@@ -1,0 +1,30 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr" data-fr-scheme="system">
+    <head>    
+        <meta charset="utf-8">
+        <meta name="format-detection" content="telephone=no">    
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">    
+        <link rel="stylesheet" href="{% static 'dsfr.min.css' %}"> 
+        <link rel="stylesheet" href="{% static 'utility/utility.min.css' %}"> 
+        <link href="{% static 'utility/icons/icons.min.css' %}" rel="stylesheet">   
+        <meta name="theme-color" content="#000091"><!-- Défini la couleur de thème du navigateur (Safari/Android) -->    
+        <link rel="apple-touch-icon" href="{% static 'favicon/apple-touch-icon.png' %}"><!-- 180×180 -->    
+        <link rel="icon" href="{% static 'favicon/favicon.svg' %}" type="image/svg+xml">    
+        <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}" type="image/x-icon"><!-- 32×32 -->    
+        <link rel="manifest" href="{% static 'favicon/manifest.webmanifest' %}" crossorigin="use-credentials">    
+        <title>Sèves</title>  
+    </head>  
+    
+    <body> 
+        <h1>Sèves</h1>
+        
+		{% block content %}{% endblock %}
+
+        <!-- Script en version es6 module et nomodule pour les navigateurs le ne supportant pas -->    
+        <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>    
+        <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script> 
+    </body>
+    
+</html>
