@@ -17,6 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+# Personnalisation du titre et de l'en-tête de l'interface d'administration
+admin.site.site_header = "Administration de Sèves"
+admin.site.site_title = "Sèves"
+admin.site.index_title = "Bienvenue sur l'administration de Sèves"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
