@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 # Personnalisation du titre et de l'en-tête de l'interface d'administration
 admin.site.site_header = "Administration de Sèves"
@@ -24,4 +24,5 @@ admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+	path("sv/", include("sv.urls"), name="sv-index"),
 ]
