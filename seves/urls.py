@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from sv import views
 
 # Personnalisation du titre et de l'en-tête de l'interface d'administration
 admin.site.site_header = "Administration de Sèves"
@@ -23,6 +24,7 @@ admin.site.site_title = "Sèves"
 admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
+	path('', views.HomeView.as_view(), name='home'),
     path('admin/', admin.site.urls),
 	path("sv/", include("sv.urls"), name="sv-index"),
 ]

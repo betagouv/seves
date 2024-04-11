@@ -1,0 +1,37 @@
+body{
+	background-color: #FFFFFF;
+}
+
+#fichedetection-list-header-title {
+	background-color: #E3E3FD;
+	padding: 2rem 0rem 2rem 2rem; 
+}
+
+#fichedetection-list-header-title h1 {
+	margin-bottom: 0;
+}
+
+#fichedetection-list {
+	margin: 2rem;
+}
+
+#fichedetection-list-table table{
+	border-collapse: collapse;
+}
+
+#fichedetection-list-table table thead tr {
+	background-color: #FFFFFF;
+	border-bottom: 1px solid #F6F6F6;
+}
+
+#fichedetection-list-table tbody tr {
+	background-image: none;
+}
+
+#fichedetection-list-table tbody tr:nth-child(odd) {
+	background-color: #FFFFFF;
+}
+
+#fichedetection-list-table tbody tr:nth-child(even) {
+	background-color: #F6F6F6;
+}

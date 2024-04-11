@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import home
+from .views import FicheDetectionListView
 
 urlpatterns = [
-	path("", home, name="home"),
+	path("fiches-detection/", FicheDetectionListView.as_view(), name="fiche-detection-list"),
 ]
