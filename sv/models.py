@@ -286,7 +286,6 @@ class PrelevementNonOfficiel(models.Model):
 		db_table = "sv_prelevement_non_officiel"
 
 	lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu")
-	fiche_detection = models.ForeignKey('FicheDetection', on_delete=models.CASCADE, verbose_name="Fiche de détection")
 	structure_preleveur = models.ForeignKey(StructurePreleveur, on_delete=models.PROTECT, verbose_name="Structure préleveur")
 	numero_echantillon = models.CharField(max_length=100, verbose_name="Numéro d'échantillon", blank=True)
 	date_prelevement = models.DateField(verbose_name="Date de prélèvement", blank=True, null=True)
@@ -334,7 +333,6 @@ class PrelevementOfficiel(models.Model):
 		db_table = "sv_prelevement_officiel"
 
 	lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu")
-	fiche_detection = models.ForeignKey('FicheDetection', on_delete=models.CASCADE, verbose_name="Fiche de détection")
 	structure_preleveur = models.ForeignKey(StructurePreleveur, on_delete=models.PROTECT, verbose_name="Structure préleveur")
 	numero_echantillon = models.CharField(max_length=100, verbose_name="Numéro d'échantillon", blank=True)
 	date_prelevement = models.DateField(verbose_name="Date de prélèvement", blank=True, null=True)
