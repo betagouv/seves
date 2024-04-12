@@ -1,7 +1,15 @@
+import json
+from datetime import datetime
 from django.shortcuts import render
-from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import TemplateView, ListView, DetailView, CreateView
+from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
-from .models import FicheDetection, Lieu, PrelevementOfficiel, PrelevementNonOfficiel
+from .models import (
+	FicheDetection, Lieu, PrelevementOfficiel, PrelevementNonOfficiel, Unite, StatutEvenement, OrganismeNuisible,
+	StatutReglementaire, Contexte, StructurePreleveur, SiteInspection, MatricePrelevee, EspeceEchantillon,
+	LaboratoireAgree, LaboratoireConfirmationOfficielle, NumeroFiche, Departement
+)
+
 
 class HomeView(TemplateView):
 	template_name = "sv/index.html"
@@ -43,3 +51,23 @@ class FicheDetectionDetailView(DetailView):
 		context['prelevements_non_officiels'] = prelevements_non_officiels
 
 		return context
+
+
+def create_fiche_detection(request):
+    context = {
+        'departements': list(Departement.objects.values('id', 'numero', 'nom')),
+        'unites' : list(Unite.objects.values('id', 'nom')),
+        'statuts_evenement': list(StatutEvenement.objects.values('id', 'libelle')),
+        'organismes_nuisibles': list(OrganismeNuisible.objects.values('id', 'libelle_court')),
+        'statuts_reglementaires': list(StatutReglementaire.objects.values('id', 'libelle')),
+        'contextes': list(Contexte.objects.values('id', 'nom')),
+        'structures_preleveurs': list(StructurePreleveur.objects.values('id', 'nom')),
+        'sites_inspections': list(SiteInspection.objects.values('id', 'nom')),
+        'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle')),
+        'especes_echantillon': list(EspeceEchantillon.objects.values('id', 'libelle')),
+        'laboratoires_agrees': list(LaboratoireAgree.objects.values('id', 'nom')),
+        'laboratoires_confirmation_officielle': list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
+    }
+
+    return render(request, 'sv/fichedetection_form.html', context)
+	

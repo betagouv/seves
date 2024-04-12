@@ -1,0 +1,228 @@
+/* -- Style de la page -- */
+main {
+	margin: 2rem 1.5rem;
+}
+
+
+/* -- Grid pour les blocs informations, objet de l'évènement, lieux, prélèvements et mesures de gestion -- */
+#fiche-detection-form{
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-gap: 1.5rem;
+}
+#informations{
+	grid-column: span 3;
+}
+#mesures-gestion{
+	grid-column: span 3;
+}
+#localisations, #prelevements {
+	overflow-y: auto;
+	max-height: 40rem; 
+}
+
+
+/* -- Styles des blocs (intérieur) -- */
+#informations,
+#objet-evenement, 
+#localisations,
+#prelevements,
+#mesures-gestion {
+	background-color: white;
+	padding: 1.5rem;
+}
+
+/* Entête (titre et boutons) */
+#fiche-detection-form-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+#fiche-detection-form-header h1 {
+	margin-bottom: 0.5rem;
+}
+
+/* Informations */
+#informations-content {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-gap: 4rem;
+
+}
+#date-creation,
+#createur,
+#statut-evenement {
+	display: flex;
+	align-items: center;
+}
+#date-creation label {
+	flex: 0.65;
+}
+#date-creation-input {
+	flex: 1.35;
+}
+#createur label {
+	flex: 0.5;
+}
+#createur-input {
+	flex: 1.5;
+}
+#statut-evenement label {
+	flex: 0.75;
+}
+#statut-evenement-input {
+	flex: 1.25;
+}
+
+/* Objet de l'évènement */
+#organisme-nuisible,
+#statut-reglementaire,
+#contexte,
+#date-1er-signalement {
+	display: flex;
+	align-items: center;
+}
+#organisme-nuisible label,
+#statut-reglementaire label,
+#contexte label {
+	flex: 0.85;
+}
+#organisme-nuisible-input,
+#statut-reglementaire-input,
+#contexte-input {
+	flex: 1.15;
+}
+#date-1er-signalement label {
+	flex: 0.80;
+}
+#date-1er-signalement-input {
+	flex: 1.20;
+}
+#commentaire-input {
+	min-height: 10rem;
+}
+
+/* Lieux */
+#localisations-header {
+	display: flex; 
+	justify-content: space-between; 
+	align-items: flex-start;
+}
+#localisations .lieu-nom {
+	font-weight: bold;
+	color: black;
+	margin-bottom: 0.5rem;
+}
+#localisations .lieu-header {
+	display: flex; 
+	justify-content: space-between;
+}
+#localisations .localisation-edit-btn,
+#localisations .localisation-delete-btn,
+#localisations .lieu-commune {
+	margin-bottom: 0;
+}
+
+
+
+#modal-add-edit-localisation-title,
+#modal-add-edit-prelevement-title {
+	margin-bottom: 2rem;
+}
+#localisation-form p {
+	display: flex;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+#localisation-form p label {
+	flex: 0.75;
+}
+#localisation-form p input {
+	flex: 1.25;
+}
+#localisation-form p select {
+	flex: 1.15;
+}
+.localisation-initiale,
+.prelevement {
+	background-color: #E3E3FD;
+	margin-bottom: 1rem;
+	padding: 1rem;
+}
+
+
+
+/* Prélèvements */
+#prelevements-header {
+	display: flex; 
+	justify-content: space-between; 
+	align-items: flex-start;
+}
+.prelevement-header {
+	display: flex; 
+	justify-content: space-between;
+}
+.prelevement-nom {
+	font-weight: bold;
+	color: black;
+	margin-bottom: 0.5rem;
+}
+.prelevement-type {
+	font-weight: bold;
+	color: #000091;
+	margin-bottom: 0.5rem;
+}
+#prelevements .prelevement-edit-btn,
+#prelevements .prelevement-delete-btn {
+	margin-bottom: 0;
+}
+.site-inspection,
+.date-prelevement {
+	margin-bottom: 0.5rem;
+}
+
+/* Prélèvement (modal) */
+#prelevement-form #localisation,
+#prelevement-form #structure,
+#prelevement-form #numero-echantillon,
+#prelevement-form #date-prelevement,
+#prelevement-form #site-inspection,
+#prelevement-form #matrice-prelevee, 
+#prelevement-form #espece-echantillon,
+#prelevement-form #numero-phytopass,
+#prelevement-form #laboratoire-agree,
+#prelevement-form #laboratoire-confirmation {
+	display: flex;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+#prelevement-form label {
+	flex: 0.75;
+}
+#prelevement-form select {
+	flex: 1.15;
+}
+#prelevement-form input {
+	flex: 1.25;
+}
+
+
+
+
+/* Mesures de gestion */
+#mesures-gestion-content{
+	display: flex;
+	gap: 2rem;
+}
+#mesures-conservatoires-immediates, 
+#mesures-consignation, 
+#mesures-phytosanitaires, 
+#mesures-surveillance-specifique {
+	flex: 1;
+}
+#mesures-conservatoires-immediates textarea, 
+#mesures-consignation textarea, 
+#mesures-phytosanitaires textarea, 
+#mesures-surveillance-specifique textarea {
+	min-height: 10rem;
+}
