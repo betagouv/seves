@@ -341,7 +341,7 @@ document.addEventListener('alpine:init', () => {
 		saveFicheDetection() {
 			const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 			const url = document.getElementById('fiche-detection-form-post-url').dataset.url;
-			
+
 			if(!this.$refs.fichedetectionForm.checkValidity()) {
 				this.$refs.fichedetectionForm.reportValidity();
 				return;
@@ -350,7 +350,7 @@ document.addEventListener('alpine:init', () => {
 			let formData = new FormData();
 			formData.append('createurId', this.ficheDetection.createurId);
 			formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
-			formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId);
+			formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId.value);
 			formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
 			formData.append('contexteId', this.ficheDetection.contexteId);
 			formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
