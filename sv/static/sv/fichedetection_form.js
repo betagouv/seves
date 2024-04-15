@@ -339,7 +339,47 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		saveFicheDetection() {
-			console.log("Enregistrement de la fiche de détection");
+			const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+			const url = document.getElementById('fiche-detection-form-post-url').dataset.url;
+			
+			if(!this.$refs.fichedetectionForm.checkValidity()) {
+				this.$refs.fichedetectionForm.reportValidity();
+				return;
+			}
+
+			let formData = new FormData();
+			formData.append('createurId', this.ficheDetection.createurId);
+			formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
+			formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId);
+			formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
+			formData.append('contexteId', this.ficheDetection.contexteId);
+			formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
+			formData.append('commentaire', this.ficheDetection.commentaire);
+			formData.append('mesuresConservatoiresImmediates', this.ficheDetection.mesuresConservatoiresImmediates);
+			formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
+			formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
+			formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
+			formData.append('localisations', JSON.stringify(this.localisations));
+			formData.append('prelevements', JSON.stringify(this.prelevements));
+
+			fetch(url, {
+				method: 'POST',
+				body: formData,
+				headers: {
+					'X-CSRFToken': csrfToken,
+				},
+			})
+			.then(response => {
+				if (!response.ok) {
+					response.text().then(errorText => {
+						console.log(errorText);
+					});
+				}
+				window.location.href = response.url;
+			})
+			.catch(error => {
+				console.error(error);
+			});
 		},
 
 	}));
