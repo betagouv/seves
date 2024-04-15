@@ -17,10 +17,12 @@ document.addEventListener('alpine:init', () => {
 		init() {
 			MODAL_ADD_EDIT_LOCALISATION.addEventListener('dsfr.conceal', (e) => {
 				this.resetLocalisationAddOrEditFormModal();
+				this.localisationIdToEdit = null;
 			});
 
 			MODAL_ADD_EDIT_PRELEVEMENT.addEventListener('dsfr.conceal', (e) => {
 				this.resetPrelevementAddOrEditFormModal();
+				this.prelevementIdToEdit = null;
 			});
         },
 		
@@ -149,11 +151,9 @@ document.addEventListener('alpine:init', () => {
 				this.localisations = this.localisations.map(localisation => 
 					localisation.id === localisationIdToEdit ? {...this.localisationForm} : localisation
 					);
-				this.localisationIdToEdit = null;
 			}
 
 			dsfr(MODAL_ADD_EDIT_LOCALISATION).modal.conceal();
-			this.resetLocalisationAddOrEditFormModal();
 		},
 
 		/**
@@ -264,11 +264,9 @@ document.addEventListener('alpine:init', () => {
 				this.prelevements = this.prelevements.map(prelevement =>
 					prelevement.id === prelevementIdToEdit ? {...this.formPrelevement} : prelevement
 				);
-				this.prelevementIdToEdit = null;
 			} 
 				
 			dsfr(MODAL_ADD_EDIT_PRELEVEMENT).modal.conceal();
-			this.resetPrelevementAddOrEditFormModal();
 		},
 
 		/**
