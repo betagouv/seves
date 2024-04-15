@@ -1,3 +1,12 @@
+document.addEventListener('DOMContentLoaded', function() {
+	const element = document.getElementById('organisme-nuisible-input');
+	const choices = new Choices(element, {
+		classNames: {
+			containerInner: 'fr-select',
+		}
+	});
+});
+
 document.addEventListener('alpine:init', () => {
 
 	const MODAL_ADD_EDIT_LOCALISATION = document.getElementById('modal-add-edit-localisation');
@@ -200,10 +209,22 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		/**
+		 * Retourne le nom d'une localisation à partir de son ID
+		 * @param {string} localisationId 
+		 * @returns le nom de la localisation
+		 */
+		getLocalisationNameFromId(localisationId) {
+			// ⚠️ localisation.id est de type number, localisationId est de type string
+			const localisation = this.localisations.find(localisation => localisation.id == localisationId);
+			return localisation ? localisation.nomLocalisation : '';
+		},
+
+		/**
 		 * Selectionne la première localisation de la liste 
 		 * avant d'afficher le formulaire d'ajout d'un prélèvement
 		 */
 		addPrelevementForm() {
+			
 			if (!this.formPrelevement.localisationId && this.localisations.length > 0) {
 				this.formPrelevement.localisationId = this.localisations[0].id;
 			}

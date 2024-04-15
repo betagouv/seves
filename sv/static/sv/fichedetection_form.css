@@ -102,6 +102,15 @@ main {
 	min-height: 10rem;
 }
 
+#organisme-nuisible .choices {
+	flex: 1.42;
+}
+#organisme-nuisible .fr-select {
+	/* supprime la flèche située à droite dans le select car déjà présente via choices.js */
+	background-image: none;
+}
+
+
 /* Lieux */
 #localisations-header {
 	display: flex; 
@@ -177,7 +186,8 @@ main {
 	margin-bottom: 0;
 }
 .site-inspection,
-.date-prelevement {
+.date-prelevement,
+.prelevement-localisation {
 	margin-bottom: 0.5rem;
 }
 
