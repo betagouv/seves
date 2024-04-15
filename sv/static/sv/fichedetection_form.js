@@ -350,7 +350,7 @@ document.addEventListener('alpine:init', () => {
 			let formData = new FormData();
 			formData.append('createurId', this.ficheDetection.createurId);
 			formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
-			formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId.value);
+			formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : '');
 			formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
 			formData.append('contexteId', this.ficheDetection.contexteId);
 			formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
