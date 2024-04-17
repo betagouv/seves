@@ -287,7 +287,17 @@
 								</p>
 								<p>
 									<div class="fr-checkbox-group">
-										<input x-model="formPrelevement.isPrelevementOfficiel" name="is-prelevement-officiel" id="is-prelevement-officiel" type="checkbox" aria-describedby="is-prelevement-officiel-messages">
+										<input 	x-model="formPrelevement.isPrelevementOfficiel" 
+												x-on:change="
+													await $nextTick();
+													if(formPrelevement.isPrelevementOfficiel) { 
+														document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
+													}
+												"
+												name="is-prelevement-officiel" 
+												id="is-prelevement-officiel" 
+												type="checkbox" 
+												aria-describedby="is-prelevement-officiel-messages">
 										<label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
 									</div>
 								</p>
@@ -319,7 +329,7 @@
 							<div class="fr-modal__footer">
 								<div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
 									<button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement">Annuler</button>
-									<input class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'"></input>
+									<input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'"></input>
 								</div>
 							</div>
 						</form>
