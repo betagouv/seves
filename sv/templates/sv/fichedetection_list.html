@@ -25,7 +25,7 @@
 				</thead>
 				<tbody>
 					{% for fiche in fichedetection_list %}
-					<tr>
+					<tr class="table-row">
 						<td><a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}">{{ fiche.numero|default:"nc." }}</a></td>
 						<td>{{ fiche.organisme_nuisible|default:"nc." }}</td>
 						<td>{{ fiche.createur }}</td>

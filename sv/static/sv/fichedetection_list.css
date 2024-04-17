@@ -35,3 +35,7 @@ body{
 #fichedetection-list-table tbody tr:nth-child(even) {
 	background-color: #F6F6F6;
 }
+
+#fichedetection-list-table .table-row:hover {
+	background-color: var(--background-contrast-grey);
+}
