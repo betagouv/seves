@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from django.shortcuts import render
-from django.views.generic import TemplateView, ListView, DetailView, CreateView
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, View
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
@@ -54,22 +54,52 @@ class FicheDetectionDetailView(DetailView):
 
 		return context
 
+class CreateFicheDetectionView(View):
+	template_name = 'sv/fichedetection_form.html'
 
-def create_fiche_detection(request):
-	if request.method == 'POST':
+	def get(self, request):
+		context = {
+			'departements': list(Departement.objects.values('id', 'numero', 'nom')),
+			'unites' : list(Unite.objects.values('id', 'nom')),
+			'statuts_evenement': list(StatutEvenement.objects.values('id', 'libelle')),
+			'organismes_nuisibles': list(OrganismeNuisible.objects.values('id', 'libelle_court')),
+			'statuts_reglementaires': list(StatutReglementaire.objects.values('id', 'libelle')),
+			'contextes': list(Contexte.objects.values('id', 'nom')),
+			'structures_preleveurs': list(StructurePreleveur.objects.values('id', 'nom')),
+			'sites_inspections': list(SiteInspection.objects.values('id', 'nom')),
+			'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle')),
+			'especes_echantillon': list(EspeceEchantillon.objects.values('id', 'libelle')),
+			'laboratoires_agrees': list(LaboratoireAgree.objects.values('id', 'nom')),
+			'laboratoires_confirmation_officielle': list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
+		}
+		return render(request, self.template_name, context)
 
+	def post(self, request):
 		# Récupération des données du formulaire
 		data = request.POST
 		localisations = json.loads(data['localisations'])
 		prelevements = json.loads(data['prelevements'])
 
 		# Validation des données
-		errors = []
+		errors = self.validate_data(data, localisations, prelevements)
+		if errors:
+			return HttpResponseBadRequest(json.dumps(errors))
 		
+		# Création des objets en base de données
+		with transaction.atomic():
+			fiche = self.create_fiche_detection(data)
+			self.create_lieux(localisations, fiche)
+			self.create_prelevements(prelevements, localisations)
+
+		return HttpResponseRedirect(reverse('fiche-detection-vue-detaillee', args=[fiche.pk]))
+
+	def validate_data(self, data, localisations, prelevements):	
+		errors = []
+
 		# createur est obligatoire
 		if not data['createurId']:
 			errors.append('Le champ createur est obligatoire')	
-		if data['createurId'] and not Unite.objects.filter(pk=data['createurId']).exists():
+		elif not Unite.objects.filter(pk=data['createurId']).exists():
 			errors.append('Le champ createur est invalide')
 		
 		# Validation des lieux (nom du lieu obligatoire)
@@ -100,11 +130,10 @@ def create_fiche_detection(request):
 					errors.append('Le champ laboratoire agréé est invalide')
 				if prelevement['laboratoireConfirmationOfficielleId'] and not LaboratoireConfirmationOfficielle.objects.filter(pk=prelevement['laboratoireConfirmationOfficielleId']).exists():
 					errors.append('Le champ laboratoire confirmation officielle est invalide')
-
-		# envoi des erreurs
-		if errors:
-			return HttpResponseBadRequest(json.dumps(errors))
 		
+		return errors
+	
+	def create_fiche_detection(self, data): 
 		# format de la date de premier signalement
 		date_premier_signalement = data['datePremierSignalement']
 		try:
@@ -113,89 +142,73 @@ def create_fiche_detection(request):
 			date_premier_signalement = None
 		
 		# Création de la fiche de détection en base de données
-		with transaction.atomic():
-			fiche = FicheDetection(
-				numero=NumeroFiche.get_next_numero(),
-				createur_id=data['createurId'],
-				statut_evenement_id=data['statutEvenementId'],
-				organisme_nuisible_id=data['organismeNuisibleId'],
-				statut_reglementaire_id=data['statutReglementaireId'],
-				contexte_id=data['contexteId'],
-				date_premier_signalement=date_premier_signalement,
-				commentaire=data['commentaire'],
-				mesures_conservatoires_immediates=data['mesuresConservatoiresImmediates'],
-				mesures_consignation=data['mesuresConsignation'],
-				mesures_phytosanitaires=data['mesuresPhytosanitaires'],
-				mesures_surveillance_specifique=data['mesuresSurveillanceSpecifique'],
-			)
-			fiche.save()
+		fiche = FicheDetection(
+			numero=NumeroFiche.get_next_numero(),
+			createur_id=data['createurId'],
+			statut_evenement_id=data['statutEvenementId'],
+			organisme_nuisible_id=data['organismeNuisibleId'],
+			statut_reglementaire_id=data['statutReglementaireId'],
+			contexte_id=data['contexteId'],
+			date_premier_signalement=date_premier_signalement,
+			commentaire=data['commentaire'],
+			mesures_conservatoires_immediates=data['mesuresConservatoiresImmediates'],
+			mesures_consignation=data['mesuresConsignation'],
+			mesures_phytosanitaires=data['mesuresPhytosanitaires'],
+			mesures_surveillance_specifique=data['mesuresSurveillanceSpecifique'],
+		)
+		fiche.save()
 
-			# Création des lieux en base de données
-			for loc in localisations:
-				wgs84_longitude = loc['coordGPSWGS84Longitude'] if loc['coordGPSWGS84Longitude'] != '' else None
-				wgs84_latitude = loc['coordGPSWGS84Latitude'] if loc['coordGPSWGS84Latitude'] != '' else None
+		return fiche
+	
+	def create_lieux(self, localisations, fiche):
+		# Création des lieux en base de données
+		for loc in localisations:
+			wgs84_longitude = loc['coordGPSWGS84Longitude'] if loc['coordGPSWGS84Longitude'] != '' else None
+			wgs84_latitude = loc['coordGPSWGS84Latitude'] if loc['coordGPSWGS84Latitude'] != '' else None
 
-				#lieu = Lieu(fiche_detection=fiche, **loc)
-				lieu = Lieu(fiche_detection=fiche, 
-							nom=loc['nomLocalisation'], 
-							wgs84_longitude=wgs84_longitude,
-							wgs84_latitude=wgs84_latitude,
-							adresse_lieu_dit=loc['adresseLieuDit'],
-							commune=loc['commune'],
-							code_insee=loc['codeINSEE'],
-							departement_id=loc['departementId'])
-				lieu.save()
-				loc['lieu_pk'] = lieu.pk
+			#lieu = Lieu(fiche_detection=fiche, **loc)
+			lieu = Lieu(fiche_detection=fiche, 
+						nom=loc['nomLocalisation'], 
+						wgs84_longitude=wgs84_longitude,
+						wgs84_latitude=wgs84_latitude,
+						adresse_lieu_dit=loc['adresseLieuDit'],
+						commune=loc['commune'],
+						code_insee=loc['codeINSEE'],
+						departement_id=loc['departementId'])
+			lieu.save()
+			loc['lieu_pk'] = lieu.pk
+		return localisations
 
-			# Création des prélèvements en base de données
-			for prel in prelevements:
-				# format de la date de prélèvement 
-				try:
-					datetime.strptime(prel['datePrelevement'], '%Y-%m-%d')
-				except ValueError:
-					prel['datePrelevement'] = None
+	def create_prelevements(self, prelevements, localisations):
+		# Création des prélèvements en base de données
+		for prel in prelevements:
+			# format de la date de prélèvement 
+			try:
+				datetime.strptime(prel['datePrelevement'], '%Y-%m-%d')
+			except ValueError:
+				prel['datePrelevement'] = None
 
-				# recupérer le lieu_pk associé à chaque prélèvement prel
-				prel['lieu_pk'] = next((loc['lieu_pk'] for loc in localisations if loc['id'] == prel['localisationId']), None)
-				
-				if prel['isPrelevementOfficiel']:
-					prelevement_officiel = PrelevementOfficiel(lieu_id=prel['lieu_pk'],
+			# recupérer le lieu_pk associé à chaque prélèvement prel
+			prel['lieu_pk'] = next((loc['lieu_pk'] for loc in localisations if loc['id'] == prel['localisationId']), None)
+			
+			if prel['isPrelevementOfficiel']:
+				prelevement_officiel = PrelevementOfficiel(lieu_id=prel['lieu_pk'],
+															structure_preleveur_id=prel['structurePreleveurId'],
+															numero_echantillon=prel['numeroEchantillon'],
+															date_prelevement=prel['datePrelevement'],
+															site_inspection_id=prel['siteInspectionId'],
+															matrice_prelevee_id=prel['matricePreleveeId'],
+															espece_echantillon_id=prel['especeEchantillonId'],
+															numero_phytopass=prel['numeroPhytopass'],
+															laboratoire_agree_id=prel['laboratoireAgreeId'],
+															laboratoire_confirmation_officielle_id=prel['laboratoireConfirmationOfficielleId'])
+				prelevement_officiel.save()
+			else:
+				prelevement_non_officiel = PrelevementNonOfficiel(lieu_id=prel['lieu_pk'],
 																structure_preleveur_id=prel['structurePreleveurId'],
 																numero_echantillon=prel['numeroEchantillon'],
 																date_prelevement=prel['datePrelevement'],
 																site_inspection_id=prel['siteInspectionId'],
 																matrice_prelevee_id=prel['matricePreleveeId'],
-																espece_echantillon_id=prel['especeEchantillonId'],
-																numero_phytopass=prel['numeroPhytopass'],
-																laboratoire_agree_id=prel['laboratoireAgreeId'],
-																laboratoire_confirmation_officielle_id=prel['laboratoireConfirmationOfficielleId'])
-					prelevement_officiel.save()
-				else:
-					prelevement_non_officiel = PrelevementNonOfficiel(lieu_id=prel['lieu_pk'],
-																	structure_preleveur_id=prel['structurePreleveurId'],
-																	numero_echantillon=prel['numeroEchantillon'],
-																	date_prelevement=prel['datePrelevement'],
-																	site_inspection_id=prel['siteInspectionId'],
-																	matrice_prelevee_id=prel['matricePreleveeId'],
-																	espece_echantillon_id=prel['especeEchantillonId'])
-					prelevement_non_officiel.save()
-
-		return HttpResponseRedirect(reverse('fiche-detection-vue-detaillee', args=[fiche.pk]))
-	else:
-		context = {
-			'departements': list(Departement.objects.values('id', 'numero', 'nom')),
-			'unites' : list(Unite.objects.values('id', 'nom')),
-			'statuts_evenement': list(StatutEvenement.objects.values('id', 'libelle')),
-			'organismes_nuisibles': list(OrganismeNuisible.objects.values('id', 'libelle_court')),
-			'statuts_reglementaires': list(StatutReglementaire.objects.values('id', 'libelle')),
-			'contextes': list(Contexte.objects.values('id', 'nom')),
-			'structures_preleveurs': list(StructurePreleveur.objects.values('id', 'nom')),
-			'sites_inspections': list(SiteInspection.objects.values('id', 'nom')),
-			'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle')),
-			'especes_echantillon': list(EspeceEchantillon.objects.values('id', 'libelle')),
-			'laboratoires_agrees': list(LaboratoireAgree.objects.values('id', 'nom')),
-			'laboratoires_confirmation_officielle': list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
-		}
-
-		return render(request, 'sv/fichedetection_form.html', context)
-	
+																espece_echantillon_id=prel['especeEchantillonId'])
+				prelevement_non_officiel.save()
