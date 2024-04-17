@@ -66,8 +66,8 @@ class CreateFicheDetectionView(View):
 			'statuts_reglementaires': list(StatutReglementaire.objects.values('id', 'libelle')),
 			'contextes': list(Contexte.objects.values('id', 'nom')),
 			'structures_preleveurs': list(StructurePreleveur.objects.values('id', 'nom')),
-			'sites_inspections': list(SiteInspection.objects.values('id', 'nom')),
-			'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle')),
+			'sites_inspections': list(SiteInspection.objects.values('id', 'nom').order_by('nom')),
+			'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle').order_by('libelle')),
 			'especes_echantillon': list(EspeceEchantillon.objects.values('id', 'libelle')),
 			'laboratoires_agrees': list(LaboratoireAgree.objects.values('id', 'nom')),
 			'laboratoires_confirmation_officielle': list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
