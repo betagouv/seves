@@ -5,3 +5,4 @@ gunicorn
 dj-static
 playwright
 ruff
+pre-commit

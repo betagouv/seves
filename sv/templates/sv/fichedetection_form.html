@@ -86,8 +86,8 @@
 							<select x-model="ficheDetection.createurId" id="createur-input" class="fr-select" required>
 								<option value="">----</option>
 								<template x-for="unite in unites" :key="unite.id">
-									<option 
-										:value="unite.id" 
+									<option
+										:value="unite.id"
 										x-text="unite.nom"
 										:selected="unite.id == ficheDetection.createurId"></option>
 								</template>
@@ -98,7 +98,7 @@
 							<select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
 								<option value="">----</option>
 								<template x-for="statutEvenement in statutsEvenement" :key="statutEvenement.id">
-									<option 
+									<option
 										:value="statutEvenement.id"
 										x-text="statutEvenement.libelle"
 										:selected="statutEvenement.id == ficheDetection.statutEvenementId"></option>
@@ -115,8 +115,8 @@
 						<select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
 							<option value="">----</option>
 							<template x-for="organismeNuisible in organismesNuisibles" :key="organismeNuisible.id">
-								<option 
-									:value="organismeNuisible.id" 
+								<option
+									:value="organismeNuisible.id"
 									x-text="organismeNuisible.libelle_court"
 									:selected="organismeNuisible.id == ficheDetection.organismeNuisibleId"></option>
 							</template>
@@ -127,8 +127,8 @@
 						<select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
 							<option value="">----</option>
 							<template x-for="statutReglementaire in statutsReglementaires" :key="statutReglementaire.id">
-								<option 
-									:value="statutReglementaire.id" 
+								<option
+									:value="statutReglementaire.id"
 									x-text="statutReglementaire.libelle"
 									:selected="statutReglementaire.id == ficheDetection.statutReglementaireId"></option>
 							</template>
@@ -139,8 +139,8 @@
 						<select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
 							<option value="">----</option>
 							<template x-for="contexte in contextes" :key="contexte.id">
-								<option 
-									:value="contexte.id" 
+								<option
+									:value="contexte.id"
 									x-text="contexte.nom"
 									:selected="contexte.id == ficheDetection.contexteId"></option>
 							</template>
@@ -208,7 +208,7 @@
 							<button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-localisation">Fermer</button>
 						</div>
 						<div class="fr-modal__content">
-							<h1 id="modal-add-edit-localisation-title" 
+							<h1 id="modal-add-edit-localisation-title"
 								class="fr-modal__title"
 								x-text="(localisationIdToEdit === null ? 'Ajouter une' : 'Modifier la') + ' localisation'"></h1>
 							<form x-ref="localisationForm" @submit.prevent="addOrEditLocalisation(localisationIdToEdit)" id="localisation-form">
@@ -271,8 +271,8 @@
 							<button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-prelevement">Fermer</button>
 						</div>
 						<div class="fr-modal__content">
-							<h1 id="modal-add-edit-prelevement-title" 
-								class="fr-modal__title" 
+							<h1 id="modal-add-edit-prelevement-title"
+								class="fr-modal__title"
 								x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
 							<form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
 								<div id="localisation" class="fr-select-group">
@@ -329,16 +329,16 @@
 								</p>
 								<p>
 									<div class="fr-checkbox-group">
-										<input 	x-model="formPrelevement.isPrelevementOfficiel" 
+										<input 	x-model="formPrelevement.isPrelevementOfficiel"
 												x-on:change="
 													await $nextTick();
-													if(formPrelevement.isPrelevementOfficiel) { 
+													if(formPrelevement.isPrelevementOfficiel) {
 														document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
 													}
 												"
-												name="is-prelevement-officiel" 
-												id="is-prelevement-officiel" 
-												type="checkbox" 
+												name="is-prelevement-officiel"
+												id="is-prelevement-officiel"
+												type="checkbox"
 												aria-describedby="is-prelevement-officiel-messages">
 										<label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
 									</div>

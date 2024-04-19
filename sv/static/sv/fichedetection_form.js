@@ -51,21 +51,21 @@ document.addEventListener('alpine:init', () => {
 		],
 
 		prelevements: [
-			/*{ 
-				id: crypto.randomUUID(), 
-				nom: 'Prélèvement 1', 
-				localisationId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', 
-				isPrelevementOfficiel: true, 
+			/*{
+				id: crypto.randomUUID(),
+				nom: 'Prélèvement 1',
+				localisationId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09',
+				isPrelevementOfficiel: true,
 				datePrelevement: '2021-09-01',
 				structurePreleveurId: '1',
 				siteInspectionId: '1',
 			},
 			*/
 		],
-		
+
 		// Données du formulaire d'ajout d'une localisation
-		localisationForm: { 
-			id: '', 
+		localisationForm: {
+			id: '',
 			nomLocalisation: '',
 			adresseLieuDit: '',
 			commune: '',
@@ -79,7 +79,7 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		// Données du formulaire d'ajout d'un prélèvement
-		formPrelevement: { 
+		formPrelevement: {
 			id: '',
 			localisationId: '',
 			structurePreleveurId: '',
@@ -96,13 +96,13 @@ document.addEventListener('alpine:init', () => {
 
 		// ID de la localisation en cours de modification
 		localisationIdToEdit: null,
-		
+
 		// Index du prélèvement en cours de modification
 		prelevementIdToEdit: null,
-		
+
 		// ID de la localisation en cours de suppression
 		localisationIdToDelete: null,
-		
+
 		// ID du prélèvement en cours de suppression
 		prelevementIdToDelete: null,
 
@@ -116,7 +116,7 @@ document.addEventListener('alpine:init', () => {
 				this.resetPrelevementAddOrEditFormModal();
 				this.prelevementIdToEdit = null;
 			});
-			
+
 			this.ficheDetection = {
 				numero: this.getValueById('numeroFiche'),
 				createurId: this.getValueById('createur-id'),
@@ -152,7 +152,7 @@ document.addEventListener('alpine:init', () => {
 					};
 				});
 			}
-			
+
 			// Récupération et initialisation des prélèvements officiels (si modification d'une fiche de détection existante)
 			const prelevementsOfficielsData = JSON.parse(document.getElementById('prelevements-officiels').textContent);
 			if (prelevementsOfficielsData) {
@@ -192,7 +192,7 @@ document.addEventListener('alpine:init', () => {
 				};
 			});
 		},
-		
+
 		getNumeroIfExist() {
 			const numero = document.getElementById('fiche-detection-numero');
 			return numero ? numero.textContent : '';
@@ -201,7 +201,7 @@ document.addEventListener('alpine:init', () => {
 		/**
 		 * Affichage du formulaire d'édition d'une localisation
 		 * et remplissage des champs avec les données de la localisation à modifier
-		 * @param {string} localisationId 
+		 * @param {string} localisationId
 		 */
 		fillLocalisationEditForm(localisationId) {
 			const localisationToEdit = this.localisations.find(localisation => localisation.id === localisationId);
@@ -226,10 +226,10 @@ document.addEventListener('alpine:init', () => {
 			if (localisationIdToEdit === null) {
 				this.localisationForm.id = crypto.randomUUID();
 				this.localisations.push({...this.localisationForm});
-			}			
+			}
 			// Mise à jour de la localisation existante
 			else {
-				this.localisations = this.localisations.map(localisation => 
+				this.localisations = this.localisations.map(localisation =>
 					localisation.id === localisationIdToEdit ? {...this.localisationForm} : localisation
 					);
 			}
@@ -238,13 +238,13 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		/**
-		 * Réinitialise le formulaire lors de la fermerture de la 
+		 * Réinitialise le formulaire lors de la fermerture de la
 		 * modal d'ajout ou de modification d'une localisation
 		 */
 		resetLocalisationAddOrEditFormModal() {
 			// Réinitialise le formulaire
-			this.localisationForm = { 
-				id: '', 
+			this.localisationForm = {
+				id: '',
 				nomLocalisation: '',
 				adresseLieuDit: '',
 				commune: '',
@@ -262,7 +262,7 @@ document.addEventListener('alpine:init', () => {
 		 * Vérifie si une localisation peut être supprimée.
 		 * Si la localisation est liée à un prélèvement, afficher un message d'erreur.
 		 * Sinon, afficher la modal de confirmation de suppression.
-		 * @param {string} localisationId 
+		 * @param {string} localisationId
 		 */
 		canDeleteLocalisation(localisationId) {
 			// Vérifier si la localisation est liée à un prélèvement
@@ -272,16 +272,16 @@ document.addEventListener('alpine:init', () => {
 				// Si la localisation est liée à un prélèvement, afficher un message d'erreur
 				dsfr(document.getElementById('fr-modal-suppression-localisation')).modal.disclose();
 				return;
-			} 
+			}
 
 			// Si la localisation n'est pas liée à un prélèvement, afficher la modal de confirmation de suppression
 			this.localisationIdToDelete = localisationId;
 			dsfr(document.getElementById('fr-modal-cant-delete-localisation')).modal.disclose();
 		},
-		
+
 		/**
 		 * Supprime une localisation.
-		 * @param {string} localisationIdToDelete 
+		 * @param {string} localisationIdToDelete
 		 */
 		deleteLocalisation(localisationIdToDelete) {
 			this.localisations = this.localisations.filter(localisation => localisation.id !== localisationIdToDelete);
@@ -291,7 +291,7 @@ document.addEventListener('alpine:init', () => {
 
 		/**
 		 * Retourne le nom d'une localisation à partir de son ID
-		 * @param {string} localisationId 
+		 * @param {string} localisationId
 		 * @returns le nom de la localisation
 		 */
 		getLocalisationNameFromId(localisationId) {
@@ -301,11 +301,11 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		/**
-		 * Selectionne la première localisation de la liste 
+		 * Selectionne la première localisation de la liste
 		 * avant d'afficher le formulaire d'ajout d'un prélèvement
 		 */
 		addPrelevementForm() {
-			
+
 			if (!this.formPrelevement.localisationId && this.localisations.length > 0) {
 				this.formPrelevement.localisationId = this.localisations[0].id;
 			}
@@ -314,7 +314,7 @@ document.addEventListener('alpine:init', () => {
 		/**
 		 * Affiche le formulaire d'édition d'un prélèvement
 		 * et rempli les champs avec les données du prélèvement à modifier.
-		 * @param {string} prelevementIdToEdit 
+		 * @param {string} prelevementIdToEdit
 		 */
 		fillPrelevementEditForm(prelevementIdToEdit) {
 			const prelevementToEdit = this.prelevements.find(prelevement => prelevement.id === prelevementIdToEdit);
@@ -326,7 +326,7 @@ document.addEventListener('alpine:init', () => {
 		 * Ajout ou modification d'un prélèvement.
 		 * Si prelevementIdToEdit est null, il s'agit d'un nouveau prélèvement.
 		 * Sinon, met à jour le prélèvement existant.
-		 * @param {string} prelevementIdToEdit 
+		 * @param {string} prelevementIdToEdit
 		 */
 		addOrEditPrelevement(prelevementIdToEdit) {
 			// Si le formulaire n'est pas valide, afficher les messages d'erreur
@@ -334,7 +334,7 @@ document.addEventListener('alpine:init', () => {
 				this.$refs.formPrelevement.reportValidity();
 				return;
 			}
-			
+
 			// Ajout d'un nouveau prélèvement
 			if (prelevementIdToEdit === null) {
 				this.formPrelevement.id = crypto.randomUUID();
@@ -345,7 +345,7 @@ document.addEventListener('alpine:init', () => {
 				this.prelevements = this.prelevements.map(prelevement =>
 					prelevement.id === prelevementIdToEdit ? {...this.formPrelevement} : prelevement
 				);
-			} 
+			}
 			console.log(this.prelevements);
 			console.log(this.localisations);
 			dsfr(MODAL_ADD_EDIT_PRELEVEMENT).modal.conceal();
@@ -355,7 +355,7 @@ document.addEventListener('alpine:init', () => {
 		 * Réinitialise le formulaire d'ajout ou de modification d'un prélèvement
 		 */
 		resetPrelevementAddOrEditFormModal() {
-			this.formPrelevement = { 
+			this.formPrelevement = {
 				localisationId: '',
 				structurePreleveurId: '',
 				numeroEchantillon: '',
@@ -367,21 +367,21 @@ document.addEventListener('alpine:init', () => {
 				numeroPhytopass: '',
 				laboratoireAgreeId: '',
 				laboratoireConfirmationOfficielleId: '',
-			}; 
+			};
 		},
 
 		/**
 		 * Affiche la modal de confirmation de suppression d'un prélèvement
-		 * @param {string} prelevementId 
+		 * @param {string} prelevementId
 		 */
 		showDeletePrelevementConfirmationModal(prelevementId) {
 			this.prelevementIdToDelete = prelevementId;
 			dsfr(document.getElementById('modal-delete-prelevement-confirmation')).modal.disclose();
 		},
-		
+
 		/**
 		 * Supprime un prélèvement
-		 * @param {string} prelevementIdToDelete 
+		 * @param {string} prelevementIdToDelete
 		 */
 		deletePrelevement(prelevementIdToDelete) {
 			this.prelevements = this.prelevements.filter(prelevement => prelevement.id !== prelevementIdToDelete);
@@ -391,7 +391,7 @@ document.addEventListener('alpine:init', () => {
 
 		/**
 		 * Retourne le nom d'une structure préleveur à partir de son ID
-		 * @param {string} structurePreleveurId 
+		 * @param {string} structurePreleveurId
 		 * @returns le nom de la structure préleveur
 		 */
 		getStructurePreleveurNameFromId(structurePreleveurId) {
@@ -402,7 +402,7 @@ document.addEventListener('alpine:init', () => {
 
 		/**
 		 * Retourne le nom d'un site d'inspection à partir de son ID
-		 * @param {string} siteInspectionId 
+		 * @param {string} siteInspectionId
 		 * @returns le nom du site d'inspection
 		 */
 		getSiteInspectionNameFromId(siteInspectionId) {
@@ -413,7 +413,7 @@ document.addEventListener('alpine:init', () => {
 
 		/**
 		 * Retourne la date de prélèvement formatée (jj/mm/aaaa)
-		 * @param {string} datePrelevement 
+		 * @param {string} datePrelevement
 		 * @returns la date de prélèvement formatée
 		 */
 		getDatePrelevementFormated(datePrelevement) {
@@ -422,12 +422,12 @@ document.addEventListener('alpine:init', () => {
 
 		saveFicheDetection() {
 			console.log(this.ficheDetection);
-			
+
 			if(!this.$refs.fichedetectionForm.checkValidity()) {
 				this.$refs.fichedetectionForm.reportValidity();
 				return;
 			}
-			
+
 			let formData = new FormData();
 			formData.append('createurId', this.ficheDetection.createurId);
 			formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
@@ -442,7 +442,7 @@ document.addEventListener('alpine:init', () => {
 			formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
 			formData.append('localisations', JSON.stringify(this.localisations));
 			formData.append('prelevements', JSON.stringify(this.prelevements));
-			
+
 			const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 			const url = document.getElementById('fiche-detection-form-url').dataset.url;
 

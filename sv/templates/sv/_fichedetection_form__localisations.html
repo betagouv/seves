@@ -5,35 +5,35 @@
 			<p x-text="localisation.nomLocalisation" class="lieu-nom"></p>
 			<ul class="fr-btns-group fr-btns-group--sm fr-btns-group--inline-reverse fr-btns-group--inline-lg">
 				<li>
-					<button 
+					<button
 						type="button"
-						class="localisation-edit-btn fr-btn fr-btn--secondary fr-icon-edit-fill" 
+						class="localisation-edit-btn fr-btn fr-btn--secondary fr-icon-edit-fill"
 						title="Modifier la localisation"
-						@click="fillLocalisationEditForm(localisation.id)" 
-						data-fr-opened="false" 
+						@click="fillLocalisationEditForm(localisation.id)"
+						data-fr-opened="false"
 						aria-controls="modal-add-edit-localisation"
 						:aria-describedby="'tooltip-edit-localisation-' + localisation.id">
 					</button>
-					<span 
-						class="fr-tooltip fr-placement" 
-						:id="'tooltip-edit-localisation-' + localisation.id" 
-						role="tooltip" 
+					<span
+						class="fr-tooltip fr-placement"
+						:id="'tooltip-edit-localisation-' + localisation.id"
+						role="tooltip"
 						aria-hidden="true">
 						Modifier la localisation
 					</span>
 				</li>
 				<li>
-					<button 
+					<button
 						type="button"
-						class="localisation-delete-btn fr-btn fr-btn--secondary fr-icon-delete-fill" 
+						class="localisation-delete-btn fr-btn fr-btn--secondary fr-icon-delete-fill"
 						title="Supprimer la localisation"
 						@click="canDeleteLocalisation(localisation.id)"
 						:aria-describedby="'tooltip-delete-localisation-' + localisation.id">
 					</button>
-					<span 
-						class="fr-tooltip fr-placement" 
-						:id="'tooltip-delete-localisation-' + localisation.id" 
-						role="tooltip" 
+					<span
+						class="fr-tooltip fr-placement"
+						:id="'tooltip-delete-localisation-' + localisation.id"
+						role="tooltip"
 						aria-hidden="true">
 						Supprimer la localisation
 					</span>
@@ -61,7 +61,7 @@
 						<div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
 							<button type="button" class="fr-btn" @click="deleteLocalisation(localisationIdToDelete)">Supprimer</button>
 							<button type="button" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cant-delete-localisation">Annuler</button>
-						</div>	
+						</div>
 					</div>
 				</div>
 			</div>
@@ -93,4 +93,3 @@
 		</div>
 	</div>
 </dialog>
-

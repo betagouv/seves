@@ -18,13 +18,13 @@ main {
 }
 #localisations, #prelevements {
 	overflow-y: auto;
-	max-height: 40rem; 
+	max-height: 40rem;
 }
 
 
 /* -- Styles des blocs (intérieur) -- */
 #informations,
-#objet-evenement, 
+#objet-evenement,
 #localisations,
 #prelevements,
 #mesures-gestion {
@@ -113,8 +113,8 @@ main {
 
 /* Lieux */
 #localisations-header {
-	display: flex; 
-	justify-content: space-between; 
+	display: flex;
+	justify-content: space-between;
 	align-items: flex-start;
 }
 #localisations .lieu-nom {
@@ -123,7 +123,7 @@ main {
 	margin-bottom: 0.5rem;
 }
 #localisations .lieu-header {
-	display: flex; 
+	display: flex;
 	justify-content: space-between;
 }
 #localisations .localisation-edit-btn,
@@ -163,12 +163,12 @@ main {
 
 /* Prélèvements */
 #prelevements-header {
-	display: flex; 
-	justify-content: space-between; 
+	display: flex;
+	justify-content: space-between;
 	align-items: flex-start;
 }
 .prelevement-header {
-	display: flex; 
+	display: flex;
 	justify-content: space-between;
 }
 .prelevement-nom {
@@ -197,7 +197,7 @@ main {
 #prelevement-form #numero-echantillon,
 #prelevement-form #date-prelevement,
 #prelevement-form #site-inspection,
-#prelevement-form #matrice-prelevee, 
+#prelevement-form #matrice-prelevee,
 #prelevement-form #espece-echantillon,
 #prelevement-form #numero-phytopass,
 #prelevement-form #laboratoire-agree,
@@ -224,15 +224,15 @@ main {
 	display: flex;
 	gap: 2rem;
 }
-#mesures-conservatoires-immediates, 
-#mesures-consignation, 
-#mesures-phytosanitaires, 
+#mesures-conservatoires-immediates,
+#mesures-consignation,
+#mesures-phytosanitaires,
 #mesures-surveillance-specifique {
 	flex: 1;
 }
-#mesures-conservatoires-immediates textarea, 
-#mesures-consignation textarea, 
-#mesures-phytosanitaires textarea, 
+#mesures-conservatoires-immediates textarea,
+#mesures-consignation textarea,
+#mesures-phytosanitaires textarea,
 #mesures-surveillance-specifique textarea {
 	min-height: 10rem;
 }

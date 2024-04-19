@@ -6,24 +6,40 @@
 #
 asgiref==3.7.2
     # via django
+cfgv==3.4.0
+    # via pre-commit
+distlib==0.3.8
+    # via virtualenv
 dj-static==0.0.6
     # via -r requirements.in
 django==5.0.3
     # via -r requirements.in
 django-environ==0.11.2
     # via -r requirements.in
+filelock==3.13.4
+    # via virtualenv
 greenlet==3.0.3
     # via playwright
 gunicorn==21.2.0
     # via -r requirements.in
+identify==2.5.35
+    # via pre-commit
+nodeenv==1.8.0
+    # via pre-commit
 packaging==24.0
     # via gunicorn
+platformdirs==4.2.0
+    # via virtualenv
 playwright==1.43.0
+    # via -r requirements.in
+pre-commit==3.7.0
     # via -r requirements.in
 psycopg2-binary==2.9.9
     # via -r requirements.in
 pyee==11.1.0
     # via playwright
+pyyaml==6.0.1
+    # via pre-commit
 ruff==0.4.1
     # via -r requirements.in
 sqlparse==0.4.4
@@ -32,3 +48,8 @@ static3==0.7.0
     # via dj-static
 typing-extensions==4.11.0
     # via pyee
+virtualenv==20.25.3
+    # via pre-commit
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

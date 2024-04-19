@@ -9,7 +9,7 @@
 	.hidden {
 		display: none;
 	}
-	
+
 
 	/* -- Grid pour l'ensemble des blocs -- */
 	#detail {
@@ -29,15 +29,15 @@
 	.field-label {
 		margin-right: 0.5rem;
 	}
-	.field-label, 
+	.field-label,
 	.mesures-gestion-label {
 		font-weight: bold;
 	}
-	#informations, 
-	#objet-evenement, 
-	#localisations, 
-	#prelevements, 
-	#mesures-gestion, 
+	#informations,
+	#objet-evenement,
+	#localisations,
+	#prelevements,
+	#mesures-gestion,
 	#synthese {
 		background-color: white;
 		padding: 1.5rem;
@@ -69,7 +69,7 @@
 	#informations-form-fields #third-column{
 		flex: 1;
 	}
-	
+
 	/* Bloc objet de l'évènement */
 	#objet-evenement .field{
 		display: flex;
@@ -107,15 +107,15 @@
 	.prelevement-officiel {
 		margin-bottom: 1rem;
 	}
-	
+
 	/* Bloc mesures de gestion */
 	#mesures-gestion-content{
 		display: flex;
 		gap: 2rem;
 	}
-	#mesures-conservatoires-immediates, 
-	#mesures-consignation, 
-	#mesures_phytosanitaires, 
+	#mesures-conservatoires-immediates,
+	#mesures-consignation,
+	#mesures_phytosanitaires,
 	#mesures-surveillance-specifique {
 		flex: 1;
 	}
@@ -132,7 +132,7 @@
 		flex: 1;
 		text-align: left;
 	}
-	
+
 </style>
 {% endblock %}
 
@@ -196,11 +196,11 @@
 					<div id="third-column">
 						<p><span class="field-label">Statut</span>{{ fichedetection.statut_evenement|default:"" }}</p>
 						<p><span class="field-label">N° de fiche</span>{{ fichedetection.numero }}</p>
-					</div>	
+					</div>
 
 				</div>
 			</div>
-	
+
 			<!-- Objet de l'évènement -->
 			<div id="objet-evenement">
 				<h2>Objet de l'évènement</h2>
@@ -229,7 +229,7 @@
 					<p class="field-value">{{ fichedetection.commentaire|default:"nc." }}</p>
 				</div>
 			</div>
-	
+
 			<!-- Localisations -->
 			<div id="localisations">
 				<h2>Lieux</h2>
@@ -247,9 +247,9 @@
 						</div>
 					</div>
 				</div>
-				{% endfor %} 
+				{% endfor %}
 			</div>
-	
+
 			<!-- Prélèvements et analyses -->
 			<div id="prelevements">
 				<h2>Prélèvements</h2>
@@ -264,7 +264,7 @@
 									{% if prelevement_officiel.numero_phytopass %}
 										{{ prelevement_officiel.numero_phytopass }}<br>
 									{% endif %}
-									{% if prelevement_officiel.laboratoire_agree %} 
+									{% if prelevement_officiel.laboratoire_agree %}
 										{{ prelevement_officiel.laboratoire_agree.numero_agrement }}<br>
 									{% endif %}
 									{% if prelevement_officiel.espece_echantillon %}
@@ -302,11 +302,11 @@
 					{% endfor %}
 				</div>
 			</div>
-	
+
 			<!-- Mesures de gestion -->
 			<div id="mesures-gestion">
 				<h2>Mesures de gestion</h2>
-				
+
 				<div id="mesures-gestion-content">
 					<div id="mesures-conservatoires-immediates">
 						<p class="mesures-gestion-label">Mesures conservatoires immédiates</p>

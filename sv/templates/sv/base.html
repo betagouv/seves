@@ -2,25 +2,25 @@
 
 <!doctype html>
 <html lang="fr">
-    <head>    
+    <head>
         <meta charset="utf-8">
-        <meta name="format-detection" content="telephone=no">    
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">    
-        <link rel="stylesheet" href="{% static 'dsfr.min.css' %}"> 
-        <link rel="stylesheet" href="{% static 'utility/utility.min.css' %}"> 
-        <link href="{% static 'utility/icons/icons.min.css' %}" rel="stylesheet">   
-        <meta name="theme-color" content="#000091">  
+        <meta name="format-detection" content="telephone=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="{% static 'dsfr.min.css' %}">
+        <link rel="stylesheet" href="{% static 'utility/utility.min.css' %}">
+        <link href="{% static 'utility/icons/icons.min.css' %}" rel="stylesheet">
+        <meta name="theme-color" content="#000091">
         <link rel="apple-touch-icon" href="{% static 'favicon/apple-touch-icon.png' %}">
-        <link rel="icon" href="{% static 'favicon/favicon.svg' %}" type="image/svg+xml">    
+        <link rel="icon" href="{% static 'favicon/favicon.svg' %}" type="image/svg+xml">
         <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}" type="image/x-icon">
-        <link rel="manifest" href="{% static 'favicon/manifest.webmanifest' %}" crossorigin="use-credentials">    
-        <title>Sèves</title> 
+        <link rel="manifest" href="{% static 'favicon/manifest.webmanifest' %}" crossorigin="use-credentials">
+        <title>Sèves</title>
         <link rel="stylesheet" href="{% static 'sv/base.css' %}">
         {% block extrahead %}{% endblock %}
-    </head>  
-    
-    <body> 
-        <body> 
+    </head>
+
+    <body>
+        <body>
             <header role="banner" class="fr-header">
                 <div id="en-tete">
                     <img src="{% static 'images/marianne.png' %}" alt="">
@@ -42,7 +42,7 @@
                                 </ul>
                             </div>
                         </li>
-                        <li class="fr-nav__item"> 
+                        <li class="fr-nav__item">
                             <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-detection-list' %}" target="_self" aria-current=”page”>Fiches</a>
                         </li>
                         <li class="fr-nav__item">
@@ -57,13 +57,13 @@
                         </li>
                     </ul>
                 </nav>
-            </header> 
-        
+            </header>
+
 		{% block content %}{% endblock %}
 
-        <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>    
-        <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script> 
+        <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
+        <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
         {% block scripts %}{% endblock %}
     </body>
-    
+
 </html>

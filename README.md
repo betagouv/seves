@@ -26,7 +26,7 @@ Gestion mutualisée de tous les événements sanitaires
 - Git
 - PostgreSQL
 - Python 3
-- Django 
+- Django
 - HTML, CSS
 - Système de Design de l'État [DSFR](https://www.systeme-de-design.gouv.fr/)
 - JavaScript (AlpineJS, vanilla)
@@ -87,7 +87,7 @@ Se rendre sur http://localhost:8000/
 # Gestion des dépendances Python
 Les dépendances sont gérées via [pip-tools](https://github.com/jazzband/pip-tools).
 
-Pour ajouter une nouvelle dépendance au projet : 
+Pour ajouter une nouvelle dépendance au projet :
 - ajoutez la dépendance dans le fichier requirements.in
 - executez la commande `pip-compile` (pour mettre à à jour le fichier `requirements.txt`)
 - executez la commande `pip-sync` (installation de la nouvelle dépendance)
@@ -98,11 +98,11 @@ Pour ajouter une nouvelle dépendance au projet :
 ## E2E
 Les tests E2E sont réalisés avec la bibliothèque [Playwright](https://playwright.dev/python/) ([installé précédemment](#Installation-des-dépendances-Python)).
 
-Avant de pouvoir lancer les tests E2E, il faut installer les navigateurs ([source](https://playwright.dev/python/docs/intro#installing-playwright-pytest)) : 
+Avant de pouvoir lancer les tests E2E, il faut installer les navigateurs ([source](https://playwright.dev/python/docs/intro#installing-playwright-pytest)) :
 ```
 playwright install
 ```
-Lancez les tests : 
+Lancez les tests :
 ```
 ./manage.py test
 ```
