@@ -32,6 +32,7 @@ Gestion mutualisée de tous les événements sanitaires
 - JavaScript (AlpineJS, vanilla)
 - Playwright (tests E2E)
 - Ruff (linter/formatter)
+- Pre-commit
 
 # Installation et configuration
 ## Récupération du code source
