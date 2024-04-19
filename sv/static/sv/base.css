@@ -19,3 +19,6 @@ header{
 .fr-header .fr-nav__list {
 	margin: 0;
 }
+.menu__item--active {
+	border-bottom: 4px solid var(--background-active-blue-france);
+}

@@ -43,7 +43,7 @@
                             </div>
                         </li>
                         <li class="fr-nav__item"> 
-                            <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left" href="{% url 'fiche-detection-list' %}" target="_self" aria-current=”page”>Fiches</a>
+                            <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-detection-list' %}" target="_self" aria-current=”page”>Fiches</a>
                         </li>
                         <li class="fr-nav__item">
                             <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-777"><span class="fr-icon-account-circle-line"></span>Mélanie Tessier</button>
