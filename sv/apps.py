@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class SvConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'sv'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "sv"
