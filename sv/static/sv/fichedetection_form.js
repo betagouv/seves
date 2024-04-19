@@ -14,18 +14,6 @@ document.addEventListener('alpine:init', () => {
 
 	Alpine.data('app', () => ({
 
-		init() {
-			MODAL_ADD_EDIT_LOCALISATION.addEventListener('dsfr.conceal', (e) => {
-				this.resetLocalisationAddOrEditFormModal();
-				this.localisationIdToEdit = null;
-			});
-
-			MODAL_ADD_EDIT_PRELEVEMENT.addEventListener('dsfr.conceal', (e) => {
-				this.resetPrelevementAddOrEditFormModal();
-				this.prelevementIdToEdit = null;
-			});
-        },
-		
 		// Données de référence pour les listes déroulantes
 		departements: JSON.parse(document.getElementById('departements').textContent),
 		unites: JSON.parse(document.getElementById('unites').textContent),
@@ -42,6 +30,7 @@ document.addEventListener('alpine:init', () => {
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des localisations et prélèvements)
 		ficheDetection: {
+			numero: '',
 			createurId: '',
 			statutEvenementId: '',
 			organismeNuisibleId: '',
@@ -114,8 +103,100 @@ document.addEventListener('alpine:init', () => {
 		// ID de la localisation en cours de suppression
 		localisationIdToDelete: null,
 		
-		// Index du prélèvement en cours de suppression
+		// ID du prélèvement en cours de suppression
 		prelevementIdToDelete: null,
+
+		init() {
+			MODAL_ADD_EDIT_LOCALISATION.addEventListener('dsfr.conceal', (e) => {
+				this.resetLocalisationAddOrEditFormModal();
+				this.localisationIdToEdit = null;
+			});
+
+			MODAL_ADD_EDIT_PRELEVEMENT.addEventListener('dsfr.conceal', (e) => {
+				this.resetPrelevementAddOrEditFormModal();
+				this.prelevementIdToEdit = null;
+			});
+			
+			this.ficheDetection = {
+				numero: this.getValueById('numeroFiche'),
+				createurId: this.getValueById('createur-id'),
+				statutEvenementId: this.getValueById('statut-evenement-id'),
+				organismeNuisibleId: this.getValueById('organisme-nuisible-id'),
+				statutReglementaireId: this.getValueById('statut-reglementaire-id'),
+				contexteId: this.getValueById('contexte-id'),
+				datePremierSignalement: this.getValueById('date-premier-signalement'),
+				commentaire: this.getValueById('commentaire'),
+				mesuresConservatoiresImmediates: this.getValueById('mesures-conservatoires-immediates'),
+				mesuresConsignation: this.getValueById('mesures-consignation'),
+				mesuresPhytosanitaires: this.getValueById('mesures-phytosanitaires'),
+				mesuresSurveillanceSpecifique: this.getValueById('mesures-surveillance-specifique')
+			};
+
+			// Récupération et initialisation des localisations (si modification d'une fiche de détection existante)
+			const lieux = JSON.parse(document.getElementById('lieux').textContent);
+			if(lieux) {
+				this.localisations = lieux.map(lieu => {
+					return {
+						id: lieu.id.toString(),
+						pk: lieu.id,
+						ficheDetectionId: lieu.fiche_detection_id,
+						nomLocalisation: lieu.nom,
+						adresseLieuDit: lieu.adresse_lieu_dit,
+						commune: lieu.commune,
+						codeINSEE: lieu.code_insee,
+						departementId: lieu.departement_id,
+						coordGPSLambert93Latitude: lieu.coordGPSLambert93Latitude,
+						coordGPSLambert93Longitude: lieu.coordGPSLambert93Longitude,
+						coordGPSWGS84Latitude: lieu.wgs84_latitude,
+						coordGPSWGS84Longitude: lieu.wgs84_longitude,
+					};
+				});
+			}
+			
+			// Récupération et initialisation des prélèvements officiels (si modification d'une fiche de détection existante)
+			const prelevementsOfficielsData = JSON.parse(document.getElementById('prelevements-officiels').textContent);
+			if (prelevementsOfficielsData) {
+				let prelevementsOfficiels = this.mapPrelevements(prelevementsOfficielsData);
+				this.prelevements = prelevementsOfficiels;
+			}
+
+			// Récupération et initialisation des prélèvements non officiels (si modification d'une fiche de détection existante)
+			const prelevementsNonOfficielsData = JSON.parse(document.getElementById('prelevements-non-officiels').textContent);
+			if (prelevementsNonOfficielsData) {
+				let prelevementsNonOfficiels = this.mapPrelevements(prelevementsNonOfficielsData);
+				this.prelevements = this.prelevements.concat(prelevementsNonOfficiels);
+			}
+        },
+
+		getValueById(id) {
+			const element = document.getElementById(id);
+			return element ? element.value : null;
+		},
+
+		mapPrelevements(prelevementsData) {
+			return prelevementsData.map(prelevement => {
+				return {
+					id: prelevement.uuid,
+					pk: prelevement.id,
+					localisationId: prelevement.lieu_id.toString(),
+					structurePreleveurId: prelevement.structure_preleveur_id,
+					numeroEchantillon: prelevement.numero_echantillon,
+					datePrelevement: prelevement.date_prelevement,
+					siteInspectionId: prelevement.site_inspection_id,
+					matricePreleveeId: prelevement.matrice_prelevee_id,
+					especeEchantillonId: prelevement.espece_echantillon_id,
+					isPrelevementOfficiel: prelevement.isPrelevementOfficiel,
+					numeroPhytopass: prelevement.isPrelevementOfficiel ? prelevement.numero_phytopass : null,
+					laboratoireAgreeId: prelevement.isPrelevementOfficiel ? prelevement.laboratoire_agree_id : null,
+					laboratoireConfirmationOfficielleId: prelevement.isPrelevementOfficiel ? prelevement.laboratoire_confirmation_officielle_id : null,
+				};
+			});
+		},
+		
+		getNumeroIfExist() {
+			const numero = document.getElementById('fiche-detection-numero');
+			return numero ? numero.textContent : '';
+		},
 
 		/**
 		 * Affichage du formulaire d'édition d'une localisation
@@ -152,7 +233,7 @@ document.addEventListener('alpine:init', () => {
 					localisation.id === localisationIdToEdit ? {...this.localisationForm} : localisation
 					);
 			}
-
+			console.log(this.localisations);
 			dsfr(MODAL_ADD_EDIT_LOCALISATION).modal.conceal();
 		},
 
@@ -265,7 +346,8 @@ document.addEventListener('alpine:init', () => {
 					prelevement.id === prelevementIdToEdit ? {...this.formPrelevement} : prelevement
 				);
 			} 
-				
+			console.log(this.prelevements);
+			console.log(this.localisations);
 			dsfr(MODAL_ADD_EDIT_PRELEVEMENT).modal.conceal();
 		},
 
@@ -339,14 +421,13 @@ document.addEventListener('alpine:init', () => {
 		},
 
 		saveFicheDetection() {
-			const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-			const url = document.getElementById('fiche-detection-form-post-url').dataset.url;
-
+			console.log(this.ficheDetection);
+			
 			if(!this.$refs.fichedetectionForm.checkValidity()) {
 				this.$refs.fichedetectionForm.reportValidity();
 				return;
 			}
-
+			
 			let formData = new FormData();
 			formData.append('createurId', this.ficheDetection.createurId);
 			formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
@@ -361,6 +442,9 @@ document.addEventListener('alpine:init', () => {
 			formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
 			formData.append('localisations', JSON.stringify(this.localisations));
 			formData.append('prelevements', JSON.stringify(this.prelevements));
+			
+			const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+			const url = document.getElementById('fiche-detection-form-url').dataset.url;
 
 			fetch(url, {
 				method: 'POST',

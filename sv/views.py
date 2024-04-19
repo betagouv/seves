@@ -1,11 +1,14 @@
 import json
 from datetime import datetime
-from django.shortcuts import render
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, View
+import uuid
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, View, UpdateView
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 from .models import (
 	FicheDetection, Lieu, PrelevementOfficiel, PrelevementNonOfficiel, Unite, StatutEvenement, OrganismeNuisible,
 	StatutReglementaire, Contexte, StructurePreleveur, SiteInspection, MatricePrelevee, EspeceEchantillon,
@@ -54,25 +57,33 @@ class FicheDetectionDetailView(DetailView):
 
 		return context
 
-class CreateFicheDetectionView(View):
-	template_name = 'sv/fichedetection_form.html'
 
-	def get(self, request):
-		context = {
-			'departements': list(Departement.objects.values('id', 'numero', 'nom')),
-			'unites' : list(Unite.objects.values('id', 'nom')),
-			'statuts_evenement': list(StatutEvenement.objects.values('id', 'libelle')),
-			'organismes_nuisibles': list(OrganismeNuisible.objects.values('id', 'libelle_court')),
-			'statuts_reglementaires': list(StatutReglementaire.objects.values('id', 'libelle')),
-			'contextes': list(Contexte.objects.values('id', 'nom')),
-			'structures_preleveurs': list(StructurePreleveur.objects.values('id', 'nom')),
-			'sites_inspections': list(SiteInspection.objects.values('id', 'nom').order_by('nom')),
-			'matrices_prelevees': list(MatricePrelevee.objects.values('id', 'libelle').order_by('libelle')),
-			'especes_echantillon': list(EspeceEchantillon.objects.values('id', 'libelle')),
-			'laboratoires_agrees': list(LaboratoireAgree.objects.values('id', 'nom')),
-			'laboratoires_confirmation_officielle': list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
-		}
-		return render(request, self.template_name, context)
+class FicheDetectionContextMixin:
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['departements'] = list(Departement.objects.values('id', 'numero', 'nom'))
+		context['unites'] = list(Unite.objects.values('id', 'nom'))
+		context['statuts_evenement'] = list(StatutEvenement.objects.values('id', 'libelle'))
+		context['organismes_nuisibles'] = list(OrganismeNuisible.objects.values('id', 'libelle_court'))
+		context['statuts_reglementaires'] = list(StatutReglementaire.objects.values('id', 'libelle'))
+		context['contextes'] = list(Contexte.objects.values('id', 'nom'))
+		context['structures_preleveurs'] = list(StructurePreleveur.objects.values('id', 'nom'))
+		context['sites_inspections'] = list(SiteInspection.objects.values('id', 'nom'))
+		context['matrices_prelevees'] = list(MatricePrelevee.objects.values('id', 'libelle'))
+		context['especes_echantillon'] = list(EspeceEchantillon.objects.values('id', 'libelle'))
+		context['laboratoires_agrees'] = list(LaboratoireAgree.objects.values('id', 'nom'))
+		context['laboratoires_confirmation_officielle'] = list(LaboratoireConfirmationOfficielle.objects.values('id', 'nom'))
+		return context
+
+
+class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
+	model = FicheDetection
+	fields = ['createur', 'statut_evenement', 'organisme_nuisible', 'statut_reglementaire', 'contexte', 'date_premier_signalement', 'commentaire', 'mesures_conservatoires_immediates', 'mesures_consignation', 'mesures_phytosanitaires', 'mesures_surveillance_specifique']
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['is_creation'] = True
+		return context
 
 	def post(self, request):
 		# Récupération des données du formulaire
@@ -212,3 +223,77 @@ class CreateFicheDetectionView(View):
 																matrice_prelevee_id=prel['matricePreleveeId'],
 																espece_echantillon_id=prel['especeEchantillonId'])
 				prelevement_non_officiel.save()
+
+
+class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
+	model = FicheDetection
+	fields = ['createur', 'statut_evenement', 'organisme_nuisible', 'statut_reglementaire', 'contexte', 'date_premier_signalement', 'commentaire', 'mesures_conservatoires_immediates', 'mesures_consignation', 'mesures_phytosanitaires', 'mesures_surveillance_specifique']
+	success_message = "La fiche détection a été modifiée avec succès."
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+
+		# Lieux associés à la fiche de détection
+		lieux = Lieu.objects.filter(fiche_detection=self.object).values()
+
+		# Prélèvements officiels associés à chaque lieu
+		prelevements_officiels = PrelevementOfficiel.objects.filter(lieu__fiche_detection=self.object).values()
+		for prelevement in prelevements_officiels:
+			prelevement['uuid'] = str(uuid.uuid4())
+			prelevement['isPrelevementOfficiel'] = True
+		
+		# Prélèvements non officiels associés à chaque lieu
+		prelevements_non_officiels = PrelevementNonOfficiel.objects.filter(lieu__fiche_detection=self.object).values()
+		for prelevement in prelevements_non_officiels:
+			prelevement['uuid'] = str(uuid.uuid4())
+			prelevement['isPrelevementOfficiel'] = False
+		
+		context['is_creation'] = False
+		context['lieux'] = list(lieux)
+		context['prelevements_officiels'] = list(prelevements_officiels)
+		context['prelevements_non_officiels'] = list(prelevements_non_officiels)
+
+		return context
+
+	def post(self, request, pk):
+		data = request.POST
+
+		# Validation
+		errors = []
+		# createur est obligatoire
+		if not data['createurId']:
+			errors.append('Le champ createur est obligatoire')	
+		elif not Unite.objects.filter(pk=data['createurId']).exists():
+			errors.append('Le champ createur est invalide')
+		if errors:
+			return HttpResponseBadRequest(json.dumps(errors))
+		
+		# Format de la date de premier signalement
+		date_premier_signalement = data['datePremierSignalement']
+		try:
+			datetime.strptime(date_premier_signalement, '%Y-%m-%d')
+		except ValueError:
+			date_premier_signalement = None
+
+		# Mise à jour des champs de l'objet FicheDetection
+		fiche_detection = self.get_object()
+		fiche_detection.createur_id = data.get('createurId')
+		fiche_detection.statut_evenement_id = data.get('statutEvenementId')
+		fiche_detection.organisme_nuisible_id = data.get('organismeNuisibleId')
+		fiche_detection.statut_reglementaire_id = data.get('statutReglementaireId')
+		fiche_detection.contexte_id = data.get('contexteId')
+		fiche_detection.date_premier_signalement = date_premier_signalement
+		fiche_detection.commentaire = data.get('commentaire')
+		fiche_detection.mesures_conservatoires_immediates = data.get('mesuresConservatoiresImmediates')
+		fiche_detection.mesures_consignation = data.get('mesuresConsignation')
+		fiche_detection.mesures_phytosanitaires = data.get('mesuresPhytosanitaires')
+		fiche_detection.mesures_surveillance_specifique = data.get('mesuresSurveillanceSpecifique')
+		
+		try:
+			fiche_detection.full_clean()
+			fiche_detection.save()
+		except ValidationError as e:
+			return HttpResponseBadRequest(str(e))
+		
+		messages.success(request, self.success_message)
+		return redirect(reverse('fiche-detection-vue-detaillee', args=[fiche_detection.pk]))
