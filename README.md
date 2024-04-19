@@ -31,6 +31,7 @@ Gestion mutualisée de tous les événements sanitaires
 - Système de Design de l'État [DSFR](https://www.systeme-de-design.gouv.fr/)
 - JavaScript (AlpineJS, vanilla)
 - Playwright (tests E2E)
+- Ruff (linter/formatter)
 
 # Installation et configuration
 ## Récupération du code source
