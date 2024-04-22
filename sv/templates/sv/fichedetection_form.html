@@ -82,7 +82,7 @@
 							<input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
 						</p>
 						<p id="createur">
-							<label class="fr-label">Créateur</label>
+							<label class="fr-label" for="createur-input">Créateur</label>
 							<select x-model="ficheDetection.createurId" id="createur-input" class="fr-select" required>
 								<option value="">----</option>
 								<template x-for="unite in unites" :key="unite.id">
