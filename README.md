@@ -30,6 +30,7 @@ Gestion mutualisée de tous les événements sanitaires
 - HTML, CSS
 - Système de Design de l'État [DSFR](https://www.systeme-de-design.gouv.fr/)
 - JavaScript (AlpineJS, vanilla)
+- Pytest
 - Playwright (tests E2E)
 - Ruff (linter/formatter)
 - Pre-commit
@@ -105,7 +106,7 @@ playwright install
 ```
 Lancez les tests :
 ```
-./manage.py test
+python -m pytest
 ```
 
 # Recette

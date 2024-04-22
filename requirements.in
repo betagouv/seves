@@ -6,3 +6,6 @@ dj-static
 playwright
 ruff
 pre-commit
+pytest-django
+pytest-xdist
+pytest-playwright
