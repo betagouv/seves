@@ -34,6 +34,7 @@ Gestion mutualisée de tous les événements sanitaires
 - Playwright (tests E2E)
 - Ruff (linter/formatter)
 - Pre-commit
+- DjHTML (indenter)
 
 # Installation et configuration
 ## Récupération du code source
