@@ -1,406 +1,406 @@
 {% extends 'sv/base.html' %}
 
 {% block extrahead %}
-<style>
+    <style>
 	/* -- Styles de la page -- */
-	main{
-		margin: 2rem 1.5rem;
-	}
-	.hidden {
-		display: none;
-	}
+        main{
+            margin: 2rem 1.5rem;
+        }
+        .hidden {
+            display: none;
+        }
 
 
 	/* -- Grid pour l'ensemble des blocs -- */
-	#detail {
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
-		grid-gap: 1.5rem;
-	}
-	#informations{
-		grid-column: span 3;
-	}
-	#mesures-gestion{
-		grid-column: span 3;
-	}
+        #detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 1.5rem;
+        }
+        #informations{
+            grid-column: span 3;
+        }
+        #mesures-gestion{
+            grid-column: span 3;
+        }
 
 
 	/* -- Styles des blocs (à l'intérieur) -- */
-	.field-label {
-		margin-right: 0.5rem;
-	}
-	.field-label,
-	.mesures-gestion-label {
-		font-weight: bold;
-	}
-	#informations,
-	#objet-evenement,
-	#localisations,
-	#prelevements,
-	#mesures-gestion,
-	#synthese {
-		background-color: white;
-		padding: 1.5rem;
-	}
+        .field-label {
+            margin-right: 0.5rem;
+        }
+        .field-label,
+        .mesures-gestion-label {
+            font-weight: bold;
+        }
+        #informations,
+        #objet-evenement,
+        #localisations,
+        #prelevements,
+        #mesures-gestion,
+        #synthese {
+            background-color: white;
+            padding: 1.5rem;
+        }
 
 	/* Bloc en-entête (titres et actions) */
-	#fiche-header{
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 2rem;
-	}
-	#fiche-header h1{
-		margin-bottom: 0.5rem;
-	}
+        #fiche-header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        #fiche-header h1{
+            margin-bottom: 0.5rem;
+        }
 
 	/* Bloc Informations */
-	#informations-form-fields{
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	#informations-form-fields #first-column{
-		flex: 1;
-	}
-	#informations-form-fields #second-column{
-		flex: 1;
-	}
-	#informations-form-fields #third-column{
-		flex: 1;
-	}
+        #informations-form-fields{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #informations-form-fields #first-column{
+            flex: 1;
+        }
+        #informations-form-fields #second-column{
+            flex: 1;
+        }
+        #informations-form-fields #third-column{
+            flex: 1;
+        }
 
 	/* Bloc objet de l'évènement */
-	#objet-evenement .field{
-		display: flex;
-		justify-content: space-between;
-	}
-	#objet-evenement .field-label {
-		flex: 1;
-	}
-	#objet-evenement .field-value {
-		flex: 1;
-		text-align: left;
-	}
+        #objet-evenement .field{
+            display: flex;
+            justify-content: space-between;
+        }
+        #objet-evenement .field-label {
+            flex: 1;
+        }
+        #objet-evenement .field-value {
+            flex: 1;
+            text-align: left;
+        }
 
 	/* Bloc Localisations - onglet Localisations initiales */
-	.localisation-initiale {
-		margin-bottom: 1rem;
-	}
+        .localisation-initiale {
+            margin-bottom: 1rem;
+        }
 
 	/* Bloc Localisations - onglet Établissements */
-	.etablissement-position {
-		font-size: 0.8rem;
-		color: #666666;
-		margin-top: 0.7rem;
-	}
+        .etablissement-position {
+            font-size: 0.8rem;
+            color: #666666;
+            margin-top: 0.7rem;
+        }
 
 	/* Bloc Prélèvements et analyses */
-	.prelevement-type {
-		font-weight: bold;
-		color: #000091;
-	}
-	#prelevements-officiels-list {
-		margin-bottom: 1rem;
-	}
-	.prelevement-non-officiel,
-	.prelevement-officiel {
-		margin-bottom: 1rem;
-	}
+        .prelevement-type {
+            font-weight: bold;
+            color: #000091;
+        }
+        #prelevements-officiels-list {
+            margin-bottom: 1rem;
+        }
+        .prelevement-non-officiel,
+        .prelevement-officiel {
+            margin-bottom: 1rem;
+        }
 
 	/* Bloc mesures de gestion */
-	#mesures-gestion-content{
-		display: flex;
-		gap: 2rem;
-	}
-	#mesures-conservatoires-immediates,
-	#mesures-consignation,
-	#mesures_phytosanitaires,
-	#mesures-surveillance-specifique {
-		flex: 1;
-	}
+        #mesures-gestion-content{
+            display: flex;
+            gap: 2rem;
+        }
+        #mesures-conservatoires-immediates,
+        #mesures-consignation,
+        #mesures_phytosanitaires,
+        #mesures-surveillance-specifique {
+            flex: 1;
+        }
 
 	/* Bloc synthèse */
-	#synthese .field {
-		display: flex;
-		justify-content: space-between;
-	}
-	#synthese .field-label{
-		flex: 0.2;
-	}
-	#objet-evenement .field-value, #synthese .field-value{
-		flex: 1;
-		text-align: left;
-	}
+        #synthese .field {
+            display: flex;
+            justify-content: space-between;
+        }
+        #synthese .field-label{
+            flex: 0.2;
+        }
+        #objet-evenement .field-value, #synthese .field-value{
+            flex: 1;
+            text-align: left;
+        }
 
-</style>
+    </style>
 {% endblock %}
 
 {% block highlight_menu_fiches %}menu__item--active{% endblock %}
 
 {% block content %}
-<main>
-	<div id="fiche-header">
-		<div>
-			{% if messages %}
-				{% for message in messages %}
-				<div class="fr-alert fr-alert--success" style="margin-bottom: 3rem;">
-					<h3 class="fr-alert__title">{{message}}</h3>
-					<button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-						Masquer le message
-					</button>
-				</div>
-				{% endfor %}
-			{% endif %}
+    <main>
+        <div id="fiche-header">
+            <div>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="fr-alert fr-alert--success" style="margin-bottom: 3rem;">
+                            <h3 class="fr-alert__title">{{message}}</h3>
+                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                Masquer le message
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
-			<h1>Fiche n° {{ fichedetection.numero }}</h1>
-			<p class="fr-tag">Détection</p>
-		</div>
+                <h1>Fiche n° {{ fichedetection.numero }}</h1>
+                <p class="fr-tag">Détection</p>
+            </div>
 
-		<p id="detail-synthese-switch">
-			<fieldset class="fr-segmented">
-				<div class="fr-segmented__elements">
-					<div class="fr-segmented__element">
-						<input value="1" checked type="radio" id="detail-btn" name="segmented-2215">
-						<label class="fr-label" for="detail-btn">Détail</label>
-					</div>
-					<div class="fr-segmented__element">
-						<input value="2" type="radio" id="synthese-btn" name="segmented-2215">
-						<label class="fr-label" for="synthese-btn">Synthèse</label>
-					</div>
-				</div>
-			</fieldset>
-		</p>
+            <p id="detail-synthese-switch">
+                <fieldset class="fr-segmented">
+                    <div class="fr-segmented__elements">
+                        <div class="fr-segmented__element">
+                            <input value="1" checked type="radio" id="detail-btn" name="segmented-2215">
+                            <label class="fr-label" for="detail-btn">Détail</label>
+                        </div>
+                        <div class="fr-segmented__element">
+                            <input value="2" type="radio" id="synthese-btn" name="segmented-2215">
+                            <label class="fr-label" for="synthese-btn">Synthèse</label>
+                        </div>
+                    </div>
+                </fieldset>
+            </p>
 
-		<p id="actions">
-			<button class="fr-btn">
-				<a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill"></span></a>
-			</button>
-		</p>
-	</div>
+            <p id="actions">
+                <button class="fr-btn">
+                    <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill"></span></a>
+                </button>
+            </p>
+        </div>
 
-	<div id="detail-bloc">
-		<div id="detail">
+        <div id="detail-bloc">
+            <div id="detail">
 			<!-- Informations -->
-			<div id="informations">
-				<h2>Informations</h2>
-				<div id="informations-form-fields">
-					<div id="first-column">
-						<p><span class="field-label">Créateur</span>{{ fichedetection.createur }}</p>
-						<p><span class="field-label">Date de création</span></p>
-					</div>
-					<div id="second-column">
-						<p><span class="field-label">N° Europhyt </span>{{ fichedetection.numero_europhyt|default:"nc." }}</p>
-						<p><span class="field-label">N° RASFF </span>{{ fichedetection.numero_rasff|default:"nc." }}</p>
-					</div>
-					<div id="third-column">
-						<p><span class="field-label">Statut</span>{{ fichedetection.statut_evenement|default:"" }}</p>
-						<p><span class="field-label">N° de fiche</span>{{ fichedetection.numero }}</p>
-					</div>
+                <div id="informations">
+                    <h2>Informations</h2>
+                    <div id="informations-form-fields">
+                        <div id="first-column">
+                            <p><span class="field-label">Créateur</span>{{ fichedetection.createur }}</p>
+                            <p><span class="field-label">Date de création</span></p>
+                        </div>
+                        <div id="second-column">
+                            <p><span class="field-label">N° Europhyt </span>{{ fichedetection.numero_europhyt|default:"nc." }}</p>
+                            <p><span class="field-label">N° RASFF </span>{{ fichedetection.numero_rasff|default:"nc." }}</p>
+                        </div>
+                        <div id="third-column">
+                            <p><span class="field-label">Statut</span>{{ fichedetection.statut_evenement|default:"" }}</p>
+                            <p><span class="field-label">N° de fiche</span>{{ fichedetection.numero }}</p>
+                        </div>
 
-				</div>
-			</div>
+                    </div>
+                </div>
 
 			<!-- Objet de l'évènement -->
-			<div id="objet-evenement">
-				<h2>Objet de l'évènement</h2>
-				<div class="field">
-					<p class="field-label">Organisme nuisible</p>
-					<p class="field-value">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</p>
-				</div>
-				<div class="field">
-					<p class="field-label">Code OEPP</p>
-					<p class="field-value">{{ fichedetection.organisme_nuisible.code_oepp|default:"nc." }}</p>
-				</div>
-				<div class="field">
-					<p class="field-label">Statut règlementaire</p>
-					<p class="field-value">{{ fichedetection.statut_reglementaire|default:"nc." }}</p>
-				</div>
-				<div class="field">
-					<p class="field-label">Contexte</p>
-					<p class="field-value">{{ fichedetection.contexte|default:"nc." }}</p>
-				</div>
-				<div class="field">
-					<p class="field-label">Date 1er signalement</p>
-					<p class="field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
-				</div>
-				<div class="field">
-					<p class="field-label">Commentaire</p>
-					<p class="field-value">{{ fichedetection.commentaire|default:"nc." }}</p>
-				</div>
-			</div>
+                <div id="objet-evenement">
+                    <h2>Objet de l'évènement</h2>
+                    <div class="field">
+                        <p class="field-label">Organisme nuisible</p>
+                        <p class="field-value">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</p>
+                    </div>
+                    <div class="field">
+                        <p class="field-label">Code OEPP</p>
+                        <p class="field-value">{{ fichedetection.organisme_nuisible.code_oepp|default:"nc." }}</p>
+                    </div>
+                    <div class="field">
+                        <p class="field-label">Statut règlementaire</p>
+                        <p class="field-value">{{ fichedetection.statut_reglementaire|default:"nc." }}</p>
+                    </div>
+                    <div class="field">
+                        <p class="field-label">Contexte</p>
+                        <p class="field-value">{{ fichedetection.contexte|default:"nc." }}</p>
+                    </div>
+                    <div class="field">
+                        <p class="field-label">Date 1er signalement</p>
+                        <p class="field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
+                    </div>
+                    <div class="field">
+                        <p class="field-label">Commentaire</p>
+                        <p class="field-value">{{ fichedetection.commentaire|default:"nc." }}</p>
+                    </div>
+                </div>
 
 			<!-- Localisations -->
-			<div id="localisations">
-				<h2>Lieux</h2>
-				{% for localisation_initiale in lieux %}
-				<div class="localisation-initiale fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
-					<div class="fr-card__body">
-						<div class="fr-card__content">
-							<p class="fr-card__title">{{localisation_initiale.nom}}</p>
-							<p class="fr-card__desc">
-								{{ localisation_initiale.commune|default:"" }} <br/>
-								{% if localisation_initiale.departement %}
-									{{ localisation_initiale.departement.nom }} ({{ localisation_initiale.departement.numero }})
-								{% endif %}
-							</p>
-						</div>
-					</div>
-				</div>
-				{% endfor %}
-			</div>
+                <div id="localisations">
+                    <h2>Lieux</h2>
+                    {% for localisation_initiale in lieux %}
+                        <div class="localisation-initiale fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
+                            <div class="fr-card__body">
+                                <div class="fr-card__content">
+                                    <p class="fr-card__title">{{localisation_initiale.nom}}</p>
+                                    <p class="fr-card__desc">
+                                        {{ localisation_initiale.commune|default:"" }} <br/>
+                                        {% if localisation_initiale.departement %}
+                                            {{ localisation_initiale.departement.nom }} ({{ localisation_initiale.departement.numero }})
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
 
 			<!-- Prélèvements et analyses -->
-			<div id="prelevements">
-				<h2>Prélèvements</h2>
+                <div id="prelevements">
+                    <h2>Prélèvements</h2>
 				<!-- Prélèvements officiels-->
-				<div id="prelevements-officiels-list">
-					{% for prelevement_officiel in prelevements_officiels %}
-					<div class="prelevement-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
-						<div class="fr-card__body">
-							<div class="fr-card__content">
-								<p class="fr-card__title">{{ prelevement_officiel.structure_preleveur }}</p>
-								<p class="fr-card__desc">
-									{% if prelevement_officiel.numero_phytopass %}
-										{{ prelevement_officiel.numero_phytopass }}<br>
-									{% endif %}
-									{% if prelevement_officiel.laboratoire_agree %}
-										{{ prelevement_officiel.laboratoire_agree.numero_agrement }}<br>
-									{% endif %}
-									{% if prelevement_officiel.espece_echantillon %}
-										{{ prelevement_officiel.espece_echantillon }}<br>
-									{% endif %}
-								</p>
-								<p class="fr-card__desc prelevement-type">Prélèvement officiel</p>
-								<div class="fr-card__start">
-									<p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_officiel.lieu.nom }}</p>
-								</div>
-							</div>
-						</div>
-					</div>
-					{% endfor %}
-				</div>
+                    <div id="prelevements-officiels-list">
+                        {% for prelevement_officiel in prelevements_officiels %}
+                            <div class="prelevement-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
+                                <div class="fr-card__body">
+                                    <div class="fr-card__content">
+                                        <p class="fr-card__title">{{ prelevement_officiel.structure_preleveur }}</p>
+                                        <p class="fr-card__desc">
+                                            {% if prelevement_officiel.numero_phytopass %}
+                                                {{ prelevement_officiel.numero_phytopass }}<br>
+                                            {% endif %}
+                                            {% if prelevement_officiel.laboratoire_agree %}
+                                                {{ prelevement_officiel.laboratoire_agree.numero_agrement }}<br>
+                                            {% endif %}
+                                            {% if prelevement_officiel.espece_echantillon %}
+                                                {{ prelevement_officiel.espece_echantillon }}<br>
+                                            {% endif %}
+                                        </p>
+                                        <p class="fr-card__desc prelevement-type">Prélèvement officiel</p>
+                                        <div class="fr-card__start">
+                                            <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_officiel.lieu.nom }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
 				<!-- Prélèvements non officiels-->
-				<div id="prelevement-non-officiels-list">
-					{% for prelevement_non_officiel in prelevements_non_officiels %}
-					<div class="prelevement-non-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
-						<div class="fr-card__body">
-							<div class="fr-card__content">
-								<p class="fr-card__title">{{ prelevement_non_officiel.structure_preleveur }}</p>
-								<p class="fr-card__desc">
-									{% if prelevement_non_officiel.espece_echantillon %}
-										{{ prelevement_non_officiel.espece_echantillon }}<br>
-									{% endif %}
-									<span class="prelevement-type">Prélèvement non officiel</span>
-								</p>
-								<div class="fr-card__start">
-									<p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_non_officiel.lieu.nom }}</p>
-								</div>
-							</div>
-						</div>
-					</div>
-					{% endfor %}
-				</div>
-			</div>
+                    <div id="prelevement-non-officiels-list">
+                        {% for prelevement_non_officiel in prelevements_non_officiels %}
+                            <div class="prelevement-non-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
+                                <div class="fr-card__body">
+                                    <div class="fr-card__content">
+                                        <p class="fr-card__title">{{ prelevement_non_officiel.structure_preleveur }}</p>
+                                        <p class="fr-card__desc">
+                                            {% if prelevement_non_officiel.espece_echantillon %}
+                                                {{ prelevement_non_officiel.espece_echantillon }}<br>
+                                            {% endif %}
+                                            <span class="prelevement-type">Prélèvement non officiel</span>
+                                        </p>
+                                        <div class="fr-card__start">
+                                            <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_non_officiel.lieu.nom }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
 			<!-- Mesures de gestion -->
-			<div id="mesures-gestion">
-				<h2>Mesures de gestion</h2>
+                <div id="mesures-gestion">
+                    <h2>Mesures de gestion</h2>
 
-				<div id="mesures-gestion-content">
-					<div id="mesures-conservatoires-immediates">
-						<p class="mesures-gestion-label">Mesures conservatoires immédiates</p>
-						<p>{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
-					</div>
-					<div id="mesures-consignation">
-						<p class="mesures-gestion-label">Mesures de consignation</p>
-						<p>{{ fichedetection.mesures_consignation|default:"nc." }}</p>
-					</div>
-					<div id="mesures_phytosanitaires">
-						<p class="mesures-gestion-label">Mesures phytosanitaires</p>
-						<p>{{ fichedetection.mesures_phytosanitaires|default:"nc." }}</p>
-					</div>
-					<div id="mesures-surveillance-specifique">
-						<p class="mesures-gestion-label">Mesures de surveillance spécifique</p>
-						<p>{{ fichedetection.mesures_surveillance_specifique|default:"nc." }}</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                    <div id="mesures-gestion-content">
+                        <div id="mesures-conservatoires-immediates">
+                            <p class="mesures-gestion-label">Mesures conservatoires immédiates</p>
+                            <p>{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
+                        </div>
+                        <div id="mesures-consignation">
+                            <p class="mesures-gestion-label">Mesures de consignation</p>
+                            <p>{{ fichedetection.mesures_consignation|default:"nc." }}</p>
+                        </div>
+                        <div id="mesures_phytosanitaires">
+                            <p class="mesures-gestion-label">Mesures phytosanitaires</p>
+                            <p>{{ fichedetection.mesures_phytosanitaires|default:"nc." }}</p>
+                        </div>
+                        <div id="mesures-surveillance-specifique">
+                            <p class="mesures-gestion-label">Mesures de surveillance spécifique</p>
+                            <p>{{ fichedetection.mesures_surveillance_specifique|default:"nc." }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-	<div id="synthese">
-		<div class="field">
-			<p class="field-label">Créateur</p>
-			<p class="field-value">{{ fichedetection.createur }}</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Date 1er signalement</p>
-			<p class="field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Organisme nuisible</p>
-			<p class="field-value">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Commune</p>
-			<p class="field-value">
-				{% if localisations_initiales %}
-					{{ localisations_initiales.0.commune }}
-				{% else %}
-					nc.
-				{% endif %}
-			</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Région</p>
-			<p class="field-value">
-				{% if localisations_initiales %}
-					{{ localisations_initiales.0.region.nom }}
-				{% else %}
-					nc.
-				{% endif %}
-				</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Mesure de gestion</p>
-			<p class="field-value">???</p>
-		</div>
-		<div class="field">
-			<p class="field-label">Mesures conservatoires</p>
-			<p class="field-value">{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
-		</div>
-	</div>
-</main>
+        <div id="synthese">
+            <div class="field">
+                <p class="field-label">Créateur</p>
+                <p class="field-value">{{ fichedetection.createur }}</p>
+            </div>
+            <div class="field">
+                <p class="field-label">Date 1er signalement</p>
+                <p class="field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
+            </div>
+            <div class="field">
+                <p class="field-label">Organisme nuisible</p>
+                <p class="field-value">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</p>
+            </div>
+            <div class="field">
+                <p class="field-label">Commune</p>
+                <p class="field-value">
+                    {% if localisations_initiales %}
+                        {{ localisations_initiales.0.commune }}
+                    {% else %}
+                        nc.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="field">
+                <p class="field-label">Région</p>
+                <p class="field-value">
+                    {% if localisations_initiales %}
+                        {{ localisations_initiales.0.region.nom }}
+                    {% else %}
+                        nc.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="field">
+                <p class="field-label">Mesure de gestion</p>
+                <p class="field-value">???</p>
+            </div>
+            <div class="field">
+                <p class="field-label">Mesures conservatoires</p>
+                <p class="field-value">{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
+            </div>
+        </div>
+    </main>
 
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	const detailButton = document.getElementById('detail-btn');
-	const detailElement = document.getElementById('detail-bloc');
-	const syntheseButton = document.getElementById('synthese-btn');
-	const syntheseElement = document.getElementById('synthese');
-	const hiddenClass = 'hidden';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const detailButton = document.getElementById('detail-btn');
+            const detailElement = document.getElementById('detail-bloc');
+            const syntheseButton = document.getElementById('synthese-btn');
+            const syntheseElement = document.getElementById('synthese');
+            const hiddenClass = 'hidden';
 
-	function toggleElementVisibility(elementToShow, elementToHide) {
-		elementToShow.classList.remove(hiddenClass);
-		elementToHide.classList.add(hiddenClass);
-	}
+            function toggleElementVisibility(elementToShow, elementToHide) {
+                elementToShow.classList.remove(hiddenClass);
+                elementToHide.classList.add(hiddenClass);
+            }
 
-	detailButton.addEventListener('click', function() {
-		toggleElementVisibility(detailElement, syntheseElement);
-	});
+            detailButton.addEventListener('click', function() {
+                toggleElementVisibility(detailElement, syntheseElement);
+            });
 
-	syntheseButton.addEventListener('click', function() {
-		toggleElementVisibility(syntheseElement, detailElement);
-	});
+            syntheseButton.addEventListener('click', function() {
+                toggleElementVisibility(syntheseElement, detailElement);
+            });
 
 	// Afficher l'élément de détail par défaut
-	detailElement.classList.remove(hiddenClass);
-	syntheseElement.classList.add(hiddenClass);
-});
-</script>
+            detailElement.classList.remove(hiddenClass);
+            syntheseElement.classList.add(hiddenClass);
+        });
+    </script>
 
 {% endblock %}

@@ -1,24 +1,24 @@
 body{
-	background-color: #F6F6F6;
+    background-color: #F6F6F6;
 }
 header{
-	display: flex;
-	justify-content: space-between;
-	border-bottom: 2px solid #000091;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #000091;
 }
 #en-tete{
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	padding-left: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-left: 1.5rem;
 }
 #seves-title {
-	font-size: 2rem;
-	font-weight: bold;
+    font-size: 2rem;
+    font-weight: bold;
 }
 .fr-header .fr-nav__list {
-	margin: 0;
+    margin: 0;
 }
 .menu__item--active {
-	border-bottom: 4px solid var(--background-active-blue-france);
+    border-bottom: 4px solid var(--background-active-blue-france);
 }

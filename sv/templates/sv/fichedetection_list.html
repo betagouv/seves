@@ -2,58 +2,58 @@
 {% load static %}
 
 {% block extrahead %}
-<link rel="stylesheet" href="{% static 'sv/fichedetection_list.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/fichedetection_list.css' %}">
 {% endblock %}
 
 
 {% block highlight_menu_fiches %}menu__item--active{% endblock %}
 
 {% block content %}
-	<div id="fichedetection-list-header-title">
-		<h1>Liste des fiches détection</h1>
-	</div>
+    <div id="fichedetection-list-header-title">
+        <h1>Liste des fiches détection</h1>
+    </div>
 
-	<div id="fichedetection-list">
-		<p><b>{{ fichedetection_list.count }} fiche{{ fichedetection_list.count|pluralize }}</b> sur un total de {{ fichedetection_list.count }}</p>
-		<div id="fichedetection-list-table" class="fr-table fr-table--no-caption fr-table--layout-fixed">
-			<table>
-				<thead>
-					<tr>
-						<th scope="col">N° fiche</th>
-						<th scope="col">Organisme nuisible</th>
-						<th scope="col">Créateur</th>
-						<th scope="col">Commune</th>
-						<th scope="col">Région</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for fiche in fichedetection_list %}
-					<tr class="table-row">
-						<td><a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}">{{ fiche.numero|default:"nc." }}</a></td>
-						<td>{{ fiche.organisme_nuisible|default:"nc." }}</td>
-						<td>{{ fiche.createur }}</td>
-						<td>
-							{% with fiche.lieux_list|length as num_lieux %}
-								{% if num_lieux == 0 %}
-									{{ fiche.lieux_list|default:"nc." }}
-								{% endif %}
-								{% if num_lieux <= 3 %}
-									{% for lieu in fiche.lieux_list %}
-										{{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-									{% endfor %}
-								{% else %}
-									{% for lieu in fiche.lieux_list|slice:":3" %}
-										{{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-									{% endfor %}
-									... +{{ num_lieux|add:"-3" }}
-								{% endif %}
-							{% endwith %}
-						</td>
-						<td>{{ fiche.region|default:"nc." }}</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-	</div>
+    <div id="fichedetection-list">
+        <p><b>{{ fichedetection_list.count }} fiche{{ fichedetection_list.count|pluralize }}</b> sur un total de {{ fichedetection_list.count }}</p>
+        <div id="fichedetection-list-table" class="fr-table fr-table--no-caption fr-table--layout-fixed">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">N° fiche</th>
+                        <th scope="col">Organisme nuisible</th>
+                        <th scope="col">Créateur</th>
+                        <th scope="col">Commune</th>
+                        <th scope="col">Région</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fiche in fichedetection_list %}
+                        <tr class="table-row">
+                            <td><a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}">{{ fiche.numero|default:"nc." }}</a></td>
+                            <td>{{ fiche.organisme_nuisible|default:"nc." }}</td>
+                            <td>{{ fiche.createur }}</td>
+                            <td>
+                                {% with fiche.lieux_list|length as num_lieux %}
+                                    {% if num_lieux == 0 %}
+                                        {{ fiche.lieux_list|default:"nc." }}
+                                    {% endif %}
+                                    {% if num_lieux <= 3 %}
+                                        {% for lieu in fiche.lieux_list %}
+                                            {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for lieu in fiche.lieux_list|slice:":3" %}
+                                            {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                        ... +{{ num_lieux|add:"-3" }}
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>{{ fiche.region|default:"nc." }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

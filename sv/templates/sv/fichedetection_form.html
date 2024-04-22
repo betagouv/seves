@@ -3,382 +3,382 @@
 {% load static %}
 
 {% block extrahead %}
-<link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
 
 <!-- Alpine Core -->
-<script defer src="{% static 'alpineV3.cdn.min.js' %}"></script>
+    <script defer src="{% static 'alpineV3.cdn.min.js' %}"></script>
 
 <!-- choicesjs (autocompletion pour select) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
-<script type="text/javascript" src="{% static 'sv/fichedetection_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fichedetection_form.js' %}"></script>
 {% endblock %}
 
 {% block highlight_menu_fiches %}menu__item--active{% endblock %}
 
 {% block content %}
-<main x-data="app">
+    <main x-data="app">
 
-		<input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
-		<input type="hidden" id="createur-id" value="{{ form.instance.createur_id|default:'' }}">
-		<input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
-		<input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
-		<input type="hidden" id="statut-reglementaire-id" value="{{ form.instance.statut_reglementaire_id|default:'' }}">
-		<input type="hidden" id="contexte-id" value="{{ form.instance.contexte_id|default:'' }}">
-		<input type="hidden" id="date-premier-signalement" value="{{ form.instance.date_premier_signalement|date:'Y-m-d' }}">
-		<input type="hidden" id="commentaire" value="{{ form.instance.commentaire }}">
-		<input type="hidden" id="mesures-conservatoires-immediates" value="{{ form.instance.mesures_conservatoires_immediates }}">
-		<input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
-		<input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
-		<input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
-		{{ lieux|json_script:"lieux" }}
-		{{ prelevements_officiels|json_script:"prelevements-officiels" }}
-		{{ prelevements_non_officiels|json_script:"prelevements-non-officiels" }}
-		{{ departements|json_script:"departements" }}
-		{{ unites|json_script:"unites" }}
-		{{ statuts_evenement|json_script:"statuts-evenement" }}
-		{{ organismes_nuisibles|json_script:"organismes-nuisibles" }}
-		{{ statuts_reglementaires|json_script:"statuts-reglementaires" }}
-		{{ contextes|json_script:"contextes" }}
-		{{ structures_preleveurs|json_script:"structures-preleveurs" }}
-		{{ sites_inspections|json_script:"sites-inspections" }}
-		{{ matrices_prelevees|json_script:"matrices-prelevees" }}
-		{{ especes_echantillon|json_script:"especes-echantillon" }}
-		{{ laboratoires_agrees|json_script:"laboratoires-agrees" }}
-		{{ laboratoires_confirmation_officielle|json_script:"laboratoires-confirmation-officielle" }}
+        <input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
+        <input type="hidden" id="createur-id" value="{{ form.instance.createur_id|default:'' }}">
+        <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
+        <input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
+        <input type="hidden" id="statut-reglementaire-id" value="{{ form.instance.statut_reglementaire_id|default:'' }}">
+        <input type="hidden" id="contexte-id" value="{{ form.instance.contexte_id|default:'' }}">
+        <input type="hidden" id="date-premier-signalement" value="{{ form.instance.date_premier_signalement|date:'Y-m-d' }}">
+        <input type="hidden" id="commentaire" value="{{ form.instance.commentaire }}">
+        <input type="hidden" id="mesures-conservatoires-immediates" value="{{ form.instance.mesures_conservatoires_immediates }}">
+        <input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
+        <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
+        <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
+        {{ lieux|json_script:"lieux" }}
+        {{ prelevements_officiels|json_script:"prelevements-officiels" }}
+        {{ prelevements_non_officiels|json_script:"prelevements-non-officiels" }}
+        {{ departements|json_script:"departements" }}
+        {{ unites|json_script:"unites" }}
+        {{ statuts_evenement|json_script:"statuts-evenement" }}
+        {{ organismes_nuisibles|json_script:"organismes-nuisibles" }}
+        {{ statuts_reglementaires|json_script:"statuts-reglementaires" }}
+        {{ contextes|json_script:"contextes" }}
+        {{ structures_preleveurs|json_script:"structures-preleveurs" }}
+        {{ sites_inspections|json_script:"sites-inspections" }}
+        {{ matrices_prelevees|json_script:"matrices-prelevees" }}
+        {{ especes_echantillon|json_script:"especes-echantillon" }}
+        {{ laboratoires_agrees|json_script:"laboratoires-agrees" }}
+        {{ laboratoires_confirmation_officielle|json_script:"laboratoires-confirmation-officielle" }}
 
-	<form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection()">
+        <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection()">
 
-		<div id="fiche-detection-form-header">
-			<h1>
-			{% if is_creation %}
-				Création d'une fiche détection
-			{% else %}
-				Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
-			{% endif %}
-			</h1>
+            <div id="fiche-detection-form-header">
+                <h1>
+                    {% if is_creation %}
+                        Création d'une fiche détection
+                    {% else %}
+                        Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
+                    {% endif %}
+                </h1>
 
-			<p>
-				<input type="submit" value="Enregistrer" class="fr-btn">
-			</p>
-		</div>
+                <p>
+                    <input type="submit" value="Enregistrer" class="fr-btn">
+                </p>
+            </div>
 
-		<div id="fiche-detection-form">
-				{% csrf_token %}
-				{% if is_creation %}
-					<div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-creation' %}" ></div>
-				{% else %}
-					<div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-modification' form.instance.id  %}"></div>
-				{% endif %}
+            <div id="fiche-detection-form">
+                {% csrf_token %}
+                {% if is_creation %}
+                    <div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-creation' %}" ></div>
+                {% else %}
+                    <div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-modification' form.instance.id  %}"></div>
+                {% endif %}
 
-				<div id="informations">
-					<h2>Informations</h2>
-					<div id="informations-content">
-						<p id="date-creation">
-							<label class="fr-label" for="date-creation-input">Date de création</label>
-							<input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
-						</p>
-						<p id="createur">
-							<label class="fr-label" for="createur-input">Créateur</label>
-							<select x-model="ficheDetection.createurId" id="createur-input" class="fr-select" required>
-								<option value="">----</option>
-								<template x-for="unite in unites" :key="unite.id">
-									<option
-										:value="unite.id"
-										x-text="unite.nom"
-										:selected="unite.id == ficheDetection.createurId"></option>
-								</template>
-							</select>
-						</p>
-						<p id="statut-evenement">
-							<label class="fr-label" for="statut-evenement-input">Statut évènement</label>
-							<select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
-								<option value="">----</option>
-								<template x-for="statutEvenement in statutsEvenement" :key="statutEvenement.id">
-									<option
-										:value="statutEvenement.id"
-										x-text="statutEvenement.libelle"
-										:selected="statutEvenement.id == ficheDetection.statutEvenementId"></option>
-								</template>
-							</select>
-						</p>
-					</div>
-				</div>
+                <div id="informations">
+                    <h2>Informations</h2>
+                    <div id="informations-content">
+                        <p id="date-creation">
+                            <label class="fr-label" for="date-creation-input">Date de création</label>
+                            <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
+                        </p>
+                        <p id="createur">
+                            <label class="fr-label" for="createur-input">Créateur</label>
+                            <select x-model="ficheDetection.createurId" id="createur-input" class="fr-select" required>
+                                <option value="">----</option>
+                                <template x-for="unite in unites" :key="unite.id">
+                                    <option
+                                        :value="unite.id"
+                                        x-text="unite.nom"
+                                        :selected="unite.id == ficheDetection.createurId"></option>
+                                </template>
+                            </select>
+                        </p>
+                        <p id="statut-evenement">
+                            <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
+                            <select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
+                                <option value="">----</option>
+                                <template x-for="statutEvenement in statutsEvenement" :key="statutEvenement.id">
+                                    <option
+                                        :value="statutEvenement.id"
+                                        x-text="statutEvenement.libelle"
+                                        :selected="statutEvenement.id == ficheDetection.statutEvenementId"></option>
+                                </template>
+                            </select>
+                        </p>
+                    </div>
+                </div>
 
-				<div id="objet-evenement">
-					<h2>Objet de l'évènement</h2>
-					<p id="organisme-nuisible">
-						<label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
-						<select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
-							<option value="">----</option>
-							<template x-for="organismeNuisible in organismesNuisibles" :key="organismeNuisible.id">
-								<option
-									:value="organismeNuisible.id"
-									x-text="organismeNuisible.libelle_court"
-									:selected="organismeNuisible.id == ficheDetection.organismeNuisibleId"></option>
-							</template>
-						</select>
-					</p>
-					<p id="statut-reglementaire">
-						<label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
-						<select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
-							<option value="">----</option>
-							<template x-for="statutReglementaire in statutsReglementaires" :key="statutReglementaire.id">
-								<option
-									:value="statutReglementaire.id"
-									x-text="statutReglementaire.libelle"
-									:selected="statutReglementaire.id == ficheDetection.statutReglementaireId"></option>
-							</template>
-						</select>
-					</p>
-					<p id="contexte">
-						<label class="fr-label" for="contexte-input">Contexte</label>
-						<select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
-							<option value="">----</option>
-							<template x-for="contexte in contextes" :key="contexte.id">
-								<option
-									:value="contexte.id"
-									x-text="contexte.nom"
-									:selected="contexte.id == ficheDetection.contexteId"></option>
-							</template>
-						</select>
-					</p>
-					<p id="date-1er-signalement">
-						<label class="fr-label" for="date-1er-signalement-input">Date 1er signalement</label>
-						<input x-text="ficheDetection.datePremierSignalement" x-model="ficheDetection.datePremierSignalement" type="date" id="date-1er-signalement-input" class="fr-input">
-					</p>
-					<p>
-						<label class="fr-label" for="commentaire-input">Commentaire</label>
-						<textarea x-model="ficheDetection.commentaire" id="commentaire-input" class="fr-input" maxlength="500"></textarea>
-					</p>
-				</div>
+                <div id="objet-evenement">
+                    <h2>Objet de l'évènement</h2>
+                    <p id="organisme-nuisible">
+                        <label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
+                        <select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
+                            <option value="">----</option>
+                            <template x-for="organismeNuisible in organismesNuisibles" :key="organismeNuisible.id">
+                                <option
+                                    :value="organismeNuisible.id"
+                                    x-text="organismeNuisible.libelle_court"
+                                    :selected="organismeNuisible.id == ficheDetection.organismeNuisibleId"></option>
+                            </template>
+                        </select>
+                    </p>
+                    <p id="statut-reglementaire">
+                        <label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
+                        <select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
+                            <option value="">----</option>
+                            <template x-for="statutReglementaire in statutsReglementaires" :key="statutReglementaire.id">
+                                <option
+                                    :value="statutReglementaire.id"
+                                    x-text="statutReglementaire.libelle"
+                                    :selected="statutReglementaire.id == ficheDetection.statutReglementaireId"></option>
+                            </template>
+                        </select>
+                    </p>
+                    <p id="contexte">
+                        <label class="fr-label" for="contexte-input">Contexte</label>
+                        <select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
+                            <option value="">----</option>
+                            <template x-for="contexte in contextes" :key="contexte.id">
+                                <option
+                                    :value="contexte.id"
+                                    x-text="contexte.nom"
+                                    :selected="contexte.id == ficheDetection.contexteId"></option>
+                            </template>
+                        </select>
+                    </p>
+                    <p id="date-1er-signalement">
+                        <label class="fr-label" for="date-1er-signalement-input">Date 1er signalement</label>
+                        <input x-text="ficheDetection.datePremierSignalement" x-model="ficheDetection.datePremierSignalement" type="date" id="date-1er-signalement-input" class="fr-input">
+                    </p>
+                    <p>
+                        <label class="fr-label" for="commentaire-input">Commentaire</label>
+                        <textarea x-model="ficheDetection.commentaire" id="commentaire-input" class="fr-input" maxlength="500"></textarea>
+                    </p>
+                </div>
 
-				<div id="localisations">
-					<div id="localisations-header">
-						<h2>Lieux</h2>
-						<button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-localisation">Ajouter une localisation</button>
-					</div>
-					{% include 'sv/_fichedetection_form__localisations.html' %}
-				</div>
+                <div id="localisations">
+                    <div id="localisations-header">
+                        <h2>Lieux</h2>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-localisation">Ajouter une localisation</button>
+                    </div>
+                    {% include 'sv/_fichedetection_form__localisations.html' %}
+                </div>
 
-				<div id="prelevements">
-					<div id="prelevements-header">
-						<h2>Prélèvements</h2>
-						<template x-if="localisations.length > 0">
-							<button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter un prélèvement</button>
-						</template>
-					</div>
-					{% include 'sv/_fichedetection_form__prelevements.html' %}
-				</div>
+                <div id="prelevements">
+                    <div id="prelevements-header">
+                        <h2>Prélèvements</h2>
+                        <template x-if="localisations.length > 0">
+                            <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter un prélèvement</button>
+                        </template>
+                    </div>
+                    {% include 'sv/_fichedetection_form__prelevements.html' %}
+                </div>
 
-				<div id="mesures-gestion">
-					<h2>Mesures de gestion</h2>
-					<div id="mesures-gestion-content">
-						<p id="mesures-conservatoires-immediates">
-							<label class="fr-label" for="mesures-conservatoires-immediates-input">Mesures conservatoires immédiates</label>
-							<textarea x-model="ficheDetection.mesuresConservatoiresImmediates" id="mesures-conservatoires-immediates-input" class="fr-input" maxlength="500"></textarea>
-						</p>
-						<p id="mesures-consignation">
-							<label class="fr-label" for="mesures-consignation-input">Mesures de consignation</label>
-							<textarea x-model="ficheDetection.mesuresConsignation" id="mesures-consignation-input" class="fr-input" maxlength="500"></textarea>
-						</p>
-						<p id="mesures-phytosanitaires">
-							<label class="fr-label" for="mesures-phytosanitaires-input">Mesures phytosanitaires</label>
-							<textarea x-model="ficheDetection.mesuresPhytosanitaires" id="mesures-phytosanitaires-input" class="fr-input" maxlength="500"></textarea>
-						</p>
-						<p id="mesures-surveillance-specifique">
-							<label class="fr-label" for="mesures-surveillance-specifique-input">Mesures de surveillance spécifique</label>
-							<textarea x-model="ficheDetection.mesuresSurveillanceSpecifique" id="mesures-surveillance-specifique-input" class="fr-input" maxlength="500"></textarea>
-						</p>
-					</div>
-				</div>
-		</div>
-	</form>
+                <div id="mesures-gestion">
+                    <h2>Mesures de gestion</h2>
+                    <div id="mesures-gestion-content">
+                        <p id="mesures-conservatoires-immediates">
+                            <label class="fr-label" for="mesures-conservatoires-immediates-input">Mesures conservatoires immédiates</label>
+                            <textarea x-model="ficheDetection.mesuresConservatoiresImmediates" id="mesures-conservatoires-immediates-input" class="fr-input" maxlength="500"></textarea>
+                        </p>
+                        <p id="mesures-consignation">
+                            <label class="fr-label" for="mesures-consignation-input">Mesures de consignation</label>
+                            <textarea x-model="ficheDetection.mesuresConsignation" id="mesures-consignation-input" class="fr-input" maxlength="500"></textarea>
+                        </p>
+                        <p id="mesures-phytosanitaires">
+                            <label class="fr-label" for="mesures-phytosanitaires-input">Mesures phytosanitaires</label>
+                            <textarea x-model="ficheDetection.mesuresPhytosanitaires" id="mesures-phytosanitaires-input" class="fr-input" maxlength="500"></textarea>
+                        </p>
+                        <p id="mesures-surveillance-specifique">
+                            <label class="fr-label" for="mesures-surveillance-specifique-input">Mesures de surveillance spécifique</label>
+                            <textarea x-model="ficheDetection.mesuresSurveillanceSpecifique" id="mesures-surveillance-specifique-input" class="fr-input" maxlength="500"></textarea>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
 
 	<!-- Modal ajout/modif localisation -->
-	<dialog aria-labelledby="modal-add-edit-localisation-title" id="modal-add-edit-localisation" class="fr-modal" role="dialog">
-		<div class="fr-container fr-container--fluid fr-container-md">
-			<div class="fr-grid-row fr-grid-row--center">
-				<div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-					<div class="fr-modal__body">
-						<div class="fr-modal__header">
-							<button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-localisation">Fermer</button>
-						</div>
-						<div class="fr-modal__content">
-							<h1 id="modal-add-edit-localisation-title"
-								class="fr-modal__title"
-								x-text="(localisationIdToEdit === null ? 'Ajouter une' : 'Modifier la') + ' localisation'"></h1>
-							<form x-ref="localisationForm" @submit.prevent="addOrEditLocalisation(localisationIdToEdit)" id="localisation-form">
-								<p>
-									<label class="fr-label" for="nom-localisation">Nom de la localisation</label>
-									<input x-model="localisationForm.nomLocalisation" type="text" id="nom-localisation" required class="fr-input">
-								</p>
-								<p>
-									<label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
-									<input x-model="localisationForm.adresseLieuDit" type="text" id="adresse-lieu-dit" class="fr-input">
-								</p>
-								<p>
-									<label class="fr-label" for="commune">Commune</label>
-									<input x-model="localisationForm.commune" type="text" id="commune" class="fr-input">
-								</p>
-								<p>
-									<label class="fr-label" for="code-insee">Code INSEE</label>
-									<input x-model="localisationForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
-								</p>
-								<p>
-									<label class="fr-label" for="departement">Département</label>
-									<select x-model="localisationForm.departementId" class="fr-select">
-										<option value="">----</option>
-										<template x-for="departement in departements" :key="departement.id">
-											<option :value="departement.id" x-text="departement.nom + ' (' + departement.numero + ')'"></option>
-										</template>
-									</select>
-								</p>
-								<p>
-									<label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
-									<input x-model="localisationForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
-									<input x-model="localisationForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
-								</p>
-								<p>
-									<label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
-									<input x-model="localisationForm.coordGPSWGS84Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="0.000001" min="-90" max="90" id="coordonnees-gps-wgs84-latitude" class="fr-input" placeholder="Latitude">
-									<input x-model="localisationForm.coordGPSWGS84Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="0.000001" min="-180" max="180" id="coordonnees-gps-wgs84-longitude" class="fr-input" placeholder="Longitude">
-								</p>
-						</div>
-							<div class="fr-modal__footer">
-								<div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-									<button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-localisation">Annuler</button>
-									<input type="submit" :value="localisationIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn"></input>
-								</div>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-	</dialog>
+        <dialog aria-labelledby="modal-add-edit-localisation-title" id="modal-add-edit-localisation" class="fr-modal" role="dialog">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-localisation">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="modal-add-edit-localisation-title"
+                                    class="fr-modal__title"
+                                    x-text="(localisationIdToEdit === null ? 'Ajouter une' : 'Modifier la') + ' localisation'"></h1>
+                                <form x-ref="localisationForm" @submit.prevent="addOrEditLocalisation(localisationIdToEdit)" id="localisation-form">
+                                    <p>
+                                        <label class="fr-label" for="nom-localisation">Nom de la localisation</label>
+                                        <input x-model="localisationForm.nomLocalisation" type="text" id="nom-localisation" required class="fr-input">
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
+                                        <input x-model="localisationForm.adresseLieuDit" type="text" id="adresse-lieu-dit" class="fr-input">
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="commune">Commune</label>
+                                        <input x-model="localisationForm.commune" type="text" id="commune" class="fr-input">
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="code-insee">Code INSEE</label>
+                                        <input x-model="localisationForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="departement">Département</label>
+                                        <select x-model="localisationForm.departementId" class="fr-select" id="departement">
+                                            <option value="">----</option>
+                                            <template x-for="departement in departements" :key="departement.id">
+                                                <option :value="departement.id" x-text="departement.nom + ' (' + departement.numero + ')'"></option>
+                                            </template>
+                                        </select>
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
+                                        <input x-model="localisationForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
+                                        <input x-model="localisationForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
+                                    </p>
+                                    <p>
+                                        <label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
+                                        <input x-model="localisationForm.coordGPSWGS84Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="0.000001" min="-90" max="90" id="coordonnees-gps-wgs84-latitude" class="fr-input" placeholder="Latitude">
+                                        <input x-model="localisationForm.coordGPSWGS84Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="0.000001" min="-180" max="180" id="coordonnees-gps-wgs84-longitude" class="fr-input" placeholder="Longitude">
+                                    </p>
+                                </div>
+                                <div class="fr-modal__footer">
+                                    <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                                        <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-localisation">Annuler</button>
+                                        <input type="submit" :value="localisationIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn"></input>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
 
 	<!-- Modal ajout/modif prélèvement -->
-	<dialog aria-labelledby="modal-add-edit-prelevement-title" id="modal-add-edit-prelevement" class="fr-modal" role="dialog">
-		<div class="fr-container fr-container--fluid fr-container-md">
-			<div class="fr-grid-row fr-grid-row--center">
-				<div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-					<div class="fr-modal__body">
-						<div class="fr-modal__header">
-							<button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-prelevement">Fermer</button>
-						</div>
-						<div class="fr-modal__content">
-							<h1 id="modal-add-edit-prelevement-title"
-								class="fr-modal__title"
-								x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
-							<form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
-								<div id="localisation" class="fr-select-group">
-									<label class="fr-label">Localisation</label>
-									<select class="fr-select" x-model="formPrelevement.localisationId">
-										<template x-for="localisation in localisations" :key="localisation.id">
-											<option :value="localisation.id" x-text="localisation.nomLocalisation"></option>
-										</template>
-									</select>
-								</div>
-								<div id="structure" class="fr-select-group">
-									<label class="fr-label">Structure</label>
-									<select x-model="formPrelevement.structurePreleveurId" class="fr-select" required>
-										<option value="">----</option>
-										<template x-for="structure in structuresPreleveurs" :key="structure.id">
-											<option :value="structure.id" x-text="structure.nom"></option>
-										</template>
-									</select>
-								</div>
-								<p id="numero-echantillon">
-									<label class="fr-label">N° d'échantillon</label>
-									<input x-model="formPrelevement.numeroEchantillon" type="text" class="fr-input">
-								</p>
-								<p id="date-prelevement">
-									<label class="fr-label">Date prélèvement</label>
-									<input x-model="formPrelevement.datePrelevement" type="date" class="fr-input">
-								</p>
-								<p id="site-inspection">
-									<label class="fr-label">Site d'inspection</label>
-									<select x-model="formPrelevement.siteInspectionId" class="fr-select">
-										<option value="">----</option>
-										<template x-for="site in sitesInspections" :key="site.id">
-											<option :value="site.id" x-text="site.nom"></option>
-										</template>
-									</select>
-								</p>
-								<p id="matrice-prelevee">
-									<label class="fr-label">Matrice prélevée</label>
-									<select x-model="formPrelevement.matricePreleveeId" class="fr-select">
-										<option value="">----</option>
-										<template x-for="matrice in matricesPrelevees" :key="matrice.id">
-											<option :value="matrice.id" x-text="matrice.libelle"></option>
-										</template>
-									</select>
-								</p>
-								<p id="espece-echantillon">
-									<label class="fr-label">Espèce de l'echantillon</label>
-									<select x-model="formPrelevement.especeEchantillonId" class="fr-select">
-										<option value="">----</option>
-										<template x-for="espece in especesEchantillon" :key="espece.id">
-											<option :value="espece.id" x-text="espece.libelle"></option>
-										</template>
-									</select>
-								</p>
-								<p>
-									<div class="fr-checkbox-group">
-										<input 	x-model="formPrelevement.isPrelevementOfficiel"
-												x-on:change="
-													await $nextTick();
-													if(formPrelevement.isPrelevementOfficiel) {
-														document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
-													}
-												"
-												name="is-prelevement-officiel"
-												id="is-prelevement-officiel"
-												type="checkbox"
-												aria-describedby="is-prelevement-officiel-messages">
-										<label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
-									</div>
-								</p>
-								<div x-show="formPrelevement.isPrelevementOfficiel">
-									<p id="numero-phytopass">
-										<label class="fr-label">N° Phytopass</label>
-										<input x-model="formPrelevement.numeroPhytopass" type="text" class="fr-input">
-									</p>
-									<p id="laboratoire-agree">
-										<label class="fr-label">Laboratoire agrée</label>
-										<select x-model="formPrelevement.laboratoireAgreeId" class="fr-select">
-											<option value="">----</option>
-											<template x-for="laboratoire_agree in laboratoiresAgrees" :key="laboratoire_agree.id">
-												<option :value="laboratoire_agree.id" x-text="laboratoire_agree.nom"></option>
-											</template>
-										</select>
-									</p>
-									<p id="laboratoire-confirmation">
-										<label class="fr-label">Laboratoire de confirmation</label>
-										<select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select">
-											<option value="">----</option>
-											<template x-for="laboratoire_confirmation_officielle in laboratoiresConfirmationOfficielle" :key="laboratoire_confirmation_officielle.id">
-												<option :value="laboratoire_confirmation_officielle.id" x-text="laboratoire_confirmation_officielle.nom"></option>
-											</template>
-										</select>
-									</p>
-								</div>
-							</div>
-							<div class="fr-modal__footer">
-								<div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-									<button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement">Annuler</button>
-									<input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'"></input>
-								</div>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-	</dialog>
-</main>
+        <dialog aria-labelledby="modal-add-edit-prelevement-title" id="modal-add-edit-prelevement" class="fr-modal" role="dialog">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-prelevement">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="modal-add-edit-prelevement-title"
+                                    class="fr-modal__title"
+                                    x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
+                                <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
+                                    <div id="localisation" class="fr-select-group">
+                                        <label class="fr-label">Localisation</label>
+                                        <select class="fr-select" x-model="formPrelevement.localisationId">
+                                            <template x-for="localisation in localisations" :key="localisation.id">
+                                                <option :value="localisation.id" x-text="localisation.nomLocalisation"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div id="structure" class="fr-select-group">
+                                        <label class="fr-label">Structure</label>
+                                        <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required>
+                                            <option value="">----</option>
+                                            <template x-for="structure in structuresPreleveurs" :key="structure.id">
+                                                <option :value="structure.id" x-text="structure.nom"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <p id="numero-echantillon">
+                                        <label class="fr-label">N° d'échantillon</label>
+                                        <input x-model="formPrelevement.numeroEchantillon" type="text" class="fr-input">
+                                    </p>
+                                    <p id="date-prelevement">
+                                        <label class="fr-label">Date prélèvement</label>
+                                        <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input">
+                                    </p>
+                                    <p id="site-inspection">
+                                        <label class="fr-label">Site d'inspection</label>
+                                        <select x-model="formPrelevement.siteInspectionId" class="fr-select">
+                                            <option value="">----</option>
+                                            <template x-for="site in sitesInspections" :key="site.id">
+                                                <option :value="site.id" x-text="site.nom"></option>
+                                            </template>
+                                        </select>
+                                    </p>
+                                    <p id="matrice-prelevee">
+                                        <label class="fr-label">Matrice prélevée</label>
+                                        <select x-model="formPrelevement.matricePreleveeId" class="fr-select">
+                                            <option value="">----</option>
+                                            <template x-for="matrice in matricesPrelevees" :key="matrice.id">
+                                                <option :value="matrice.id" x-text="matrice.libelle"></option>
+                                            </template>
+                                        </select>
+                                    </p>
+                                    <p id="espece-echantillon">
+                                        <label class="fr-label">Espèce de l'echantillon</label>
+                                        <select x-model="formPrelevement.especeEchantillonId" class="fr-select">
+                                            <option value="">----</option>
+                                            <template x-for="espece in especesEchantillon" :key="espece.id">
+                                                <option :value="espece.id" x-text="espece.libelle"></option>
+                                            </template>
+                                        </select>
+                                    </p>
+                                    <p>
+                                        <div class="fr-checkbox-group">
+                                            <input 	x-model="formPrelevement.isPrelevementOfficiel"
+                                                   x-on:change="
+                                                                await $nextTick();
+                                                                if(formPrelevement.isPrelevementOfficiel) {
+                                                                document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
+                                                                }
+                                                               "
+                                                   name="is-prelevement-officiel"
+                                                   id="is-prelevement-officiel"
+                                                   type="checkbox"
+                                                   aria-describedby="is-prelevement-officiel-messages">
+                                            <label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
+                                        </div>
+                                    </p>
+                                    <div x-show="formPrelevement.isPrelevementOfficiel">
+                                        <p id="numero-phytopass">
+                                            <label class="fr-label">N° Phytopass</label>
+                                            <input x-model="formPrelevement.numeroPhytopass" type="text" class="fr-input">
+                                        </p>
+                                        <p id="laboratoire-agree">
+                                            <label class="fr-label">Laboratoire agrée</label>
+                                            <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select">
+                                                <option value="">----</option>
+                                                <template x-for="laboratoire_agree in laboratoiresAgrees" :key="laboratoire_agree.id">
+                                                    <option :value="laboratoire_agree.id" x-text="laboratoire_agree.nom"></option>
+                                                </template>
+                                            </select>
+                                        </p>
+                                        <p id="laboratoire-confirmation">
+                                            <label class="fr-label">Laboratoire de confirmation</label>
+                                            <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select">
+                                                <option value="">----</option>
+                                                <template x-for="laboratoire_confirmation_officielle in laboratoiresConfirmationOfficielle" :key="laboratoire_confirmation_officielle.id">
+                                                    <option :value="laboratoire_confirmation_officielle.id" x-text="laboratoire_confirmation_officielle.nom"></option>
+                                                </template>
+                                            </select>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="fr-modal__footer">
+                                    <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                                        <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement">Annuler</button>
+                                        <input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'"></input>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </main>
 {% endblock %}

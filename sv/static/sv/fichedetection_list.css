@@ -1,41 +1,41 @@
 body{
-	background-color: #FFFFFF;
+    background-color: #FFFFFF;
 }
 
 #fichedetection-list-header-title {
-	background-color: #E3E3FD;
-	padding: 2rem 0rem 2rem 2rem;
+    background-color: #E3E3FD;
+    padding: 2rem 0rem 2rem 2rem;
 }
 
 #fichedetection-list-header-title h1 {
-	margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 #fichedetection-list {
-	margin: 2rem;
+    margin: 2rem;
 }
 
 #fichedetection-list-table table{
-	border-collapse: collapse;
+    border-collapse: collapse;
 }
 
 #fichedetection-list-table table thead tr {
-	background-color: #FFFFFF;
-	border-bottom: 1px solid #F6F6F6;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #F6F6F6;
 }
 
 #fichedetection-list-table tbody tr {
-	background-image: none;
+    background-image: none;
 }
 
 #fichedetection-list-table tbody tr:nth-child(odd) {
-	background-color: #FFFFFF;
+    background-color: #FFFFFF;
 }
 
 #fichedetection-list-table tbody tr:nth-child(even) {
-	background-color: #F6F6F6;
+    background-color: #F6F6F6;
 }
 
 #fichedetection-list-table .table-row:hover {
-	background-color: var(--background-contrast-grey);
+    background-color: var(--background-contrast-grey);
 }

@@ -59,11 +59,11 @@
                 </nav>
             </header>
 
-		{% block content %}{% endblock %}
+            {% block content %}{% endblock %}
 
-        <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
-        <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
-        {% block scripts %}{% endblock %}
-    </body>
+            <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
+            <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
+            {% block scripts %}{% endblock %}
+        </body>
 
-</html>
+    </html>
