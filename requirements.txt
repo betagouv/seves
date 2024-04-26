@@ -78,7 +78,7 @@ requests==2.31.0
     # via pytest-base-url
 ruff==0.4.1
     # via -r requirements.in
-sqlparse==0.4.4
+sqlparse==0.5.0
     # via django
 static3==0.7.0
     # via dj-static
