@@ -365,20 +365,19 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
     def update_lieux(self, localisations, fiche_detection):
         for loc in localisations:
+            # Création ou récupération de l'objet Lieu
+            # si pk -> update
             # si pas de pk -> création
-            if not loc.get("pk"):
-                lieu = Lieu(
-                    fiche_detection=fiche_detection,
-                    nom=loc["nomLocalisation"],
-                    wgs84_longitude=loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None,
-                    wgs84_latitude=loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None,
-                    adresse_lieu_dit=loc["adresseLieuDit"],
-                    commune=loc["commune"],
-                    code_insee=loc["codeINSEE"],
-                    departement_id=loc["departementId"],
-                )
-                lieu.save()
-                loc["lieu_pk"] = lieu.pk
+            lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
+            lieu.nom = loc["nomLocalisation"]
+            lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
+            lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
+            lieu.adresse_lieu_dit = loc["adresseLieuDit"]
+            lieu.commune = loc["commune"]
+            lieu.code_insee = loc["codeINSEE"]
+            lieu.departement_id = loc["departementId"]
+            lieu.save()
+            loc["lieu_pk"] = lieu.pk
 
     def post(self, request, pk):
         data = request.POST
