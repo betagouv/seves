@@ -327,64 +327,76 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         return context
 
+    def validate_data(self, data):
+        errors = []
+        if not data["createurId"]:
+            errors.append("Le champ createur est obligatoire")
+        elif not Unite.objects.filter(pk=data["createurId"]).exists():
+            errors.append("Le champ createur est invalide")
+        return errors
+
+    def update_fiche_detection(self, data, fiche_detection):
+        # Format de la date de premier signalement
+        date_premier_signalement = data["datePremierSignalement"]
+        try:
+            datetime.strptime(date_premier_signalement, "%Y-%m-%d")
+        except ValueError:
+            date_premier_signalement = None
+
+        # Mise à jour des champs de l'objet FicheDetection
+        fiche_detection.createur_id = data.get("createurId")
+        fiche_detection.statut_evenement_id = data.get("statutEvenementId")
+        fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
+        fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
+        fiche_detection.contexte_id = data.get("contexteId")
+        fiche_detection.date_premier_signalement = date_premier_signalement
+        fiche_detection.commentaire = data.get("commentaire")
+        fiche_detection.mesures_conservatoires_immediates = data.get("mesuresConservatoiresImmediates")
+        fiche_detection.mesures_consignation = data.get("mesuresConsignation")
+        fiche_detection.mesures_phytosanitaires = data.get("mesuresPhytosanitaires")
+        fiche_detection.mesures_surveillance_specifique = data.get("mesuresSurveillanceSpecifique")
+
+        try:
+            fiche_detection.full_clean()
+        except ValidationError as e:
+            return fiche_detection, e
+
+        return fiche_detection, None
+
+    def update_lieux(self, localisations, fiche_detection):
+        for loc in localisations:
+            # si pas de pk -> création
+            if not loc.get("pk"):
+                lieu = Lieu(
+                    fiche_detection=fiche_detection,
+                    nom=loc["nomLocalisation"],
+                    wgs84_longitude=loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None,
+                    wgs84_latitude=loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None,
+                    adresse_lieu_dit=loc["adresseLieuDit"],
+                    commune=loc["commune"],
+                    code_insee=loc["codeINSEE"],
+                    departement_id=loc["departementId"],
+                )
+                lieu.save()
+                loc["lieu_pk"] = lieu.pk
+
     def post(self, request, pk):
         data = request.POST
         localisations = json.loads(data["localisations"])
 
         # Validation
-        errors = []
-        # createur est obligatoire
-        if not data["createurId"]:
-            errors.append("Le champ createur est obligatoire")
-        elif not Unite.objects.filter(pk=data["createurId"]).exists():
-            errors.append("Le champ createur est invalide")
+        errors = self.validate_data(data)
         if errors:
             return HttpResponseBadRequest(json.dumps(errors))
 
+        # Mise à jour des objets en base de données
         with transaction.atomic():
-            # Format de la date de premier signalement
-            date_premier_signalement = data["datePremierSignalement"]
-            try:
-                datetime.strptime(date_premier_signalement, "%Y-%m-%d")
-            except ValueError:
-                date_premier_signalement = None
+            fiche_detection, error = self.update_fiche_detection(data, self.get_object())
+            if error:
+                return HttpResponseBadRequest(str(error))
+            fiche_detection.save()
 
-            # Mise à jour des champs de l'objet FicheDetection
-            fiche_detection = self.get_object()
-            fiche_detection.createur_id = data.get("createurId")
-            fiche_detection.statut_evenement_id = data.get("statutEvenementId")
-            fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
-            fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
-            fiche_detection.contexte_id = data.get("contexteId")
-            fiche_detection.date_premier_signalement = date_premier_signalement
-            fiche_detection.commentaire = data.get("commentaire")
-            fiche_detection.mesures_conservatoires_immediates = data.get("mesuresConservatoiresImmediates")
-            fiche_detection.mesures_consignation = data.get("mesuresConsignation")
-            fiche_detection.mesures_phytosanitaires = data.get("mesuresPhytosanitaires")
-            fiche_detection.mesures_surveillance_specifique = data.get("mesuresSurveillanceSpecifique")
-
-            try:
-                fiche_detection.full_clean()
-                fiche_detection.save()
-            except ValidationError as e:
-                return HttpResponseBadRequest(str(e))
-
-            # Lieux
-            for loc in localisations:
-                # si pas de pk -> création
-                if not loc.get("pk"):
-                    lieu = Lieu(
-                        fiche_detection=fiche_detection,
-                        nom=loc["nomLocalisation"],
-                        wgs84_longitude=loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None,
-                        wgs84_latitude=loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None,
-                        adresse_lieu_dit=loc["adresseLieuDit"],
-                        commune=loc["commune"],
-                        code_insee=loc["codeINSEE"],
-                        departement_id=loc["departementId"],
-                    )
-                    lieu.save()
-                    loc["lieu_pk"] = lieu.pk
+            self.update_lieux(localisations, fiche_detection)
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
