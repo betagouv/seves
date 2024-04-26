@@ -1,3 +1,6 @@
+<!-- Liste des localisations (pour tests e2e Playwright) -->
+<input type="hidden" disabled data-testid="localisations" :value="JSON.stringify(localisations)">
+
 <!-- Liste des localisations -->
 <template x-for="(localisation, index) in localisations" :key="localisation.id">
     <div class="localisation-initiale">
