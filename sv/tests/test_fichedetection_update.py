@@ -156,3 +156,18 @@ def test_fiche_detection_update_without_lieux_and_prelevement(setup_data, live_s
     assert fiche_detection.mesures_consignation == new_mesures_consignation
     assert fiche_detection.mesures_phytosanitaires == new_mesures_phytosanitaires
     assert fiche_detection.mesures_surveillance_specifique == new_mesures_surveillance_specifique
+
+
+def test_add_new_lieu(setup_data, live_server, page: Page):
+    page.goto(f"{live_server.url}{setup_data['edit_fiche_detection_url']}")
+    page.get_by_role("button", name="Ajouter une localisation").click()
+    page.get_by_label("Nom de la localisation").click()
+    page.get_by_label("Nom de la localisation").fill("test")
+    page.get_by_label("Ajouter une localisation").get_by_role("button", name="Enregistrer").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    page.wait_for_timeout(200)
+
+    fiche_detection = FicheDetection.objects.get(id=setup_data["fiche_detection"].id)
+    assert fiche_detection.lieux.count() == 1
+    assert fiche_detection.lieux.first().nom == "test"
