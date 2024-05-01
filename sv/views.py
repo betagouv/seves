@@ -369,18 +369,23 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 None,
             )
 
-            prelevement = Prelevement(
-                lieu_id=prel["lieu_pk"],
-                structure_preleveur_id=prel["structurePreleveurId"],
-                numero_echantillon=prel["numeroEchantillon"] if prel["numeroEchantillon"] else "",
-                date_prelevement=prel["datePrelevement"],
-                site_inspection_id=prel["siteInspectionId"],
-                matrice_prelevee_id=prel["matricePreleveeId"],
-                espece_echantillon_id=prel["especeEchantillonId"],
-                is_officiel=prel["isOfficiel"],
-                numero_phytopass=prel["numeroPhytopass"] if prel["numeroPhytopass"] else "",
-                laboratoire_agree_id=prel["laboratoireAgreeId"],
-                laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
+            # Création ou récupération de l'objet Prelevement
+            # si pk -> update
+            # si pas de pk -> création
+            prelevement = (
+                Prelevement.objects.get(pk=prel["pk"]) if prel.get("pk") else Prelevement(lieu_id=prel["lieu_pk"])
+            )
+            prelevement.structure_preleveur_id = prel["structurePreleveurId"]
+            prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
+            prelevement.date_prelevement = prel["datePrelevement"]
+            prelevement.site_inspection_id = prel["siteInspectionId"]
+            prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
+            prelevement.espece_echantillon_id = prel["especeEchantillonId"]
+            prelevement.is_officiel = prel["isOfficiel"]
+            prelevement.numero_phytopass = prel["numeroPhytopass"] if prel["isOfficiel"] else ""
+            prelevement.laboratoire_agree_id = prel["laboratoireAgreeId"] if prel["isOfficiel"] else None
+            prelevement.laboratoire_confirmation_officielle_id = (
+                prel["laboratoireConfirmationOfficielleId"] if prel["isOfficiel"] else None
             )
             prelevement.save()
 
