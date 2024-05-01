@@ -329,21 +329,22 @@
                                     </p>
                                     <p>
                                         <div class="fr-checkbox-group">
-                                            <input 	x-model="formPrelevement.isPrelevementOfficiel"
+                                            <input x-model="formPrelevement.isOfficiel"
                                                    x-on:change="
                                                                 await $nextTick();
-                                                                if(formPrelevement.isPrelevementOfficiel) {
+                                                                if(formPrelevement.isOfficiel) {
                                                                 document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
                                                                 }
                                                                "
                                                    name="is-prelevement-officiel"
                                                    id="is-prelevement-officiel"
                                                    type="checkbox"
+                                                   :disabled="formPrelevement.pk !== null"
                                                    aria-describedby="is-prelevement-officiel-messages">
                                             <label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
                                         </div>
                                     </p>
-                                    <div x-show="formPrelevement.isPrelevementOfficiel">
+                                    <div x-show="formPrelevement.isOfficiel">
                                         <p id="numero-phytopass">
                                             <label class="fr-label">N° Phytopass</label>
                                             <input x-model="formPrelevement.numeroPhytopass" type="text" class="fr-input">

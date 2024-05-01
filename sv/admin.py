@@ -16,10 +16,9 @@ from .models import (
     SiteInspection,
     MatricePrelevee,
     EspeceEchantillon,
-    PrelevementNonOfficiel,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
-    PrelevementOfficiel,
+    Prelevement,
     StatutEvenement,
     FicheDetection,
     NumeroFiche,
@@ -43,10 +42,9 @@ admin.site.register(StructurePreleveur)
 admin.site.register(SiteInspection)
 admin.site.register(MatricePrelevee)
 admin.site.register(EspeceEchantillon)
-admin.site.register(PrelevementNonOfficiel)
 admin.site.register(LaboratoireAgree)
 admin.site.register(LaboratoireConfirmationOfficielle)
-admin.site.register(PrelevementOfficiel)
+admin.site.register(Prelevement)
 admin.site.register(StatutEvenement)
 admin.site.register(FicheDetection)
 admin.site.register(NumeroFiche)

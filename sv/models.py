@@ -290,44 +290,6 @@ class EspeceEchantillon(models.Model):
         return self.libelle
 
 
-class PrelevementNonOfficiel(models.Model):
-    class Meta:
-        verbose_name = "Prélèvement non officiel"
-        verbose_name_plural = "Prélèvements non officiels"
-        db_table = "sv_prelevement_non_officiel"
-
-    lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu")
-    structure_preleveur = models.ForeignKey(
-        StructurePreleveur, on_delete=models.PROTECT, verbose_name="Structure préleveur"
-    )
-    numero_echantillon = models.CharField(max_length=100, verbose_name="Numéro d'échantillon", blank=True)
-    date_prelevement = models.DateField(verbose_name="Date de prélèvement", blank=True, null=True)
-    site_inspection = models.ForeignKey(
-        SiteInspection,
-        on_delete=models.PROTECT,
-        verbose_name="Site d'inspection",
-        blank=True,
-        null=True,
-    )
-    matrice_prelevee = models.ForeignKey(
-        MatricePrelevee,
-        on_delete=models.PROTECT,
-        verbose_name="Matrice prélevée",
-        blank=True,
-        null=True,
-    )
-    espece_echantillon = models.ForeignKey(
-        EspeceEchantillon,
-        on_delete=models.PROTECT,
-        verbose_name="Espèce de l'échantillon",
-        blank=True,
-        null=True,
-    )
-
-    def __str__(self):
-        return f"Prélèvement non officiel n° {self.id}"
-
-
 class LaboratoireAgree(models.Model):
     class Meta:
         verbose_name = "Laboratoire agréé"
@@ -354,11 +316,11 @@ class LaboratoireConfirmationOfficielle(models.Model):
         return self.nom
 
 
-class PrelevementOfficiel(models.Model):
+class Prelevement(models.Model):
     class Meta:
-        verbose_name = "Prélèvement officiel"
-        verbose_name_plural = "Prélèvements officiels"
-        db_table = "sv_prelevement_officiel"
+        verbose_name = "Prélèvement"
+        verbose_name_plural = "Prélèvements"
+        db_table = "sv_prelevement"
 
     lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu")
     structure_preleveur = models.ForeignKey(
@@ -387,16 +349,17 @@ class PrelevementOfficiel(models.Model):
         blank=True,
         null=True,
     )
+    is_officiel = models.BooleanField(verbose_name="Prélèvement officiel", default=False)
     numero_phytopass = models.CharField(max_length=100, verbose_name="Numéro Phytopass", blank=True)
     laboratoire_agree = models.ForeignKey(
-        LaboratoireAgree,
+        "LaboratoireAgree",
         on_delete=models.PROTECT,
         verbose_name="Laboratoire agréé",
         blank=True,
         null=True,
     )
     laboratoire_confirmation_officielle = models.ForeignKey(
-        LaboratoireConfirmationOfficielle,
+        "LaboratoireConfirmationOfficielle",
         on_delete=models.PROTECT,
         verbose_name="Laboratoire de confirmation officielle",
         blank=True,
@@ -404,7 +367,7 @@ class PrelevementOfficiel(models.Model):
     )
 
     def __str__(self):
-        return f"Prélèvement officiel n° {self.id}"
+        return f"Prélèvement n° {self.id}"
 
 
 class StatutEvenement(models.Model):

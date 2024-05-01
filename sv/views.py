@@ -18,8 +18,7 @@ from django.contrib import messages
 from .models import (
     FicheDetection,
     Lieu,
-    PrelevementOfficiel,
-    PrelevementNonOfficiel,
+    Prelevement,
     Unite,
     StatutEvenement,
     OrganismeNuisible,
@@ -67,13 +66,8 @@ class FicheDetectionDetailView(DetailView):
         # Ajout des lieux associés à la fiche de détection
         context["lieux"] = Lieu.objects.filter(fiche_detection=self.get_object())
 
-        # Ajout des prélèvements officiels associés à chaque lieu
-        prelevements_officiels = PrelevementOfficiel.objects.filter(lieu__fiche_detection=self.get_object())
-        context["prelevements_officiels"] = prelevements_officiels
-
-        # Ajout des prélèvements non officiels associés à chaque lieu
-        prelevements_non_officiels = PrelevementNonOfficiel.objects.filter(lieu__fiche_detection=self.get_object())
-        context["prelevements_non_officiels"] = prelevements_non_officiels
+        # Ajout des prélèvements associés à chaque lieu
+        context["prelevements"] = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
 
         return context
 
@@ -179,7 +173,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             ):
                 errors.append("Le champ matrice prelevée est invalide")
             # si c'est un prélèvement officiel, laboratoire agréé et/ou laboratoireConfirmationOfficielleId doit être valide (existe en base de données)
-            if prelevement["isPrelevementOfficiel"]:
+            if prelevement["isOfficiel"]:
                 if (
                     prelevement["laboratoireAgreeId"]
                     and not LaboratoireAgree.objects.filter(pk=prelevement["laboratoireAgreeId"]).exists()
@@ -258,31 +252,20 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 None,
             )
 
-            if prel["isPrelevementOfficiel"]:
-                prelevement_officiel = PrelevementOfficiel(
-                    lieu_id=prel["lieu_pk"],
-                    structure_preleveur_id=prel["structurePreleveurId"],
-                    numero_echantillon=prel["numeroEchantillon"],
-                    date_prelevement=prel["datePrelevement"],
-                    site_inspection_id=prel["siteInspectionId"],
-                    matrice_prelevee_id=prel["matricePreleveeId"],
-                    espece_echantillon_id=prel["especeEchantillonId"],
-                    numero_phytopass=prel["numeroPhytopass"],
-                    laboratoire_agree_id=prel["laboratoireAgreeId"],
-                    laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
-                )
-                prelevement_officiel.save()
-            else:
-                prelevement_non_officiel = PrelevementNonOfficiel(
-                    lieu_id=prel["lieu_pk"],
-                    structure_preleveur_id=prel["structurePreleveurId"],
-                    numero_echantillon=prel["numeroEchantillon"],
-                    date_prelevement=prel["datePrelevement"],
-                    site_inspection_id=prel["siteInspectionId"],
-                    matrice_prelevee_id=prel["matricePreleveeId"],
-                    espece_echantillon_id=prel["especeEchantillonId"],
-                )
-                prelevement_non_officiel.save()
+            prelevement = Prelevement(
+                lieu_id=prel["lieu_pk"],
+                structure_preleveur_id=prel["structurePreleveurId"],
+                numero_echantillon=prel["numeroEchantillon"],
+                date_prelevement=prel["datePrelevement"],
+                site_inspection_id=prel["siteInspectionId"],
+                matrice_prelevee_id=prel["matricePreleveeId"],
+                espece_echantillon_id=prel["especeEchantillonId"],
+                is_officiel=prel["isOfficiel"],
+                numero_phytopass=prel["numeroPhytopass"],
+                laboratoire_agree_id=prel["laboratoireAgreeId"],
+                laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
+            )
+            prelevement.save()
 
 
 class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
@@ -308,22 +291,14 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         # Lieux associés à la fiche de détection
         lieux = Lieu.objects.filter(fiche_detection=self.object).values()
 
-        # Prélèvements officiels associés à chaque lieu
-        prelevements_officiels = PrelevementOfficiel.objects.filter(lieu__fiche_detection=self.object).values()
-        for prelevement in prelevements_officiels:
+        # Prélèvements associés à chaque lieu
+        prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object).values()
+        for prelevement in prelevements:
             prelevement["uuid"] = str(uuid.uuid4())
-            prelevement["isPrelevementOfficiel"] = True
-
-        # Prélèvements non officiels associés à chaque lieu
-        prelevements_non_officiels = PrelevementNonOfficiel.objects.filter(lieu__fiche_detection=self.object).values()
-        for prelevement in prelevements_non_officiels:
-            prelevement["uuid"] = str(uuid.uuid4())
-            prelevement["isPrelevementOfficiel"] = False
 
         context["is_creation"] = False
         context["lieux"] = list(lieux)
-        context["prelevements_officiels"] = list(prelevements_officiels)
-        context["prelevements_non_officiels"] = list(prelevements_non_officiels)
+        context["prelevements"] = list(prelevements)
 
         return context
 

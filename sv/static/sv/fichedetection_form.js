@@ -55,7 +55,7 @@ document.addEventListener('alpine:init', () => {
 				id: crypto.randomUUID(),
 				nom: 'Prélèvement 1',
 				localisationId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09',
-				isPrelevementOfficiel: true,
+				isOfficiel: true,
 				datePrelevement: '2021-09-01',
 				structurePreleveurId: '1',
 				siteInspectionId: '1',
@@ -81,6 +81,7 @@ document.addEventListener('alpine:init', () => {
 		// Données du formulaire d'ajout d'un prélèvement
         formPrelevement: {
             id: '',
+            pk: null,
             localisationId: '',
             structurePreleveurId: '',
             numeroEchantillon: '',
@@ -88,7 +89,7 @@ document.addEventListener('alpine:init', () => {
             siteInspectionId: '',
             matricePreleveeId: '',
             especeEchantillonId: '',
-            isPrelevementOfficiel: false,
+            isOfficiel: false,
             numeroPhytopass: '',
             laboratoireAgreeId: '',
             laboratoireConfirmationOfficielleId: '',
@@ -185,10 +186,10 @@ document.addEventListener('alpine:init', () => {
                     siteInspectionId: prelevement.site_inspection_id,
                     matricePreleveeId: prelevement.matrice_prelevee_id,
                     especeEchantillonId: prelevement.espece_echantillon_id,
-                    isPrelevementOfficiel: prelevement.isPrelevementOfficiel,
-                    numeroPhytopass: prelevement.isPrelevementOfficiel ? prelevement.numero_phytopass : null,
-                    laboratoireAgreeId: prelevement.isPrelevementOfficiel ? prelevement.laboratoire_agree_id : null,
-                    laboratoireConfirmationOfficielleId: prelevement.isPrelevementOfficiel ? prelevement.laboratoire_confirmation_officielle_id : null,
+                    isOfficiel: prelevement.isOfficiel,
+                    numeroPhytopass: prelevement.numero_phytopass,
+                    laboratoireAgreeId: prelevement.laboratoire_agree_id,
+                    laboratoireConfirmationOfficielleId: prelevement.laboratoire_confirmation_officielle_id,
                 };
             });
         },
@@ -233,7 +234,6 @@ document.addEventListener('alpine:init', () => {
                     localisation.id === localisationIdToEdit ? {...this.localisationForm} : localisation
                 );
             }
-            console.log(this.localisations);
             dsfr(MODAL_ADD_EDIT_LOCALISATION).modal.conceal();
         },
 
@@ -346,8 +346,6 @@ document.addEventListener('alpine:init', () => {
                     prelevement.id === prelevementIdToEdit ? {...this.formPrelevement} : prelevement
                 );
             }
-            console.log(this.prelevements);
-            console.log(this.localisations);
             dsfr(MODAL_ADD_EDIT_PRELEVEMENT).modal.conceal();
         },
 
@@ -357,13 +355,14 @@ document.addEventListener('alpine:init', () => {
         resetPrelevementAddOrEditFormModal() {
             this.formPrelevement = {
                 localisationId: '',
+                pk: null,
                 structurePreleveurId: '',
                 numeroEchantillon: '',
                 datePrelevement: '',
                 siteInspectionId: '',
                 matricePreleveeId: '',
                 especeEchantillonId: '',
-                isPrelevementOfficiel: false,
+                isOfficiel: false,
                 numeroPhytopass: '',
                 laboratoireAgreeId: '',
                 laboratoireConfirmationOfficielleId: '',
@@ -421,8 +420,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         saveFicheDetection() {
-            console.log(this.ficheDetection);
-
             if(!this.$refs.fichedetectionForm.checkValidity()) {
                 this.$refs.fichedetectionForm.reportValidity();
                 return;
