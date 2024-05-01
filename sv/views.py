@@ -364,6 +364,13 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         return fiche_detection, None
 
     def update_lieux(self, localisations, fiche_detection):
+        # Suppression des lieux qui ne sont plus dans la liste
+        lieux_a_supprimer = Lieu.objects.filter(fiche_detection=fiche_detection).exclude(
+            pk__in=[loc["pk"] for loc in localisations if "pk" in loc]
+        )
+        lieux_a_supprimer.delete()
+
+        # Création ou mise à jour des lieux
         for loc in localisations:
             # Création ou récupération de l'objet Lieu
             # si pk -> update
