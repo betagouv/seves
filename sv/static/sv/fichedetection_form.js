@@ -157,33 +157,29 @@ document.addEventListener('alpine:init', () => {
 			// Récupération et initialisation des prélèvements (si modification d'une fiche de détection existante)
             const prelevementsData = JSON.parse(document.getElementById('prelevements').textContent);
             if (prelevementsData) {
-                this.prelevements = this.mapPrelevements(prelevementsData);
+                this.prelevements = prelevementsData.map(prelevement => {
+                    return {
+                        id: prelevement.uuid,
+                        pk: prelevement.id,
+                        localisationId: prelevement.lieu_id.toString(),
+                        structurePreleveurId: prelevement.structure_preleveur_id,
+                        numeroEchantillon: prelevement.numero_echantillon,
+                        datePrelevement: prelevement.date_prelevement,
+                        siteInspectionId: prelevement.site_inspection_id,
+                        matricePreleveeId: prelevement.matrice_prelevee_id,
+                        especeEchantillonId: prelevement.espece_echantillon_id,
+                        isOfficiel: prelevement.is_officiel,
+                        numeroPhytopass: prelevement.numero_phytopass,
+                        laboratoireAgreeId: prelevement.laboratoire_agree_id,
+                        laboratoireConfirmationOfficielleId: prelevement.laboratoire_confirmation_officielle_id,
+                    };
+                });
             }
         },
 
         getValueById(id) {
             const element = document.getElementById(id);
             return element ? element.value : null;
-        },
-
-        mapPrelevements(prelevementsData) {
-            return prelevementsData.map(prelevement => {
-                return {
-                    id: prelevement.uuid,
-                    pk: prelevement.id,
-                    localisationId: prelevement.lieu_id.toString(),
-                    structurePreleveurId: prelevement.structure_preleveur_id,
-                    numeroEchantillon: prelevement.numero_echantillon,
-                    datePrelevement: prelevement.date_prelevement,
-                    siteInspectionId: prelevement.site_inspection_id,
-                    matricePreleveeId: prelevement.matrice_prelevee_id,
-                    especeEchantillonId: prelevement.espece_echantillon_id,
-                    isOfficiel: prelevement.isOfficiel,
-                    numeroPhytopass: prelevement.numero_phytopass,
-                    laboratoireAgreeId: prelevement.laboratoire_agree_id,
-                    laboratoireConfirmationOfficielleId: prelevement.laboratoire_confirmation_officielle_id,
-                };
-            });
         },
 
         getNumeroIfExist() {
