@@ -10,3 +10,4 @@ pytest-django
 pytest-xdist
 pytest-playwright
 djhtml
+model-bakery
