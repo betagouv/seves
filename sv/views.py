@@ -378,9 +378,8 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             # Création ou récupération de l'objet Prelevement
             # si pk -> update
             # si pas de pk -> création
-            prelevement = (
-                Prelevement.objects.get(pk=prel["pk"]) if prel.get("pk") else Prelevement(lieu_id=prel["lieu_pk"])
-            )
+            prelevement = Prelevement.objects.get(pk=prel["pk"]) if prel.get("pk") else Prelevement()
+            prelevement.lieu_id = prel["lieu_pk"]
             prelevement.structure_preleveur_id = prel["structurePreleveurId"]
             prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
             prelevement.date_prelevement = prel["datePrelevement"]
