@@ -35,8 +35,7 @@
         <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
         <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
         {{ lieux|json_script:"lieux" }}
-        {{ prelevements_officiels|json_script:"prelevements-officiels" }}
-        {{ prelevements_non_officiels|json_script:"prelevements-non-officiels" }}
+        {{ prelevements|json_script:"prelevements" }}
         {{ departements|json_script:"departements" }}
         {{ unites|json_script:"unites" }}
         {{ statuts_evenement|json_script:"statuts-evenement" }}
