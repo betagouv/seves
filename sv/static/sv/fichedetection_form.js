@@ -80,19 +80,19 @@ document.addEventListener('alpine:init', () => {
 
 		// Données du formulaire d'ajout d'un prélèvement
         formPrelevement: {
-            id: '',
+            id: null,
             pk: null,
-            localisationId: '',
-            structurePreleveurId: '',
-            numeroEchantillon: '',
-            datePrelevement: '',
-            siteInspectionId: '',
-            matricePreleveeId: '',
-            especeEchantillonId: '',
+            localisationId: null,
+            structurePreleveurId: null,
+            numeroEchantillon: null,
+            datePrelevement: null,
+            siteInspectionId: null,
+            matricePreleveeId: null,
+            especeEchantillonId: null,
             isOfficiel: false,
-            numeroPhytopass: '',
-            laboratoireAgreeId: '',
-            laboratoireConfirmationOfficielleId: '',
+            numeroPhytopass: null,
+            laboratoireAgreeId: null,
+            laboratoireConfirmationOfficielleId: null,
         },
 
 		// ID de la localisation en cours de modification
@@ -154,18 +154,10 @@ document.addEventListener('alpine:init', () => {
                 });
             }
 
-			// Récupération et initialisation des prélèvements officiels (si modification d'une fiche de détection existante)
-            const prelevementsOfficielsData = JSON.parse(document.getElementById('prelevements-officiels').textContent);
-            if (prelevementsOfficielsData) {
-                let prelevementsOfficiels = this.mapPrelevements(prelevementsOfficielsData);
-                this.prelevements = prelevementsOfficiels;
-            }
-
-			// Récupération et initialisation des prélèvements non officiels (si modification d'une fiche de détection existante)
-            const prelevementsNonOfficielsData = JSON.parse(document.getElementById('prelevements-non-officiels').textContent);
-            if (prelevementsNonOfficielsData) {
-                let prelevementsNonOfficiels = this.mapPrelevements(prelevementsNonOfficielsData);
-                this.prelevements = this.prelevements.concat(prelevementsNonOfficiels);
+			// Récupération et initialisation des prélèvements (si modification d'une fiche de détection existante)
+            const prelevementsData = JSON.parse(document.getElementById('prelevements').textContent);
+            if (prelevementsData) {
+                this.prelevements = this.mapPrelevements(prelevementsData);
             }
         },
 
