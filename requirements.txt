@@ -17,7 +17,9 @@ distlib==0.3.8
 dj-static==0.0.6
     # via -r requirements.in
 django==5.0.3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   model-bakery
 django-environ==0.11.2
     # via -r requirements.in
 djhtml==3.0.6
@@ -36,6 +38,8 @@ idna==3.7
     # via requests
 iniconfig==2.0.0
     # via pytest
+model-bakery==1.18.0
+    # via -r requirements.in
 nodeenv==1.8.0
     # via pre-commit
 packaging==24.0

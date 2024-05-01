@@ -34,7 +34,7 @@ class FicheDetectionFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Enregistrer")
+        return self.page.get_by_test_id("fiche-detection-save-btn")
 
     @property
     def add_lieu_btn(self) -> Locator:
@@ -157,7 +157,7 @@ class LieuFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_label("Ajouter une localisation").get_by_role("button", name="Enregistrer")
+        return self.page.get_by_test_id("lieu-add-btn")
 
     @property
     def title(self) -> Locator:
