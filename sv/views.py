@@ -361,7 +361,13 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.save()
             loc["lieu_pk"] = lieu.pk
 
-    def update_prelevements(self, prelevements, localisations):
+    def update_prelevements(self, prelevements, localisations, fiche_detection):
+        # Suppression des prélèvements qui ne sont plus dans la liste
+        prelevements_a_supprimer = Prelevement.objects.filter(lieu__fiche_detection=fiche_detection).exclude(
+            pk__in=[prel["pk"] for prel in prelevements if "pk" in prel]
+        )
+        prelevements_a_supprimer.delete()
+
         for prel in prelevements:
             # recupérer le lieu_pk associé à chaque prélèvement prel
             prel["lieu_pk"] = next(
@@ -407,7 +413,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             fiche_detection.save()
 
             self.update_lieux(localisations, fiche_detection)
-            self.update_prelevements(prelevements, localisations)
+            self.update_prelevements(prelevements, localisations, fiche_detection)
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
