@@ -361,9 +361,33 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.save()
             loc["lieu_pk"] = lieu.pk
 
+    def update_prelevements(self, prelevements, localisations):
+        for prel in prelevements:
+            # recupérer le lieu_pk associé à chaque prélèvement prel
+            prel["lieu_pk"] = next(
+                (loc["lieu_pk"] for loc in localisations if loc["id"] == prel["localisationId"]),
+                None,
+            )
+
+            prelevement = Prelevement(
+                lieu_id=prel["lieu_pk"],
+                structure_preleveur_id=prel["structurePreleveurId"],
+                numero_echantillon=prel["numeroEchantillon"] if prel["numeroEchantillon"] else "",
+                date_prelevement=prel["datePrelevement"],
+                site_inspection_id=prel["siteInspectionId"],
+                matrice_prelevee_id=prel["matricePreleveeId"],
+                espece_echantillon_id=prel["especeEchantillonId"],
+                is_officiel=prel["isOfficiel"],
+                numero_phytopass=prel["numeroPhytopass"] if prel["numeroPhytopass"] else "",
+                laboratoire_agree_id=prel["laboratoireAgreeId"],
+                laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
+            )
+            prelevement.save()
+
     def post(self, request, pk):
         data = request.POST
         localisations = json.loads(data["localisations"])
+        prelevements = json.loads(data["prelevements"])
 
         # Validation
         errors = self.validate_data(data)
@@ -378,6 +402,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             fiche_detection.save()
 
             self.update_lieux(localisations, fiche_detection)
+            self.update_prelevements(prelevements, localisations)
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
