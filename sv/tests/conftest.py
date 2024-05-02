@@ -1,6 +1,6 @@
 import os
 import pytest
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 
 
@@ -17,3 +17,8 @@ def form_elements(page: Page):
 @pytest.fixture
 def lieu_form_elements(page: Page):
     return LieuFormDomElements(page)
+
+
+@pytest.fixture
+def prelevement_form_elements(page: Page):
+    return PrelevementFormDomElements(page)

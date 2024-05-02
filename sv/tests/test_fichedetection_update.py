@@ -4,8 +4,14 @@ from playwright.sync_api import Page, expect
 from django.urls import reverse
 from ..models import (
     FicheDetection,
+    Lieu,
+    Prelevement,
 )
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+
+
+def get_fiche_detection_update_form_url(fiche_detection: FicheDetection):
+    return reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.id})
 
 
 @pytest.fixture
@@ -13,17 +19,34 @@ def fiche_detection():
     return baker.make(FicheDetection, _fill_optional=True)
 
 
-@pytest.fixture(autouse=True)
-def test_goto_fiche_detection_update_form_url(live_server, page: Page, fiche_detection: FicheDetection):
-    """Ouvre la page de modification de la fiche de détection."""
-    fiche_detection_update_form_url = reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.id})
-    return page.goto(f"{live_server.url}{fiche_detection_update_form_url}")
+@pytest.fixture
+def fiche_detection_with_one_lieu():
+    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    return fiche_detection
+
+
+@pytest.fixture
+def fiche_detection_with_two_lieux():
+    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    return fiche_detection
+
+
+@pytest.fixture
+def fiche_detection_with_one_lieu_and_one_prelevement():
+    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    baker.make(Prelevement, lieu=lieu, _fill_optional=True)
+    return fiche_detection
 
 
 def test_page_title(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
 ):
     """Test que le titre de la page est bien "Modification de la fiche détection n°2024.1"""
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     expect(form_elements.title).to_contain_text(f"Modification de la fiche détection n°{fiche_detection.numero}")
 
 
@@ -31,6 +54,8 @@ def test_fiche_detection_update_page_content(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
 ):
     """Test que toutes les données de la fiche de détection sont affichées sur la page de modification de la fiche de détection."""
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
 
     # Createur
     expect(form_elements.createur_input).to_contain_text(fiche_detection.createur.nom)
@@ -77,15 +102,14 @@ def test_fiche_detection_update_page_content(
     # TODO: ajouter les tests pour les lieux et les prélèvements
 
 
-def test_fiche_detection_update_with_createur_only(
+def test_fiche_detection_update_page_content_with_createur_only(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
     """Test que la page de modification de la fiche de détection affiche uniquement le créateur pour une fiche détection contenant uniquement le créateur."""
 
     fiche_detection_with_createur_only = baker.make(FicheDetection)
-    goto_url = reverse("fiche-detection-modification", kwargs={"pk": fiche_detection_with_createur_only.id})
 
-    page.goto(f"{live_server.url}{goto_url}")
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_createur_only)}")
 
     expect(form_elements.createur_input).to_contain_text(fiche_detection_with_createur_only.createur.nom)
     expect(form_elements.createur_input).to_have_value(str(fiche_detection_with_createur_only.createur.id))
@@ -108,9 +132,10 @@ def test_fiche_detection_update_with_createur_only(
 def test_fiche_detection_update_without_lieux_and_prelevement(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
 ):
-    """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées apès modification."""
-    new_fiche_detection = baker.make(FicheDetection, _fill_optional=True)
-    page.reload()
+    """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
+    new_fiche_detection = baker.prepare(FicheDetection, _fill_optional=True, _save_related=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.createur_input.select_option(str(new_fiche_detection.createur.id))
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
     # TODO
@@ -154,14 +179,365 @@ def test_add_new_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
 ):
-    """Test que l'ajout d'un nouveau lieu est bien enregistré."""
+    """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
+    lieu = baker.prepare(Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _save_related=True, _fill_optional=True)
 
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.add_lieu_btn.click()
-    lieu_form_elements.nom_input.fill("test")
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.commune_input.fill(lieu.commune)
+    # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
+    lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+    lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
+    lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
+    lieu_from_db = fd.lieux.first()
     assert fd.lieux.count() == 1
-    assert fd.lieux.first().nom == "test"
+    assert lieu_from_db.nom == lieu.nom
+    assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
+    assert lieu_from_db.commune == lieu.commune
+    # assert lieu_from_db.code_insee == lieu.code_insee
+    assert lieu_from_db.departement == lieu.departement
+    assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
+    assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+
+
+def test_add_multiple_lieux(
+    live_server,
+    page: Page,
+    fiche_detection: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
+    # TODO: supprimer les valeurs brutes wgs84_latitude et wgs84_longitude
+    lieux = baker.prepare(
+        Lieu, _quantity=3, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+    )
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    for lieu in lieux:
+        form_elements.add_lieu_btn.click()
+        lieu_form_elements.nom_input.fill(lieu.nom)
+        lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+        lieu_form_elements.commune_input.fill(lieu.commune)
+        # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
+        lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+        lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
+        lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+        lieu_form_elements.save_btn.click()
+
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection.id)
+    lieux_from_db = fd.lieux.all()
+    assert fd.lieux.count() == 3
+    for lieu, lieu_from_db in zip(lieux, lieux_from_db):
+        assert lieu_from_db.nom == lieu.nom
+        assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
+        assert lieu_from_db.commune == lieu.commune
+        # assert lieu_from_db.code_insee == lieu.code_insee
+        assert lieu_from_db.departement == lieu.departement
+        assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
+        assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+
+
+def test_update_lieu(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
+    new_lieu = baker.prepare(
+        Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+    )
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    page.get_by_role("button", name="Modifier la localisation").click()
+    lieu_form_elements.nom_input.fill(new_lieu.nom)
+    lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
+    lieu_form_elements.commune_input.fill(new_lieu.commune)
+    # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
+    lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+    lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
+    lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
+    lieu_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
+    lieu_from_db = fd.lieux.first()
+    assert lieu_from_db.nom == new_lieu.nom
+    assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
+    assert lieu_from_db.commune == new_lieu.commune
+    # assert lieu_from_db.code_insee == new_lieu.code_insee
+    assert lieu_from_db.departement == new_lieu.departement
+    assert lieu_from_db.wgs84_latitude == new_lieu.wgs84_latitude
+    assert lieu_from_db.wgs84_longitude == new_lieu.wgs84_longitude
+
+
+def test_update_two_lieux(
+    live_server,
+    page: Page,
+    fiche_detection_with_two_lieux: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
+    new_lieux = baker.prepare(
+        Lieu, _quantity=2, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+    )
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
+    for index, new_lieu in enumerate(new_lieux):
+        if index == 0:
+            page.get_by_role("button", name="Modifier la localisation").first.click()
+        else:
+            page.get_by_role("button", name="Modifier la localisation").nth(index).click()
+        lieu_form_elements.nom_input.fill(new_lieu.nom)
+        lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
+        lieu_form_elements.commune_input.fill(new_lieu.commune)
+        # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
+        lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+        lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
+        lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
+        lieu_form_elements.save_btn.click()
+
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
+    lieux_from_db = fd.lieux.all()
+    for lieu, new_lieu in zip(lieux_from_db, new_lieux):
+        assert lieu.nom == new_lieu.nom
+        assert lieu.adresse_lieu_dit == new_lieu.adresse_lieu_dit
+        assert lieu.commune == new_lieu.commune
+        # assert lieu.code_insee == new_lieu.code_insee
+        assert lieu.departement == new_lieu.departement
+        assert lieu.wgs84_latitude == new_lieu.wgs84_latitude
+        assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
+
+
+def test_delete_lieu(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
+    Il existe qu'un seul lieu en bd."""
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer", exact=True).click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
+    assert fd.lieux.count() == 0
+
+
+def test_delete_one_lieu_from_set_of_lieux(
+    live_server,
+    page: Page,
+    fiche_detection_with_two_lieux: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
+    Il existe plusieurs lieux en bd. Valide la suppression du lieu selectionné."""
+    pass
+    """
+    lieu_to_delete = fiche_detection_with_two_lieux.lieux.first()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
+    page.locator("div").filter(has_text=f"{lieu_to_delete.nom} Modifier la localisation").get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer", exact=True).click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
+    lieu_from_db = fd.lieux.first()
+    assert fd.lieux.count() == 1
+    assert lieu_from_db.id != lieu_deleted.id
+    """
+
+
+def test_delete_multiple_lieux(
+    live_server,
+    page: Page,
+    fiche_detection_with_two_lieux: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    """Test que la suppression de plusieurs lieux existants est bien enregistrée en base de données."""
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
+    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer", exact=True).click()
+    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer", exact=True).click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
+    assert fd.lieux.count() == 0
+
+
+def test_add_new_prelevement_non_officiel(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+    prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
+    prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
+    prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
+    prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
+    prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    prelevement_from_db = Prelevement.objects.get(lieu=lieu)
+    assert prelevement_from_db.lieu.id == prelevement.lieu.id
+    assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+    assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
+    assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
+    assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
+    assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
+    assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+
+
+def test_add_new_prelevement_officiel(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+    prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
+    prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
+    prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
+    prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
+    prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    prelevement_form_elements.numero_phytopass_input.fill(prelevement.numero_phytopass)
+    prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
+    prelevement_form_elements.laboratoire_confirmation_input.select_option(
+        str(prelevement.laboratoire_confirmation_officielle.id)
+    )
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    prelevement_from_db = Prelevement.objects.get(lieu=lieu)
+    assert prelevement_from_db.lieu.id == prelevement.lieu.id
+    assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+    assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
+    assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
+    assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
+    assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
+    assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+    assert prelevement_from_db.is_officiel is True
+    assert prelevement_from_db.numero_phytopass == prelevement.numero_phytopass
+    assert prelevement_from_db.laboratoire_agree.id == prelevement.laboratoire_agree.id
+    assert (
+        prelevement_from_db.laboratoire_confirmation_officielle.id == prelevement.laboratoire_confirmation_officielle.id
+    )
+
+
+def test_add_multiple_prelevements(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    prelevements = baker.prepare(Prelevement, _quantity=3, lieu=lieu, _fill_optional=True, _save_related=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    for prelevement in prelevements:
+        form_elements.add_prelevement_btn.click()
+        prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+        prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+        prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
+        prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
+        prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
+        prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
+        prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+        prelevement_form_elements.save_btn.click()
+
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    prelevements_from_db = Prelevement.objects.filter(lieu=lieu)
+    for prelevement, prelevement_from_db in zip(prelevements, prelevements_from_db):
+        assert prelevement_from_db.lieu.id == prelevement.lieu.id
+        assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+        assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
+        assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
+        assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
+        assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
+        assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+
+
+def test_update_prelevement(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
+    new_lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, _fill_optional=True)
+    new_prelevement = baker.prepare(Prelevement, lieu=new_lieu, _fill_optional=True, _save_related=True)
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+    prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
+    prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
+    prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
+    prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
+    prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
+    prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    prelevement_from_db = Prelevement.objects.get(lieu=new_lieu)
+    assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
+    assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
+    assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
+    assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
+    assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
+    assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
+    assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id

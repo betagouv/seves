@@ -250,7 +250,7 @@
                                 <div class="fr-modal__footer">
                                     <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
                                         <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-localisation">Annuler</button>
-                                        <input type="submit" :value="localisationIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn" data-testid="lieu-add-btn"></input>
+                                        <input type="submit" :value="localisationIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn" data-testid="lieu-save-btn"></input>
                                     </div>
                                 </div>
                             </form>
@@ -276,7 +276,7 @@
                                 <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
                                     <div id="localisation" class="fr-select-group">
                                         <label class="fr-label">Localisation</label>
-                                        <select class="fr-select" x-model="formPrelevement.localisationId">
+                                        <select class="fr-select" x-model="formPrelevement.localisationId" data-testid="prelevement-form-lieu">
                                             <template x-for="localisation in localisations" :key="localisation.id">
                                                 <option :value="localisation.id" x-text="localisation.nomLocalisation"></option>
                                             </template>
@@ -284,7 +284,7 @@
                                     </div>
                                     <div id="structure" class="fr-select-group">
                                         <label class="fr-label">Structure</label>
-                                        <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required>
+                                        <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required data-testid="prelevement-form-structure">
                                             <option value="">----</option>
                                             <template x-for="structure in structuresPreleveurs" :key="structure.id">
                                                 <option :value="structure.id" x-text="structure.nom"></option>
@@ -296,12 +296,12 @@
                                         <input x-model="formPrelevement.numeroEchantillon" type="text" class="fr-input">
                                     </p>
                                     <p id="date-prelevement">
-                                        <label class="fr-label">Date prélèvement</label>
-                                        <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input">
+                                        <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
+                                        <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input">
                                     </p>
                                     <p id="site-inspection">
                                         <label class="fr-label">Site d'inspection</label>
-                                        <select x-model="formPrelevement.siteInspectionId" class="fr-select">
+                                        <select x-model="formPrelevement.siteInspectionId" class="fr-select" data-testid="prelevement-form-site-inspection">
                                             <option value="">----</option>
                                             <template x-for="site in sitesInspections" :key="site.id">
                                                 <option :value="site.id" x-text="site.nom"></option>
@@ -310,7 +310,7 @@
                                     </p>
                                     <p id="matrice-prelevee">
                                         <label class="fr-label">Matrice prélevée</label>
-                                        <select x-model="formPrelevement.matricePreleveeId" class="fr-select">
+                                        <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
                                             <option value="">----</option>
                                             <template x-for="matrice in matricesPrelevees" :key="matrice.id">
                                                 <option :value="matrice.id" x-text="matrice.libelle"></option>
@@ -319,7 +319,7 @@
                                     </p>
                                     <p id="espece-echantillon">
                                         <label class="fr-label">Espèce de l'echantillon</label>
-                                        <select x-model="formPrelevement.especeEchantillonId" class="fr-select">
+                                        <select x-model="formPrelevement.especeEchantillonId" class="fr-select" data-testid="prelevement-form-espece-echantillon">
                                             <option value="">----</option>
                                             <template x-for="espece in especesEchantillon" :key="espece.id">
                                                 <option :value="espece.id" x-text="espece.libelle"></option>
@@ -349,7 +349,7 @@
                                         </p>
                                         <p id="laboratoire-agree">
                                             <label class="fr-label">Laboratoire agrée</label>
-                                            <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select">
+                                            <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select" data-testid="prelevement-form-laboratoire-agree">
                                                 <option value="">----</option>
                                                 <template x-for="laboratoire_agree in laboratoiresAgrees" :key="laboratoire_agree.id">
                                                     <option :value="laboratoire_agree.id" x-text="laboratoire_agree.nom"></option>
@@ -358,7 +358,7 @@
                                         </p>
                                         <p id="laboratoire-confirmation">
                                             <label class="fr-label">Laboratoire de confirmation</label>
-                                            <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select">
+                                            <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select" data-testid="prelevement-form-laboratoire-confirmation">
                                                 <option value="">----</option>
                                                 <template x-for="laboratoire_confirmation_officielle in laboratoiresConfirmationOfficielle" :key="laboratoire_confirmation_officielle.id">
                                                     <option :value="laboratoire_confirmation_officielle.id" x-text="laboratoire_confirmation_officielle.nom"></option>
@@ -370,7 +370,7 @@
                                 <div class="fr-modal__footer">
                                     <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
                                         <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement">Annuler</button>
-                                        <input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'"></input>
+                                        <input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" data-testid="prelevement-form-save-btn"></input>
                                     </div>
                                 </div>
                             </form>
