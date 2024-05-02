@@ -322,7 +322,7 @@ class Prelevement(models.Model):
         verbose_name_plural = "Prélèvements"
         db_table = "sv_prelevement"
 
-    lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu")
+    lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu", related_name="prelevements")
     structure_preleveur = models.ForeignKey(
         StructurePreleveur, on_delete=models.PROTECT, verbose_name="Structure préleveur"
     )

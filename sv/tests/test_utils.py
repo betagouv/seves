@@ -157,7 +157,7 @@ class LieuFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("lieu-add-btn")
+        return self.page.get_by_test_id("lieu-save-btn")
 
     @property
     def title(self) -> Locator:
@@ -226,3 +226,110 @@ class LieuFormDomElements:
     @property
     def coord_gps_wgs84_longitude_input(self) -> Locator:
         return self.page.locator("#coordonnees-gps-wgs84-longitude")
+
+
+class PrelevementFormDomElements:
+    """Classe contenant les éléments du DOM de la modal de création/modification d'un prélèvement"""
+
+    def __init__(self, page: Page):
+        self.page = page
+
+    @property
+    def close_btn(self) -> Locator:
+        return self.page.get_by_role("button", name="Fermer")
+
+    @property
+    def cancel_btn(self) -> Locator:
+        return self.page.get_by_role("button", name="Annuler")
+
+    @property
+    def save_btn(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-save-btn")
+
+    @property
+    def title(self) -> Locator:
+        return self.page.get_by_role("heading", name="Ajouter un prelevement")
+
+    @property
+    def lieu_label(self) -> Locator:
+        return self.page.get_by_text("Localisation", exact=True)
+
+    @property
+    def lieu_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-lieu")
+
+    @property
+    def structure_label(self) -> Locator:
+        return self.page.get_by_text("Structure")
+
+    @property
+    def structure_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-structure")
+
+    @property
+    def numero_echantillon_label(self) -> Locator:
+        return self.page.get_by_text("N° d'échantillon")
+
+    @property
+    def numero_echantillon_input(self) -> Locator:
+        return self.page.locator("#numero-echantillon").get_by_role("textbox")
+
+    @property
+    def date_prelevement_label(self) -> Locator:
+        return self.page.get_by_text("Date de prélèvement")
+
+    @property
+    def date_prelevement_input(self) -> Locator:
+        return self.page.get_by_label("Date prélèvement")
+
+    @property
+    def site_inspection_label(self) -> Locator:
+        return self.page.get_by_text("Site d'inspection")
+
+    @property
+    def site_inspection_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-site-inspection")
+
+    @property
+    def matrice_prelevee_label(self) -> Locator:
+        return self.page.get_by_text("Matrice prélevée")
+
+    @property
+    def matrice_prelevee_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-matrice-prelevee")
+
+    @property
+    def espece_echantillon_label(self) -> Locator:
+        return self.page.get_by_text("Espèce de l'échantillon")
+
+    @property
+    def espece_echantillon_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-espece-echantillon")
+
+    @property
+    def prelevement_officiel_checkbox(self) -> Locator:
+        return self.page.get_by_text("Prélèvement officiel")
+
+    @property
+    def numero_phytopass_label(self) -> Locator:
+        return self.page.get_by_text("N° Phytopass")
+
+    @property
+    def numero_phytopass_input(self) -> Locator:
+        return self.page.locator("#numero-phytopass").get_by_role("textbox")
+
+    @property
+    def laboratoire_agree_label(self) -> Locator:
+        return self.page.get_by_text("Laboratoire agréé")
+
+    @property
+    def laboratoire_agree_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-laboratoire-agree")
+
+    @property
+    def laboratoire_confirmation_label(self) -> Locator:
+        return self.page.get_by_text("Laboratoire de confirmation")
+
+    @property
+    def laboratoire_confirmation_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-laboratoire-confirmation")
