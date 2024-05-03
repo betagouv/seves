@@ -22,3 +22,11 @@ def lieu_form_elements(page: Page):
 @pytest.fixture
 def prelevement_form_elements(page: Page):
     return PrelevementFormDomElements(page)
+
+
+def check_select_options(page, label, expected_options):
+    options = page.locator(f"label:has-text('{label}') ~ select option").element_handles()
+    option_texts = [option.inner_text() for option in options]
+    assert (
+        option_texts == ["----"] + expected_options
+    ), f"Les options pour {label} ne correspondent pas aux options attendues"
