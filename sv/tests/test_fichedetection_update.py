@@ -2,6 +2,7 @@ import pytest
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from ..models import (
     FicheDetection,
     Lieu,
@@ -235,10 +236,11 @@ def test_add_multiple_lieux(
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
 
-    fd = FicheDetection.objects.get(id=fiche_detection.id)
-    lieux_from_db = fd.lieux.all()
-    assert fd.lieux.count() == 3
-    for lieu, lieu_from_db in zip(lieux, lieux_from_db):
+    lieu_1_from_db = Lieu.objects.get(nom=lieux[0].nom)
+    lieu_2_from_db = Lieu.objects.get(nom=lieux[1].nom)
+    lieu_3_from_db = Lieu.objects.get(nom=lieux[2].nom)
+
+    for lieu, lieu_from_db in zip(lieux, [lieu_1_from_db, lieu_2_from_db, lieu_3_from_db]):
         assert lieu_from_db.nom == lieu.nom
         assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
         assert lieu_from_db.commune == lieu.commune
@@ -334,14 +336,15 @@ def test_delete_lieu(
 ):
     """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
     Il existe qu'un seul lieu en bd."""
+    lieu_id = fiche_detection_with_one_lieu.lieux.first().id
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     page.get_by_role("button", name="Supprimer la localisation").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
 
-    fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
-    assert fd.lieux.count() == 0
+    with pytest.raises(ObjectDoesNotExist):
+        Lieu.objects.get(id=lieu_id)
 
 
 def test_delete_one_lieu_from_set_of_lieux(
@@ -353,21 +356,8 @@ def test_delete_one_lieu_from_set_of_lieux(
 ):
     """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
     Il existe plusieurs lieux en bd. Valide la suppression du lieu selectionné."""
+    # TODO
     pass
-    """
-    lieu_to_delete = fiche_detection_with_two_lieux.lieux.first()
-
-    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
-    page.locator("div").filter(has_text=f"{lieu_to_delete.nom} Modifier la localisation").get_by_role("button", name="Supprimer la localisation").first.click()
-    page.get_by_role("button", name="Supprimer", exact=True).click()
-    form_elements.save_btn.click()
-    page.wait_for_timeout(200)
-
-    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
-    lieu_from_db = fd.lieux.first()
-    assert fd.lieux.count() == 1
-    assert lieu_from_db.id != lieu_deleted.id
-    """
 
 
 def test_delete_multiple_lieux(
@@ -541,3 +531,101 @@ def test_update_prelevement(
     assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
+
+
+def test_update_multiple_prelevements(
+    live_server,
+    page: Page,
+    fiche_detection: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
+    lieu1, lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, _quantity=2)
+    baker.make(Prelevement, lieu=lieu1, _fill_optional=True)
+    baker.make(Prelevement, lieu=lieu2, _fill_optional=True)
+    new_prelevement_1 = baker.prepare(Prelevement, lieu=lieu2, _fill_optional=True, _save_related=True)
+    new_prelevement_2 = baker.prepare(Prelevement, lieu=lieu1, _fill_optional=True, _save_related=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
+        if index == 0:
+            page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+        else:
+            page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(3).click()
+
+        prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+        prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
+        prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
+        prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
+        prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
+        prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
+        prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+        prelevement_form_elements.save_btn.click()
+
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    prelevement_from_db_1 = Prelevement.objects.get(lieu=new_prelevement_1.lieu)
+    prelevement_from_db_2 = Prelevement.objects.get(lieu=new_prelevement_2.lieu)
+    for prelevement_from_db, new_prelevement in zip(
+        [prelevement_from_db_1, prelevement_from_db_2], [new_prelevement_1, new_prelevement_2]
+    ):
+        assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
+        assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
+        assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
+        assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
+        assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
+        assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
+        assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
+
+
+def test_delete_prelevement(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que la suppression d'un prelevement existant est bien enregistrée en base de données."""
+    prelevement_id = fiche_detection_with_one_lieu_and_one_prelevement.lieux.first().prelevements.first().id
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
+    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    with pytest.raises(ObjectDoesNotExist):
+        Prelevement.objects.get(id=prelevement_id)
+
+
+def test_delete_multiple_prelevements(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que la suppression de plusieurs prelevements existants est bien enregistrée en base de données."""
+    prelevement_1, prelevement_2 = baker.make(
+        Prelevement, lieu=fiche_detection_with_one_lieu.lieux.first(), _quantity=2
+    )
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
+    # Supprime le premier prélèvement
+    page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(2).click()
+    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+
+    # Supprime le deuxième prélèvement
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").nth(1).click()
+    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+
+    form_elements.save_btn.click()
+    page.wait_for_timeout(200)
+
+    with pytest.raises(ObjectDoesNotExist):
+        Prelevement.objects.get(id=prelevement_1.id)
+        Prelevement.objects.get(id=prelevement_2.id)
