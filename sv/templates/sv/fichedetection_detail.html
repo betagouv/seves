@@ -253,54 +253,30 @@
 			<!-- Prélèvements et analyses -->
                 <div id="prelevements">
                     <h2>Prélèvements</h2>
-				<!-- Prélèvements officiels-->
-                    <div id="prelevements-officiels-list">
-                        {% for prelevement_officiel in prelevements_officiels %}
-                            <div class="prelevement-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
-                                <div class="fr-card__body">
-                                    <div class="fr-card__content">
-                                        <p class="fr-card__title">{{ prelevement_officiel.structure_preleveur }}</p>
-                                        <p class="fr-card__desc">
-                                            {% if prelevement_officiel.numero_phytopass %}
-                                                {{ prelevement_officiel.numero_phytopass }}<br>
-                                            {% endif %}
-                                            {% if prelevement_officiel.laboratoire_agree %}
-                                                {{ prelevement_officiel.laboratoire_agree.numero_agrement }}<br>
-                                            {% endif %}
-                                            {% if prelevement_officiel.espece_echantillon %}
-                                                {{ prelevement_officiel.espece_echantillon }}<br>
-                                            {% endif %}
-                                        </p>
-                                        <p class="fr-card__desc prelevement-type">Prélèvement officiel</p>
-                                        <div class="fr-card__start">
-                                            <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_officiel.lieu.nom }}</p>
-                                        </div>
+                    {% for prelevement in prelevements %}
+                        <div class="prelevement fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border" style="margin-bottom: 1rem;">
+                            <div class="fr-card__body">
+                                <div class="fr-card__content">
+                                    <p class="fr-card__title">{{ prelevement.structure_preleveur }}</p>
+                                    <p class="fr-card__desc">
+                                        {% if prelevement.numero_phytopass %}
+                                            {{ prelevement.numero_phytopass }}<br>
+                                        {% endif %}
+                                        {% if prelevement.laboratoire_agree %}
+                                            {{ prelevement.laboratoire_agree.numero_agrement }}<br>
+                                        {% endif %}
+                                        {% if prelevement.espece_echantillon %}
+                                            {{ prelevement.espece_echantillon }}<br>
+                                        {% endif %}
+                                    </p>
+                                    <p class="fr-card__desc prelevement-type">Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}</p>
+                                    <div class="fr-card__start">
+                                        <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement.lieu.nom }}</p>
                                     </div>
                                 </div>
                             </div>
-                        {% endfor %}
-                    </div>
-				<!-- Prélèvements non officiels-->
-                    <div id="prelevement-non-officiels-list">
-                        {% for prelevement_non_officiel in prelevements_non_officiels %}
-                            <div class="prelevement-non-officiel fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
-                                <div class="fr-card__body">
-                                    <div class="fr-card__content">
-                                        <p class="fr-card__title">{{ prelevement_non_officiel.structure_preleveur }}</p>
-                                        <p class="fr-card__desc">
-                                            {% if prelevement_non_officiel.espece_echantillon %}
-                                                {{ prelevement_non_officiel.espece_echantillon }}<br>
-                                            {% endif %}
-                                            <span class="prelevement-type">Prélèvement non officiel</span>
-                                        </p>
-                                        <div class="fr-card__start">
-                                            <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement_non_officiel.lieu.nom }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
+                        </div>
+                    {% endfor %}
                 </div>
 
 			<!-- Mesures de gestion -->
