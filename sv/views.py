@@ -3,7 +3,6 @@ from datetime import datetime
 import uuid
 from django.shortcuts import redirect
 from django.views.generic import (
-    TemplateView,
     ListView,
     DetailView,
     CreateView,
@@ -33,10 +32,6 @@ from .models import (
     NumeroFiche,
     Departement,
 )
-
-
-class HomeView(TemplateView):
-    template_name = "sv/index.html"
 
 
 class FicheDetectionListView(ListView):
