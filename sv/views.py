@@ -21,7 +21,6 @@ from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-<<<<<<< HEAD
 from django import forms
 
 from core.mixins import (
@@ -34,9 +33,8 @@ from core.mixins import (
 from core.redirect import safe_redirect
 from sv.forms import FreeLinkForm
 from .export import FicheDetectionExport
-=======
 from django.forms import ModelForm
->>>>>>> d5c9bae (Formulaire Fiche zone)
+from django.forms import modelformset_factory
 from .models import (
     FicheDetection,
     Lieu,
@@ -53,14 +51,12 @@ from .models import (
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
     Departement,
-<<<<<<< HEAD
     Region,
     Etat,
     TypeExploitant,
     PositionChaineDistribution,
-=======
     FicheZone,
->>>>>>> d5c9bae (Formulaire Fiche zone)
+    Zone,
 )
 from core.forms import DSFRForm
 from core.models import Structure
@@ -626,10 +622,35 @@ class FicheZoneForm(ModelForm):
         exclude = ["numero"]
 
 
+ZoneFormSet = modelformset_factory(Zone, exclude=["fiche_zone"])
+
+
 class FicheZoneCreateView(TemplateView):
     template_name = "sv/fichezone_form.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["fiche_zone_form"] = FicheZoneForm()
+        context["zone_formset"] = ZoneFormSet(queryset=Zone.objects.none())
         return context
+
+    def post(self, request):
+        fiche_zone_form = FicheZoneForm(request.POST)
+        zone_formset = ZoneFormSet(request.POST)
+
+        if fiche_zone_form.is_valid() and zone_formset.is_valid():
+            with transaction.atomic():
+                fiche_zone_form.instance.numero = NumeroFiche.get_next_numero()
+                fiche_zone = fiche_zone_form.save()
+                zones = zone_formset.save(commit=False)
+                for zone in zones:
+                    zone.fiche_zone = fiche_zone
+                    zone.save()
+                return HttpResponse("ok")
+                # return redirect(reverse("fiche-zone-vue-detaillee", args=[fiche_zone.pk]))
+        else:
+            print(fiche_zone_form.errors)
+            print(zone_formset.errors)
+            return self.render_to_response(
+                self.get_context_data(fiche_zone_form=fiche_zone_form, zone_formset=zone_formset)
+            )

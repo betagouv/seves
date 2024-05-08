@@ -2,7 +2,13 @@
 
 {% block content %}
     <h1>Création d'une fiche zone</h1>
-    <form action="">
+    <form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
+        {% csrf_token %}
         {{ fiche_zone_form.as_p }}
+        <fieldset>
+            <legend>Zone</legend>
+            {{ zone_formset.as_p }}
+        </fieldset>
+        <input type="submit" value="Enregistrer" />
     </form>
 {% endblock %}
