@@ -22,6 +22,9 @@ from .models import (
     StatutEvenement,
     FicheDetection,
     NumeroFiche,
+    CaracteristiquesPrincipalesZoneDelimitee,
+    Zone,
+    FicheZone,
 )
 
 admin.site.site_header = "Administration de Sèves"
@@ -48,3 +51,6 @@ admin.site.register(Prelevement)
 admin.site.register(StatutEvenement)
 admin.site.register(FicheDetection)
 admin.site.register(NumeroFiche)
+admin.site.register(CaracteristiquesPrincipalesZoneDelimitee)
+admin.site.register(Zone)
+admin.site.register(FicheZone)
