@@ -1,14 +1,16 @@
-{% extends 'sv/base.html' %}
+<h1>Création d'une fiche zone</h1>
+<form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
+    {% csrf_token %}
 
-{% block content %}
-    <h1>Création d'une fiche zone</h1>
-    <form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
-        {% csrf_token %}
-        {{ fiche_zone_form.as_p }}
+    {{ fiche_zone_form.as_p }}
+
+    {{ zone_formset.management_form }}
+    {% for zone_form in zone_formset %}
         <fieldset>
             <legend>Zone</legend>
-            {{ zone_formset.as_p }}
+            {{ zone_form.as_p }}
         </fieldset>
-        <input type="submit" value="Enregistrer" />
-    </form>
-{% endblock %}
+    {% endfor %}
+
+    <input type="submit" value="Enregistrer" />
+</form>

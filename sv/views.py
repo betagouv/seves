@@ -5,8 +5,8 @@ import uuid
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from django.shortcuts import redirect
 from django.views import View
+from django.shortcuts import redirect, render
 from django.views.generic import (
     ListView,
     DetailView,
@@ -622,7 +622,7 @@ class FicheZoneForm(ModelForm):
         exclude = ["numero"]
 
 
-ZoneFormSet = modelformset_factory(Zone, exclude=["fiche_zone"])
+ZoneFormSet = modelformset_factory(Zone, exclude=["fiche_zone"], extra=2)
 
 
 class FicheZoneCreateView(TemplateView):
@@ -647,10 +647,11 @@ class FicheZoneCreateView(TemplateView):
                     zone.fiche_zone = fiche_zone
                     zone.save()
                 return HttpResponse("ok")
-                # return redirect(reverse("fiche-zone-vue-detaillee", args=[fiche_zone.pk]))
         else:
             print(fiche_zone_form.errors)
             print(zone_formset.errors)
-            return self.render_to_response(
-                self.get_context_data(fiche_zone_form=fiche_zone_form, zone_formset=zone_formset)
+            return render(
+                request,
+                self.template_name,
+                {"fiche_zone_form": fiche_zone_form, "zone_formset": zone_formset},
             )
