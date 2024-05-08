@@ -10,6 +10,7 @@ from .views import (
     FicheDetectionExportView,
     FicheDetecionCloturerView,
     FicheDetectionVisibiliteUpdateView,
+    FicheZoneDelimiteeCreateView,
 )
 
 urlpatterns = [
@@ -57,5 +58,10 @@ urlpatterns = [
         "api/espece/recherche/",
         search_espece_echantillon,
         name="api-search-espece",
+    ),
+    path(
+        "fiche-zone-delimitee/creation/",
+        FicheZoneDelimiteeCreateView.as_view(),
+        name="fiche-zone-delimitee-creation",
     ),
 ]

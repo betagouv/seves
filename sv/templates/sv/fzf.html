@@ -1,0 +1,43 @@
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'sv/fichezone_form.js' %}"></script>
+{% endblock %}
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post" action="{% url 'fiche-zone-delimitee-creation' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <h3>Zones infestées</h3>
+    <div id="zones-infestees">
+        {{ zone_infestee_formset.management_form }}
+        {% for form in zone_infestee_formset %}
+            <fieldset>
+                {{ form.as_p }}
+            </fieldset>
+        {% endfor %}
+    </div>
+
+    <template id="zone-form-template">
+        <fieldset>
+            {{ zone_infestee_formset.empty_form.as_p }}
+        </fieldset>
+    </template>
+
+    <button type="button" id="add-zone-infestee" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w">Ajouter une zone infestée</button>
+
+    <button type="submit">Enregistrer</button>
+</form>

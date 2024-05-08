@@ -5,8 +5,8 @@ import uuid
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from django.shortcuts import redirect
 from django.views import View
+from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
     DetailView,
@@ -14,7 +14,7 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.db.models import F
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -31,7 +31,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm
+from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm, FicheZoneDelimiteeForm, ZoneInfesteeFormSet
 from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
@@ -52,6 +52,7 @@ from .models import (
     Etat,
     TypeExploitant,
     PositionChaineDistribution,
+    FicheZoneDelimitee,
 )
 from core.forms import DSFRForm
 from core.models import Visibilite
@@ -647,3 +648,64 @@ class FicheDetectionVisibiliteUpdateView(UpdateView):
     def form_invalid(self, form):
         messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
         return super().form_invalid(form)
+
+
+class FicheZoneDelimiteeCreateView(CreateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeForm
+    template_name = "sv/fichezone_form.html"
+    success_url = reverse_lazy("fiche-detection-list")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
+        else:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet()
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        kwargs["detections_zones_infestees_formset"] = getattr(self, "detections_zones_infestees_formset", set())
+        return kwargs
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        context = self.get_context_data()
+        self.formset = context["zone_infestee_formset"]
+
+        if not self.formset.is_valid():
+            return self.formset_invalid()
+
+        # Récupération des fiches détection sélectionnées dans les formulaires de la formset
+        # pour vérifier les doublons entre Detection hors zone infestée et Zone infestée
+        # (cf. _has_duplicate_detections dans FicheZoneDelimiteeForm)
+        self.detections_zones_infestees_formset = {
+            detection for f in self.formset for detection in f.cleaned_data.get("detections", [])
+        }
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.formset.instance = self.object
+        self.formset.save()
+        messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+
+    def formset_invalid(self):
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Zones infestées",
+        )
+        return self.render_to_response(self.get_context_data())
