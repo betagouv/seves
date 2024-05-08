@@ -54,3 +54,6 @@ class FicheDetectionQuerySet(models.QuerySet):
 
     def optimized_for_list(self):
         return self.select_related("etat", "numero", "organisme_nuisible", "createur")
+
+    def get_all_not_in_fiche_zone_delimitee(self):
+        return self.filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True).order_by("numero")

@@ -2,7 +2,7 @@
 
 {% for group, options, index in widget.optgroups %}
     {% for option in options %}
-        <div class="fr-fieldset__element">
+        <div class="fr-fieldset__element {{ widget.attrs.class }}">
             <div class="fr-radio-group">
                 <input type="{{ option.type }}"
                        name="{{ option.name }}"

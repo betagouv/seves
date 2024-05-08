@@ -10,6 +10,8 @@ from .views import (
     FicheDetectionExportView,
     FicheDetecionCloturerView,
     FicheDetectionVisibiliteUpdateView,
+    FicheZoneDelimiteeCreateView,
+    RattachementDetectionView,
 )
 
 urlpatterns = [
@@ -49,6 +51,11 @@ urlpatterns = [
         name="fiche-detection-visibilite-update",
     ),
     path(
+        "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",
+        RattachementDetectionView.as_view(),
+        name="rattachement-fiche-zone-delimitee",
+    ),
+    path(
         "lien/ajout/",
         FreeLinkCreateView.as_view(),
         name="free-link-add",
@@ -57,5 +64,10 @@ urlpatterns = [
         "api/espece/recherche/",
         search_espece_echantillon,
         name="api-search-espece",
+    ),
+    path(
+        "fiche-zone-delimitee/creation/",
+        FicheZoneDelimiteeCreateView.as_view(),
+        name="fiche-zone-delimitee-creation",
     ),
 ]
