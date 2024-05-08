@@ -21,6 +21,7 @@ from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+<<<<<<< HEAD
 from django import forms
 
 from core.mixins import (
@@ -33,6 +34,9 @@ from core.mixins import (
 from core.redirect import safe_redirect
 from sv.forms import FreeLinkForm
 from .export import FicheDetectionExport
+=======
+from django.forms import ModelForm
+>>>>>>> d5c9bae (Formulaire Fiche zone)
 from .models import (
     FicheDetection,
     Lieu,
@@ -49,10 +53,14 @@ from .models import (
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
     Departement,
+<<<<<<< HEAD
     Region,
     Etat,
     TypeExploitant,
     PositionChaineDistribution,
+=======
+    FicheZone,
+>>>>>>> d5c9bae (Formulaire Fiche zone)
 )
 from core.forms import DSFRForm
 from core.models import Structure
@@ -612,6 +620,16 @@ class FicheDetecionCloturerView(View):
         messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
     
+class FicheZoneForm(ModelForm):
+    class Meta:
+        model = FicheZone
+        exclude = ["numero"]
+
 
 class FicheZoneCreateView(TemplateView):
     template_name = "sv/fichezone_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["fiche_zone_form"] = FicheZoneForm()
+        return context
