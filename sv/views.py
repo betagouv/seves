@@ -418,3 +418,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
+
+
+class FicheZoneCreateView(TemplateView):
+    template_name = "sv/fichezone_form.html"
