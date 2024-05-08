@@ -14,6 +14,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.forms import ModelForm
 from .models import (
     FicheDetection,
     Lieu,
@@ -31,6 +32,7 @@ from .models import (
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
     Departement,
+    FicheZone,
 )
 
 
@@ -420,5 +422,16 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
 
 
+class FicheZoneForm(ModelForm):
+    class Meta:
+        model = FicheZone
+        exclude = ["numero"]
+
+
 class FicheZoneCreateView(TemplateView):
     template_name = "sv/fichezone_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["fiche_zone_form"] = FicheZoneForm()
+        return context
