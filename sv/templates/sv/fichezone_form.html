@@ -1,5 +1,7 @@
 {% extends 'sv/base.html' %}
 
+{% load static %}
+
 {% block content %}
     <main style="margin: 2rem;">
         <form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
@@ -15,7 +17,7 @@
                     {% for i in zone_formset_nb %}
                         <li role="presentation">
                             <button type="button"
-                                    id="tabpanel-{{forloop.counter}}"
+                                    id="tabpanel-{{i}}"
                                     class="fr-tabs__tab"
                                     {% if i == 1 %}
                                         tabindex="0"
@@ -25,7 +27,7 @@
                                         aria-selected="false"
                                     {% endif %}
                                     role="tab"
-                                    aria-controls="tabpanel-{{forloop.counter}}-panel">
+                                    aria-controls="tabpanel-{{i}}-panel">
                                 Zone {{forloop.counter}}
                             </button>
                         </li>
@@ -33,15 +35,84 @@
                 </ul>
                 {{ zone_formset.management_form }}
                 {% for zone_form in zone_formset %}
-                    <div id="tabpanel-{{forloop.counter}}-panel"
-                         class="fr-tabs__panel {% if forloop.counter == 1 %}fr-tabs__panel--selected{% endif %}"
+                    <div id="tabpanel-{{forloop.counter0}}-panel"
+                         class="fr-tabs__panel {% if forloop.counter0 == 0 %}fr-tabs__panel--selected{% endif %}"
                          role="tabpanel"
-                         aria-labelledby="tabpanel-{{forloop.counter}}"
+                         aria-labelledby="tabpanel-{{forloop.counter0}}"
                          tabindex="0">
                         {{ zone_form.as_p }}
                     </div>
                 {% endfor %}
             </div>
+
+            <p>
+                <button type="button" id="add-zone" class="fr-btn fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
+            </p>
+
         </form>
     </main>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+		// récupère le bouton d'ajout de zone
+            const addZoneButton = document.getElementById('add-zone');
+
+		// ajoute un écouteur d'événement sur le bouton d'ajout de zone
+            addZoneButton.addEventListener('click', function() {
+
+                event.preventDefault();
+
+			// récupère le nombre de zones (id id_zone_set-TOTAL_FORMS) et convertir en entier
+                const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+                let totalForms = parseInt(totalFormsInput.value);
+
+			// Créez un template pour le nouvel onglet
+                let newTabTemplate = `
+				<li>
+					<button type="button"
+							id="tabpanel-${totalForms}"
+							class="fr-tabs__tab"
+							tabindex="-1"
+							role="tab"
+							aria-controls="tabpanel-${totalForms}-panel"
+							aria-selected="false">
+							Zone ${totalForms+1}
+						</button>
+				</li>
+			`;
+
+			// Ajoutez le nouvel onglet à la liste des onglets
+                document.querySelector('.fr-tabs__list').insertAdjacentHTML('beforeend', newTabTemplate);
+
+			// Créez un template pour le nouveau panneau
+                let newPanelTemplate = `
+				<div id="tabpanel-${totalForms}-panel"
+					 class="fr-tabs__panel"
+					 role="tabpanel"
+					 aria-labelledby="tabpanel-${totalForms}"
+					 tabindex="0">
+					{{ zone_formset.empty_form.as_p }}
+				</div>
+			`;
+                newPanelTemplate = newPanelTemplate.replace(/__prefix__/g, totalForms);
+
+			// Ajoutez le nouveau panneau à la page
+                document.querySelector('.fr-tabs').insertAdjacentHTML('beforeend', newPanelTemplate);
+
+			// Empêchez le comportement par défaut du bouton (soumettre le formulaire)
+                document.getElementById(`tabpanel-${totalForms}`).addEventListener('click', event => event.preventDefault());
+
+			// met à jour le nombre de zones (id id_form-TOTAL_FORMS)
+                totalFormsInput.value = totalForms+1;
+
+			// focus sur le nouvel onglet
+			//const newTabPanel = document.getElementById(`tabpanel-${totalForms}-panel`);
+			//window.dsfr(newTabPanel).tabPanel.focus();
+            });
+
+        });
+    </script>
 {% endblock %}

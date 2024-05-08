@@ -462,7 +462,7 @@ class ZoneForm(ModelForm):
         self.fields["unite_rayon_zone_tamponee"].label = False
 
 
-ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=2)
+ZoneFormSet = modelformset_factory(Zone, form=ZoneForm)
 
 
 class FicheZoneCreateView(TemplateView):
