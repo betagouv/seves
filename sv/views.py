@@ -3,8 +3,8 @@ from datetime import datetime
 import uuid
 
 from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import redirect
 from django.views import View
+from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
     DetailView,
@@ -12,7 +12,7 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.db.models import F
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -29,7 +29,14 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm
+from sv.forms import (
+    FreeLinkForm,
+    FicheDetectionVisibiliteUpdateForm,
+    FicheZoneDelimiteeForm,
+    ZoneInfesteeFormSet,
+    RattachementDetectionForm,
+    RattachementChoices,
+)
 from .export import FicheDetectionExport
 from .filters import FicheDetectionFilter
 from .models import (
@@ -49,6 +56,7 @@ from .models import (
     Departement,
     TypeExploitant,
     PositionChaineDistribution,
+    FicheZoneDelimitee,
 )
 from core.models import Visibilite
 
@@ -123,6 +131,7 @@ class FicheDetectionDetailView(
         context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
+        context["rattachement_detection_form"] = RattachementDetectionForm()
         return context
 
     def test_func(self) -> bool | None:
@@ -622,3 +631,108 @@ class FicheDetectionVisibiliteUpdateView(UpdateView):
     def form_invalid(self, form):
         messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
         return super().form_invalid(form)
+
+
+class RattachementDetectionView(FormView):
+    form_class = RattachementDetectionForm
+
+    def form_valid(self, form):
+        fiche_detection_id = self.kwargs.get("pk")
+        rattachement = form.cleaned_data["rattachement"]
+        return safe_redirect(
+            f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection_id}&rattachement={rattachement}"
+        )
+
+
+class FicheZoneDelimiteeCreateView(CreateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeForm
+    success_url = reverse_lazy("fiche-detection-list")
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+
+        fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
+
+        if fiche_detection.is_linked_to_fiche_zone_delimitee:
+            return HttpResponseBadRequest("La fiche de détection est déjà rattachée à une fiche zone délimitée.")
+
+        self.on = fiche_detection.organisme_nuisible
+        match self.request.GET.get("rattachement"):
+            case RattachementChoices.HORS_ZONE_INFESTEE:
+                self.hors_zone_infestee_detection = [fiche_detection]
+            case RattachementChoices.ZONE_INFESTEE:
+                self.zone_infestee_detection = fiche_detection
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
+        else:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(
+                organisme_nuisible=self.on, detection=getattr(self, "zone_infestee_detection", None)
+            )
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        kwargs["detections_zones_infestees_formset"] = getattr(self, "detections_zones_infestees_formset", set())
+        return kwargs
+
+    def get_initial(self):
+        if self.request.GET:
+            fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
+            return {
+                "organisme_nuisible": fiche_detection.organisme_nuisible,
+                "statut_reglementaire": fiche_detection.statut_reglementaire,
+                "detections_hors_zone": getattr(self, "hors_zone_infestee_detection", None),
+            }
+
+        return super().get_initial()
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+
+        context = self.get_context_data()
+        self.formset = context["zone_infestee_formset"]
+
+        if not self.formset.is_valid():
+            return self.formset_invalid()
+
+        self.set_detections_zones_infestees_formset()
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)
+
+    def set_detections_zones_infestees_formset(self):
+        """Récupère les fiches détection sélectionnées dans les formulaires de la formset
+        pour vérifier les doublons entre Detection hors zone infestée et Zone infestée.
+        La vérification des doublons est effectuée dans le form FicheZoneDelimiteeForm."""
+        self.detections_zones_infestees_formset = {
+            detection for f in self.formset for detection in f.cleaned_data.get("detections", [])
+        }
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.formset.instance = self.object
+        self.formset.save()
+        messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+
+    def formset_invalid(self):
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Zones infestées",
+        )
+        return self.render_to_response(self.get_context_data())

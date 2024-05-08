@@ -1,0 +1,8 @@
+<fieldset class="fr-fieldset">
+    <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+            {% include "django/forms/widgets/input.html" %}
+            <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %} class="fr-label">{{ widget.label }}</label>
+        </div>
+    </div>
+</fieldset>

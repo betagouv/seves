@@ -1,0 +1,40 @@
+.fichezoneform__details,
+.fichezoneform__zone-tampon {
+    height: 535px;
+}
+
+.fichezone_form__save-btn,
+.zones-infestees__add-form-btn {
+    text-align: right;
+}
+
+.zone-tampon__rayon-input {
+    background-color: var(--background-default-grey-active);
+}
+.zone-tampon__rayon-input input {
+    background-color: var(--background-default-grey);
+}
+
+.zone-infestees__zone-infestee-form {
+    background-color: var(--background-alt-grey);
+}
+.zone-infestee-form__numero-input {
+    width: 50%;
+}
+
+.fichezoneform__detections-hors-zone-infestee .choices__input,
+.zone-infestees__zone-infestee-form .choices__input {
+    background-color: var(--background-contrast-grey);
+    margin-left: 1rem;
+}
+
+.fichezoneform__detections-hors-zone-infestee .choices__list--multiple .choices__item,
+.zone-infestees__zone-infestee-form .choices__list--multiple .choices__item {
+    min-width: 0px;
+    min-height: 0px;
+    padding: .25rem .75rem;
+    background-color: var(--background-active-blue-france);
+    border: 1px solid var(--background-active-blue-france);
+    color: var(--text-inverted-blue-france);
+    margin: 0.25rem;
+}

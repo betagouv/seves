@@ -1,4 +1,9 @@
+from typing import Optional, Tuple
 from playwright.sync_api import Page, Locator
+from playwright.sync_api import expect
+from django.urls import reverse
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+from sv.forms import RattachementChoices
 
 
 class FicheDetectionFormDomElements:
@@ -428,3 +433,159 @@ class PrelevementFormDomElements:
     @property
     def laboratoire_confirmation_input(self) -> Locator:
         return self.page.get_by_test_id("prelevement-form-laboratoire-confirmation")
+
+
+class FicheZoneDelimiteeFormPage:
+    """Classe permettant de manipuler la page de création/modification d'une fiche zone délimitée"""
+
+    def __init__(self, page: Page, choice_js_fill):
+        self.page = page
+        self.choice_js_fill = choice_js_fill
+
+        # Risques
+        self.organisme_nuisible = page.get_by_label("organisme nuisible")
+        self.statut_reglementaire = page.get_by_label("statut réglementaire")
+
+        # Détails
+        self.caracteristiques = page.get_by_label("Caractéristiques")
+        self.vegetaux_infestes = page.get_by_label("Nombre ou volume de végétaux infestés")
+        self.commentaire = page.get_by_label("Commentaire")
+
+        # Zone tampon
+        self.rayon_zone_tampon = page.get_by_label("Rayon tampon réglementaire ou arbitré")
+        self.rayon_zone_tampon_unite_m = page.get_by_text("m", exact=True).first
+        self.rayon_zone_tampon_unite_km = page.get_by_text("km", exact=True).first
+        self.surface_tampon_totale = page.get_by_label("Surface tampon totale")
+        self.surface_tampon_totale_unite_m2 = page.get_by_text("m2", exact=True).first
+        self.surface_tampon_totale_unite_km2 = page.get_by_text("km2", exact=True).first
+        self.is_zone_tampon_toute_commune = page.get_by_label("La zone tampon s'étend à toute la ou les commune(s)")
+
+        # Détections hors zone infestée
+        self.detections_hors_zone_infestee = page.locator(".choices > div").first
+
+        # Zones infestées
+        self.zone_infestee_nom_base_locator = "#id_zoneinfestee_set-{}-nom"
+        self.zone_infestee_rayon_base_locator = "#id_zoneinfestee_set-{}-rayon"
+        self.zone_infestee_rayon_unite_base_locator = "input[name='zoneinfestee_set-{}-unite_rayon'][value='{}']"
+        self.zone_infestee_surface_infestee_totale_base_locator = "#id_zoneinfestee_set-{}-surface_infestee_totale"
+        self.zone_infestee_surface_infestee_totale_unite_base_locator = (
+            "input[name='zoneinfestee_set-{}-unite_surface_infestee_totale'][value='{}']"
+        )
+        self.zone_infestee_total_forms = self.page.locator('input[name="zoneinfestee_set-TOTAL_FORMS"]')
+
+        # Boutons
+        self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
+        self.enregistrer = page.get_by_role("button", name="Enregistrer")
+
+    def _fill_zone_infestee_form(
+        self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
+    ):
+        detections_zone_infestee = detections_zone_infestee or ()
+        self.page.locator(self.zone_infestee_nom_base_locator.format(index)).fill(zoneinfestee.nom)
+        self.page.locator(self.zone_infestee_rayon_base_locator.format(index)).fill(str(zoneinfestee.rayon))
+        self._select_unite_rayon_zone_infestee(zoneinfestee.unite_rayon, index)
+        self.page.locator(self.zone_infestee_surface_infestee_totale_base_locator.format(index)).fill(
+            str(zoneinfestee.surface_infestee_totale)
+        )
+        self._select_unite_surface_infestee_totale(zoneinfestee.unite_surface_infestee_totale, index)
+        self._select_detections_in_zone_infestee(index, detections_zone_infestee)
+
+    def _select_unite_rayon_zone_tampon(self, unite: FicheZoneDelimitee.UnitesRayon):
+        match unite:
+            case FicheZoneDelimitee.UnitesRayon.KILOMETRE:
+                self.rayon_zone_tampon_unite_km.click()
+            case FicheZoneDelimitee.UnitesRayon.METRE:
+                self.rayon_zone_tampon_unite_m.click()
+
+    def _select_unite_surface_tampon_totale(self, unite: FicheZoneDelimitee.UnitesSurfaceTamponTolale):
+        match unite:
+            case FicheZoneDelimitee.UnitesSurfaceTamponTolale.METRE_CARRE:
+                self.surface_tampon_totale_unite_m2.click()
+            case FicheZoneDelimitee.UnitesSurfaceTamponTolale.KILOMETRE_CARRE:
+                self.surface_tampon_totale_unite_km2.click()
+
+    def _select_unite_surface_infestee_totale(self, unite: ZoneInfestee.UnitesSurfaceInfesteeTotale, index: int):
+        match unite:
+            case ZoneInfestee.UnitesSurfaceInfesteeTotale.HECTARE:
+                self.page.locator(
+                    self.zone_infestee_surface_infestee_totale_unite_base_locator.format(index, "ha")
+                ).click(force=True)
+            case ZoneInfestee.UnitesSurfaceInfesteeTotale.METRE_CARRE:
+                self.page.locator(
+                    self.zone_infestee_surface_infestee_totale_unite_base_locator.format(index, "m2")
+                ).click(force=True)
+            case ZoneInfestee.UnitesSurfaceInfesteeTotale.KILOMETRE_CARRE:
+                self.page.locator(
+                    self.zone_infestee_surface_infestee_totale_unite_base_locator.format(index, "km2")
+                ).click(force=True)
+
+    def _select_unite_rayon_zone_infestee(self, unite: ZoneInfestee.UnitesRayon, index: int):
+        match unite:
+            case ZoneInfestee.UnitesRayon.METRE:
+                self.page.locator(self.zone_infestee_rayon_unite_base_locator.format(index, "m")).click(force=True)
+            case ZoneInfestee.UnitesRayon.KILOMETRE:
+                self.page.locator(self.zone_infestee_rayon_unite_base_locator.format(index, "km")).click(force=True)
+
+    def _select_detections_in_hors_zone_infesteet(
+        self, detections_hors_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
+    ):
+        detections_hors_zone_infestee = detections_hors_zone_infestee or ()
+        for detection in detections_hors_zone_infestee:
+            self.choice_js_fill(
+                self.page,
+                ".fichezoneform__detections-hors-zone-infestee .choices__input--cloned:first-of-type",
+                str(detection.numero),
+                str(detection.numero),
+            )
+
+    def _select_detections_in_zone_infestee(
+        self, index, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
+    ):
+        detections_zone_infestee = detections_zone_infestee or ()
+        for detection in detections_zone_infestee:
+            self.choice_js_fill(
+                self.page,
+                f"#zones-infestees .fr-col-4:nth-of-type({index + 1}) .choices__input--cloned:first-of-type",
+                str(detection.numero),
+                str(detection.numero),
+            )
+
+    def navigate(self, live_server, fiche_detection_id: int, rattachement: RattachementChoices):
+        self.page.goto(
+            f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection_id}&rattachement={rattachement}"
+        )
+
+    def fill_form(
+        self,
+        fichezonedelimitee: FicheZoneDelimitee,
+        zoneinfestee: Optional[ZoneInfestee] = None,
+        detections_hors_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None,
+        detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None,
+    ):
+        detections_zone_infestee = detections_zone_infestee or ()
+        self.caracteristiques.select_option(fichezonedelimitee.caracteristiques_principales_zone_delimitee)
+        self.vegetaux_infestes.fill(fichezonedelimitee.vegetaux_infestes)
+        self.commentaire.fill(fichezonedelimitee.commentaire)
+        self.rayon_zone_tampon.fill(str(fichezonedelimitee.rayon_zone_tampon))
+        self._select_unite_rayon_zone_tampon(fichezonedelimitee.unite_rayon_zone_tampon)
+        self.surface_tampon_totale.fill(str(fichezonedelimitee.surface_tampon_totale))
+        self._select_unite_surface_tampon_totale(fichezonedelimitee.unite_surface_tampon_totale)
+        if fichezonedelimitee.is_zone_tampon_toute_commune:
+            self.is_zone_tampon_toute_commune.click(force=True)
+        self._select_detections_in_hors_zone_infesteet(detections_hors_zone_infestee)
+        if zoneinfestee is not None:
+            self._fill_zone_infestee_form(0, zoneinfestee, detections_zone_infestee)
+
+    def add_new_zone_infestee(
+        self, zoneinfestee: ZoneInfestee, detections: Optional[Tuple[FicheDetection, ...]] = None
+    ):
+        detections = detections or ()
+        self.add_zone_infestee_btn.click()
+        index = int(self.zone_infestee_total_forms.get_attribute("value")) - 1
+        self._fill_zone_infestee_form(index, zoneinfestee, detections)
+
+    def send_form(self):
+        self.enregistrer.click()
+
+    def check_message_succes(self):
+        expect(self.page.get_by_text("La fiche zone délimitée a été créée avec succès.")).to_be_visible()

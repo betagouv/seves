@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
-from django.db.models import TextChoices
+from django.db.models import TextChoices, Q
 from django.contrib.contenttypes.fields import GenericRelation
 import datetime
 
@@ -403,6 +403,16 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
         db_table = "sv_fiche_detection"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=True)
+                    | Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=False)
+                    | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
+                ),
+                name="check_hors_zone_infestee_or_zone_infestee_or_none",
+            )
+        ]
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
@@ -537,6 +547,10 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
             case _:
                 return False
 
+    @property
+    def is_linked_to_fiche_zone_delimitee(self):
+        return self.hors_zone_infestee is not None or self.zone_infestee is not None
+
 
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
@@ -553,7 +567,7 @@ class ZoneInfestee(models.Model):
         verbose_name_plural = "Zones infestées"
 
     fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
-    numero = models.CharField(max_length=50, verbose_name="Numéro de la zone", blank=True)
+    nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
     surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale", blank=True, null=True)
     unite_surface_infestee_totale = models.CharField(
         max_length=3,
@@ -629,6 +643,16 @@ class FicheZoneDelimitee(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
+    organisme_nuisible = models.ForeignKey(
+        OrganismeNuisible,
+        on_delete=models.PROTECT,
+        verbose_name="Organisme nuisible",
+    )
+    statut_reglementaire = models.ForeignKey(
+        StatutReglementaire,
+        on_delete=models.PROTECT,
+        verbose_name="Statut règlementaire de l'organisme nuisible",
+    )
     caracteristiques_principales_zone_delimitee = models.CharField(
         max_length=50,
         choices=CaracteristiquesPrincipales.choices,
@@ -637,12 +661,12 @@ class FicheZoneDelimitee(models.Model):
     )
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
-    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré", null=True, blank=True)
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True)
     unite_rayon_zone_tampon = models.CharField(
         max_length=2,
         choices=UnitesRayon,
         default=UnitesRayon.KILOMETRE,
-        verbose_name="Unité du rayon tampon réglemantaire ou arbitré",
+        verbose_name="Unité du rayon tampon réglementaire ou arbitré",
     )
     surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale", null=True, blank=True)
     unite_surface_tampon_totale = models.CharField(

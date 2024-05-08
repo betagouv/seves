@@ -31,3 +31,16 @@ class DSFRToogle(forms.CheckboxInput):
 
 class DSFRRadioButton(forms.RadioSelect):
     template_name = "forms/dsfr_radio_btn.html"
+
+
+class DSFRCheckboxInput(forms.CheckboxInput):
+    template_name = "forms/dsfr_checkbox.html"
+
+    def __init__(self, *args, **kwargs):
+        self.label = kwargs.pop("label", None)
+        super().__init__(*args, **kwargs)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["widget"]["label"] = self.label
+        return context
