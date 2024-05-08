@@ -1,16 +1,47 @@
-<h1>Création d'une fiche zone</h1>
-<form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
-    {% csrf_token %}
+{% extends 'sv/base.html' %}
 
-    {{ fiche_zone_form.as_p }}
+{% block content %}
+    <main style="margin: 2rem;">
+        <form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
+            {% csrf_token %}
 
-    {{ zone_formset.management_form }}
-    {% for zone_form in zone_formset %}
-        <fieldset>
-            <legend>Zone</legend>
-            {{ zone_form.as_p }}
-        </fieldset>
-    {% endfor %}
+            <h1>Création d'une fiche zone</h1>
+            <input type="submit" value="Enregistrer" class="fr-btn" />
 
-    <input type="submit" value="Enregistrer" />
-</form>
+            {{ fiche_zone_form.as_p }}
+
+            <div class="fr-tabs">
+                <ul class="fr-tabs__list" role="tablist" aria-label="[A modifier | nom du système d'onglet]">
+                    {% for i in zone_formset_nb %}
+                        <li role="presentation">
+                            <button type="button"
+                                    id="tabpanel-{{forloop.counter}}"
+                                    class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left"
+                                    {% if i == 1 %}
+                                        tabindex="0"
+                                        aria-selected="true"
+                                    {% else %}
+                                        tabindex="-1"
+                                        aria-selected="false"
+                                    {% endif %}
+                                    role="tab"
+                                    aria-controls="tabpanel-{{forloop.counter}}-panel">
+                                Zone {{forloop.counter}}
+                            </button>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {{ zone_formset.management_form }}
+                {% for zone_form in zone_formset %}
+                    <div id="tabpanel-{{forloop.counter}}-panel"
+                         class="fr-tabs__panel {% if forloop.counter == 1 %}fr-tabs__panel--selected{% endif %}"
+                         role="tabpanel"
+                         aria-labelledby="tabpanel-{{forloop.counter}}"
+                         tabindex="0">
+                        {{ zone_form.as_p }}
+                    </div>
+                {% endfor %}
+            </div>
+        </form>
+    </main>
+{% endblock %}

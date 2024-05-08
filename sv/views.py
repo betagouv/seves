@@ -14,7 +14,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpRespon
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from django.forms import ModelForm, modelformset_factory
+from django.forms import ModelForm, modelformset_factory, RadioSelect
 from .models import (
     FicheDetection,
     Lieu,
@@ -428,8 +428,41 @@ class FicheZoneForm(ModelForm):
         model = FicheZone
         exclude = ["numero"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["createur"].widget.attrs.update({"class": "fr-input"})
 
-ZoneFormSet = modelformset_factory(Zone, exclude=["fiche_zone"], extra=2)
+
+class ZoneForm(ModelForm):
+    class Meta:
+        model = Zone
+        exclude = ["fiche_zone"]
+        widgets = {
+            "unite_surface_zone_infestee": RadioSelect,
+            "unite_rayon_zone_infestee": RadioSelect,
+            "unite_rayon_zone_tamponee": RadioSelect,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        fields_name = [
+            "surface_zone_infestee",
+            "rayon_zone_infestee",
+            "rayon_zone_tamponee",
+            "caracteristiques_principales_zone_delimitee",
+            "commentaire",
+            "vegetaux_infestes",
+        ]
+        for field_name in fields_name:
+            self.fields[field_name].widget.attrs.update({"class": "fr-input"})
+
+        self.fields["unite_surface_zone_infestee"].label = False
+        self.fields["unite_rayon_zone_infestee"].label = False
+        self.fields["unite_rayon_zone_tamponee"].label = False
+
+
+ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=2)
 
 
 class FicheZoneCreateView(TemplateView):
@@ -438,7 +471,9 @@ class FicheZoneCreateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["fiche_zone_form"] = FicheZoneForm()
-        context["zone_formset"] = ZoneFormSet(queryset=Zone.objects.none())
+        zone_formset = ZoneFormSet(queryset=Zone.objects.none())
+        context["zone_formset"] = zone_formset
+        context["zone_formset_nb"] = range(zone_formset.total_form_count())
         return context
 
     def post(self, request):
@@ -455,10 +490,12 @@ class FicheZoneCreateView(TemplateView):
                     zone.save()
                 return HttpResponse("ok")
         else:
-            print(fiche_zone_form.errors)
-            print(zone_formset.errors)
             return render(
                 request,
                 self.template_name,
-                {"fiche_zone_form": fiche_zone_form, "zone_formset": zone_formset},
+                {
+                    "fiche_zone_form": fiche_zone_form,
+                    "zone_formset": zone_formset,
+                    "zone_formset_nb": range(zone_formset.total_form_count()),
+                },
             )
