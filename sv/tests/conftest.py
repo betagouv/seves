@@ -49,7 +49,12 @@ def fiche_detection_bakery(db, mocked_authentification_user):
     def _fiche_detection_bakery():
         etat = Etat.objects.get(id=Etat.get_etat_initial())
         return baker.make(
-            FicheDetection, _fill_optional=True, etat=etat, createur=mocked_authentification_user.agent.structure
+            FicheDetection,
+            _fill_optional=True,
+            etat=etat,
+            createur=mocked_authentification_user.agent.structure,
+            hors_zone_infestee=None,
+            zone_infestee=None,
         )
 
     return _fiche_detection_bakery
