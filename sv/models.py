@@ -1,6 +1,8 @@
+import datetime
 from django.db import models, transaction
 from django.core.validators import RegexValidator
-import datetime
+from django.db.models import TextChoices
+from django.utils.translation import gettext_lazy as _
 
 
 class NumeroFiche(models.Model):
@@ -433,3 +435,69 @@ class FicheDetection(models.Model):
     mesures_consignation = models.TextField(verbose_name="Mesures de consignation", blank=True)
     mesures_phytosanitaires = models.TextField(verbose_name="Mesures phytosanitaires", blank=True)
     mesures_surveillance_specifique = models.TextField(verbose_name="Mesures de surveillance spécifique", blank=True)
+
+
+class CaracteristiquesPrincipalesZoneDelimitee(models.Model):
+    class Meta:
+        verbose_name = "Caractéristiques principales de la zone délimitée"
+        verbose_name_plural = "Caractéristiques principales des zones délimitées"
+        db_table = "sv_caracteristiques_principales_zone_delimitee"
+
+    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+
+    def __str__(self):
+        return self.libelle
+
+
+class Zone(models.Model):
+    class UnitesSurface(TextChoices):
+        HECTARE = "ha", _("Hectare")
+        KILOMETRE_CARRE = "km2", _("Kilomètre carré")
+
+    class UnitesRayon(TextChoices):
+        METRE = "m", _("Mètre")
+        KILOMETRE = "km", _("Kilomètre")
+
+    class Meta:
+        verbose_name = "Zone"
+        verbose_name_plural = "Zones"
+
+    fiche_zone = models.ForeignKey("FicheZone", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    surface_zone_infestee = models.FloatField(verbose_name="Surface de la zone infestée")
+    unite_surface_zone_infestee = models.CharField(
+        max_length=3,
+        choices=UnitesSurface.choices,
+        verbose_name="Unité de la surface de la zone infestée",
+        default=UnitesSurface.KILOMETRE_CARRE,
+    )
+    rayon_zone_infestee = models.FloatField(verbose_name="Rayon de la zone infestée")
+    unite_rayon_zone_infestee = models.CharField(
+        max_length=2,
+        choices=UnitesRayon.choices,
+        verbose_name="Unité du rayon de la zone infestée",
+        default=UnitesRayon.METRE,
+    )
+    rayon_zone_tamponee = models.FloatField(verbose_name="Rayon de la zone tampon")
+    unite_rayon_zone_tamponee = models.CharField(
+        max_length=2,
+        choices=UnitesRayon.choices,
+        verbose_name="Unité du rayon de la zone tampon",
+        default=UnitesRayon.METRE,
+    )
+    caracteristiques_principales_zone_delimitee = models.ForeignKey(
+        CaracteristiquesPrincipalesZoneDelimitee,
+        on_delete=models.PROTECT,
+        verbose_name="Caractéristiques principales de la zone délimitée",
+    )
+    commentaire = models.TextField(verbose_name="Commentaire", blank=True)
+    vegetaux_infestes = models.TextField(verbose_name="Végétaux infestés", blank=True)
+
+
+class FicheZone(models.Model):
+    class Meta:
+        verbose_name = "Fiche zone"
+        verbose_name_plural = "Fiches zone"
+        db_table = "sv_fiche_zone"
+
+    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
+    createur = models.ForeignKey(Unite, on_delete=models.PROTECT, verbose_name="Créateur")
