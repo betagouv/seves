@@ -13,6 +13,7 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     FormView,
+    TemplateView,
 )
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
@@ -610,3 +611,7 @@ class FicheDetecionCloturerView(View):
         fiche.cloturer()
         messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
+    
+
+class FicheZoneCreateView(TemplateView):
+    template_name = "sv/fichezone_form.html"
