@@ -2,24 +2,54 @@
 
 {% load static %}
 
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sv/fichezone_form.css' %}">
+{% endblock %}
+
 {% block content %}
-    <main style="margin: 2rem;">
-        <form action="{% url 'fiche-zone-creation' %}" method="post" novalidate>
+    <main class="form">
+        <form action="{% url 'fiche-zone-creation' %}" method="post">
             {% csrf_token %}
 
-            <h1>Création d'une fiche zone</h1>
-            <input type="submit" value="Enregistrer" class="fr-btn" />
+            <div class="form__form-header">
+                <h1>Création d'une fiche zone</h1>
+                <input type="submit" value="Enregistrer" class="fr-btn" />
+            </div>
 
-            {{ fiche_zone_form.as_p }}
+            {% if fiche_zone_form.errors %}
+                <div class="form__fiche-zone-form-errors fr-alert fr-alert--error fr-alert--sm">
+                    <p>{{fiche_zone_form.errors.as_text}}</p>
+                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                        Masquer le message
+                    </button>
+                </div>
+            {% endif %}
+
+            {% if zone_formset.errors %}
+                <div class="form__zones-form-errors fr-alert fr-alert--error fr-alert--sm">
+                    <p>Il y a des erreurs dans un ou plusieurs formulaires  des zones</p>
+                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                        Masquer le message
+                    </button>
+                </div>
+            {% endif %}
+
+            <div class="form__form-infos">
+                <h2>Informations</h2>
+                <div class="form-infos__createur" style="display: flex; align-items: center;">
+                    {{ fiche_zone_form.createur.label_tag }}
+                    {{ fiche_zone_form.createur }}
+                </div>
+            </div>
 
             <div class="fr-tabs">
-                <ul class="fr-tabs__list" role="tablist" aria-label="[A modifier | nom du système d'onglet]">
+                <ul class="fr-tabs__list" role="tablist" aria-label="Liste des zones">
                     {% for i in zone_formset_nb %}
                         <li role="presentation">
                             <button type="button"
                                     id="tabpanel-{{i}}"
                                     class="fr-tabs__tab"
-                                    {% if i == 1 %}
+                                    {% if i == 0 %}
                                         tabindex="0"
                                         aria-selected="true"
                                     {% else %}
@@ -36,19 +66,56 @@
                 {{ zone_formset.management_form }}
                 {% for zone_form in zone_formset %}
                     <div id="tabpanel-{{forloop.counter0}}-panel"
-                         class="fr-tabs__panel {% if forloop.counter0 == 0 %}fr-tabs__panel--selected{% endif %}"
+                         class="form-tabs-content fr-tabs__panel {% if forloop.counter0 == 0 %}fr-tabs__panel--selected{% endif %}"
                          role="tabpanel"
                          aria-labelledby="tabpanel-{{forloop.counter0}}"
                          tabindex="0">
-                        {{ zone_form.as_p }}
+                        {% if zone_form.errors %}
+                            <div class="form-tabs-content__errors fr-alert fr-alert--error fr-alert--sm">
+                                <p>{{zone_form.errors.as_text}}</p>
+                                <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                    Masquer le message
+                                </button>
+                            </div>
+                        {% endif %}
+                        <div class="form-tabs-content__surface-zone-infestee">
+                            {{ zone_form.surface_zone_infestee.label_tag }}
+                            <div class="form-tabs-content__surface-zone-infestee-input-radiobtn">
+                                {{ zone_form.surface_zone_infestee }}
+                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_surface_zone_infestee form_index=forloop.counter0 %}
+                            </div>
+                        </div>
+                        <div class="form-tabs-content__rayon-zone-infestee">
+                            {{ zone_form.rayon_zone_infestee.label_tag }}
+                            <div class="form-tabs-content__rayon-zone-infestee-input-radiobtn">
+                                {{ zone_form.rayon_zone_infestee }}
+                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_rayon_zone_infestee form_index=forloop.counter0 %}
+                            </div>
+                        </div>
+                        <div class="form-tabs-content__rayon_zone_tamponee">
+                            {{ zone_form.rayon_zone_tamponee.label_tag }}
+                            <div class="form-tabs-content__rayon-zone-tamponee-input-radiobtn">
+                                {{ zone_form.rayon_zone_tamponee }}
+                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_rayon_zone_tamponee form_index=forloop.counter0 %}
+                            </div>
+                        </div>
+                        <div class="form-tabs-content__caracteristiques_principales_zone_delimitee">
+                            {{ zone_form.caracteristiques_principales_zone_delimitee.label_tag }}
+                            {{ zone_form.caracteristiques_principales_zone_delimitee }}
+                        </div>
+                        <p class="form-tabs-content__commentaire">
+                            {{ zone_form.commentaire.label_tag }}
+                            {{ zone_form.commentaire }}
+                        </p>
+                        <p class="form-tabs-content__vegetaux-infestes">
+                            {{ zone_form.vegetaux_infestes.label_tag }}
+                            {{ zone_form.vegetaux_infestes }}
+                        </p>
                     </div>
                 {% endfor %}
             </div>
 
-            <p>
-                <button type="button" id="add-zone" class="fr-btn fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
-            </p>
-
+            <button type="button" id="add-zone" class="fr-btn fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
         </form>
     </main>
 {% endblock %}
