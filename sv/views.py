@@ -634,27 +634,41 @@ class ZoneForm(ModelForm):
             "unite_rayon_zone_infestee": RadioSelect,
             "unite_rayon_zone_tamponee": RadioSelect,
         }
+        labels = {
+            "caracteristiques_principales_zone_delimitee": "Caractéristiques de la zone délimitée",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        fields_name = [
-            "surface_zone_infestee",
-            "rayon_zone_infestee",
-            "rayon_zone_tamponee",
-            "caracteristiques_principales_zone_delimitee",
-            "commentaire",
-            "vegetaux_infestes",
+        # Affichage version courte des choix pour les unités (m², ha, km, etc.)
+        self.fields["unite_surface_zone_infestee"].widget.choices = [
+            (choice.value, choice.value) for choice in Zone.UnitesSurface
         ]
-        for field_name in fields_name:
-            self.fields[field_name].widget.attrs.update({"class": "fr-input"})
+        self.fields["unite_rayon_zone_infestee"].widget.choices = [
+            (choice.value, choice.value) for choice in Zone.UnitesRayon
+        ]
+        self.fields["unite_rayon_zone_tamponee"].widget.choices = [
+            (choice.value, choice.value) for choice in Zone.UnitesRayon
+        ]
 
-        self.fields["unite_surface_zone_infestee"].label = False
-        self.fields["unite_rayon_zone_infestee"].label = False
-        self.fields["unite_rayon_zone_tamponee"].label = False
+        self.fields["caracteristiques_principales_zone_delimitee"].widget.attrs.update(
+            {"class": "form-tabs-content__caracteristiques_zone_delimitee-select fr-input"}
+        )
+        self.fields["commentaire"].widget.attrs.update({"class": "fr-input"})
+        self.fields["vegetaux_infestes"].widget.attrs.update({"class": "fr-input"})
+        self.fields["surface_zone_infestee"].widget.attrs.update(
+            {"class": "form-tabs-content__surface-zone-infestee-input fr-input"}
+        )
+        self.fields["rayon_zone_infestee"].widget.attrs.update(
+            {"class": "form-tabs-content__rayon-zone-infestee-input fr-input"}
+        )
+        self.fields["rayon_zone_tamponee"].widget.attrs.update(
+            {"class": "form-tabs-content__rayon-zone-tamponee-input fr-input"}
+        )
 
 
-ZoneFormSet = modelformset_factory(Zone, form=ZoneForm)
+ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=1, min_num=1)
 
 
 class FicheZoneCreateView(TemplateView):
