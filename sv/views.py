@@ -668,7 +668,7 @@ class ZoneForm(ModelForm):
         )
 
 
-ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=1, min_num=1)
+ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=0, min_num=1)
 
 
 class FicheZoneCreateView(TemplateView):
