@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="{% static 'sv/fichezone_form.css' %}">
 {% endblock %}
 
+{% block scripts %}
+    <script src="{% static 'sv/fichezone_form.js' %}"></script>
+{% endblock %}
+
 {% block content %}
     <main class="form">
         <form action="{% url 'fiche-zone-creation' %}" method="post">
@@ -44,142 +48,25 @@
 
             <div class="fr-tabs">
                 <ul class="fr-tabs__list" role="tablist" aria-label="Liste des zones">
-                    {% for i in zone_formset_nb %}
-                        <li role="presentation">
-                            <button type="button"
-                                    id="tabpanel-{{i}}"
-                                    class="fr-tabs__tab"
-                                    {% if i == 0 %}
-                                        tabindex="0"
-                                        aria-selected="true"
-                                    {% else %}
-                                        tabindex="-1"
-                                        aria-selected="false"
-                                    {% endif %}
-                                    role="tab"
-                                    aria-controls="tabpanel-{{i}}-panel">
-                                Zone {{forloop.counter}}
-                            </button>
-                        </li>
+                    {{ zone_formset.management_form }}
+                    {% for zone_form in zone_formset %}
+                        {% include 'sv/fichezone_zone_form_tabs_btn.html' with form_index=forloop.counter0 zone_btn_label=forloop.counter %}
                     {% endfor %}
                 </ul>
-                {{ zone_formset.management_form }}
                 {% for zone_form in zone_formset %}
-                    <div id="tabpanel-{{forloop.counter0}}-panel"
-                         class="form-tabs-content fr-tabs__panel {% if forloop.counter0 == 0 %}fr-tabs__panel--selected{% endif %}"
-                         role="tabpanel"
-                         aria-labelledby="tabpanel-{{forloop.counter0}}"
-                         tabindex="0">
-                        {% if zone_form.errors %}
-                            <div class="form-tabs-content__errors fr-alert fr-alert--error fr-alert--sm">
-                                <p>{{zone_form.errors.as_text}}</p>
-                                <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                    Masquer le message
-                                </button>
-                            </div>
-                        {% endif %}
-                        <div class="form-tabs-content__surface-zone-infestee">
-                            {{ zone_form.surface_zone_infestee.label_tag }}
-                            <div class="form-tabs-content__surface-zone-infestee-input-radiobtn">
-                                {{ zone_form.surface_zone_infestee }}
-                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_surface_zone_infestee form_index=forloop.counter0 %}
-                            </div>
-                        </div>
-                        <div class="form-tabs-content__rayon-zone-infestee">
-                            {{ zone_form.rayon_zone_infestee.label_tag }}
-                            <div class="form-tabs-content__rayon-zone-infestee-input-radiobtn">
-                                {{ zone_form.rayon_zone_infestee }}
-                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_rayon_zone_infestee form_index=forloop.counter0 %}
-                            </div>
-                        </div>
-                        <div class="form-tabs-content__rayon_zone_tamponee">
-                            {{ zone_form.rayon_zone_tamponee.label_tag }}
-                            <div class="form-tabs-content__rayon-zone-tamponee-input-radiobtn">
-                                {{ zone_form.rayon_zone_tamponee }}
-                                {% include 'sv/fichezone_form_radio_button_group.html' with field=zone_form.unite_rayon_zone_tamponee form_index=forloop.counter0 %}
-                            </div>
-                        </div>
-                        <div class="form-tabs-content__caracteristiques_principales_zone_delimitee">
-                            {{ zone_form.caracteristiques_principales_zone_delimitee.label_tag }}
-                            {{ zone_form.caracteristiques_principales_zone_delimitee }}
-                        </div>
-                        <p class="form-tabs-content__commentaire">
-                            {{ zone_form.commentaire.label_tag }}
-                            {{ zone_form.commentaire }}
-                        </p>
-                        <p class="form-tabs-content__vegetaux-infestes">
-                            {{ zone_form.vegetaux_infestes.label_tag }}
-                            {{ zone_form.vegetaux_infestes }}
-                        </p>
-                    </div>
+                    {% include 'sv/fichezone_zone_form_tabs_content.html' with form_index=forloop.counter0 %}
                 {% endfor %}
             </div>
 
             <button type="button" id="add-zone" class="fr-btn fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
         </form>
     </main>
-{% endblock %}
 
-{% block scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    <template id="zone-form-tabs-btn">
+        {% include 'sv/fichezone_zone_form_tabs_btn.html' with form_index='__prefix__' zone_btn_label='__zone_nb__' %}
+    </template>
 
-		// récupère le bouton d'ajout de zone
-            const addZoneButton = document.getElementById('add-zone');
-
-		// ajoute un écouteur d'événement sur le bouton d'ajout de zone
-            addZoneButton.addEventListener('click', function() {
-
-                event.preventDefault();
-
-			// récupère le nombre de zones (id id_zone_set-TOTAL_FORMS) et convertir en entier
-                const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
-                let totalForms = parseInt(totalFormsInput.value);
-
-			// Créez un template pour le nouvel onglet
-                let newTabTemplate = `
-				<li>
-					<button type="button"
-							id="tabpanel-${totalForms}"
-							class="fr-tabs__tab"
-							tabindex="-1"
-							role="tab"
-							aria-controls="tabpanel-${totalForms}-panel"
-							aria-selected="false">
-							Zone ${totalForms+1}
-						</button>
-				</li>
-			`;
-
-			// Ajoutez le nouvel onglet à la liste des onglets
-                document.querySelector('.fr-tabs__list').insertAdjacentHTML('beforeend', newTabTemplate);
-
-			// Créez un template pour le nouveau panneau
-                let newPanelTemplate = `
-				<div id="tabpanel-${totalForms}-panel"
-					 class="fr-tabs__panel"
-					 role="tabpanel"
-					 aria-labelledby="tabpanel-${totalForms}"
-					 tabindex="0">
-					{{ zone_formset.empty_form.as_p }}
-				</div>
-			`;
-                newPanelTemplate = newPanelTemplate.replace(/__prefix__/g, totalForms);
-
-			// Ajoutez le nouveau panneau à la page
-                document.querySelector('.fr-tabs').insertAdjacentHTML('beforeend', newPanelTemplate);
-
-			// Empêchez le comportement par défaut du bouton (soumettre le formulaire)
-                document.getElementById(`tabpanel-${totalForms}`).addEventListener('click', event => event.preventDefault());
-
-			// met à jour le nombre de zones (id id_form-TOTAL_FORMS)
-                totalFormsInput.value = totalForms+1;
-
-			// focus sur le nouvel onglet
-			//const newTabPanel = document.getElementById(`tabpanel-${totalForms}-panel`);
-			//window.dsfr(newTabPanel).tabPanel.focus();
-            });
-
-        });
-    </script>
+    <template id="zone-form-tabs-content">
+        {% include 'sv/fichezone_zone_form_tabs_content.html' with zone_form=zone_formset.empty_form form_index='__prefix__' %}
+    </template>
 {% endblock %}
