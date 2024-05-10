@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 
 # Personnalisation du titre et de l'en-tête de l'interface d'administration
 admin.site.site_header = "Administration de Sèves"
@@ -25,7 +25,7 @@ admin.site.site_title = "Sèves"
 admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="sv/index.html"), name="home"),
+    path("", RedirectView.as_view(pattern_name="fiche-detection-list"), name="index"),
     path("admin/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),
 ]
