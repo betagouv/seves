@@ -76,13 +76,13 @@ class FicheDetectionContextMixin:
         context["organismes_nuisibles"] = list(OrganismeNuisible.objects.values("id", "libelle_court"))
         context["statuts_reglementaires"] = list(StatutReglementaire.objects.values("id", "libelle"))
         context["contextes"] = list(Contexte.objects.values("id", "nom"))
-        context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom"))
-        context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom"))
-        context["matrices_prelevees"] = list(MatricePrelevee.objects.values("id", "libelle"))
-        context["especes_echantillon"] = list(EspeceEchantillon.objects.values("id", "libelle"))
-        context["laboratoires_agrees"] = list(LaboratoireAgree.objects.values("id", "nom"))
+        context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom").order_by("nom"))
+        context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
+        context["matrices_prelevees"] = list(MatricePrelevee.objects.values("id", "libelle").order_by("libelle"))
+        context["especes_echantillon"] = list(EspeceEchantillon.objects.values("id", "libelle").order_by("libelle"))
+        context["laboratoires_agrees"] = list(LaboratoireAgree.objects.values("id", "nom").order_by("nom"))
         context["laboratoires_confirmation_officielle"] = list(
-            LaboratoireConfirmationOfficielle.objects.values("id", "nom")
+            LaboratoireConfirmationOfficielle.objects.values("id", "nom").order_by("nom")
         )
         return context
 
