@@ -80,7 +80,7 @@ pyyaml==6.0.1
     # via pre-commit
 requests==2.31.0
     # via pytest-base-url
-ruff==0.4.1
+ruff==0.4.7
     # via -r requirements.in
 sqlparse==0.4.4
     # via django
