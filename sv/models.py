@@ -501,3 +501,4 @@ class FicheZone(models.Model):
 
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
     createur = models.ForeignKey(Unite, on_delete=models.PROTECT, verbose_name="Créateur")
+    fiche_detection = models.ForeignKey(FicheDetection, on_delete=models.CASCADE, verbose_name="Fiche détection")
