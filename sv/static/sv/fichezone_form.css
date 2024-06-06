@@ -15,10 +15,26 @@
     margin-bottom: 2rem;
 }
 
-.form__form-infos {
+.form__container-risques-infos {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.form__form-infos,
+.form__form-risques,
+.form__form-detections {
+    flex: 1;
     background-color: white;
     padding: 2rem;
     margin-bottom: 2rem;
+}
+
+.form-risques__organisme-nuisible,
+.form-risques__statut-reglementaire {
+    font-weight: bold;
+    display: inline-block;
+    width: 190px;
 }
 
 .form-tabs-content {
@@ -67,5 +83,5 @@
 
 
 #add-zone {
-    margin-top: 1.5rem;
+    margin: 1.5rem 0;
 }

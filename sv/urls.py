@@ -47,7 +47,7 @@ urlpatterns = [
         name="free-link-add",
     ),
 	path(
-        "fiches-zone/creation/",
+        "fiches-zone/creation/fiche-detection/<int:pk>/",
         FicheZoneCreateView.as_view(),
         name="fiche-zone-creation",
     ),
