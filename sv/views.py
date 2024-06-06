@@ -14,7 +14,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpRespon
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from django.forms import ModelForm, modelformset_factory, RadioSelect
+from django.forms import ModelForm, modelformset_factory, RadioSelect, HiddenInput
 from .models import (
     FicheDetection,
     Lieu,
@@ -431,6 +431,7 @@ class FicheZoneForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["createur"].widget.attrs.update({"class": "fr-input"})
+        self.fields["fiche_detection"].widget = HiddenInput()
 
 
 class ZoneForm(ModelForm):
@@ -484,19 +485,24 @@ class FicheZoneCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["fiche_zone_form"] = FicheZoneForm()
+        context["fiche_zone_form"] = FicheZoneForm(initial={"fiche_detection": self.kwargs.get("pk")})
         zone_formset = ZoneFormSet(queryset=Zone.objects.none())
         context["zone_formset"] = zone_formset
         context["zone_formset_nb"] = range(zone_formset.total_form_count())
+        fiche_detection_id = self.kwargs.get("pk")
+        fiche_detection = FicheDetection.objects.get(pk=fiche_detection_id)
+        context["fiche_detection"] = fiche_detection
         return context
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         fiche_zone_form = FicheZoneForm(request.POST)
         zone_formset = ZoneFormSet(request.POST)
+        fiche_detection_id = self.kwargs.get("pk")
 
         if fiche_zone_form.is_valid() and zone_formset.is_valid():
             with transaction.atomic():
                 fiche_zone_form.instance.numero = NumeroFiche.get_next_numero()
+                fiche_zone_form.instance.fiche_detection_id = fiche_detection_id
                 fiche_zone = fiche_zone_form.save()
                 zones = zone_formset.save(commit=False)
                 for zone in zones:
@@ -511,5 +517,6 @@ class FicheZoneCreateView(TemplateView):
                     "fiche_zone_form": fiche_zone_form,
                     "zone_formset": zone_formset,
                     "zone_formset_nb": range(zone_formset.total_form_count()),
+                    "fiche_detection": FicheDetection.objects.get(pk=fiche_detection_id),
                 },
             )

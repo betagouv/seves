@@ -29,7 +29,7 @@ urlpatterns = [
         name="fiche-detection-modification",
     ),
     path(
-        "fiches-zone/creation/",
+        "fiches-zone/creation/fiche-detection/<int:pk>/",
         FicheZoneCreateView.as_view(),
         name="fiche-zone-creation",
     ),

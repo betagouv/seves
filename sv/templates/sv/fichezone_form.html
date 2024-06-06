@@ -12,8 +12,10 @@
 
 {% block content %}
     <main class="form">
-        <form action="{% url 'fiche-zone-creation' %}" method="post">
+        <form action="{% url 'fiche-zone-creation' fiche_detection.pk %}" method="post">
             {% csrf_token %}
+
+            {{ fiche_zone_form.fiche_detection.as_hidden }}
 
             <div class="form__form-header">
                 <h1>Création d'une fiche zone</h1>
@@ -38,11 +40,26 @@
                 </div>
             {% endif %}
 
-            <div class="form__form-infos">
-                <h2>Informations</h2>
-                <div class="form-infos__createur" style="display: flex; align-items: center;">
-                    {{ fiche_zone_form.createur.label_tag }}
-                    {{ fiche_zone_form.createur }}
+            <div class="form__container-risques-infos">
+                <div class="form__form-risques">
+                    <h2>Risques</h2>
+                    <p>
+                        <span class="form-risques__organisme-nuisible">Organisme nuisible </span>{{ fiche_detection.organisme_nuisible|default:"nc." }}
+                    </p>
+                    <p>
+                        <span class="form-risques__statut-reglementaire">Statut réglementaire </span>{{ fiche_detection.statut_reglementaire|default:"nc." }}
+                    </p>
+                </div>
+                <div class="form__form-infos">
+                    <h2>Informations</h2>
+                    <p class="form-infos__createur">
+                        {{ fiche_zone_form.createur.label_tag }}
+                        {{ fiche_zone_form.createur }}
+                    </p>
+                    <p class="form-infos__date-creation">
+                        <label class="fr-label">Date de création</label>
+                        <input type="text" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
+                    </p>
                 </div>
             </div>
 
@@ -58,7 +75,12 @@
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-zone" class="fr-btn fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
+            <button type="button" id="add-zone" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button>
+
+            <div class="form__form-detections">
+                <h2>Détections liées</h2>
+                <p><a href="{% url 'fiche-detection-vue-detaillee' fiche_detection.pk %}" class="fr-link">{{fiche_detection.numero}}</a></p>
+            </div>
         </form>
     </main>
 
