@@ -146,8 +146,8 @@ document.addEventListener('alpine:init', () => {
                         commune: lieu.commune,
                         codeINSEE: lieu.code_insee,
                         departementId: lieu.departement_id,
-                        coordGPSLambert93Latitude: lieu.coordGPSLambert93Latitude,
-                        coordGPSLambert93Longitude: lieu.coordGPSLambert93Longitude,
+                        coordGPSLambert93Latitude: lieu.lambert93_latitude,
+                        coordGPSLambert93Longitude: lieu.lambert93_longitude,
                         coordGPSWGS84Latitude: lieu.wgs84_latitude,
                         coordGPSWGS84Longitude: lieu.wgs84_longitude,
                     };

@@ -349,6 +349,12 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.nom = loc["nomLocalisation"]
             lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
             lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
+            lieu.lambert93_latitude = (
+                loc["coordGPSLambert93Latitude"] if loc["coordGPSLambert93Latitude"] != "" else None
+            )
+            lieu.lambert93_longitude = (
+                loc["coordGPSLambert93Longitude"] if loc["coordGPSLambert93Longitude"] != "" else None
+            )
             lieu.adresse_lieu_dit = loc["adresseLieuDit"]
             lieu.commune = loc["commune"]
             lieu.code_insee = loc["codeINSEE"]

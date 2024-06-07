@@ -140,6 +140,8 @@ class Lieu(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom", blank=True)
     wgs84_longitude = models.FloatField(verbose_name="Longitude WGS84", blank=True, null=True)
     wgs84_latitude = models.FloatField(verbose_name="Latitude WGS84", blank=True, null=True)
+    lambert93_latitude = models.FloatField(verbose_name="Latitude Lambert 93", blank=True, null=True)
+    lambert93_longitude = models.FloatField(verbose_name="Longitude Lambert 93", blank=True, null=True)
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
     commune = models.CharField(max_length=100, verbose_name="Commune")
     code_insee = models.CharField(
