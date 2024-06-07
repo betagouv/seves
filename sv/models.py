@@ -477,8 +477,8 @@ class Zone(models.Model):
         verbose_name="Unité du rayon de la zone infestée",
         default=UnitesRayon.METRE,
     )
-    rayon_zone_tamponee = models.FloatField(verbose_name="Rayon de la zone tampon")
-    unite_rayon_zone_tamponee = models.CharField(
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon de la zone tampon")
+    unite_rayon_zone_tampon = models.CharField(
         max_length=2,
         choices=UnitesRayon.choices,
         verbose_name="Unité du rayon de la zone tampon",
