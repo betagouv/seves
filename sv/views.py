@@ -633,7 +633,7 @@ class ZoneForm(ModelForm):
         widgets = {
             "unite_surface_zone_infestee": RadioSelect,
             "unite_rayon_zone_infestee": RadioSelect,
-            "unite_rayon_zone_tamponee": RadioSelect,
+            "unite_rayon_zone_tampon": RadioSelect,
         }
         labels = {
             "caracteristiques_principales_zone_delimitee": "Caractéristiques de la zone délimitée",
@@ -649,7 +649,7 @@ class ZoneForm(ModelForm):
         self.fields["unite_rayon_zone_infestee"].widget.choices = [
             (choice.value, choice.value) for choice in Zone.UnitesRayon
         ]
-        self.fields["unite_rayon_zone_tamponee"].widget.choices = [
+        self.fields["unite_rayon_zone_tampon"].widget.choices = [
             (choice.value, choice.value) for choice in Zone.UnitesRayon
         ]
 
@@ -664,7 +664,7 @@ class ZoneForm(ModelForm):
         self.fields["rayon_zone_infestee"].widget.attrs.update(
             {"class": "form-tabs-content__rayon-zone-infestee-input fr-input"}
         )
-        self.fields["rayon_zone_tamponee"].widget.attrs.update(
+        self.fields["rayon_zone_tampon"].widget.attrs.update(
             {"class": "form-tabs-content__rayon-zone-tamponee-input fr-input"}
         )
 
