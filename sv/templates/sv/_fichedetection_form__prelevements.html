@@ -37,7 +37,7 @@
                 </span>
             </ul>
         </div>
-        <p class="prelevement-localisation" x-text="'Localisation : ' + getLocalisationNameFromId(prelevement.localisationId)"></p>
+        <p class="prelevement-lieu" x-text="'Lieu : ' + getLieuNameFromId(prelevement.lieuId)"></p>
         <p class="site-inspection" x-text="getSiteInspectionNameFromId(prelevement.siteInspectionId)"></p>
         <p class="date-prelevement" x-text="getDatePrelevementFormated(prelevement.datePrelevement)"></p>
         <p class="prelevement-type" x-bind:class="{'fr-icon-check-line': prelevement.isOfficiel}" x-text="' Prélèvement ' + (prelevement.isOfficiel ? 'officiel' : 'non officiel')"></p>

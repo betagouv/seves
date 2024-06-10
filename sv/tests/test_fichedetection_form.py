@@ -2,7 +2,7 @@ import json
 import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from .conftest import check_select_options
 from ..models import (
     Departement,
@@ -16,12 +16,10 @@ def test_goto_fiche_detection_creation_url(live_server, page: Page):
     return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
 
 
-def _add_new_localisation(
-    page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
-):
+def _add_new_lieu(page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements):
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -40,8 +38,8 @@ def _add_new_localisation(
     lieu_form_elements.save_btn.click()
 
 
-def _check_add_localisation_form_fields_are_empty(page: Page, lieu_form_elements: LieuFormDomElements):
-    """Vérifie que le formulaire d'ajout d'une localisation est vide"""
+def _check_add_lieu_form_fields_are_empty(page: Page, lieu_form_elements: LieuFormDomElements):
+    """Vérifie que le formulaire d'ajout d'un lieu est vide"""
     expect(lieu_form_elements.nom_input).to_be_empty()
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
@@ -56,6 +54,8 @@ def _check_add_localisation_form_fields_are_empty(page: Page, lieu_form_elements
 # =============
 # Partie Informations, Objet de l'évènement, Mesures de gestion
 # =============
+
+
 def test_date_creation_field_is_disabled(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que le champ Date de création est désactivé"""
     expect(form_elements.date_creation_input).to_be_disabled()
@@ -73,40 +73,40 @@ def test_createur_field_is_required(live_server, page: Page, form_elements: Fich
 # Ajouter un lieu
 
 
-def test_add_localisation_button(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le bouton Ajouter une localisation affiche le formulaire d’ajout d’une nouvelle localisation dans la modal"""
+def test_add_lieu_button(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+    """Test que le bouton Ajouter un lieu affiche le formulaire d’ajout d’une nouveau lieu dans la modal"""
     form_elements.add_lieu_btn.click()
     expect(page.get_by_role("dialog")).to_be_visible()
 
 
 def test_close_button_of_add_lieu_form_modal(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le bouton Fermer ferme la modal d'ajout d'une localisation"""
+    """Test que le bouton Fermer ferme la modal d'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
     page.get_by_role("button", name="Fermer").click()
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
 def test_cancel_button_of_add_lieu_form_modal(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le bouton Annuler ferme la modal d'ajout d'une localisation"""
+    """Test que le bouton Annuler ferme la modal d'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
     page.get_by_role("button", name="Annuler").click()
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
-def test_add_localisation_form_have_all_fields(
+def test_add_lieu_form_have_all_fields(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le formulaire d'ajout d'une localisation contient bien les champs attendus."""
+    """Test que le formulaire d'ajout d'un lieu contient bien les champs attendus."""
     form_elements.add_lieu_btn.click()
 
     expect(lieu_form_elements.close_btn).to_be_visible()
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
 
     expect(lieu_form_elements.title).to_be_visible()
-    expect(lieu_form_elements.title).to_have_text("Ajouter une localisation")
+    expect(lieu_form_elements.title).to_have_text("Ajouter un lieu")
 
     expect(lieu_form_elements.nom_label).to_be_visible()
-    expect(lieu_form_elements.nom_label).to_have_text("Nom de la localisation")
+    expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
     expect(lieu_form_elements.nom_input).to_be_visible()
     expect(lieu_form_elements.nom_input).to_be_empty()
 
@@ -148,10 +148,10 @@ def test_add_localisation_form_have_all_fields(
     expect(lieu_form_elements.save_btn).to_have_text("Enregistrer")
 
 
-def test_nom_localisation_is_required_in_add_lieu_form(
+def test_nom_lieu_is_required_in_add_lieu_form(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le champ Nom de la localisation est requis pour l'ajout d'une localisation"""
+    """Test que le champ Nom du lieu est requis pour l'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
     expect(lieu_form_elements.nom_input).to_have_attribute("required", "")
 
@@ -205,32 +205,32 @@ def test_longitude_min_max_value_of_lambert93_format_in_add_lieu_form(
 def test_add_lieu_to_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le lieu ajouté est bien visible dans la liste des localisations"""
+    """Test que le lieu ajouté est bien visible dans la liste des lieux"""
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
-    expect(page.locator("#localisations").get_by_text("test localisation")).to_be_visible()
-    elements = page.query_selector_all(".localisation-initiale")
+    expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
+    elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 1
 
 
 def test_added_lieu_content_in_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le contenu du lieu ajouté contient le nom de la localisation, la commune et les boutons de suppression et de modification"""
+    """Test que le contenu du lieu ajouté contient le nom du lieu, la commune et les boutons de suppression et de modification"""
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.commune_input.click()
     lieu_form_elements.commune_input.fill("test commune")
     lieu_form_elements.save_btn.click()
-    expect(page.locator("#localisations").get_by_text("test localisation")).to_be_visible()
-    expect(page.locator("#localisations")).to_contain_text("test localisation")
+    expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
+    expect(page.locator("#lieux")).to_contain_text("test lieu")
     expect(page.get_by_text("test commune")).to_be_visible()
-    expect(page.locator("#localisations")).to_contain_text("test commune")
-    expect(page.get_by_role("button", name="Modifier la localisation")).to_be_visible()
-    expect(page.get_by_role("button", name="Supprimer la localisation")).to_be_visible()
+    expect(page.locator("#lieux")).to_contain_text("test commune")
+    expect(page.get_by_role("button", name="Modifier le lieu")).to_be_visible()
+    expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
 
 
 @pytest.mark.django_db(serialized_rollback=True)
@@ -242,7 +242,7 @@ def test_lieu_is_added_to_alpinejs_data(
 
     # ajout d'un lieu via le formulaire
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -260,40 +260,40 @@ def test_lieu_is_added_to_alpinejs_data(
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("2")
     lieu_form_elements.save_btn.click()
 
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert len(localisations) == 1
-    assert localisations[0]["nomLocalisation"] == "nom localisation"
-    assert localisations[0]["adresseLieuDit"] == "une adresse"
-    assert localisations[0]["commune"] == "une commune"
-    assert localisations[0]["codeINSEE"] == "17000"
-    assert localisations[0]["departementId"] == "62"
-    assert localisations[0]["coordGPSLambert93Latitude"] == "6000000"
-    assert localisations[0]["coordGPSLambert93Longitude"] == "200000"
-    assert localisations[0]["coordGPSWGS84Latitude"] == "1"
-    assert localisations[0]["coordGPSWGS84Longitude"] == "2"
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 1
+    assert lieux[0]["nomLieu"] == "nom lieu"
+    assert lieux[0]["adresseLieuDit"] == "une adresse"
+    assert lieux[0]["commune"] == "une commune"
+    assert lieux[0]["codeINSEE"] == "17000"
+    assert lieux[0]["departementId"] == "62"
+    assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
+    assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
+    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
+    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_add_two_lieux_to_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que les lieux ajoutés sont bien visibles dans la liste des localisations"""
+    """Test que les lieux ajoutés sont bien visibles dans la liste des lieux"""
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
 
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation 2")
+    lieu_form_elements.nom_input.fill("test lieu 2")
     lieu_form_elements.save_btn.click()
 
-    expect(page.locator("#localisations").get_by_text("test localisation", exact=True)).to_be_visible()
-    expect(page.locator("#localisations").get_by_text("test localisation 2", exact=True)).to_be_visible()
-    expect(page.locator("#localisations")).to_contain_text("a")
-    expect(page.locator("#localisations")).to_contain_text("b")
-    elements = page.query_selector_all(".localisation-initiale")
+    expect(page.locator("#lieux").get_by_text("test lieu", exact=True)).to_be_visible()
+    expect(page.locator("#lieux").get_by_text("test lieu 2", exact=True)).to_be_visible()
+    expect(page.locator("#lieux")).to_contain_text("a")
+    expect(page.locator("#lieux")).to_contain_text("b")
+    elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 2
 
 
@@ -305,7 +305,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -326,7 +326,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     # ajout du deuxième lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation 2")
+    lieu_form_elements.nom_input.fill("nom lieu 2")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse 2")
     lieu_form_elements.commune_input.click()
@@ -344,27 +344,27 @@ def test_two_lieux_are_added_to_alpinejs_data(
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("2")
     lieu_form_elements.save_btn.click()
 
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert len(localisations) == 2
-    assert localisations[0]["nomLocalisation"] == "nom localisation"
-    assert localisations[0]["adresseLieuDit"] == "une adresse"
-    assert localisations[0]["commune"] == "une commune"
-    assert localisations[0]["codeINSEE"] == "17000"
-    assert localisations[0]["departementId"] == "62"
-    assert localisations[0]["coordGPSLambert93Latitude"] == "6000000"
-    assert localisations[0]["coordGPSLambert93Longitude"] == "200000"
-    assert localisations[0]["coordGPSWGS84Latitude"] == "1"
-    assert localisations[0]["coordGPSWGS84Longitude"] == "2"
-    assert localisations[1]["nomLocalisation"] == "nom localisation 2"
-    assert localisations[1]["adresseLieuDit"] == "une adresse 2"
-    assert localisations[1]["commune"] == "une commune 2"
-    assert localisations[1]["codeINSEE"] == "17440"
-    assert localisations[1]["departementId"] == "62"
-    assert localisations[1]["coordGPSLambert93Latitude"] == "6000000"
-    assert localisations[1]["coordGPSLambert93Longitude"] == "200000"
-    assert localisations[1]["coordGPSWGS84Latitude"] == "1"
-    assert localisations[1]["coordGPSWGS84Longitude"] == "2"
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 2
+    assert lieux[0]["nomLieu"] == "nom lieu"
+    assert lieux[0]["adresseLieuDit"] == "une adresse"
+    assert lieux[0]["commune"] == "une commune"
+    assert lieux[0]["codeINSEE"] == "17000"
+    assert lieux[0]["departementId"] == "62"
+    assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
+    assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
+    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
+    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
+    assert lieux[1]["nomLieu"] == "nom lieu 2"
+    assert lieux[1]["adresseLieuDit"] == "une adresse 2"
+    assert lieux[1]["commune"] == "une commune 2"
+    assert lieux[1]["codeINSEE"] == "17440"
+    assert lieux[1]["departementId"] == "62"
+    assert lieux[1]["coordGPSLambert93Latitude"] == "6000000"
+    assert lieux[1]["coordGPSLambert93Longitude"] == "200000"
+    assert lieux[1]["coordGPSWGS84Latitude"] == "1"
+    assert lieux[1]["coordGPSWGS84Longitude"] == "2"
 
 
 # Modifier un lieu
@@ -373,16 +373,16 @@ def test_two_lieux_are_added_to_alpinejs_data(
 def test_edit_lieu_button_show_form_in_modal(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le bouton Modifier la localisation affiche le formulaire de modification dans une modal"""
+    """Test que le bouton Modifier le lieu affiche le formulaire de modification dans une modal"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.commune_input.click()
     lieu_form_elements.commune_input.fill("test commune")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
 
     expect(page.get_by_role("dialog")).to_be_visible()
 
@@ -390,37 +390,37 @@ def test_edit_lieu_button_show_form_in_modal(
 def test_edit_lieu_modal_title_and_actions_btn(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le titre de la modal de modification d'une localisation est bien 'Modifier la localisation'"""
+    """Test que le titre de la modal de modification d'un lieu est bien 'Modifier le lieu'"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.commune_input.click()
     lieu_form_elements.commune_input.fill("test commune")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
 
-    expect(page.get_by_role("heading", name="Modifier la localisation")).to_be_visible()
-    expect(page.locator("#modal-add-edit-localisation-title")).to_have_text("Modifier la localisation")
-    expect(page.get_by_label("Modifier la localisation").locator('input[type="submit"]')).to_have_text(
+    expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
+    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
+    expect(page.get_by_label("Modifier le lieu").locator('input[type="submit"]')).to_have_text(
         "Enregistrer les modifications"
     )
 
 
-def test_edit_lieu_form_with_only_nom_localisation(
+def test_edit_lieu_form_with_only_nom_lieu(
     live_server, page: Page, lieu_form_elements: LieuFormDomElements, form_elements: FicheDetectionFormDomElements
 ):
-    """Lors de la modification d'une localisation contenant seulement le nom, seulement le champ nom de la localisation est pré-rempli, les autres champs sont vides."""
+    """Lors de la modification d'un lieu contenant seulement le nom, seulement le champ nom du lieu est pré-rempli, les autres champs sont vides."""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("test localisation")
+    lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
 
-    expect(lieu_form_elements.nom_input).to_have_value("test localisation")
+    expect(lieu_form_elements.nom_input).to_have_value("test lieu")
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
     expect(lieu_form_elements.code_insee_input).to_be_empty()
@@ -435,11 +435,11 @@ def test_edit_lieu_form_with_only_nom_localisation(
 def test_edit_lieu_form_have_all_fields(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le formulaire de modification d'une localisation contient bien les champs attendus et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier."""
+    """Test que le formulaire de modification d'un lieu contient bien les champs attendus et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier."""
     # création d'un lieu TODO: FACTORISER
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("un nom de localisation")
+    lieu_form_elements.nom_input.fill("un nom de lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -458,18 +458,18 @@ def test_edit_lieu_form_have_all_fields(
     lieu_form_elements.save_btn.click()
 
     # modification du lieu
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
 
     expect(lieu_form_elements.close_btn).to_be_visible()
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
 
-    expect(page.get_by_role("heading", name="Modifier la localisation")).to_be_visible()
-    expect(page.locator("#modal-add-edit-localisation-title")).to_have_text("Modifier la localisation")
+    expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
+    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
 
     expect(lieu_form_elements.nom_label).to_be_visible()
-    expect(lieu_form_elements.nom_label).to_have_text("Nom de la localisation")
+    expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
     expect(lieu_form_elements.nom_input).to_be_visible()
-    expect(lieu_form_elements.nom_input).to_have_value("un nom de localisation")
+    expect(lieu_form_elements.nom_input).to_have_value("un nom de lieu")
 
     expect(lieu_form_elements.adresse_label).to_be_visible()
     expect(lieu_form_elements.adresse_label).to_have_text("Adresse ou lieu-dit")
@@ -508,15 +508,15 @@ def test_edit_lieu_form_have_all_fields(
 
 
 @pytest.mark.django_db(serialized_rollback=True)
-def test_edit_lieu_form_have_all_fields_with_multiple_localisations(
+def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le formulaire de modification d'une localisation contient bien les champs attendus
-    et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier si plusieurs localisations sont présentent dans la liste"""
+    """Test que le formulaire de modification d'un lieu contient bien les champs attendus
+    et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier si plusieurs lieux sont présentent dans la liste"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -537,7 +537,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_localisations(
     # ajout du deuxième lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation 2")
+    lieu_form_elements.nom_input.fill("nom lieu 2")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse 2")
     lieu_form_elements.commune_input.click()
@@ -556,8 +556,8 @@ def test_edit_lieu_form_have_all_fields_with_multiple_localisations(
     lieu_form_elements.save_btn.click()
 
     # vérification des valeurs du premier lieu
-    page.get_by_role("button", name="Modifier la localisation").first.click()
-    expect(lieu_form_elements.nom_input).to_have_value("nom localisation")
+    page.get_by_role("button", name="Modifier le lieu").first.click()
+    expect(lieu_form_elements.nom_input).to_have_value("nom lieu")
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
     expect(lieu_form_elements.commune_input).to_have_value("une commune")
     expect(lieu_form_elements.code_insee_input).to_have_value("17000")
@@ -569,8 +569,8 @@ def test_edit_lieu_form_have_all_fields_with_multiple_localisations(
     page.get_by_role("button", name="Fermer").click()
 
     # vérification des valeurs du deuxième lieu
-    page.get_by_role("button", name="Modifier la localisation").nth(1).click()
-    expect(lieu_form_elements.nom_input).to_have_value("nom localisation 2")
+    page.get_by_role("button", name="Modifier le lieu").nth(1).click()
+    expect(lieu_form_elements.nom_input).to_have_value("nom lieu 2")
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse 2")
     expect(lieu_form_elements.commune_input).to_have_value("une commune 2")
     expect(lieu_form_elements.code_insee_input).to_have_value("17440")
@@ -590,7 +590,7 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -609,8 +609,8 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     lieu_form_elements.save_btn.click()
 
     # modification du lieu
-    page.get_by_role("button", name="Modifier la localisation").click()
-    lieu_form_elements.nom_input.fill("nom localisation modifié")
+    page.get_by_role("button", name="Modifier le lieu").click()
+    lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
     lieu_form_elements.commune_input.fill("une commune modifiée")
     lieu_form_elements.code_insee_input.fill("17001")
@@ -622,28 +622,28 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
     # vérification des valeurs du lieu modifié
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert localisations[0]["nomLocalisation"] == "nom localisation modifié"
-    assert localisations[0]["adresseLieuDit"] == "une adresse modifiée"
-    assert localisations[0]["commune"] == "une commune modifiée"
-    assert localisations[0]["codeINSEE"] == "17001"
-    assert localisations[0]["departementId"] == "63"
-    assert localisations[0]["coordGPSLambert93Latitude"] == "6000001"
-    assert localisations[0]["coordGPSLambert93Longitude"] == "200001"
-    assert localisations[0]["coordGPSWGS84Latitude"] == "11"
-    assert localisations[0]["coordGPSWGS84Longitude"] == "21"
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert lieux[0]["nomLieu"] == "nom lieu modifié"
+    assert lieux[0]["adresseLieuDit"] == "une adresse modifiée"
+    assert lieux[0]["commune"] == "une commune modifiée"
+    assert lieux[0]["codeINSEE"] == "17001"
+    assert lieux[0]["departementId"] == "63"
+    assert lieux[0]["coordGPSLambert93Latitude"] == "6000001"
+    assert lieux[0]["coordGPSLambert93Longitude"] == "200001"
+    assert lieux[0]["coordGPSWGS84Latitude"] == "11"
+    assert lieux[0]["coordGPSWGS84Longitude"] == "21"
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_edit(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le formulaire d'ajout d'une localisation est vide après la modification d'une localisation"""
+    """Test que le formulaire d'ajout d'un lieu est vide après la modification d'un lieu"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
-    lieu_form_elements.nom_input.fill("nom localisation")
+    lieu_form_elements.nom_input.fill("nom lieu")
     lieu_form_elements.adresse_input.click()
     lieu_form_elements.adresse_input.fill("une adresse")
     lieu_form_elements.commune_input.click()
@@ -662,8 +662,8 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.save_btn.click()
 
     # modification du lieu
-    page.get_by_role("button", name="Modifier la localisation").click()
-    lieu_form_elements.nom_input.fill("nom localisation modifié")
+    page.get_by_role("button", name="Modifier le lieu").click()
+    lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
     lieu_form_elements.commune_input.fill("une commune modifiée")
     lieu_form_elements.code_insee_input.fill("17001")
@@ -674,7 +674,7 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
-    # vérification que le formulaire d'ajout d'une localisation est vide
+    # vérification que le formulaire d'ajout d'un lieu est vide
     form_elements.add_lieu_btn.click()
     expect(lieu_form_elements.nom_input).to_be_empty()
     expect(lieu_form_elements.adresse_input).to_be_empty()
@@ -691,60 +691,60 @@ def test_add_lieu_form_is_empty_after_edit(
 def test_add_lieu_form_is_empty_after_close_edit_form_with_close_btn_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que si je quitte la modification d’une localisation sans enregistrer via le  bouton fermer,
-    je dois trouver le formulaire d’ajout d’une localisation vide"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test que si je quitte la modification d’un lieu sans enregistrer via le  bouton fermer,
+    je dois trouver le formulaire d’ajout d’un lieu vide"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
     page.get_by_role("button", name="Fermer").click()
     form_elements.add_lieu_btn.click()
 
-    _check_add_localisation_form_fields_are_empty(page, lieu_form_elements)
+    _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que si je quitte la modification d’une localisation sans enregistrer via le bouton annuler,
-    je dois trouver le formulaire d’ajout d’une localisation vide"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test que si je quitte la modification d’un lieu sans enregistrer via le bouton annuler,
+    je dois trouver le formulaire d’ajout d’un lieu vide"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
     page.get_by_role("button", name="Annuler").click()
     form_elements.add_lieu_btn.click()
 
-    _check_add_localisation_form_fields_are_empty(page, lieu_form_elements)
+    _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que si je quitte la modification d’une localisation sans enregistrer via la touche echap du clavier,
-    je dois trouver le formulaire d’ajout d’une localisation vide"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test que si je quitte la modification d’un lieu sans enregistrer via la touche echap du clavier,
+    je dois trouver le formulaire d’ajout d’un lieu vide"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
     page.keyboard.press("Escape")
     form_elements.add_lieu_btn.click()
 
-    _check_add_localisation_form_fields_are_empty(page, lieu_form_elements)
+    _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_click_outside_modal_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que si je quitte la modification d’une localisation sans enregistrer via un clic en dehors de la modal,
-    je dois trouver le formulaire d’ajout d’une localisation vide"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test que si je quitte la modification d’un lieu sans enregistrer via un clic en dehors de la modal,
+    je dois trouver le formulaire d’ajout d’un lieu vide"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
     page.mouse.click(0, 0)  # clic en dehors de la modal
     form_elements.add_lieu_btn.click()
 
-    _check_add_localisation_form_fields_are_empty(page, lieu_form_elements)
+    _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
 # Supprimer un lieu
@@ -754,10 +754,10 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_click_outside_modal_w
 def test_delete_lieu_button_show_confirmation_modal(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test qu'une modal de confirmation est affichée lors de la suppression d'une localisation liée à aucun prélèvement"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test qu'une modal de confirmation est affichée lors de la suppression d'un lieu liée à aucun prélèvement"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Supprimer la localisation").click()
+    page.get_by_role("button", name="Supprimer le lieu").click()
 
     expect(page.get_by_role("dialog")).to_be_visible()
 
@@ -766,27 +766,27 @@ def test_delete_lieu_button_show_confirmation_modal(
 def test_delete_lieu_from_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que la localisation est bien supprimée de la liste des localisations après confirmation"""
-    _add_new_localisation(page, form_elements, lieu_form_elements)
+    """Test que le lieu est bien supprimée de la liste des lieux après confirmation"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Supprimer la localisation").click()
+    page.get_by_role("button", name="Supprimer le lieu").click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
-    expect(page.locator("#localisations")).not_to_contain_text("nom localisation")
-    elements = page.query_selector_all(".localisation-initiale")
+    expect(page.locator("#lieux")).not_to_contain_text("nom lieu")
+    elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 0
 
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert len(localisations) == 0
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 0
 
 
 @pytest.mark.django_db(serialized_rollback=True)
-def test_delete_lieu_from_list_with_multiple_localisations(
+def test_delete_lieu_from_list_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que la localisation est bien supprimée de la liste des localisations après confirmation
-    et que c'est la bonne localisation qui est supprimée"""
+    """Test que le lieu est bien supprimée de la liste des lieux après confirmation
+    et que c'est le bon lieu qui est supprimée"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -800,27 +800,27 @@ def test_delete_lieu_from_list_with_multiple_localisations(
     lieu_form_elements.save_btn.click()
 
     # suppression du premier lieu
-    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
-    expect(page.locator("#localisations")).not_to_contain_text("lorem")
-    expect(page.locator("#localisations")).to_contain_text("ipsum")
-    elements = page.query_selector_all(".localisation-initiale")
+    expect(page.locator("#lieux")).not_to_contain_text("lorem")
+    expect(page.locator("#lieux")).to_contain_text("ipsum")
+    elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 1
 
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert len(localisations) == 1
-    assert localisations[0]["nomLocalisation"] == "ipsum"
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 1
+    assert lieux[0]["nomLieu"] == "ipsum"
 
 
 @pytest.mark.django_db(serialized_rollback=True)
 def test_delete_correct_lieu(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test si j'affiche la modal de confirmation de la suppression d'une localisation,
-    que je quitte la modal sans supprimer la localisation et que je supprime une autre localisation
-    → vérifier que c’est la bonne localisation qui est supprimée"""
+    """Test si j'affiche la modal de confirmation de la suppression d'un lieu,
+    que je quitte la modal sans supprimer le lieu et que je supprime un autre lieu
+    → vérifier que c’est le bon lieu qui est supprimée"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -833,18 +833,71 @@ def test_delete_correct_lieu(
     lieu_form_elements.nom_input.fill("ipsum")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Fermer").click()
 
-    page.get_by_role("button", name="Supprimer la localisation").nth(1).click()
+    page.get_by_role("button", name="Supprimer le lieu").nth(1).click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
-    expect(page.locator("#localisations")).not_to_contain_text("ipsum")
-    expect(page.locator("#localisations")).to_contain_text("lorem")
-    elements = page.query_selector_all(".localisation-initiale")
+    expect(page.locator("#lieux")).not_to_contain_text("ipsum")
+    expect(page.locator("#lieux")).to_contain_text("lorem")
+    elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 1
 
-    localisations_json = page.get_by_test_id("localisations").input_value()
-    localisations = json.loads(localisations_json)
-    assert len(localisations) == 1
-    assert localisations[0]["nomLocalisation"] == "lorem"
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 1
+    assert lieux[0]["nomLieu"] == "lorem"
+
+
+@pytest.mark.django_db(serialized_rollback=True)
+def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    """Test que la suppression d'un lieu est impossible si elle est liée à un prélèvement"""
+    # ajout d'un lieu
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.click()
+    lieu_form_elements.nom_input.fill("lorem")
+    lieu_form_elements.save_btn.click()
+
+    # ajout d'un prélèvement
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements = PrelevementFormDomElements(page)
+    prelevement_form_elements.date_prelevement_input.click()
+    prelevement_form_elements.structure_input.select_option("1")
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
+    prelevement_form_elements.save_btn.click()
+
+    # suppression du lieu
+    page.get_by_role("button", name="Supprimer le lieu").click()
+
+    expect(page.get_by_role("dialog")).not_to_be_visible()
+    expect(page.locator("#lieux")).to_contain_text("lorem")
+    elements = page.query_selector_all(".lieu-initial")
+    assert len(elements) == 1
+
+    lieux_json = page.get_by_test_id("lieux").input_value()
+    lieux = json.loads(lieux_json)
+    assert len(lieux) == 1
+    assert lieux[0]["nomLieu"] == "lorem"
+
+
+# =============
+# Partie Prélèvements
+# =============
+
+# Ajouter un prélèvement
+
+
+def test_no_add_prelevement_btn_if_no_lieu(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+    """Test que le bouton d'ajout d'un prélèvement n'est pas visible si aucun lieu dans la liste"""
+    expect(form_elements.add_prelevement_btn).not_to_be_visible()
+
+
+def test_add_prelevement_btn_is_visible_if_lieu_exists(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    """Test que le bouton d'ajout d'un prélèvement est visible si au moins un lieu existe dans la liste"""
+    _add_new_lieu(page, form_elements, lieu_form_elements)
+    expect(form_elements.add_prelevement_btn).to_be_visible()
