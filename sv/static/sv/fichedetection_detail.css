@@ -1,0 +1,136 @@
+:root {
+    --field-label-font-weight: bold;
+    --field-label-margin-right: 0.5rem;
+    --fiche-detail-bloc-padding: 1.5rem;
+    --fiche-detail-bloc-background-color: white;
+}
+main{
+    margin: 2rem 1.5rem;
+}
+.hidden {
+    display: none;
+}
+
+
+/* -- Grid pour l'ensemble des blocs -- */
+.fiche-detail__container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 1.5rem;
+}
+
+
+/* Bloc en-entête (titres et actions) */
+.fiche-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.fiche-header__title{
+    margin-bottom: 0.5rem;
+}
+.fiche-header__message {
+    margin-bottom: 3rem;
+}
+
+/* Bloc Informations */
+.fiche-detail__informations{
+    grid-column: span 3;
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.informations__fields{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.informations__first-column,
+.informations__second-column,
+.informations__third-column {
+    flex: 1;
+}
+.informations__field-label {
+    font-weight: var(--field-label-font-weight);
+    margin-right: var(--field-label-margin-right);
+}
+
+
+/* Bloc objet de l'évènement */
+.fiche-detail__objet-evenement {
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.objet-evenement__field {
+    display: flex;
+    justify-content: space-between;
+}
+.objet-evenement__field-label {
+    flex: 1;
+    font-weight: var(--field-label-font-weight);
+}
+.objet-evenement__field-value {
+    flex: 1;
+    text-align: left;
+}
+
+
+/* Bloc Lieux */
+.fiche-detail__lieux {
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.lieu-initial {
+    margin-bottom: 1rem;
+}
+
+
+/* Bloc Prélèvements */
+.fiche-detail__prelevements {
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.prelevement__type {
+    font-weight: var(--field-label-font-weight);
+    color: var(--text-title-blue-france);
+}
+
+
+/* Bloc mesures de gestion */
+.fiche-detail__mesures-gestion {
+    grid-column: span 3;
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.mesures-gestion__container{
+    display: flex;
+    gap: 2rem;
+}
+.mesures-gestion__mesures-conservatoires-immediates,
+.mesures-gestion__mesures-consignation,
+.mesures-gestion__mesures_phytosanitaires,
+.mesures-gestion__mesures-surveillance-specifique {
+    flex: 1;
+}
+.mesures-gestion__label {
+    font-weight: var(--field-label-font-weight);
+}
+
+
+/* Bloc synthèse */
+.fiche-synthese {
+    background-color: var(--fiche-detail-bloc-background-color);
+    padding: var(--fiche-detail-bloc-padding);
+}
+.fiche-synthese__field {
+    display: flex;
+    justify-content: space-between;
+}
+.fiche-synthese__label{
+    flex: 0.2;
+    font-weight: var(--field-label-font-weight);
+}
+.fiche-synthese__value {
+    flex: 1;
+    text-align: left;
+}
