@@ -1,41 +1,38 @@
 body{
-    background-color: #FFFFFF;
+    background-color: var(--background-default-grey);
 }
 
-#fichedetection-list-header-title {
-    background-color: #E3E3FD;
+.fiches__header {
+    background-color: var(--background-open-blue-france);
     padding: 2rem 0rem 2rem 2rem;
 }
-
-#fichedetection-list-header-title h1 {
+.fiches__title {
     margin-bottom: 0;
 }
 
-#fichedetection-list {
+.fiches__list-container {
     margin: 2rem;
 }
+.fiches__count {
+    font-weight: bold;
+}
 
-#fichedetection-list-table table{
+.fiches__list-table{
     border-collapse: collapse;
 }
-
-#fichedetection-list-table table thead tr {
-    background-color: #FFFFFF;
-    border-bottom: 1px solid #F6F6F6;
+.fiches__table-header {
+    background-color: var(--background-default-grey);
+    border-bottom: 1px solid var(--background-alt-grey);
 }
-
-#fichedetection-list-table tbody tr {
+.fiches__list-row {
     background-image: none;
 }
-
-#fichedetection-list-table tbody tr:nth-child(odd) {
-    background-color: #FFFFFF;
+.fiches__list-row:nth-child(odd) {
+    background-color: var(--background-default-grey);
 }
-
-#fichedetection-list-table tbody tr:nth-child(even) {
-    background-color: #F6F6F6;
+.fiches__list-row:nth-child(even) {
+    background-color: var(--background-alt-grey) !important;
 }
-
-#fichedetection-list-table .table-row:hover {
-    background-color: var(--background-contrast-grey);
+.fiches__list-row:hover {
+    background-color: var(--background-contrast-grey) !important;
 }
