@@ -155,18 +155,18 @@
                     </p>
                 </div>
 
-                <div id="localisations">
-                    <div id="localisations-header">
+                <div id="lieux">
+                    <div id="lieux-header">
                         <h2>Lieux</h2>
-                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-localisation">Ajouter une localisation</button>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter un lieu</button>
                     </div>
-                    {% include 'sv/_fichedetection_form__localisations.html' %}
+                    {% include 'sv/_fichedetection_form__lieux.html' %}
                 </div>
 
                 <div id="prelevements">
                     <div id="prelevements-header">
                         <h2>Prélèvements</h2>
-                        <template x-if="localisations.length > 0">
+                        <template x-if="lieux.length > 0">
                             <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter un prélèvement</button>
                         </template>
                     </div>
@@ -197,39 +197,39 @@
             </div>
         </form>
 
-	<!-- Modal ajout/modif localisation -->
-        <dialog aria-labelledby="modal-add-edit-localisation-title" id="modal-add-edit-localisation" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+	<!-- Modal ajout/modif lieu -->
+        <dialog aria-labelledby="modal-add-edit-lieu-title" id="modal-add-edit-lieu" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
                     <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
                         <div class="fr-modal__body">
                             <div class="fr-modal__header">
-                                <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-localisation">Fermer</button>
+                                <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-lieu">Fermer</button>
                             </div>
                             <div class="fr-modal__content">
-                                <h1 id="modal-add-edit-localisation-title"
+                                <h1 id="modal-add-edit-lieu-title"
                                     class="fr-modal__title"
-                                    x-text="(localisationIdToEdit === null ? 'Ajouter une' : 'Modifier la') + ' localisation'"></h1>
-                                <form x-ref="localisationForm" @submit.prevent="addOrEditLocalisation(localisationIdToEdit)" id="localisation-form">
+                                    x-text="(lieuIdToEdit === null ? 'Ajouter un' : 'Modifier le') + ' lieu'"></h1>
+                                <form x-ref="lieuForm" @submit.prevent="addOrEditLieu(lieuIdToEdit)" id="lieu-form">
                                     <p>
-                                        <label class="fr-label" for="nom-localisation">Nom de la localisation</label>
-                                        <input x-model="localisationForm.nomLocalisation" type="text" id="nom-localisation" required class="fr-input">
+                                        <label class="fr-label" for="nom-lieu">Nom du lieu</label>
+                                        <input x-model="lieuForm.nomLieu" type="text" id="nom-lieu" required class="fr-input">
                                     </p>
                                     <p>
                                         <label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
-                                        <input x-model="localisationForm.adresseLieuDit" type="text" id="adresse-lieu-dit" class="fr-input">
+                                        <input x-model="lieuForm.adresseLieuDit" type="text" id="adresse-lieu-dit" class="fr-input">
                                     </p>
                                     <p>
                                         <label class="fr-label" for="commune">Commune</label>
-                                        <input x-model="localisationForm.commune" type="text" id="commune" class="fr-input">
+                                        <input x-model="lieuForm.commune" type="text" id="commune" class="fr-input">
                                     </p>
                                     <p>
                                         <label class="fr-label" for="code-insee">Code INSEE</label>
-                                        <input x-model="localisationForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
+                                        <input x-model="lieuForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
                                     </p>
                                     <p>
                                         <label class="fr-label" for="departement">Département</label>
-                                        <select x-model="localisationForm.departementId" class="fr-select" id="departement">
+                                        <select x-model="lieuForm.departementId" class="fr-select" id="departement">
                                             <option value="">----</option>
                                             <template x-for="departement in departements" :key="departement.id">
                                                 <option :value="departement.id" x-text="departement.nom + ' (' + departement.numero + ')'"></option>
@@ -238,19 +238,19 @@
                                     </p>
                                     <p>
                                         <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
-                                        <input x-model="localisationForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
-                                        <input x-model="localisationForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
+                                        <input x-model="lieuForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
+                                        <input x-model="lieuForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
                                     </p>
                                     <p>
                                         <label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
-                                        <input x-model="localisationForm.coordGPSWGS84Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="0.000001" min="-90" max="90" id="coordonnees-gps-wgs84-latitude" class="fr-input" placeholder="Latitude">
-                                        <input x-model="localisationForm.coordGPSWGS84Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="0.000001" min="-180" max="180" id="coordonnees-gps-wgs84-longitude" class="fr-input" placeholder="Longitude">
+                                        <input x-model="lieuForm.coordGPSWGS84Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="0.000001" min="-90" max="90" id="coordonnees-gps-wgs84-latitude" class="fr-input" placeholder="Latitude">
+                                        <input x-model="lieuForm.coordGPSWGS84Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="0.000001" min="-180" max="180" id="coordonnees-gps-wgs84-longitude" class="fr-input" placeholder="Longitude">
                                     </p>
                                 </div>
                                 <div class="fr-modal__footer">
                                     <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-                                        <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-localisation">Annuler</button>
-                                        <input type="submit" :value="localisationIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn" data-testid="lieu-save-btn"></input>
+                                        <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-lieu">Annuler</button>
+                                        <input type="submit" :value="lieuIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn" data-testid="lieu-save-btn"></input>
                                     </div>
                                 </div>
                             </form>
@@ -274,11 +274,11 @@
                                     class="fr-modal__title"
                                     x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
                                 <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
-                                    <div id="localisation" class="fr-select-group">
-                                        <label class="fr-label">Localisation</label>
-                                        <select class="fr-select" x-model="formPrelevement.localisationId" data-testid="prelevement-form-lieu">
-                                            <template x-for="localisation in localisations" :key="localisation.id">
-                                                <option :value="localisation.id" x-text="localisation.nomLocalisation"></option>
+                                    <div id="lieu" class="fr-select-group">
+                                        <label class="fr-label">Lieu</label>
+                                        <select class="fr-select" x-model="formPrelevement.lieuId" data-testid="prelevement-form-lieu">
+                                            <template x-for="lieu in lieux" :key="lieu.id">
+                                                <option :value="lieu.id" x-text="lieu.nomLieu"></option>
                                             </template>
                                         </select>
                                     </div>

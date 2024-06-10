@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('alpine:init', () => {
 
-    const MODAL_ADD_EDIT_LOCALISATION = document.getElementById('modal-add-edit-localisation');
+    const MODAL_ADD_EDIT_LIEU = document.getElementById('modal-add-edit-lieu');
     const MODAL_ADD_EDIT_PRELEVEMENT = document.getElementById('modal-add-edit-prelevement');
 
     Alpine.data('app', () => ({
@@ -28,7 +28,7 @@ document.addEventListener('alpine:init', () => {
         laboratoiresAgrees: JSON.parse(document.getElementById('laboratoires-agrees').textContent),
         laboratoiresConfirmationOfficielle: JSON.parse(document.getElementById('laboratoires-confirmation-officielle').textContent),
 
-		// Données du formulaire de la fiche détection (champs fiche détection et listes des localisations et prélèvements)
+		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
             numero: '',
             createurId: '',
@@ -44,17 +44,17 @@ document.addEventListener('alpine:init', () => {
             mesuresSurveillanceSpecifique: '',
         },
 
-        localisations: [
-			//{ id: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', nomLocalisation: 'Localisation 1', adresseLieuDit: 'Adresse 1', commune: 'Commune 1', codeINSEE: '12345', departementId: '1', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'e16e5305-76c0-4758-a0c7-e6674cff5086', nomLocalisation: 'Localisation 2', adresseLieuDit: 'Adresse 2', commune: 'Commune 2', codeINSEE: '54321', departementId: '2', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'b5492275-a960-477a-aeca-af50932ca21e', nomLocalisation: 'Localisation 3', adresseLieuDit: 'Adresse 3', commune: 'Commune 3', codeINSEE: '54321', departementId: '3', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+        lieux: [
+			//{ id: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', nomLieu: 'Lieu 1', adresseLieuDit: 'Adresse 1', commune: 'Commune 1', codeINSEE: '12345', departementId: '1', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+			//{ id: 'e16e5305-76c0-4758-a0c7-e6674cff5086', nomLieu: 'Lieu 2', adresseLieuDit: 'Adresse 2', commune: 'Commune 2', codeINSEE: '54321', departementId: '2', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+			//{ id: 'b5492275-a960-477a-aeca-af50932ca21e', nomLieu: 'Lieu 3', adresseLieuDit: 'Adresse 3', commune: 'Commune 3', codeINSEE: '54321', departementId: '3', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
         ],
 
         prelevements: [
 			/*{
 				id: crypto.randomUUID(),
 				nom: 'Prélèvement 1',
-				localisationId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09',
+				lieuId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09',
 				isOfficiel: true,
 				datePrelevement: '2021-09-01',
 				structurePreleveurId: '1',
@@ -63,10 +63,10 @@ document.addEventListener('alpine:init', () => {
 			*/
         ],
 
-		// Données du formulaire d'ajout d'une localisation
-        localisationForm: {
+		// Données du formulaire d'ajout d'un lieu
+        lieuForm: {
             id: '',
-            nomLocalisation: '',
+            nomLieu: '',
             adresseLieuDit: '',
             commune: '',
             codeINSEE: '',
@@ -82,7 +82,7 @@ document.addEventListener('alpine:init', () => {
         formPrelevement: {
             id: null,
             pk: null,
-            localisationId: null,
+            lieuId: null,
             structurePreleveurId: null,
             numeroEchantillon: null,
             datePrelevement: null,
@@ -95,22 +95,22 @@ document.addEventListener('alpine:init', () => {
             laboratoireConfirmationOfficielleId: null,
         },
 
-		// ID de la localisation en cours de modification
-        localisationIdToEdit: null,
+		// ID du lieu en cours de modification
+        lieuIdToEdit: null,
 
 		// Index du prélèvement en cours de modification
         prelevementIdToEdit: null,
 
-		// ID de la localisation en cours de suppression
-        localisationIdToDelete: null,
+		// ID du lieu en cours de suppression
+        lieuIdToDelete: null,
 
 		// ID du prélèvement en cours de suppression
         prelevementIdToDelete: null,
 
         init() {
-            MODAL_ADD_EDIT_LOCALISATION.addEventListener('dsfr.conceal', (e) => {
-                this.resetLocalisationAddOrEditFormModal();
-                this.localisationIdToEdit = null;
+            MODAL_ADD_EDIT_LIEU.addEventListener('dsfr.conceal', (e) => {
+                this.resetLieuAddOrEditFormModal();
+                this.lieuIdToEdit = null;
             });
 
             MODAL_ADD_EDIT_PRELEVEMENT.addEventListener('dsfr.conceal', (e) => {
@@ -133,15 +133,15 @@ document.addEventListener('alpine:init', () => {
                 mesuresSurveillanceSpecifique: this.getValueById('mesures-surveillance-specifique')
             };
 
-			// Récupération et initialisation des localisations (si modification d'une fiche de détection existante)
+			// Récupération et initialisation des lieux (si modification d'une fiche de détection existante)
             const lieux = JSON.parse(document.getElementById('lieux').textContent);
             if(lieux) {
-                this.localisations = lieux.map(lieu => {
+                this.lieux = lieux.map(lieu => {
                     return {
                         id: lieu.id.toString(),
                         pk: lieu.id,
                         ficheDetectionId: lieu.fiche_detection_id,
-                        nomLocalisation: lieu.nom,
+                        nomLieu: lieu.nom,
                         adresseLieuDit: lieu.adresse_lieu_dit,
                         commune: lieu.commune,
                         codeINSEE: lieu.code_insee,
@@ -161,7 +161,7 @@ document.addEventListener('alpine:init', () => {
                     return {
                         id: prelevement.uuid,
                         pk: prelevement.id,
-                        localisationId: prelevement.lieu_id.toString(),
+                        lieuId: prelevement.lieu_id.toString(),
                         structurePreleveurId: prelevement.structure_preleveur_id,
                         numeroEchantillon: prelevement.numero_echantillon,
                         datePrelevement: prelevement.date_prelevement,
@@ -188,52 +188,52 @@ document.addEventListener('alpine:init', () => {
         },
 
 		/**
-		 * Affichage du formulaire d'édition d'une localisation
-		 * et remplissage des champs avec les données de la localisation à modifier
-		 * @param {string} localisationId
+		 * Affichage du formulaire d'édition d'un lieu
+		 * et remplissage des champs avec les données du lieu à modifier
+		 * @param {string} lieuId
 		 */
-        fillLocalisationEditForm(localisationId) {
-            const localisationToEdit = this.localisations.find(localisation => localisation.id === localisationId);
-            this.localisationForm = {...localisationToEdit};
-            this.localisationIdToEdit = localisationId;
+        fillLieuEditForm(lieuId) {
+            const lieuToEdit = this.lieux.find(lieu => lieu.id === lieuId);
+            this.lieuForm = {...lieuToEdit};
+            this.lieuIdToEdit = lieuId;
         },
 
 		/**
-		 * Ajout ou modification d'une localisation.
-		 * Si localisationIdToEdit est null, il s'agit d'une nouvelle localisation.
-		 * Sinon, met à jour la localisation existante.
-		 * @param {string} localisationIdToEdit
+		 * Ajout ou modification d'un lieu.
+		 * Si lieuIdToEdit est null, il s'agit d'un nouveau lieu.
+		 * Sinon, met à jour le lieu existant.
+		 * @param {string} lieuIdToEdit
 		 */
-        addOrEditLocalisation(localisationIdToEdit) {
+        addOrEditLieu(lieuIdToEdit) {
 			// Si le formulaire n'est pas valide, afficher les messages d'erreur
-            if (!this.$refs.localisationForm.checkValidity()) {
-                this.$refs.localisationForm.reportValidity();
+            if (!this.$refs.lieuForm.checkValidity()) {
+                this.$refs.lieuForm.reportValidity();
                 return;
             }
 
-			// Ajout d'une nouvelle localisation
-            if (localisationIdToEdit === null) {
-                this.localisationForm.id = crypto.randomUUID();
-                this.localisations.push({...this.localisationForm});
+			// Ajout d'un nouveau lieu
+            if (lieuIdToEdit === null) {
+                this.lieuForm.id = crypto.randomUUID();
+                this.lieux.push({...this.lieuForm});
             }
-			// Mise à jour de la localisation existante
+			// Mise à jour du lieu existant
             else {
-                this.localisations = this.localisations.map(localisation =>
-                    localisation.id === localisationIdToEdit ? {...this.localisationForm} : localisation
+                this.lieux = this.lieux.map(lieu =>
+                    lieu.id === lieuIdToEdit ? {...this.lieuForm} : lieu
                 );
             }
-            dsfr(MODAL_ADD_EDIT_LOCALISATION).modal.conceal();
+            dsfr(MODAL_ADD_EDIT_LIEU).modal.conceal();
         },
 
 		/**
 		 * Réinitialise le formulaire lors de la fermerture de la
-		 * modal d'ajout ou de modification d'une localisation
+		 * modal d'ajout ou de modification d'un lieu
 		 */
-        resetLocalisationAddOrEditFormModal() {
+        resetLieuAddOrEditFormModal() {
 			// Réinitialise le formulaire
-            this.localisationForm = {
+            this.lieuForm = {
                 id: '',
-                nomLocalisation: '',
+                nomLieu: '',
                 adresseLieuDit: '',
                 commune: '',
                 codeINSEE: '',
@@ -247,55 +247,54 @@ document.addEventListener('alpine:init', () => {
         },
 
 		/**
-		 * Vérifie si une localisation peut être supprimée.
-		 * Si la localisation est liée à un prélèvement, afficher un message d'erreur.
+		 * Vérifie si un lieu peut être supprimée.
+		 * Si le lieu est liée à un prélèvement, afficher un message d'erreur.
 		 * Sinon, afficher la modal de confirmation de suppression.
-		 * @param {string} localisationId
+		 * @param {string} lieuId
 		 */
-        canDeleteLocalisation(localisationId) {
-			// Vérifier si la localisation est liée à un prélèvement
-            let localisationisLinkToAPrelevement = this.prelevements.some(prelevement => prelevement.localisationId === localisationId);
+        canDeleteLieu(lieuId) {
+			// Vérifier si le lieu est liée à un prélèvement
+            let lieuisLinkToAPrelevement = this.prelevements.some(prelevement => prelevement.lieuId === lieuId);
 
-            if (localisationisLinkToAPrelevement) {
-				// Si la localisation est liée à un prélèvement, afficher un message d'erreur
-                dsfr(document.getElementById('fr-modal-suppression-localisation')).modal.disclose();
+            if (lieuisLinkToAPrelevement) {
+				// Si le lieu est liée à un prélèvement, afficher un message d'erreur
+                dsfr(document.getElementById('fr-modal-suppression-lieu')).modal.disclose();
                 return;
             }
 
-			// Si la localisation n'est pas liée à un prélèvement, afficher la modal de confirmation de suppression
-            this.localisationIdToDelete = localisationId;
-            dsfr(document.getElementById('fr-modal-cant-delete-localisation')).modal.disclose();
+			// Si le lieu n'est pas liée à un prélèvement, afficher la modal de confirmation de suppression
+            this.lieuIdToDelete = lieuId;
+            dsfr(document.getElementById('fr-modal-cant-delete-lieu')).modal.disclose();
         },
 
 		/**
-		 * Supprime une localisation.
-		 * @param {string} localisationIdToDelete
+		 * Supprime un lieu.
+		 * @param {string} lieuIdToDelete
 		 */
-        deleteLocalisation(localisationIdToDelete) {
-            this.localisations = this.localisations.filter(localisation => localisation.id !== localisationIdToDelete);
-            dsfr(document.getElementById('fr-modal-cant-delete-localisation')).modal.conceal();
-            this.localisationIdToDelete = null;
+        deleteLieu(lieuIdToDelete) {
+            this.lieux = this.lieux.filter(lieu => lieu.id !== lieuIdToDelete);
+            dsfr(document.getElementById('fr-modal-cant-delete-lieu')).modal.conceal();
+            this.lieuIdToDelete = null;
         },
 
 		/**
-		 * Retourne le nom d'une localisation à partir de son ID
-		 * @param {string} localisationId
-		 * @returns le nom de la localisation
+		 * Retourne le nom d'un lieu à partir de son ID
+		 * @param {string} lieuId
+		 * @returns le nom d'un lieu
 		 */
-        getLocalisationNameFromId(localisationId) {
-			// ⚠️ localisation.id est de type number, localisationId est de type string
-            const localisation = this.localisations.find(localisation => localisation.id == localisationId);
-            return localisation ? localisation.nomLocalisation : '';
+        getLieuNameFromId(lieuId) {
+			// ⚠️ lieu.id est de type number, lieuId est de type string
+            const lieu = this.lieux.find(lieu => lieu.id == lieuId);
+            return lieu ? lieu.nomLieu : '';
         },
 
 		/**
-		 * Selectionne la première localisation de la liste
+		 * Selectionne le premier lieu de la liste
 		 * avant d'afficher le formulaire d'ajout d'un prélèvement
 		 */
         addPrelevementForm() {
-
-            if (!this.formPrelevement.localisationId && this.localisations.length > 0) {
-                this.formPrelevement.localisationId = this.localisations[0].id;
+            if (!this.formPrelevement.lieuId && this.lieux.length > 0) {
+                this.formPrelevement.lieuId = this.lieux[0].id;
             }
         },
 
@@ -342,7 +341,7 @@ document.addEventListener('alpine:init', () => {
 		 */
         resetPrelevementAddOrEditFormModal() {
             this.formPrelevement = {
-                localisationId: '',
+                lieuId: '',
                 pk: null,
                 structurePreleveurId: '',
                 numeroEchantillon: '',
@@ -425,7 +424,7 @@ document.addEventListener('alpine:init', () => {
             formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
             formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
             formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
-            formData.append('localisations', JSON.stringify(this.localisations));
+            formData.append('lieux', JSON.stringify(this.lieux));
             formData.append('prelevements', JSON.stringify(this.prelevements));
 
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;

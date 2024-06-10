@@ -38,7 +38,7 @@ class FicheDetectionFormDomElements:
 
     @property
     def add_lieu_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Ajouter une localisation")
+        return self.page.get_by_role("button", name="Ajouter un lieu")
 
     @property
     def add_prelevement_btn(self) -> Locator:
@@ -161,15 +161,15 @@ class LieuFormDomElements:
 
     @property
     def title(self) -> Locator:
-        return self.page.get_by_role("heading", name="Ajouter une localisation")
+        return self.page.get_by_role("heading", name="Ajouter un lieu")
 
     @property
     def nom_label(self) -> Locator:
-        return self.page.get_by_text("Nom de la localisation")
+        return self.page.get_by_text("Nom du lieu")
 
     @property
     def nom_input(self) -> Locator:
-        return self.page.get_by_label("Nom de la localisation")
+        return self.page.get_by_label("Nom du lieu")
 
     @property
     def adresse_label(self) -> Locator:
@@ -252,7 +252,7 @@ class PrelevementFormDomElements:
 
     @property
     def lieu_label(self) -> Locator:
-        return self.page.get_by_text("Localisation", exact=True)
+        return self.page.get_by_text("Lieu", exact=True)
 
     @property
     def lieu_input(self) -> Locator:

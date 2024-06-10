@@ -35,7 +35,7 @@
         }
         #informations,
         #objet-evenement,
-        #localisations,
+        #lieux,
         #prelevements,
         #mesures-gestion,
         #synthese {
@@ -83,12 +83,12 @@
             text-align: left;
         }
 
-	/* Bloc Localisations - onglet Localisations initiales */
-        .localisation-initiale {
+	/* Bloc Lieux - onglet Lieux initiaux */
+        .lieu-initial {
             margin-bottom: 1rem;
         }
 
-	/* Bloc Localisations - onglet Établissements */
+	/* Bloc Lieux - onglet Établissements */
         .etablissement-position {
             font-size: 0.8rem;
             color: #666666;
@@ -230,18 +230,18 @@
                     </div>
                 </div>
 
-			<!-- Localisations -->
-                <div id="localisations">
+			<!-- Lieux -->
+                <div id="lieux">
                     <h2>Lieux</h2>
-                    {% for localisation_initiale in lieux %}
-                        <div class="localisation-initiale fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
+                    {% for lieu_initial in lieux %}
+                        <div class="lieu-initial fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
                             <div class="fr-card__body">
                                 <div class="fr-card__content">
-                                    <p class="fr-card__title">{{localisation_initiale.nom}}</p>
+                                    <p class="fr-card__title">{{lieu_initial.nom}}</p>
                                     <p class="fr-card__desc">
-                                        {{ localisation_initiale.commune|default:"" }} <br/>
-                                        {% if localisation_initiale.departement %}
-                                            {{ localisation_initiale.departement.nom }} ({{ localisation_initiale.departement.numero }})
+                                        {{ lieu_initial.commune|default:"" }} <br/>
+                                        {% if lieu_initial.departement %}
+                                            {{ lieu_initial.departement.nom }} ({{ lieu_initial.departement.numero }})
                                         {% endif %}
                                     </p>
                                 </div>
@@ -321,8 +321,8 @@
             <div class="field">
                 <p class="field-label">Commune</p>
                 <p class="field-value">
-                    {% if localisations_initiales %}
-                        {{ localisations_initiales.0.commune }}
+                    {% if lieux_initiaux %}
+                        {{ lieux_initiaux.0.commune }}
                     {% else %}
                         nc.
                     {% endif %}
@@ -331,8 +331,8 @@
             <div class="field">
                 <p class="field-label">Région</p>
                 <p class="field-value">
-                    {% if localisations_initiales %}
-                        {{ localisations_initiales.0.region.nom }}
+                    {% if lieux_initiaux %}
+                        {{ lieux_initiaux.0.region.nom }}
                     {% else %}
                         nc.
                     {% endif %}

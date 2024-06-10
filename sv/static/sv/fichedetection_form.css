@@ -16,7 +16,7 @@ main {
 #mesures-gestion{
     grid-column: span 3;
 }
-#localisations, #prelevements {
+#lieux, #prelevements {
     overflow-y: auto;
     max-height: 40rem;
 }
@@ -25,7 +25,7 @@ main {
 /* -- Styles des blocs (intérieur) -- */
 #informations,
 #objet-evenement,
-#localisations,
+#lieux,
 #prelevements,
 #mesures-gestion {
     background-color: white;
@@ -112,47 +112,47 @@ main {
 
 
 /* Lieux */
-#localisations-header {
+#lieux-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
-#localisations .lieu-nom {
+#lieux .lieu-nom {
     font-weight: bold;
     color: black;
     margin-bottom: 0.5rem;
 }
-#localisations .lieu-header {
+#lieux .lieu-header {
     display: flex;
     justify-content: space-between;
 }
-#localisations .localisation-edit-btn,
-#localisations .localisation-delete-btn,
-#localisations .lieu-commune {
+#lieux .lieu-edit-btn,
+#lieux .lieu-delete-btn,
+#lieux .lieu-commune {
     margin-bottom: 0;
 }
 
 
 
-#modal-add-edit-localisation-title,
+#modal-add-edit-lieu-title,
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
 }
-#localisation-form p {
+#lieu-form p {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-#localisation-form p label {
+#lieu-form p label {
     flex: 0.75;
 }
-#localisation-form p input {
+#lieu-form p input {
     flex: 1.25;
 }
-#localisation-form p select {
+#lieu-form p select {
     flex: 1.15;
 }
-.localisation-initiale,
+.lieu-initial,
 .prelevement {
     background-color: #E3E3FD;
     margin-bottom: 1rem;
@@ -187,12 +187,12 @@ main {
 }
 .site-inspection,
 .date-prelevement,
-.prelevement-localisation {
+.prelevement-lieu {
     margin-bottom: 0.5rem;
 }
 
 /* Prélèvement (modal) */
-#prelevement-form #localisation,
+#prelevement-form #lieu,
 #prelevement-form #structure,
 #prelevement-form #numero-echantillon,
 #prelevement-form #date-prelevement,

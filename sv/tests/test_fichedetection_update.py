@@ -262,7 +262,7 @@ def test_update_lieu(
         Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
     )
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
-    page.get_by_role("button", name="Modifier la localisation").click()
+    page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(new_lieu.commune)
@@ -300,9 +300,9 @@ def test_update_two_lieux(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
     for index, new_lieu in enumerate(new_lieux):
         if index == 0:
-            page.get_by_role("button", name="Modifier la localisation").first.click()
+            page.get_by_role("button", name="Modifier le lieu").first.click()
         else:
-            page.get_by_role("button", name="Modifier la localisation").nth(index).click()
+            page.get_by_role("button", name="Modifier le lieu").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
         lieu_form_elements.commune_input.fill(new_lieu.commune)
@@ -338,7 +338,7 @@ def test_delete_lieu(
     Il existe qu'un seul lieu en bd."""
     lieu_id = fiche_detection_with_one_lieu.lieux.first().id
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
-    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
@@ -369,9 +369,9 @@ def test_delete_multiple_lieux(
 ):
     """Test que la suppression de plusieurs lieux existants est bien enregistrée en base de données."""
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
-    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
-    page.get_by_role("button", name="Supprimer la localisation").first.click()
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)

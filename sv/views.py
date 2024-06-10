@@ -111,23 +111,23 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     def post(self, request):
         # Récupération des données du formulaire
         data = request.POST
-        localisations = json.loads(data["localisations"])
+        lieux = json.loads(data["lieux"])
         prelevements = json.loads(data["prelevements"])
 
         # Validation des données
-        errors = self.validate_data(data, localisations, prelevements)
+        errors = self.validate_data(data, lieux, prelevements)
         if errors:
             return HttpResponseBadRequest(json.dumps(errors))
 
         # Création des objets en base de données
         with transaction.atomic():
             fiche = self.create_fiche_detection(data)
-            self.create_lieux(localisations, fiche)
-            self.create_prelevements(prelevements, localisations)
+            self.create_lieux(lieux, fiche)
+            self.create_prelevements(prelevements, lieux)
 
         return HttpResponseRedirect(reverse("fiche-detection-vue-detaillee", args=[fiche.pk]))
 
-    def validate_data(self, data, localisations, prelevements):
+    def validate_data(self, data, lieux, prelevements):
         errors = []
 
         # createur est obligatoire
@@ -137,18 +137,18 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             errors.append("Le champ createur est invalide")
 
         # Validation des lieux (nom du lieu obligatoire)
-        for loc in localisations:
-            if not loc["nomLocalisation"]:
+        for lieu in lieux:
+            if not lieu["nomLieu"]:
                 errors.append("Le champ nom du lieu est obligatoire")
-            if loc["departementId"] and not Departement.objects.filter(pk=loc["departementId"]).exists():
+            if lieu["departementId"] and not Departement.objects.filter(pk=lieu["departementId"]).exists():
                 errors.append("Le champ département est invalide")
 
         # Validation des prélèvements
-        localisation_ids = [loc["id"] for loc in localisations]
+        lieu_ids = [lieu["id"] for loc in lieux]
         for prelevement in prelevements:
             # chaque prélèvement doit être associé à un lieu
-            if prelevement["localisationId"] not in localisation_ids:
-                errors.append(f"Le prélèvement avec l'id {prelevement['id']} n'est relié à aucune localisation")
+            if prelevement["lieuId"] not in lieu_ids:
+                errors.append(f"Le prélèvement avec l'id {prelevement['id']} n'est relié à aucun lieu")
             # structure preleveur doit être valide (existe en base de données)
             if (
                 prelevement["structurePreleveurId"]
@@ -211,28 +211,28 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
         return fiche
 
-    def create_lieux(self, localisations, fiche):
+    def create_lieux(self, lieux, fiche):
         # Création des lieux en base de données
-        for loc in localisations:
-            wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
-            wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
+        for lieu in lieux:
+            wgs84_longitude = lieu["coordGPSWGS84Longitude"] if lieu["coordGPSWGS84Longitude"] != "" else None
+            wgs84_latitude = lieu["coordGPSWGS84Latitude"] if lieu["coordGPSWGS84Latitude"] != "" else None
 
-            # lieu = Lieu(fiche_detection=fiche, **loc)
-            lieu = Lieu(
+            # lieu = Lieu(fiche_detection=fiche, **lieu)
+            lieu_instance = Lieu(
                 fiche_detection=fiche,
-                nom=loc["nomLocalisation"],
+                nom=lieu["nomLieu"],
                 wgs84_longitude=wgs84_longitude,
                 wgs84_latitude=wgs84_latitude,
-                adresse_lieu_dit=loc["adresseLieuDit"],
-                commune=loc["commune"],
-                code_insee=loc["codeINSEE"],
-                departement_id=loc["departementId"],
+                adresse_lieu_dit=lieu["adresseLieuDit"],
+                commune=lieu["commune"],
+                code_insee=lieu["codeINSEE"],
+                departement_id=lieu["departementId"],
             )
-            lieu.save()
-            loc["lieu_pk"] = lieu.pk
-        return localisations
+            lieu_instance.save()
+            lieu["lieu_pk"] = lieu_instance.pk
+        return lieux
 
-    def create_prelevements(self, prelevements, localisations):
+    def create_prelevements(self, prelevements, lieux):
         # Création des prélèvements en base de données
         for prel in prelevements:
             # format de la date de prélèvement
@@ -243,7 +243,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
             # recupérer le lieu_pk associé à chaque prélèvement prel
             prel["lieu_pk"] = next(
-                (loc["lieu_pk"] for loc in localisations if loc["id"] == prel["localisationId"]),
+                (loc["lieu_pk"] for loc in lieux if loc["id"] == prel["lieuId"]),
                 None,
             )
 
@@ -333,20 +333,20 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         return fiche_detection, None
 
-    def update_lieux(self, localisations, fiche_detection):
+    def update_lieux(self, lieux, fiche_detection):
         # Suppression des lieux qui ne sont plus dans la liste
         lieux_a_supprimer = Lieu.objects.filter(fiche_detection=fiche_detection).exclude(
-            pk__in=[loc["pk"] for loc in localisations if "pk" in loc]
+            pk__in=[loc["pk"] for loc in lieux if "pk" in loc]
         )
         lieux_a_supprimer.delete()
 
         # Création ou mise à jour des lieux
-        for loc in localisations:
+        for loc in lieux:
             # Création ou récupération de l'objet Lieu
             # si pk -> update
             # si pas de pk -> création
             lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
-            lieu.nom = loc["nomLocalisation"]
+            lieu.nom = loc["nomLieu"]
             lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
             lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
             lieu.lambert93_latitude = (
@@ -362,7 +362,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.save()
             loc["lieu_pk"] = lieu.pk
 
-    def update_prelevements(self, prelevements, localisations, fiche_detection):
+    def update_prelevements(self, prelevements, lieux, fiche_detection):
         # Suppression des prélèvements qui ne sont plus dans la liste
         prelevements_a_supprimer = Prelevement.objects.filter(lieu__fiche_detection=fiche_detection).exclude(
             pk__in=[prel["pk"] for prel in prelevements if "pk" in prel]
@@ -372,7 +372,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         for prel in prelevements:
             # recupérer le lieu_pk associé à chaque prélèvement prel
             prel["lieu_pk"] = next(
-                (loc["lieu_pk"] for loc in localisations if loc["id"] == prel["localisationId"]),
+                (loc["lieu_pk"] for loc in lieux if loc["id"] == prel["lieuId"]),
                 None,
             )
 
@@ -397,7 +397,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
     def post(self, request, pk):
         data = request.POST
-        localisations = json.loads(data["localisations"])
+        lieux = json.loads(data["lieux"])
         prelevements = json.loads(data["prelevements"])
 
         # Validation
@@ -412,8 +412,8 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 return HttpResponseBadRequest(str(error))
             fiche_detection.save()
 
-            self.update_lieux(localisations, fiche_detection)
-            self.update_prelevements(prelevements, localisations, fiche_detection)
+            self.update_lieux(lieux, fiche_detection)
+            self.update_prelevements(prelevements, lieux, fiche_detection)
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
