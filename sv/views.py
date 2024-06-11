@@ -7,6 +7,7 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
+    TemplateView,
 )
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
