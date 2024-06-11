@@ -4,6 +4,7 @@ from .views import (
     FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
+    FicheZoneCreateView,
 )
 
 urlpatterns = [
@@ -26,5 +27,10 @@ urlpatterns = [
         "fiches-detection/<int:pk>/modification/",
         FicheDetectionUpdateView.as_view(),
         name="fiche-detection-modification",
+    ),
+    path(
+        "fiches-zone/creation/fiche-detection/<int:pk>/",
+        FicheZoneCreateView.as_view(),
+        name="fiche-zone-creation",
     ),
 ]

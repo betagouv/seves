@@ -1,0 +1,16 @@
+<li role="presentation">
+    <button type="button"
+            id="tabpanel-{{form_index}}"
+            class="fr-tabs__tab"
+            {% if form_index == 0 %}
+                tabindex="0"
+                aria-selected="true"
+            {% else %}
+                tabindex="-1"
+                aria-selected="false"
+            {% endif %}
+            role="tab"
+            aria-controls="tabpanel-{{form_index}}-panel">
+        Zone {{zone_btn_label}}
+    </button>
+</li>

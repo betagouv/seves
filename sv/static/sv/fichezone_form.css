@@ -1,0 +1,87 @@
+.form {
+    margin: 2rem;
+}
+
+.form__form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.form__fiche-zone-form-errors,
+.form__zones-form-errors {
+    width: 50%;
+}
+.form__zones-form-errors {
+    margin-bottom: 2rem;
+}
+
+.form__container-risques-infos {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.form__form-infos,
+.form__form-risques,
+.form__form-detections {
+    flex: 1;
+    background-color: white;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-risques__organisme-nuisible,
+.form-risques__statut-reglementaire {
+    font-weight: bold;
+    display: inline-block;
+    width: 190px;
+}
+
+.form-tabs-content {
+    background-color: white;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 1rem;
+}
+.form-tabs-content__errors {
+    grid-column: 1 / 5;
+}
+.form-tabs-content__surface-zone-infestee {
+    grid-column: 1;
+}
+.form-tabs-content__rayon-zone-infestee {
+    grid-column: 2;
+}
+.form-tabs-content__rayon-zone-tamponee {
+    grid-column: 3;
+}
+.form-tabs-content__caracteristiques_principales_zone_delimitee {
+    grid-column: 4;
+}
+.form-tabs-content__commentaire {
+    grid-column: 1 / 3;
+}
+.form-tabs-content__vegetaux-infestes {
+    grid-column: 3 / 5;
+}
+
+.form-tabs-content__surface-zone-infestee-input-radiobtn,
+.form-tabs-content__rayon-zone-infestee-input-radiobtn,
+.form-tabs-content__rayon-zone-tamponee-input-radiobtn {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+.form-tabs-content__surface-zone-infestee-input,
+.form-tabs-content__rayon-zone-infestee-input,
+.form-tabs-content__rayon-zone-tamponee-input {
+    width: 12rem;
+}
+.form-tabs-content__caracteristiques_zone_delimitee-select {
+    margin-top: 0.5rem;
+}
+
+
+#add-zone {
+    margin: 1.5rem 0;
+}

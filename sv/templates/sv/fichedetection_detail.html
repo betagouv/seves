@@ -46,7 +46,8 @@
                 </fieldset>
             </p>
 
-            <p>
+            <p id="actions">
+                <a href="{% url 'fiche-zone-creation' fichedetection.pk %}">Créer une zone liée</a>
                 <button class="fr-btn">
                     <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill"></span></a>
                 </button>
