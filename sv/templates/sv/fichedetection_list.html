@@ -14,8 +14,7 @@
 
     <div class="fiches__list-container">
         <p>
-            <span class="fiches__count">{{ fichedetection_list.count }} fiche{{ fichedetection_list.count|pluralize }}</span>
-            sur un total de {{ fichedetection_list.count }}
+            <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ fichedetection_list.count|pluralize }} au total</span>
         </p>
         <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
             <table class="fiches__list-table">
@@ -56,6 +55,58 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+            <nav role="navigation" class="fr-pagination" aria-label="Pagination" style="margin-top: 2rem;">
+                <ul class="fr-pagination__list">
+
+                    <a class="fr-pagination__link fr-pagination__link--first" href="?page=1" role="link" aria-describedby="tooltip-first-page">
+                        Première page
+                    </a>
+                    <span class="fr-tooltip fr-placement" id="tooltip-first-page" role="tooltip" aria-hidden="true">Première page</span>
+
+                    <li>
+                        <a  class="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
+                           {% if page_obj.has_previous %}
+                               href="?page={{ page_obj.previous_page_number }}"
+                           {% endif %}
+                           role="link"
+                           aria-disabled="{{ page_obj.has_previous|yesno:'false,true' }}">
+                            Page précédente
+                        </a>
+                    </li>
+
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li>
+                                <a class="fr-pagination__link" aria-current="page" title="Page {{ i }}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                            <li>
+                                <a class="fr-pagination__link" href="?page={{ i }}" title="Page {{ i }}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <li>
+                        <a class="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
+                           {% if page_obj.has_next %}href="?page={{ page_obj.next_page_number }}"{% endif %}
+                           aria-disabled="{{ page_obj.has_next|yesno:'false,true' }}">
+                            Page suivante
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="fr-pagination__link fr-pagination__link--last" href="?page={{ page_obj.paginator.num_pages }}" role="link" aria-describedby="tooltip-last-page">
+                            Dernière page
+                        </a>
+                        <span class="fr-tooltip fr-placement" id="tooltip-last-page" role="tooltip" aria-hidden="true">Dernière page</span>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 {% endblock %}
