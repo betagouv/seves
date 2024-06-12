@@ -453,3 +453,4 @@ class FicheDetection(models.Model):
     etat = models.ForeignKey(
         Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
     )
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
