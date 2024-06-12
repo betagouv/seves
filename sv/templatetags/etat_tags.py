@@ -14,5 +14,4 @@ ETATS_FICHE_DETECTION_COLORS = {
 
 @register.filter(name="etat_fiche_detection_color")
 def etat_fiche_detection_color(value):
-    print(value)
     return ETATS_FICHE_DETECTION_COLORS.get(value)
