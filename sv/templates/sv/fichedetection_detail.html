@@ -1,6 +1,7 @@
 {% extends 'sv/base.html' %}
 
 {% load static %}
+{% load etat_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
@@ -27,8 +28,8 @@
                     {% endfor %}
                 {% endif %}
 
-                <h1 class="fiche-header__title">Fiche n° {{ fichedetection.numero }}</h1>
-                <p class="fr-tag">Détection</p>
+                <h1 class="fiche-header__title">Fiche détection n° {{ fichedetection.numero }}</h1>
+                <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
             </div>
 
             <p>
