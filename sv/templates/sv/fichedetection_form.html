@@ -1,6 +1,7 @@
 {% extends 'sv/base.html' %}
 
 {% load static %}
+{% load etat_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
@@ -52,13 +53,18 @@
         <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection()">
 
             <div id="fiche-detection-form-header">
-                <h1>
-                    {% if is_creation %}
-                        Création d'une fiche détection
-                    {% else %}
-                        Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
+                <div>
+                    <h1>
+                        {% if is_creation %}
+                            Création d'une fiche détection
+                        {% else %}
+                            Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
+                        {% endif %}
+                    </h1>
+                    {% if not is_creation %}
+                        <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
                     {% endif %}
-                </h1>
+                </div>
 
                 <p>
                     <input type="submit" value="Enregistrer" class="fr-btn" data-testid="fiche-detection-save-btn">
