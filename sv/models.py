@@ -384,6 +384,22 @@ class StatutEvenement(models.Model):
         return self.libelle
 
 
+class Etat(models.Model):
+    class Meta:
+        verbose_name = "Etat"
+        verbose_name_plural = "Etats"
+        db_table = "sv_etat"
+
+    libelle = models.CharField(max_length=30, unique=True)
+
+    @classmethod
+    def get_etat_initial(cls):
+        return cls.objects.get(libelle="nouveau").id
+
+    def __str__(self):
+        return self.libelle
+
+
 class FicheDetection(models.Model):
     class Meta:
         verbose_name = "Fiche détection"
@@ -433,3 +449,7 @@ class FicheDetection(models.Model):
     mesures_consignation = models.TextField(verbose_name="Mesures de consignation", blank=True)
     mesures_phytosanitaires = models.TextField(verbose_name="Mesures phytosanitaires", blank=True)
     mesures_surveillance_specifique = models.TextField(verbose_name="Mesures de surveillance spécifique", blank=True)
+
+    etat = models.ForeignKey(
+        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
+    )
