@@ -1,5 +1,6 @@
 {% extends 'sv/base.html' %}
 {% load static %}
+{% load etat_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/fichedetection_list.css' %}">
@@ -25,6 +26,7 @@
                         <th scope="col">Créateur</th>
                         <th scope="col">Commune</th>
                         <th scope="col">Région</th>
+                        <th scope="col">État</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -51,6 +53,7 @@
                                 {% endwith %}
                             </td>
                             <td>{{ fiche.region|default:"nc." }}</td>
+                            <td><span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span></td>
                         </tr>
                     {% endfor %}
                 </tbody>
