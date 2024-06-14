@@ -83,7 +83,7 @@ pyyaml==6.0.1
     # via pre-commit
 requests==2.31.0
     # via pytest-base-url
-ruff==0.4.1
+ruff==0.4.8
     # via -r requirements.in
 sentry-sdk[django]==2.5.1
     # via -r requirements.in
