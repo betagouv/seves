@@ -21,6 +21,7 @@ Gestion mutualisée de tous les événements sanitaires
   - [Déploiement](#déploiement)
   - [Django admin](#django-admin)
 - [Production](#production)
+- [CRON](#cron)
 
 # Technologies
 - Git
@@ -35,6 +36,7 @@ Gestion mutualisée de tous les événements sanitaires
 - Ruff (linter/formatter)
 - Pre-commit
 - DjHTML (indenter)
+- Sentry
 
 # Installation et configuration
 ## Récupération du code source
@@ -115,6 +117,12 @@ python -m pytest
 git push scalingo main
 ## Django admin
 Création d'un super user (commande CLI scalingo à éxecuter en local) :
-scalingo --app seves-poc python manage.py createsuperuser
+scalingo --app my-app run python manage.py createsuperuser
 
 # Production
+
+
+
+# CRON
+Sur Scalingo, des crons sont configurés via Scalingo Scheduler (cf. fichier cron.json à la racine du projet).
+Ils sont monitorés via Sentry Cron Monitors.
