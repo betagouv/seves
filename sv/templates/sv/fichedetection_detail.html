@@ -62,7 +62,7 @@
                     <div class="informations__fields">
                         <div class="informations__first-column">
                             <p><span class="informations__field-label">Créateur</span>{{ fichedetection.createur }}</p>
-                            <p><span class="informations__field-label">Date de création</span></p>
+                            <p><span class="informations__field-label">Date de création</span>{{ fichedetection.date_creation|date:"d/m/Y" }}</p>
                         </div>
                         <div class="informations__second-column">
                             <p><span class="informations__field-label">N° Europhyt </span>{{ fichedetection.numero_europhyt|default:"nc." }}</p>
