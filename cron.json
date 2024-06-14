@@ -1,0 +1,7 @@
+{
+	"jobs": [
+	  {
+		"command": "* * * * * python manage.py update_fichedetection_etat"
+	  }
+	]
+  }
