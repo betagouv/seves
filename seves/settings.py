@@ -144,10 +144,6 @@ SENTRY_DSN = env("SENTRY_DSN", default=None)
 if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
-        integrations=[
-            DjangoIntegration(
-                transaction_style="endpoint",
-            )
-        ],
+        integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
     )
