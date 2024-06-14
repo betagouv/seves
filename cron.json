@@ -1,7 +1,7 @@
 {
 	"jobs": [
 	  {
-		"command": "*/10 * * * * python manage.py update_fichedetection_etat"
+		"command": "0 0,5 * * * python manage.py update_fichedetection_etat"
 	  }
 	]
   }
