@@ -1,3 +1,4 @@
+from sentry_sdk.crons import monitor
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now, timedelta
 from sv.models import FicheDetection, Etat
@@ -6,6 +7,7 @@ from sv.models import FicheDetection, Etat
 class Command(BaseCommand):
     help = "Mise à jour quotidienne de l'état des Fiches détection (nouveau -> en_cours) après 14 jours."
 
+    @monitor(monitor_slug="cron-update-fichedetection-etat")
     def handle(self, *args, **options):
         # Calculer la date limite pour filtrer les fiches qui ont plus de 14 jours
         cutoff_date = now() - timedelta(days=14)
