@@ -7,7 +7,17 @@ body{
     padding: 2rem 0rem 2rem 2rem;
 }
 .fiches__title {
-    margin-bottom: 0;
+    margin-bottom: 1.5rem;
+}
+
+.fiches__search-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-right: 2rem;
+}
+.form-search__field {
+    flex: 1;
 }
 
 .fiches__list-container {
