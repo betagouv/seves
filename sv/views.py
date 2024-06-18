@@ -14,6 +14,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django import forms
 from .models import (
     FicheDetection,
     Lieu,
@@ -31,7 +32,31 @@ from .models import (
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
     Departement,
+    Region,
+    Etat,
 )
+
+
+class FicheDetectionSearchForm(forms.Form):
+    numero = forms.CharField(label="Numéro", required=False)
+    region = forms.ModelChoiceField(label="Région", queryset=Region.objects.all(), required=False)
+    organisme_nuisible = forms.ModelChoiceField(
+        label="Organisme", queryset=OrganismeNuisible.objects.all(), required=False
+    )
+    date_debut = forms.DateField(label="Période du", widget=forms.DateInput(attrs={"type": "date"}), required=False)
+    date_fin = forms.DateField(label="Au", widget=forms.DateInput(attrs={"type": "date"}), required=False)
+    etat = forms.ModelChoiceField(label="État", queryset=Etat.objects.all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Ajoutez vos classes CSS ici
+        self.fields["numero"].widget.attrs.update({"class": "fr-input"})
+        self.fields["region"].widget.attrs.update({"class": "fr-select"})
+        self.fields["organisme_nuisible"].widget.attrs.update({"class": "fr-select"})
+        self.fields["date_debut"].widget.attrs.update({"class": "fr-input"})
+        self.fields["date_fin"].widget.attrs.update({"class": "fr-input"})
+        self.fields["etat"].widget.attrs.update({"class": "fr-select"})
 
 
 class FicheDetectionListView(ListView):
@@ -50,7 +75,30 @@ class FicheDetectionListView(ListView):
             region=Subquery(first_lieu.values("departement__region__nom")[:1]),
         )
 
+        form = FicheDetectionSearchForm(self.request.GET)
+
+        if form.is_valid():
+            if form.cleaned_data["numero"]:
+                annee, numero = map(int, form.cleaned_data["numero"].split("."))
+                queryset = queryset.filter(numero__annee=annee, numero__numero=numero)
+            else:
+                if form.cleaned_data["region"]:
+                    queryset = queryset.filter(lieux__departement__region=form.cleaned_data["region"])
+                if form.cleaned_data["organisme_nuisible"]:
+                    queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
+                if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
+                    queryset = queryset.filter(
+                        date_creation__range=(form.cleaned_data["date_debut"], form.cleaned_data["date_fin"])
+                    )
+                if form.cleaned_data["etat"]:
+                    queryset = queryset.filter(etat=form.cleaned_data["etat"])
+
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = FicheDetectionSearchForm(self.request.GET)
+        return context
 
 
 class FicheDetectionDetailView(DetailView):
