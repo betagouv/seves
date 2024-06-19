@@ -1,6 +1,6 @@
 from typing import Optional, Union, Tuple
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 from django.shortcuts import redirect
 from django.views.generic import (
@@ -99,9 +99,14 @@ class FicheDetectionListView(ListView):
                 if form.cleaned_data["organisme_nuisible"]:
                     queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
                 if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
-                    queryset = queryset.filter(
-                        date_creation__range=(form.cleaned_data["date_debut"], form.cleaned_data["date_fin"])
-                    )
+                    # Si une plage de dates est fournie, on filtre le queryset pour inclure uniquement les fiches créées dans cette plage.
+                    # On ajoute 1 jour à la date de fin pour inclure les fiches créées le jour même.
+                    # Par exemple, si la plage est du 2024-06-14 au 2024-06-14, sans l'ajout d'un jour, une fiche créée à 2024-06-14 10:00:00 ne serait pas incluse
+                    # car la date de fin est interprétée comme 2024-06-14 00:00:00 (la recherche est de 2024-06-14 00:00:00 à 2024-06-14 00:00:00).
+                    # Donc toute fiche créée après cette heure ne serait pas incluse.
+                    # Avec l'ajout d'un jour, la plage devient du 2024-06-14 00:00:00 au 2024-06-15 00:00:00, donc la fiche est incluse.
+                    date_fin = form.cleaned_data["date_fin"] + timedelta(days=1)
+                    queryset = queryset.filter(date_creation__range=(form.cleaned_data["date_debut"], date_fin))
                 if form.cleaned_data["etat"]:
                     queryset = queryset.filter(etat=form.cleaned_data["etat"])
 
