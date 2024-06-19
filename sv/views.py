@@ -1,3 +1,4 @@
+from typing import Optional, Union, Tuple
 import json
 from datetime import datetime
 import uuid
@@ -58,6 +59,17 @@ class FicheDetectionSearchForm(forms.Form):
         self.fields["date_fin"].widget.attrs.update({"class": "fr-input"})
         self.fields["etat"].widget.attrs.update({"class": "fr-select"})
 
+    def clean_numero(self) -> Optional[Union[Tuple[int, int], str]]:
+        """Vérifie que le champ 'numero' est au format 'annee.numero' et le retourne sous forme de tuple (annee, numero)."""
+        numero = self.cleaned_data["numero"]
+        if numero:
+            try:
+                annee, numero = map(int, numero.split("."))
+                return annee, numero
+            except ValueError:
+                raise forms.ValidationError("Format 'numero' invalide. Il devrait être 'annee.numero'")
+        return numero
+
 
 class FicheDetectionListView(ListView):
     model = FicheDetection
@@ -79,7 +91,7 @@ class FicheDetectionListView(ListView):
 
         if form.is_valid():
             if form.cleaned_data["numero"]:
-                annee, numero = map(int, form.cleaned_data["numero"].split("."))
+                annee, numero = form.cleaned_data["numero"]
                 queryset = queryset.filter(numero__annee=annee, numero__numero=numero)
             else:
                 if form.cleaned_data["region"]:
