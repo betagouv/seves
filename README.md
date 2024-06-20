@@ -110,6 +110,14 @@ podman run -v /mnt/data:/data  -p 9000:9000 -p 9001:9001 quay.io/minio/minio ser
 Une fois dans la console Web de minio vous pouvez vous créer une clé d'accès ainsi qu'un bucket en local.
 Configurez ensuite votre fichier .env avec `STORAGE_ENGINE="storages.backends.s3.S3Storage"` et les tokens d'authentification (cf exemple dans .env.dist).
 
+# Travailler avec l'authentification en local
+
+Le backend d'authentification Agricoll nécessite l'utilisation du protocole HTTPS ainsi que d'URL spécifique (impossible de se connecter depuis localhost par exemple).
+
+Pour faciliter le dévellopement au quotidien il est possible d'utiliser un autre backend OIDC en changeant les variables d'environnement.
+
+Un exemple est donné dans le fichier `.env.dist`, les informations sur les logins et mots de passe, ainsi que les endpoints pour le backend [sont disponibles dans la documentation](https://oidctest.wsweet.org/).
+
 # Tests
 ## E2E
 Les tests E2E sont réalisés avec la bibliothèque [Playwright](https://playwright.dev/python/) ([installé précédemment](#Installation-des-dépendances-Python)).

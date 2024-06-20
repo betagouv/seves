@@ -1,0 +1,39 @@
+.login main {
+     display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 145px);
+}
+
+.login h1 {
+    text-align: center;
+}
+
+.login .fr-header {
+    filter: none;
+}
+
+.login-image{
+    background-image: url("../images/login.jpeg");
+    background-size: cover;
+    box-shadow: inset 0 0 0 1000px rgba(0,0,145,.66);
+    width: 100%;
+}
+
+.login .fr-header__brand {
+    width: 100%;
+}
+.login .fr-header__brand-top {
+    width: 100%;
+}
+.login .fr-header__logo {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+.login .project-name{
+    font-size: 4rem;
+    color: #000091;
+    font-weight: bold;
+    padding-top: 25px;
+}

@@ -1,5 +1,9 @@
 import os
+from unittest.mock import patch
+
 import pytest
+from django.contrib.auth import get_user_model
+
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 from model_bakery import baker
@@ -18,6 +22,17 @@ def page(page):
 @pytest.fixture(scope="module", autouse=True)
 def set_django_allow_async_unsafe():
     os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+
+@pytest.fixture(autouse=True)
+def mocked_authentification():
+    def mocked(self, request):
+        user = baker.make(get_user_model())
+        request.user = user
+        return self.get_response(request)
+
+    with patch("seves.middlewares.LoginRequiredMiddleware.__call__", mocked):
+        yield
 
 
 @pytest.fixture

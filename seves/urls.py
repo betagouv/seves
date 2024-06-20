@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from mozilla_django_oidc.urls import OIDCCallbackClass
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
@@ -26,7 +27,9 @@ admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="fiche-detection-list"), name="index"),
+    path("login-eap-callback", OIDCCallbackClass.as_view(), name="custom_oidc_authentication_callback"),
     path("admin/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),
     path("core/", include("core.urls"), name="core"),
+    path("oidc/", include("mozilla_django_oidc.urls")),
 ]
