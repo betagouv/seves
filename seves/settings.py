@@ -16,7 +16,7 @@ from pathlib import Path
 import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,6 +47,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
+    "mozilla_django_oidc",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "seves.middlewares.LoginRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
@@ -147,3 +149,23 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
     )
+
+
+AUTHENTICATION_BACKENDS = (
+"django.contrib.auth.backends.ModelBackend",
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+)
+OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
+OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://oidctest.wsweet.org/oauth2/authorize"
+OIDC_OP_TOKEN_ENDPOINT = "https://oidctest.wsweet.org/oauth2/token"
+OIDC_OP_USER_ENDPOINT = "https://oidctest.wsweet.org/oauth2/userinfo"
+OIDC_OP_JWKS_ENDPOINT = "https://oidctest.wsweet.org/oauth2/jwks"
+LOGIN_REDIRECT_URL="/"
+OIDC_RP_SIGN_ALGO="RS256"
+OIDC_RP_SCOPES="openid email profile"
+LOGIN_URL=reverse_lazy("oidc_authentication_init")
+
+# TODO handle logout URL redirect ?
+# TODO handle extra attributes (firstname, lastname,etc)
+# TODO is the auth going to break all the existing tests ?
