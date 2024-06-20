@@ -17,7 +17,7 @@ import environ
 import tempfile
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +48,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
+    "mozilla_django_oidc",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -64,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "seves.middlewares.LoginRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
@@ -174,3 +176,19 @@ if all(
     }
 elif environ.Env(TEMP_STORAGE=(bool, False)):
     STORAGES["default"]["OPTIONS"] = {"location": tempfile.mkdtemp()}
+
+AUTHENTICATION_BACKENDS = ("mozilla_django_oidc.auth.OIDCAuthenticationBackend",)
+LOGIN_URL = reverse_lazy("login")
+OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID")
+OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET")
+OIDC_OP_AUTHORIZATION_ENDPOINT = env("OIDC_RP_AUTH_ENDPOINT")
+OIDC_OP_TOKEN_ENDPOINT = env("OIDC_RP_TOKEN_ENDPOINT")
+OIDC_OP_USER_ENDPOINT = env("OIDC_RP_USER_ENDPOINT")
+OIDC_OP_JWKS_ENDPOINT = env("OIDC_RP_JWKS_ENDPOINT")
+OIDC_RP_LOGOUT_ENDPOINT = env("OIDC_RP_LOGOUT_ENDPOINT")
+OIDC_AUTHENTICATION_CALLBACK_URL = "custom_oidc_authentication_callback"
+OIDC_OP_LOGOUT_URL_METHOD = "core.auth_views.logout"
+LOGIN_REDIRECT_URL = "/"
+OIDC_RP_SIGN_ALGO = "RS256"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
