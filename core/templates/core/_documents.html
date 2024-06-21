@@ -1,0 +1,16 @@
+<div class="fr-btns-group--right fr-mb-2w">
+    <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-circle-line" data-testid="documents-add" data-fr-opened="false" aria-controls="fr-modal-add-doc">
+        Ajouter un document
+    </button>
+</div>
+
+{% include "core/_modale_ajout_document.html" %}
+<div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+        {% for document in document_list %}
+            <div class="fr-col-3 fr-col-xl-2">
+                {% include "core/_carte_resume_document.html" %}
+            </div>
+        {% endfor %}
+    </div>
+</div>

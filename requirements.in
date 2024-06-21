@@ -7,8 +7,10 @@ playwright
 ruff
 pre-commit
 pytest-django
+pytest-env
 pytest-xdist
 pytest-playwright
 djhtml
 model-bakery
 sentry-sdk[django]
+django-storages[s3]

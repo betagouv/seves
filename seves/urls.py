@@ -28,4 +28,5 @@ urlpatterns = [
     path("", RedirectView.as_view(pattern_name="fiche-detection-list"), name="index"),
     path("admin/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),
+    path("core/", include("core.urls"), name="core"),
 ]
