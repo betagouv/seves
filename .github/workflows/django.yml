@@ -25,3 +25,6 @@ jobs:
         run: ruff check .
       - name: Run tests
         run: pytest
+        env:
+          SECRET_KEY: NOT_A_REAL_SECRET
+          DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
