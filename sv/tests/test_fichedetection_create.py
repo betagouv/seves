@@ -9,7 +9,7 @@ from ..models import (
     Unite,
     StatutEvenement,
     StatutReglementaire,
-    Contexte,
+    Contexte, Etat,
 )
 
 
@@ -100,7 +100,6 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_fiche_detection_create_without_lieux_and_prelevement(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
