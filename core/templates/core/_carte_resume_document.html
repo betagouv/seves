@@ -1,0 +1,20 @@
+<div class="fr-card">
+    <div class="fr-card__body">
+        <div class="fr-card__content document__details {% if document.is_deleted %}document__details--deleted{% endif %}">
+            <p class="fr-hint-text">Ajouté le {{ document.date_creation }}</p>
+            <h6 class="fr-h6">{{ document.nom }}</h6>
+            <p class="fr-card__dess fr-mb-1w">{{ document.description | truncatechars:150 | default:"Pas de description" }}</p>
+            <p class="fr-tag fr-my-1w">{{document.document_type|title}}</p>
+
+            {% if document.is_deleted %}
+                Document supprimé
+            {% else %}
+                <div class="fr-btns-group--right document__actions">
+                    <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w"></a>
+                    <a href="#" class="fr-icon-delete-line fr-btn fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-{{ document.pk }}"></a>
+                </div>
+                {% include "core/_modale_suppression_document.html" %}
+            {% endif %}
+        </div>
+    </div>
+</div>

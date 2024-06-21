@@ -148,3 +148,26 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
     )
+
+
+STORAGES = {
+    "default": {"BACKEND": env("STORAGE_ENGINE")},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+if all(
+    [
+        env("STORAGE_BUCKET_NAME", default=None),
+        env("STORAGE_ACCESS_KEY", default=None),
+        env("STORAGE_SECRET_KEY", default=None),
+        env("STORAGE_URL", default=None),
+    ]
+):
+    STORAGES["default"]["OPTIONS"] = {
+        "bucket_name": env("STORAGE_BUCKET_NAME", default=None),
+        "access_key": env("STORAGE_ACCESS_KEY", default=None),
+        "secret_key": env("STORAGE_SECRET_KEY", default=None),
+        "endpoint_url": env("STORAGE_URL", default=None),
+    }
