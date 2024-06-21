@@ -134,3 +134,7 @@ main{
     flex: 1;
     text-align: left;
 }
+
+.bloc-commun-gestion {
+    margin-top:  1rem;
+}
