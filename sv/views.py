@@ -1,7 +1,8 @@
 from typing import Optional, Union, Tuple
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time
 import uuid
+from django.utils import timezone
 from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
@@ -99,14 +100,14 @@ class FicheDetectionListView(ListView):
                 if form.cleaned_data["organisme_nuisible"]:
                     queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
                 if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
-                    # Si une plage de dates est fournie, on filtre le queryset pour inclure uniquement les fiches créées dans cette plage.
-                    # On ajoute 1 jour à la date de fin pour inclure les fiches créées le jour même.
-                    # Par exemple, si la plage est du 2024-06-14 au 2024-06-14, sans l'ajout d'un jour, une fiche créée à 2024-06-14 10:00:00 ne serait pas incluse
-                    # car la date de fin est interprétée comme 2024-06-14 00:00:00 (la recherche est de 2024-06-14 00:00:00 à 2024-06-14 00:00:00).
-                    # Donc toute fiche créée après cette heure ne serait pas incluse.
-                    # Avec l'ajout d'un jour, la plage devient du 2024-06-14 00:00:00 au 2024-06-15 00:00:00, donc la fiche est incluse.
-                    date_fin = form.cleaned_data["date_fin"] + timedelta(days=1)
-                    queryset = queryset.filter(date_creation__range=(form.cleaned_data["date_debut"], date_fin))
+                    # Ajustement des dates de début et de fin pour inclure les fiches créées le jour même.
+                    # La date de début est définie à minuit (00:00:00) et la date de fin à la dernière seconde de la journée (23:59:59).
+                    # Cela permet d'inclure toutes les fiches créées dans la plage de dates spécifiée.
+                    # Si ces dates ne sont pas ajustées, les valeurs de date_debut et date_fin serait égales à 2024-06-19 00:00:00 et 2024-06-19 00:00:00 respectivement
+                    # donc les fiches créées le 2024-06-19 à 00:00:01 et après ne seraient pas incluses dans les résultats.
+                    date_debut = timezone.make_aware(datetime.combine(form.cleaned_data["date_debut"], time.min))
+                    date_fin = timezone.make_aware(datetime.combine(form.cleaned_data["date_fin"], time.max))
+                    queryset = queryset.filter(date_creation__range=(date_debut, date_fin))
                 if form.cleaned_data["etat"]:
                     queryset = queryset.filter(etat=form.cleaned_data["etat"])
 
