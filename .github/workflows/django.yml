@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: 3.11.1
       - name: Install dependencies
-        run: pip install pip-tools && pip-sync
+        run: pip install pip-tools && pip-sync && playwright install
       - name: Run ruff
         run: ruff check .
       - name: Run tests
