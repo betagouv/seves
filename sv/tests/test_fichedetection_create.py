@@ -13,20 +13,16 @@ from ..models import (
 )
 
 
-@pytest.fixture(autouse=True)
-def test_goto_fiche_detection_creation_url(live_server, page: Page):
-    """Ouvre la page de création d'une fiche de détection"""
-    add_fiche_detection_form_url = reverse("fiche-detection-creation")
-    return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que le titre de la page est bien "Modification de la fiche détection n°2024.1"""
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.title).to_contain_text("Création d'une fiche détection")
-
 
 def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.informations_title).to_be_visible()
     expect(form_elements.objet_evenement_title).to_be_visible()
     expect(form_elements.lieux_title).to_be_visible()
@@ -94,19 +90,19 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.mesures_surveillance_specifique_input).to_be_visible()
     expect(form_elements.mesures_surveillance_specifique_input).to_be_empty()
 
-
 def test_date_creation_field_is_current_day(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la date de création soit egale à la date du jour"""
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
 
-
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_fiche_detection_create_without_lieux_and_prelevement(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
-    form_elements.createur_input.select_option("1")
-    page.get_by_label("Statut évènement").select_option("1")
+    page.get_by_label("Créateur").select_option(label="Mission des urgences sanitaires")
+    page.get_by_label("Statut évènement").select_option(label="Foyer")
     page.get_by_text("--------").click()
     page.get_by_label("----").fill("xylela")
     page.get_by_role("option", name="Xylella fastidiosa (maladie de Pierce)").click()
@@ -127,9 +123,9 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
 
     page.wait_for_timeout(500)
 
-    fiche_detection = FicheDetection.objects.last()
-    assert fiche_detection.createur.id == 1
-    assert fiche_detection.statut_evenement.id == 1
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.createur.nom == "Mission des urgences sanitaires"
+    assert fiche_detection.statut_evenement.libelle == "Foyer"
     assert fiche_detection.organisme_nuisible.libelle_court == "Xylella fastidiosa (maladie de Pierce)"
     assert fiche_detection.statut_reglementaire.id == 2
     assert fiche_detection.contexte.id == 2

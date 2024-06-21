@@ -14,30 +14,21 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 def get_fiche_detection_update_form_url(fiche_detection: FicheDetection):
     return reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.id})
 
-
 @pytest.fixture
-def fiche_detection():
-    return baker.make(FicheDetection, _fill_optional=True)
-
-
-@pytest.fixture
-def fiche_detection_with_one_lieu():
-    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+def fiche_detection_with_one_lieu(fiche_detection):
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
-def fiche_detection_with_two_lieux():
-    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+def fiche_detection_with_two_lieux(fiche_detection):
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
-def fiche_detection_with_one_lieu_and_one_prelevement():
-    fiche_detection = baker.make(FicheDetection, _fill_optional=True)
+def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection):
     lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     baker.make(Prelevement, lieu=lieu, _fill_optional=True)
     return fiche_detection
@@ -131,10 +122,11 @@ def test_fiche_detection_update_page_content_with_createur_only(
 
 
 def test_fiche_detection_update_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection, fiche_detection_bakery
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
-    new_fiche_detection = baker.prepare(FicheDetection, _fill_optional=True, _save_related=True)
+
+    new_fiche_detection = fiche_detection_bakery()
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.createur_input.select_option(str(new_fiche_detection.createur.id))
@@ -259,7 +251,7 @@ def test_update_lieu(
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     new_lieu = baker.prepare(
-        Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+        Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True, lambert93_longitude=652469, lambert93_latitude=6862035
     )
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     page.get_by_role("button", name="Modifier le lieu").click()
@@ -268,6 +260,8 @@ def test_update_lieu(
     lieu_form_elements.commune_input.fill(new_lieu.commune)
     # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
     lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+    lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
+    lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
@@ -294,7 +288,7 @@ def test_update_two_lieux(
 ):
     """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
     new_lieux = baker.prepare(
-        Lieu, _quantity=2, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+        Lieu, _quantity=2, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True, lambert93_longitude=652469, lambert93_latitude=6862035
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
@@ -308,6 +302,8 @@ def test_update_two_lieux(
         lieu_form_elements.commune_input.fill(new_lieu.commune)
         # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
         lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+        lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
+        lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
