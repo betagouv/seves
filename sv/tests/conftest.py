@@ -7,6 +7,13 @@ from model_bakery import baker
 from sv.models import Etat, FicheDetection
 
 
+@pytest.fixture
+def page(page):
+    timeout = 2_000
+    page.set_default_navigation_timeout(timeout)
+    page.set_default_timeout(timeout)
+    yield page
+
 @pytest.fixture(scope="module", autouse=True)
 def set_django_allow_async_unsafe():
     os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
