@@ -134,7 +134,7 @@ document.addEventListener('alpine:init', () => {
             };
 
 			// Récupération et initialisation des lieux (si modification d'une fiche de détection existante)
-            const lieux = JSON.parse(document.getElementById('lieux').textContent);
+            const lieux = JSON.parse(document.getElementById('lieux-json').textContent);
             if(lieux) {
                 this.lieux = lieux.map(lieu => {
                     return {

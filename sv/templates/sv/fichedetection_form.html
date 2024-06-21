@@ -35,7 +35,7 @@
         <input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
         <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
         <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
-        {{ lieux|json_script:"lieux" }}
+        {{ lieux|json_script:"lieux-json" }}
         {{ prelevements|json_script:"prelevements" }}
         {{ departements|json_script:"departements" }}
         {{ unites|json_script:"unites" }}

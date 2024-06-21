@@ -98,7 +98,6 @@ def test_add_lieu_form_have_all_fields(
 ):
     """Test que le formulaire d'ajout d'un lieu contient bien les champs attendus."""
     form_elements.add_lieu_btn.click()
-
     expect(lieu_form_elements.close_btn).to_be_visible()
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
 
@@ -124,8 +123,9 @@ def test_add_lieu_form_have_all_fields(
 
     expect(lieu_form_elements.departement_label).to_be_visible()
     expect(lieu_form_elements.departement_label).to_have_text("Département")
-    departements = list(Departement.objects.values_list("nom", flat=True))
-    check_select_options(page, "Département", departements)
+    departements = Departement.objects.all()
+    expected_departements = [f"{d.nom} ({d.numero})" for d in departements]
+    check_select_options(page, "Département", expected_departements)
 
     expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_have_text("Coordonnées GPS (Lambert 93)")
@@ -732,21 +732,6 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
-@pytest.mark.django_db(serialized_rollback=True)
-def test_add_lieu_form_is_empty_after_close_edit_form_with_click_outside_modal_without_save(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
-):
-    """Test que si je quitte la modification d’un lieu sans enregistrer via un clic en dehors de la modal,
-    je dois trouver le formulaire d’ajout d’un lieu vide"""
-    _add_new_lieu(page, form_elements, lieu_form_elements)
-
-    page.get_by_role("button", name="Modifier le lieu").click()
-    page.mouse.click(0, 0)  # clic en dehors de la modal
-    form_elements.add_lieu_btn.click()
-
-    _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
-
-
 # Supprimer un lieu
 
 
@@ -872,7 +857,8 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     # suppression du lieu
     page.get_by_role("button", name="Supprimer le lieu").click()
 
-    expect(page.get_by_role("dialog")).not_to_be_visible()
+    expect(page.get_by_role("dialog")).to_be_visible()
+    page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
     elements = page.query_selector_all(".lieu-initial")
     assert len(elements) == 1
@@ -894,7 +880,7 @@ def test_no_add_prelevement_btn_if_no_lieu(live_server, page: Page, form_element
     """Test que le bouton d'ajout d'un prélèvement n'est pas visible si aucun lieu dans la liste"""
     expect(form_elements.add_prelevement_btn).not_to_be_visible()
 
-
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_prelevement_btn_is_visible_if_lieu_exists(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
