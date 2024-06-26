@@ -1,23 +1,23 @@
 
 <div class="bloc-commun-gestion">
     <div class="fr-tabs">
-    <ul class="fr-tabs__list" role="tablist">
-        <li role="presentation">
-            <button id="tabpanel-404" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Fil de suivi</button>
-        </li>
-        <li role="presentation">
-            <button id="tabpanel-405" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Contacts</button>
-        </li>
-        <li role="presentation">
-            <button id="tabpanel-406" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-406-panel">Documents</button>
-        </li>
-    </ul>
-    <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
+        <ul class="fr-tabs__list" role="tablist">
+            <li role="presentation">
+                <button id="tabpanel-404" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Fil de suivi</button>
+            </li>
+            <li role="presentation">
+                <button id="tabpanel-405" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Contacts</button>
+            </li>
+            <li role="presentation">
+                <button id="tabpanel-406" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-406-panel">Documents</button>
+            </li>
+        </ul>
+        <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
+        </div>
+        <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
+        </div>
+        <div id="tabpanel-406-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-406" tabindex="0">
+            {% include "core/_upload_document.html" %}
+        </div>
     </div>
-    <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
-    </div>
-    <div id="tabpanel-406-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-406" tabindex="0">
-        {% include "core/_upload_document.html" %}
-    </div>
-</div>
 </div>
