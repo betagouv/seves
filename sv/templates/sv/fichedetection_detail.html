@@ -17,17 +17,6 @@
     <main>
         <div class="fiche-header">
             <div>
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="fiche-header__message fr-alert fr-alert--success">
-                            <h3 class="fr-alert__title">{{message}}</h3>
-                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                Masquer le message
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
                 <h1 class="fiche-header__title">Fiche détection n° {{ fichedetection.numero }}</h1>
                 <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
             </div>
