@@ -17,30 +17,12 @@
     <div class="fiches__header">
         <h2 class="fiches__title">Rechercher une fiche</h2>
         <form id="search-form" method="get" class="fiches__search-form">
-            <p class="form-search__field">
-                <label for="{{ form.numero.id_for_label }}" class="fr-label"> {{ form.numero.label }}</label>
-                <input id="{{ form.numero.id_for_label }}" name="{{ form.numero.name }}" value="{{ form.numero.value|default:'' }}" pattern="^[0-9]{4}\.[0-9]+$" title="Format attendu : ANNEE.NUMERO" class="fr-input">
-            </p>
-            <p class="form-search__field">
-                <label for="{{ form.region.id_for_label }}" class="fr-label">{{ form.region.label }}</label>
-                {{ form.region }}
-            </p>
-            <p class="form-search__field">
-                <label for="{{ form.organisme_nuisible.id_for_label }}" class="fr-label">{{ form.organisme_nuisible.label }}</label>
-                {{ form.organisme_nuisible }}
-            </p>
-            <p class="form-search__field">
-                <label for="{{ form.date_debut.id_for_label }}" class="fr-label">{{ form.date_debut.label }}</label>
-                {{ form.date_debut }}
-            </p>
-            <p class="form-search__field">
-                <label for="{{ form.date_fin.id_for_label }}" class="fr-label">{{ form.date_fin.label }}</label>
-                {{ form.date_fin }}
-            </p>
-            <p class="form-search__field">
-                <label for="{{ form.etat.id_for_label }}" class="fr-label">{{ form.etat.label }}</label>
-                {{ form.etat }}
-            </p>
+            {% for field in form %}
+                <p class="form-search__field">
+                    <label for="{{ field.id_for_label }}" class="fr-label"> {{ field.label }}</label>
+                    {{ field }}
+                </p>
+            {% endfor %}
             <p>
                 <button type="reset" class="fr-btn fr-btn--secondary">Effacer</button>
                 <button type="submit" class="fr-btn">Rechercher</button>
