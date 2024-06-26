@@ -52,7 +52,6 @@ class FicheDetectionSearchForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Ajoutez vos classes CSS ici
         self.fields["numero"].widget.attrs.update({"class": "fr-input"})
         self.fields["region"].widget.attrs.update({"class": "fr-select"})
         self.fields["organisme_nuisible"].widget.attrs.update({"class": "fr-select"})
