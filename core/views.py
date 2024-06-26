@@ -25,5 +25,7 @@ class DocumentUploadView(FormView):
             form.save()
             messages.success(request, "Le document a été ajouté avec succés.")
             return self._get_redirect()
-        # TODO what to do when we have an error ?
+
+        messages.error(request, "Une erreur s'est produite lors de l'ajout du document")
+        return self._get_redirect()
 
