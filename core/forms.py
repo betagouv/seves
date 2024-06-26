@@ -47,5 +47,4 @@ class DocumentUploadForm(DSFRForm, forms.ModelForm):
             self.fields['next'] = forms.CharField(widget=forms.HiddenInput())
             self.initial['next'] = next
 
-# TODO : templates: moves them to the correct directory
 # TODO : test E2E
