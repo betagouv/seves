@@ -22,3 +22,6 @@ header{
 .menu__item--active {
     border-bottom: 4px solid var(--background-active-blue-france);
 }
+.document__details .fr-card__desc{
+    order: initial;
+}
