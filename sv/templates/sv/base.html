@@ -59,6 +59,19 @@
                 </nav>
             </header>
 
+            {% if messages %}
+                <div class="alert-container">
+                    {% for message in messages %}
+                        <div class="fr-alert fr-alert--{{ message.tags }}">
+                            <h3 class="fr-alert__title">{{message}}</h3>
+                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                Masquer le message
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             {% block content %}{% endblock %}
 
             <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
