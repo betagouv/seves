@@ -15,7 +15,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 
-from core.mixins import WithDocumentUploadFormMixin
+from core.mixins import WithDocumentUploadFormMixin, WithDocumentListInContextMixin
 from .models import (
     FicheDetection,
     Lieu,
@@ -55,8 +55,11 @@ class FicheDetectionListView(ListView):
         return queryset
 
 
-class FicheDetectionDetailView(WithDocumentUploadFormMixin, DetailView):
+class FicheDetectionDetailView(WithDocumentListInContextMixin, WithDocumentUploadFormMixin, DetailView):
     model = FicheDetection
+
+    def get_object_linked_to_document(self):
+        return self.get_object()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
