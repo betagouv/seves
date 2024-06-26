@@ -89,26 +89,31 @@ class FicheDetectionListView(ListView):
 
         form = FicheDetectionSearchForm(self.request.GET)
 
-        if form.is_valid():
-            if form.cleaned_data["numero"]:
-                annee, numero = form.cleaned_data["numero"]
-                queryset = queryset.filter(numero__annee=annee, numero__numero=numero)
-            else:
-                if form.cleaned_data["region"]:
-                    queryset = queryset.filter(lieux__departement__region=form.cleaned_data["region"])
-                if form.cleaned_data["organisme_nuisible"]:
-                    queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
-                if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
-                    # Ajustement des dates de début et de fin pour inclure les fiches créées le jour même.
-                    # La date de début est définie à minuit (00:00:00) et la date de fin à la dernière seconde de la journée (23:59:59).
-                    # Cela permet d'inclure toutes les fiches créées dans la plage de dates spécifiée.
-                    # Si ces dates ne sont pas ajustées, les valeurs de date_debut et date_fin serait égales à 2024-06-19 00:00:00 et 2024-06-19 00:00:00 respectivement
-                    # donc les fiches créées le 2024-06-19 à 00:00:01 et après ne seraient pas incluses dans les résultats.
-                    date_debut = timezone.make_aware(datetime.combine(form.cleaned_data["date_debut"], time.min))
-                    date_fin = timezone.make_aware(datetime.combine(form.cleaned_data["date_fin"], time.max))
-                    queryset = queryset.filter(date_creation__range=(date_debut, date_fin))
-                if form.cleaned_data["etat"]:
-                    queryset = queryset.filter(etat=form.cleaned_data["etat"])
+        if not form.is_valid():
+            return queryset
+
+        if form.cleaned_data["numero"]:
+            annee, numero = form.cleaned_data["numero"]
+            return queryset.filter(numero__annee=annee, numero__numero=numero)
+
+        if form.cleaned_data["region"]:
+            queryset = queryset.filter(lieux__departement__region=form.cleaned_data["region"])
+
+        if form.cleaned_data["organisme_nuisible"]:
+            queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
+
+        if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
+            # Ajustement des dates de début et de fin pour inclure les fiches créées le jour même.
+            # La date de début est définie à minuit (00:00:00) et la date de fin à la dernière seconde de la journée (23:59:59).
+            # Cela permet d'inclure toutes les fiches créées dans la plage de dates spécifiée.
+            # Si ces dates ne sont pas ajustées, les valeurs de date_debut et date_fin serait égales à 2024-06-19 00:00:00 et 2024-06-19 00:00:00 respectivement
+            # donc les fiches créées le 2024-06-19 à 00:00:01 et après ne seraient pas incluses dans les résultats.
+            date_debut = timezone.make_aware(datetime.combine(form.cleaned_data["date_debut"], time.min))
+            date_fin = timezone.make_aware(datetime.combine(form.cleaned_data["date_fin"], time.max))
+            queryset = queryset.filter(date_creation__range=(date_debut, date_fin))
+
+        if form.cleaned_data["etat"]:
+            queryset = queryset.filter(etat=form.cleaned_data["etat"])
 
         return queryset
 
