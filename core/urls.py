@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    DocumentUploadView
+    DocumentUploadView, DocumentDeleteView
 )
 
 urlpatterns = [
@@ -8,5 +8,10 @@ urlpatterns = [
         "document-upload/",
         DocumentUploadView.as_view(),
         name="document-upload",
+    ),
+    path(
+        "document-delete/<int:pk>/",
+        DocumentDeleteView.as_view(),
+        name="document-delete",
     ),
 ]

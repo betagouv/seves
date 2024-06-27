@@ -13,6 +13,7 @@ class Document(models.Model):
     document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES)
     file = models.FileField(upload_to='')
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    is_deleted = models.BooleanField(default=False)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

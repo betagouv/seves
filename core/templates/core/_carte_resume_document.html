@@ -6,9 +6,17 @@
             <p class="fr-card__dess fr-mb-1w">{{ document.description | truncatechars:150 | default:"Pas de description" }}</p>
             <p class="fr-tag fr-my-1w">{{document.document_type|title}}</p>
 
-            <div class="fr-btns-group--right document__actions">
-            <a href="{{ document.file.url }}" target="_blank"><span class="fr-icon-download-line" aria-hidden="true"></span></a>
-            </div>
+            {% if document.is_deleted %}
+                Document supprimé
+            {% else %}
+                <div class="fr-btns-group--right document__actions">
+                    <a href="{{ document.file.url }}" target="_blank"><span class="fr-icon-download-line fr-mr-1w"></span></a>
+                    <a href="#" class="fr-icon-delete-line" data-fr-opened="false" aria-controls="fr-modal-{{ document.pk }}"></a>
+
+                </div>
+
+                {% include "core/_modale_suppression_document.html" %}
+            {% endif %}
         </div>
     </div>
 </div>
