@@ -459,7 +459,7 @@ class FicheDetection(models.Model):
         Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    documents = GenericRelation(Document) # TODO this could be into a mixin ?
+    documents = GenericRelation(Document)
 
     def get_absolute_url(self):
         return reverse('fiche-detection-vue-detaillee', kwargs={"pk":self.pk})

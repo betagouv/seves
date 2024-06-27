@@ -12,13 +12,7 @@ class Document(models.Model):
     description = models.TextField()
     document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES)
     file = models.FileField(upload_to='')
-
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    # TODO we need to have auth in order to used this
-    # TODO when user is added, add the info in the card
-    # uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    # TODO handle deleted_by and date_deletion at some point in the process
-    # TODO should we use models Casacade here ? Decide what to do
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

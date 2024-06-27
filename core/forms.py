@@ -44,5 +44,3 @@ class DocumentUploadForm(DSFRForm, forms.ModelForm):
         if next:
             self.fields['next'] = forms.CharField(widget=forms.HiddenInput())
             self.initial['next'] = next
-
-# TODO : test E2E
