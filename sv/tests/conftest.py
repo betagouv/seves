@@ -14,9 +14,11 @@ def page(page):
     page.set_default_timeout(timeout)
     yield page
 
+
 @pytest.fixture(scope="module", autouse=True)
 def set_django_allow_async_unsafe():
     os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 
 @pytest.fixture
 def form_elements(page: Page):
@@ -57,6 +59,7 @@ def fiche_detection_bakery():
         return baker.make(FicheDetection, _fill_optional=True, etat=etat)
 
     return _fiche_detection_bakery
+
 
 @pytest.fixture
 def fiche_detection(fiche_detection_bakery):
