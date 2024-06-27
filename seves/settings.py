@@ -148,3 +148,19 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
     )
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": env("STORAGE_BUCKET_NAME", default=None),
+            "access_key": env("STORAGE_ACCESS_KEY", default=None),
+            "secret_key": env("STORAGE_SECRET_KEY", default=None),
+            "endpoint_url": env("STORAGE_URL", default=None),
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}

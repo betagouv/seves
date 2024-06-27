@@ -6,6 +6,12 @@
 #
 asgiref==3.7.2
     # via django
+boto3==1.34.134
+    # via django-storages
+botocore==1.34.134
+    # via
+    #   boto3
+    #   s3transfer
 certifi==2024.2.2
     # via
     #   requests
@@ -21,9 +27,12 @@ dj-static==0.0.6
 django==5.0.3
     # via
     #   -r requirements.in
+    #   django-storages
     #   model-bakery
     #   sentry-sdk
 django-environ==0.11.2
+    # via -r requirements.in
+django-storages[s3]==1.14.3
     # via -r requirements.in
 djhtml==3.0.6
     # via -r requirements.in
@@ -41,6 +50,10 @@ idna==3.7
     # via requests
 iniconfig==2.0.0
     # via pytest
+jmespath==1.0.1
+    # via
+    #   boto3
+    #   botocore
 model-bakery==1.18.0
     # via -r requirements.in
 nodeenv==1.8.0
@@ -77,6 +90,8 @@ pytest-playwright==0.4.4
     # via -r requirements.in
 pytest-xdist==3.5.0
     # via -r requirements.in
+python-dateutil==2.9.0.post0
+    # via botocore
 python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
@@ -85,8 +100,12 @@ requests==2.31.0
     # via pytest-base-url
 ruff==0.4.1
     # via -r requirements.in
+s3transfer==0.10.2
+    # via boto3
 sentry-sdk[django]==2.5.1
     # via -r requirements.in
+six==1.16.0
+    # via python-dateutil
 sqlparse==0.4.4
     # via django
 static3==0.7.0
@@ -97,6 +116,7 @@ typing-extensions==4.11.0
     # via pyee
 urllib3==2.2.1
     # via
+    #   botocore
     #   requests
     #   sentry-sdk
 virtualenv==20.25.3
