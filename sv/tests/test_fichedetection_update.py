@@ -14,6 +14,7 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 def get_fiche_detection_update_form_url(fiche_detection: FicheDetection):
     return reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.id})
 
+
 @pytest.fixture
 def fiche_detection_with_one_lieu(fiche_detection):
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
@@ -122,7 +123,11 @@ def test_fiche_detection_update_page_content_with_createur_only(
 
 
 def test_fiche_detection_update_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection, fiche_detection_bakery
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    fiche_detection: FicheDetection,
+    fiche_detection_bakery,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
 
@@ -251,7 +256,13 @@ def test_update_lieu(
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     new_lieu = baker.prepare(
-        Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True, lambert93_longitude=652469, lambert93_latitude=6862035
+        Lieu,
+        wgs84_latitude=48.8566,
+        wgs84_longitude=2.3522,
+        _fill_optional=True,
+        _save_related=True,
+        lambert93_longitude=652469,
+        lambert93_latitude=6862035,
     )
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     page.get_by_role("button", name="Modifier le lieu").click()
@@ -288,7 +299,14 @@ def test_update_two_lieux(
 ):
     """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
     new_lieux = baker.prepare(
-        Lieu, _quantity=2, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True, lambert93_longitude=652469, lambert93_latitude=6862035
+        Lieu,
+        _quantity=2,
+        wgs84_latitude=48.8566,
+        wgs84_longitude=2.3522,
+        _fill_optional=True,
+        _save_related=True,
+        lambert93_longitude=652469,
+        lambert93_latitude=6862035,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")

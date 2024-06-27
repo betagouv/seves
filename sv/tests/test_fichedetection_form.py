@@ -880,6 +880,7 @@ def test_no_add_prelevement_btn_if_no_lieu(live_server, page: Page, form_element
     """Test que le bouton d'ajout d'un prélèvement n'est pas visible si aucun lieu dans la liste"""
     expect(form_elements.add_prelevement_btn).not_to_be_visible()
 
+
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_prelevement_btn_is_visible_if_lieu_exists(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements

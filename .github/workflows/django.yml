@@ -23,6 +23,8 @@ jobs:
         run: pip install pip-tools && pip-sync && playwright install
       - name: Run ruff
         run: ruff check .
+      - name: Run ruff format
+        run: ruff format --check .
       - name: Run DjHTML
         run: find -name *.html -not -path "./venv/*" | xargs djhtml
       - name: Run tests
