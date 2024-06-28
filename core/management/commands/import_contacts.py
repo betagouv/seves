@@ -36,7 +36,7 @@ class Command(BaseCommand):
             raise Exception(f"Erreur lors de l'importation à la ligne {ligne} : {e}")
 
     def handle(self, *args, **kwargs):
-        temps_debut = time.time()
+        start_time = time.time()
         csv_file_path = kwargs["csv_file"]
         ligne = 1
         with open(csv_file_path, mode="r", encoding="utf-8") as csv_file:
@@ -45,5 +45,5 @@ class Command(BaseCommand):
                 for row in self.clean_contacts_data(reader):
                     ligne += 1
                     self.save_contact(row, ligne)
-        temps_fin = time.time()
-        self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(temps_fin - temps_debut)} secondes"))
+        end_time = time.time()
+        self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(end_time - start_time)} secondes"))
