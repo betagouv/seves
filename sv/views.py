@@ -37,10 +37,10 @@ from .models import (
     Region,
     Etat,
 )
-from common.mixins import DSFRFormMixin
+from core.forms import DSFRForm
 
 
-class FicheDetectionSearchForm(forms.Form, DSFRFormMixin):
+class FicheDetectionSearchForm(forms.Form, DSFRForm):
     numero = forms.CharField(
         label="Numéro",
         required=False,
@@ -53,10 +53,6 @@ class FicheDetectionSearchForm(forms.Form, DSFRFormMixin):
     date_debut = forms.DateField(label="Période du", widget=forms.DateInput(attrs={"type": "date"}), required=False)
     date_fin = forms.DateField(label="Au", widget=forms.DateInput(attrs={"type": "date"}), required=False)
     etat = forms.ModelChoiceField(label="État", queryset=Etat.objects.all(), required=False)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.apply_input_form_css_classes()
 
     def clean_numero(self) -> Optional[Union[Tuple[int, int], str]]:
         """Vérifie que le champ 'numero' est au format 'annee.numero' et le retourne sous forme de tuple (annee, numero)."""
