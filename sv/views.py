@@ -41,7 +41,11 @@ from common.mixins import DSFRFormMixin
 
 
 class FicheDetectionSearchForm(forms.Form, DSFRFormMixin):
-    numero = forms.CharField(label="Numéro", required=False)
+    numero = forms.CharField(
+        label="Numéro",
+        required=False,
+        widget=forms.TextInput(attrs={"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}),
+    )
     region = forms.ModelChoiceField(label="Région", queryset=Region.objects.all(), required=False)
     organisme_nuisible = forms.ModelChoiceField(
         label="Organisme", queryset=OrganismeNuisible.objects.all(), required=False
