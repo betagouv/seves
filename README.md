@@ -97,7 +97,18 @@ Pour ajouter une nouvelle dépendance au projet :
 - executez la commande `pip-compile` (pour mettre à à jour le fichier `requirements.txt`)
 - executez la commande `pip-sync` (installation de la nouvelle dépendance)
 
+# Travailler avec un service S3 local
 
+Suivre [la documentation de minio](https://hub.docker.com/r/minio/minio) sur le hub docker, en résumé pour avoir le stockage persistent:
+
+```bash
+sudo mkdir /mnt/data
+sudo chown votre_user:votre_groupe /mnt/data/
+podman run -v /mnt/data:/data  -p 9000:9000 -p 9001:9001 quay.io/minio/minio server /data --console-address ":9001"
+```
+
+Une fois dans la console Web de minio vous pouvez vous créer une clé d'accès ainsi qu'un bucket en local.
+Configurez ensuite votre fichier .env avec `STORAGE_ENGINE="storages.backends.s3.S3Storage"` et les tokens d'authentification (cf exemple dans .env.dist).
 
 # Tests
 ## E2E
