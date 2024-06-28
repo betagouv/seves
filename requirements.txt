@@ -80,11 +80,14 @@ pytest==8.1.1
     # via
     #   pytest-base-url
     #   pytest-django
+    #   pytest-env
     #   pytest-playwright
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
 pytest-django==4.8.0
+    # via -r requirements.in
+pytest-env==1.1.3
     # via -r requirements.in
 pytest-playwright==0.4.4
     # via -r requirements.in

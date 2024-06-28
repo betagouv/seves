@@ -15,13 +15,12 @@ class DocumentUploadView(FormView):
 
     def _get_redirect(self):
         if url_has_allowed_host_and_scheme(
-                url=self.request.POST.get('next'),
-                allowed_hosts={self.request.get_host()},
-                require_https=self.request.is_secure()
+            url=self.request.POST.get("next"),
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
         ):
-            return HttpResponseRedirect(self.request.POST.get('next'))
+            return HttpResponseRedirect(self.request.POST.get("next"))
         return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
-
 
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -36,8 +35,8 @@ class DocumentUploadView(FormView):
 
 class DocumentDeleteView(View):
     def post(self, request, *args, **kwargs):
-        document = get_object_or_404(Document, pk=kwargs.get('pk'))
+        document = get_object_or_404(Document, pk=kwargs.get("pk"))
         document.is_deleted = True
         document.save()
         messages.success(request, "Le document a été marqué comme supprimé.")
-        return HttpResponseRedirect(request.POST.get('next'))
+        return HttpResponseRedirect(request.POST.get("next"))

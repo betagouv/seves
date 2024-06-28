@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -29,16 +28,12 @@ class Migration(migrations.Migration):
                 ("description", models.TextField()),
                 (
                     "document_type",
-                    models.CharField(
-                        choices=[("autre", "Autre document")], max_length=100
-                    ),
+                    models.CharField(choices=[("autre", "Autre document")], max_length=100),
                 ),
                 ("file", models.FileField(upload_to="")),
                 (
                     "date_creation",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="Date de création"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="Date de création"),
                 ),
                 ("object_id", models.PositiveIntegerField()),
                 (

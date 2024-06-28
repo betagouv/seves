@@ -13,12 +13,11 @@ from ..models import (
 )
 
 
-
-
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que le titre de la page est bien "Modification de la fiche détection n°2024.1"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.title).to_contain_text("Création d'une fiche détection")
+
 
 def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
@@ -90,10 +89,12 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.mesures_surveillance_specifique_input).to_be_visible()
     expect(form_elements.mesures_surveillance_specifique_input).to_be_empty()
 
+
 def test_date_creation_field_is_current_day(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la date de création soit egale à la date du jour"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
+
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_fiche_detection_create_without_lieux_and_prelevement(

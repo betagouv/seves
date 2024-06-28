@@ -2,7 +2,6 @@ from core.forms import DocumentUploadForm
 
 
 class WithDocumentUploadFormMixin:
-
     def get_object_linked_to_document(self):
         raise NotImplementedError
 
@@ -17,7 +16,6 @@ class WithDocumentUploadFormMixin:
 
 
 class WithDocumentListInContextMixin:
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["document_list"] = self.get_object().documents.all()

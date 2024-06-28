@@ -462,6 +462,4 @@ class FicheDetection(models.Model):
     documents = GenericRelation(Document)
 
     def get_absolute_url(self):
-        return reverse('fiche-detection-vue-detaillee', kwargs={"pk":self.pk})
-
-
+        return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})

@@ -18,7 +18,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" value="{{ document.pk }}" name="pk">
                                 <input type="hidden" value="{{ redirect_url }}" name="next">
-                                <button type="submit" class="fr-btn" >Supprimer le document</button>
+                                <button type="submit" class="fr-btn" data-testid="documents-delete-{{ document.pk }}">Supprimer le document</button>
                             </form>
                         </div>
                     </div>

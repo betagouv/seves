@@ -1,7 +1,5 @@
 from django.urls import path
-from .views import (
-    DocumentUploadView, DocumentDeleteView
-)
+from .views import DocumentUploadView, DocumentDeleteView
 
 urlpatterns = [
     path(
