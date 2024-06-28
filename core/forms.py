@@ -1,6 +1,7 @@
 from django import forms
 from collections import defaultdict
 
+
 class DSFRForm(forms.BaseForm):
     input_to_class = defaultdict(lambda: "fr-input")
     input_to_class["ClearableFileInput"] = "fr-upload"
