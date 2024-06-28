@@ -126,3 +126,7 @@ scalingo --app my-app run python manage.py createsuperuser
 # CRON
 Sur Scalingo, des crons sont configurés via Scalingo Scheduler (cf. fichier cron.json à la racine du projet).
 Ils sont monitorés via Sentry Cron Monitors.
+
+
+# Import du fichier d'extraction des contacts Agricoll
+scalingo --app APP_NAME run --file FILE_PATH python manage.py import_contacts /tmp/uploads/FILE_NAME.csv
