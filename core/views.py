@@ -3,15 +3,24 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404, render
 from django.views import View
-from django.views.generic.edit import FormView, UpdateView
-from .forms import DocumentUploadForm, DocumentEditForm, ContactAddForm, ContactSelectionForm
+from django.views.generic import DetailView
+from django.views.generic.edit import FormView, CreateView, UpdateView
+from .forms import (
+    DocumentUploadForm,
+    MessageForm,
+    MessageDocumentForm,
+    DocumentEditForm,
+    ContactAddForm,
+    ContactSelectionForm,
+)
 from django.http import HttpResponseRedirect
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ngettext
 
 
-from .models import Document
+from .models import Document, Message
+
+from django.contrib.contenttypes.models import ContentType
 
 
 class DocumentUploadView(FormView):
@@ -131,3 +140,50 @@ class ContactSelectionView(FormView):
                 "selection_form": form,
             },
         )
+
+
+class MessageCreateView(SuccessMessageMixin, CreateView):
+    model = Message
+    form_class = MessageForm
+    success_message = "Le message a bien été ajouté."
+
+    def dispatch(self, request, *args, **kwargs):
+        self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
+        self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({"obj": self.obj, "next": self.obj.get_absolute_url(), "message_type": Message.MESSAGE})
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["go_back_url"] = self.obj.get_absolute_url()
+        context["add_document_form"] = MessageDocumentForm()
+        return context
+
+    def get_success_url(self):
+        return self.obj.get_absolute_url()
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        message = form.instance
+
+        content_type = ContentType.objects.get_for_model(message)
+        document_numbers = [
+            s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
+        ]
+        for i in document_numbers:
+            Document.objects.create(
+                file=form.cleaned_data[f"document_{i}"],
+                nom=form.cleaned_data[f"document_{i}"]._name,
+                document_type=form.cleaned_data[f"document_type_{i}"],
+                content_type=content_type,
+                object_id=message.pk,
+            )
+        return response
+
+
+class MessageDetailsView(DetailView):
+    model = Message

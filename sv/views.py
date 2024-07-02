@@ -18,7 +18,12 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
 
-from core.mixins import WithDocumentUploadFormMixin, WithDocumentListInContextMixin, WithContactListInContextMixin
+from core.mixins import (
+    WithDocumentUploadFormMixin,
+    WithDocumentListInContextMixin,
+    WithMessagesListInContextMixin,
+    WithContactListInContextMixin,
+)
 from .models import (
     FicheDetection,
     Lieu,
@@ -121,7 +126,11 @@ class FicheDetectionListView(ListView):
 
 
 class FicheDetectionDetailView(
-    WithDocumentListInContextMixin, WithDocumentUploadFormMixin, WithContactListInContextMixin, DetailView
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithMessagesListInContextMixin,
+    WithContactListInContextMixin,
+    DetailView,
 ):
     model = FicheDetection
 

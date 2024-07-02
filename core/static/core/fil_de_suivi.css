@@ -1,0 +1,17 @@
+.fil-de-suivi td {
+        padding: 0px !important;
+}
+
+.fil-de-suivi td a {
+        display: block !important;
+        padding-right: 1.5rem !important;
+        padding-left: 1.5rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        background-image: none !important;
+    }
+
+.fil-de-suivi tr:hover td{
+        background: var(--background-alt-grey) !important;
+        border-bottom: 1px var(--border-contrast-grey) solid !important;
+}

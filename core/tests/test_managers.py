@@ -10,4 +10,4 @@ def test_document_ordered():
     doc_3 = baker.make(Document, nom="Doc 3", date_creation="2023-01-01")
     doc_4 = baker.make(Document, nom="Doc 4", date_creation="2024-01-01")
 
-    assert list(Document.objects.ordered()) == [doc_4, doc_3, doc_2, doc_1]
+    assert list(Document.objects.order_list()) == [doc_4, doc_3, doc_2, doc_1]

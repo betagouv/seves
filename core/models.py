@@ -1,8 +1,9 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 
-from .managers import DocumentManager
+from .managers import DocumentQueryset
 
 
 class Contact(models.Model):
@@ -43,7 +44,7 @@ class Document(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
-    objects = DocumentManager()
+    objects = DocumentQueryset.as_manager()
 
     class Meta:
         indexes = [
@@ -52,3 +53,35 @@ class Document(models.Model):
 
     def __str__(self):
         return f"{self.nom} ({self.document_type})"
+
+
+class Message(models.Model):
+    MESSAGE = "message"
+    NOTE = "note"
+    MESSAGE_TYPE_CHOICES = ((MESSAGE, "Message"), (NOTE, "Note"))
+
+    message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
+    title = models.CharField(max_length=512, verbose_name="Titre")
+    content = models.TextField()
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    documents = GenericRelation(Document)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"Message de type {self.message_type}: {self.content[:150]}..."
+
+    def get_fiche_url(self):
+        return self.content_object.get_absolute_url()
+
+    def get_absolute_url(self):
+        return reverse("message-view", kwargs={"pk": self.pk})

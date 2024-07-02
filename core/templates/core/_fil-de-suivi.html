@@ -1,0 +1,23 @@
+<div class="fr-btns-group--right fr-mb-2w">
+    <a href="{{ fiche.add_message_url }}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+       data-testid="fildesuivi-add">
+        Nouveau message
+    </a>
+</div>
+
+<div class="fr-container--fluid">
+    {% if message_list %}
+        <div class="fr-table--lg fr-table">
+            <div class="fr-table__wrapper">
+                <div class="fr-table__container">
+                    <div class="fr-table__content">
+                        {% include "core/_tableau_fil_de_suivi.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <p>Pas de message pour le moment</p>
+    {% endif %}
+</div>

@@ -1,6 +1,14 @@
 from django.urls import path
 from . import auth_views
-from .views import DocumentUploadView, DocumentDeleteView, DocumentUpdateView, ContactAddFormView, ContactSelectionView
+from .views import (
+    DocumentUploadView,
+    DocumentDeleteView,
+    DocumentUpdateView,
+    ContactAddFormView,
+    ContactSelectionView,
+    MessageCreateView,
+    MessageDetailsView,
+)
 
 urlpatterns = [
     path(
@@ -30,4 +38,14 @@ urlpatterns = [
     ),
     path("contacts/ajout", ContactAddFormView.as_view(), name="contact-add-form"),
     path("contacts/ajout/agents", ContactSelectionView.as_view(), name="contact-add-form-select-agents"),
+    path(
+        "message-add/<int:obj_type_pk>/<int:obj_pk>/",
+        MessageCreateView.as_view(),
+        name="message-add",
+    ),
+    path(
+        "message/<int:pk>/",
+        MessageDetailsView.as_view(),
+        name="message-view",
+    ),
 ]

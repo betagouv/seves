@@ -1,0 +1,53 @@
+.message-title{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between
+}
+.message-container {
+    background-color: white;
+}
+.message-container .fr-grid-row .fr-card {
+    height: unset;
+}
+.message-container-header{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between
+}
+.message-document-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+.message-document-container .fr-link {
+    max-width:75%;
+}
+
+.message-documents-container {
+    background-color: var(--background-disabled-grey);
+}
+.message-documents-container hr {
+    border-top: 1px solid black;
+}
+.message-documents-container label {
+    display: block;
+    padding-bottom: 0.5rem;
+}
+.document-to-add {
+    background-color: var(--background-contrast-grey);
+    display: flex;
+    justify-content: space-between;
+}
+.document-to-add a{
+    background-image: none;
+}
+.document-to-add span{
+    white-space: nowrap;
+    width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.message-documents-actions{
+    display: flex;
+    justify-content: end;
+}
