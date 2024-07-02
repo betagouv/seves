@@ -1,0 +1,47 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'core/message_form.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="fr-container fr-pt-4w">
+        <a href="{{ go_back_url }}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a>
+
+        <div class="message-title">
+            <h1 class="fr-mt-2w">Nouveau message</h1>
+            <a href="{{ go_back_url }}" class="fr-link">Annuler</a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-8">
+                    <div class="fr-p-4w message-container">
+                        {{ form.as_dsfr_div }}
+                        <button type="submit" class="fr-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+                    </div>
+                </div>
+                <div class="fr-col-4">
+                    <div class="fr-p-4w message-documents-container">
+                        <h3 class="fr-h3">Documents</h3>
+                        <p id="no-document">Aucun document ajouté.</p>
+                        <div id="documents-to-upload"></div>
+                        <div id="inputs-for-upload" class="fr-hidden"></div>
+                        <hr>
+                        <h4 class="fr-h4">Nouveau document</h4>
+                        <div>
+                            {{ add_document_form.as_dsfr_div }}
+                            <div class="message-documents-actions">
+                                <button class="fr-btn" id="message-add-document" disabled>Ajouter</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock content %}

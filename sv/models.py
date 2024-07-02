@@ -1,12 +1,12 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 import datetime
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
-from django.contrib.contenttypes.models import ContentType
 
-from core.models import Document, Contact
+from core.models import Document, Message, Contact
 
 
 class NumeroFiche(models.Model):
@@ -461,6 +461,7 @@ class FicheDetection(models.Model):
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     documents = GenericRelation(Document)
+    messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
     def get_absolute_url(self):
@@ -469,3 +470,8 @@ class FicheDetection(models.Model):
     def get_content_type_id(self) -> int:
         """Renvoie l'ID du ContentType associé au modèle FicheDetection"""
         return ContentType.objects.get_for_model(self).pk
+
+    @property
+    def add_message_url(self):
+        content_type = ContentType.objects.get_for_model(self)
+        return reverse("message-add", kwargs={"obj_type_pk": content_type.pk, "obj_pk": self.pk})

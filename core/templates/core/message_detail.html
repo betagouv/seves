@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="fr-container fr-pt-4w">
+        <a href="{{ message.get_fiche_url }}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a>
+
+        <h1 class="fr-mt-2w">{{ message.title }}</h1>
+        <div class="fr-p-4w message-container">
+            <div class="fr-mb-2w message-container-header">
+                <div>
+                    {# Sender info will come here#}
+                </div>
+                <div>{{ message.date_creation }}</div>
+            </div>
+            <hr class="fr-hr-or">
+
+            {% if message.documents.all %}
+                <p class="fr-hint-text">Pièces jointes. Retrouvez l'ensemble des documents dans l'onglet "Documents" du bloc de suivi.</p>
+                <div class="fr-grid-row fr-grid-row--gutters">
+
+                    {% for document in message.documents.all %}
+                        <div class="fr-col-3">
+                            <div class="fr-card fr-card--shadow">
+                                <div class="fr-px-2w fr-py-1w message-document-container">
+                                    <a href="{{ document.file.url }}" target="_blank" class="fr-link">{{ document.nom }}</a>
+                                    {% if document.is_deleted %}
+                                        Document supprimé
+                                    {% else %}
+                                        <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w"></a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <p class="fr-pt-4w" data-testid="message-content">
+                {{ message.content|linebreaksbr }}
+            </p>
+
+        </div>
+    </div>
+{% endblock content %}
