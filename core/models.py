@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from .managers import DocumentManager
+
 
 class Contact(models.Model):
     class Meta:
@@ -36,6 +38,8 @@ class Document(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
+
+    objects = DocumentManager()
 
     class Meta:
         indexes = [
