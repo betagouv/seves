@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
 
-from core.mixins import WithDocumentUploadFormMixin, WithDocumentListInContextMixin
+from core.mixins import WithDocumentUploadFormMixin, WithDocumentListInContextMixin, WithContactListInContextMixin
 from .models import (
     FicheDetection,
     Lieu,
@@ -120,7 +120,9 @@ class FicheDetectionListView(ListView):
         return context
 
 
-class FicheDetectionDetailView(WithDocumentListInContextMixin, WithDocumentUploadFormMixin, DetailView):
+class FicheDetectionDetailView(
+    WithDocumentListInContextMixin, WithDocumentUploadFormMixin, WithContactListInContextMixin, DetailView
+):
     model = FicheDetection
 
     def get_object_linked_to_document(self):

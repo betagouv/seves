@@ -4,8 +4,9 @@ import datetime
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
+from django.contrib.contenttypes.models import ContentType
 
-from core.models import Document
+from core.models import Document, Contact
 
 
 class NumeroFiche(models.Model):
@@ -460,6 +461,11 @@ class FicheDetection(models.Model):
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     documents = GenericRelation(Document)
+    contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
+
+    def get_content_type_id(self) -> int:
+        """Renvoie l'ID du ContentType associé au modèle FicheDetection"""
+        return ContentType.objects.get_for_model(self).pk

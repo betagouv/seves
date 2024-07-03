@@ -26,3 +26,10 @@ class WithDocumentListInContextMixin:
         context["document_filter"] = document_filter
 
         return context
+
+
+class WithContactListInContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["contacts"] = self.get_object().contacts.all()
+        return context
