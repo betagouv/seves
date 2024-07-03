@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import environ
+import tempfile
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -171,3 +172,5 @@ if all(
         "secret_key": env("STORAGE_SECRET_KEY", default=None),
         "endpoint_url": env("STORAGE_URL", default=None),
     }
+elif environ.Env(TEMP_STORAGE=(bool, False)):
+    STORAGES["default"]["OPTIONS"] = {"location": tempfile.mkdtemp()}
