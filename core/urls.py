@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import DocumentUploadView, DocumentDeleteView, DocumentUpdateView
 from . import auth_views
+from .views import DocumentUploadView, DocumentDeleteView, DocumentUpdateView, ContactAddFormView, ContactSelectionView
 
 urlpatterns = [
     path(
@@ -28,4 +28,6 @@ urlpatterns = [
         auth_views.logout,
         name="logout",
     ),
+    path("contacts/ajout", ContactAddFormView.as_view(), name="contact-add-form"),
+    path("contacts/ajout/agents", ContactSelectionView.as_view(), name="contact-add-form-select-agents"),
 ]

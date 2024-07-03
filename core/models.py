@@ -23,6 +23,9 @@ class Contact(models.Model):
     telephone = models.CharField(max_length=20, blank=True)
     mobile = models.CharField(max_length=20, blank=True)
 
+    def __str__(self):
+        return f"{self.structure} - {self.prenom} {self.nom}"
+
 
 class Document(models.Model):
     DOCUMENT_AUTRE = "autre"

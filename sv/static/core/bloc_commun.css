@@ -29,3 +29,9 @@
     display:flex;
     align-items: end;
 }
+
+
+/* Bloc contacts */
+.agents-count{
+    font-weight: bold;
+}

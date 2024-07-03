@@ -209,7 +209,7 @@
                 <p class="fiche-synthese__value">{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
             </div>
         </div>
-        {% include "core/_fiche_bloc_commun.html" with redirect_url=fichedetection.get_absolute_url %}
+        {% include "core/_fiche_bloc_commun.html" with redirect_url=fichedetection.get_absolute_url pk=fichedetection.pk content_type_id=fichedetection.get_content_type_id %}
     </main>
 
 {% endblock %}

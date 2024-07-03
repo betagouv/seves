@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from core.models import Document
+from core.models import Document, Contact
 from django import forms
 from collections import defaultdict
 
@@ -62,3 +62,51 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["nom", "document_type", "description"]
+
+
+class ContactAddForm(DSFRForm, forms.Form):
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    structure = forms.ChoiceField(
+        label_suffix="",
+        widget=forms.Select(attrs={"autocomplete": "off"}),
+    )
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["structure"].choices = [("", "Choisir dans la liste")] + [
+            (structure, structure) for structure in Contact.objects.values_list("structure", flat=True).distinct()
+        ]
+
+
+class ContactSelectionForm(forms.Form):
+    structure = forms.CharField(widget=forms.HiddenInput())
+    contacts = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.none(),
+        widget=forms.CheckboxSelectMultiple(),
+        label="",
+        error_messages={"required": "Veuillez sélectionner au moins un contact"},
+    )
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        structure = kwargs.pop("structure")
+        fiche_id = kwargs.pop("fiche_id")
+        content_type_id = kwargs.pop("content_type_id")
+        super().__init__(*args, **kwargs)
+        self.fields["structure"].initial = structure
+        self.fields["fiche_id"].initial = fiche_id
+        self.fields["content_type_id"].initial = content_type_id
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        fiche = content_type.objects.get(pk=fiche_id)
+        # Obtention des contacts déjà liés à la fiche
+        existing_contacts = fiche.contacts.all()
+        # Filtrage pour exclure les contacts déjà associés à la fiche
+        self.fields["contacts"].queryset = (
+            Contact.objects.filter(structure__icontains=structure)
+            .exclude(pk__in=existing_contacts)
+            .order_by("structure", "nom")
+        )
