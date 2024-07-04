@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404
 from django.views import View
-from django.views.generic.edit import FormView
-from .forms import DocumentUploadForm
+from django.views.generic.edit import FormView, UpdateView
+from .forms import DocumentUploadForm, DocumentEditForm
 from django.http import HttpResponseRedirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -26,7 +27,7 @@ class DocumentUploadView(FormView):
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "Le document a été ajouté avec succés.")
+            messages.success(request, "Le document a été ajouté avec succès.")
             return self._get_redirect()
 
         messages.error(request, "Une erreur s'est produite lors de l'ajout du document")
@@ -40,3 +41,13 @@ class DocumentDeleteView(View):
         document.save()
         messages.success(request, "Le document a été marqué comme supprimé.")
         return HttpResponseRedirect(request.POST.get("next"))
+
+
+class DocumentUpdateView(SuccessMessageMixin, UpdateView):
+    model = Document
+    success_message = "Le document a bien été mis à jour."
+    form_class = DocumentEditForm
+    http_method_names = ["post"]
+
+    def get_success_url(self):
+        return self.request.POST.get("next")

@@ -28,7 +28,7 @@ class DocumentUploadForm(DSFRForm, forms.ModelForm):
     )
     document_type = forms.ChoiceField(choices=Document.DOCUMENT_TYPE_CHOICES, label="Type de document")
     description = forms.CharField(
-        widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Description - facultatif", required=False
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
     file = forms.FileField(label="Ajouter un Document")
 
@@ -48,3 +48,17 @@ class DocumentUploadForm(DSFRForm, forms.ModelForm):
         if next:
             self.fields["next"] = forms.CharField(widget=forms.HiddenInput())
             self.initial["next"] = next
+
+
+class DocumentEditForm(DSFRForm, forms.ModelForm):
+    nom = forms.CharField(
+        help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
+    )
+    document_type = forms.ChoiceField(choices=Document.DOCUMENT_TYPE_CHOICES, label="Type de document")
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
+    )
+
+    class Meta:
+        model = Document
+        fields = ["nom", "document_type", "description"]

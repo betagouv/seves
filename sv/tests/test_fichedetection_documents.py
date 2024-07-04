@@ -53,3 +53,30 @@ def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page,
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Test document")).to_be_visible()
     expect(page.get_by_text("Document supprimé")).to_be_visible()
+
+
+def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
+    document = baker.make(Document, nom="Test document", description="My description", _create_files=True)
+    fiche_detection.documents.set([document])
+    assert fiche_detection.documents.count() == 1
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+
+    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
+
+    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
+
+    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill("New name")
+    page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("")
+    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}")
+
+    document = fiche_detection.documents.get()
+    assert document.nom == "New name"
+    assert document.description == ""
+
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_text("New name", exact=True)).to_be_visible()
