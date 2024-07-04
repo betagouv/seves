@@ -10,9 +10,11 @@
                 Document supprimé
             {% else %}
                 <div class="fr-btns-group--right document__actions">
+                    <a href="#" class="fr-icon-edit-line fr-btn fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-edit-{{ document.pk }}"></a>
                     <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w"></a>
                     <a href="#" class="fr-icon-delete-line fr-btn fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-{{ document.pk }}"></a>
                 </div>
+                {% include "core/_modale_edition_document.html" %}
                 {% include "core/_modale_suppression_document.html" %}
             {% endif %}
         </div>

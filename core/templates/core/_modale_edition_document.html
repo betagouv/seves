@@ -1,0 +1,30 @@
+<dialog aria-labelledby="fr-modal-edit-{{ document.pk }}-title" id="fr-modal-edit-{{ document.pk }}" class="fr-modal" role="dialog">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <form action="{% url 'document-update' document.pk %}" method="POST">
+                        <div class="fr-modal__header">
+                            <button class="fr-btn--close fr-btn" aria-controls="fr-modal-edit-{{ document.pk }}">Fermer</button>
+                        </div>
+                        <div class="fr-modal__content"><h1 class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg"></span>Modifier le document</h1>
+                            {{ document.edit_form.as_dsfr_div }}
+                        </div>
+
+                        <div class="fr-modal__footer">
+                            <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ document.pk }}" name="pk">
+                                    <input type="hidden" value="{{ redirect_url }}" name="next">
+                                    <button type="submit" class="fr-btn" data-testid="documents-edit-{{ document.pk }}">Enregistrer les modifications</button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
