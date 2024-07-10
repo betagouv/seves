@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "sv.apps.SvConfig",
     "core.apps.CoreConfig",
+    "django_filters",
 ]
 
 MIDDLEWARE = [

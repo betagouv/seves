@@ -26,11 +26,12 @@ class Contact(models.Model):
 
 class Document(models.Model):
     DOCUMENT_AUTRE = "autre"
-    DOCUMENT_TYPE_CHOICES = ((DOCUMENT_AUTRE, "Autre document"),)
+    DOCUMENT_CARTOGRAPHIE = "cartographie"
+    DOCUMENT_TYPE_CHOICES = ((DOCUMENT_CARTOGRAPHIE, "Cartographie"), (DOCUMENT_AUTRE, "Autre document"))
 
     nom = models.CharField(max_length=256)
     description = models.TextField()
-    document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES)
+    document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES, verbose_name="Type de document")
     file = models.FileField(upload_to="")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)

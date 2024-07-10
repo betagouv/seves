@@ -1,4 +1,5 @@
 from core.forms import DocumentUploadForm, DocumentEditForm
+from .filters import DocumentFilter
 
 
 class WithDocumentUploadFormMixin:
@@ -19,7 +20,9 @@ class WithDocumentListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         documents = self.get_object().documents.ordered()
-        for document in documents:
+        document_filter = DocumentFilter(self.request.GET, queryset=documents)
+        for document in document_filter.qs:
             document.edit_form = DocumentEditForm(instance=document)
-        context["document_list"] = documents
+        context["document_filter"] = document_filter
+
         return context
