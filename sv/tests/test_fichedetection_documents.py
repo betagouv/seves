@@ -14,7 +14,7 @@ def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_dete
     expect(page.locator("#fr-modal-add-doc")).to_be_visible()
 
     page.locator("#id_nom").fill("Name of the document")
-    page.locator("#id_document_type").select_option("autre")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option("autre")
     page.locator("#id_description").fill("Description")
     page.locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
@@ -80,3 +80,22 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_det
 
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("New name", exact=True)).to_be_visible()
+
+
+def test_can_filter_documents_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
+    document_1 = baker.make(Document, nom="Test document", document_type="autre", _create_files=True)
+    document_2 = baker.make(Document, nom="Cartographie", document_type="cartographie", _create_files=True)
+    fiche_detection.documents.set([document_1, document_2])
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}#documents")
+
+    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
+    expect(page.get_by_role("heading", name="Cartographie")).to_be_visible()
+
+    page.locator(".documents__filters #id_document_type").select_option("autre")
+    page.get_by_test_id("documents-filter").click()
+
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}?document_type=autre#documents")
+
+    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
+    expect(page.get_by_role("heading", name="Cartographie")).not_to_be_visible()

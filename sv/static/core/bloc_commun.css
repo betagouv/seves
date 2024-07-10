@@ -25,3 +25,7 @@
 .document__actions a {
     background-image: none;
 }
+.documents__filters {
+    display:flex;
+    align-items: end;
+}
