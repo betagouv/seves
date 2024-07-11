@@ -1,12 +1,15 @@
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 import pytest
-from core.models import Document
 from ..models import FicheDetection
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
+def test_can_add_document_to_fiche_detection(
+    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user: User
+):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_test_id("documents").click()
     expect(page.get_by_test_id("documents-add")).to_be_visible()
@@ -26,21 +29,26 @@ def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_dete
     assert document.document_type == "autre"
     assert document.nom == "Name of the document"
     assert document.description == "Description"
+    assert document.created_by == mocked_authentification_user.agent
+    assert document.created_by_structure == mocked_authentification_user.agent.structure
 
     # Check the document is now listed on the page
     page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document", exact=True)).to_be_visible()
+    expect(page.get_by_text("Name of the document Information")).to_be_visible()
+    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
-    document = baker.make(Document, nom="Test document", _create_files=True)
+def test_can_see_and_delete_document_on_fiche_detection(
+    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user: User, document_recipe
+):
+    document = document_recipe().make(nom="Test document", description="")
     fiche_detection.documents.set([document])
     assert fiche_detection.documents.count() == 1
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_test_id("documents").click()
-    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
 
     page.locator(f'a[aria-controls="fr-modal-{document.id}"]').click()
     expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()
@@ -49,6 +57,7 @@ def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page,
     page.wait_for_timeout(200)
     document = fiche_detection.documents.get()
     assert document.is_deleted is True
+    assert document.deleted_by == mocked_authentification_user.agent
 
     # Document is still displayed
     page.get_by_test_id("documents").click()
@@ -57,15 +66,17 @@ def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page,
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
-    document = baker.make(Document, nom="Test document", description="My description", _create_files=True)
+def test_can_edit_document_on_fiche_detection(
+    live_server, page: Page, fiche_detection: FicheDetection, document_recipe
+):
+    document = document_recipe().make(nom="Test document", description="My description")
     fiche_detection.documents.set([document])
     assert fiche_detection.documents.count() == 1
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_test_id("documents").click()
 
-    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
+    expect(page.get_by_text("Test document Information")).to_be_visible()
 
     page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
     expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
@@ -85,20 +96,22 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_det
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_can_filter_documents_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
-    document_1 = baker.make(Document, nom="Test document", document_type="autre", _create_files=True)
-    document_2 = baker.make(Document, nom="Cartographie", document_type="cartographie", _create_files=True)
+def test_can_filter_documents_on_fiche_detection(
+    live_server, page: Page, fiche_detection: FicheDetection, document_recipe
+):
+    document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
+    document_2 = document_recipe().make(nom="Ma carto", document_type="cartographie", description="")
     fiche_detection.documents.set([document_1, document_2])
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}#tabpanel-documents-panel")
 
-    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
-    expect(page.get_by_role("heading", name="Cartographie")).to_be_visible()
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+    expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
     page.locator(".documents__filters #id_document_type").select_option("autre")
     page.get_by_test_id("documents-filter").click()
 
     page.wait_for_url(f"**{fiche_detection.get_absolute_url()}?document_type=autre#tabpanel-documents-panel")
 
-    expect(page.get_by_role("heading", name="Test document")).to_be_visible()
-    expect(page.get_by_role("heading", name="Cartographie")).not_to_be_visible()
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+    expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()

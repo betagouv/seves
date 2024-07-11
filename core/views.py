@@ -26,7 +26,11 @@ class DocumentUploadView(FormView):
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            document = form.save(commit=False)
+            agent = request.user.agent
+            document.created_by = agent
+            document.created_by_structure = agent.structure
+            document.save()
             messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
             return HttpResponseRedirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
@@ -38,6 +42,7 @@ class DocumentDeleteView(View):
     def post(self, request, *args, **kwargs):
         document = get_object_or_404(Document, pk=kwargs.get("pk"))
         document.is_deleted = True
+        document.deleted_by = self.request.user.agent
         document.save()
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
         return HttpResponseRedirect(request.POST.get("next") + "#tabpanel-documents-panel")
@@ -182,6 +187,8 @@ class MessageCreateView(CreateView):
                 document_type=form.cleaned_data[f"document_type_{i}"],
                 content_type=content_type,
                 object_id=message.pk,
+                created_by=self.request.user.agent,
+                created_by_structure=self.request.user.agent.structure,
             )
 
     def form_valid(self, form):
