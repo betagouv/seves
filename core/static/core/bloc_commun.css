@@ -16,8 +16,15 @@
 .document__details--deleted{
     background-color: var(--background-disabled-grey);
 }
+.document__details--structure{
+    color: var(--info-425-625);
+}
 .document__details .fr-card__desc{
     order: initial;
+}
+.document__details .fr-btn--tooltip::before {
+    -webkit-mask-image: url(../../../static/icons/system/information-line.svg);
+    mask-image: url(../../../static/icons/system/information-line.svg);
 }
 .document__actions a[target="_blank"]::after {
     content: none;

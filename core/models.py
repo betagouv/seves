@@ -92,6 +92,9 @@ class Document(models.Model):
     file = models.FileField(upload_to="")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
+    created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")
+    created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
+    deleted_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()

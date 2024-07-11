@@ -25,6 +25,13 @@ SD/DAAF/DAAF973/SG;Prestataire;TEMPORAIRE;inconnu;;;;"""
     return str(p)
 
 
+def _reset_contacts():
+    # Remove objects created by fixtures
+    Contact.objects.all().delete()
+    Agent.objects.all().delete()
+    Structure.objects.all().delete()
+
+
 @pytest.mark.django_db
 def test_import_contacts(mock_csv_data):
     """Test du processus complet d'importation des contacts"""
@@ -41,6 +48,7 @@ def test_import_contacts(mock_csv_data):
 @pytest.mark.django_db
 def test_data_integrity(mock_csv_data):
     """Test pour vérifier l'intégrité des données après l'importation"""
+    _reset_contacts()
     call_command("import_contacts", mock_csv_data)
 
     # vérification de l'enregistrement des structures

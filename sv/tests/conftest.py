@@ -3,13 +3,16 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 
-from core.models import Agent, Structure, Contact
+from core.models import Agent, Structure, Contact, Document
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 from model_bakery import baker
-
+from model_bakery.recipe import Recipe, foreign_key
 from sv.models import Etat, FicheDetection
+
+User = get_user_model()
 
 
 @pytest.fixture
@@ -84,3 +87,22 @@ def fiche_detection_bakery():
 @pytest.fixture
 def fiche_detection(fiche_detection_bakery):
     return fiche_detection_bakery()
+
+
+@pytest.fixture
+def document_recipe(fiche_detection_bakery):
+    def _document_recipe():
+        fiche = fiche_detection_bakery()
+        content_type = ContentType.objects.get_for_model(fiche)
+        agent_recipe = Recipe(Agent)
+        structure_recipe = Recipe(Structure)
+        return Recipe(
+            Document,
+            created_by=foreign_key(agent_recipe),
+            created_by_structure=foreign_key(structure_recipe),
+            content_type=content_type,
+            object_id=fiche.pk,
+            _create_files=True,
+        )
+
+    return _document_recipe
