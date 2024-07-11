@@ -31,7 +31,7 @@ distlib==0.3.8
     # via virtualenv
 dj-static==0.0.6
     # via -r requirements.in
-django==5.0.3
+django==5.0.7
     # via
     #   -r requirements.in
     #   django-filter
