@@ -2,6 +2,27 @@
 	"env": {
 	  "ALLOWED_HOSTS": {
 		"generator": "url"
+	  },
+	  "OIDC_RP_CLIENT_ID": {
+		"value": "private"
+	  },
+	  "OIDC_RP_CLIENT_SECRET": {
+		"value": "tardis"
+	  },
+	  "OIDC_RP_AUTH_ENDPOINT": {
+		"value": "https://oidctest.wsweet.org/oauth2/authorize"
+	  },
+	  "OIDC_RP_TOKEN_ENDPOINT": {
+		"value": "https://oidctest.wsweet.org/oauth2/token"
+	  },
+	  "OIDC_RP_USER_ENDPOINT": {
+		"value": "https://oidctest.wsweet.org/oauth2/userinfo"
+	  },
+	  "OIDC_RP_JWKS_ENDPOINT": {
+		"value": "https://oidctest.wsweet.org/oauth2/jwks"
+	  },
+	  "OIDC_RP_LOGOUT_ENDPOINT": {
+		"value": "https://oidctest.wsweet.org/oauth2/logout"
 	  }
 	}
-  }
+}
