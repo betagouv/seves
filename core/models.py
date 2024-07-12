@@ -2,8 +2,47 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.db.models import Q
 
 from .managers import DocumentQueryset
+
+
+class Agent(models.Model):
+    class Meta:
+        verbose_name = "Agent"
+        verbose_name_plural = "Agents"
+        indexes = [
+            models.Index(fields=["user"]),
+        ]
+        ordering = ["nom", "prenom"]
+
+    user = models.OneToOneField(User, on_delete=models.RESTRICT)
+    structure = models.ForeignKey("Structure", on_delete=models.RESTRICT)
+    structure_complete = models.CharField(max_length=255)
+    prenom = models.CharField(max_length=255)
+    nom = models.CharField(max_length=255)
+    fonction_hierarchique = models.CharField(max_length=255, blank=True)
+    complement_fonction = models.TextField(blank=True)
+    telephone = models.CharField(max_length=20, blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        return f"{self.nom} {self.prenom}"
+
+
+class Structure(models.Model):
+    class Meta:
+        verbose_name = "Structure"
+        verbose_name_plural = "Structures"
+        ordering = ["niveau1", "niveau2"]
+
+    niveau1 = models.CharField(max_length=255)
+    niveau2 = models.CharField(max_length=255, blank=True)
+    libelle = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.libelle
 
 
 class Contact(models.Model):
@@ -11,21 +50,21 @@ class Contact(models.Model):
         verbose_name = "Contact"
         verbose_name_plural = "Contacts"
         indexes = [
-            models.Index(fields=["structure"]),
-            models.Index(fields=["email"]),
+            models.Index(fields=["email", "structure", "agent"]),
+        ]
+        ordering = ["structure", "agent"]
+        constraints = [
+            models.CheckConstraint(
+                check=Q(structure__isnull=False) | Q(agent__isnull=False), name="contact_has_structure_or_agent"
+            ),
         ]
 
-    structure = models.CharField(max_length=255)
-    prenom = models.CharField(max_length=255)
-    nom = models.CharField(max_length=255)
+    structure = models.ForeignKey(Structure, on_delete=models.RESTRICT, null=True)
+    agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True)
     email = models.EmailField()
-    fonction_hierarchique = models.CharField(max_length=255, blank=True)
-    complement_fonction = models.TextField(blank=True)
-    telephone = models.CharField(max_length=20, blank=True)
-    mobile = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
-        return f"{self.structure} - {self.prenom} {self.nom}"
+        return str(self.structure) if self.structure else str(self.agent)
 
 
 class Document(models.Model):

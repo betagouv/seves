@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
-from core.models import Document, Contact, Message
+from core.models import Document, Contact, Message, Structure
 from django import forms
 from collections import defaultdict
 
@@ -77,22 +77,17 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
 
 class ContactAddForm(DSFRForm, forms.Form):
     fiche_id = forms.IntegerField(widget=forms.HiddenInput())
-    structure = forms.ChoiceField(
+    structure = forms.ModelChoiceField(
+        queryset=Structure.objects.all(),
+        empty_label="Choisir dans la liste",
         label_suffix="",
-        widget=forms.Select(attrs={"autocomplete": "off"}),
     )
     next = forms.CharField(widget=forms.HiddenInput(), required=False)
     content_type_id = forms.IntegerField(widget=forms.HiddenInput())
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["structure"].choices = [("", "Choisir dans la liste")] + [
-            (structure, structure) for structure in Contact.objects.values_list("structure", flat=True).distinct()
-        ]
-
 
 class ContactSelectionForm(forms.Form):
-    structure = forms.CharField(widget=forms.HiddenInput())
+    structure = forms.ModelChoiceField(queryset=Structure.objects.all(), widget=forms.HiddenInput())
     contacts = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.none(),
         widget=forms.CheckboxSelectMultiple(),
@@ -117,9 +112,9 @@ class ContactSelectionForm(forms.Form):
         existing_contacts = fiche.contacts.all()
         # Filtrage pour exclure les contacts déjà associés à la fiche
         self.fields["contacts"].queryset = (
-            Contact.objects.filter(structure__icontains=structure)
+            Contact.objects.filter(agent__structure=structure)
             .exclude(pk__in=existing_contacts)
-            .order_by("structure", "nom")
+            .order_by("structure", "agent__nom")
         )
 
 
