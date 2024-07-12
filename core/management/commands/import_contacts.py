@@ -2,8 +2,9 @@ import time
 from django.db.utils import DataError
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.contrib.auth import get_user_model
 import csv
-from core.models import Contact
+from core.models import Contact, Structure, Agent
 
 
 class Command(BaseCommand):
@@ -20,16 +21,49 @@ class Command(BaseCommand):
 
     def save_contact(self, row, ligne):
         try:
-            Contact.objects.update_or_create(
-                email=row["Mail"],
+            # Contact pour structure
+            parts = row["Structure"].split("/")
+            niveau1 = ""
+            niveau2 = ""
+
+            if row["Structure"].startswith("AC/DAC/DGAL"):
+                niveau1 = "/".join(parts[:3])
+                niveau2 = "/".join(parts[3:])
+            elif row["Structure"].startswith(("SD/DRAAF", "SD/DAAF", "DDI/DDPP")):
+                niveau1 = "/".join(parts[:2])
+                niveau2 = parts[2]
+
+            if not niveau1:
+                return
+
+            structure, _ = Structure.objects.get_or_create(
+                niveau1=niveau1, niveau2=niveau2, defaults={"libelle": niveau2}
+            )
+
+            Contact.objects.get_or_create(structure=structure)
+
+            # Contact pour agent
+            User = get_user_model()
+            user, _ = User.objects.update_or_create(username=row["Mail"], is_active=False)
+
+            agent, _ = Agent.objects.update_or_create(
+                user=user,
                 defaults={
-                    "structure": row["Structure"],
+                    "structure": structure,
+                    "structure_complete": row["Structure"],
                     "prenom": row["Prénom"],
                     "nom": row["Nom"],
                     "fonction_hierarchique": row.get("Fonction_hiérarchique", ""),
                     "complement_fonction": row.get("Complément_fonction", ""),
                     "telephone": row.get("Téléphone", ""),
                     "mobile": row.get("Mobile", ""),
+                },
+            )
+
+            Contact.objects.update_or_create(
+                agent=agent,
+                defaults={
+                    "email": row["Mail"],
                 },
             )
         except DataError as e:
