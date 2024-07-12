@@ -1,7 +1,8 @@
 {
 	"env": {
 	  "ALLOWED_HOSTS": {
-		"generator": "url"
+		"generator": "template",
+		"template": "%APP_HOSTNAME%"
 	  },
 	  "OIDC_RP_CLIENT_ID": {
 		"value": "private"
