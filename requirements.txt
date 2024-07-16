@@ -49,6 +49,8 @@ djhtml==3.0.6
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
+faker==26.0.0
+    # via -r requirements.in
 filelock==3.13.4
     # via virtualenv
 greenlet==3.0.3
@@ -113,7 +115,9 @@ pytest-playwright==0.4.4
 pytest-xdist==3.5.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
-    # via botocore
+    # via
+    #   botocore
+    #   faker
 python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1

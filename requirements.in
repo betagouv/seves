@@ -16,3 +16,4 @@ sentry-sdk[django]
 django-storages[s3]
 mozilla-django-oidc
 django-filter
+faker
