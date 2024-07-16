@@ -76,7 +76,7 @@ class FicheDetectionSearchForm(forms.Form, DSFRForm):
 class FicheDetectionListView(ListView):
     model = FicheDetection
     ordering = ["-numero"]
-    paginate_by = 10
+    paginate_by = 100
 
     def get_queryset(self):
         # Pour chaque fiche de détection, on récupère la liste des lieux associés
