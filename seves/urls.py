@@ -19,6 +19,7 @@ from mozilla_django_oidc.urls import OIDCCallbackClass
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
+from django.conf import settings
 
 # Personnalisation du titre et de l'en-tête de l'interface d'administration
 admin.site.site_header = "Administration de Sèves"
@@ -33,3 +34,7 @@ urlpatterns = [
     path("core/", include("core.urls"), name="core"),
     path("oidc/", include("mozilla_django_oidc.urls")),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))

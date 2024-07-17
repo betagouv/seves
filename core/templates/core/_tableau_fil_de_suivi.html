@@ -5,10 +5,16 @@
                 Date
             </th>
             <th scope="col">
+                De
+            </th>
+            <th scope="col">
+                Destinataires
+            </th>
+            <th scope="col">
                 Contenu
             </th>
             <th scope="col">
-                Pièce jointe
+                Documents joints
             </th>
             <th scope="col">
                 Type
@@ -20,6 +26,19 @@
             <tr id="table-sm-row-key-1" data-row-key="1">
                 <td>
                     <a href="{% url 'message-view' message.pk  %}">{{ message.date_creation }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'message-view' message.pk  %}">{{ message.sender.agent.structure }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'message-view' message.pk  %}">
+                        {% if message.recipients.all|length == 1 %}
+                            <p class="fr-tag">{{ message.recipients.all.0 }}</p>
+                        {%  else %}
+                            <p class="fr-tag">{{ message.recipients.all.0 }} et {{ message.recipients.all|length|add:"-1" }} autres</p>
+
+                        {%  endif %}
+                    </a>
                 </td>
                 <td>
                     <a href="{% url 'message-view' message.pk  %}">{{ message.title|truncatechars:100 }}</a>

@@ -2,10 +2,12 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.contrib.auth.models import User
 from django.db.models import Q
 
-from .managers import DocumentQueryset
+from django.contrib.auth import get_user_model
+from .managers import DocumentQueryset, ContactQueryset
+
+User = get_user_model()
 
 
 class Agent(models.Model):
@@ -29,6 +31,10 @@ class Agent(models.Model):
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"
+
+    @property
+    def name_with_structure(self):
+        return f"{self.structure} [{self.nom} {self.prenom}]"
 
 
 class Structure(models.Model):
@@ -63,8 +69,16 @@ class Contact(models.Model):
     agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True)
     email = models.EmailField()
 
+    objects = ContactQueryset.as_manager()
+
     def __str__(self):
         return str(self.structure) if self.structure else str(self.agent)
+
+    @property
+    def display_with_agent_unit(self):
+        return (
+            str(self.structure) if self.structure else f"{self.agent.nom} {self.agent.prenom} ({self.agent.structure})"
+        )
 
 
 class Document(models.Model):
@@ -103,6 +117,10 @@ class Message(models.Model):
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+
+    sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages")
+    recipients = models.ManyToManyField(Contact, related_name="messages_recipient")
+    recipients_copy = models.ManyToManyField(Contact, related_name="messages_recipient_copy")
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from django.contrib.auth import get_user_model
 
+from core.models import Agent, Structure, Contact
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 from model_bakery import baker
@@ -25,14 +26,18 @@ def set_django_allow_async_unsafe():
 
 
 @pytest.fixture(autouse=True)
-def mocked_authentification():
+def mocked_authentification_user():
+    user = baker.make(get_user_model(), email="test@example.com")
+    structure = baker.make(Structure, niveau2="Structure Test", libelle="Structure Test")
+    agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")
+    Contact.objects.create(agent=agent, email="text@example.com")
+
     def mocked(self, request):
-        user = baker.make(get_user_model())
         request.user = user
         return self.get_response(request)
 
     with patch("seves.middlewares.LoginRequiredMiddleware.__call__", mocked):
-        yield
+        yield user
 
 
 @pytest.fixture

@@ -34,11 +34,14 @@ dj-static==0.0.6
 django==5.0.3
     # via
     #   -r requirements.in
+    #   django-debug-toolbar
     #   django-filter
     #   django-storages
     #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
+django-debug-toolbar==4.4.6
+    # via -r requirements.in
 django-environ==0.11.2
     # via -r requirements.in
 django-filter==24.2
@@ -135,7 +138,9 @@ sentry-sdk[django]==2.5.1
 six==1.16.0
     # via python-dateutil
 sqlparse==0.4.4
-    # via django
+    # via
+    #   django
+    #   django-debug-toolbar
 static3==0.7.0
     # via dj-static
 text-unidecode==1.3

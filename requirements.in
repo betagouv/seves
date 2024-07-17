@@ -17,3 +17,4 @@ django-storages[s3]
 mozilla-django-oidc
 django-filter
 faker
+django-debug-toolbar

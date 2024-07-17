@@ -75,3 +75,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const choicesRecipients = new Choices(document.getElementById('id_recipients'), {
+        removeItemButton: true,
+        classNames: {containerInner: 'fr-select'}
+    });
+    const choicesCopy = new Choices(document.getElementById('id_recipients_copy'), {
+        removeItemButton: true,
+        classNames: {containerInner: 'fr-select'}
+    });
+});

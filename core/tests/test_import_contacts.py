@@ -6,6 +6,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from core.models import Contact, Agent, Structure
 
 
+def _reset_contacts():
+    # Remove objects created by fixtures
+    Contact.objects.all().delete()
+    Agent.objects.all().delete()
+    Structure.objects.all().delete()
+
+
 @pytest.fixture
 def mock_csv_data(tmp_path):
     """Fixture pour les données CSV de test"""
@@ -21,6 +28,7 @@ SD/DAAF/DAAF973/SG;Prestataire;TEMPORAIRE;inconnu;;;;"""
 @pytest.mark.django_db
 def test_import_contacts(mock_csv_data):
     """Test du processus complet d'importation des contacts"""
+    _reset_contacts()
     out = StringIO()
     call_command("import_contacts", mock_csv_data, stdout=out)
     output = out.getvalue()
@@ -74,6 +82,7 @@ def test_data_integrity(mock_csv_data):
 @pytest.mark.django_db
 def test_ignore_unknown_email(mock_csv_data):
     """Test pour s'assurer que les lignes avec un email 'inconnu' sont ignorées"""
+    _reset_contacts()
     call_command("import_contacts", mock_csv_data)
     assert Contact.objects.filter(agent__isnull=False).count() == 2
     with pytest.raises(ObjectDoesNotExist):
