@@ -50,16 +50,16 @@
 
                             {% if user.is_authenticated %}
                                 <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-777"><span class="fr-icon-account-circle-line"></span>{{ user.email }}</button>
-                            <div class="fr-collapse fr-menu" id="menu-777">
-                                <ul class="fr-menu__list">
-                                    <li>
-                                        <form action="{% url 'oidc_logout' %}" method="post">
-                                {% csrf_token %}
-                                <input type="submit" value="Se déconnecter" class="fr-nav__link">
-                              </form>
-                                    </li>
-                                </ul>
-                            </div>
+                                <div class="fr-collapse fr-menu" id="menu-777">
+                                    <ul class="fr-menu__list">
+                                        <li>
+                                            <form action="{% url 'oidc_logout' %}" method="post">
+                                                {% csrf_token %}
+                                                <input type="submit" value="Se déconnecter" class="fr-nav__link">
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             {% endif %}
                         </li>
                     </ul>

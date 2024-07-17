@@ -26,7 +26,7 @@ jobs:
       - name: Run ruff format
         run: ruff format --check .
       - name: Run DjHTML
-        run: find -name *.html -not -path "./venv/*" | xargs djhtml
+        run: ./bin/check_html_format.sh
       - name: Run tests
         run: pytest
         env:
