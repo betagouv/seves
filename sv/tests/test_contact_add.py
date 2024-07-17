@@ -33,7 +33,7 @@ def test_add_contact_form(live_server, page, fiche_detection):
 
     expect(page.get_by_role("link", name="Retour à la fiche")).to_be_visible()
     expect(page.get_by_role("heading", name="Ajouter un agent")).to_be_visible()
-    expect(page.get_by_text("Structure")).to_be_visible()
+    expect(page.get_by_text("Structure", exact=True)).to_be_visible()
     expect(page.get_by_text("Choisir dans la listeChoisir")).to_be_visible()
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
@@ -51,6 +51,9 @@ def test_add_contact_form_back_to_fiche(live_server, page, fiche_detection):
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_structure_list(client):
     """Test que la liste des structures soit bien dans le contexte du formulaire d'ajout de contact"""
+    Contact.objects.all().delete()
+    Agent.objects.all().delete()
+    Structure.objects.all().delete()
     baker.make(Structure, _quantity=3)
     url = reverse("contact-add-form")
     response = client.get(url)

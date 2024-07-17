@@ -9,10 +9,31 @@
         <h1 class="fr-mt-2w">{{ message.title }}</h1>
         <div class="fr-p-4w message-container">
             <div class="fr-mb-2w message-container-header">
-                <div>
-                    {# Sender info will come here#}
+                <div class="fr-container--fluid">
+                    <div class="fr-grid-row">
+                        <div class="fr-col-9">
+                            <p><span class="fr-text--bold">De : </span>{{ message.sender.agent.name_with_structure }}</p>
+                            <p><span class="fr-text--bold">A : </span>
+                                {% for recipient in message.recipients.all %}
+                                    {{ recipient.display_with_agent_unit }}
+                                {% endfor %}
+                            </p>
+                            {% if message.recipients_copy.all|length %}
+
+                                <p>
+                                    <span class="fr-text--bold">CC : </span>
+                                    {% for recipient in message.recipients_copy.all %}
+                                        {{ recipient.display_with_agent_unit }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="fr-col-3 message-container--date">
+                            {{ message.date_creation }}
+                        </div>
+                    </div>
+
                 </div>
-                <div>{{ message.date_creation }}</div>
             </div>
             <hr class="fr-hr-or">
 

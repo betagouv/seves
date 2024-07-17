@@ -145,7 +145,14 @@ class MessageCreateView(CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update({"obj": self.obj, "next": self.obj.get_absolute_url(), "message_type": Message.MESSAGE})
+        kwargs.update(
+            {
+                "obj": self.obj,
+                "next": self.obj.get_absolute_url(),
+                "message_type": Message.MESSAGE,
+                "sender": self.request.user,
+            }
+        )
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -157,10 +164,13 @@ class MessageCreateView(CreateView):
     def get_success_url(self):
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        message = form.instance
+    def _add_contacts_to_object(self, message):
+        for contact in message.recipients.all().union(message.recipients_copy.all()):
+            if contact not in self.obj.contacts.all():
+                self.obj.contacts.add(contact)
 
+    def _create_documents(self, form):
+        message = form.instance
         content_type = ContentType.objects.get_for_model(message)
         document_numbers = [
             s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
@@ -173,6 +183,11 @@ class MessageCreateView(CreateView):
                 content_type=content_type,
                 object_id=message.pk,
             )
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self._add_contacts_to_object(form.instance)
+        self._create_documents(form)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
 

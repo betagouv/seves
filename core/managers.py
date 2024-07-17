@@ -21,3 +21,8 @@ class DocumentQueryset(QuerySet):
         message_ids = fiche.messages.all().values_list("id", flat=True)
         message_type = ContentType.objects.get_for_model(Message)
         return self.filter(content_type=message_type, object_id__in=message_ids)
+
+
+class ContactQueryset(QuerySet):
+    def with_structure_and_agent(self):
+        return self.select_related("structure", "agent")

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
@@ -5,11 +6,14 @@ from core.models import Document, Contact, Message, Structure
 from django import forms
 from collections import defaultdict
 
+User = get_user_model()
+
 
 class DSFRForm(forms.BaseForm):
     input_to_class = defaultdict(lambda: "fr-input")
     input_to_class["ClearableFileInput"] = "fr-upload"
     input_to_class["Select"] = "fr-select"
+    input_to_class["SelectMultiple"] = "fr-select"
 
     def as_dsfr_div(self):
         return self.render("core/_dsfr_div.html")
@@ -119,12 +123,31 @@ class ContactSelectionForm(forms.Form):
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+    # Duplicate the field in order to show one which is disabled (not send via POST request) and hide the real one
+    displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}))
+    sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
+    recipients = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.with_structure_and_agent(), label="Destinataires"
+    )
+    recipients_copy = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.with_structure_and_agent(), label="En copie", required=False
+    )
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 4}))
 
     class Meta:
         model = Message
-        fields = ["message_type", "title", "content", "content_type", "object_id"]
+        fields = [
+            "displayed_sender",
+            "sender",
+            "recipients",
+            "recipients_copy",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+        ]
 
     def _add_files_inputs(self, data, files):
         document_types = {k: v for k, v in data.items() if k.startswith("document_type_")}
@@ -139,7 +162,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             document_field = forms.FileField(initial=documents[f"document_file_{document_number}"])
             self.fields[f"document_{document_number}"] = document_field
 
-    def __init__(self, *args, message_type, **kwargs):
+    def __init__(self, *args, message_type, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
@@ -147,9 +170,14 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
 
+        if self.is_bound:
+            self.fields.pop("displayed_sender")
+
         self.add_content_type_fields(obj)
         self.add_next_field(next_url)
         self.initial["message_type"] = message_type
+        self.initial["sender"] = sender.agent.contact_set.get()
+        self.initial["displayed_sender"] = sender.agent.name_with_structure
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):

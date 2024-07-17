@@ -31,12 +31,16 @@ class WithDocumentListInContextMixin:
 class WithMessagesListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["message_list"] = self.get_object().messages.all()
+        context["message_list"] = (
+            self.get_object()
+            .messages.all()
+            .prefetch_related("recipients__structure", "recipients__agent", "recipients_copy", "sender__agent")
+        )
         return context
 
 
 class WithContactListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["contacts"] = self.get_object().contacts.all()
+        context["contacts"] = self.get_object().contacts.prefetch_related("agent__structure")
         return context

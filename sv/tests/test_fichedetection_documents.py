@@ -1,10 +1,11 @@
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-
+import pytest
 from core.models import Document
 from ..models import FicheDetection
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_test_id("documents").click()
@@ -19,7 +20,6 @@ def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_dete
     page.locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
 
-    page.wait_for_timeout(200)
     assert fiche_detection.documents.count() == 1
     document = fiche_detection.documents.get()
 
@@ -32,6 +32,7 @@ def test_can_add_document_to_fiche_detection(live_server, page: Page, fiche_dete
     expect(page.get_by_text("Name of the document", exact=True)).to_be_visible()
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
     document = baker.make(Document, nom="Test document", _create_files=True)
     fiche_detection.documents.set([document])
@@ -55,6 +56,7 @@ def test_can_see_and_delete_document_on_fiche_detection(live_server, page: Page,
     expect(page.get_by_text("Document supprimé")).to_be_visible()
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
     document = baker.make(Document, nom="Test document", description="My description", _create_files=True)
     fiche_detection.documents.set([document])
@@ -82,6 +84,7 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_det
     expect(page.get_by_text("New name", exact=True)).to_be_visible()
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_filter_documents_on_fiche_detection(live_server, page: Page, fiche_detection: FicheDetection):
     document_1 = baker.make(Document, nom="Test document", document_type="autre", _create_files=True)
     document_2 = baker.make(Document, nom="Cartographie", document_type="cartographie", _create_files=True)
