@@ -73,12 +73,14 @@
             {% if messages %}
                 <div class="alert-container">
                     {% for message in messages %}
-                        <div class="fr-alert fr-alert--{{ message.tags }}">
-                            <h3 class="fr-alert__title">{{message}}</h3>
-                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                Masquer le message
-                            </button>
-                        </div>
+                        {% if "core" not in message.extra_tags %}
+                            <div class="fr-alert fr-alert--{{ message.level_tag }}">
+                                <h3 class="fr-alert__title">{{message}}</h3>
+                                <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                    Masquer le message
+                                </button>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             {% endif %}

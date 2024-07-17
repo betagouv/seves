@@ -22,10 +22,4 @@ document.addEventListener('DOMContentLoaded', function() {
     detailElement.classList.remove(hiddenClass);
     syntheseElement.classList.add(hiddenClass);
 
-    if(window.location.hash && window.location.hash === "#documents") {
-        document.getElementById("tabpanel-404").setAttribute("aria-selected", false);
-        document.getElementById("tabpanel-405").setAttribute("aria-selected", false);
-        document.getElementById("tabpanel-406").setAttribute("aria-selected", true);
-
-    }
 });
