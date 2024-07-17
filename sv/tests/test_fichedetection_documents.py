@@ -72,7 +72,7 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_det
     page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("")
     page.get_by_test_id(f"documents-edit-{document.pk}").click()
 
-    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}")
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}#tabpanel-documents-panel")
 
     document = fiche_detection.documents.get()
     assert document.nom == "New name"
@@ -87,7 +87,7 @@ def test_can_filter_documents_on_fiche_detection(live_server, page: Page, fiche_
     document_2 = baker.make(Document, nom="Cartographie", document_type="cartographie", _create_files=True)
     fiche_detection.documents.set([document_1, document_2])
 
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}#documents")
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}#tabpanel-documents-panel")
 
     expect(page.get_by_role("heading", name="Test document")).to_be_visible()
     expect(page.get_by_role("heading", name="Cartographie")).to_be_visible()
@@ -95,7 +95,7 @@ def test_can_filter_documents_on_fiche_detection(live_server, page: Page, fiche_
     page.locator(".documents__filters #id_document_type").select_option("autre")
     page.get_by_test_id("documents-filter").click()
 
-    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}?document_type=autre#documents")
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}?document_type=autre#tabpanel-documents-panel")
 
     expect(page.get_by_role("heading", name="Test document")).to_be_visible()
     expect(page.get_by_role("heading", name="Cartographie")).not_to_be_visible()

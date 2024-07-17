@@ -15,7 +15,7 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
-    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}")
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}#tabpanel-messages-panel")
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
     assert page.text_content(cell_selector) == "Title of the message"
@@ -61,7 +61,7 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fic
     expect(page.get_by_text("requirements.in", exact=True)).not_to_be_visible()
 
     page.get_by_test_id("fildesuivi-add-submit").click()
-    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}")
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}#tabpanel-messages-panel")
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
     assert page.text_content(cell_selector) == "Title of the message"

@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.generic import DetailView
@@ -14,7 +12,6 @@ from .forms import (
     ContactSelectionForm,
 )
 from django.http import HttpResponseRedirect
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import ngettext
 
 
@@ -26,24 +23,15 @@ from django.contrib.contenttypes.models import ContentType
 class DocumentUploadView(FormView):
     form_class = DocumentUploadForm
 
-    def _get_redirect(self):
-        if url_has_allowed_host_and_scheme(
-            url=self.request.POST.get("next"),
-            allowed_hosts={self.request.get_host()},
-            require_https=self.request.is_secure(),
-        ):
-            return HttpResponseRedirect(self.request.POST.get("next"))
-        return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
-
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "Le document a été ajouté avec succès.")
-            return self._get_redirect()
+            messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
+            return HttpResponseRedirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
         messages.error(request, "Une erreur s'est produite lors de l'ajout du document")
-        return self._get_redirect()
+        return HttpResponseRedirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
 
 class DocumentDeleteView(View):
@@ -51,18 +39,22 @@ class DocumentDeleteView(View):
         document = get_object_or_404(Document, pk=kwargs.get("pk"))
         document.is_deleted = True
         document.save()
-        messages.success(request, "Le document a été marqué comme supprimé.")
-        return HttpResponseRedirect(request.POST.get("next"))
+        messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
+        return HttpResponseRedirect(request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentUpdateView(SuccessMessageMixin, UpdateView):
+class DocumentUpdateView(UpdateView):
     model = Document
-    success_message = "Le document a bien été mis à jour."
     form_class = DocumentEditForm
     http_method_names = ["post"]
 
     def get_success_url(self):
-        return self.request.POST.get("next")
+        return self.request.POST.get("next") + "#tabpanel-documents-panel"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Le document a bien été mis à jour.", extra_tags="core documents")
+        return response
 
 
 class ContactAddFormView(FormView):
@@ -118,9 +110,9 @@ class ContactSelectionView(FormView):
         message = ngettext(
             "Le contact a été ajouté avec succès.", "Les %(count)d contacts ont été ajoutés avec succès.", len(contacts)
         ) % {"count": len(contacts)}
-        messages.success(self.request, message)
+        messages.success(self.request, message, extra_tags="core contacts")
 
-        redirect_url = self.request.POST.get("next")
+        redirect_url = self.request.POST.get("next") + "#tabpanel-contacts-panel"
         return HttpResponseRedirect(redirect_url)
 
     def form_invalid(self, form):
@@ -142,10 +134,9 @@ class ContactSelectionView(FormView):
         )
 
 
-class MessageCreateView(SuccessMessageMixin, CreateView):
+class MessageCreateView(CreateView):
     model = Message
     form_class = MessageForm
-    success_message = "Le message a bien été ajouté."
 
     def dispatch(self, request, *args, **kwargs):
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
@@ -164,7 +155,7 @@ class MessageCreateView(SuccessMessageMixin, CreateView):
         return context
 
     def get_success_url(self):
-        return self.obj.get_absolute_url()
+        return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -182,6 +173,7 @@ class MessageCreateView(SuccessMessageMixin, CreateView):
                 content_type=content_type,
                 object_id=message.pk,
             )
+        messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
 
 
