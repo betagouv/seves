@@ -19,6 +19,11 @@ body{
 .form-search__field {
     flex: 1;
 }
+.choices__list--single{
+    overflow: hidden;
+  max-height: 1.5rem;
+}
+
 
 .fiches__list-container {
     margin: 2rem;

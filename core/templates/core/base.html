@@ -19,6 +19,7 @@
         <link rel="stylesheet" href="{% static 'core/bloc_commun.css' %}">
         <link rel="stylesheet" href="{% static 'core/message.css' %}">
         <link rel="stylesheet" href="{% static 'core/fil_de_suivi.css' %}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
         {% block extrahead %}{% endblock %}
     </head>
 
@@ -89,6 +90,7 @@
 
             <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
             <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
+            <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
             {% block scripts %}{% endblock %}
         </body>
 

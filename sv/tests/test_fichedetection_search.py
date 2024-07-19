@@ -7,6 +7,12 @@ from django.utils.timezone import make_aware
 from ..models import Region, OrganismeNuisible, Etat, FicheDetection, NumeroFiche, Departement, Lieu
 
 
+def _pick_organisme(page, organisme_name):
+    page.query_selector(".choices__list--single").click()
+    page.locator("*:focus").fill(organisme_name)
+    page.get_by_role("option", name=organisme_name).click()
+
+
 def get_fiche_detection_search_form_url() -> str:
     return reverse("fiche-detection-list")
 
@@ -23,8 +29,8 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_label("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_contain_text("---------")
     expect(page.get_by_text("Organisme", exact=True)).to_be_visible()
-    expect(page.get_by_label("Organisme")).to_be_visible()
-    expect(page.get_by_label("Organisme")).to_contain_text("---------")
+    expect(page.locator(".choices__list--single .choices__placeholder")).to_be_visible()
+    expect(page.locator(".choices__list--single .choices__placeholder")).to_contain_text("---------")
     expect(page.get_by_text("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_empty()
@@ -47,7 +53,7 @@ def test_clear_button_clears_form(live_server, page: Page) -> None:
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
     page.get_by_label("Région").select_option(index=1)
-    page.get_by_label("Organisme").select_option(index=1)
+    _pick_organisme(page, OrganismeNuisible.objects.first().libelle_court)
     page.get_by_label("Période du").fill("2024-06-19")
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_label("État").select_option(index=1)
@@ -119,8 +125,13 @@ def test_search_with_organisme_nuisible(live_server, page: Page) -> None:
     baker.make(FicheDetection, organisme_nuisible=organisme2, etat=baker.make(Etat))
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Organisme").select_option(str(organisme1.id))
+    _pick_organisme(page, organisme1.libelle_court)
     page.get_by_role("button", name="Rechercher").click()
+
+    assert (
+        page.url
+        == f"{live_server.url}{reverse('fiche-detection-list')}?numero=&region=&organisme_nuisible={organisme1.id}&date_debut=&date_fin=&etat="
+    )
 
     expect(page.get_by_role("cell", name=organisme1.libelle_court)).to_be_visible()
     expect(page.get_by_role("cell", name=organisme2.libelle_court)).not_to_be_visible()
@@ -181,7 +192,7 @@ def test_search_with_multiple_filters(live_server, page: Page) -> None:
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Région").select_option(str(lieu.departement.region.id))
-    page.get_by_label("Organisme").select_option(str(fiche1.organisme_nuisible.id))
+    _pick_organisme(page, fiche1.organisme_nuisible.libelle_court)
     page.get_by_label("Période du").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("Au").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("État").select_option(str(fiche1.etat.id))

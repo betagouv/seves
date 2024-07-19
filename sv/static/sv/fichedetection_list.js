@@ -8,4 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
         this.elements['date_fin'].value = '';
         this.elements['etat'].value = '';
     });
+
+    const choices = new Choices(document.getElementById('id_organisme_nuisible'), {
+        classNames: {
+            containerInner: 'fr-select',
+        }
+    });
 });
