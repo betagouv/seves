@@ -120,17 +120,7 @@ main{
 /* Bloc synthèse */
 .fiche-synthese {
     background-color: var(--fiche-detail-bloc-background-color);
-    padding: var(--fiche-detail-bloc-padding);
-}
-.fiche-synthese__field {
-    display: flex;
-    justify-content: space-between;
 }
 .fiche-synthese__label{
-    flex: 0.2;
     font-weight: var(--field-label-font-weight);
-}
-.fiche-synthese__value {
-    flex: 1;
-    text-align: left;
 }

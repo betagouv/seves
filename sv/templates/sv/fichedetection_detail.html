@@ -166,49 +166,8 @@
                 </div>
             </div>
         </div>
+        {% include "sv/_fichedetection_synthese.html" %}
 
-        <div class="fiche-synthese">
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Créateur</p>
-                <p class="fiche-synthese__value">{{ fichedetection.createur }}</p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Date 1er signalement</p>
-                <p class="fiche-synthese__value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Organisme nuisible</p>
-                <p class="fiche-synthese__value">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Commune</p>
-                <p class="fiche-synthese__value">
-                    {% if lieux_initiaux %}
-                        {{ lieux_initiaux.0.commune }}
-                    {% else %}
-                        nc.
-                    {% endif %}
-                </p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Région</p>
-                <p class="fiche-synthese__value">
-                    {% if lieux_initiaux %}
-                        {{ lieux_initiaux.0.region.nom }}
-                    {% else %}
-                        nc.
-                    {% endif %}
-                </p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Mesure de gestion</p>
-                <p class="fiche-synthese__value">???</p>
-            </div>
-            <div class="fiche-synthese__field">
-                <p class="fiche-synthese__label">Mesures conservatoires</p>
-                <p class="fiche-synthese__value">{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
-            </div>
-        </div>
         {% include "core/_fiche_bloc_commun.html" with redirect_url=fichedetection.get_absolute_url fiche=fichedetection pk=fichedetection.pk content_type_id=fichedetection.get_content_type_id %}
     </main>
 
