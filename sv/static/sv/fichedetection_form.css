@@ -105,10 +105,6 @@ main {
 #organisme-nuisible .choices {
     flex: 1.42;
 }
-#organisme-nuisible .fr-select {
-	/* supprime la flèche située à droite dans le select car déjà présente via choices.js */
-    background-image: none;
-}
 
 
 /* Lieux */

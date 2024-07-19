@@ -55,7 +55,7 @@ class FicheDetectionSearchForm(forms.Form, DSFRForm):
     )
     region = forms.ModelChoiceField(label="Région", queryset=Region.objects.all(), required=False)
     organisme_nuisible = forms.ModelChoiceField(
-        label="Organisme", queryset=OrganismeNuisible.objects.all(), required=False
+        label="Organisme", queryset=OrganismeNuisible.objects.none(), required=False
     )
     date_debut = forms.DateField(label="Période du", widget=forms.DateInput(attrs={"type": "date"}), required=False)
     date_fin = forms.DateField(label="Au", widget=forms.DateInput(attrs={"type": "date"}), required=False)
@@ -71,6 +71,10 @@ class FicheDetectionSearchForm(forms.Form, DSFRForm):
             except ValueError:
                 raise forms.ValidationError("Format 'numero' invalide. Il devrait être 'annee.numero'")
         return numero
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["organisme_nuisible"].queryset = OrganismeNuisible.objects.all()
 
 
 class FicheDetectionListView(ListView):

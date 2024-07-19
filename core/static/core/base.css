@@ -25,3 +25,10 @@ header{
 .menu__item--active {
     border-bottom: 4px solid var(--background-active-blue-france);
 }
+.choices .fr-select {
+	/* Make sure we never have 2 down arrows (1 via choices js, 1 via DSFR) for select inputs that uses choices js*/
+    background-image: none;
+}
+.choices__list--dropdown{
+    z-index: 10 !important;
+}
