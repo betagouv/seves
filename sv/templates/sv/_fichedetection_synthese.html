@@ -2,36 +2,46 @@
     <div class="fr-grid-row">
         <div class="fr-col-3">
             <div class="fr-grid-row">
-                <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Créateur</div>
-                <div class="fr-col-7">{{ fichedetection.createur }}</div>
+                <div class="fr-col-6 fiche-synthese__label fr-pb-1w">Créateur</div>
+                <div class="fr-col-6">{{ fichedetection.createur }}</div>
             </div>
             <div class="fr-grid-row">
-                <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Date 1er signalement</div>
-                <div class="fr-col-7">{{ fichedetection.date_premier_signalement|default:"nc." }}</div>
+                <div class="fr-col-6 fiche-synthese__label fr-pb-1w">Date 1er signalement</div>
+                <div class="fr-col-6">{{ fichedetection.date_premier_signalement|default:"nc." }}</div>
             </div>
 
             <div class="fr-grid-row">
-                <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Organisme nuisible</div>
-                <div class="fr-col-7">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</div>
+                <div class="fr-col-6 fiche-synthese__label fr-pb-1w">Organisme nuisible</div>
+                <div class="fr-col-6">{{ fichedetection.organisme_nuisible.libelle_court|default:"nc." }}</div>
             </div>
         </div>
         <div class="fr-col-3">
             <div class="fr-grid-row">
                 <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Commune</div>
-                <div class="fr-col-7">                    {% if lieux_initiaux %}
-                    {{ lieux_initiaux.0.commune }}
-                {% else %}
-                    nc.
-                {% endif %}</div>
+                <div class="fr-col-7">
+                    {% with lieux|length as lieux_count %}
+                        {% if lieux_count == 0 %}
+                            nc.
+                        {% else %}
+                            {{ lieux.0.commune }} <span aria-describedby="tooltip-2989">+{{ lieux_count|add:"-1" }}</span>
+                            <span class="fr-tooltip fr-placement" id="tooltip-2989" role="tooltip" aria-hidden="true">
+                                {% for lieu in lieux|slice:"1:" %}
+                                    {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                    {% endwith %}
+                </div>
             </div>
 
             <div class="fr-grid-row">
                 <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Région</div>
-                <div class="fr-col-7">                   {% if lieux_initiaux %}
-                    {{ lieux_initiaux.0.region.nom }}
-                {% else %}
-                    nc.
-                {% endif %}</div>
+                <div class="fr-col-7">
+                    {% if lieux %}
+                        {{ lieux.0.departement.region.nom }}
+                    {% else %}
+                        nc.
+                    {% endif %}</div>
             </div>
         </div>
         <div class="fr-col-6">

@@ -145,7 +145,7 @@ class FicheDetectionDetailView(
         context = super().get_context_data(**kwargs)
 
         # Ajout des lieux associés à la fiche de détection
-        context["lieux"] = Lieu.objects.filter(fiche_detection=self.get_object())
+        context["lieux"] = Lieu.objects.filter(fiche_detection=self.get_object()).order_by("id")
 
         # Ajout des prélèvements associés à chaque lieu
         context["prelevements"] = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
