@@ -65,8 +65,8 @@ class Contact(models.Model):
             ),
         ]
 
-    structure = models.ForeignKey(Structure, on_delete=models.RESTRICT, null=True)
-    agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True)
+    structure = models.ForeignKey(Structure, on_delete=models.RESTRICT, null=True, blank=True)
+    agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True, blank=True)
     email = models.EmailField()
 
     objects = ContactQueryset.as_manager()
