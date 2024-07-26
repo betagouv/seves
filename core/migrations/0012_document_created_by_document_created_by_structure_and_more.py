@@ -2,23 +2,34 @@
 
 import django.db.models.deletion
 from django.conf import settings
-from django.db import migrations, models, IntegrityError
-from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import migrations, models
 
 
 def add_user(apps, schema_editor):
     Document = apps.get_model("core", "Document")
     Structure = apps.get_model("core", "Structure")
-    User = get_user_model()
+    Agent = apps.get_model("core", "Agent")
+    User = apps.get_model(*settings.AUTH_USER_MODEL.split("."))
+
     try:
-        with transaction.atomic():
-            user = User.objects.create_user(username="service_account", email="service_account@seves.com")
-    except IntegrityError:
-        user = User.objects.get(username="service_account")
+        user = User.objects.get(email="service_account@seves.com")
+    except User.DoesNotExist:
+        user = User.objects.create_user(username="service_account", email="service_account@seves.com")
+
+    try:
+        structure = Structure.objects.get(niveau1="service_account")
+    except Structure.DoesNotExist:
+        structure = Structure.objects.create(niveau1="service_account")
+
+    try:
+        agent = Agent.objects.get(user=user)
+    except Agent.DoesNotExist:
+        agent = Agent.objects.create(
+            user=user, prenom="Service", nom="Account", structure_complete="Service account", structure=structure
+        )
 
     structure, _ = Structure.objects.get_or_create(niveau1="service_account")
-    Document.objects.update(created_by=user, created_by_structure=structure)
+    Document.objects.update(created_by=agent, created_by_structure=structure)
 
 
 class Migration(migrations.Migration):
