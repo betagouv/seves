@@ -1,5 +1,8 @@
+from model_bakery import baker
 from playwright.sync_api import Page, expect
 import pytest
+
+from core.models import Structure
 from ..models import FicheDetection
 from django.contrib.auth import get_user_model
 
@@ -96,7 +99,7 @@ def test_can_edit_document_on_fiche_detection(
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_can_filter_documents_on_fiche_detection(
+def test_can_filter_documents_by_type_on_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, document_recipe
 ):
     document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
@@ -111,7 +114,42 @@ def test_can_filter_documents_on_fiche_detection(
     page.locator(".documents__filters #id_document_type").select_option("autre")
     page.get_by_test_id("documents-filter").click()
 
-    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}?document_type=autre#tabpanel-documents-panel")
+    assert (
+        page.url
+        == f"{live_server.url}{fiche_detection.get_absolute_url()}?document_type=autre&created_by_structure=#tabpanel-documents-panel"
+    )
+
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+    expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_can_filter_documents_by_unit_on_fiche_detection(
+    live_server, page: Page, fiche_detection: FicheDetection, document_recipe
+):
+    document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
+    other_structure = baker.make(Structure)
+    document_2 = document_recipe().make(
+        nom="Ma carto", document_type="cartographie", description="", created_by_structure=other_structure
+    )
+    _structure_with_no_document = baker.make(Structure, libelle="Should not be in the list")
+    fiche_detection.documents.set([document_1, document_2])
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}#tabpanel-documents-panel")
+
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+    expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
+
+    assert page.locator(".documents__filters #id_created_by_structure").all_inner_texts() == [
+        "\n".join(["---------", "Structure Test"])
+    ]
+    page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
+    page.get_by_test_id("documents-filter").click()
+
+    assert (
+        page.url
+        == f"{live_server.url}{fiche_detection.get_absolute_url()}?document_type=&created_by_structure={document_1.created_by_structure.id}#tabpanel-documents-panel"
+    )
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()

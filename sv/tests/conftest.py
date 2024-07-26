@@ -95,7 +95,7 @@ def document_recipe(fiche_detection_bakery):
         fiche = fiche_detection_bakery()
         content_type = ContentType.objects.get_for_model(fiche)
         agent_recipe = Recipe(Agent)
-        structure_recipe = Recipe(Structure)
+        structure_recipe = Recipe(Structure, libelle="Structure Test")
         return Recipe(
             Document,
             created_by=foreign_key(agent_recipe),
