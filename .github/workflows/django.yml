@@ -21,6 +21,11 @@ jobs:
           python-version: 3.11.1
       - name: Install dependencies
         run: pip install pip-tools && pip-sync && playwright install
+      - name: Check no missing migrations
+        run: python manage.py makemigrations --check --dry-run >  /dev/null
+        env:
+          SECRET_KEY: NOT_A_REAL_SECRET
+          DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
       - name: Run ruff
         run: ruff check .
       - name: Run ruff format
