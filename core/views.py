@@ -71,6 +71,7 @@ class ContactAddFormView(FormView):
         initial["fiche_id"] = self.request.GET.get("fiche_id")
         initial["next"] = self.request.GET.get("next")
         initial["content_type_id"] = self.request.GET.get("content_type_id")
+        initial["structure"] = self.request.user.agent.structure
         return initial
 
     def form_valid(self, form):
