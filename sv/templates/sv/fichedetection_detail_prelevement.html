@@ -1,0 +1,75 @@
+<dialog aria-labelledby="fr-modal-title-modal-{{prelevement_index}}" role="dialog" id="fr-modal-prelevement-{{prelevement_index}}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-prelevement-{{prelevement_index}}">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <div class="fr-grid-row fr-grid-row--center fr-mb-4w">
+                            <h1 id="fr-modal-title-modal-{{prelevement_index}}">Échantillon {{prelevement.numero_echantillon}}</h1>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--type">Type de prélèvement</div>
+                            <div class="fr-col-6 {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}" data-testid="prelevement-{{prelevement_index}}-type">Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--structure">Structure</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-structure-preleveur">{{prelevement.structure_preleveur|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--numero-echantillon">Numéro d'échantillon</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-echantillon">{{prelevement.numero_echantillon|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--date-prelevement">Date de prélèvement</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-prelevement">{{prelevement.date_prelevement|date:"d/m/Y"|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--site-inspection">Site d'inspection</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-site-inspection">{{prelevement.site_inspection|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--matrice-prelevee">Matrice prélevée</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-matrice-prelevee">{{prelevement.matrice_prelevee|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--espece-echantillon">Espèce de l'échantillon</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-espece-echantillon">{{prelevement.espece_echantillon|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--code-oepp">Code OEPP</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-code-oepp">{{prelevement.espece_echantillon.code_oepp|default:"nc."}}</div>
+                        </div>
+                        {% if prelevement.is_officiel %}
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-1"></div>
+                                <div class="fr-col-5 detail-prelevement__label--numero-phytopass">Numéro Phytopass</div>
+                                <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-phytopass">{{prelevement.numero_phytopass|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-1"></div>
+                                <div class="fr-col-5 detail-prelevement__label--laboratoire-agree">Labo. agréé</div>
+                                <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire-agree">{{prelevement.laboratoire_agree|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-1"></div>
+                                <div class="fr-col-5 detail-prelevement__label--laboratoire-confirmation-officielle">Labo. de confirmation</div>
+                                <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire-confirmation-officielle">{{prelevement.laboratoire_confirmation_officielle|default:"nc."}}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

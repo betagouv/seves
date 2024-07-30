@@ -83,6 +83,15 @@ main{
 .lieu-initial {
     margin-bottom: 1rem;
 }
+.detail-lieu__label--adresse,
+.detail-lieu__label--commune,
+.detail-lieu__label--code-insee,
+.detail-lieu__label--departement,
+.detail-lieu__label--region,
+.detail-lieu__label--gps-lambert93,
+.detail-lieu__label--gps-wgs84 {
+    font-weight: bold;
+}
 
 
 /* Bloc Prélèvements */
@@ -93,6 +102,19 @@ main{
 .prelevement__type {
     font-weight: var(--field-label-font-weight);
     color: var(--text-title-blue-france);
+}
+.detail-prelevement__label--type,
+.detail-prelevement__label--structure,
+.detail-prelevement__label--numero-echantillon,
+.detail-prelevement__label--date-prelevement,
+.detail-prelevement__label--site-inspection,
+.detail-prelevement__label--matrice-prelevee,
+.detail-prelevement__label--espece-echantillon,
+.detail-prelevement__label--code-oepp,
+.detail-prelevement__label--numero-phytopass,
+.detail-prelevement__label--laboratoire-agree,
+.detail-prelevement__label--laboratoire-confirmation-officielle {
+    font-weight: bold;
 }
 
 
