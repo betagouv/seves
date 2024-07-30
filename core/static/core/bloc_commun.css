@@ -1,3 +1,9 @@
+.bloc-commun__panel--messages,
+.bloc-commun__panel--contacts,
+.bloc-commun__panel--documents {
+    min-height: 600px;
+}
+
 .bloc-commun-gestion .fr-tabs__tab:not([aria-selected="true"]){
     background-color: var(--background-contrast-grey);
     box-shadow: 0 2px 0 0 var(--background-open-blue-france);
