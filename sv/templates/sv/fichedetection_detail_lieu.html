@@ -1,0 +1,71 @@
+<dialog aria-labelledby="fr-modal-title-modal-{{lieu_index}}" role="dialog" id="fr-modal-lieu-{{lieu_index}}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-lieu-{{lieu_index}}">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <div class="fr-grid-row fr-grid-row--center fr-mb-4w">
+                            <h1 id="fr-modal-title-modal-{{lieu_index}}">{{lieu.nom}}</h1>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--adresse">Adresse ou lieu-dit</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse">{{lieu.adresse_lieu_dit|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--commune">Commune</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-commune">{{lieu.commune|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--code-insee">Code INSEE</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-insee">{{lieu.code_insee|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--departement">Département</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-departement">{{lieu.departement.nom|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--region">Région</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-region">{{lieu.departement.region.nom|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--gps-lambert93">Coord. Lambert 93</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-lambert93">
+                                {% if lieu.lambert93_latitude and lieu.lambert93_longitude %}
+                                    <div class="fr-grid-row">
+                                        <div class="fr-col-5" data-testid="lieu-{{lieu_index}}-lambert93-latitude">{{lieu.lambert93_latitude}}</div>
+                                        <div class="fr-col-7" data-testid="lieu-{{lieu_index}}-lambert93-longitude">{{lieu.lambert93_longitude}}</div>
+                                    </div>
+                                {% else %}
+                                    nc.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--gps-wgs84">Coord. WGS84</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-wgs84">
+                                {% if lieu.wgs84_latitude and lieu.wgs84_longitude %}
+                                    <div class="fr-grid-row">
+                                        <div class="fr-col-5" data-testid="lieu-{{lieu_index}}-wgs84-latitude">{{lieu.wgs84_latitude}}</div>
+                                        <div class="fr-col-7" data-testid="lieu-{{lieu_index}}-wgs84-longitude">{{lieu.wgs84_longitude}}</div>
+                                    </div>
+                                {% else %}
+                                    nc.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
