@@ -125,14 +125,17 @@
                                         {% if prelevement.numero_phytopass %}
                                             {{ prelevement.numero_phytopass }}<br>
                                         {% endif %}
-                                        {% if prelevement.laboratoire_agree %}
-                                            {{ prelevement.laboratoire_agree.numero_agrement }}<br>
-                                        {% endif %}
                                         {% if prelevement.espece_echantillon %}
                                             {{ prelevement.espece_echantillon }}<br>
                                         {% endif %}
+                                        {% if prelevement.laboratoire_agree %}
+                                            {{ prelevement.laboratoire_agree }} |
+                                        {% endif %}
+                                        {% if prelevement.date_prelevement %}
+                                            {{ prelevement.date_prelevement|date:"d/m/Y" }}
+                                        {% endif %}
                                     </p>
-                                    <p class="fr-card__desc prelevement__type">Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}</p>
+                                    <p class="fr-card__desc prelevement__type {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}">Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}</p>
                                     <div class="fr-card__start">
                                         <p class="fr-card__detail fr-icon-road-map-line">{{ prelevement.lieu.nom }}</p>
                                     </div>
