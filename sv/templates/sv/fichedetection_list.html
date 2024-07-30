@@ -50,28 +50,50 @@
                 <tbody>
                     {% for fiche in fichedetection_list %}
                         <tr class="fiches__list-row">
-                            <td><a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}">{{ fiche.numero|default:"nc." }}</a></td>
-                            <td>{{ fiche.organisme_nuisible|default:"nc." }}</td>
-                            <td>{{ fiche.createur|truncatechars:30 }}</td>
                             <td>
-                                {% with fiche.lieux_list|length as num_lieux %}
-                                    {% if num_lieux == 0 %}
-                                        {{ fiche.lieux_list|default:"nc." }}
-                                    {% endif %}
-                                    {% if num_lieux <= 3 %}
-                                        {% for lieu in fiche.lieux_list %}
-                                            {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        {% for lieu in fiche.lieux_list|slice:":3" %}
-                                            {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                        ... +{{ num_lieux|add:"-3" }}
-                                    {% endif %}
-                                {% endwith %}
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    {{ fiche.numero|default:"nc." }}
+                                </a>
                             </td>
-                            <td>{{ fiche.region|default:"nc." }}</td>
-                            <td><span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span></td>
+                            <td>
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    {{ fiche.organisme_nuisible|default:"nc." }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    {{ fiche.createur|truncatechars:30 }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    {% with fiche.lieux_list|length as num_lieux %}
+                                        {% if num_lieux == 0 %}
+                                            {{ fiche.lieux_list|default:"nc." }}
+                                        {% endif %}
+                                        {% if num_lieux <= 3 %}
+                                            {% for lieu in fiche.lieux_list %}
+                                                {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for lieu in fiche.lieux_list|slice:":3" %}
+                                                {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            ... +{{ num_lieux|add:"-3" }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    {{ fiche.region|default:"nc." }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>

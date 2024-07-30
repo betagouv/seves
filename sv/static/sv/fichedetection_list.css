@@ -21,7 +21,7 @@ body{
 }
 .choices__list--single{
     overflow: hidden;
-  max-height: 1.5rem;
+    max-height: 1.5rem;
 }
 
 
@@ -50,4 +50,12 @@ body{
 }
 .fiches__list-row:hover {
     background-color: var(--background-contrast-grey) !important;
+}
+.fiches__list-link {
+    display: block !important;
+    padding-right: 1.5rem !important;
+    padding-left: 1.5rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    background-image: none !important;
 }
