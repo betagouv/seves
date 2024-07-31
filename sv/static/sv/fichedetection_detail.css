@@ -113,7 +113,8 @@ main{
 .detail-prelevement__label--code-oepp,
 .detail-prelevement__label--numero-phytopass,
 .detail-prelevement__label--laboratoire-agree,
-.detail-prelevement__label--laboratoire-confirmation-officielle {
+.detail-prelevement__label--laboratoire-confirmation-officielle,
+.detail-prelevement__label--resultat {
     font-weight: bold;
 }
 

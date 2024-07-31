@@ -47,6 +47,7 @@
         {{ especes_echantillon|json_script:"especes-echantillon" }}
         {{ laboratoires_agrees|json_script:"laboratoires-agrees" }}
         {{ laboratoires_confirmation_officielle|json_script:"laboratoires-confirmation-officielle" }}
+        {{ resultats_prelevement|json_script:"resultats-prelevement"}}
 
         <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection()">
 
@@ -327,6 +328,15 @@
                                             <option value="">----</option>
                                             <template x-for="espece in especesEchantillon" :key="espece.id">
                                                 <option :value="espece.id" x-text="espece.libelle"></option>
+                                            </template>
+                                        </select>
+                                    </p>
+                                    <p id="resultat">
+                                        <label class="fr-label">Résultat</label>
+                                        <select x-model="formPrelevement.resultat" class="fr-select" data-testid="prelevement-form-resultat">
+                                            <option value="">----</option>
+                                            <template x-for="resultat in resultatsPrelevement" :key="resultat[0]">
+                                                <option :value="resultat[0]" x-text="resultat[1]"></option>
                                             </template>
                                         </select>
                                     </p>

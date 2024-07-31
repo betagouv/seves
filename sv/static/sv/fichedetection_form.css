@@ -197,7 +197,8 @@ main {
 #prelevement-form #espece-echantillon,
 #prelevement-form #numero-phytopass,
 #prelevement-form #laboratoire-agree,
-#prelevement-form #laboratoire-confirmation {
+#prelevement-form #laboratoire-confirmation,
+#prelevement-form #resultat {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;

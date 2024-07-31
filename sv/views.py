@@ -170,6 +170,7 @@ class FicheDetectionContextMixin:
         context["laboratoires_confirmation_officielle"] = list(
             LaboratoireConfirmationOfficielle.objects.values("id", "nom").order_by("nom")
         )
+        context["resultats_prelevement"] = Prelevement.Resultat.choices
         return context
 
 
@@ -345,6 +346,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 numero_phytopass=prel["numeroPhytopass"],
                 laboratoire_agree_id=prel["laboratoireAgreeId"],
                 laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
+                resultat=prel["resultat"],
             )
             prelevement.save()
 
@@ -479,6 +481,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             prelevement.laboratoire_confirmation_officielle_id = (
                 prel["laboratoireConfirmationOfficielleId"] if prel["isOfficiel"] else None
             )
+            prelevement.resultat = prel["resultat"]
             prelevement.save()
 
     def post(self, request, pk):

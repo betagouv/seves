@@ -27,6 +27,7 @@ document.addEventListener('alpine:init', () => {
         especesEchantillon: JSON.parse(document.getElementById('especes-echantillon').textContent),
         laboratoiresAgrees: JSON.parse(document.getElementById('laboratoires-agrees').textContent),
         laboratoiresConfirmationOfficielle: JSON.parse(document.getElementById('laboratoires-confirmation-officielle').textContent),
+        resultatsPrelevement: JSON.parse(document.getElementById('resultats-prelevement').textContent),
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
@@ -93,6 +94,7 @@ document.addEventListener('alpine:init', () => {
             numeroPhytopass: null,
             laboratoireAgreeId: null,
             laboratoireConfirmationOfficielleId: null,
+            resultat: null,
         },
 
 		// ID du lieu en cours de modification
@@ -172,6 +174,7 @@ document.addEventListener('alpine:init', () => {
                         numeroPhytopass: prelevement.numero_phytopass,
                         laboratoireAgreeId: prelevement.laboratoire_agree_id,
                         laboratoireConfirmationOfficielleId: prelevement.laboratoire_confirmation_officielle_id,
+                        resultat: prelevement.resultat,
                     };
                 });
             }
@@ -353,6 +356,7 @@ document.addEventListener('alpine:init', () => {
                 numeroPhytopass: '',
                 laboratoireAgreeId: '',
                 laboratoireConfirmationOfficielleId: '',
+                resultat: '',
             };
         },
 
