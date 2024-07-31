@@ -50,6 +50,11 @@
                             <div class="fr-col-5 detail-prelevement__label--code-oepp">Code OEPP</div>
                             <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-code-oepp">{{prelevement.espece_echantillon.code_oepp|default:"nc."}}</div>
                         </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label--resultat">Résultat</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|default:"nc."}}</div>
+                        </div>
                         {% if prelevement.is_officiel %}
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-1"></div>

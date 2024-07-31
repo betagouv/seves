@@ -325,6 +325,10 @@ class LaboratoireConfirmationOfficielle(models.Model):
 
 
 class Prelevement(models.Model):
+    class Resultat(models.TextChoices):
+        DETECTE = "detecte", "Détecté"
+        NON_DETECTE = "non_detecte", "Non détecté"
+
     class Meta:
         verbose_name = "Prélèvement"
         verbose_name_plural = "Prélèvements"
@@ -373,6 +377,7 @@ class Prelevement(models.Model):
         blank=True,
         null=True,
     )
+    resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat", blank=True)
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"
