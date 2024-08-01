@@ -16,7 +16,7 @@ document.addEventListener('alpine:init', () => {
 
 		// Données de référence pour les listes déroulantes
         departements: JSON.parse(document.getElementById('departements').textContent),
-        unites: JSON.parse(document.getElementById('unites').textContent),
+        structures: JSON.parse(document.getElementById('structures').textContent),
         statutsEvenement: JSON.parse(document.getElementById('statuts-evenement').textContent),
         organismesNuisibles: JSON.parse(document.getElementById('organismes-nuisibles').textContent),
         statutsReglementaires: JSON.parse(document.getElementById('statuts-reglementaires').textContent),
@@ -32,7 +32,6 @@ document.addEventListener('alpine:init', () => {
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
             numero: '',
-            createurId: '',
             statutEvenementId: '',
             organismeNuisibleId: '',
             statutReglementaireId: '',
@@ -122,7 +121,6 @@ document.addEventListener('alpine:init', () => {
 
             this.ficheDetection = {
                 numero: this.getValueById('numeroFiche'),
-                createurId: this.getValueById('createur-id'),
                 statutEvenementId: this.getValueById('statut-evenement-id'),
                 organismeNuisibleId: this.getValueById('organisme-nuisible-id'),
                 statutReglementaireId: this.getValueById('statut-reglementaire-id'),
@@ -417,7 +415,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             let formData = new FormData();
-            formData.append('createurId', this.ficheDetection.createurId);
             formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
             formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : '');
             formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);

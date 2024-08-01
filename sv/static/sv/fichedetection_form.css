@@ -50,7 +50,6 @@ main {
 
 }
 #date-creation,
-#createur,
 #statut-evenement {
     display: flex;
     align-items: center;
@@ -60,12 +59,6 @@ main {
 }
 #date-creation-input {
     flex: 1.35;
-}
-#createur label {
-    flex: 0.5;
-}
-#createur-input {
-    flex: 1.5;
 }
 #statut-evenement label {
     flex: 0.75;

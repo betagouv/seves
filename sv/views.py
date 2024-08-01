@@ -28,7 +28,6 @@ from .models import (
     FicheDetection,
     Lieu,
     Prelevement,
-    Unite,
     StatutEvenement,
     OrganismeNuisible,
     StatutReglementaire,
@@ -45,6 +44,7 @@ from .models import (
     Etat,
 )
 from core.forms import DSFRForm
+from core.models import Structure
 
 
 class FicheDetectionSearchForm(forms.Form, DSFRForm):
@@ -157,7 +157,7 @@ class FicheDetectionContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["departements"] = list(Departement.objects.values("id", "numero", "nom"))
-        context["unites"] = list(Unite.objects.values("id", "nom"))
+        context["structures"] = list(Structure.objects.values("id", "libelle"))
         context["statuts_evenement"] = list(StatutEvenement.objects.values("id", "libelle"))
         context["organismes_nuisibles"] = list(OrganismeNuisible.objects.values("id", "libelle_court"))
         context["statuts_reglementaires"] = list(StatutReglementaire.objects.values("id", "libelle"))
@@ -177,7 +177,6 @@ class FicheDetectionContextMixin:
 class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     model = FicheDetection
     fields = [
-        "createur",
         "statut_evenement",
         "organisme_nuisible",
         "statut_reglementaire",
@@ -208,7 +207,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
         # Création des objets en base de données
         with transaction.atomic():
-            fiche = self.create_fiche_detection(data)
+            fiche = self.create_fiche_detection(data, request.user.agent.structure)
             self.create_lieux(lieux, fiche)
             self.create_prelevements(prelevements, lieux)
 
@@ -216,12 +215,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
     def validate_data(self, data, lieux, prelevements):
         errors = []
-
-        # createur est obligatoire
-        if not data["createurId"]:
-            errors.append("Le champ createur est obligatoire")
-        elif not Unite.objects.filter(pk=data["createurId"]).exists():
-            errors.append("Le champ createur est invalide")
 
         # Validation des lieux (nom du lieu obligatoire)
         for lieu in lieux:
@@ -271,7 +264,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
         return errors
 
-    def create_fiche_detection(self, data):
+    def create_fiche_detection(self, data, user_structure):
         # format de la date de premier signalement
         date_premier_signalement = data["datePremierSignalement"]
         try:
@@ -282,7 +275,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         # Création de la fiche de détection en base de données
         fiche = FicheDetection(
             numero=NumeroFiche.get_next_numero(),
-            createur_id=data["createurId"],
+            createur=user_structure,
             statut_evenement_id=data["statutEvenementId"],
             organisme_nuisible_id=data["organismeNuisibleId"],
             statut_reglementaire_id=data["statutReglementaireId"],
@@ -354,7 +347,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
     model = FicheDetection
     fields = [
-        "createur",
         "statut_evenement",
         "organisme_nuisible",
         "statut_reglementaire",
@@ -385,14 +377,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         return context
 
-    def validate_data(self, data):
-        errors = []
-        if not data["createurId"]:
-            errors.append("Le champ createur est obligatoire")
-        elif not Unite.objects.filter(pk=data["createurId"]).exists():
-            errors.append("Le champ createur est invalide")
-        return errors
-
     def update_fiche_detection(self, data, fiche_detection):
         # Format de la date de premier signalement
         date_premier_signalement = data["datePremierSignalement"]
@@ -402,7 +386,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             date_premier_signalement = None
 
         # Mise à jour des champs de l'objet FicheDetection
-        fiche_detection.createur_id = data.get("createurId")
         fiche_detection.statut_evenement_id = data.get("statutEvenementId")
         fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
         fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
@@ -488,11 +471,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         data = request.POST
         lieux = json.loads(data["lieux"])
         prelevements = json.loads(data["prelevements"])
-
-        # Validation
-        errors = self.validate_data(data)
-        if errors:
-            return HttpResponseBadRequest(json.dumps(errors))
 
         # Mise à jour des objets en base de données
         with transaction.atomic():

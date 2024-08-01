@@ -1,7 +1,5 @@
 from django.contrib import admin
 from .models import (
-    Administration,
-    Unite,
     OrganismeNuisible,
     StatutReglementaire,
     Contexte,
@@ -27,8 +25,6 @@ from .models import (
 
 admin.site.site_header = "Administration de Sèves"
 
-admin.site.register(Administration)
-admin.site.register(Unite)
 admin.site.register(OrganismeNuisible)
 admin.site.register(StatutReglementaire)
 admin.site.register(Contexte)
