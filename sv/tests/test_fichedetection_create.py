@@ -6,7 +6,6 @@ from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements
 from ..models import (
     FicheDetection,
-    Unite,
     StatutEvenement,
     StatutReglementaire,
     Contexte,
@@ -33,13 +32,6 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
 
     expect(form_elements.date_creation_label).to_be_visible()
     expect(form_elements.date_creation_input).to_be_disabled()
-
-    expect(form_elements.createur_label).to_be_visible()
-    expect(form_elements.createur_input).to_be_visible()
-    expect(form_elements.createur_input).to_contain_text("----")
-    expect(form_elements.createur_input).to_have_value("")
-    unites = list(Unite.objects.values_list("nom", flat=True))
-    check_select_options(page, "Créateur", unites)
 
     expect(form_elements.statut_evenement_label).to_be_visible()
     expect(form_elements.statut_evenement_input).to_be_visible()
@@ -98,11 +90,10 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_fiche_detection_create_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
-    page.get_by_label("Créateur").select_option(label="Mission des urgences sanitaires")
     page.get_by_label("Statut évènement").select_option(label="Foyer")
     page.get_by_text("--------").click()
     page.get_by_label("----").fill("xylela")
@@ -125,7 +116,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.wait_for_timeout(500)
 
     fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.createur.nom == "Mission des urgences sanitaires"
+    assert fiche_detection.createur == mocked_authentification_user.agent.structure
     assert fiche_detection.statut_evenement.libelle == "Foyer"
     assert fiche_detection.organisme_nuisible.libelle_court == "Xylella fastidiosa (maladie de Pierce)"
     assert fiche_detection.statut_reglementaire.id == 2

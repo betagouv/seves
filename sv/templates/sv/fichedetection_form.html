@@ -22,7 +22,6 @@
     <main x-data="app">
 
         <input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
-        <input type="hidden" id="createur-id" value="{{ form.instance.createur_id|default:'' }}">
         <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
         <input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
         <input type="hidden" id="statut-reglementaire-id" value="{{ form.instance.statut_reglementaire_id|default:'' }}">
@@ -36,7 +35,7 @@
         {{ lieux|json_script:"lieux-json" }}
         {{ prelevements|json_script:"prelevements" }}
         {{ departements|json_script:"departements" }}
-        {{ unites|json_script:"unites" }}
+        {{ structures|json_script:"structures" }}
         {{ statuts_evenement|json_script:"statuts-evenement" }}
         {{ organismes_nuisibles|json_script:"organismes-nuisibles" }}
         {{ statuts_reglementaires|json_script:"statuts-reglementaires" }}
@@ -84,18 +83,6 @@
                         <p id="date-creation">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
-                        </p>
-                        <p id="createur">
-                            <label class="fr-label" for="createur-input">Créateur</label>
-                            <select x-model="ficheDetection.createurId" id="createur-input" class="fr-select" required>
-                                <option value="">----</option>
-                                <template x-for="unite in unites" :key="unite.id">
-                                    <option
-                                        :value="unite.id"
-                                        x-text="unite.nom"
-                                        :selected="unite.id == ficheDetection.createurId"></option>
-                                </template>
-                            </select>
                         </p>
                         <p id="statut-evenement">
                             <label class="fr-label" for="statut-evenement-input">Statut évènement</label>

@@ -61,11 +61,6 @@ def test_date_creation_field_is_disabled(live_server, page: Page, form_elements:
     expect(form_elements.date_creation_input).to_be_disabled()
 
 
-def test_createur_field_is_required(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le champ Créateur est requis pour la création d'une fiche de détection"""
-    expect(form_elements.createur_input).to_have_attribute("required", "")
-
-
 # =============
 # Partie Lieux
 # =============

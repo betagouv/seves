@@ -50,10 +50,6 @@ def test_fiche_detection_update_page_content(
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
 
-    # Createur
-    expect(form_elements.createur_input).to_contain_text(fiche_detection.createur.nom)
-    expect(form_elements.createur_input).to_have_value(str(fiche_detection.createur.id))
-
     # Statut évènement
     expect(form_elements.statut_evenement_input).to_contain_text(fiche_detection.statut_evenement.libelle)
     expect(form_elements.statut_evenement_input).to_have_value(str(fiche_detection.statut_evenement.id))
@@ -95,17 +91,15 @@ def test_fiche_detection_update_page_content(
     # TODO: ajouter les tests pour les lieux et les prélèvements
 
 
-def test_fiche_detection_update_page_content_with_createur_only(
+def test_fiche_detection_update_page_content_with_no_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
-    """Test que la page de modification de la fiche de détection affiche uniquement le créateur pour une fiche détection contenant uniquement le créateur."""
+    """Test que la page de modification de la fiche de détection affiche aucune donnée pour une fiche détection sans données"""
 
-    fiche_detection_with_createur_only = baker.make(FicheDetection)
+    fiche_detection = baker.make(FicheDetection)
 
-    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_createur_only)}")
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
 
-    expect(form_elements.createur_input).to_contain_text(fiche_detection_with_createur_only.createur.nom)
-    expect(form_elements.createur_input).to_have_value(str(fiche_detection_with_createur_only.createur.id))
     expect(form_elements.statut_evenement_input).to_contain_text("----")
     expect(form_elements.statut_evenement_input).to_have_value("")
     expect(form_elements.organisme_nuisible_input).to_contain_text("----")
@@ -128,13 +122,13 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements: FicheDetectionFormDomElements,
     fiche_detection: FicheDetection,
     fiche_detection_bakery,
+    mocked_authentification_user,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
 
     new_fiche_detection = fiche_detection_bakery()
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
-    form_elements.createur_input.select_option(str(new_fiche_detection.createur.id))
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
     # TODO
     # page.locator("#organisme-nuisible-input").select_option(str(new_organisme_nuisible.id))
@@ -152,7 +146,9 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     page.wait_for_timeout(200)
 
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
-    assert fiche_detection_updated.createur == new_fiche_detection.createur
+    assert (
+        fiche_detection_updated.createur == fiche_detection.createur
+    )  # le createur ne doit pas changer lors d'une modification
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
     # TODO
     # assert fiche_detection_updated.organisme_nuisible == new_organisme_nuisible

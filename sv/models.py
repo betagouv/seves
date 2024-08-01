@@ -45,30 +45,6 @@ class NumeroFiche(models.Model):
         return new_fiche
 
 
-class Administration(models.Model):
-    class Meta:
-        verbose_name = "Administration"
-        verbose_name_plural = "Administrations"
-
-    nom = models.CharField(max_length=100, verbose_name="Nom")
-
-    def __str__(self):
-        return self.nom
-
-
-class Unite(models.Model):
-    class Meta:
-        verbose_name = "Unité"
-        verbose_name_plural = "Unités"
-        ordering = ["-type", "nom"]
-
-    nom = models.CharField(max_length=100, verbose_name="Nom")
-    type = models.ForeignKey(Administration, on_delete=models.PROTECT, verbose_name="Type")
-
-    def __str__(self):
-        return self.nom
-
-
 class OrganismeNuisible(models.Model):
     class Meta:
         verbose_name = "Organisme nuisible"
@@ -419,7 +395,7 @@ class FicheDetection(models.Model):
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
-    createur = models.ForeignKey(Unite, on_delete=models.PROTECT, verbose_name="Créateur")
+    createur = models.ForeignKey("core.Structure", on_delete=models.PROTECT, verbose_name="Structure créatrice")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
     statut_evenement = models.ForeignKey(

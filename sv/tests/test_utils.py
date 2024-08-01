@@ -53,14 +53,6 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Date de création")
 
     @property
-    def createur_label(self) -> Locator:
-        return self.page.get_by_text("Créateur")
-
-    @property
-    def createur_input(self) -> Locator:
-        return self.page.get_by_label("Créateur")
-
-    @property
     def statut_evenement_label(self) -> Locator:
         return self.page.get_by_text("Statut évènement")
 
