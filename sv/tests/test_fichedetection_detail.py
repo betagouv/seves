@@ -98,6 +98,7 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
         prelevement.espece_echantillon.libelle
     )
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text(prelevement.espece_echantillon.code_oepp)
+    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text(prelevement.get_resultat_display())
 
 
 def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
@@ -116,6 +117,7 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text("nc.")
+    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text("nc.")
 
 
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page, fiche_detection):
@@ -140,6 +142,7 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
         prelevement2.espece_echantillon.libelle
     )
     expect(page.get_by_test_id("prelevement-2-code-oepp")).to_contain_text(prelevement2.espece_echantillon.code_oepp)
+    expect(page.get_by_test_id("prelevement-2-resultat")).to_contain_text(prelevement2.get_resultat_display())
 
 
 def test_prelevement_officiel_details(live_server, page, fiche_detection):

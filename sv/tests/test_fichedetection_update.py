@@ -414,6 +414,7 @@ def test_add_new_prelevement_non_officiel(
     prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
     prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    prelevement_form_elements.resultat_input.select_option(str(prelevement.resultat))
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
@@ -426,6 +427,11 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+    assert prelevement_from_db.resultat == prelevement.resultat
+    assert prelevement_from_db.is_officiel is False
+    assert prelevement_from_db.numero_phytopass == ""
+    assert prelevement_from_db.laboratoire_agree is None
+    assert prelevement_from_db.laboratoire_confirmation_officielle is None
 
 
 def test_add_new_prelevement_officiel(
@@ -448,6 +454,7 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
     prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    prelevement_form_elements.resultat_input.select_option(str(prelevement.resultat))
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     prelevement_form_elements.numero_phytopass_input.fill(prelevement.numero_phytopass)
     prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
@@ -466,6 +473,7 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+    assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is True
     assert prelevement_from_db.numero_phytopass == prelevement.numero_phytopass
     assert prelevement_from_db.laboratoire_agree.id == prelevement.laboratoire_agree.id
@@ -495,6 +503,7 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
         prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+        prelevement_form_elements.resultat_input.select_option(str(prelevement.resultat))
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
@@ -509,6 +518,7 @@ def test_add_multiple_prelevements(
         assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
         assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
+        assert prelevement_from_db.resultat == prelevement.resultat
 
 
 def test_update_prelevement(
@@ -533,6 +543,7 @@ def test_update_prelevement(
     prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
     prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+    prelevement_form_elements.resultat_input.select_option(str(new_prelevement.resultat))
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
     page.wait_for_timeout(200)
@@ -545,6 +556,7 @@ def test_update_prelevement(
     assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
+    assert prelevement_from_db.resultat == new_prelevement.resultat
 
 
 def test_update_multiple_prelevements(
@@ -575,6 +587,7 @@ def test_update_multiple_prelevements(
         prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
         prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+        prelevement_form_elements.resultat_input.select_option(str(new_prelevement.resultat))
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
@@ -592,6 +605,7 @@ def test_update_multiple_prelevements(
         assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
         assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
+        assert prelevement_from_db.resultat == new_prelevement.resultat
 
 
 def test_delete_prelevement(

@@ -307,6 +307,14 @@ class PrelevementFormDomElements:
         return self.page.get_by_test_id("prelevement-form-espece-echantillon")
 
     @property
+    def resultat_label(self) -> Locator:
+        return self.page.get_by_text("Résultat")
+
+    @property
+    def resultat_input(self) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-resultat")
+
+    @property
     def prelevement_officiel_checkbox(self) -> Locator:
         return self.page.get_by_text("Prélèvement officiel")
 
