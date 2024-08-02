@@ -79,25 +79,22 @@ def test_add_contact_form_select_structure(live_server, page, fiche_detection, c
     page.get_by_role("button", name="Rechercher").click()
     contact1 = contacts[0]
     contact2 = contacts[1]
-    expect(page.get_by_text(f"MUS - {contact1.agent.nom}")).to_be_visible()
-    expect(page.get_by_text(f"MUS - {contact1.agent.nom}")).to_contain_text(
-        f"{contact1.agent.structure.libelle} - {contact1.agent.nom}"
-    )
-    expect(page.get_by_text(f"MUS - {contact2.agent.nom}")).to_be_visible()
-    expect(page.get_by_text(f"MUS - {contact2.agent.nom}")).to_contain_text(
-        f"{contact2.agent.structure.libelle} - {contact2.agent.nom}"
-    )
+    expect(page.get_by_text(f"{contact1.agent.nom}")).to_be_visible()
+    expect(page.get_by_text(f"{contact1.agent.nom}")).to_contain_text(f"{contact1.agent.nom} {contact1.agent.prenom}")
+    expect(page.get_by_text(f"{contact2.agent.nom}")).to_be_visible()
+    expect(page.get_by_text(f"{contact2.agent.nom}")).to_contain_text(f"{contact2.agent.nom} {contact2.agent.prenom}")
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
     """Test l'ajout d'un contact à une fiche de détection"""
+    contact1 = contacts[0]
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
     _pick_structure(page, "MUS")
     page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text("MUS -").first.click()
+    page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
     page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
     page.get_by_role("tab", name="Contacts").click()
 
@@ -108,13 +105,15 @@ def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, contacts):
     """Test l'ajout de plusieurs contacts à une fiche de détection"""
+    contact1 = contacts[0]
+    contact2 = contacts[1]
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
     _pick_structure(page, "MUS")
     page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text("MUS -").first.click()
-    page.get_by_text("MUS -").nth(1).click()
+    page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
+    page.get_by_text(f"{contact2.agent.nom} {contact2.agent.prenom}").click()
     page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
 
     expect(page.get_by_text("Les 2 contacts ont été ajoutés avec succès.")).to_be_visible()
