@@ -1,3 +1,4 @@
+import math
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -101,6 +102,7 @@ class ContactSelectionForm(forms.Form):
     content_type_id = forms.IntegerField(widget=forms.HiddenInput())
     fiche_id = forms.IntegerField(widget=forms.HiddenInput())
     next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    contacts_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, *args, **kwargs):
         structure = kwargs.pop("structure")
@@ -120,6 +122,8 @@ class ContactSelectionForm(forms.Form):
             .exclude(pk__in=existing_contacts)
             .order_by("structure", "agent__nom")
         )
+        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
+        self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):

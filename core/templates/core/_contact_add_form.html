@@ -3,7 +3,9 @@
 {% load static %}
 
 {% block extrahead %}
-<!-- choicesjs (autocompletion pour select) -->
+    <link rel="stylesheet" href="{% static 'core/contact_add_form.css' %}">
+
+    <!-- choicesjs (autocompletion pour select) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
 {% endblock %}
@@ -15,7 +17,7 @@
             const choices = new Choices(element, {
                 searchResultLimit: 500,
                 classNames: {
-                    containerInner: 'fr-select',
+                    containerInner: 'fr-select fr-mt-1w',
                 }
             });
         });
@@ -25,51 +27,84 @@
 
 {% block content %}
     <div class="fr-container">
-        <div class="fr-grid-row">
-            <div class="fr-col">
-                <p class="fr-my-4w"><a href="{{form.next.value}}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a></p>
-                <h2>Ajouter un agent</h2>
-                <form id="form-search" method="post" action="{% url 'contact-add-form' %}">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" form="form-search" class="fr-btn">Rechercher</button>
-                </form>
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-9">
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <p class="fr-my-2w"><a href="{{form.next.value}}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a></p>
+                    </div>
+                </div>
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <h1>Ajouter un agent</h1>
+                    </div>
+                </div>
+                <div class="contact-add-form__container fr-p-5w fr-mb-6w">
+                    <div class="fr-grid-row fr-pl-1w">
+                        <div class="fr-col-7">
+                            <form id="form-search" method="post" action="{% url 'contact-add-form' %}">
+                                {% csrf_token %}
+                                {{ form.as_p }}
+                                <button type="submit" form="form-search" class="fr-btn">Rechercher</button>
+                            </form>
+                        </div>
+                        <div class="fr-col-5"></div>
+                    </div>
+                    {% if selection_form%}
+                        <div class="fr-grid-row">
+                            <div class="fr-col">
+                                <form id="form-selection" method="post" action="{% url 'contact-add-form-select-agents' %}" class="fr-mt-4w">
+                                    {% csrf_token %}
 
-                {% if selection_form%}
-                    <form id="form-selection" method="post" action="{% url 'contact-add-form-select-agents' %}" class="fr-mt-4w">
-                        {% csrf_token %}
-                        <fieldset class="fr-fieldset" id="checkboxes" aria-labelledby="checkboxes-legend checkboxes-messages">
-                            <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-my-2w" id="checkboxes-legend">
-                                <span class="agents-count">{{ selection_form.contacts.field.queryset.count }} agents</span> dans cette structure
-                            </legend>
-                            {% if selection_form.contacts.errors %}
-                                <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-4w">
-                                    {% for error in selection_form.contacts.errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                        Masquer le message
-                                    </button>
-                                </div>
-                            {% endif %}
-                            {% for contact in selection_form.contacts.field.queryset %}
-                                <div class="fr-fieldset__element">
-                                    <div class="fr-checkbox-group">
-                                        <input name="contacts" id="checkboxes-{{ forloop.counter }}" type="checkbox" value="{{ contact.id }}" aria-describedby="checkboxes-{{ forloop.counter }}-messages">
-                                        <label class="fr-label" for="checkboxes-{{ forloop.counter }}">
-                                            <span class='fr-badge'>{{contact.agent.structure.libelle}}</span> - {{contact.agent.nom}} {{contact.agent.prenom}}{% if contact.agent.fonction_hierarchique %} ({{ contact.agent.fonction_hierarchique }}){% endif %}
-                                        </label>
+                                    <div class="fr-grid-row fr-pl-1w">
+                                        <div class="fr-col">
+                                            <p><span class="agents-count">{{ selection_form.contacts.field.queryset.count }} agents</span> dans cette structure</p>
+                                        </div>
                                     </div>
-                                </div>
-                            {% endfor %}
-                        </fieldset>
-                        {{ selection_form.structure }}
-                        {{ selection_form.content_type_id }}
-                        {{ selection_form.fiche_id }}
-                        {{ selection_form.next }}
-                        <button type="submit" form="form-selection" class="fr-btn">Ajouter les contacts sélectionnés</button>
-                    </form>
-                {% endif %}
+
+                                    {% if selection_form.contacts.errors %}
+                                        <div class="grid-row">
+                                            <div class="fr-col-8">
+                                                <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-4w">
+                                                    {% for error in selection_form.contacts.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                                        Masquer le message
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    {% with half_value=selection_form.contacts_count_half.value|stringformat:"s" %}
+                                        {% with first_half=":"|add:half_value last_half=half_value|add:":" %}
+                                            <div class="fr-grid-row">
+                                                <div class="fr-col-6">
+                                                    {% for contact in selection_form.contacts.field.queryset|slice:first_half %}
+                                                        {% include "core/_contact_checkbox.html" with checkbox_id=forloop.counter %}
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="fr-col-6">
+                                                    {% for contact in selection_form.contacts.field.queryset|slice:last_half %}
+                                                        {% include "core/_contact_checkbox.html" with checkbox_id=forloop.counter|add:half_value %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endwith %}
+                                    {% endwith %}
+
+                                    {{ selection_form.structure }}
+                                    {{ selection_form.content_type_id }}
+                                    {{ selection_form.fiche_id }}
+                                    {{ selection_form.next }}
+
+                                    <button type="submit" form="form-selection" class="fr-btn fr-mt-2w">Ajouter les contacts sélectionnés</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
