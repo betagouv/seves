@@ -15,3 +15,16 @@
         background: var(--background-alt-grey) !important;
         border-bottom: 1px var(--border-contrast-grey) solid !important;
 }
+
+.message-actions {
+        display: flex;
+        justify-content: end;
+}
+.message-actions .fr-translate__btn {
+        padding: .5rem 1rem;
+}
+
+.message-actions .fr-translate .fr-translate__btn::before {
+        -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
+        mask-image: url(../../../static/icons/system/add-line.svg);
+}

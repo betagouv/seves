@@ -167,3 +167,39 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(
     page.get_by_test_id("contacts").click()
     for agent in agents:
         expect(page.get_by_text(str(agent), exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_can_add_and_see_note_without_document(live_server, page: Page, fiche_detection: FicheDetection):
+    agent = baker.make(Agent)
+    baker.make(Contact, agent=agent)
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    page.locator(".fr-translate__btn").click()
+    page.get_by_role("link", name="Note").click()
+
+    assert page.url == f"{live_server.url}{fiche_detection.add_note_url}"
+
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert page.url == f"{live_server.url}{fiche_detection.get_absolute_url()}#tabpanel-messages-panel"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
+    assert page.text_content(cell_selector) == "Structure Test"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
+    assert page.text_content(cell_selector).strip() == ""
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "Title of the message"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Note"
+
+    page.locator(cell_selector).click()
+    message = Message.objects.get()
+    page.wait_for_url(f"**{message.get_absolute_url()}")
+
+    expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
+    assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()

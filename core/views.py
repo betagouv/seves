@@ -145,6 +145,7 @@ class MessageCreateView(CreateView):
     form_class = MessageForm
 
     def dispatch(self, request, *args, **kwargs):
+        self.message_type = self.kwargs.get("message_type")
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
         self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
         return super().dispatch(request, *args, **kwargs)
@@ -155,7 +156,7 @@ class MessageCreateView(CreateView):
             {
                 "obj": self.obj,
                 "next": self.obj.get_absolute_url(),
-                "message_type": Message.MESSAGE,
+                "message_type": self.message_type,
                 "sender": self.request.user,
             }
         )
@@ -165,6 +166,8 @@ class MessageCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
         context["add_document_form"] = MessageDocumentForm()
+        context["message_type"] = self.message_type
+        context["feminize"] = self.message_type in Message.TYPES_TO_FEMINIZE
         return context
 
     def get_success_url(self):

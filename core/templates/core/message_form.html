@@ -11,7 +11,9 @@
         <a href="{{ go_back_url }}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a>
 
         <div class="message-title">
-            <h1 class="fr-mt-2w">Nouveau message</h1>
+            <h1 class="fr-mt-2w">
+                {% if feminize %}Nouvelle {% else %}Nouveau {% endif %}{{ message_type }}
+            </h1>
             <a href="{{ go_back_url }}" class="fr-link">Annuler</a>
         </div>
 

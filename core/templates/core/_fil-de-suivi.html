@@ -1,8 +1,26 @@
-<div class="fr-btns-group--right fr-mb-2w">
-    <a href="{{ fiche.add_message_url }}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+<div class="message-actions fr-mb-2w">
+    <a href="{{ fiche.add_message_url }}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line fr-mr-2w"
        data-testid="fildesuivi-add">
         Nouveau message
     </a>
+
+    <nav role="navigation" class="fr-translate fr-nav">
+        <div class="fr-nav__item">
+            <button class="fr-translate__btn fr-btn fr-btn--secondary" aria-controls="translate-1177"
+                    aria-expanded="false" title="Sélectionner un type d'élément de suivi">Élément de suivi<span
+                class="fr-hidden-lg"> - Français</span></button>
+            <div class="fr-collapse fr-translate__menu fr-menu" id="translate-1177">
+                <ul class="fr-menu__list">
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_message_url }}">Message</a></li>
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_note_url }}">Note</a></li>
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_point_de_suivi_url }}">Point de situation</a></li>
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_demande_intervention_url }}">Demande d'intervention</a></li>
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_compte_rendu_url }}">Compte rendu sur demande d'intervention</a></li>
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ fiche.add_fin_intervention_url }}">Fin d'intervention</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </div>
 
 <div class="fr-container--fluid">

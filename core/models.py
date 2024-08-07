@@ -114,7 +114,20 @@ class Document(models.Model):
 class Message(models.Model):
     MESSAGE = "message"
     NOTE = "note"
-    MESSAGE_TYPE_CHOICES = ((MESSAGE, "Message"), (NOTE, "Note"))
+    POINT_DE_SITUATION = "point de situation"
+    DEMANDE_INTERVENTION = "demande d'intervention"
+    COMPTE_RENDU = "compte rendu sur demande d'intervention"
+    FIN_INTERVENTION = "fin d'intervention"
+    MESSAGE_TYPE_CHOICES = (
+        (MESSAGE, "Message"),
+        (NOTE, "Note"),
+        (POINT_DE_SITUATION, "Point de situation"),
+        (DEMANDE_INTERVENTION, "Demande d'intervention"),
+        (COMPTE_RENDU, "Compte rendu sur demande d'intervention"),
+        (FIN_INTERVENTION, "Fin d'intervention"),
+    )
+    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_INTERVENTION)
+    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_INTERVENTION)
 
     message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
     title = models.CharField(max_length=512, verbose_name="Titre")

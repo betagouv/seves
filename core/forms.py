@@ -128,7 +128,7 @@ class ContactSelectionForm(forms.Form):
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
     # Duplicate the field in order to show one which is disabled (not send via POST request) and hide the real one
-    displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}))
+    displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}), label="De")
     sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
     recipients = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.with_structure_and_agent(), label="Destinataires"
@@ -180,6 +180,11 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.add_content_type_fields(obj)
         self.add_next_field(next_url)
         self.initial["message_type"] = message_type
+
+        if message_type in Message.TYPES_WITHOUT_RECIPIENTS:
+            self.fields.pop("recipients")
+            self.fields.pop("recipients_copy")
+
         self.initial["sender"] = sender.agent.contact_set.get()
         self.initial["displayed_sender"] = sender.agent.name_with_structure
 
