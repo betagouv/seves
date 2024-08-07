@@ -39,7 +39,7 @@ urlpatterns = [
     path("contacts/ajout", ContactAddFormView.as_view(), name="contact-add-form"),
     path("contacts/ajout/agents", ContactSelectionView.as_view(), name="contact-add-form-select-agents"),
     path(
-        "message-add/<int:obj_type_pk>/<int:obj_pk>/",
+        "message-add/<str:message_type>/<int:obj_type_pk>/<int:obj_pk>/",
         MessageCreateView.as_view(),
         name="message-add",
     ),
