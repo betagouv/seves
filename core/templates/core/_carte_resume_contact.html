@@ -6,6 +6,10 @@
             <p class="fr-tag">{{contact.agent.structure}}</p>
             <p class="fr-mt-3w fr-mb-1w"><a href="mailto:{{ contact.email }}" class="fr-link">{{ contact.email }}</a></p>
             <p class="fr-mt-1w">{{ contact.agent.telephone }}</p>
+            <div class="fr-btns-group--right">
+                <a href="#" class="fr-icon-delete-line fr-btn fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-contact-{{ contact.pk }}"></a>
+            </div>
         </div>
     </div>
 </div>
+{% include "core/_modale_suppression_contact.html" %}
