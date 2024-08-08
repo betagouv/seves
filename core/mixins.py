@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
+
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
 from core.models import Document
@@ -43,4 +45,5 @@ class WithContactListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["contacts"] = self.get_object().contacts.prefetch_related("agent__structure")
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context

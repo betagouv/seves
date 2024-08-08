@@ -15,7 +15,7 @@ from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
 
 
-from .models import Document, Message
+from .models import Document, Message, Contact
 
 from django.contrib.contenttypes.models import ContentType
 
@@ -138,6 +138,18 @@ class ContactSelectionView(FormView):
                 "selection_form": form,
             },
         )
+
+
+class ContactDeleteView(View):
+    def post(self, request, *args, **kwargs):
+        content_type = ContentType.objects.get(id=request.POST.get("content_type_pk"))
+        ModelClass = content_type.model_class()
+        fiche = get_object_or_404(ModelClass, pk=request.POST.get("fiche_pk"))
+        contact = Contact.objects.get(pk=self.request.POST.get("pk"))
+
+        fiche.contacts.remove(contact)
+        messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
+        return HttpResponseRedirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
 class MessageCreateView(CreateView):

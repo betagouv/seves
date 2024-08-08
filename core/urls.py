@@ -6,6 +6,7 @@ from .views import (
     DocumentUpdateView,
     ContactAddFormView,
     ContactSelectionView,
+    ContactDeleteView,
     MessageCreateView,
     MessageDetailsView,
 )
@@ -38,6 +39,11 @@ urlpatterns = [
     ),
     path("contacts/ajout", ContactAddFormView.as_view(), name="contact-add-form"),
     path("contacts/ajout/agents", ContactSelectionView.as_view(), name="contact-add-form-select-agents"),
+    path(
+        "contacts/suppression/",
+        ContactDeleteView.as_view(),
+        name="contact-delete",
+    ),
     path(
         "message-add/<str:message_type>/<int:obj_type_pk>/<int:obj_pk>/",
         MessageCreateView.as_view(),
