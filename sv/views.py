@@ -288,7 +288,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             mesures_surveillance_specifique=data["mesuresSurveillanceSpecifique"],
         )
         fiche.save()
-
+        fiche.contacts.add(self.request.user.agent.contact_set.get())
         return fiche
 
     def create_lieux(self, lieux, fiche):

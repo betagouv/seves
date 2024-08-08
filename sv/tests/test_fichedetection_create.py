@@ -127,3 +127,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     assert fiche_detection.mesures_consignation == "test mesures consignation"
     assert fiche_detection.mesures_phytosanitaires == "test mesures phyto"
     assert fiche_detection.mesures_surveillance_specifique == "test mesures surveillance"
+
+    page.get_by_test_id("contacts").click()
+    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
