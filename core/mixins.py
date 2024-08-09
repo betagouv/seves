@@ -22,7 +22,7 @@ class WithDocumentUploadFormMixin:
 class WithDocumentListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        documents = Document.objects.for_fiche(self.get_object())
+        documents = Document.objects.for_fiche(self.get_object()).prefetch_related("created_by_structure")
         document_filter = DocumentFilter(self.request.GET, queryset=documents)
         for document in document_filter.qs:
             document.edit_form = DocumentEditForm(instance=document)
@@ -36,7 +36,9 @@ class WithMessagesListInContextMixin:
         context["message_list"] = (
             self.get_object()
             .messages.all()
-            .prefetch_related("recipients__structure", "recipients__agent", "recipients_copy", "sender__agent")
+            .prefetch_related(
+                "recipients__structure", "recipients__agent", "recipients_copy", "sender__agent", "documents"
+            )
         )
         return context
 
