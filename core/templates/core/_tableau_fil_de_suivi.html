@@ -43,7 +43,7 @@
                     <a href="{% url 'message-view' message.pk  %}">{{ message.title|truncatechars:100 }}</a>
                 </td>
                 <td>
-                    {% if message.documents.count %}
+                    {% if message.documents.exists %}
                         <a href="{% url 'message-view' message.pk  %}"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
                     {% endif %}
                 </td>
