@@ -306,6 +306,10 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         for lieu in lieux:
             wgs84_longitude = lieu["coordGPSWGS84Longitude"] if lieu["coordGPSWGS84Longitude"] != "" else None
             wgs84_latitude = lieu["coordGPSWGS84Latitude"] if lieu["coordGPSWGS84Latitude"] != "" else None
+            lambert93_longitude = (
+                lieu["coordGPSLambert93Longitude"] if lieu["coordGPSLambert93Longitude"] != "" else None
+            )
+            lambert93_latitude = lieu["coordGPSLambert93Latitude"] if lieu["coordGPSLambert93Latitude"] != "" else None
 
             # lieu = Lieu(fiche_detection=fiche, **lieu)
             lieu_instance = Lieu(
@@ -313,6 +317,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 nom=lieu["nomLieu"],
                 wgs84_longitude=wgs84_longitude,
                 wgs84_latitude=wgs84_latitude,
+                lambert93_longitude=lambert93_longitude,
+                lambert93_latitude=lambert93_latitude,
                 adresse_lieu_dit=lieu["adresseLieuDit"],
                 commune=lieu["commune"],
                 code_insee=lieu["codeINSEE"],

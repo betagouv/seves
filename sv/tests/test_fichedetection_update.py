@@ -183,6 +183,8 @@ def test_add_new_lieu(
         Lieu,
         wgs84_latitude=48.8566,
         wgs84_longitude=2.3522,
+        lambert93_longitude=652469,
+        lambert93_latitude=6862035,
         code_insee="17000",
         _save_related=True,
         _fill_optional=True,
@@ -197,6 +199,8 @@ def test_add_new_lieu(
     lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+    lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
+    lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
     page.wait_for_timeout(600)
@@ -211,6 +215,8 @@ def test_add_new_lieu(
     assert lieu_from_db.departement == lieu.departement
     assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+    assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
+    assert lieu_from_db.lambert93_longitude == lieu.lambert93_longitude
 
 
 @pytest.mark.django_db
@@ -222,15 +228,37 @@ def test_add_multiple_lieux(
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
-    # TODO: supprimer les valeurs brutes wgs84_latitude et wgs84_longitude
-    lieux = baker.prepare(
+    lieu_1 = baker.prepare(
         Lieu,
-        _quantity=3,
         wgs84_latitude=48.8566,
         wgs84_longitude=2.3522,
+        lambert93_longitude=652469,
+        lambert93_latitude=6862035,
+        code_insee="17000",
         _fill_optional=True,
         _save_related=True,
     )
+    lieu_2 = baker.prepare(
+        Lieu,
+        wgs84_latitude=49.8566,
+        wgs84_longitude=3.3522,
+        lambert93_longitude=652470,
+        lambert93_latitude=6862036,
+        code_insee="17001",
+        _fill_optional=True,
+        _save_related=True,
+    )
+    lieu_3 = baker.prepare(
+        Lieu,
+        wgs84_latitude=50.8566,
+        wgs84_longitude=4.3522,
+        lambert93_longitude=652471,
+        lambert93_latitude=6862037,
+        code_insee="17002",
+        _fill_optional=True,
+        _save_related=True,
+    )
+    lieux = [lieu_1, lieu_2, lieu_3]
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     for lieu in lieux:
@@ -238,10 +266,12 @@ def test_add_multiple_lieux(
         lieu_form_elements.nom_input.fill(lieu.nom)
         lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
         lieu_form_elements.commune_input.fill(lieu.commune)
-        # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
+        lieu_form_elements.code_insee_input.fill(lieu.code_insee)
         lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+        lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
+        lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
         lieu_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
@@ -255,10 +285,12 @@ def test_add_multiple_lieux(
         assert lieu_from_db.nom == lieu.nom
         assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
         assert lieu_from_db.commune == lieu.commune
-        # assert lieu_from_db.code_insee == lieu.code_insee
+        assert lieu_from_db.code_insee == str(lieu.code_insee)
         assert lieu_from_db.departement == lieu.departement
         assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
         assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+        assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
+        assert lieu_from_db.lambert93_longitude == lieu.lambert93_longitude
 
 
 @pytest.mark.django_db
@@ -287,6 +319,7 @@ def test_update_lieu(
         type_exploitant_etablissement=type_exploitant,
         position_chaine_distribution_etablissement=position,
         _fill_optional=True,
+        _save_related=True,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
@@ -357,6 +390,7 @@ def test_update_two_lieux(
         _save_related=True,
         lambert93_longitude=652469,
         lambert93_latitude=6862035,
+        code_insee="17000",
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_two_lieux)}")
@@ -368,7 +402,7 @@ def test_update_two_lieux(
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
         lieu_form_elements.commune_input.fill(new_lieu.commune)
-        # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
+        lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
         lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
         lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
         lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
@@ -385,7 +419,7 @@ def test_update_two_lieux(
         assert lieu.nom == new_lieu.nom
         assert lieu.adresse_lieu_dit == new_lieu.adresse_lieu_dit
         assert lieu.commune == new_lieu.commune
-        # assert lieu.code_insee == new_lieu.code_insee
+        assert lieu.code_insee == str(new_lieu.code_insee)
         assert lieu.departement == new_lieu.departement
         assert lieu.wgs84_latitude == new_lieu.wgs84_latitude
         assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
