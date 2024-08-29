@@ -28,6 +28,8 @@ document.addEventListener('alpine:init', () => {
         laboratoiresAgrees: JSON.parse(document.getElementById('laboratoires-agrees').textContent),
         laboratoiresConfirmationOfficielle: JSON.parse(document.getElementById('laboratoires-confirmation-officielle').textContent),
         resultatsPrelevement: JSON.parse(document.getElementById('resultats-prelevement').textContent),
+        typesEtablissement: JSON.parse(document.getElementById('types-etablissement').textContent),
+        positionsEtablissement: JSON.parse(document.getElementById('positions-etablissement').textContent),
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
@@ -76,6 +78,15 @@ document.addEventListener('alpine:init', () => {
             coordGPSLambert93Longitude: '',
             coordGPSWGS84Latitude: '',
             coordGPSWGS84Longitude: '',
+            isEtablissement: false,
+            nomEtablissement: '',
+            activiteEtablissement: '',
+            paysEtablissement: '',
+            raisonSocialeEtablissement: '',
+            adresseEtablissement: '',
+            siretEtablissement: '',
+            typeEtablissementId: '',
+            positionEtablissementId: '',
         },
 
 		// Données du formulaire d'ajout d'un prélèvement
@@ -150,6 +161,15 @@ document.addEventListener('alpine:init', () => {
                         coordGPSLambert93Longitude: lieu.lambert93_longitude,
                         coordGPSWGS84Latitude: lieu.wgs84_latitude,
                         coordGPSWGS84Longitude: lieu.wgs84_longitude,
+                        isEtablissement: lieu.is_etablissement,
+                        nomEtablissement: lieu.nom_etablissement,
+                        activiteEtablissement: lieu.activite_etablissement,
+                        paysEtablissement: lieu.pays_etablissement,
+                        raisonSocialeEtablissement: lieu.raison_sociale_etablissement,
+                        adresseEtablissement: lieu.adresse_etablissement,
+                        siretEtablissement: lieu.siret_etablissement,
+                        typeEtablissementId: lieu.type_exploitant_etablissement_id,
+                        positionEtablissementId: lieu.position_chaine_distribution_etablissement_id,
                     };
                 });
             }
@@ -244,6 +264,16 @@ document.addEventListener('alpine:init', () => {
                 coordGPSLambert93Longitude: '',
                 coordGPSWGS84Latitude: '',
                 coordGPSWGS84Longitude: '',
+                isEtablissement: false,
+                nomEtablissement: '',
+                activiteEtablissement: '',
+                paysEtablissement: '',
+                raisonSocialeEtablissement: '',
+                adresseEtablissement: '',
+                siretEtablissement: '',
+                typeEtablissementId: '',
+                positionEtablissementId: '',
+
             };
         },
 

@@ -42,6 +42,8 @@ from .models import (
     Departement,
     Region,
     Etat,
+    TypeExploitant,
+    PositionChaineDistribution,
 )
 from core.forms import DSFRForm
 from core.models import Structure
@@ -175,6 +177,10 @@ class FicheDetectionContextMixin:
             LaboratoireConfirmationOfficielle.objects.values("id", "nom").order_by("nom")
         )
         context["resultats_prelevement"] = Prelevement.Resultat.choices
+        context["types_etablissement"] = list(TypeExploitant.objects.values("id", "libelle").order_by("libelle"))
+        context["positions_chaine_distribution"] = list(
+            PositionChaineDistribution.objects.values("id", "libelle").order_by("libelle")
+        )
         return context
 
 
@@ -311,6 +317,15 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 commune=lieu["commune"],
                 code_insee=lieu["codeINSEE"],
                 departement_id=lieu["departementId"],
+                is_etablissement=lieu["isEtablissement"],
+                nom_etablissement=lieu["nomEtablissement"],
+                activite_etablissement=lieu["activiteEtablissement"],
+                pays_etablissement=lieu["paysEtablissement"],
+                raison_sociale_etablissement=lieu["raisonSocialeEtablissement"],
+                adresse_etablissement=lieu["adresseEtablissement"],
+                siret_etablissement=lieu["siretEtablissement"],
+                type_exploitant_etablissement_id=lieu["typeEtablissementId"],
+                position_chaine_distribution_etablissement_id=lieu["positionEtablissementId"],
             )
             lieu_instance.save()
             lieu["lieu_pk"] = lieu_instance.pk
@@ -434,6 +449,25 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.commune = loc["commune"]
             lieu.code_insee = loc["codeINSEE"]
             lieu.departement_id = loc["departementId"]
+            lieu.is_etablissement = loc["isEtablissement"]
+            if loc["isEtablissement"]:
+                lieu.nom_etablissement = loc["nomEtablissement"]
+                lieu.activite_etablissement = loc["activiteEtablissement"]
+                lieu.pays_etablissement = loc["paysEtablissement"]
+                lieu.raison_sociale_etablissement = loc["raisonSocialeEtablissement"]
+                lieu.adresse_etablissement = loc["adresseEtablissement"]
+                lieu.siret_etablissement = loc["siretEtablissement"]
+                lieu.type_exploitant_etablissement_id = loc["typeEtablissementId"]
+                lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
+            else:
+                lieu.nom_etablissement = ""
+                lieu.activite_etablissement = ""
+                lieu.pays_etablissement = ""
+                lieu.raison_sociale_etablissement = ""
+                lieu.adresse_etablissement = ""
+                lieu.siret_etablissement = ""
+                lieu.type_exploitant_etablissement_id = None
+                lieu.position_chaine_distribution_etablissement_id = None
             lieu.save()
             loc["lieu_pk"] = lieu.pk
 

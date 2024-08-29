@@ -63,6 +63,54 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% if lieu.is_etablissement %}
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-10">
+                                    Il s'agit d'un établissement
+                                </div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--nom-etablissement">Nom</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-nom-etablissement">{{lieu.nom_etablisement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--activite-etablissement">Activité</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-activite-etablissement">{{lieu.activite_etablissement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--pays-etablissement">Pays</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-pays-etablissement">{{lieu.pays_etablissement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--raison-sociale-etablissement">Raison sociale</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-raison-sociale-etablissement">{{lieu.raison_sociale_etablissement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--adresse-etablissement">Adresse</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse-etablissement">{{lieu.adresse_etablissement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--siret-etablissement">N° SIRET</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-siret-etablissement">{{lieu.siret_etablissement|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--type-etablissement">Type</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-type-etablissement">{{lieu.type_exploitant_etablissement.libelle|default:"nc."}}</div>
+                            </div>
+                            <div class="fr-grid-row fr-mb-2w">
+                                <div class="fr-col-offset-2"></div>
+                                <div class="fr-col-4 detail-lieu__label--position-etablissement">Position</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">{{lieu.position_chaine_distribution_etablissement.libelle|default:"nc."}}</div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

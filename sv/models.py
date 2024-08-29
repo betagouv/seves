@@ -145,6 +145,29 @@ class Lieu(models.Model):
         blank=True,
         null=True,
     )
+    is_etablissement = models.BooleanField(verbose_name="Établissement", default=False)
+    nom_etablissement = models.CharField(max_length=100, verbose_name="Nom établissement", blank=True)
+    activite_etablissement = models.CharField(max_length=100, verbose_name="Activité établissement", blank=True)
+    pays_etablissement = models.CharField(max_length=100, verbose_name="Pays établissement", blank=True)
+    raison_sociale_etablissement = models.CharField(
+        max_length=100, verbose_name="Raison sociale établissement", blank=True
+    )
+    adresse_etablissement = models.CharField(max_length=100, verbose_name="Adresse établissement", blank=True)
+    siret_etablissement = models.CharField(max_length=100, verbose_name="SIRET établissement", blank=True)
+    type_exploitant_etablissement = models.ForeignKey(
+        "TypeExploitant",
+        on_delete=models.PROTECT,
+        verbose_name="Type d'exploitant établissement",
+        blank=True,
+        null=True,
+    )
+    position_chaine_distribution_etablissement = models.ForeignKey(
+        "PositionChaineDistribution",
+        on_delete=models.PROTECT,
+        verbose_name="Position dans la chaîne de distribution établissement",
+        blank=True,
+        null=True,
+    )
 
     def __str__(self):
         return str(self.id)
@@ -184,44 +207,6 @@ class PositionChaineDistribution(models.Model):
 
     def __str__(self):
         return self.libelle
-
-
-class Etablissement(models.Model):
-    class Meta:
-        verbose_name = "Etablissement"
-        verbose_name_plural = "Etablissements"
-
-    fiche_detection = models.ForeignKey("FicheDetection", on_delete=models.CASCADE, verbose_name="Fiche de détection")
-    statut = models.ForeignKey(
-        StatutEtablissement,
-        on_delete=models.PROTECT,
-        verbose_name="Statut",
-        blank=True,
-        null=True,
-    )
-    nom = models.CharField(max_length=100, verbose_name="Nom", blank=True)
-    activite = models.CharField(max_length=100, verbose_name="Activité", blank=True)
-    pays = models.CharField(max_length=100, verbose_name="Pays", blank=True)
-    raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale", blank=True)
-    adresse = models.CharField(max_length=100, verbose_name="Adresse", blank=True)
-    identifiant = models.CharField(max_length=100, verbose_name="Identifiant", blank=True)
-    type_exploitant = models.ForeignKey(
-        TypeExploitant,
-        on_delete=models.PROTECT,
-        verbose_name="Type d'exploitant",
-        blank=True,
-        null=True,
-    )
-    position_chaine_distribution = models.ForeignKey(
-        PositionChaineDistribution,
-        on_delete=models.PROTECT,
-        verbose_name="Position dans la chaîne de distribution",
-        blank=True,
-        null=True,
-    )
-
-    def __str__(self):
-        return self.nom
 
 
 class StructurePreleveur(models.Model):
