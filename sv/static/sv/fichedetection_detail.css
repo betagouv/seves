@@ -89,7 +89,15 @@ main{
 .detail-lieu__label--departement,
 .detail-lieu__label--region,
 .detail-lieu__label--gps-lambert93,
-.detail-lieu__label--gps-wgs84 {
+.detail-lieu__label--gps-wgs84,
+.detail-lieu__label--nom-etablissement,
+.detail-lieu__label--activite-etablissement,
+.detail-lieu__label--pays-etablissement,
+.detail-lieu__label--raison-sociale-etablissement,
+.detail-lieu__label--adresse-etablissement,
+.detail-lieu__label--siret-etablissement,
+.detail-lieu__label--type-etablissement,
+.detail-lieu__label--position-etablissement {
     font-weight: bold;
 }
 

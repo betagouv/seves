@@ -219,6 +219,74 @@ class LieuFormDomElements:
     def coord_gps_wgs84_longitude_input(self) -> Locator:
         return self.page.locator("#coordonnees-gps-wgs84-longitude")
 
+    @property
+    def is_etablissement_checkbox(self) -> Locator:
+        return self.page.get_by_text("Il s'agit d'un établissement")
+
+    @property
+    def nom_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Nom")
+
+    @property
+    def nom_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Nom", exact=True)
+
+    @property
+    def activite_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Activité")
+
+    @property
+    def activite_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Activité")
+
+    @property
+    def pays_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Pays")
+
+    @property
+    def pays_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Pays")
+
+    @property
+    def raison_sociale_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Raison sociale")
+
+    @property
+    def raison_sociale_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Raison sociale")
+
+    @property
+    def adresse_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Adresse")
+
+    @property
+    def adresse_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Adresse", exact=True)
+
+    @property
+    def siret_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("N° SIRET")
+
+    @property
+    def siret_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("N° SIRET")
+
+    @property
+    def type_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Type")
+
+    @property
+    def type_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Type")
+
+    @property
+    def position_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Position")
+
+    @property
+    def position_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Position")
+
 
 class PrelevementFormDomElements:
     """Classe contenant les éléments du DOM de la modal de création/modification d'un prélèvement"""

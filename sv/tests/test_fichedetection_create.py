@@ -1,15 +1,20 @@
 import pytest
+from model_bakery import baker
 from datetime import datetime
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 from .conftest import check_select_options
-from .test_utils import FicheDetectionFormDomElements
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements
 from ..models import (
     FicheDetection,
     StatutEvenement,
     StatutReglementaire,
     Contexte,
     OrganismeNuisible,
+    Lieu,
+    Departement,
+    TypeExploitant,
+    PositionChaineDistribution,
 )
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
@@ -154,3 +159,80 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
 
     page.get_by_test_id("contacts").click()
     expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_create_fiche_detection_with_lieu(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    mocked_authentification_user,
+):
+    dept = baker.make(Departement)
+    type_exploitant = baker.make(TypeExploitant)
+    position = baker.make(PositionChaineDistribution)
+    lieu = baker.prepare(
+        Lieu,
+        wgs84_latitude=48.8566,
+        wgs84_longitude=2.3522,
+        lambert93_latitude=6000000,
+        lambert93_longitude=200000,
+        code_insee="17000",
+        siret_etablissement="12345678901234",
+        departement=dept,
+        is_etablissement=True,
+        type_exploitant_etablissement=type_exploitant,
+        position_chaine_distribution_etablissement=position,
+        _fill_optional=True,
+    )
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.statut_evenement_input.select_option(label="Foyer")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.commune_input.fill(lieu.commune)
+    lieu_form_elements.code_insee_input.fill(lieu.code_insee)
+    lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+    lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
+    lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
+    lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
+    lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.nom_etablissement_input.fill(lieu.nom)
+    lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
+    lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
+    lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
+    lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
+    lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
+    lieu_form_elements.type_etablissement_input.select_option(str(lieu.type_exploitant_etablissement.id))
+    lieu_form_elements.position_etablissement_input.select_option(
+        str(lieu.position_chaine_distribution_etablissement.id)
+    )
+    lieu_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+
+    page.wait_for_timeout(500)
+
+    fiche_detection = FicheDetection.objects.last()
+    assert fiche_detection.lieux.count() == 1
+    lieu = fiche_detection.lieux.first()
+    assert lieu.nom == lieu.nom
+    assert lieu.wgs84_latitude == lieu.wgs84_latitude
+    assert lieu.wgs84_longitude == lieu.wgs84_longitude
+    assert lieu.lambert93_latitude == lieu.lambert93_latitude
+    assert lieu.lambert93_longitude == lieu.lambert93_longitude
+    assert lieu.adresse_lieu_dit == lieu.adresse_lieu_dit
+    assert lieu.commune == lieu.commune
+    assert lieu.code_insee == str(lieu.code_insee)
+    assert lieu.departement == lieu.departement
+    assert lieu.is_etablissement == lieu.is_etablissement
+    assert lieu.nom_etablissement == lieu.nom_etablissement
+    assert lieu.activite_etablissement == lieu.activite_etablissement
+    assert lieu.pays_etablissement == lieu.pays_etablissement
+    assert lieu.raison_sociale_etablissement == lieu.raison_sociale_etablissement
+    assert lieu.adresse_etablissement == lieu.adresse_etablissement
+    assert lieu.siret_etablissement == lieu.siret_etablissement
+    assert lieu.type_exploitant_etablissement == lieu.type_exploitant_etablissement
+    assert lieu.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement

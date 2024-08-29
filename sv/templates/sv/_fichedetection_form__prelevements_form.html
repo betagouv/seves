@@ -1,0 +1,127 @@
+<dialog aria-labelledby="modal-add-edit-prelevement-title" id="modal-add-edit-prelevement" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-prelevement">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="modal-add-edit-prelevement-title"
+                            class="fr-modal__title"
+                            x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
+                        <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
+                            <div id="lieu" class="fr-select-group">
+                                <label class="fr-label">Lieu</label>
+                                <select class="fr-select" x-model="formPrelevement.lieuId" data-testid="prelevement-form-lieu">
+                                    <template x-for="lieu in lieux" :key="lieu.id">
+                                        <option :value="lieu.id" x-text="lieu.nomLieu"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div id="structure" class="fr-select-group">
+                                <label class="fr-label">Structure</label>
+                                <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required data-testid="prelevement-form-structure">
+                                    <option value="">----</option>
+                                    <template x-for="structure in structuresPreleveurs" :key="structure.id">
+                                        <option :value="structure.id" x-text="structure.nom"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <p id="numero-echantillon">
+                                <label class="fr-label">N° d'échantillon</label>
+                                <input x-model="formPrelevement.numeroEchantillon" type="text" class="fr-input">
+                            </p>
+                            <p id="date-prelevement">
+                                <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
+                                <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input">
+                            </p>
+                            <p id="site-inspection">
+                                <label class="fr-label">Site d'inspection</label>
+                                <select x-model="formPrelevement.siteInspectionId" class="fr-select" data-testid="prelevement-form-site-inspection">
+                                    <option value="">----</option>
+                                    <template x-for="site in sitesInspections" :key="site.id">
+                                        <option :value="site.id" x-text="site.nom"></option>
+                                    </template>
+                                </select>
+                            </p>
+                            <p id="matrice-prelevee">
+                                <label class="fr-label">Matrice prélevée</label>
+                                <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
+                                    <option value="">----</option>
+                                    <template x-for="matrice in matricesPrelevees" :key="matrice.id">
+                                        <option :value="matrice.id" x-text="matrice.libelle"></option>
+                                    </template>
+                                </select>
+                            </p>
+                            <p id="espece-echantillon">
+                                <label class="fr-label">Espèce de l'echantillon</label>
+                                <select x-model="formPrelevement.especeEchantillonId" class="fr-select" data-testid="prelevement-form-espece-echantillon">
+                                    <option value="">----</option>
+                                    <template x-for="espece in especesEchantillon" :key="espece.id">
+                                        <option :value="espece.id" x-text="espece.libelle"></option>
+                                    </template>
+                                </select>
+                            </p>
+                            <p id="resultat">
+                                <label class="fr-label">Résultat</label>
+                                <select x-model="formPrelevement.resultat" class="fr-select" data-testid="prelevement-form-resultat">
+                                    <option value="">----</option>
+                                    <template x-for="resultat in resultatsPrelevement" :key="resultat[0]">
+                                        <option :value="resultat[0]" x-text="resultat[1]"></option>
+                                    </template>
+                                </select>
+                            </p>
+                            <p>
+                                <div class="fr-checkbox-group">
+                                    <input x-model="formPrelevement.isOfficiel"
+                                           x-on:change="
+                                                        await $nextTick();
+                                                        if(formPrelevement.isOfficiel) {
+                                                        document.getElementById('laboratoire-confirmation').scrollIntoView({ behavior: 'smooth'});
+                                                        }
+                                                       "
+                                           name="is-prelevement-officiel"
+                                           id="is-prelevement-officiel"
+                                           type="checkbox"
+                                           aria-describedby="is-prelevement-officiel-messages">
+                                    <label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
+                                </div>
+                            </p>
+                            <div x-show="formPrelevement.isOfficiel">
+                                <p id="numero-phytopass">
+                                    <label class="fr-label">N° Phytopass</label>
+                                    <input x-model="formPrelevement.numeroPhytopass" type="text" class="fr-input">
+                                </p>
+                                <p id="laboratoire-agree">
+                                    <label class="fr-label">Laboratoire agrée</label>
+                                    <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select" data-testid="prelevement-form-laboratoire-agree">
+                                        <option value="">----</option>
+                                        <template x-for="laboratoire_agree in laboratoiresAgrees" :key="laboratoire_agree.id">
+                                            <option :value="laboratoire_agree.id" x-text="laboratoire_agree.nom"></option>
+                                        </template>
+                                    </select>
+                                </p>
+                                <p id="laboratoire-confirmation">
+                                    <label class="fr-label">Laboratoire de confirmation</label>
+                                    <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select" data-testid="prelevement-form-laboratoire-confirmation">
+                                        <option value="">----</option>
+                                        <template x-for="laboratoire_confirmation_officielle in laboratoiresConfirmationOfficielle" :key="laboratoire_confirmation_officielle.id">
+                                            <option :value="laboratoire_confirmation_officielle.id" x-text="laboratoire_confirmation_officielle.nom"></option>
+                                        </template>
+                                    </select>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="fr-modal__footer">
+                            <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                                <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement">Annuler</button>
+                                <input id="end" class="fr-btn" type="submit" :value="prelevementIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" data-testid="prelevement-form-save-btn"></input>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

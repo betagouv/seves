@@ -1,0 +1,121 @@
+<dialog aria-labelledby="modal-add-edit-lieu-title" id="modal-add-edit-lieu" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-lieu">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="modal-add-edit-lieu-title"
+                            class="fr-modal__title"
+                            x-text="(lieuIdToEdit === null ? 'Ajouter un' : 'Modifier le') + ' lieu'"></h1>
+                        <form x-ref="lieuForm" @submit.prevent="addOrEditLieu(lieuIdToEdit)" id="lieu-form">
+                            <p>
+                                <label class="fr-label" for="nom-lieu">Nom du lieu</label>
+                                <input x-model="lieuForm.nomLieu" type="text" id="nom-lieu" required class="fr-input">
+                            </p>
+                            <p>
+                                <label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
+                                <input x-model="lieuForm.adresseLieuDit" type="text" id="adresse-lieu-dit" class="fr-input">
+                            </p>
+                            <p>
+                                <label class="fr-label" for="commune">Commune</label>
+                                <input x-model="lieuForm.commune" type="text" id="commune" class="fr-input">
+                            </p>
+                            <p>
+                                <label class="fr-label" for="code-insee">Code INSEE</label>
+                                <input x-model="lieuForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
+                            </p>
+                            <p>
+                                <label class="fr-label" for="departement">Département</label>
+                                <select x-model="lieuForm.departementId" class="fr-select" id="departement">
+                                    <option value="">----</option>
+                                    <template x-for="departement in departements" :key="departement.id">
+                                        <option :value="departement.id" x-text="departement.nom + ' (' + departement.numero + ')'"></option>
+                                    </template>
+                                </select>
+                            </p>
+                            <p>
+                                <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
+                                <input x-model="lieuForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
+                                <input x-model="lieuForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
+                            </p>
+                            <p>
+                                <label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
+                                <input x-model="lieuForm.coordGPSWGS84Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="0.000001" min="-90" max="90" id="coordonnees-gps-wgs84-latitude" class="fr-input" placeholder="Latitude">
+                                <input x-model="lieuForm.coordGPSWGS84Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="0.000001" min="-180" max="180" id="coordonnees-gps-wgs84-longitude" class="fr-input" placeholder="Longitude">
+                            </p>
+                            <p>
+                                <div class="fr-checkbox-group">
+                                    <input x-model="lieuForm.isEtablissement"
+                                           x-on:change="
+                                                        await $nextTick();
+                                                        if(lieuForm.isEtablissement) {
+                                                        document.getElementById('position-etablissement').scrollIntoView({ behavior: 'smooth'});
+                                                        }
+                                                       "
+                                           name="is-etablissement"
+                                           id="is-etablissement"
+                                           type="checkbox"
+                                           aria-describedby="is-etablissement-messages">
+                                    <label class="fr-label" for="is-etablissement">Il s'agit d'un établissement</label>
+                                </div>
+                            </p>
+                            <div x-show="lieuForm.isEtablissement">
+                                <p>
+                                    <label class="fr-label" for="nom-etablissement">Nom</label>
+                                    <input x-model="lieuForm.nomEtablissement" type="text" class="fr-input" id="nom-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="activite-etablissement">Activité</label>
+                                    <input x-model="lieuForm.activiteEtablissement" type="text" class="fr-input" id="activite-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="pays-etablissement">Pays</label>
+                                    <input x-model="lieuForm.paysEtablissement" type="text" class="fr-input" id="pays-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="raison-sociale-etablissement">Raison sociale</label>
+                                    <input x-model="lieuForm.raisonSocialeEtablissement" type="text" class="fr-input" id="raison-sociale-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="adresse-etablissement">Adresse</label>
+                                    <input x-model="lieuForm.adresseEtablissement" type="text" class="fr-input" id="adresse-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="siret-etablissement">N° SIRET</label>
+                                    <input x-model="lieuForm.siretEtablissement" type="number" class="fr-input" id="siret-etablissement">
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="type-etablissement">Type</label>
+                                    <select x-model="lieuForm.typeEtablissementId" class="fr-select" data-testid="lieu-form-type-etablissement" id="type-etablissement">
+                                        <option value="">----</option>
+                                        <template x-for="typeEtablissement in typesEtablissement" :key="typeEtablissement.id">
+                                            <option :value="typeEtablissement.id" x-text="typeEtablissement.libelle"></option>
+                                        </template>
+                                    </select>
+                                </p>
+                                <p>
+                                    <label class="fr-label" for="position-etablissement">Position</label>
+                                    <select x-model="lieuForm.positionEtablissementId" class="fr-select" data-testid="lieu-form-position-etablissement" id="position-etablissement">
+                                        <option value="">----</option>
+                                        <template x-for="positionEtablissement in positionsEtablissement" :key="positionEtablissement.id">
+                                            <option :value="positionEtablissement.id" x-text="positionEtablissement.libelle"></option>
+                                        </template>
+                                    </select>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="fr-modal__footer">
+                            <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                                <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-lieu">Annuler</button>
+                                <input type="submit" :value="lieuIdToEdit === null ? 'Enregistrer' : 'Enregistrer les modifications'" class="fr-btn" data-testid="lieu-save-btn"></input>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

@@ -7,6 +7,9 @@ from ..models import (
     FicheDetection,
     Lieu,
     Prelevement,
+    Departement,
+    TypeExploitant,
+    PositionChaineDistribution,
 )
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
@@ -176,14 +179,21 @@ def test_add_new_lieu(
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
-    lieu = baker.prepare(Lieu, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _save_related=True, _fill_optional=True)
+    lieu = baker.prepare(
+        Lieu,
+        wgs84_latitude=48.8566,
+        wgs84_longitude=2.3522,
+        code_insee="17000",
+        _save_related=True,
+        _fill_optional=True,
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(lieu.commune)
-    # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
+    lieu_form_elements.code_insee_input.fill(str(lieu.code_insee))
     lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -197,7 +207,7 @@ def test_add_new_lieu(
     assert lieu_from_db.nom == lieu.nom
     assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
     assert lieu_from_db.commune == lieu.commune
-    # assert lieu_from_db.code_insee == lieu.code_insee
+    assert lieu_from_db.code_insee == str(lieu.code_insee)
     assert lieu_from_db.departement == lieu.departement
     assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
@@ -260,26 +270,47 @@ def test_update_lieu(
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
+
+    dept = baker.make(Departement)
+    type_exploitant = baker.make(TypeExploitant)
+    position = baker.make(PositionChaineDistribution)
     new_lieu = baker.prepare(
         Lieu,
         wgs84_latitude=48.8566,
         wgs84_longitude=2.3522,
+        lambert93_latitude=6000000,
+        lambert93_longitude=200000,
+        code_insee="17000",
+        siret_etablissement="12345678901234",
+        departement=dept,
+        is_etablissement=True,
+        type_exploitant_etablissement=type_exploitant,
+        position_chaine_distribution_etablissement=position,
         _fill_optional=True,
-        _save_related=True,
-        lambert93_longitude=652469,
-        lambert93_latitude=6862035,
     )
+
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(new_lieu.commune)
-    # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
+    lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
     lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
+    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.nom_etablissement_input.fill(new_lieu.nom_etablissement)
+    lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
+    lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
+    lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
+    lieu_form_elements.adresse_etablissement_input.fill(new_lieu.adresse_etablissement)
+    lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
+    lieu_form_elements.type_etablissement_input.select_option(str(new_lieu.type_exploitant_etablissement.id))
+    lieu_form_elements.position_etablissement_input.select_option(
+        str(new_lieu.position_chaine_distribution_etablissement.id)
+    )
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
     page.wait_for_timeout(600)
@@ -287,12 +318,25 @@ def test_update_lieu(
     fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
     lieu_from_db = fd.lieux.first()
     assert lieu_from_db.nom == new_lieu.nom
-    assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
-    assert lieu_from_db.commune == new_lieu.commune
-    # assert lieu_from_db.code_insee == new_lieu.code_insee
-    assert lieu_from_db.departement == new_lieu.departement
     assert lieu_from_db.wgs84_latitude == new_lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == new_lieu.wgs84_longitude
+    assert lieu_from_db.lambert93_latitude == new_lieu.lambert93_latitude
+    assert lieu_from_db.lambert93_longitude == new_lieu.lambert93_longitude
+    assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
+    assert lieu_from_db.commune == new_lieu.commune
+    assert lieu_from_db.code_insee == str(new_lieu.code_insee)
+    assert lieu_from_db.departement == new_lieu.departement
+    assert lieu_from_db.is_etablissement == new_lieu.is_etablissement
+    assert lieu_from_db.nom_etablissement == new_lieu.nom_etablissement
+    assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
+    assert lieu_from_db.pays_etablissement == new_lieu.pays_etablissement
+    assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
+    assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement
+    assert lieu_from_db.siret_etablissement == new_lieu.siret_etablissement
+    assert lieu_from_db.type_exploitant_etablissement == new_lieu.type_exploitant_etablissement
+    assert (
+        lieu_from_db.position_chaine_distribution_etablissement == new_lieu.position_chaine_distribution_etablissement
+    )
 
 
 @pytest.mark.django_db
