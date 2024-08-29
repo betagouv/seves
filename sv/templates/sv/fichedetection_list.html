@@ -35,128 +35,130 @@
         <p>
             <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ fichedetection_list.count|pluralize }} au total</span>
         </p>
-        <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
-            <table class="fiches__list-table">
-                <thead>
-                    <tr class="fiches__table-header">
-                        <th scope="col">N° fiche</th>
-                        <th scope="col">Organisme nuisible</th>
-                        <th scope="col">Créateur</th>
-                        <th scope="col">Commune</th>
-                        <th scope="col">Région</th>
-                        <th scope="col">État</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for fiche in fichedetection_list %}
-                        <tr class="fiches__list-row">
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    {{ fiche.numero|default:"nc." }}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    {{ fiche.organisme_nuisible|default:"nc." }}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    {{ fiche.createur|truncatechars:30 }}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    {% with fiche.lieux_list|length as num_lieux %}
-                                        {% if num_lieux == 0 %}
-                                            {{ fiche.lieux_list|default:"nc." }}
-                                        {% endif %}
-                                        {% if num_lieux <= 3 %}
-                                            {% for lieu in fiche.lieux_list %}
-                                                {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        {% else %}
-                                            {% for lieu in fiche.lieux_list|slice:":3" %}
-                                                {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                            ... +{{ num_lieux|add:"-3" }}
-                                        {% endif %}
-                                    {% endwith %}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    {{ fiche.region|default:"nc." }}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                    <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
-                                </a>
-                            </td>
+        {% if fichedetection_list.count %}
+            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+                <table class="fiches__list-table">
+                    <thead>
+                        <tr class="fiches__table-header">
+                            <th scope="col">N° fiche</th>
+                            <th scope="col">Organisme nuisible</th>
+                            <th scope="col">Créateur</th>
+                            <th scope="col">Commune</th>
+                            <th scope="col">Région</th>
+                            <th scope="col">État</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for fiche in fichedetection_list %}
+                            <tr class="fiches__list-row">
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {{ fiche.numero|default:"nc." }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {{ fiche.organisme_nuisible|default:"nc." }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {{ fiche.createur|truncatechars:30 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {% with fiche.lieux_list|length as num_lieux %}
+                                            {% if num_lieux == 0 %}
+                                                {{ fiche.lieux_list|default:"nc." }}
+                                            {% endif %}
+                                            {% if num_lieux <= 3 %}
+                                                {% for lieu in fiche.lieux_list %}
+                                                    {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                {% for lieu in fiche.lieux_list|slice:":3" %}
+                                                    {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                                ... +{{ num_lieux|add:"-3" }}
+                                            {% endif %}
+                                        {% endwith %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {{ fiche.region|default:"nc." }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
             <!--
             Utilisation du tag 'url_replace' pour maintenir les paramètres de recherche lors de la pagination.
             Ce tag est utilisé pour générer les URLs de pagination tout en conservant les filtres de recherche.
             -->
-            {% if page_obj.paginator.num_pages > 1 %}
-                <nav role="navigation" class="fr-pagination" aria-label="Pagination" style="margin-top: 2rem;">
-                    <ul class="fr-pagination__list">
-                        <li>
-                            <a class="fr-pagination__link fr-pagination__link--first" href="?{% url_replace page='1' %}" role="link" aria-describedby="tooltip-first-page">
-                                Première page
-                            </a>
-                            <span class="fr-tooltip fr-placement" id="tooltip-first-page" role="tooltip" aria-hidden="true">Première page</span>
-                        </li>
+                {% if page_obj.paginator.num_pages > 1 %}
+                    <nav role="navigation" class="fr-pagination" aria-label="Pagination" style="margin-top: 2rem;">
+                        <ul class="fr-pagination__list">
+                            <li>
+                                <a class="fr-pagination__link fr-pagination__link--first" href="?{% url_replace page='1' %}" role="link" aria-describedby="tooltip-first-page">
+                                    Première page
+                                </a>
+                                <span class="fr-tooltip fr-placement" id="tooltip-first-page" role="tooltip" aria-hidden="true">Première page</span>
+                            </li>
 
-                        <li>
-                            <a class="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
-                               {% if page_obj.has_previous %}
-                                   href="?{% url_replace page=page_obj.previous_page_number %}"
-                               {% endif %}
-                               role="link"
-                               aria-disabled="{{ page_obj.has_previous|yesno:'false,true' }}">
-                                Page précédente
-                            </a>
-                        </li>
+                            <li>
+                                <a class="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
+                                   {% if page_obj.has_previous %}
+                                       href="?{% url_replace page=page_obj.previous_page_number %}"
+                                   {% endif %}
+                                   role="link"
+                                   aria-disabled="{{ page_obj.has_previous|yesno:'false,true' }}">
+                                    Page précédente
+                                </a>
+                            </li>
 
-                        {% for i in page_obj.paginator.page_range %}
-                            {% if page_obj.number == i %}
-                                <li>
-                                    <a class="fr-pagination__link" aria-current="page" title="Page {{ i }}">
-                                        {{ i }}
-                                    </a>
-                                </li>
-                            {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
-                                <li>
-                                    <a class="fr-pagination__link" href="?{% url_replace page=i %}" title="Page {{ i }}">
-                                        {{ i }}
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
+                            {% for i in page_obj.paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                    <li>
+                                        <a class="fr-pagination__link" aria-current="page" title="Page {{ i }}">
+                                            {{ i }}
+                                        </a>
+                                    </li>
+                                {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                                    <li>
+                                        <a class="fr-pagination__link" href="?{% url_replace page=i %}" title="Page {{ i }}">
+                                            {{ i }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
 
-                        <li>
-                            <a class="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
-                               {% if page_obj.has_next %}href="?{% url_replace page=page_obj.next_page_number %}"{% endif %}
-                               aria-disabled="{{ page_obj.has_next|yesno:'false,true' }}">
-                                Page suivante
-                            </a>
-                        </li>
+                            <li>
+                                <a class="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
+                                   {% if page_obj.has_next %}href="?{% url_replace page=page_obj.next_page_number %}"{% endif %}
+                                   aria-disabled="{{ page_obj.has_next|yesno:'false,true' }}">
+                                    Page suivante
+                                </a>
+                            </li>
 
-                        <li>
-                            <a class="fr-pagination__link fr-pagination__link--last" href="?{% url_replace page=page_obj.paginator.num_pages %}" role="link" aria-describedby="tooltip-last-page">
-                                Dernière page
-                            </a>
-                            <span class="fr-tooltip fr-placement" id="tooltip-last-page" role="tooltip" aria-hidden="true">Dernière page</span>
-                        </li>
-                    </ul>
-                </nav>
-            {% endif %}
-        </div>
+                            <li>
+                                <a class="fr-pagination__link fr-pagination__link--last" href="?{% url_replace page=page_obj.paginator.num_pages %}" role="link" aria-describedby="tooltip-last-page">
+                                    Dernière page
+                                </a>
+                                <span class="fr-tooltip fr-placement" id="tooltip-last-page" role="tooltip" aria-hidden="true">Dernière page</span>
+                            </li>
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
