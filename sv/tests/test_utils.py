@@ -272,6 +272,14 @@ class LieuFormDomElements:
         return self.page.get_by_label("N° SIRET")
 
     @property
+    def code_inpp_etablissement_label(self) -> Locator:
+        return self.page.get_by_text("Code INPP")
+
+    @property
+    def code_inpp_etablissement_input(self) -> Locator:
+        return self.page.get_by_label("Code INPP")
+
+    @property
     def type_etablissement_label(self) -> Locator:
         return self.page.get_by_text("Type")
 
