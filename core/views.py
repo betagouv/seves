@@ -11,6 +11,8 @@ from .forms import (
     DocumentEditForm,
     ContactAddForm,
     ContactSelectionForm,
+    StructureAddForm,
+    StructureSelectionForm,
 )
 from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
@@ -218,6 +220,85 @@ class MessageCreateView(CreateView):
 
 class MessageDetailsView(DetailView):
     model = Message
+
+
+class StructureAddFormView(FormView):
+    template_name = "core/_structure_add_form.html"
+    form_class = StructureAddForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["fiche_id"] = self.request.GET.get("fiche_id")
+        initial["next"] = self.request.GET.get("next")
+        initial["content_type_id"] = self.request.GET.get("content_type_id")
+        return initial
+
+    def form_valid(self, form):
+        selection_form = StructureSelectionForm(
+            fiche_id=form.cleaned_data.get("fiche_id"),
+            content_type_id=form.cleaned_data.get("content_type_id"),
+            structure_selected=form.cleaned_data.get("structure_niveau1"),
+            initial={
+                "next": form.cleaned_data.get("next"),
+            },
+        )
+        return render(self.request, self.template_name, {"form": form, "selection_form": selection_form})
+
+
+class StructureSelectionView(FormView):
+    template_name = "core/_structure_add_form.html"
+    form_class = StructureSelectionForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["next"] = self.request.GET.get("next")
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(StructureSelectionView, self).get_form_kwargs()
+        kwargs.update(
+            {
+                "fiche_id": self.request.POST.get("fiche_id", ""),
+                "content_type_id": self.request.POST.get("content_type_id", ""),
+                "structure_selected": self.request.POST.get("structure_selected", ""),
+            }
+        )
+        return kwargs
+
+    def form_invalid(self, form):
+        add_form = StructureAddForm(
+            initial={
+                "fiche_id": form.data.get("fiche_id"),
+                "content_type_id": form.data.get("content_type_id"),
+                "next": form.data.get("next"),
+                "structure_niveau1": form.data.get("structure_selected"),
+            }
+        )
+        return render(
+            self.request,
+            self.template_name,
+            {
+                "form": add_form,
+                "selection_form": form,
+            },
+        )
+
+    def form_valid(self, form):
+        content_type = ContentType.objects.get(pk=form.cleaned_data["content_type_id"]).model_class()
+        fiche = content_type.objects.get(pk=form.cleaned_data["fiche_id"])
+        contacts = form.cleaned_data["contacts"]
+        for contact in contacts:
+            fiche.contacts.add(contact)
+
+        message = ngettext(
+            "La structure a été ajoutée avec succès.",
+            "Les %(count)d structures ont été ajoutées avec succès.",
+            len(contacts),
+        ) % {"count": len(contacts)}
+        messages.success(self.request, message, extra_tags="core contacts")
+
+        redirect_url = self.request.POST.get("next") + "#tabpanel-contacts-panel"
+        return HttpResponseRedirect(redirect_url)
 
 
 class SoftDeleteView(View):

@@ -10,6 +10,8 @@ from .views import (
     MessageCreateView,
     MessageDetailsView,
     SoftDeleteView,
+    StructureAddFormView,
+    StructureSelectionView,
 )
 
 urlpatterns = [
@@ -60,4 +62,6 @@ urlpatterns = [
         SoftDeleteView.as_view(),
         name="soft-delete",
     ),
+    path("structures/ajout/selection", StructureAddFormView.as_view(), name="structure-selection-add-form"),
+    path("structures/ajout", StructureSelectionView.as_view(), name="structure-add"),
 ]

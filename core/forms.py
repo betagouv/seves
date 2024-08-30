@@ -200,3 +200,51 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["document_type", "file"]
+
+
+class StructureAddForm(forms.Form):
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    structure_niveau1 = forms.ChoiceField(choices=[], label="En :", widget=forms.RadioSelect)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        niveau1_choices = Structure.objects.values_list("niveau1", flat=True).distinct().order_by("niveau1")
+        self.fields["structure_niveau1"].choices = [(niveau1, niveau1) for niveau1 in niveau1_choices]
+        self.fields["structure_niveau1"].initial = niveau1_choices.first()
+
+
+class StructureSelectionForm(forms.Form):
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    structure_selected = forms.CharField(widget=forms.HiddenInput())
+    contacts = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.none(),
+        widget=forms.CheckboxSelectMultiple(),
+        label="",
+        error_messages={"required": "Veuillez sélectionner au moins une structure"},
+    )
+    contacts_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        fiche_id = kwargs.pop("fiche_id")
+        content_type_id = kwargs.pop("content_type_id")
+        structure_selected = kwargs.pop("structure_selected")
+        super().__init__(*args, **kwargs)
+        self.fields["fiche_id"].initial = fiche_id
+        self.fields["content_type_id"].initial = content_type_id
+        self.fields["structure_selected"].initial = structure_selected
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        fiche = content_type.objects.get(pk=fiche_id)
+        # Obtention des structures déjà liées à la fiche
+        existing_structures = fiche.contacts.all()
+        # Exclut les contacts déjà associés à la fiche
+        self.fields["contacts"].queryset = (
+            Contact.objects.filter(structure__niveau1=structure_selected)
+            .exclude(pk__in=existing_structures)
+            .order_by("structure__niveau2")
+        )
+        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
+        self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
