@@ -161,7 +161,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db
 def test_create_fiche_detection_with_lieu(
     live_server,
     page: Page,
@@ -194,7 +194,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(lieu.commune)
     lieu_form_elements.code_insee_input.fill(lieu.code_insee)
-    lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+    lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -206,6 +206,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
     lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
+    lieu_form_elements.code_inpp_etablissement_input.fill(lieu.code_inpp_etablissement)
     lieu_form_elements.type_etablissement_input.select_option(str(lieu.type_exploitant_etablissement.id))
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
@@ -213,7 +214,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
 
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(600)
 
     fiche_detection = FicheDetection.objects.last()
     assert fiche_detection.lieux.count() == 1
@@ -234,5 +235,6 @@ def test_create_fiche_detection_with_lieu(
     assert lieu.raison_sociale_etablissement == lieu.raison_sociale_etablissement
     assert lieu.adresse_etablissement == lieu.adresse_etablissement
     assert lieu.siret_etablissement == lieu.siret_etablissement
+    assert lieu.code_inpp_etablissement == lieu.code_inpp_etablissement
     assert lieu.type_exploitant_etablissement == lieu.type_exploitant_etablissement
     assert lieu.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement

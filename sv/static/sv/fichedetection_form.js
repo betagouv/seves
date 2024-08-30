@@ -85,6 +85,7 @@ document.addEventListener('alpine:init', () => {
             raisonSocialeEtablissement: '',
             adresseEtablissement: '',
             siretEtablissement: '',
+            codeInppEtablissement: '',
             typeEtablissementId: '',
             positionEtablissementId: '',
         },
@@ -168,6 +169,7 @@ document.addEventListener('alpine:init', () => {
                         raisonSocialeEtablissement: lieu.raison_sociale_etablissement,
                         adresseEtablissement: lieu.adresse_etablissement,
                         siretEtablissement: lieu.siret_etablissement,
+                        codeInppEtablissement: lieu.code_inpp_etablissement,
                         typeEtablissementId: lieu.type_exploitant_etablissement_id,
                         positionEtablissementId: lieu.position_chaine_distribution_etablissement_id,
                     };
@@ -271,6 +273,7 @@ document.addEventListener('alpine:init', () => {
                 raisonSocialeEtablissement: '',
                 adresseEtablissement: '',
                 siretEtablissement: '',
+                codeInppEtablissement: '',
                 typeEtablissementId: '',
                 positionEtablissementId: '',
 
