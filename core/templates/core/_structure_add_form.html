@@ -4,26 +4,7 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/contact_add_form.css' %}">
-
-    <!-- choicesjs (autocompletion pour select) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
 {% endblock %}
-
-{% block scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const element = document.getElementById('id_structure');
-            const choices = new Choices(element, {
-                searchResultLimit: 500,
-                classNames: {
-                    containerInner: 'fr-select fr-mt-1w',
-                }
-            });
-        });
-    </script>
-{% endblock %}
-
 
 {% block content %}
     <div class="fr-container">
@@ -34,31 +15,60 @@
                         <p class="fr-my-2w"><a href="{{form.next.value}}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à la fiche</a></p>
                     </div>
                 </div>
+
                 <div class="fr-grid-row">
                     <div class="fr-col-12">
-                        <h1>Ajouter un agent</h1>
+                        <h1>Ajouter une structure</h1>
                     </div>
                 </div>
+
                 <div class="contact-add-form__container fr-p-5w fr-mb-6w">
-                    <div class="fr-grid-row fr-pl-1w">
-                        <div class="fr-col-7">
-                            <form id="form-search" method="post" action="{% url 'contact-add-form' %}">
-                                {% csrf_token %}
-                                {{ form.as_p }}
-                                <button type="submit" form="form-search" class="fr-btn">Rechercher</button>
-                            </form>
-                        </div>
-                        <div class="fr-col-5"></div>
-                    </div>
+                    <form id="form-search" method="post" action="{% url 'structure-selection-add-form' %}">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                            <div class="grid-row">
+                                <div class="fr-col-8">
+                                    <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-4w">
+                                        {% for error in form.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                        <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                            Masquer le message
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <fieldset class="fr-fieldset" id="radio-hint" aria-labelledby="radio-hint-legend">
+                            <legend class="fr-fieldset__legend--regular fr-fieldset__legend" id="radio-hint-legend">
+                                {{ form.structure_niveau1.label_tag }}
+                            </legend>
+                            {% for structure in form.structure_niveau1 %}
+                                <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                    <div class="fr-radio-group">
+                                        {{ structure.tag }}
+                                        <label class="fr-label" for="{{ structure.id_for_label }}">{{ structure.choice_label }}</label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </fieldset>
+                        {{ form.fiche_id }}
+                        {{ form.next }}
+                        {{ form.content_type_id }}
+                        <button type="submit" form="form-search" class="fr-btn">Rechercher</button>
+                    </form>
+
                     {% if selection_form%}
                         <div class="fr-grid-row">
                             <div class="fr-col">
-                                <form id="form-selection" method="post" action="{% url 'contact-add-form-select-agents' %}" class="fr-mt-4w">
+                                <form id="form-selection" method="post" action="{% url 'structure-add' %}" class="fr-mt-4w">
                                     {% csrf_token %}
 
-                                    <div class="fr-grid-row fr-pl-1w">
+                                    <div class="fr-grid-row fr-pl-1w fr-mb-1w fr-mt-5w">
                                         <div class="fr-col">
-                                            <p><span class="contacts-count">{{ selection_form.contacts.field.queryset.count }} agents</span> dans cette structure</p>
+                                            <p><span class="contacts-count">{{ selection_form.contacts.field.queryset.count }} services</span> trouvés</p>
                                         </div>
                                     </div>
 
@@ -94,20 +104,21 @@
                                         {% endwith %}
                                     {% endwith %}
 
-                                    {{ selection_form.structure }}
+                                    {{ selection_form.structure_selected }}
                                     {{ selection_form.content_type_id }}
                                     {{ selection_form.fiche_id }}
                                     {{ selection_form.next }}
 
-                                    <button type="submit" form="form-selection" class="fr-btn fr-mt-2w">Ajouter les contacts sélectionnés</button>
+                                    {% if selection_form.contacts.field.queryset.count %}
+                                        <button type="submit" form="form-selection" class="fr-btn fr-mt-2w">Ajouter les structures sélectionnées</button>
+                                    {% endif %}
                                 </form>
                             </div>
                         </div>
                     {% endif %}
                 </div>
+
             </div>
         </div>
-
-
     </div>
 {% endblock %}

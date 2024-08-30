@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin
-from core.models import Document, Message, Contact
+from core.models import Document, Message, Contact, Structure
 from sv.managers import FicheDetectionManager
 
 
@@ -383,7 +383,7 @@ class FicheDetection(AllowsSoftDeleteMixin, models.Model):
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
-    createur = models.ForeignKey("core.Structure", on_delete=models.PROTECT, verbose_name="Structure créatrice")
+    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
     statut_evenement = models.ForeignKey(
