@@ -854,6 +854,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     assert StructurePreleveur.objects.count() > 0
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveur.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
+    page.get_by_test_id("prelevement-form-resultat-detecte").click()
     prelevement_form_elements.save_btn.click()
 
     # suppression du lieu
