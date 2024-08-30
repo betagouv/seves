@@ -63,15 +63,19 @@
                                     </template>
                                 </select>
                             </p>
-                            <p id="resultat">
-                                <label class="fr-label">Résultat</label>
-                                <select x-model="formPrelevement.resultat" class="fr-select" data-testid="prelevement-form-resultat">
-                                    <option value="">----</option>
+                            <div id="resultat">
+                                <label class="fr-label" style="flex:0.65">Résultat</label>
+                                <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
                                     <template x-for="resultat in resultatsPrelevement" :key="resultat[0]">
-                                        <option :value="resultat[0]" x-text="resultat[1]"></option>
+                                        <div class="fr-fieldset__element fr-fieldset__element--inline fr-mt-4v fr-mb-0-5v">
+                                            <div class="fr-radio-group">
+                                                <input x-model="formPrelevement.resultat" type="radio" :id="resultat[0] + '-id'" name="resultat" :value="resultat[0]" required />
+                                                <label class="fr-label" :for="resultat[0] + '-id'" x-text="resultat[1]" :data-testid="'prelevement-form-resultat-'+resultat[0]"></label>
+                                            </div>
+                                        </div>
                                     </template>
-                                </select>
-                            </p>
+                                </fieldset>
+                            </div>
                             <p>
                                 <div class="fr-checkbox-group">
                                     <input x-model="formPrelevement.isOfficiel"

@@ -378,9 +378,8 @@ class PrelevementFormDomElements:
     def resultat_label(self) -> Locator:
         return self.page.get_by_text("Résultat")
 
-    @property
-    def resultat_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-resultat")
+    def resultat_input(self, resultat_value) -> Locator:
+        return self.page.get_by_test_id("prelevement-form-resultat-" + resultat_value)
 
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
