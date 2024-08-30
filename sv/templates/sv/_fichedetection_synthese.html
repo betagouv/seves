@@ -23,10 +23,10 @@
                         {% if lieux_count == 0 %}
                             nc.
                         {% else %}
-                            {{ lieux.0.commune }} <span aria-describedby="tooltip-2989">+{{ lieux_count|add:"-1" }}</span>
+                            {{ lieux.0.commune|default:"nc." }} <span aria-describedby="tooltip-2989">+{{ lieux_count|add:"-1" }}</span>
                             <span class="fr-tooltip fr-placement" id="tooltip-2989" role="tooltip" aria-hidden="true">
                                 {% for lieu in lieux|slice:"1:" %}
-                                    {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
+                                    {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </span>
                         {% endif %}
