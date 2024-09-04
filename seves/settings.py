@@ -97,6 +97,12 @@ DATABASES = {
     "default": env.db(),
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": env("CACHE_CLASS", default="django.core.cache.backends.locmem.LocMemCache"),
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
