@@ -467,3 +467,6 @@ class FicheDetection(models.Model):
     @property
     def add_fin_intervention_url(self):
         return self._add_message_url(Message.FIN_INTERVENTION)
+
+    def __str__(self):
+        return str(self.numero)

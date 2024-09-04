@@ -169,7 +169,7 @@ def test_can_add_and_see_note_without_document(live_server, page: Page, fiche_de
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    page.locator(".fr-translate__btn").click()
+    page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Note").click()
 
     assert page.url == f"{live_server.url}{fiche_detection.add_note_url}"

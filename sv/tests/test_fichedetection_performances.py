@@ -4,7 +4,7 @@ from model_bakery import baker
 from core.models import Message, Document
 from sv.models import FicheDetection, Lieu, Prelevement
 
-BASE_NUM_QUERIES = 9  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 11  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
