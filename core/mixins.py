@@ -1,8 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
-from core.models import Document
+from core.models import Document, LienLibre
 
 
 class WithDocumentUploadFormMixin:
@@ -48,4 +49,15 @@ class WithContactListInContextMixin:
         context = super().get_context_data(**kwargs)
         context["contacts"] = self.get_object().contacts.prefetch_related("agent__structure")
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        return context
+
+
+class WithFreeLinksListInContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        context["free_links_list"] = LienLibre.objects.filter(
+            (Q(content_type_1=ContentType.objects.get_for_model(obj), object_id_1=obj.id))
+            | (Q(content_type_2=ContentType.objects.get_for_model(obj), object_id_2=obj.id))
+        )
         return context

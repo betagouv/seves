@@ -2,6 +2,8 @@ from typing import Optional, Union, Tuple
 import json
 from datetime import datetime, time
 import uuid
+
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.shortcuts import redirect
 from django.views.generic import (
@@ -9,11 +11,12 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
+    FormView,
 )
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
@@ -23,7 +26,9 @@ from core.mixins import (
     WithDocumentListInContextMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
 )
+from sv.forms import FreeLinkForm
 from .models import (
     FicheDetection,
     Lieu,
@@ -136,6 +141,7 @@ class FicheDetectionDetailView(
     WithDocumentUploadFormMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
     DetailView,
 ):
     model = FicheDetection
@@ -151,11 +157,17 @@ class FicheDetectionDetailView(
     def get_object_linked_to_document(self):
         return self.get_object()
 
+    def _get_free_link_form(self):
+        return FreeLinkForm(
+            content_type_1=ContentType.objects.get_for_model(self.get_object()).pk, object_id_1=self.get_object().pk
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lieux"] = Lieu.objects.filter(fiche_detection=self.get_object()).order_by("id")
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
+        context["free_link_form"] = self._get_free_link_form()
         return context
 
 
@@ -530,3 +542,22 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
+
+
+class FreeLinkCreateView(FormView):
+    form_class = FreeLinkForm
+
+    def post(self, request, *args, **kwargs):
+        form = FreeLinkForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, "Ce lien existe déjà.")
+            return HttpResponseRedirect(self.request.POST.get("next"))
+
+        try:
+            form.save()
+        except IntegrityError:
+            messages.error(request, "Vous ne pouvez pas lier un objet à lui même.")
+            return HttpResponseRedirect(self.request.POST.get("next"))
+
+        messages.success(request, "Le lien a été créé avec succès.")
+        return HttpResponseRedirect(self.request.POST.get("next"))

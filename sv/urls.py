@@ -4,6 +4,7 @@ from .views import (
     FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
+    FreeLinkCreateView,
 )
 
 urlpatterns = [
@@ -26,5 +27,10 @@ urlpatterns = [
         "fiches-detection/<int:pk>/modification/",
         FicheDetectionUpdateView.as_view(),
         name="fiche-detection-modification",
+    ),
+    path(
+        "lien/ajout/",
+        FreeLinkCreateView.as_view(),
+        name="free-link-add",
     ),
 ]

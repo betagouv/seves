@@ -36,11 +36,13 @@
                 </fieldset>
             </p>
 
-            <p>
-                <button class="fr-btn">
-                    <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill"></span></a>
+            <div class="fiche-action">
+                <button class="fr-btn fr-btn--secondary fr-mr-2w">
+                    <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
                 </button>
-            </p>
+                {% include "sv/_action_navigation.html" %}
+                {% include "sv/_lienlibre_modal.html" %}
+            </div>
         </div>
 
         <div class="fiche-detail">
@@ -190,9 +192,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="fiche-detail__liens">
+                    <h2>Liens libres</h2>
+                    {% for link in free_links_list %}
+                        {% if link.related_object_1 == fichedetection %}
+                            <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}">{{ link.related_object_2 }}</a>
+                        {% endif %}
+                        {% if link.related_object_2 == fichedetection %}
+                            <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}">{{ link.related_object_1 }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
         {% include "sv/_fichedetection_synthese.html" %}
+
 
         {% include "core/_fiche_bloc_commun.html" with redirect_url=fichedetection.get_absolute_url fiche=fichedetection pk=fichedetection.pk content_type_id=fichedetection.get_content_type_id %}
     </main>

@@ -1,8 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, CheckConstraint
 
 from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
@@ -158,3 +159,43 @@ class Message(models.Model):
 
     def get_absolute_url(self):
         return reverse("message-view", kwargs={"pk": self.pk})
+
+
+class LienLibre(models.Model):
+    content_type_1 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_1")
+    object_id_1 = models.PositiveIntegerField()
+    related_object_1 = GenericForeignKey("content_type_1", "object_id_1")
+
+    content_type_2 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_2")
+    object_id_2 = models.PositiveIntegerField()
+    related_object_2 = GenericForeignKey("content_type_2", "object_id_2")
+
+    class Meta:
+        constraints = [
+            CheckConstraint(
+                check=~Q(content_type_1=models.F("content_type_2"), object_id_1=models.F("object_id_2")),
+                name="no_self_relation",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if LienLibre.objects.filter(
+            content_type_1=self.content_type_1,
+            object_id_1=self.object_id_1,
+            content_type_2=self.content_type_2,
+            object_id_2=self.object_id_2,
+        ).exists():
+            raise ValidationError("Cette relation existe déjà.")
+
+        if LienLibre.objects.filter(
+            content_type_1=self.content_type_2,
+            object_id_1=self.object_id_2,
+            content_type_2=self.content_type_1,
+            object_id_2=self.object_id_1,
+        ).exists():
+            raise ValidationError("Une relation inverse existe déjà.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

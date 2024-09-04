@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView
+
 from .forms import (
     DocumentUploadForm,
     MessageForm,
