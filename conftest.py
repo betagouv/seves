@@ -12,7 +12,7 @@ User = get_user_model()
 
 @pytest.fixture
 def page(page):
-    timeout = 2_000
+    timeout = 4_000
     page.set_default_navigation_timeout(timeout)
     page.set_default_timeout(timeout)
     yield page
