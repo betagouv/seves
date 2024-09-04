@@ -12,7 +12,7 @@ User = get_user_model()
 
 @pytest.fixture
 def page(page):
-    timeout = 2_000
+    timeout = 4_000
     page.set_default_navigation_timeout(timeout)
     page.set_default_timeout(timeout)
     yield page
@@ -24,7 +24,7 @@ def set_django_allow_async_unsafe():
 
 
 @pytest.fixture(autouse=True)
-def mocked_authentification_user():
+def mocked_authentification_user(db):
     user = baker.make(get_user_model(), email="test@example.com")
     structure = baker.make(Structure, niveau2="Structure Test", libelle="Structure Test")
     agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")

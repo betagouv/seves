@@ -1,11 +1,9 @@
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-import pytest
 from core.models import Message, Contact, Agent
 from ..models import FicheDetection
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_and_see_message_without_document(live_server, page: Page, fiche_detection: FicheDetection):
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)
@@ -44,7 +42,6 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fiche_detection: FicheDetection):
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)
@@ -102,7 +99,6 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fic
     expect(page.get_by_text("requirements.txt", exact=True)).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(
     live_server, page: Page, fiche_detection: FicheDetection
 ):
@@ -169,7 +165,6 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(
         expect(page.get_by_text(str(agent), exact=True)).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_and_see_note_without_document(live_server, page: Page, fiche_detection: FicheDetection):
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)

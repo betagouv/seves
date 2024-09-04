@@ -9,7 +9,26 @@ from ..models import (
     StatutEvenement,
     StatutReglementaire,
     Contexte,
+    OrganismeNuisible,
 )
+
+from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
+
+
+@pytest.fixture(autouse=True)
+@pytest.mark.db
+def create_fixtures_if_needed():
+    for statut in STATUTS_EVENEMENT:
+        StatutEvenement.objects.get_or_create(libelle=statut)
+
+    OrganismeNuisible.objects.get_or_create(libelle_court="Xylella fastidiosa (maladie de Pierce)")
+    OrganismeNuisible.objects.get_or_create(libelle_court="lorem ipsum")
+
+    for code, libelle in STATUTS_REGLEMENTAIRES.items():
+        StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
+
+    for contexte in CONTEXTES:
+        Contexte.objects.get_or_create(nom=contexte)
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
@@ -88,18 +107,23 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db
 def test_fiche_detection_create_without_lieux_and_prelevement(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
+    statut_evenement = StatutEvenement.objects.first()
+    organisme_nuisible = OrganismeNuisible.objects.get(libelle_court="Xylella fastidiosa (maladie de Pierce)")
+    statut_reglementaire = StatutReglementaire.objects.first()
+    contexte = Contexte.objects.first()
+
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
-    page.get_by_label("Statut évènement").select_option(label="Foyer")
+    page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
     page.get_by_text("--------").click()
     page.get_by_label("----").fill("xylela")
-    page.get_by_role("option", name="Xylella fastidiosa (maladie de Pierce)").click()
-    page.get_by_label("Statut règlementaire").select_option("2")
-    page.get_by_label("Contexte").select_option("2")
+    page.get_by_role("option", name=organisme_nuisible.libelle_court).click()
+    page.get_by_label("Statut règlementaire").select_option(value=str(statut_reglementaire.id))
+    page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
     page.get_by_label("Commentaire").click()
     page.get_by_label("Commentaire").fill("test commentaire")
@@ -113,14 +137,14 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_label("Mesures de surveillance spé").fill("test mesures surveillance")
     page.get_by_role("button", name="Enregistrer").click()
 
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(600)
 
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.createur == mocked_authentification_user.agent.structure
-    assert fiche_detection.statut_evenement.libelle == "Foyer"
-    assert fiche_detection.organisme_nuisible.libelle_court == "Xylella fastidiosa (maladie de Pierce)"
-    assert fiche_detection.statut_reglementaire.id == 2
-    assert fiche_detection.contexte.id == 2
+    assert fiche_detection.statut_evenement.libelle == statut_evenement.libelle
+    assert fiche_detection.organisme_nuisible.libelle_court == organisme_nuisible.libelle_court
+    assert fiche_detection.statut_reglementaire.id == statut_reglementaire.id
+    assert fiche_detection.contexte.id == contexte.id
     assert fiche_detection.date_premier_signalement.strftime("%Y-%m-%d") == "2024-04-21"
     assert fiche_detection.commentaire == "test commentaire"
     assert fiche_detection.mesures_conservatoires_immediates == "test mesures conservatoires"

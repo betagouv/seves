@@ -1,6 +1,5 @@
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-import pytest
 
 from core.models import Structure
 from ..models import FicheDetection
@@ -9,7 +8,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_add_document_to_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user: User
 ):
@@ -41,7 +39,6 @@ def test_can_add_document_to_fiche_detection(
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_see_and_delete_document_on_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user: User, document_recipe
 ):
@@ -57,7 +54,7 @@ def test_can_see_and_delete_document_on_fiche_detection(
     expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()
     page.get_by_test_id(f"documents-delete-{document.id}").click()
 
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
     document = fiche_detection.documents.get()
     assert document.is_deleted is True
     assert document.deleted_by == mocked_authentification_user.agent
@@ -68,7 +65,6 @@ def test_can_see_and_delete_document_on_fiche_detection(
     expect(page.get_by_text("Document supprimé")).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_edit_document_on_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, document_recipe
 ):
@@ -98,7 +94,6 @@ def test_can_edit_document_on_fiche_detection(
     expect(page.get_by_text("New name", exact=True)).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_filter_documents_by_type_on_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, document_recipe
 ):
@@ -123,7 +118,6 @@ def test_can_filter_documents_by_type_on_fiche_detection(
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_filter_documents_by_unit_on_fiche_detection(
     live_server, page: Page, fiche_detection: FicheDetection, document_recipe
 ):

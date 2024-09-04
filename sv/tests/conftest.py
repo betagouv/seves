@@ -45,7 +45,7 @@ def add_basic_etat_objects():
 
 
 @pytest.fixture
-def fiche_detection_bakery():
+def fiche_detection_bakery(db):
     def _fiche_detection_bakery():
         etat = Etat.objects.get(id=Etat.get_etat_initial())
         return baker.make(FicheDetection, _fill_optional=True, etat=etat)
@@ -59,7 +59,7 @@ def fiche_detection(fiche_detection_bakery):
 
 
 @pytest.fixture
-def document_recipe(fiche_detection_bakery):
+def document_recipe(fiche_detection_bakery, db):
     def _document_recipe():
         fiche = fiche_detection_bakery()
         content_type = ContentType.objects.get_for_model(fiche)

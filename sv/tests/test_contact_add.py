@@ -12,13 +12,13 @@ def _pick_structure(page, structure_libelle):
 
 
 @pytest.fixture
-def contact():
+def contact(db):
     structure = baker.make(Structure, _fill_optional=True)
     return baker.make(Contact, agent=baker.make(Agent, structure=structure))
 
 
 @pytest.fixture
-def contacts():
+def contacts(db):
     # creation de deux contacts de type Agent
     agent1, agent2 = baker.make(Agent, _quantity=2)
     baker.make(Contact, agent=agent1)
@@ -54,7 +54,7 @@ def test_add_contact_form_back_to_fiche(live_server, page, fiche_detection):
     expect(page).to_have_url(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db
 def test_structure_list(client):
     """Test que la liste des structures soit bien dans le contexte du formulaire d'ajout de contact"""
     Contact.objects.all().delete()
@@ -69,7 +69,6 @@ def test_structure_list(client):
     assert all(structure in form_structures for structure in Structure.objects.all())
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_contact_form_select_structure(live_server, page, fiche_detection, contacts):
     """Test l'affichage des contacts dans le formulaire de sélection suite à la selection d'une structure"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
@@ -85,7 +84,6 @@ def test_add_contact_form_select_structure(live_server, page, fiche_detection, c
     expect(page.get_by_text(f"{contact2.agent.nom}")).to_contain_text(f"{contact2.agent.nom} {contact2.agent.prenom}")
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
     """Test l'ajout d'un contact à une fiche de détection"""
     contact1 = contacts[0]
@@ -102,7 +100,6 @@ def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
     expect(page.locator(".fr-card__content")).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, contacts):
     """Test l'ajout de plusieurs contacts à une fiche de détection"""
     contact1 = contacts[0]
@@ -122,7 +119,6 @@ def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, co
     expect(page.locator("div:nth-child(2) > .fr-card > .fr-card__body > .fr-card__content")).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_no_contact_selected(live_server, page, fiche_detection, contact):
     """Test l'affichage d'un message d'erreur si aucun contact n'est sélectionné"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
@@ -136,7 +132,6 @@ def test_no_contact_selected(live_server, page, fiche_detection, contact):
     expect(page.locator("#form-selection")).to_contain_text("Veuillez sélectionner au moins un contact")
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_contact_form_back_to_fiche_after_select_structure(live_server, page, fiche_detection, contact):
     """Test le lien de retour vers la fiche après la selection d'une structure et l'affichage des contacts associés"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
@@ -149,7 +144,6 @@ def test_add_contact_form_back_to_fiche_after_select_structure(live_server, page
     expect(page).to_have_url(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_contact_form_back_to_fiche_after_error_message(live_server, page, fiche_detection, contact):
     """Test le lien de retour vers la fiche après l'affichage du message d'erreur si aucun contact n'est sélectionné"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
