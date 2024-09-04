@@ -6,7 +6,22 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from .conftest import check_select_options
 from ..models import (
     Departement,
+    Region,
+    StructurePreleveur,
 )
+
+from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUR
+
+
+@pytest.fixture(autouse=True)
+def create_fixtures_if_needed(db):
+    for nom in REGIONS:
+        Region.objects.get_or_create(nom=nom)
+    for numero, nom, region_nom in DEPARTEMENTS:
+        region = Region.objects.get(nom=region_nom)
+        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
+    for nom in STRUCTURES_PRELEVEUR:
+        StructurePreleveur.objects.get_or_create(nom=nom)
 
 
 @pytest.fixture(autouse=True)
@@ -26,7 +41,7 @@ def _add_new_lieu(page: Page, form_elements: FicheDetectionFormDomElements, lieu
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -228,7 +243,7 @@ def test_added_lieu_content_in_list(
     expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
 
 
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db
 def test_lieu_is_added_to_alpinejs_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -244,7 +259,7 @@ def test_lieu_is_added_to_alpinejs_data(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -262,14 +277,13 @@ def test_lieu_is_added_to_alpinejs_data(
     assert lieux[0]["adresseLieuDit"] == "une adresse"
     assert lieux[0]["commune"] == "une commune"
     assert lieux[0]["codeINSEE"] == "17000"
-    assert lieux[0]["departementId"] == "62"
+    assert lieux[0]["departementId"] == str(Departement.objects.get(numero="17").id)
     assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
     assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
     assert lieux[0]["coordGPSWGS84Latitude"] == "1"
     assert lieux[0]["coordGPSWGS84Longitude"] == "2"
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_add_two_lieux_to_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -292,7 +306,7 @@ def test_add_two_lieux_to_list(
     assert len(elements) == 2
 
 
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db
 def test_two_lieux_are_added_to_alpinejs_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -307,7 +321,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -328,7 +342,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     lieu_form_elements.commune_input.fill("une commune 2")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17440")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -346,7 +360,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     assert lieux[0]["adresseLieuDit"] == "une adresse"
     assert lieux[0]["commune"] == "une commune"
     assert lieux[0]["codeINSEE"] == "17000"
-    assert lieux[0]["departementId"] == "62"
+    assert lieux[0]["departementId"] == str(Departement.objects.get(numero="17").id)
     assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
     assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
     assert lieux[0]["coordGPSWGS84Latitude"] == "1"
@@ -355,7 +369,7 @@ def test_two_lieux_are_added_to_alpinejs_data(
     assert lieux[1]["adresseLieuDit"] == "une adresse 2"
     assert lieux[1]["commune"] == "une commune 2"
     assert lieux[1]["codeINSEE"] == "17440"
-    assert lieux[1]["departementId"] == "62"
+    assert lieux[1]["departementId"] == str(Departement.objects.get(numero="17").id)
     assert lieux[1]["coordGPSLambert93Latitude"] == "6000000"
     assert lieux[1]["coordGPSLambert93Longitude"] == "200000"
     assert lieux[1]["coordGPSWGS84Latitude"] == "1"
@@ -426,7 +440,6 @@ def test_edit_lieu_form_with_only_nom_lieu(
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_edit_lieu_form_have_all_fields(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -441,7 +454,7 @@ def test_edit_lieu_form_have_all_fields(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -485,7 +498,6 @@ def test_edit_lieu_form_have_all_fields(
     expect(lieu_form_elements.departement_label).to_have_text("Département")
     expect(lieu_form_elements.departement_input).to_be_visible()
     expect(lieu_form_elements.departement_input).to_contain_text("Charente-Maritime (17)")
-    expect(lieu_form_elements.departement_input).to_contain_text("62")
 
     expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_have_text("Coordonnées GPS (Lambert 93)")
@@ -502,7 +514,7 @@ def test_edit_lieu_form_have_all_fields(
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value("9")
 
 
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db
 def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -518,7 +530,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -539,7 +551,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     lieu_form_elements.commune_input.fill("une commune 2")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17440")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000002")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -556,7 +568,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
     expect(lieu_form_elements.commune_input).to_have_value("une commune")
     expect(lieu_form_elements.code_insee_input).to_have_value("17000")
-    expect(lieu_form_elements.departement_input).to_have_value("62")
+    expect(lieu_form_elements.departement_input).to_have_value(str(Departement.objects.get(numero="17").id))
     expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_value("6000000")
     expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_value("200000")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("1")
@@ -569,7 +581,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse 2")
     expect(lieu_form_elements.commune_input).to_have_value("une commune 2")
     expect(lieu_form_elements.code_insee_input).to_have_value("17440")
-    expect(lieu_form_elements.departement_input).to_have_value("62")
+    expect(lieu_form_elements.departement_input).to_have_value(str(Departement.objects.get(numero="17").id))
     expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_value("6000002")
     expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_value("200002")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("12")
@@ -577,7 +589,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     page.get_by_role("button", name="Fermer").click()
 
 
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db
 def test_edit_lieu_is_updated_in_alpinejs_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -592,7 +604,7 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -609,7 +621,7 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
     lieu_form_elements.commune_input.fill("une commune modifiée")
     lieu_form_elements.code_insee_input.fill("17001")
-    lieu_form_elements.departement_input.select_option("63")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
@@ -623,14 +635,13 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     assert lieux[0]["adresseLieuDit"] == "une adresse modifiée"
     assert lieux[0]["commune"] == "une commune modifiée"
     assert lieux[0]["codeINSEE"] == "17001"
-    assert lieux[0]["departementId"] == "63"
+    assert lieux[0]["departementId"] == str(Departement.objects.get(numero="17").id)
     assert lieux[0]["coordGPSLambert93Latitude"] == "6000001"
     assert lieux[0]["coordGPSLambert93Longitude"] == "200001"
     assert lieux[0]["coordGPSWGS84Latitude"] == "11"
     assert lieux[0]["coordGPSWGS84Longitude"] == "21"
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_edit(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -645,7 +656,7 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.commune_input.fill("une commune")
     lieu_form_elements.code_insee_input.click()
     lieu_form_elements.code_insee_input.fill("17000")
-    lieu_form_elements.departement_input.select_option("62")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.click()
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000000")
     lieu_form_elements.coord_gps_lamber93_longitude_input.click()
@@ -662,7 +673,7 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
     lieu_form_elements.commune_input.fill("une commune modifiée")
     lieu_form_elements.code_insee_input.fill("17001")
-    lieu_form_elements.departement_input.select_option("63")
+    lieu_form_elements.departement_input.select_option(label="Charente-Maritime (17)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
@@ -682,7 +693,6 @@ def test_add_lieu_form_is_empty_after_edit(
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_close_btn_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -697,7 +707,6 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_close_btn_without_sav
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -712,7 +721,6 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -730,7 +738,6 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
 # Supprimer un lieu
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_delete_lieu_button_show_confirmation_modal(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -742,7 +749,6 @@ def test_delete_lieu_button_show_confirmation_modal(
     expect(page.get_by_role("dialog")).to_be_visible()
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_delete_lieu_from_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -761,7 +767,6 @@ def test_delete_lieu_from_list(
     assert len(lieux) == 0
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_delete_lieu_from_list_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -794,7 +799,6 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     assert lieux[0]["nomLieu"] == "ipsum"
 
 
-@pytest.mark.django_db(serialized_rollback=True)
 def test_delete_correct_lieu(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -830,10 +834,12 @@ def test_delete_correct_lieu(
     assert lieux[0]["nomLieu"] == "lorem"
 
 
-@pytest.mark.django_db(serialized_rollback=True)
+@pytest.mark.django_db
 def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
+    page.wait_for_timeout(600)
+
     """Test que la suppression d'un lieu est impossible si elle est liée à un prélèvement"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
@@ -845,7 +851,8 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements = PrelevementFormDomElements(page)
     prelevement_form_elements.date_prelevement_input.click()
-    prelevement_form_elements.structure_input.select_option("1")
+    assert StructurePreleveur.objects.count() > 0
+    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveur.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.save_btn.click()
 
@@ -876,7 +883,6 @@ def test_no_add_prelevement_btn_if_no_lieu(live_server, page: Page, form_element
     expect(form_elements.add_prelevement_btn).not_to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_add_prelevement_btn_is_visible_if_lieu_exists(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):

@@ -1,11 +1,9 @@
-import pytest
 from model_bakery import baker
 from playwright.sync_api import expect
 
 from core.models import Contact, Agent
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_remove_myself_from_a_fiche(live_server, page, fiche_detection, mocked_authentification_user):
     contact = mocked_authentification_user.agent.contact_set.get()
     fiche_detection.contacts.set([contact])
@@ -22,7 +20,6 @@ def test_can_remove_myself_from_a_fiche(live_server, page, fiche_detection, mock
     expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).not_to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_can_remove_another_contact_from_a_fiche(live_server, page, fiche_detection):
     agent = baker.make(Agent)
     contact = baker.make(Contact, agent=agent)

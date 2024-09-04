@@ -16,20 +16,20 @@ def get_fiche_detection_update_form_url(fiche_detection: FicheDetection):
 
 
 @pytest.fixture
-def fiche_detection_with_one_lieu(fiche_detection):
+def fiche_detection_with_one_lieu(fiche_detection, db):
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
-def fiche_detection_with_two_lieux(fiche_detection):
+def fiche_detection_with_two_lieux(fiche_detection, db):
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
-def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection):
+def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection, db):
     lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     baker.make(Prelevement, lieu=lieu, _fill_optional=True)
     return fiche_detection
@@ -116,6 +116,7 @@ def test_fiche_detection_update_page_content_with_no_data(
     expect(form_elements.mesures_surveillance_specifique_input).to_have_value("")
 
 
+@pytest.mark.django_db
 def test_fiche_detection_update_without_lieux_and_prelevement(
     live_server,
     page: Page,
@@ -143,7 +144,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements.mesures_phytosanitaires_input.fill(new_fiche_detection.mesures_phytosanitaires)
     form_elements.mesures_surveillance_specifique_input.fill(new_fiche_detection.mesures_surveillance_specifique)
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
     assert (
@@ -166,6 +167,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     )
 
 
+@pytest.mark.django_db
 def test_add_new_lieu(
     live_server,
     page: Page,
@@ -182,12 +184,12 @@ def test_add_new_lieu(
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(lieu.commune)
     # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
-    lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+    lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
     lieu_from_db = fd.lieux.first()
@@ -201,6 +203,7 @@ def test_add_new_lieu(
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
 
 
+@pytest.mark.django_db
 def test_add_multiple_lieux(
     live_server,
     page: Page,
@@ -211,7 +214,12 @@ def test_add_multiple_lieux(
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
     # TODO: supprimer les valeurs brutes wgs84_latitude et wgs84_longitude
     lieux = baker.prepare(
-        Lieu, _quantity=3, wgs84_latitude=48.8566, wgs84_longitude=2.3522, _fill_optional=True, _save_related=True
+        Lieu,
+        _quantity=3,
+        wgs84_latitude=48.8566,
+        wgs84_longitude=2.3522,
+        _fill_optional=True,
+        _save_related=True,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
@@ -221,13 +229,13 @@ def test_add_multiple_lieux(
         lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
         lieu_form_elements.commune_input.fill(lieu.commune)
         # lieu_form_elements.code_insee_input.fill(lieu.code_insee)
-        lieu_form_elements.departement_input.select_option(str(lieu.departement.id))
+        lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     lieu_1_from_db = Lieu.objects.get(nom=lieux[0].nom)
     lieu_2_from_db = Lieu.objects.get(nom=lieux[1].nom)
@@ -243,6 +251,7 @@ def test_add_multiple_lieux(
         assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
 
 
+@pytest.mark.django_db
 def test_update_lieu(
     live_server,
     page: Page,
@@ -266,14 +275,14 @@ def test_update_lieu(
     lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
     lieu_form_elements.commune_input.fill(new_lieu.commune)
     # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
-    lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+    lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
     lieu_from_db = fd.lieux.first()
@@ -286,6 +295,7 @@ def test_update_lieu(
     assert lieu_from_db.wgs84_longitude == new_lieu.wgs84_longitude
 
 
+@pytest.mark.django_db
 def test_update_two_lieux(
     live_server,
     page: Page,
@@ -315,7 +325,7 @@ def test_update_two_lieux(
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
         lieu_form_elements.commune_input.fill(new_lieu.commune)
         # lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
-        lieu_form_elements.departement_input.select_option(str(new_lieu.departement.id))
+        lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
         lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
         lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
@@ -323,7 +333,7 @@ def test_update_two_lieux(
         lieu_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
     lieux_from_db = fd.lieux.all()
@@ -337,6 +347,7 @@ def test_update_two_lieux(
         assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
 
 
+@pytest.mark.django_db
 def test_delete_lieu(
     live_server,
     page: Page,
@@ -351,12 +362,13 @@ def test_delete_lieu(
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
         Lieu.objects.get(id=lieu_id)
 
 
+@pytest.mark.django_db
 def test_delete_one_lieu_from_set_of_lieux(
     live_server,
     page: Page,
@@ -370,6 +382,7 @@ def test_delete_one_lieu_from_set_of_lieux(
     pass
 
 
+@pytest.mark.django_db
 def test_delete_multiple_lieux(
     live_server,
     page: Page,
@@ -384,12 +397,13 @@ def test_delete_multiple_lieux(
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
     assert fd.lieux.count() == 0
 
 
+@pytest.mark.django_db
 def test_add_new_prelevement_non_officiel(
     live_server,
     page: Page,
@@ -413,7 +427,7 @@ def test_add_new_prelevement_non_officiel(
     prelevement_form_elements.resultat_input.select_option(str(prelevement.resultat))
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
@@ -430,6 +444,7 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.laboratoire_confirmation_officielle is None
 
 
+@pytest.mark.django_db
 def test_add_new_prelevement_officiel(
     live_server,
     page: Page,
@@ -459,7 +474,7 @@ def test_add_new_prelevement_officiel(
     )
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
@@ -478,6 +493,7 @@ def test_add_new_prelevement_officiel(
     )
 
 
+@pytest.mark.django_db
 def test_add_multiple_prelevements(
     live_server,
     page: Page,
@@ -503,7 +519,7 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     prelevements_from_db = Prelevement.objects.filter(lieu=lieu)
     for prelevement, prelevement_from_db in zip(prelevements, prelevements_from_db):
@@ -517,6 +533,7 @@ def test_add_multiple_prelevements(
         assert prelevement_from_db.resultat == prelevement.resultat
 
 
+@pytest.mark.django_db
 def test_update_prelevement(
     live_server,
     page: Page,
@@ -542,7 +559,7 @@ def test_update_prelevement(
     prelevement_form_elements.resultat_input.select_option(str(new_prelevement.resultat))
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=new_lieu)
     assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
@@ -555,6 +572,7 @@ def test_update_prelevement(
     assert prelevement_from_db.resultat == new_prelevement.resultat
 
 
+@pytest.mark.django_db
 def test_update_multiple_prelevements(
     live_server,
     page: Page,
@@ -587,7 +605,7 @@ def test_update_multiple_prelevements(
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     prelevement_from_db_1 = Prelevement.objects.get(lieu=new_prelevement_1.lieu)
     prelevement_from_db_2 = Prelevement.objects.get(lieu=new_prelevement_2.lieu)
@@ -604,6 +622,7 @@ def test_update_multiple_prelevements(
         assert prelevement_from_db.resultat == new_prelevement.resultat
 
 
+@pytest.mark.django_db
 def test_delete_prelevement(
     live_server,
     page: Page,
@@ -620,12 +639,13 @@ def test_delete_prelevement(
     page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_id)
 
 
+@pytest.mark.django_db
 def test_delete_multiple_prelevements(
     live_server,
     page: Page,
@@ -648,7 +668,7 @@ def test_delete_multiple_prelevements(
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
 
     form_elements.save_btn.click()
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_1.id)

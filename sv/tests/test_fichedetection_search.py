@@ -44,6 +44,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
 
+@pytest.mark.django_db
 def test_clear_button_clears_form(live_server, page: Page) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=5)
@@ -67,6 +68,7 @@ def test_clear_button_clears_form(live_server, page: Page) -> None:
     expect(page.get_by_label("État")).to_contain_text("---------")
 
 
+@pytest.mark.django_db
 def test_search_with_fiche_number(live_server, page: Page) -> None:
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche valide (format année.numéro)"""
     num1 = NumeroFiche.get_next_numero()
@@ -81,7 +83,6 @@ def test_search_with_fiche_number(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(num1))).to_be_visible()
 
 
-@pytest.mark.django_db
 def test_search_with_invalid_fiche_number(client):
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche invalide (format année.numéro)"""
     response = client.get(reverse("fiche-detection-list"), {"numero": "az.erty"})
