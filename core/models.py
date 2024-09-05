@@ -159,7 +159,7 @@ class Message(models.Model):
     )
     TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_SUIVI)
     TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_SUIVI)
-    TYPES_WITH_LIMITED_RECIPIENTS = COMPTE_RENDU
+    TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
 
     message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
     title = models.CharField(max_length=512, verbose_name="Titre")

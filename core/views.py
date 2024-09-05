@@ -16,7 +16,7 @@ from .forms import (
 )
 from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
-
+from .notifications import notify_message
 
 from .models import Document, Message, Contact, FinSuiviContact
 
@@ -235,6 +235,7 @@ class MessageCreateView(CreateView):
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
         self._create_documents(form)
+        notify_message(form.instance)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
 
