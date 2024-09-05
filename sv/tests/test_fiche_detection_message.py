@@ -203,9 +203,10 @@ def test_can_add_and_see_note_without_document(live_server, page: Page, fiche_de
 def test_can_add_and_see_compte_rendu(live_server, page: Page, fiche_detection: FicheDetection):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
-    Contact.objects.create(structure=Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS"))
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    Contact.objects.create(structure=structure, email="bar@example.com")
     structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
-    Contact.objects.create(structure=structure)
+    Contact.objects.create(structure=structure, email="foo@example.com")
     page.get_by_test_id("element-actions").click()
     page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
 

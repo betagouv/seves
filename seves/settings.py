@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "sv.apps.SvConfig",
     "core.apps.CoreConfig",
     "django_filters",
+    "post_office",
 ]
 
 MIDDLEWARE = [
@@ -204,3 +205,17 @@ if DEBUG:
     INSTALLED_APPS.append("debug_toolbar")
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INTERNAL_IPS = ["127.0.0.1"]
+
+POST_OFFICE = {
+    "BACKENDS": {
+        "default": env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"),
+    },
+    "DEFAULT_PRIORITY": env("EMAIL_PRIORITY", default="medium"),
+    "MESSAGE_ID_ENABLED": True,
+}
+
+if env("EMAIL_HOST", default=None):
+    EMAIL_HOST = env("EMAIL_HOST")
+    EMAIL_PORT = env("EMAIL_PORT")
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")

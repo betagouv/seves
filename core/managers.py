@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet
 
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
+
 
 class DocumentQueryset(QuerySet):
     def order_list(self):
@@ -28,7 +30,13 @@ class ContactQueryset(QuerySet):
         return self.select_related("structure", "agent")
 
     def get_mus(self):
-        return self.get(structure__niveau2="MUS")
+        return self.get(structure__niveau2=MUS_STRUCTURE)
 
     def get_bsv(self):
-        return self.get(structure__niveau2="SAS/SDSPV/BSV")
+        return self.get(structure__niveau2=BSV_STRUCTURE)
+
+    def has_agent(self):
+        return self.exclude(agent__isnull=True)
+
+    def has_structure(self):
+        return self.exclude(structure__isnull=True)
