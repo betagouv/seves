@@ -6,6 +6,7 @@ import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import (
     ListView,
     DetailView,
@@ -15,8 +16,8 @@ from django.views.generic import (
 )
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.db import transaction, IntegrityError
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
@@ -29,6 +30,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from sv.forms import FreeLinkForm
+from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
     Lieu,
@@ -562,3 +564,13 @@ class FreeLinkCreateView(FormView):
 
         messages.success(request, "Le lien a été créé avec succès.")
         return HttpResponseRedirect(self.request.POST.get("next"))
+
+
+class FicheDetectionExportView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        response = HttpResponse(content_type="text/csv")
+        FicheDetectionExport().export(stream=response)
+        response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
+        return response

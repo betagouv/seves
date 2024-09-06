@@ -14,6 +14,8 @@
 {% block highlight_menu_fiches %}menu__item--active{% endblock %}
 
 {% block content %}
+    {% include "sv/_extract_modal.html" %}
+
     <div class="fiches__header">
         <h2 class="fiches__title">Rechercher une fiche</h2>
         <form id="search-form" method="get" class="fiches__search-form">
@@ -32,9 +34,12 @@
 
     <div class="fiches__list-container">
         <h2>Liste des fiches</h2>
-        <p>
+        <div class="fiches__list-header">
             <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ fichedetection_list.count|pluralize }} au total</span>
-        </p>
+            <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
+                Extraire
+            </button>
+        </div>
         {% if fichedetection_list.count %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="fiches__list-table">
