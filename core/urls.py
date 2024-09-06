@@ -9,6 +9,7 @@ from .views import (
     ContactDeleteView,
     MessageCreateView,
     MessageDetailsView,
+    SoftDeleteView,
 )
 
 urlpatterns = [
@@ -53,5 +54,10 @@ urlpatterns = [
         "message/<int:pk>/",
         MessageDetailsView.as_view(),
         name="message-view",
+    ),
+    path(
+        "suppression/",
+        SoftDeleteView.as_view(),
+        name="soft-delete",
     ),
 ]

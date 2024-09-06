@@ -218,3 +218,20 @@ class MessageCreateView(CreateView):
 
 class MessageDetailsView(DetailView):
     model = Message
+
+
+class SoftDeleteView(View):
+    def post(self, request):
+        content_type_id = request.POST.get("content_type_id")
+        content_id = request.POST.get("content_id")
+
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        obj = content_type.objects.get(pk=content_id)
+
+        try:
+            obj.soft_delete()
+            messages.success(request, "Objet supprimé avec succès")
+        except AttributeError:
+            messages.error(request, "Ce type d'objet ne peut pas être supprimé")
+
+        return HttpResponseRedirect(request.POST.get("next"))

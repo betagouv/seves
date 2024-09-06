@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.db import models
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
@@ -61,3 +62,14 @@ class WithFreeLinksListInContextMixin:
             | (Q(content_type_2=ContentType.objects.get_for_model(obj), object_id_2=obj.id))
         )
         return context
+
+
+class AllowsSoftDeleteMixin(models.Model):
+    is_deleted = models.BooleanField(default=False)
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+
+    class Meta:
+        abstract = True
