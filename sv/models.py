@@ -6,7 +6,9 @@ import datetime
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
+from core.mixins import AllowsSoftDeleteMixin
 from core.models import Document, Message, Contact
+from sv.managers import FicheDetectionManager
 
 
 class NumeroFiche(models.Model):
@@ -373,7 +375,7 @@ class Etat(models.Model):
         return self.libelle
 
 
-class FicheDetection(models.Model):
+class FicheDetection(AllowsSoftDeleteMixin, models.Model):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
@@ -430,6 +432,8 @@ class FicheDetection(models.Model):
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
+
+    objects = FicheDetectionManager()
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})

@@ -168,6 +168,7 @@ class FicheDetectionDetailView(
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
         context["free_link_form"] = self._get_free_link_form()
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 
 

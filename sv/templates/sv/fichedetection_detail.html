@@ -42,6 +42,7 @@
                 </button>
                 {% include "sv/_action_navigation.html" %}
                 {% include "sv/_lienlibre_modal.html" %}
+                {% include "sv/_delete_fiche_modal.html" %}
             </div>
         </div>
 
@@ -195,12 +196,14 @@
                 <div class="fiche-detail__liens">
                     <h2>Liens libres</h2>
                     {% for link in free_links_list %}
-                        {% if link.related_object_1 == fichedetection %}
+                        {% if link.related_object_1 == fichedetection and not link.related_object_2.is_deleted %}
                             <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}">{{ link.related_object_2 }}</a>
                         {% endif %}
-                        {% if link.related_object_2 == fichedetection %}
+                        {% if link.related_object_2 == fichedetection and not link.related_object_1.is_deleted %}
                             <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}">{{ link.related_object_1 }}</a>
                         {% endif %}
+                    {% empty %}
+                        <p>Pas de liens pour cette fiche.</p>
                     {% endfor %}
                 </div>
             </div>
