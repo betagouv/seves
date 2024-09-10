@@ -49,9 +49,15 @@ class WithContactListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["contacts_agents"] = (
-            self.get_object().contacts.exclude(agent__isnull=True).prefetch_related("agent__structure")
+            self.get_object()
+            .contacts.agents_only()
+            .prefetch_related("agent__structure")
+            .services_deconcentres_first()
+            .order_by_structure_and_name()
         )
-        context["contacts_structures"] = self.get_object().contacts.exclude(structure__isnull=True)
+        context["contacts_structures"] = (
+            self.get_object().contacts.structures_only().services_deconcentres_first().order_by_structure_and_niveau2()
+        )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
         return context
