@@ -21,8 +21,7 @@ from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
 
 @pytest.fixture(autouse=True)
-@pytest.mark.db
-def create_fixtures_if_needed():
+def create_fixtures_if_needed(db):
     for statut in STATUTS_EVENEMENT:
         StatutEvenement.objects.get_or_create(libelle=statut)
 

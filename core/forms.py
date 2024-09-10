@@ -198,6 +198,9 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.initial["sender"] = sender.agent.contact_set.get()
         self.initial["displayed_sender"] = sender.agent.name_with_structure
 
+        if message_type == Message.FIN_SUIVI:
+            self.initial["title"] = "Fin de suivi"
+
     def _convert_checkboxes_to_contacts(self):
         try:
             checkboxes = copy(self.cleaned_data["recipients"])
