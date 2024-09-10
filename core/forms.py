@@ -1,8 +1,11 @@
 import math
+from copy import copy
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
+from core.fields import DSFRCheckboxSelectMultiple
 from core.models import Document, Contact, Message, Structure
 from django import forms
 from collections import defaultdict
@@ -184,9 +187,32 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         if message_type in Message.TYPES_WITHOUT_RECIPIENTS:
             self.fields.pop("recipients")
             self.fields.pop("recipients_copy")
+        elif message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self.fields.pop("recipients_copy")
+            self.fields["recipients"] = forms.MultipleChoiceField(
+                choices=[("mus", "MUS"), ("bsv", "BSV")],
+                label="Destinataires",
+                widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+            )
 
         self.initial["sender"] = sender.agent.contact_set.get()
         self.initial["displayed_sender"] = sender.agent.name_with_structure
+
+    def _convert_checkboxes_to_contacts(self):
+        try:
+            checkboxes = copy(self.cleaned_data["recipients"])
+        except KeyError:
+            raise ValidationError("Au moins un destinataire doit être sélectionné.")
+        self.cleaned_data["recipients"] = []
+        if "mus" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
+        if "bsv" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self._convert_checkboxes_to_contacts()
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):

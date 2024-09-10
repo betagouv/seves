@@ -26,3 +26,9 @@ class DocumentQueryset(QuerySet):
 class ContactQueryset(QuerySet):
     def with_structure_and_agent(self):
         return self.select_related("structure", "agent")
+
+    def get_mus(self):
+        return self.get(structure__niveau2="MUS")
+
+    def get_bsv(self):
+        return self.get(structure__niveau2="SAS/SDSPV/BSV")
