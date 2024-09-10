@@ -18,9 +18,10 @@ from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
 
 
-from .models import Document, Message, Contact
+from .models import Document, Message, Contact, FinSuiviContact
 
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 
 class DocumentUploadView(FormView):
@@ -210,7 +211,27 @@ class MessageCreateView(CreateView):
                 created_by_structure=self.request.user.agent.structure,
             )
 
+    def _mark_contact_as_fin_suivi(self, form):
+        message_type = form.cleaned_data.get("message_type")
+        if message_type == Message.FIN_SUIVI:
+            content_type = form.cleaned_data.get("content_type")
+            object_id = form.cleaned_data.get("object_id")
+
+            fin_suivi_contact = FinSuiviContact(
+                content_type=content_type,
+                object_id=object_id,
+                contact=Contact.objects.get(structure=self.request.user.agent.structure),
+            )
+            fin_suivi_contact.full_clean()
+            fin_suivi_contact.save()
+
     def form_valid(self, form):
+        try:
+            self._mark_contact_as_fin_suivi(form)
+        except ValidationError as e:
+            for message in e.messages:
+                messages.error(self.request, message)
+            return HttpResponseRedirect(self.obj.get_absolute_url())
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
         self._create_documents(form)

@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin
-from core.models import Document, Message, Contact, Structure
+from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from sv.managers import FicheDetectionManager
 
 
@@ -432,6 +432,7 @@ class FicheDetection(AllowsSoftDeleteMixin, models.Model):
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
+    fin_suivi = GenericRelation(FinSuiviContact)
 
     objects = FicheDetectionManager()
 
@@ -469,8 +470,8 @@ class FicheDetection(AllowsSoftDeleteMixin, models.Model):
         return self._add_message_url(Message.COMPTE_RENDU)
 
     @property
-    def add_fin_intervention_url(self):
-        return self._add_message_url(Message.FIN_INTERVENTION)
+    def add_fin_suivi_url(self):
+        return self._add_message_url(Message.FIN_SUIVI)
 
     def __str__(self):
         return str(self.numero)

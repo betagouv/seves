@@ -27,6 +27,7 @@ def set_django_allow_async_unsafe():
 def mocked_authentification_user(db):
     user = baker.make(get_user_model(), email="test@example.com")
     structure = baker.make(Structure, niveau2="Structure Test", libelle="Structure Test")
+    Contact.objects.create(structure=structure, email="structure_test@test.fr")
     agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")
     Contact.objects.create(agent=agent, email="text@example.com")
 

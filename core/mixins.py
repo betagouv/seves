@@ -4,7 +4,7 @@ from django.db import models
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
-from core.models import Document, LienLibre
+from core.models import Document, LienLibre, Contact
 
 
 class WithDocumentUploadFormMixin:
@@ -53,6 +53,7 @@ class WithContactListInContextMixin:
         )
         context["contacts_structures"] = self.get_object().contacts.exclude(structure__isnull=True)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
         return context
 
 

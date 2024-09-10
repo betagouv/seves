@@ -12,7 +12,11 @@
 
         <div class="message-title">
             <h1 class="fr-mt-2w">
-                {% if feminize %}Nouvelle {% else %}Nouveau {% endif %}{{ message_type }}
+                {% if message_type == "fin de suivi" %}
+                    Signaler la {{ message_type }}
+                {% else %}
+                    {% if feminize %}Nouvelle {% else %}Nouveau {% endif %}{{ message_type }}
+                {% endif %}
             </h1>
             <a href="{{ go_back_url }}" class="fr-link">Annuler</a>
         </div>
