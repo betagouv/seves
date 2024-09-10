@@ -255,7 +255,7 @@ class EspeceEchantillon(models.Model):
         verbose_name_plural = "Espèces de l'échantillon"
         db_table = "sv_espece_echantillon"
 
-    code_oepp = models.CharField(max_length=100, verbose_name="Code OEPP")
+    code_oepp = models.CharField(max_length=100, verbose_name="Code OEPP", unique=True)
     libelle = models.CharField(max_length=100, verbose_name="Libellé")
 
     def __str__(self):
