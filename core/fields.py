@@ -19,3 +19,7 @@ class MultiModelChoiceField(forms.ChoiceField):
             return model_class.objects.get(id=object_id)
         except model_class.DoesNotExist:
             raise forms.ValidationError("L'objet sélectionné n'existe pas.")
+
+
+class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    option_template_name = "forms/dsfr_checkbox_option.html"
