@@ -360,6 +360,10 @@ class StatutEvenement(models.Model):
 
 
 class Etat(models.Model):
+    NOUVEAU = "nouveau"
+    EN_COURS = "en cours"
+    CLOTURE = "clôturé"
+
     class Meta:
         verbose_name = "Etat"
         verbose_name_plural = "Etats"
@@ -369,7 +373,14 @@ class Etat(models.Model):
 
     @classmethod
     def get_etat_initial(cls):
-        return cls.objects.get(libelle="nouveau").id
+        return cls.objects.get(libelle=cls.NOUVEAU).id
+
+    @classmethod
+    def get_etat_cloture(cls):
+        return cls.objects.get(libelle=cls.CLOTURE)
+
+    def is_cloture(self):
+        return self.libelle == self.CLOTURE
 
     def __str__(self):
         return self.libelle
@@ -449,6 +460,10 @@ class FicheDetection(AllowsSoftDeleteMixin, models.Model):
             "message-add", kwargs={"message_type": message_type, "obj_type_pk": content_type.pk, "obj_pk": self.pk}
         )
 
+    def cloturer(self):
+        self.etat = Etat.get_etat_cloture()
+        self.save()
+
     @property
     def add_message_url(self):
         return self._add_message_url(Message.MESSAGE)
@@ -475,3 +490,9 @@ class FicheDetection(AllowsSoftDeleteMixin, models.Model):
 
     def __str__(self):
         return str(self.numero)
+
+    def can_be_cloturer_by(self, user):
+        return user.agent.structure.is_ac
+
+    def is_already_cloturer(self):
+        return self.etat.is_cloture()

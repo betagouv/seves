@@ -62,7 +62,7 @@ def test_add_structure_to_a_fiche(live_server, page, fiche_detection, contacts_s
     page.get_by_text(contacts_structure[0].structure.libelle).click()
     page.get_by_role("button", name="Ajouter les structures sélectionnées").click()
     expect(page.get_by_text("La structure a été ajoutée avec succès.")).to_be_visible()
-    expect(page.get_by_text(contacts_structure[0].structure.libelle, exact=True)).to_be_visible()
+    expect(page.locator("p").filter(has_text=contacts_structure[0].structure.libelle)).to_be_visible()
 
 
 @pytest.mark.django_db
@@ -81,8 +81,8 @@ def test_add_multiple_structures_to_a_fiche(live_server, page, fiche_detection):
     page.get_by_role("button", name="Ajouter les structures sélectionnées").click()
 
     expect(page.get_by_text("Les 2 structures ont été ajoutées avec succès.")).to_be_visible()
-    expect(page.get_by_text(contact1.structure.libelle, exact=True)).to_be_visible()
-    expect(page.get_by_text(contact2.structure.libelle, exact=True)).to_be_visible()
+    expect(page.locator(".bloc-commun__panel--contacts")).to_contain_text(contact1.structure.libelle)
+    expect(page.locator(".bloc-commun__panel--contacts")).to_contain_text(contact2.structure.libelle)
 
 
 @pytest.mark.django_db

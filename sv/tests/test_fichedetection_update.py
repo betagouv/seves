@@ -673,12 +673,14 @@ def test_update_multiple_prelevements(
             page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(3).click()
 
         prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
-        prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
+        prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
-        prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
-        prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
-        prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+        prelevement_form_elements.site_inspection_input.select_option(value=str(new_prelevement.site_inspection.id))
+        prelevement_form_elements.matrice_prelevee_input.select_option(value=str(new_prelevement.matrice_prelevee.id))
+        prelevement_form_elements.espece_echantillon_input.select_option(
+            value=str(new_prelevement.espece_echantillon.id)
+        )
         prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()
 
