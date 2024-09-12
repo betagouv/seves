@@ -147,7 +147,7 @@ class FicheDetectionDetailView(
     DetailView,
 ):
     model = FicheDetection
-    queryset = FicheDetection.objects.select_related("statut_reglementaire", "etat", "numero", "contexte")
+    queryset = FicheDetection.objects.select_related("statut_reglementaire", "etat", "numero", "contexte", "createur")
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -171,6 +171,9 @@ class FicheDetectionDetailView(
         context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
         context["free_link_form"] = self._get_free_link_form()
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(self.get_object())
+        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
+        context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         return context
 
 
@@ -575,3 +578,34 @@ class FicheDetectionExportView(View):
         FicheDetectionExport().export(stream=response)
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
+
+
+class FicheDetecionCloturerView(View):
+    redirect_url_name = "fiche-detection-vue-detaillee"
+
+    def get_redirect_url(self, fiche_pk):
+        return reverse(self.redirect_url_name, args=[fiche_pk])
+
+    def post(self, request, pk):
+        fiche = FicheDetection.objects.get(pk=pk)
+        redirect_url = self.get_redirect_url(pk)
+
+        if not fiche.can_be_cloturer_by(request.user):
+            messages.error(request, "Vous n'avez pas les droits pour clôturer une fiche de détection.")
+            return redirect(redirect_url)
+
+        if fiche.is_already_cloturer():
+            messages.error(request, f"La fiche de détection n° {fiche.numero} est déjà clôturée.")
+            return redirect(redirect_url)
+
+        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(fiche)
+        if contacts_not_in_fin_suivi:
+            messages.error(
+                request,
+                f"La fiche de détection n° {fiche.numero} ne peut pas être clôturée car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
+            )
+            return redirect(redirect_url)
+
+        fiche.cloturer()
+        messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
+        return redirect(redirect_url)

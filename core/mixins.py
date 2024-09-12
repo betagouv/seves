@@ -56,7 +56,11 @@ class WithContactListInContextMixin:
             .order_by_structure_and_name()
         )
         context["contacts_structures"] = (
-            self.get_object().contacts.structures_only().services_deconcentres_first().order_by_structure_and_niveau2()
+            self.get_object()
+            .contacts.structures_only()
+            .services_deconcentres_first()
+            .order_by_structure_and_niveau2()
+            .select_related("structure")
         )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())

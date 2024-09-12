@@ -8,6 +8,7 @@ from django.db.models import Q, CheckConstraint
 from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
 from django.apps import apps
+from core.constants import AC_STRUCTURE
 
 User = get_user_model()
 
@@ -51,6 +52,11 @@ class Structure(models.Model):
 
     def __str__(self):
         return self.libelle
+
+    @property
+    def is_ac(self):
+        "Permet de savoir si la structure fait partie de l'administration centrale (AC)"
+        return self.niveau1 == AC_STRUCTURE
 
 
 class Contact(models.Model):

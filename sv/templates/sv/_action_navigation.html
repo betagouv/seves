@@ -5,6 +5,9 @@
         <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
             <ul class="fr-menu__list">
                 <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-freelink"><span class="fr-icon-git-pull-request-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Ajouter un lien libre</a></li>
+                {% if user.agent.structure.is_ac and not fichedetection.etat.is_cloture %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-fiche"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer la fiche</a></li>
+                {% endif %}
                 <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer la fiche</a></li>
             </ul>
         </div>
