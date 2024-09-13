@@ -495,11 +495,14 @@ document.addEventListener('alpine:init', () => {
             return datePrelevement ? new Date(datePrelevement).toLocaleDateString('fr-FR') : '';
         },
 
-        saveFicheDetection() {
+        saveFicheDetection(event) {
             if(!this.$refs.fichedetectionForm.checkValidity()) {
                 this.$refs.fichedetectionForm.reportValidity();
                 return;
             }
+
+            const boutonClique = event.submitter;
+            const action = boutonClique.dataset.action;
 
             let formData = new FormData();
             formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
@@ -514,6 +517,7 @@ document.addEventListener('alpine:init', () => {
             formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
             formData.append('lieux', JSON.stringify(this.lieux));
             formData.append('prelevements', JSON.stringify(this.prelevements));
+            formData.append('action', action);
 
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             const url = document.getElementById('fiche-detection-form-url').dataset.url;

@@ -4,7 +4,15 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 from django.utils.timezone import make_aware
-from ..models import Region, OrganismeNuisible, Etat, FicheDetection, NumeroFiche, Departement, Lieu
+from ..models import (
+    Region,
+    OrganismeNuisible,
+    Etat,
+    FicheDetection,
+    NumeroFiche,
+    Departement,
+    Lieu,
+)
 
 
 def _pick_organisme(page, organisme_name):
@@ -69,12 +77,16 @@ def test_clear_button_clears_form(live_server, page: Page) -> None:
 
 
 @pytest.mark.django_db
-def test_search_with_fiche_number(live_server, page: Page) -> None:
+def test_search_with_fiche_number(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche valide (format année.numéro)"""
     num1 = NumeroFiche.get_next_numero()
     num2 = NumeroFiche.get_next_numero()
-    baker.make(FicheDetection, numero=num1, etat=baker.make(Etat))
-    baker.make(FicheDetection, numero=num2, etat=baker.make(Etat))
+    baker.make(
+        FicheDetection, numero=num1, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure
+    )
+    baker.make(
+        FicheDetection, numero=num2, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill(str(num1))
@@ -93,12 +105,12 @@ def test_search_with_invalid_fiche_number(client):
     )
 
 
-def test_search_with_region(live_server, page: Page) -> None:
+def test_search_with_region(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant une région
     Effectuer une recherche en sélectionnant uniquement une région.
     Vérifier que tous les résultats retournés sont bien associés à cette région."""
     region1, region2 = baker.make(Region, _quantity=2)
-    fiche1 = baker.make(FicheDetection, etat=baker.make(Etat))
+    fiche1 = baker.make(FicheDetection, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure)
     baker.make(
         Lieu,
         departement=baker.make(Departement, region=region1),
@@ -107,7 +119,9 @@ def test_search_with_region(live_server, page: Page) -> None:
     baker.make(
         Lieu,
         departement=baker.make(Departement, region=region2),
-        fiche_detection=baker.make(FicheDetection, etat=baker.make(Etat)),
+        fiche_detection=baker.make(
+            FicheDetection, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure
+        ),
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
@@ -117,13 +131,23 @@ def test_search_with_region(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
 
 
-def test_search_with_organisme_nuisible(live_server, page: Page) -> None:
+def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un organisme nuisible.
     Effectue une recherche en sélectionnant un organisme nuisible spécifique et
     vérifier que les fiches détectées retournées sont associées à cet organisme."""
     organisme1, organisme2 = baker.make(OrganismeNuisible, _quantity=2)
-    baker.make(FicheDetection, organisme_nuisible=organisme1, etat=baker.make(Etat))
-    baker.make(FicheDetection, organisme_nuisible=organisme2, etat=baker.make(Etat))
+    baker.make(
+        FicheDetection,
+        organisme_nuisible=organisme1,
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+    )
+    baker.make(
+        FicheDetection,
+        organisme_nuisible=organisme2,
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     _pick_organisme(page, organisme1.libelle_court)
@@ -138,12 +162,22 @@ def test_search_with_organisme_nuisible(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=organisme2.libelle_court)).not_to_be_visible()
 
 
-def test_search_with_period(live_server, page: Page) -> None:
+def test_search_with_period(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant une période.
     Effectue une recherche en sélectionnant une période spécifique et
     vérifier que les fiches détectées retournées sont celles créées dans cette plage de dates."""
-    fiche1 = baker.make(FicheDetection, date_creation=make_aware(datetime(2024, 6, 19)), etat=baker.make(Etat))
-    fiche2 = baker.make(FicheDetection, date_creation=make_aware(datetime(2024, 6, 20)), etat=baker.make(Etat))
+    fiche1 = baker.make(
+        FicheDetection,
+        date_creation=make_aware(datetime(2024, 6, 19)),
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+    )
+    fiche2 = baker.make(
+        FicheDetection,
+        date_creation=make_aware(datetime(2024, 6, 20)),
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Période du").fill("2024-06-19")
@@ -154,11 +188,16 @@ def test_search_with_period(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(fiche2.numero))).not_to_be_visible()
 
 
-def test_search_with_crossed_dates(live_server, page: Page) -> None:
+def test_search_with_crossed_dates(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant une période avec des dates croisées.
     Effectue une recherche en sélectionnant une période avec des dates croisées et
     vérifier que aucun résultat n'est retourné."""
-    baker.make(FicheDetection, date_creation=make_aware(datetime(2024, 6, 19)), etat=baker.make(Etat))
+    baker.make(
+        FicheDetection,
+        date_creation=make_aware(datetime(2024, 6, 19)),
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Période du").fill("2024-06-20")
@@ -168,13 +207,13 @@ def test_search_with_crossed_dates(live_server, page: Page) -> None:
     expect(page.locator("body")).to_contain_text("0 fiches au total")
 
 
-def test_search_with_state(live_server, page: Page) -> None:
+def test_search_with_state(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un état.
     Effectue une recherche en sélectionnant un état spécifique et
     vérifier que les fiches détectées retournées sont celles ayant cet état."""
     etat1, etat2 = baker.make(Etat, _quantity=2)
-    fiche1 = baker.make(FicheDetection, etat=etat1)
-    fiche2 = baker.make(FicheDetection, etat=etat2)
+    fiche1 = baker.make(FicheDetection, etat=etat1, createur=mocked_authentification_user.agent.structure)
+    fiche2 = baker.make(FicheDetection, etat=etat2, createur=mocked_authentification_user.agent.structure)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("État").select_option(str(etat1.id))
@@ -184,11 +223,17 @@ def test_search_with_state(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(fiche2.numero))).not_to_be_visible()
 
 
-def test_search_with_multiple_filters(live_server, page: Page) -> None:
+def test_search_with_multiple_filters(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant plusieurs filtres.
     Effectue une recherche en sélectionnant plusieurs filtres et
     vérifier que les fiches détectées retournées satisfont toutes les conditions spécifiées."""
-    fiche1, fiche2 = baker.make(FicheDetection, etat=baker.make(Etat), _quantity=2, _fill_optional=True)
+    fiche1, fiche2 = baker.make(
+        FicheDetection,
+        etat=baker.make(Etat),
+        _quantity=2,
+        _fill_optional=True,
+        createur=mocked_authentification_user.agent.structure,
+    )
     lieu = baker.make(Lieu, fiche_detection=fiche1, _fill_optional=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
@@ -203,11 +248,13 @@ def test_search_with_multiple_filters(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(fiche2.numero))).not_to_be_visible()
 
 
-def test_search_without_filters(live_server, page: Page) -> None:
+def test_search_without_filters(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection sans aucun filtre.
     Effectue une recherche sans entrer de critères dans les filtres pour s'assurer que tous les enregistrements sont retournés
     et qu'aucun filtre n'est appliqué."""
-    fiche1, fiche2 = baker.make(FicheDetection, etat=baker.make(Etat), _quantity=2)
+    fiche1, fiche2 = baker.make(
+        FicheDetection, etat=baker.make(Etat), _quantity=2, createur=mocked_authentification_user.agent.structure
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_role("button", name="Rechercher").click()

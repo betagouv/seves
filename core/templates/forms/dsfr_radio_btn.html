@@ -1,0 +1,25 @@
+{% load get_item %}
+
+{% for group, options, index in widget.optgroups %}
+    {% for option in options %}
+        <div class="fr-fieldset__element">
+            <div class="fr-radio-group">
+                <input type="{{ option.type }}"
+                       name="{{ option.name }}"
+                       id="{{ option.attrs.id }}"
+                       value="{{ option.value }}"
+                       {% if option.attrs.checked %}checked{% endif %}
+                       {% if option.attrs.required %}required{% endif %}
+                       {% if option.attrs.disabled %}disabled{% endif %}
+                       {% include "django/forms/attrs.html" %}
+                >
+                <label class="fr-label" for="{{ option.attrs.id }}">
+                    {{ option.label }}
+                    {% if option.attrs.hint_text %}
+                        <span class="fr-hint-text">{{ option.attrs.hint_text|get_item:option.value }}</span>
+                    {% endif %}
+                </label>
+            </div>
+        </div>
+    {% endfor %}
+{% endfor %}

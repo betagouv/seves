@@ -10,7 +10,7 @@ def test_can_add_free_link(live_server, page, fiche_detection, fiche_detection_b
     other_fiche = fiche_detection_bakery()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
-    page.get_by_test_id("fiche-action").click()
+    page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Ajouter un lien libre").click()
     page.locator("#id_object_choice").select_option(label=f"FicheDetection: {str(other_fiche.numero)}")
     page.get_by_test_id("submit-freelink").click()
@@ -30,7 +30,7 @@ def test_can_add_free_link(live_server, page, fiche_detection, fiche_detection_b
 def test_cant_link_to_self(live_server, page, fiche_detection):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
-    page.get_by_test_id("fiche-action").click()
+    page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Ajouter un lien libre").click()
     page.wait_for_selector("#id_object_choice")
     page.locator("#id_object_choice").select_option(label=f"FicheDetection: {str(fiche_detection.numero)}")
@@ -54,7 +54,7 @@ def test_cant_link_if_links_exists(live_server, page, fiche_detection, fiche_det
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
-    page.get_by_test_id("fiche-action").click()
+    page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Ajouter un lien libre").click()
     page.wait_for_selector("#id_object_choice")
     page.locator("#id_object_choice").select_option(label=f"FicheDetection: {str(other_fiche.numero)}")

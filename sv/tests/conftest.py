@@ -45,10 +45,12 @@ def add_basic_etat_objects():
 
 
 @pytest.fixture
-def fiche_detection_bakery(db):
+def fiche_detection_bakery(db, mocked_authentification_user):
     def _fiche_detection_bakery():
         etat = Etat.objects.get(id=Etat.get_etat_initial())
-        return baker.make(FicheDetection, _fill_optional=True, etat=etat)
+        return baker.make(
+            FicheDetection, _fill_optional=True, etat=etat, createur=mocked_authentification_user.agent.structure
+        )
 
     return _fiche_detection_bakery
 
