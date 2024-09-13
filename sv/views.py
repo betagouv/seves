@@ -18,8 +18,9 @@ from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch, F
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib import messages
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django import forms
 
 from core.mixins import (
@@ -30,7 +31,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm
+from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm
 from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
@@ -54,7 +55,7 @@ from .models import (
     PositionChaineDistribution,
 )
 from core.forms import DSFRForm
-from core.models import Structure
+from core.models import Structure, Visibilite
 
 
 class FicheDetectionSearchForm(forms.Form, DSFRForm):
@@ -93,9 +94,13 @@ class FicheDetectionListView(ListView):
     paginate_by = 100
 
     def get_queryset(self):
+        queryset = super().get_queryset()
+
+        queryset = FicheDetection.objects.get_fiches_user_can_view(self.request.user)
+
         # Pour chaque fiche de détection, on récupère la liste des lieux associés
         lieux_prefetch = Prefetch("lieux", queryset=Lieu.objects.order_by("id"), to_attr="lieux_list")
-        queryset = super().get_queryset().prefetch_related(lieux_prefetch)
+        queryset = queryset.prefetch_related(lieux_prefetch)
 
         # Pour chaque fiche de détection, on récupère le nom de la région du premier lieu associé
         first_lieu = Lieu.objects.filter(fiche_detection=OuterRef("pk")).order_by("id")
@@ -145,6 +150,7 @@ class FicheDetectionDetailView(
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
+    UserPassesTestMixin,
     DetailView,
 ):
     model = FicheDetection
@@ -175,7 +181,17 @@ class FicheDetectionDetailView(
         contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(self.get_object())
         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
+        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
         return context
+
+    def test_func(self) -> bool | None:
+        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
+        return self.get_object().can_user_access(self.request.user)
+
+    def handle_no_permission(self):
+        """Affiche une erreur 403 Forbidden si l'utilisateur n'a pas la permission d'accéder à la vue. (cf. UserPassesTestMixin)."""
+        raise PermissionDenied()
 
 
 class FicheDetectionContextMixin:
@@ -317,6 +333,10 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             mesures_phytosanitaires=data["mesuresPhytosanitaires"],
             mesures_surveillance_specifique=data["mesuresSurveillanceSpecifique"],
         )
+
+        if data["action"] == "publier":
+            fiche.visibilite = Visibilite.LOCAL
+
         fiche.save()
         fiche.contacts.add(self.request.user.agent.contact_set.get())
         fiche.contacts.add(self.request.user.agent.structure.contact_set.get())
@@ -613,3 +633,20 @@ class FicheDetecionCloturerView(View):
         fiche.cloturer()
         messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
+
+
+class FicheDetectionVisibiliteUpdateView(UpdateView):
+    model = FicheDetection
+    form_class = FicheDetectionVisibiliteUpdateForm
+    http_method_names = ["post"]
+
+    def get_success_url(self):
+        return reverse("fiche-detection-vue-detaillee", args=[self.object.pk])
+
+    def form_valid(self, form):
+        messages.success(self.request, "La visibilité de la fiche détection a bien été modifiée.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
+        return super().form_invalid(form)

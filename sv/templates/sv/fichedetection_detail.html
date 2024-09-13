@@ -22,6 +22,7 @@
                 {% if fichedetection.is_ac_notified %}
                     <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"> Déclaré AC</p>
                 {% endif %}
+                <p class="fr-badge fr-badge--no-icon">{{ fichedetection.visibilite }}</p>
             </div>
 
             <p>
@@ -47,6 +48,9 @@
                 {% include "sv/_lienlibre_modal.html" %}
                 {% include "sv/_delete_fiche_modal.html" %}
                 {% include "sv/_fichedetection_cloturer_modal.html" %}
+                {% if can_update_visibilite %}
+                    {% include "sv/_fichedetection_update_visibilite_modal.html" %}
+                {% endif %}
             </div>
         </div>
 

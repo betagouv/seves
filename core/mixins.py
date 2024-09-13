@@ -5,7 +5,7 @@ from django.db import models
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact, Message
+from core.models import Document, LienLibre, Contact, Message, Visibilite
 from .notifications import notify_message
 
 
@@ -112,6 +112,24 @@ class AllowACNotificationMixin(models.Model):
         )
         notify_message(message)
         self.save()
+
+    class Meta:
+        abstract = True
+
+
+class AllowVisibiliteMixin(models.Model):
+    visibilite = models.CharField(
+        max_length=100,
+        choices=[
+            ("brouillon", "Vous seul pourrez voir la fiche et la modifier"),
+            (
+                "local",
+                "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche",
+            ),
+            ("national", "La fiche sera et modifiable par toutes les structures"),
+        ],
+        default=Visibilite.BROUILLON,
+    )
 
     class Meta:
         abstract = True

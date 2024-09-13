@@ -50,7 +50,7 @@
         {{ types_etablissement|json_script:"types-etablissement" }}
         {{ positions_chaine_distribution|json_script:"positions-etablissement" }}
 
-        <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection()">
+        <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection($event)">
 
             <div id="fiche-detection-form-header">
                 <div>
@@ -63,11 +63,18 @@
                     </h1>
                     {% if not is_creation %}
                         <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
+                        <p class="fr-badge fr-badge--no-icon">{{ fichedetection.visibilite }}</p>
                     {% endif %}
                 </div>
 
                 <p>
-                    <input type="submit" value="Enregistrer" class="fr-btn" data-testid="fiche-detection-save-btn">
+                    {% if is_creation %}
+                        <input type="submit" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w" data-testid="fiche-detection-save-btn">
+                        <input type="submit" name="action" value="Publier" data-action="publier" class="fr-btn">
+                    {% else %}
+                        <a href="{% url 'fiche-detection-vue-detaillee' fichedetection.pk %}" class="fr-link fr-mr-3w">Annuler</a>
+                        <input type="submit" name="action" value="Enregistrer les modifications" data-action="enregistrer-modifications" class="fr-btn" data-testid="fiche-detection-save-btn">
+                    {% endif %}
                 </p>
             </div>
 

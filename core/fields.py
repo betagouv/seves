@@ -27,3 +27,7 @@ class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
 
 class DSFRToogle(forms.CheckboxInput):
     template_name = "forms/dsfr_toogle.html"
+
+
+class DSFRRadioButton(forms.RadioSelect):
+    template_name = "forms/dsfr_radio_btn.html"

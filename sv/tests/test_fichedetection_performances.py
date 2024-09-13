@@ -4,12 +4,12 @@ from model_bakery import baker
 from core.models import Message, Document, Structure, Contact
 from sv.models import FicheDetection, Lieu, Prelevement
 
-BASE_NUM_QUERIES = 12  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 13  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
-def test_empty_fiche_detection_performances(client, django_assert_num_queries):
-    fiche = baker.make(FicheDetection)
+def test_empty_fiche_detection_performances(client, django_assert_num_queries, mocked_authentification_user):
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
@@ -20,14 +20,19 @@ def test_empty_fiche_detection_performances(client, django_assert_num_queries):
 def test_fiche_detection_performances_with_messages_from_same_user(
     client, django_assert_num_queries, mocked_authentification_user
 ):
-    fiche = baker.make(FicheDetection)
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     baker.make(Message, content_object=fiche, sender=mocked_authentification_user.agent.contact_set.get())
     with django_assert_num_queries(BASE_NUM_QUERIES + 6):
         client.get(fiche.get_absolute_url())
 
-    baker.make(Message, content_object=fiche, sender=mocked_authentification_user.agent.contact_set.get(), _quantity=3)
+    baker.make(
+        Message,
+        content_object=fiche,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        _quantity=3,
+    )
 
     with django_assert_num_queries(BASE_NUM_QUERIES + 6):
         response = client.get(fiche.get_absolute_url())
@@ -36,8 +41,8 @@ def test_fiche_detection_performances_with_messages_from_same_user(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_performances_with_lieux(client, django_assert_num_queries):
-    fiche = baker.make(FicheDetection)
+def test_fiche_detection_performances_with_lieux(client, django_assert_num_queries, mocked_authentification_user):
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
@@ -49,8 +54,8 @@ def test_fiche_detection_performances_with_lieux(client, django_assert_num_queri
 
 
 @pytest.mark.django_db
-def test_fiche_detection_performances_with_document(client, django_assert_num_queries):
-    fiche = baker.make(FicheDetection)
+def test_fiche_detection_performances_with_document(client, django_assert_num_queries, mocked_authentification_user):
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
@@ -62,8 +67,8 @@ def test_fiche_detection_performances_with_document(client, django_assert_num_qu
 
 
 @pytest.mark.django_db
-def test_fiche_detection_performances_with_prelevement(client, django_assert_num_queries):
-    fiche = baker.make(FicheDetection)
+def test_fiche_detection_performances_with_prelevement(client, django_assert_num_queries, mocked_authentification_user):
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
@@ -78,8 +83,10 @@ def test_fiche_detection_performances_with_prelevement(client, django_assert_num
 
 
 @pytest.mark.django_db
-def test_fiche_detection_performances_when_adding_structure(client, django_assert_num_queries):
-    fiche = baker.make(FicheDetection)
+def test_fiche_detection_performances_when_adding_structure(
+    client, django_assert_num_queries, mocked_authentification_user
+):
+    fiche = baker.make(FicheDetection, createur=mocked_authentification_user.agent.structure)
     client.get(fiche.get_absolute_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):

@@ -9,7 +9,7 @@ from sv.models import FicheDetection
 def test_can_delete_fiche_detection(live_server, page, fiche_detection):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
-    page.get_by_test_id("fiche-action").click()
+    page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Supprimer la fiche").click()
     page.get_by_test_id("submit-delete").click()
 

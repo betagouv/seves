@@ -51,6 +51,7 @@
                             <th scope="col">Créateur</th>
                             <th scope="col">Commune</th>
                             <th scope="col">État</th>
+                            <th scope="col">Visibilité</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -100,7 +101,11 @@
                                         <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
                                     </a>
                                 </td>
-                            </tr>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        <span class="fr-badge">{{ fiche.visibilite }}</span>
+                                    </a>
+                                </tr>
                         {% endfor %}
                         <tbody>
                         </table>

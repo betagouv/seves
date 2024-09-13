@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
 from django.apps import apps
-from core.constants import AC_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 
 User = get_user_model()
 
@@ -36,6 +36,9 @@ class Agent(models.Model):
     def __str__(self):
         return f"{self.nom} {self.prenom}"
 
+    def is_in_structure(self, structure):
+        return self.structure == structure
+
     @property
     def name_with_structure(self):
         return f"{self.structure} [{self.nom} {self.prenom}]"
@@ -58,6 +61,10 @@ class Structure(models.Model):
     def is_ac(self):
         "Permet de savoir si la structure fait partie de l'administration centrale (AC)"
         return self.niveau1 == AC_STRUCTURE
+
+    @property
+    def is_mus_or_bsv(self):
+        return self.niveau2 in [MUS_STRUCTURE, BSV_STRUCTURE]
 
 
 class Contact(models.Model):
@@ -247,3 +254,9 @@ class UnitesMesure(models.TextChoices):
     HECTARE = "ha", _("Hectare")
     METRE_CARRE = "m2", _("Mètre carré")
     KILOMETRE_CARRE = "km2", _("Kilomètre carré")
+
+
+class Visibilite(models.TextChoices):
+    BROUILLON = "brouillon", "Vous seul pourrez voir la fiche et la modifier"
+    LOCAL = "local", "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche"
+    NATIONAL = "national", "La fiche sera et modifiable par toutes les structures"

@@ -2,13 +2,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices
+from django.contrib.contenttypes.fields import GenericRelation
 import datetime
 
-from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
-from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure
+from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.managers import FicheDetectionManager
 
 
@@ -391,7 +391,7 @@ class Etat(models.Model):
         return self.libelle
 
 
-class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Model):
+class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, models.Model):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
@@ -503,6 +503,28 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
 
     def is_already_cloturer(self):
         return self.etat.is_cloture()
+
+    def can_update_visibilite(self, user):
+        """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
+        match self.visibilite:
+            case Visibilite.BROUILLON:
+                return user.agent.is_in_structure(self.createur)
+            case Visibilite.LOCAL | Visibilite.NATIONAL:
+                return user.agent.structure.is_mus_or_bsv
+            case _:
+                return False
+
+    def can_user_access(self, user):
+        """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
+        match self.visibilite:
+            case Visibilite.BROUILLON:
+                return user.agent.is_in_structure(self.createur)
+            case Visibilite.LOCAL:
+                return user.agent.structure.is_mus_or_bsv or user.agent.is_in_structure(self.createur)
+            case Visibilite.NATIONAL:
+                return True
+            case _:
+                return False
 
 
 class CaracteristiquesPrincipalesZoneDelimitee(models.TextChoices):
