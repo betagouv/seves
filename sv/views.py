@@ -314,6 +314,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         )
         fiche.save()
         fiche.contacts.add(self.request.user.agent.contact_set.get())
+        fiche.contacts.add(self.request.user.agent.structure.contact_set.get())
         return fiche
 
     def create_lieux(self, lieux, fiche):
