@@ -113,9 +113,36 @@ class FinSuiviContact(models.Model):
 
 
 class Document(models.Model):
+    DOCUMENT_ARRETE = "arrete prefectoral ministériel"
     DOCUMENT_AUTRE = "autre"
     DOCUMENT_CARTOGRAPHIE = "cartographie"
-    DOCUMENT_TYPE_CHOICES = ((DOCUMENT_CARTOGRAPHIE, "Cartographie"), (DOCUMENT_AUTRE, "Autre document"))
+    DOCUMENT_CERTIFICAT_PHYTOSANITAIRE = "certificat phytosanitaire"
+    DOCUMENT_COMPTE_RENDU_REUNION = "compte rendu reunion"
+    DOCUMENT_COURRIER_OFFICIEL = "courrier officiel"
+    DOCUMENT_DSCE = "dsce"
+    DOCUMENT_FACTURE = "facture"
+    DOCUMENT_IMAGE = "image"
+    DOCUMENT_PASSEPORT_PHYTOSANITAIRE = "passeport phytosanitaire"
+    DOCUMENT_RAPPORT_ANALYSE = "rapport analyse"
+    DOCUMENT_RAPPORT_INSPECTION = "rapport inspection"
+    DOCUMENT_REGLEMENTATION = "reglementation"
+    DOCUMENT_TRANSPORT = "document de transport"
+    DOCUMENT_TYPE_CHOICES = (
+        (DOCUMENT_ARRETE, "Arrêté préfectoral/ministériel"),
+        (DOCUMENT_AUTRE, "Autre document"),
+        (DOCUMENT_CARTOGRAPHIE, "Cartographie"),
+        (DOCUMENT_CERTIFICAT_PHYTOSANITAIRE, "Certificat phytosanitaire"),
+        (DOCUMENT_COMPTE_RENDU_REUNION, "Compte rendu de réunion"),
+        (DOCUMENT_COURRIER_OFFICIEL, "Courrier officiel"),
+        (DOCUMENT_DSCE, "DSCE"),
+        (DOCUMENT_FACTURE, "Facture"),
+        (DOCUMENT_IMAGE, "Image"),
+        (DOCUMENT_PASSEPORT_PHYTOSANITAIRE, "Passeport phytosanitaire"),
+        (DOCUMENT_RAPPORT_ANALYSE, "Rapport d'analyse"),
+        (DOCUMENT_RAPPORT_INSPECTION, "Rapport d'inspection"),
+        (DOCUMENT_REGLEMENTATION, "Réglementation"),
+        (DOCUMENT_TRANSPORT, "Document de transport"),
+    )
 
     nom = models.CharField(max_length=256)
     description = models.TextField()
