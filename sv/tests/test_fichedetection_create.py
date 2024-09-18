@@ -16,6 +16,7 @@ from ..models import (
     TypeExploitant,
     PositionChaineDistribution,
 )
+from core.models import Contact
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
@@ -156,9 +157,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     assert fiche_detection.mesures_phytosanitaires == "test mesures phyto"
     assert fiche_detection.mesures_surveillance_specifique == "test mesures surveillance"
 
-    page.get_by_test_id("contacts").click()
-    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
-
 
 @pytest.mark.django_db
 def test_create_fiche_detection_with_lieu(
@@ -237,3 +235,38 @@ def test_create_fiche_detection_with_lieu(
     assert lieu.code_inpp_etablissement == lieu.code_inpp_etablissement
     assert lieu.type_exploitant_etablissement == lieu.type_exploitant_etablissement
     assert lieu.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
+
+
+def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+):
+    """Test que lors de la création d'une fiche de détection, le contact correspondant à la structure de l'utilisateur connecté
+    est ajouté dans la liste des contacts de la fiche détection"""
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.statut_evenement_input.select_option(label="Foyer")
+    form_elements.save_btn.click()
+
+    page.get_by_test_id("contacts").click()
+    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.last()
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in fiche_detection.contacts.all()
+
+
+def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+):
+    """Test que lors de la création d'une fiche de détection, le contact correspondant à l'agent de l'utilisateur connecté
+    est ajouté dans la liste des contacts de la fiche détection"""
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.statut_evenement_input.select_option(label="Foyer")
+    form_elements.save_btn.click()
+
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.last()
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in fiche_detection.contacts.all()
