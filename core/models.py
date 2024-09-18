@@ -128,13 +128,25 @@ class FinSuiviContact(models.Model):
 
 
 class Document(models.Model):
-    DOCUMENT_AUTRE = "autre"
-    DOCUMENT_CARTOGRAPHIE = "cartographie"
-    DOCUMENT_TYPE_CHOICES = ((DOCUMENT_CARTOGRAPHIE, "Cartographie"), (DOCUMENT_AUTRE, "Autre document"))
+    class TypeDocument(models.TextChoices):
+        ARRETE = "arrete_prefectoral_ministériel", "Arrêté préfectoral/ministériel"
+        AUTRE = "autre", "Autre document"
+        CARTOGRAPHIE = "cartographie", "Cartographie"
+        CERTIFICAT_PHYTOSANITAIRE = "certificat_phytosanitaire", "Certificat phytosanitaire"
+        COMPTE_RENDU_REUNION = "compte_rendu_reunion", "Compte rendu de réunion"
+        COURRIER_OFFICIEL = "courrier_officiel", "Courrier officiel"
+        DSCE = "dsce", "DSCE"
+        FACTURE = "facture", "Facture"
+        IMAGE = "image", "Image"
+        PASSEPORT_PHYTOSANITAIRE = "passeport_phytosanitaire", "Passeport phytosanitaire"
+        RAPPORT_ANALYSE = "rapport_analyse", "Rapport d'analyse"
+        RAPPORT_INSPECTION = "rapport_inspection", "Rapport d'inspection"
+        REGLEMENTATION = "reglementation", "Réglementation"
+        TRANSPORT = "document_de_transport", "Document de transport"
 
     nom = models.CharField(max_length=256)
     description = models.TextField()
-    document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES, verbose_name="Type de document")
+    document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(upload_to=get_timestamped_filename)
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
