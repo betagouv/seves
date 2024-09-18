@@ -52,7 +52,7 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
     nom = forms.CharField(
         help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
     )
-    document_type = forms.ChoiceField(choices=Document.DOCUMENT_TYPE_CHOICES, label="Type de document")
+    document_type = forms.ChoiceField(choices=Document.TypeDocument, label="Type de document")
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
@@ -74,7 +74,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
     nom = forms.CharField(
         help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
     )
-    document_type = forms.ChoiceField(choices=Document.DOCUMENT_TYPE_CHOICES, label="Type de document")
+    document_type = forms.ChoiceField(choices=Document.TypeDocument, label="Type de document")
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
@@ -165,7 +165,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             raise ValidationError("Il n'y a pas le même nombre de documents et de type de documents.")
 
         for key, value in document_types.items():
-            self.fields[key] = forms.ChoiceField(initial=value, choices=Document.DOCUMENT_TYPE_CHOICES)
+            self.fields[key] = forms.ChoiceField(initial=value, choices=Document.TypeDocument)
             document_number = key.split("_")[-1]
             document_field = forms.FileField(initial=documents[f"document_file_{document_number}"])
             self.fields[f"document_{document_number}"] = document_field
@@ -243,7 +243,12 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):
     document_type = forms.ChoiceField(
-        choices=(("", ""),) + Document.DOCUMENT_TYPE_CHOICES, label="Type de document", required=False
+        choices=[
+            ("", ""),
+        ]
+        + Document.TypeDocument.choices,
+        label="Type de document",
+        required=False,
     )
     file = forms.FileField(
         label="Ajouter un Document", required=False, widget=forms.FileInput(attrs={"disabled": True})

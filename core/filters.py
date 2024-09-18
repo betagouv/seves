@@ -32,7 +32,7 @@ class DocumentFilter(django_filters.FilterSet):
             self.queryset.values_list("document_type", flat=True).order_by("document_type").distinct("document_type")
         )
         self.filters["document_type"].extra["choices"] = [
-            (k, v) for (k, v) in Document.DOCUMENT_TYPE_CHOICES if k in actual_document_types
+            (k, v) for (k, v) in Document.TypeDocument.choices if k in actual_document_types
         ]
 
         structure_queryset = Structure.objects.filter(
