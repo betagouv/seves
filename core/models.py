@@ -149,6 +149,7 @@ class Message(models.Model):
     DEMANDE_INTERVENTION = "demande d'intervention"
     COMPTE_RENDU = "compte rendu sur demande d'intervention"
     FIN_SUIVI = "fin de suivi"
+    NOTIFICATION_AC = "notification ac"
     MESSAGE_TYPE_CHOICES = (
         (MESSAGE, "Message"),
         (NOTE, "Note"),
@@ -156,6 +157,7 @@ class Message(models.Model):
         (DEMANDE_INTERVENTION, "Demande d'intervention"),
         (COMPTE_RENDU, "Compte rendu sur demande d'intervention"),
         (FIN_SUIVI, "Fin de suivi"),
+        (NOTIFICATION_AC, "Notification à l'administration centrale"),
     )
     TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_SUIVI)
     TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_SUIVI)

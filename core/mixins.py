@@ -1,10 +1,12 @@
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db import models
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact
+from core.models import Document, LienLibre, Contact, Message
+from .notifications import notify_message
 
 
 class WithDocumentUploadFormMixin:
@@ -73,6 +75,32 @@ class AllowsSoftDeleteMixin(models.Model):
 
     def soft_delete(self):
         self.is_deleted = True
+        self.save()
+
+    class Meta:
+        abstract = True
+
+
+class AllowACNotificationMixin(models.Model):
+    is_ac_notified = models.BooleanField(default=False)
+
+    @property
+    def can_notifiy(self):
+        return not self.is_ac_notified
+
+    def notify_ac(self, sender):
+        if not self.can_notifiy:
+            raise ValidationError("Cet objet est déjà notifié à l'AC")
+
+        self.is_ac_notified = True
+        message = Message.objects.create(
+            message_type=Message.NOTIFICATION_AC,
+            title="Notification à l'AC",
+            content="L'administration a été notifiée de cette fiche.",
+            sender=sender,
+            content_object=self,
+        )
+        notify_message(message)
         self.save()
 
     class Meta:

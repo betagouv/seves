@@ -48,7 +48,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'message-view' message.pk  %}">{{ message.message_type|title }}</a>
+                    <a href="{% url 'message-view' message.pk  %}">{{ message.get_message_type_display|capfirst }}</a>
                 </td>
             </tr>
         {% endfor %}

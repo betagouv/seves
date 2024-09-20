@@ -229,7 +229,7 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page, fiche_detection: 
     assert page.text_content(cell_selector) == "Title of the message"
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
-    assert page.text_content(cell_selector) == "Compte Rendu Sur Demande D'Intervention"
+    assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention"
 
 
 def test_cant_add_compte_rendu_without_recipient(live_server, page: Page, fiche_detection: FicheDetection):
