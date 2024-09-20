@@ -1,7 +1,7 @@
 from post_office.mail import send
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message
+from core.models import Message, Contact
 
 
 def _send_message(recipients: list[str], copy: list[str], subject, message):
@@ -40,6 +40,12 @@ def notify_message(instance: Message):
         message = "Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES."
         recipients = instance.content_object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)
         recipients = [r.email for r in recipients]
+    elif instance.message_type == Message.NOTIFICATION_AC:
+        subject = instance.title
+        message = (
+            f"Bonjour,\n une personne a déclarée la fiche {instance.content_object.numero} à l'administration centrale."
+        )
+        recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
 
     if recipients and message:
         _send_message(recipients, copy, subject=subject, message=message)

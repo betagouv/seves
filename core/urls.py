@@ -12,6 +12,7 @@ from .views import (
     SoftDeleteView,
     StructureAddFormView,
     StructureSelectionView,
+    ACNotificationView,
 )
 
 urlpatterns = [
@@ -61,6 +62,11 @@ urlpatterns = [
         "suppression/",
         SoftDeleteView.as_view(),
         name="soft-delete",
+    ),
+    path(
+        "notify-ac/",
+        ACNotificationView.as_view(),
+        name="notify-ac",
     ),
     path("structures/ajout/selection", StructureAddFormView.as_view(), name="structure-selection-add-form"),
     path("structures/ajout", StructureSelectionView.as_view(), name="structure-add"),

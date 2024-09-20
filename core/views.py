@@ -338,3 +338,22 @@ class SoftDeleteView(View):
             messages.error(request, "Ce type d'objet ne peut pas être supprimé")
 
         return HttpResponseRedirect(request.POST.get("next"))
+
+
+class ACNotificationView(View):
+    def post(self, request):
+        content_type_id = request.POST.get("content_type_id")
+        content_id = request.POST.get("content_id")
+
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        obj = content_type.objects.get(pk=content_id)
+
+        try:
+            obj.notify_ac(sender=self.request.user.agent.contact_set.get())
+            messages.success(request, "L'administration centrale a été notifiée avec succès")
+        except AttributeError:
+            messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
+        except ValidationError:
+            messages.error(request, "Cet objet est déjà notifié à l'AC")
+
+        return HttpResponseRedirect(request.POST.get("next"))

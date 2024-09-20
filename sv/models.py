@@ -6,7 +6,7 @@ import datetime
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
-from core.mixins import AllowsSoftDeleteMixin
+from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from sv.managers import FicheDetectionManager
 
@@ -386,7 +386,7 @@ class Etat(models.Model):
         return self.libelle
 
 
-class FicheDetection(AllowsSoftDeleteMixin, models.Model):
+class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Model):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
