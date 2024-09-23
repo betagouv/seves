@@ -1,0 +1,4 @@
+<div class="fr-toggle fr-toggle--border-bottom fr-toggle--label-left">
+    <input type="checkbox" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %} class="fr-toggle__input" aria-describedby="group-{{ widget.attrs.id }}-toggle-hint" id="group-{{ widget.attrs.id }}-toggle-hint">
+    <label class="fr-toggle__label" for="{{ widget.attrs.id }}" data-fr-checked-label="Activé" data-fr-unchecked-label="Désactivé">{{ widget.attrs.label  }}</label>
+</div>

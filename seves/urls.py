@@ -32,6 +32,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),
     path("core/", include("core.urls"), name="core"),
+    path("account/", include("account.urls"), name="account"),
     path("oidc/", include("mozilla_django_oidc.urls")),
 ]
 
