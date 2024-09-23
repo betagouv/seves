@@ -23,3 +23,7 @@ class MultiModelChoiceField(forms.ChoiceField):
 
 class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
     option_template_name = "forms/dsfr_checkbox_option.html"
+
+
+class DSFRToogle(forms.CheckboxInput):
+    template_name = "forms/dsfr_toogle.html"

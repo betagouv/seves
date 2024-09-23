@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "sv.apps.SvConfig",
     "core.apps.CoreConfig",
+    "account.apps.AccountConfig",
     "django_filters",
     "post_office",
 ]

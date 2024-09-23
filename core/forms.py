@@ -24,7 +24,6 @@ class DSFRForm(forms.BaseForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         for field in self.fields:
             widget = self.fields[field].widget
             class_to_add = self.input_to_class[type(widget).__name__]
