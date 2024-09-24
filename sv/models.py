@@ -528,6 +528,7 @@ class ZoneInfestee(models.Model):
             "plein_air_zone_production_pepiniere",
             "(1) Plein air — zone de production (1.3) pépinière",
         )
+
         PLEIN_AIR_ZONE_PRODUCTION_FORET = (
             "plein_air_zone_production_foret",
             "(1) Plein air — zone de production (1.4) forêt",
