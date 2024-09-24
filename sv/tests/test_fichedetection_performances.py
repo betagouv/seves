@@ -1,10 +1,10 @@
 import pytest
 from model_bakery import baker
 
-from core.models import Message, Document
+from core.models import Message, Document, Structure, Contact
 from sv.models import FicheDetection, Lieu, Prelevement
 
-BASE_NUM_QUERIES = 11  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 12  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -74,4 +74,21 @@ def test_fiche_detection_performances_with_prelevement(client, django_assert_num
         baker.make(Prelevement, lieu=lieu)
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
+        client.get(fiche.get_absolute_url())
+
+
+@pytest.mark.django_db
+def test_fiche_detection_performances_when_adding_structure(client, django_assert_num_queries):
+    fiche = baker.make(FicheDetection)
+    client.get(fiche.get_absolute_url())
+
+    with django_assert_num_queries(BASE_NUM_QUERIES):
+        client.get(fiche.get_absolute_url())
+
+    for _ in range(0, 10):
+        structure = baker.make(Structure)
+        contact = baker.make(Contact, structure=structure, agent=None)
+        fiche.contacts.add(contact)
+
+    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(fiche.get_absolute_url())

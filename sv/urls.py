@@ -5,6 +5,8 @@ from .views import (
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
     FreeLinkCreateView,
+    FicheDetectionExportView,
+    FicheDetecionCloturerView,
 )
 
 urlpatterns = [
@@ -24,9 +26,19 @@ urlpatterns = [
         name="fiche-detection-creation",
     ),
     path(
+        "fiches-detection/export/",
+        FicheDetectionExportView.as_view(),
+        name="fiche-detection-export",
+    ),
+    path(
         "fiches-detection/<int:pk>/modification/",
         FicheDetectionUpdateView.as_view(),
         name="fiche-detection-modification",
+    ),
+    path(
+        "fiches-detection/<int:pk>/cloturer/",
+        FicheDetecionCloturerView.as_view(),
+        name="fiche-detection-cloturer",
     ),
     path(
         "lien/ajout/",

@@ -1,9 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.db import models
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
-from core.models import Document, LienLibre
+from core.models import Document, LienLibre, Contact
 
 
 class WithDocumentUploadFormMixin:
@@ -47,8 +48,22 @@ class WithMessagesListInContextMixin:
 class WithContactListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["contacts"] = self.get_object().contacts.prefetch_related("agent__structure")
+        context["contacts_agents"] = (
+            self.get_object()
+            .contacts.agents_only()
+            .prefetch_related("agent__structure")
+            .services_deconcentres_first()
+            .order_by_structure_and_name()
+        )
+        context["contacts_structures"] = (
+            self.get_object()
+            .contacts.structures_only()
+            .services_deconcentres_first()
+            .order_by_structure_and_niveau2()
+            .select_related("structure")
+        )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
         return context
 
 
@@ -61,3 +76,14 @@ class WithFreeLinksListInContextMixin:
             | (Q(content_type_2=ContentType.objects.get_for_model(obj), object_id_2=obj.id))
         )
         return context
+
+
+class AllowsSoftDeleteMixin(models.Model):
+    is_deleted = models.BooleanField(default=False)
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+
+    class Meta:
+        abstract = True

@@ -1,11 +1,21 @@
-<div class="fr-btns-group--right fr-mb-2w">
+<div class="fr-btns-group--right fr-mb-3w">
+    <a href="{% url 'structure-selection-add-form'%}?fiche_id={{fichedetection.pk}}&content_type_id={{content_type_id}}&next={{redirect_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
+        Ajouter une structure
+    </a>
     <a href="{% url 'contact-add-form'%}?fiche_id={{fichedetection.pk}}&content_type_id={{content_type_id}}&next={{redirect_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
         Ajouter un agent
     </a>
 </div>
 <div class="fr-container--fluid">
     <div class="fr-grid-row fr-grid-row--gutters">
-        {% for contact in contacts %}
+        {% for contact in contacts_agents %}
+            <div class="fr-col-3 fr-col-xl-3">
+                {% include "core/_carte_resume_contact.html" %}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="fr-grid-row fr-grid-row--gutters">
+        {% for contact in contacts_structures %}
             <div class="fr-col-3 fr-col-xl-3">
                 {% include "core/_carte_resume_contact.html" %}
             </div>

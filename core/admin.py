@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Document, Structure, Contact, Agent, Message
+from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact
 
 
 admin.site.register(Document)
@@ -20,3 +20,4 @@ class ContactAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Contact, ContactAdmin)
+admin.site.register(FinSuiviContact)

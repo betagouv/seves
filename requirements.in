@@ -18,3 +18,4 @@ mozilla-django-oidc
 django-filter
 faker
 django-debug-toolbar
+django-post_office

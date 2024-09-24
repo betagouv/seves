@@ -2,7 +2,11 @@
     <div class="fr-checkbox-group">
         <input name="contacts" id="checkboxes-{{ checkbox_id }}" type="checkbox" value="{{ contact.id }}" aria-describedby="checkboxes-{{ checkbox_id }}-messages">
         <label class="fr-label" for="checkboxes-{{ checkbox_id }}">
-            {{ contact.agent.nom }} {{ contact.agent.prenom }}{% if contact.agent.fonction_hierarchique %} ({{ contact.agent.fonction_hierarchique }}){% endif %}
+            {% if contact.agent %}
+                {{ contact.agent.nom }} {{ contact.agent.prenom }}{% if contact.agent.fonction_hierarchique %} ({{ contact.agent.fonction_hierarchique }}){% endif %}
+            {% else %}
+                {{ contact.structure }}
+            {% endif %}
         </label>
     </div>
 </div>

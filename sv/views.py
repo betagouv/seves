@@ -6,6 +6,7 @@ import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import (
     ListView,
     DetailView,
@@ -15,8 +16,8 @@ from django.views.generic import (
 )
 from django.urls import reverse
 from django.db.models import OuterRef, Subquery, Prefetch
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.db import transaction, IntegrityError
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
@@ -29,6 +30,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from sv.forms import FreeLinkForm
+from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
     Lieu,
@@ -145,7 +147,7 @@ class FicheDetectionDetailView(
     DetailView,
 ):
     model = FicheDetection
-    queryset = FicheDetection.objects.select_related("statut_reglementaire", "etat", "numero", "contexte")
+    queryset = FicheDetection.objects.select_related("statut_reglementaire", "etat", "numero", "contexte", "createur")
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -168,6 +170,10 @@ class FicheDetectionDetailView(
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
         context["free_link_form"] = self._get_free_link_form()
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(self.get_object())
+        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
+        context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         return context
 
 
@@ -311,6 +317,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         )
         fiche.save()
         fiche.contacts.add(self.request.user.agent.contact_set.get())
+        fiche.contacts.add(self.request.user.agent.structure.contact_set.get())
         return fiche
 
     def create_lieux(self, lieux, fiche):
@@ -561,3 +568,44 @@ class FreeLinkCreateView(FormView):
 
         messages.success(request, "Le lien a été créé avec succès.")
         return HttpResponseRedirect(self.request.POST.get("next"))
+
+
+class FicheDetectionExportView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        response = HttpResponse(content_type="text/csv")
+        FicheDetectionExport().export(stream=response)
+        response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
+        return response
+
+
+class FicheDetecionCloturerView(View):
+    redirect_url_name = "fiche-detection-vue-detaillee"
+
+    def get_redirect_url(self, fiche_pk):
+        return reverse(self.redirect_url_name, args=[fiche_pk])
+
+    def post(self, request, pk):
+        fiche = FicheDetection.objects.get(pk=pk)
+        redirect_url = self.get_redirect_url(pk)
+
+        if not fiche.can_be_cloturer_by(request.user):
+            messages.error(request, "Vous n'avez pas les droits pour clôturer une fiche de détection.")
+            return redirect(redirect_url)
+
+        if fiche.is_already_cloturer():
+            messages.error(request, f"La fiche de détection n° {fiche.numero} est déjà clôturée.")
+            return redirect(redirect_url)
+
+        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(fiche)
+        if contacts_not_in_fin_suivi:
+            messages.error(
+                request,
+                f"La fiche de détection n° {fiche.numero} ne peut pas être clôturée car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
+            )
+            return redirect(redirect_url)
+
+        fiche.cloturer()
+        messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
+        return redirect(redirect_url)

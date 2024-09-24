@@ -7,6 +7,8 @@ from django.db.models import Q, CheckConstraint
 
 from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
+from django.apps import apps
+from core.constants import AC_STRUCTURE
 
 User = get_user_model()
 
@@ -51,6 +53,11 @@ class Structure(models.Model):
     def __str__(self):
         return self.libelle
 
+    @property
+    def is_ac(self):
+        "Permet de savoir si la structure fait partie de l'administration centrale (AC)"
+        return self.niveau1 == AC_STRUCTURE
+
 
 class Contact(models.Model):
     class Meta:
@@ -80,6 +87,35 @@ class Contact(models.Model):
         return (
             str(self.structure) if self.structure else f"{self.agent.nom} {self.agent.prenom} ({self.agent.structure})"
         )
+
+
+class FinSuiviContact(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["content_type", "object_id", "contact"], name="unique_fin_suivi_contact")
+        ]
+
+    def __str__(self):
+        return f"Fin de suivi de {self.contact} pour la fiche {self.content_type} n° {self.content_object}"
+
+    def clean(self):
+        super().clean()
+        content_type_model = self.content_type.model
+        fiche_model = apps.get_model(self.content_type.app_label, content_type_model)
+        fiche_object = fiche_model.objects.get(id=self.object_id)
+        if not hasattr(fiche_object, "contacts"):
+            raise ValidationError(f"La fiche {fiche_model} liée ne possède pas de relation 'contacts'.")
+        if self.contact.agent:
+            raise ValidationError("Le contact doit être lié à une structure et non à un agent.")
+        if not fiche_object.contacts.filter(id=self.contact.id).exists():
+            raise ValidationError(
+                "Vous ne pouvez pas signaler la fin de suivi pour cette fiche car votre structure n'est pas dans la liste des contacts."
+            )
 
 
 class Document(models.Model):
@@ -118,17 +154,18 @@ class Message(models.Model):
     POINT_DE_SITUATION = "point de situation"
     DEMANDE_INTERVENTION = "demande d'intervention"
     COMPTE_RENDU = "compte rendu sur demande d'intervention"
-    FIN_INTERVENTION = "fin d'intervention"
+    FIN_SUIVI = "fin de suivi"
     MESSAGE_TYPE_CHOICES = (
         (MESSAGE, "Message"),
         (NOTE, "Note"),
         (POINT_DE_SITUATION, "Point de situation"),
         (DEMANDE_INTERVENTION, "Demande d'intervention"),
         (COMPTE_RENDU, "Compte rendu sur demande d'intervention"),
-        (FIN_INTERVENTION, "Fin d'intervention"),
+        (FIN_SUIVI, "Fin de suivi"),
     )
-    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_INTERVENTION)
-    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_INTERVENTION)
+    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_SUIVI)
+    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_SUIVI)
+    TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
 
     message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
     title = models.CharField(max_length=512, verbose_name="Titre")

@@ -28,6 +28,10 @@ body{
 .fiches__list-container {
     margin: 2rem;
 }
+.fiches__list-header {
+    display: flex;
+    justify-content: space-between;
+}
 .fiches__count {
     font-weight: bold;
 }

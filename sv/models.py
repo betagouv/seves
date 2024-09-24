@@ -6,7 +6,9 @@ import datetime
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
-from core.models import Document, Message, Contact
+from core.mixins import AllowsSoftDeleteMixin
+from core.models import Document, Message, Contact, Structure, FinSuiviContact
+from sv.managers import FicheDetectionManager
 
 
 class NumeroFiche(models.Model):
@@ -253,7 +255,7 @@ class EspeceEchantillon(models.Model):
         verbose_name_plural = "Espèces de l'échantillon"
         db_table = "sv_espece_echantillon"
 
-    code_oepp = models.CharField(max_length=100, verbose_name="Code OEPP")
+    code_oepp = models.CharField(max_length=100, verbose_name="Code OEPP", unique=True)
     libelle = models.CharField(max_length=100, verbose_name="Libellé")
 
     def __str__(self):
@@ -358,6 +360,10 @@ class StatutEvenement(models.Model):
 
 
 class Etat(models.Model):
+    NOUVEAU = "nouveau"
+    EN_COURS = "en cours"
+    CLOTURE = "clôturé"
+
     class Meta:
         verbose_name = "Etat"
         verbose_name_plural = "Etats"
@@ -367,13 +373,20 @@ class Etat(models.Model):
 
     @classmethod
     def get_etat_initial(cls):
-        return cls.objects.get(libelle="nouveau").id
+        return cls.objects.get(libelle=cls.NOUVEAU).id
+
+    @classmethod
+    def get_etat_cloture(cls):
+        return cls.objects.get(libelle=cls.CLOTURE)
+
+    def is_cloture(self):
+        return self.libelle == self.CLOTURE
 
     def __str__(self):
         return self.libelle
 
 
-class FicheDetection(models.Model):
+class FicheDetection(AllowsSoftDeleteMixin, models.Model):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
@@ -381,7 +394,7 @@ class FicheDetection(models.Model):
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
-    createur = models.ForeignKey("core.Structure", on_delete=models.PROTECT, verbose_name="Structure créatrice")
+    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
     statut_evenement = models.ForeignKey(
@@ -430,6 +443,9 @@ class FicheDetection(models.Model):
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
+    fin_suivi = GenericRelation(FinSuiviContact)
+
+    objects = FicheDetectionManager()
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
@@ -443,6 +459,10 @@ class FicheDetection(models.Model):
         return reverse(
             "message-add", kwargs={"message_type": message_type, "obj_type_pk": content_type.pk, "obj_pk": self.pk}
         )
+
+    def cloturer(self):
+        self.etat = Etat.get_etat_cloture()
+        self.save()
 
     @property
     def add_message_url(self):
@@ -465,8 +485,14 @@ class FicheDetection(models.Model):
         return self._add_message_url(Message.COMPTE_RENDU)
 
     @property
-    def add_fin_intervention_url(self):
-        return self._add_message_url(Message.FIN_INTERVENTION)
+    def add_fin_suivi_url(self):
+        return self._add_message_url(Message.FIN_SUIVI)
 
     def __str__(self):
         return str(self.numero)
+
+    def can_be_cloturer_by(self, user):
+        return user.agent.structure.is_ac
+
+    def is_already_cloturer(self):
+        return self.etat.is_cloture()

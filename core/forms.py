@@ -1,8 +1,11 @@
 import math
+from copy import copy
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
+from core.fields import DSFRCheckboxSelectMultiple
 from core.models import Document, Contact, Message, Structure
 from django import forms
 from collections import defaultdict
@@ -184,9 +187,35 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         if message_type in Message.TYPES_WITHOUT_RECIPIENTS:
             self.fields.pop("recipients")
             self.fields.pop("recipients_copy")
+        elif message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self.fields.pop("recipients_copy")
+            self.fields["recipients"] = forms.MultipleChoiceField(
+                choices=[("mus", "MUS"), ("bsv", "BSV")],
+                label="Destinataires",
+                widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+            )
 
         self.initial["sender"] = sender.agent.contact_set.get()
         self.initial["displayed_sender"] = sender.agent.name_with_structure
+
+        if message_type == Message.FIN_SUIVI:
+            self.initial["title"] = "Fin de suivi"
+
+    def _convert_checkboxes_to_contacts(self):
+        try:
+            checkboxes = copy(self.cleaned_data["recipients"])
+        except KeyError:
+            raise ValidationError("Au moins un destinataire doit être sélectionné.")
+        self.cleaned_data["recipients"] = []
+        if "mus" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
+        if "bsv" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self._convert_checkboxes_to_contacts()
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):
@@ -200,3 +229,51 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["document_type", "file"]
+
+
+class StructureAddForm(forms.Form):
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    structure_niveau1 = forms.ChoiceField(choices=[], label="En :", widget=forms.RadioSelect)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        niveau1_choices = Structure.objects.values_list("niveau1", flat=True).distinct().order_by("niveau1")
+        self.fields["structure_niveau1"].choices = [(niveau1, niveau1) for niveau1 in niveau1_choices]
+        self.fields["structure_niveau1"].initial = niveau1_choices.first()
+
+
+class StructureSelectionForm(forms.Form):
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
+    structure_selected = forms.CharField(widget=forms.HiddenInput())
+    contacts = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.none(),
+        widget=forms.CheckboxSelectMultiple(),
+        label="",
+        error_messages={"required": "Veuillez sélectionner au moins une structure"},
+    )
+    contacts_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        fiche_id = kwargs.pop("fiche_id")
+        content_type_id = kwargs.pop("content_type_id")
+        structure_selected = kwargs.pop("structure_selected")
+        super().__init__(*args, **kwargs)
+        self.fields["fiche_id"].initial = fiche_id
+        self.fields["content_type_id"].initial = content_type_id
+        self.fields["structure_selected"].initial = structure_selected
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        fiche = content_type.objects.get(pk=fiche_id)
+        # Obtention des structures déjà liées à la fiche
+        existing_structures = fiche.contacts.all()
+        # Exclut les contacts déjà associés à la fiche
+        self.fields["contacts"].queryset = (
+            Contact.objects.filter(structure__niveau1=structure_selected)
+            .exclude(pk__in=existing_structures)
+            .order_by("structure__niveau2")
+        )
+        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
+        self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
