@@ -26,6 +26,14 @@ jobs:
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
+          STORAGE_ENGINE: django.core.files.storage.FileSystemStorage
+          OIDC_RP_CLIENT_ID: null
+          OIDC_RP_CLIENT_SECRET: null
+          OIDC_RP_AUTH_ENDPOINT: null
+          OIDC_RP_TOKEN_ENDPOINT: null
+          OIDC_RP_USER_ENDPOINT: null
+          OIDC_RP_JWKS_ENDPOINT: null
+          OIDC_RP_LOGOUT_ENDPOINT: null
       - name: Run ruff
         run: ruff check .
       - name: Run ruff format
