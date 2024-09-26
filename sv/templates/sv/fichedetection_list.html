@@ -47,9 +47,9 @@
                         <tr class="fiches__table-header">
                             <th scope="col">N° fiche</th>
                             <th scope="col">Organisme nuisible</th>
+                            <th scope="col">Création</th>
                             <th scope="col">Créateur</th>
                             <th scope="col">Commune</th>
-                            <th scope="col">Région</th>
                             <th scope="col">État</th>
                         </tr>
                     </thead>
@@ -64,6 +64,11 @@
                                 <td>
                                     <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
                                         {{ fiche.organisme_nuisible|default:"nc." }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                        {{ fiche.date_creation|date:"d/m/Y" }}
                                     </a>
                                 </td>
                                 <td>
@@ -88,11 +93,6 @@
                                                 ... +{{ num_lieux|add:"-3" }}
                                             {% endif %}
                                         {% endwith %}
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                        {{ fiche.region|default:"nc." }}
                                     </a>
                                 </td>
                                 <td>

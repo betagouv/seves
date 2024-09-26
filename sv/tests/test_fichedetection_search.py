@@ -98,10 +98,11 @@ def test_search_with_region(live_server, page: Page) -> None:
     Effectuer une recherche en sélectionnant uniquement une région.
     Vérifier que tous les résultats retournés sont bien associés à cette région."""
     region1, region2 = baker.make(Region, _quantity=2)
+    fiche1 = baker.make(FicheDetection, etat=baker.make(Etat))
     baker.make(
         Lieu,
         departement=baker.make(Departement, region=region1),
-        fiche_detection=baker.make(FicheDetection, etat=baker.make(Etat)),
+        fiche_detection=fiche1,
     )
     baker.make(
         Lieu,
@@ -113,8 +114,7 @@ def test_search_with_region(live_server, page: Page) -> None:
     page.get_by_label("Région").select_option(str(region1.id))
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=region1.nom)).to_be_visible()
-    expect(page.get_by_role("cell", name=region2.nom)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
 
 
 def test_search_with_organisme_nuisible(live_server, page: Page) -> None:

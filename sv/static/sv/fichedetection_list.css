@@ -55,6 +55,9 @@ body{
 .fiches__list-row:hover {
     background-color: var(--background-contrast-grey) !important;
 }
+.fiches__list-row td {
+    padding: 0 !important;
+}
 .fiches__list-link {
     display: block !important;
     padding-right: 1.5rem !important;
