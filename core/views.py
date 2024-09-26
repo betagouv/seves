@@ -23,6 +23,8 @@ from .models import Document, Message, Contact, FinSuiviContact
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
+from .redirect import safe_redirect
+
 
 class DocumentUploadView(FormView):
     form_class = DocumentUploadForm
@@ -36,10 +38,10 @@ class DocumentUploadView(FormView):
             document.created_by_structure = agent.structure
             document.save()
             messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
-            return HttpResponseRedirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
+            return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
         messages.error(request, "Une erreur s'est produite lors de l'ajout du document")
-        return HttpResponseRedirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
+        return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
 
 class DocumentDeleteView(View):
@@ -49,7 +51,7 @@ class DocumentDeleteView(View):
         document.deleted_by = self.request.user.agent
         document.save()
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
-        return HttpResponseRedirect(request.POST.get("next") + "#tabpanel-documents-panel")
+        return safe_redirect(request.POST.get("next") + "#tabpanel-documents-panel")
 
 
 class DocumentUpdateView(UpdateView):
@@ -122,8 +124,7 @@ class ContactSelectionView(FormView):
         ) % {"count": len(contacts)}
         messages.success(self.request, message, extra_tags="core contacts")
 
-        redirect_url = self.request.POST.get("next") + "#tabpanel-contacts-panel"
-        return HttpResponseRedirect(redirect_url)
+        return safe_redirect(self.request.POST.get("next") + "#tabpanel-contacts-panel")
 
     def form_invalid(self, form):
         add_form = ContactAddForm(
@@ -153,7 +154,7 @@ class ContactDeleteView(View):
 
         fiche.contacts.remove(contact)
         messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
-        return HttpResponseRedirect(request.POST.get("next") + "#tabpanel-contacts-panel")
+        return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
 class MessageCreateView(CreateView):
@@ -319,8 +320,7 @@ class StructureSelectionView(FormView):
         ) % {"count": len(contacts)}
         messages.success(self.request, message, extra_tags="core contacts")
 
-        redirect_url = self.request.POST.get("next") + "#tabpanel-contacts-panel"
-        return HttpResponseRedirect(redirect_url)
+        return safe_redirect(self.request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
 class SoftDeleteView(View):
@@ -337,7 +337,7 @@ class SoftDeleteView(View):
         except AttributeError:
             messages.error(request, "Ce type d'objet ne peut pas être supprimé")
 
-        return HttpResponseRedirect(request.POST.get("next"))
+        return safe_redirect(request.POST.get("next"))
 
 
 class ACNotificationView(View):
@@ -356,4 +356,4 @@ class ACNotificationView(View):
         except ValidationError:
             messages.error(request, "Cet objet est déjà notifié à l'AC")
 
-        return HttpResponseRedirect(request.POST.get("next"))
+        return safe_redirect(request.POST.get("next"))

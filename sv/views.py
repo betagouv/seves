@@ -29,6 +29,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
 )
+from core.redirect import safe_redirect
 from sv.forms import FreeLinkForm
 from .export import FicheDetectionExport
 from .models import (
@@ -558,16 +559,16 @@ class FreeLinkCreateView(FormView):
         form = FreeLinkForm(request.POST)
         if not form.is_valid():
             messages.error(request, "Ce lien existe déjà.")
-            return HttpResponseRedirect(self.request.POST.get("next"))
+            return safe_redirect(self.request.POST.get("next"))
 
         try:
             form.save()
         except IntegrityError:
             messages.error(request, "Vous ne pouvez pas lier un objet à lui même.")
-            return HttpResponseRedirect(self.request.POST.get("next"))
+            return safe_redirect(self.request.POST.get("next"))
 
         messages.success(request, "Le lien a été créé avec succès.")
-        return HttpResponseRedirect(self.request.POST.get("next"))
+        return safe_redirect(self.request.POST.get("next"))
 
 
 class FicheDetectionExportView(View):
