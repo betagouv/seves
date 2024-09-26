@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const choices = new Choices(document.getElementById('id_organisme_nuisible'), {
         classNames: {
             containerInner: 'fr-select',
-        }
+        },
+        itemSelectText: ''
     });
 });

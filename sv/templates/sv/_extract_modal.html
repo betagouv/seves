@@ -13,7 +13,7 @@
                             <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-extract">Annuler</button>
                             <form method="post" action="{% url 'fiche-detection-export' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="fr-btn" data-testid="extract-submit">Extraire</button>
+                                <button class="fr-btn" data-testid="extract-submit" aria-controls="fr-modal-extract">Extraire</button>
                             </form>
                         </div>
                     </div>

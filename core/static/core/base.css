@@ -39,3 +39,8 @@ header{
 .fr-tabs__panel{
     transition: none !important;
 }
+@media (min-width: 640px) {
+  .choices__list--dropdown .choices__item--selectable {
+    padding-right: 0 !important;
+  }
+}

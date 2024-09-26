@@ -141,7 +141,7 @@
                     </p>
                     <p id="date-1er-signalement">
                         <label class="fr-label" for="date-1er-signalement-input">Date 1er signalement</label>
-                        <input x-text="ficheDetection.datePremierSignalement" x-model="ficheDetection.datePremierSignalement" type="date" id="date-1er-signalement-input" class="fr-input">
+                        <input x-text="ficheDetection.datePremierSignalement" x-model="ficheDetection.datePremierSignalement" type="date" id="date-1er-signalement-input" class="fr-input" max="{% now "Y-m-d" %}">
                     </p>
                     <p>
                         <label class="fr-label" for="commentaire-input">Commentaire</label>
