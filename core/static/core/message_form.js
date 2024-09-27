@@ -1,3 +1,4 @@
+
 function cloneDocumentInput(input, currentID, destination){
     let newFileInput = input.cloneNode()
     newFileInput.setAttribute("id", `document_file_${currentID}`)
@@ -46,6 +47,11 @@ function allowToValidateWhenDocumentIsSelected(typeInput, fileInput,messageAddDo
     })
 }
 
+function addStructuresToRecipients(event, choiceElement){
+    event.preventDefault()
+    choiceElement.setChoiceByValue(event.target.getAttribute("data-structures").split(","))
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     let currentID = 0
     const messageAddDocumentButton = document.getElementById("message-add-document")
@@ -74,9 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentID += 1;
 
     });
-});
 
-document.addEventListener('DOMContentLoaded', function() {
     const choicesRecipients = new Choices(document.getElementById('id_recipients'), {
         removeItemButton: true,
         classNames: {containerInner: 'fr-select'},
@@ -87,4 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         classNames: {containerInner: 'fr-select'},
         itemSelectText: ''
     });
+
+    document.querySelector(".destinataires-shortcut").addEventListener("click", event => addStructuresToRecipients(event, choicesRecipients))
+    document.querySelector(".copie-shortcut").addEventListener("click", event => addStructuresToRecipients(event, choicesCopy))
 });

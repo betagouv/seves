@@ -4,6 +4,7 @@ from copy import copy
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple
 from core.models import Document, Contact, Message, Structure
@@ -133,10 +134,10 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}), label="De")
     sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
     recipients = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.with_structure_and_agent(), label="Destinataires"
+        queryset=Contact.objects.with_structure_and_agent(), label_suffix="", label="Destinataires :"
     )
     recipients_copy = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.with_structure_and_agent(), label="En copie", required=False
+        queryset=Contact.objects.with_structure_and_agent(), required=False, label="Copie :", label_suffix=""
     )
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 4}))
@@ -168,10 +169,32 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             document_field = forms.FileField(initial=documents[f"document_file_{document_number}"])
             self.fields[f"document_{document_number}"] = document_field
 
+    def _get_structures(self, obj):
+        if hasattr(self, "_structures"):
+            return self._structures
+        self._structures = obj.contacts.structures_only().select_related("structure")
+        return self._structures
+
+    def _get_recipients_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return mark_safe(
+            f"Destinataires :<a href='#' class='fr-link destinataires-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
+        )
+
+    def _get_recipients_copy_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return mark_safe(
+            f"Copie :<a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
+        )
+
     def __init__(self, *args, message_type, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+
+        if self._get_structures(obj):
+            self.fields["recipients"].label = self._get_recipients_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
 
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))

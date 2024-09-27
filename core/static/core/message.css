@@ -67,3 +67,8 @@
     display: flex;
     justify-content: end;
 }
+label[for=id_recipients], label[for=id_recipients_copy]
+{
+    display: flex;
+    justify-content: space-between;
+}

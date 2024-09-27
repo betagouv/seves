@@ -248,3 +248,36 @@ def test_cant_add_compte_rendu_without_recipient(live_server, page: Page, fiche_
 
     page.wait_for_url(f"**{fiche_detection.add_compte_rendu_url}")
     expect(page.get_by_text("Au moins un destinataire doit être sélectionné.")).to_be_visible()
+
+
+def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page, fiche_detection: FicheDetection):
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+
+    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
+    page.get_by_test_id("fildesuivi-add").click()
+
+    page.wait_for_url(f"**{fiche_detection.add_message_url}")
+    expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
+
+
+def test_can_click_on_shortcut_when_fiche_has_structure(live_server, page: Page, fiche_detection: FicheDetection):
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    contact = Contact.objects.create(email="foo@example.com", structure=structure)
+    fiche_detection.contacts.add(contact)
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+
+    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
+    page.get_by_test_id("fildesuivi-add").click()
+
+    page.wait_for_url(f"**{fiche_detection.add_message_url}")
+    page.locator(".destinataires-shortcut").click()
+
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    page.wait_for_url(f"**{fiche_detection.get_absolute_url()}#tabpanel-messages-panel")
+
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.messages.get().recipients.get() == contact
