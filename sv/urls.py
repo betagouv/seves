@@ -7,7 +7,7 @@ from .views import (
     FreeLinkCreateView,
     FicheDetectionExportView,
     FicheDetecionCloturerView,
-    FicheZoneCreateView,
+    FicheZoneDelimiteeCreateView,
 )
 
 urlpatterns = [
@@ -46,9 +46,9 @@ urlpatterns = [
         FreeLinkCreateView.as_view(),
         name="free-link-add",
     ),
-	path(
-        "fiches-zone/creation/fiche-detection/<int:pk>/",
-        FicheZoneCreateView.as_view(),
-        name="fiche-zone-creation",
+    path(
+        "fiche-zone-delimitee/creation/",
+        FicheZoneDelimiteeCreateView.as_view(),
+        name="fiche-zone-delimitee-creation",
     ),
 ]

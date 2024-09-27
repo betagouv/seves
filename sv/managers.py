@@ -10,3 +10,6 @@ class FicheDetectionManager(models.Manager):
         fin_suivi_contacts_ids = fiche_detection.fin_suivi.values_list("contact", flat=True)
         contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
         return contacts_not_in_fin_suivi
+
+    def get_all_not_in_fiche_zone_delimitee(self):
+        return self.get_queryset().filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)

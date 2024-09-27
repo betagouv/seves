@@ -6,16 +6,15 @@ import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.views import View
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
     DetailView,
     CreateView,
     UpdateView,
     FormView,
-    TemplateView,
 )
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.db.models import OuterRef, Subquery, Prefetch
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -31,9 +30,8 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm
+from sv.forms import FreeLinkForm, FicheZoneDelimiteeForm, HorsZoneInfesteeFormSet, ZoneInfesteeFormSet
 from .export import FicheDetectionExport
-from django.forms import ModelForm, modelformset_factory, RadioSelect, HiddenInput
 from .models import (
     FicheDetection,
     Lieu,
@@ -54,8 +52,7 @@ from .models import (
     Etat,
     TypeExploitant,
     PositionChaineDistribution,
-    FicheZone,
-    Zone,
+    FicheZoneDelimitee,
 )
 from core.forms import DSFRForm
 from core.models import Structure
@@ -614,101 +611,75 @@ class FicheDetecionCloturerView(View):
         fiche.cloturer()
         messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
-    
-class FicheZoneForm(ModelForm):
-    class Meta:
-        model = FicheZone
-        exclude = ["numero"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["createur"].widget.attrs.update({"class": "fr-input"})
-        self.fields["fiche_detection"].widget = HiddenInput()
 
 
-class ZoneForm(ModelForm):
-    class Meta:
-        model = Zone
-        exclude = ["fiche_zone"]
-        widgets = {
-            "unite_surface_zone_infestee": RadioSelect,
-            "unite_rayon_zone_infestee": RadioSelect,
-            "unite_rayon_zone_tampon": RadioSelect,
-        }
-        labels = {
-            "caracteristiques_principales_zone_delimitee": "Caractéristiques de la zone délimitée",
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Affichage version courte des choix pour les unités (m², ha, km, etc.)
-        self.fields["unite_surface_zone_infestee"].widget.choices = [
-            (choice.value, choice.value) for choice in Zone.UnitesSurface
-        ]
-        self.fields["unite_rayon_zone_infestee"].widget.choices = [
-            (choice.value, choice.value) for choice in Zone.UnitesRayon
-        ]
-        self.fields["unite_rayon_zone_tampon"].widget.choices = [
-            (choice.value, choice.value) for choice in Zone.UnitesRayon
-        ]
-
-        self.fields["caracteristiques_principales_zone_delimitee"].widget.attrs.update(
-            {"class": "form-tabs-content__caracteristiques_zone_delimitee-select fr-input"}
-        )
-        self.fields["commentaire"].widget.attrs.update({"class": "fr-input"})
-        self.fields["vegetaux_infestes"].widget.attrs.update({"class": "fr-input"})
-        self.fields["surface_zone_infestee"].widget.attrs.update(
-            {"class": "form-tabs-content__surface-zone-infestee-input fr-input"}
-        )
-        self.fields["rayon_zone_infestee"].widget.attrs.update(
-            {"class": "form-tabs-content__rayon-zone-infestee-input fr-input"}
-        )
-        self.fields["rayon_zone_tampon"].widget.attrs.update(
-            {"class": "form-tabs-content__rayon-zone-tamponee-input fr-input"}
-        )
-
-
-ZoneFormSet = modelformset_factory(Zone, form=ZoneForm, extra=0, min_num=1)
-
-
-class FicheZoneCreateView(TemplateView):
-    template_name = "sv/fichezone_form.html"
+class FicheZoneDelimiteeCreateView(CreateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeForm
+    template_name = "sv/fzf.html"
+    success_url = reverse_lazy("fiche-detection-list")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["fiche_zone_form"] = FicheZoneForm(initial={"fiche_detection": self.kwargs.get("pk")})
-        zone_formset = ZoneFormSet(queryset=Zone.objects.none())
-        context["zone_formset"] = zone_formset
-        context["zone_formset_nb"] = range(zone_formset.total_form_count())
-        fiche_detection_id = self.kwargs.get("pk")
-        fiche_detection = FicheDetection.objects.get(pk=fiche_detection_id)
-        context["fiche_detection"] = fiche_detection
+        if self.request.POST:
+            # context['zone_formset'] = ZoneFormSet(self.request.POST, queryset=ZoneInfestee.objects.none())
+            context["hors_zone_formset"] = HorsZoneInfesteeFormSet(self.request.POST)
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
+        else:
+            # context['zone_formset'] = ZoneFormSet(queryset=ZoneInfestee.objects.none())
+            context["hors_zone_formset"] = HorsZoneInfesteeFormSet()
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet()
         return context
 
-    def post(self, request, *args, **kwargs):
-        fiche_zone_form = FicheZoneForm(request.POST)
-        zone_formset = ZoneFormSet(request.POST)
-        fiche_detection_id = self.kwargs.get("pk")
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["createur"] = self.request.user.agent.structure
+        return kwargs
 
-        if fiche_zone_form.is_valid() and zone_formset.is_valid():
-            with transaction.atomic():
-                fiche_zone_form.instance.numero = NumeroFiche.get_next_numero()
-                fiche_zone_form.instance.fiche_detection_id = fiche_detection_id
-                fiche_zone = fiche_zone_form.save()
-                zones = zone_formset.save(commit=False)
-                for zone in zones:
-                    zone.fiche_zone = fiche_zone
+    """
+    def form_valid(self, form):
+        context = self.get_context_data()
+        zone_formset = context['zone_formset']
+        with transaction.atomic():
+            form.instance.createur = self.request.user.agent.structure
+            self.object = form.save()
+            if zone_formset.is_valid():
+                zones_infestee = zone_formset.save(commit=False)
+                for zone in zones_infestee:
+                    zone.fiche_zone_delimitee = self.object
                     zone.save()
-                return HttpResponse("ok")
-        else:
-            return render(
-                request,
-                self.template_name,
-                {
-                    "fiche_zone_form": fiche_zone_form,
-                    "zone_formset": zone_formset,
-                    "zone_formset_nb": range(zone_formset.total_form_count()),
-                    "fiche_detection": FicheDetection.objects.get(pk=fiche_detection_id),
-                },
-            )
+            else:
+                return self.form_invalid(form)
+
+        # TODO: Visibilite de la fiche
+        action = form.cleaned_data.get('action')
+        print(action)
+
+        messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
+        return super().form_valid(form)
+    """
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        hors_zone_formset = context["hors_zone_formset"]
+        zone_infestee_formset = context["zone_infestee_formset"]
+        with transaction.atomic():
+            form.instance.createur = self.request.user.agent.structure
+            self.object = form.save()
+            if hors_zone_formset.is_valid():
+                hors_zone_formset.instance = self.object
+                hors_zone_formset.save()
+            if zone_infestee_formset.is_valid():
+                zone_infestee_formset.instance = self.object
+                zone_infestee_formset.save()
+        return super().form_valid(form)
+
+
+"""
+    def form_invalid(self, form):
+        context = self.get_context_data()
+        zone_formset = context['zone_formset']
+        if not zone_formset.is_valid():
+            messages.error(self.request, "Veuillez corriger les erreurs dans le formulaire des zones infestées.")
+        return self.render_to_response(self.get_context_data(form=form))
+"""

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.db.models import Q, CheckConstraint
+from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
@@ -238,3 +239,11 @@ class LienLibre(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
+class UnitesMesure(models.TextChoices):
+    METRE = "m", _("Mètre")
+    KILOMETRE = "km", _("Kilomètre")
+    HECTARE = "ha", _("Hectare")
+    METRE_CARRE = "m2", _("Mètre carré")
+    KILOMETRE_CARRE = "km2", _("Kilomètre carré")

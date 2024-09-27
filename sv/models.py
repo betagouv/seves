@@ -1,18 +1,14 @@
-<<<<<<< HEAD
-from django.contrib.contenttypes.models import ContentType
-=======
 import datetime
->>>>>>> d274a56 (Modèles pour Fiche zone)
 from django.db import models, transaction
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, ValidationError
 from django.db.models import TextChoices
-from django.utils.translation import gettext_lazy as _
 
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin
-from core.models import Document, Message, Contact, Structure, FinSuiviContact
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure
 from sv.managers import FicheDetectionManager
 
 
@@ -449,8 +445,21 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
+    hors_zone_infestee = models.ForeignKey(
+        "HorsZoneInfestee", on_delete=models.CASCADE, null=True, blank=True, related_name="fiches_detection"
+    )
+    zone_infestee = models.ForeignKey(
+        "ZoneInfestee", on_delete=models.CASCADE, null=True, blank=True, related_name="fiches_detection"
+    )
 
     objects = FicheDetectionManager()
+
+    def clean(self):
+        super().clean()
+        if self.hors_zone_infestee and self.zone_infestee:
+            raise ValidationError(
+                "Une détection ne peut pas être à la fois dans une zone infestée et hors zone infestée."
+            )
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
@@ -502,6 +511,7 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
     def is_already_cloturer(self):
         return self.etat.is_cloture()
 
+
 class CaracteristiquesPrincipalesZoneDelimitee(models.Model):
     class Meta:
         verbose_name = "Caractéristiques principales de la zone délimitée"
@@ -514,56 +524,97 @@ class CaracteristiquesPrincipalesZoneDelimitee(models.Model):
         return self.libelle
 
 
-class Zone(models.Model):
-    class UnitesSurface(TextChoices):
-        HECTARE = "ha", _("Hectare")
-        KILOMETRE_CARRE = "km2", _("Kilomètre carré")
+class HorsZoneInfestee(models.Model):
+    class Meta:
+        verbose_name = "Détection hors zone infestée"
+        verbose_name_plural = "Détections hors zone infestée"
 
-    class UnitesRayon(TextChoices):
-        METRE = "m", _("Mètre")
-        KILOMETRE = "km", _("Kilomètre")
+    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+
+
+class ZoneInfestee(models.Model):
+    class UnitesSurfaceInfesteeTotale(TextChoices):
+        HECTARE = UnitesMesure.HECTARE
+        METRE_CARRE = UnitesMesure.METRE_CARRE
+        KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
 
     class Meta:
-        verbose_name = "Zone"
-        verbose_name_plural = "Zones"
+        verbose_name = "Zone infestée"
+        verbose_name_plural = "Zones infestées"
 
-    fiche_zone = models.ForeignKey("FicheZone", on_delete=models.CASCADE, verbose_name="Fiche zone")
-    surface_zone_infestee = models.FloatField(verbose_name="Surface de la zone infestée")
-    unite_surface_zone_infestee = models.CharField(
+    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    numero = models.CharField(max_length=50, verbose_name="Numéro de la zone")
+    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale")
+    unite_surface_infestee_totale = models.CharField(
         max_length=3,
-        choices=UnitesSurface.choices,
-        verbose_name="Unité de la surface de la zone infestée",
-        default=UnitesSurface.KILOMETRE_CARRE,
+        choices=UnitesSurfaceInfesteeTotale,
+        default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
+        verbose_name="Unité de la surface infestée totale",
     )
-    rayon_zone_infestee = models.FloatField(verbose_name="Rayon de la zone infestée")
-    unite_rayon_zone_infestee = models.CharField(
-        max_length=2,
-        choices=UnitesRayon.choices,
-        verbose_name="Unité du rayon de la zone infestée",
-        default=UnitesRayon.METRE,
-    )
-    rayon_zone_tampon = models.FloatField(verbose_name="Rayon de la zone tampon")
-    unite_rayon_zone_tampon = models.CharField(
-        max_length=2,
-        choices=UnitesRayon.choices,
-        verbose_name="Unité du rayon de la zone tampon",
-        default=UnitesRayon.METRE,
-    )
+    # detections = models.ManyToManyField(FicheDetection, verbose_name="Liste des détections", blank=True)
+
+
+class FicheZoneDelimitee(models.Model):
+    class UnitesRayon(TextChoices):
+        METRE = UnitesMesure.METRE
+        KILOMETRE = UnitesMesure.KILOMETRE
+
+    class UnitesSurfaceTamponTolale(TextChoices):
+        METRE_CARRE = UnitesMesure.METRE_CARRE
+        KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
+
+    class Meta:
+        verbose_name = "Fiche zone délimitée"
+        verbose_name_plural = "Fiches zones délimitées"
+
+    # Informations
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
+    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
+
+    # Détails
     caracteristiques_principales_zone_delimitee = models.ForeignKey(
         CaracteristiquesPrincipalesZoneDelimitee,
         on_delete=models.PROTECT,
         verbose_name="Caractéristiques principales de la zone délimitée",
     )
+    vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
-    vegetaux_infestes = models.TextField(verbose_name="Végétaux infestés", blank=True)
 
+    # Zone tampon
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré")
+    unite_rayon_zone_tampon = models.CharField(
+        max_length=2,
+        choices=UnitesRayon,
+        default=UnitesRayon.KILOMETRE,
+        verbose_name="Unité du rayon tampon réglemantaire ou arbitré",
+    )
+    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale")
+    unite_surface_tampon_totale = models.CharField(
+        max_length=3,
+        choices=UnitesSurfaceTamponTolale,
+        default=UnitesSurfaceTamponTolale.METRE_CARRE,
+        verbose_name="Unité de la surface tampon totale",
+    )
+    is_zone_tampon_toute_commune = models.BooleanField(
+        verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
+    )
 
-class FicheZone(models.Model):
-    class Meta:
-        verbose_name = "Fiche zone"
-        verbose_name_plural = "Fiches zone"
-        db_table = "sv_fiche_zone"
+    # detections_hors_zone_infestee = models.ManyToManyField(FicheDetection, verbose_name="Détections hors zone infestée", blank=True)
 
-    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
-    createur = models.ForeignKey(Unite, on_delete=models.PROTECT, verbose_name="Créateur")
-    fiche_detection = models.ForeignKey(FicheDetection, on_delete=models.CASCADE, verbose_name="Fiche détection")
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.numero = NumeroFiche.get_next_numero()
+        super().save(*args, **kwargs)
+
+    """
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            VisibiliteFiche.objects.create(
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.pk,
+                visibilite=Visibilite.objects.get(libelle=Visibilite.BROUILLON),
+            )
+    """
