@@ -4,10 +4,6 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/contact_add_form.css' %}">
-
-    <!-- choicesjs (autocompletion pour select) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
@@ -15,11 +11,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const element = document.getElementById('id_structure');
             const choices = new Choices(element, {
-                searchResultLimit: 500,
+                itemSelectText: '',
                 classNames: {
                     containerInner: 'fr-select fr-mt-1w',
                 },
-                itemSelectText: ''
+                searchResultLimit: 500,
             });
         });
     </script>
