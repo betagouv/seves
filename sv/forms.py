@@ -1,14 +1,13 @@
 from core.forms import DSFRForm, WithNextUrlMixin
 
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 
 from core.fields import MultiModelChoiceField
 from django import forms
 from django.forms.models import inlineformset_factory
 
 from core.models import LienLibre
-from sv.models import FicheDetection, FicheZoneDelimitee, ZoneInfestee, HorsZoneInfestee
+from sv.models import FicheDetection, FicheZoneDelimitee, ZoneInfestee
 
 
 class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
@@ -83,33 +82,33 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         self.fields["unite_surface_tampon_totale"].widget.choices = [
             (choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesSurfaceTamponTolale
         ]
-        if self.instance.pk and self.instance.detections_hors_zone_infestee:
-            self.fields[
-                "detections_hors_zone"
-            ].initial = self.instance.detections_hors_zone_infestee.fiches_detection.all()
+        if self.instance.pk:
+            self.fields["detections_hors_zone"].initial = FicheDetection.objects.filter(
+                hors_zone_infestee=self.instance, zone_infestee__isnull=True
+            )
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        if not hasattr(instance, "detections_hors_zone_infestee"):
-            instance.detections_hors_zone_infestee = HorsZoneInfestee.objects.create()
         if commit:
             instance.save()
             self.save_detections_hors_zone(instance)
         return instance
 
     def save_detections_hors_zone(self, instance):
-        detections = self.cleaned_data.get("detections_hors_zone")
-        print(detections)
-        hors_zone = instance.detections_hors_zone_infestee
+        nouvelles_detections = set(self.cleaned_data.get("detections_hors_zone", []))
+        anciennes_detections = set(FicheDetection.objects.filter(hors_zone_infestee=instance))
 
-        # Mettre à jour les détections qui ne sont plus hors zone
-        FicheDetection.objects.filter(hors_zone_infestee=hors_zone).exclude(id__in=[d.id for d in detections]).update(
-            hors_zone_infestee=None
-        )
+        # Détections à ajouter
+        detections_a_ajouter = nouvelles_detections - anciennes_detections
+        if detections_a_ajouter:
+            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(
+                hors_zone_infestee=instance, zone_infestee=None
+            )
 
-        # Mettre à jour les nouvelles détections qui sont hors zone
-        detections_to_update = detections.filter(~Q(hors_zone_infestee=hors_zone))
-        detections_to_update.update(hors_zone_infestee=hors_zone, zone_infestee=None)
+        # Détections à retirer
+        detections_a_retirer = anciennes_detections - nouvelles_detections
+        if detections_a_retirer:
+            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(hors_zone_infestee=None)
 
 
 class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
@@ -137,7 +136,21 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         return instance
 
     def save_detections(self, instance):
-        instance.fiches_detection.set(self.cleaned_data["detections"])
+        # instance.fiches_detection.set(self.cleaned_data["detections"])
+        nouvelles_detections = set(self.cleaned_data.get("detections", []))
+        anciennes_detections = set(instance.fiches_detection.all())
+
+        # Détections à ajouter
+        detections_a_ajouter = nouvelles_detections - anciennes_detections
+        if detections_a_ajouter:
+            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(
+                zone_infestee=instance, hors_zone_infestee=None
+            )
+
+        # Détections à retirer
+        detections_a_retirer = anciennes_detections - nouvelles_detections
+        if detections_a_retirer:
+            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(zone_infestee=None)
 
 
 ZoneInfesteeFormSet = inlineformset_factory(

@@ -80,8 +80,8 @@ class Contact(models.Model):
 
     objects = ContactQueryset.as_manager()
 
-    def __str__(self):
-        return str(self.structure) if self.structure else str(self.agent)
+    # def __str__(self):
+    #    return str(self.structure) if self.structure else str(self.agent)
 
     @property
     def display_with_agent_unit(self):

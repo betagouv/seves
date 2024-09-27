@@ -399,7 +399,7 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
                     | Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=False)
                     | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
                 ),
-                name="check_hors_zone_infestee_or_zone_infestee",
+                name="check_hors_zone_infestee_or_zone_infestee_or_none",
             )
         ]
 
@@ -456,7 +456,7 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
     hors_zone_infestee = models.ForeignKey(
-        "HorsZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True, related_name="fiches_detection"
+        "FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True, related_name="fiches_detection"
     )
     zone_infestee = models.ForeignKey(
         "ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True, related_name="fiches_detection"
@@ -527,14 +527,6 @@ class CaracteristiquesPrincipalesZoneDelimitee(models.Model):
         return self.libelle
 
 
-class HorsZoneInfestee(models.Model):
-    class Meta:
-        verbose_name = "Hors zone infestée"
-        verbose_name_plural = "Hors zone infestée"
-
-    # Pas besoin d'autres champs ici, la relation est gérée par FicheZoneDelimitee
-
-
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
         HECTARE = UnitesMesure.HECTARE
@@ -600,11 +592,6 @@ class FicheZoneDelimitee(models.Model):
     )
     is_zone_tampon_toute_commune = models.BooleanField(
         verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
-    )
-    detections_hors_zone_infestee = models.OneToOneField(
-        HorsZoneInfestee,
-        on_delete=models.CASCADE,
-        related_name="fiche_zone_delimitee",
     )
 
     def save(self, *args, **kwargs):
