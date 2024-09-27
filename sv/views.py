@@ -638,12 +638,17 @@ class FicheZoneDelimiteeCreateView(CreateView):
 
         form.instance.createur = self.request.user.agent.structure
         if form.is_valid() and zone_infestee_formset.is_valid():
+            if self.has_duplicate_detections(form, zone_infestee_formset):
+                return self.form_invalid(form)
+
             self.object = form.save()
             zone_infestee_formset.instance = self.object
             zone_infestee_formset.save()
+
             # TODO: Visibilite de la fiche
             action = form.cleaned_data.get("action")
             print(action)
+
             messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
             return super().form_valid(form)
         else:
@@ -659,3 +664,24 @@ class FicheZoneDelimiteeCreateView(CreateView):
             messages.error(self.request, f"Erreurs dans le formset zone infestée: {zone_infestee_formset.errors}")
 
         return super().form_invalid(form)
+
+    def has_duplicate_detections(self, form, zone_infestee_formset):
+        # Récupérer les détections sélectionnées dans le formulaire principal
+        detections_hors_zone = set(form.cleaned_data.get("detections_hors_zone", []))
+
+        # Récupérer les détections sélectionnées dans le formset
+        detections_infestee = set()
+        for zone_form in zone_infestee_formset:
+            if zone_form.cleaned_data:
+                detections_infestee.update(zone_form.cleaned_data.get("detections", []))
+
+        # Vérifier les duplications
+        duplications = detections_hors_zone.intersection(detections_infestee)
+        if duplications:
+            form.add_error(
+                None,
+                "Certaines détections sont sélectionnées à la fois dans les zones infestées et hors zone infestée.",
+            )
+            return True
+
+        return False

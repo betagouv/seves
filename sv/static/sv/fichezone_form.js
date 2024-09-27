@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     addZoneButton.addEventListener('click', function(event) {
         event.preventDefault();
 
-        const totalFormsInput = document.getElementById('id_horszoneinfestee_set-TOTAL_FORMS');
+        const totalFormsInput = document.getElementById('id_zoneinfestee_set-TOTAL_FORMS');
         let totalForms = parseInt(totalFormsInput.value);
 
         let newTabTemplate = document.getElementById('zone-form-template').innerHTML;
