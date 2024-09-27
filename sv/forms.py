@@ -1,6 +1,7 @@
 from core.forms import DSFRForm, WithNextUrlMixin
 
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 
 from core.fields import MultiModelChoiceField
 from django import forms
@@ -39,6 +40,13 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
 
 
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
+    detections_hors_zone = forms.ModelMultipleChoiceField(
+        queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
+        widget=forms.SelectMultiple,
+        required=False,
+        label="Détections hors zone infestée",
+    )
+
     class Meta:
         model = FicheZoneDelimitee
         fields = [
@@ -51,7 +59,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
             "surface_tampon_totale",
             "unite_surface_tampon_totale",
             "is_zone_tampon_toute_commune",
-            # "detections_hors_zone_infestee",
         ]
         labels = {
             "caracteristiques_principales_zone_delimitee": "Caractéristiques",
@@ -76,38 +83,36 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         self.fields["unite_surface_tampon_totale"].widget.choices = [
             (choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesSurfaceTamponTolale
         ]
-
-
-class HorsZoneInfesteeForm(forms.ModelForm):
-    detections = forms.ModelMultipleChoiceField(
-        queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
-        widget=forms.SelectMultiple,
-        required=False,
-        label="Détections hors zone infestée",
-    )
-
-    class Meta:
-        model = HorsZoneInfestee
-        fields = []
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.fields["detections"].initial = self.instance.fiches_detection.all()
+        if self.instance.pk and self.instance.detections_hors_zone_infestee:
+            self.fields[
+                "detections_hors_zone"
+            ].initial = self.instance.detections_hors_zone_infestee.fiches_detection.all()
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        if not hasattr(instance, "detections_hors_zone_infestee"):
+            instance.detections_hors_zone_infestee = HorsZoneInfestee.objects.create()
         if commit:
             instance.save()
-            instance.fiches_detection.set(self.cleaned_data["detections"])
+            self.save_detections_hors_zone(instance)
         return instance
+
+    def save_detections_hors_zone(self, instance):
+        detections = self.cleaned_data.get("detections_hors_zone")
+        print(detections)
+        hors_zone = instance.detections_hors_zone_infestee
+
+        # Mettre à jour les détections qui ne sont plus hors zone
+        FicheDetection.objects.filter(hors_zone_infestee=hors_zone).exclude(id__in=[d.id for d in detections]).update(
+            hors_zone_infestee=None
+        )
+
+        # Mettre à jour les nouvelles détections qui sont hors zone
+        detections_to_update = detections.filter(~Q(hors_zone_infestee=hors_zone))
+        detections_to_update.update(hors_zone_infestee=hors_zone, zone_infestee=None)
 
 
 class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
-    class Meta:
-        model = ZoneInfestee
-        exclude = ["fiche_zone_delimitee"]
-
     detections = forms.ModelMultipleChoiceField(
         queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
         widget=forms.SelectMultiple,
@@ -115,6 +120,10 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         label="Détections dans la zone infestée",
     )
 
+    class Meta:
+        model = ZoneInfestee
+        exclude = ["fiche_zone_delimitee"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
@@ -124,21 +133,12 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         instance = super().save(commit=False)
         if commit:
             instance.save()
-            instance.fiches_detection.set(self.cleaned_data["detections"])
+            self.save_detections(instance)
         return instance
 
+    def save_detections(self, instance):
+        instance.fiches_detection.set(self.cleaned_data["detections"])
 
-# ZoneFormSet = modelformset_factory(ZoneInfestee, form=ZoneInfesteeForm, extra=0, min_num=1)
-
-HorsZoneInfesteeFormSet = inlineformset_factory(
-    FicheZoneDelimitee,
-    HorsZoneInfestee,
-    form=HorsZoneInfesteeForm,
-    fields=("__all__"),
-    extra=1,
-    max_num=1,
-    can_delete=False,
-)
 
 ZoneInfesteeFormSet = inlineformset_factory(
     FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, extra=1, can_delete=False

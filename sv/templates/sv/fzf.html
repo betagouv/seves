@@ -16,12 +16,6 @@
     {% csrf_token %}
     {{ form.as_p }}
 
-    <h3>Détections hors zone infestée</h3>
-    {{ hors_zone_formset.management_form }}
-    {% for form in hors_zone_formset %}
-        {{ form.as_p }}
-    {% endfor %}
-
     <h3>Zones infestées</h3>
     <div id="zones-infestees">
         {{ zone_infestee_formset.management_form }}

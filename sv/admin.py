@@ -23,6 +23,7 @@ from .models import (
     CaracteristiquesPrincipalesZoneDelimitee,
     ZoneInfestee,
     FicheZoneDelimitee,
+    HorsZoneInfestee,
 )
 
 admin.site.site_header = "Administration de Sèves"
@@ -50,3 +51,4 @@ admin.site.register(Etat)
 admin.site.register(CaracteristiquesPrincipalesZoneDelimitee)
 admin.site.register(ZoneInfestee)
 admin.site.register(FicheZoneDelimitee)
+admin.site.register(HorsZoneInfestee)

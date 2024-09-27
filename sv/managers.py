@@ -12,4 +12,6 @@ class FicheDetectionManager(models.Manager):
         return contacts_not_in_fin_suivi
 
     def get_all_not_in_fiche_zone_delimitee(self):
-        return self.get_queryset().filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
+        return (
+            self.get_queryset().filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True).order_by("numero")
+        )

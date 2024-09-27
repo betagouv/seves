@@ -30,7 +30,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm, FicheZoneDelimiteeForm, HorsZoneInfesteeFormSet, ZoneInfesteeFormSet
+from sv.forms import FreeLinkForm, FicheZoneDelimiteeForm, ZoneInfesteeFormSet
 from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
@@ -622,13 +622,9 @@ class FicheZoneDelimiteeCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            # context['zone_formset'] = ZoneFormSet(self.request.POST, queryset=ZoneInfestee.objects.none())
-            context["hors_zone_formset"] = HorsZoneInfesteeFormSet(self.request.POST)
             context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
         else:
-            # context['zone_formset'] = ZoneFormSet(queryset=ZoneInfestee.objects.none())
-            context["hors_zone_formset"] = HorsZoneInfesteeFormSet()
-            context["zone_infestee_formset"] = ZoneInfesteeFormSet()
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(instance=self.object)
         return context
 
     def get_form_kwargs(self):
@@ -636,50 +632,30 @@ class FicheZoneDelimiteeCreateView(CreateView):
         kwargs["createur"] = self.request.user.agent.structure
         return kwargs
 
-    """
     def form_valid(self, form):
         context = self.get_context_data()
-        zone_formset = context['zone_formset']
-        with transaction.atomic():
-            form.instance.createur = self.request.user.agent.structure
-            self.object = form.save()
-            if zone_formset.is_valid():
-                zones_infestee = zone_formset.save(commit=False)
-                for zone in zones_infestee:
-                    zone.fiche_zone_delimitee = self.object
-                    zone.save()
-            else:
-                return self.form_invalid(form)
-
-        # TODO: Visibilite de la fiche
-        action = form.cleaned_data.get('action')
-        print(action)
-
-        messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
-        return super().form_valid(form)
-    """
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        hors_zone_formset = context["hors_zone_formset"]
         zone_infestee_formset = context["zone_infestee_formset"]
-        with transaction.atomic():
-            form.instance.createur = self.request.user.agent.structure
+
+        form.instance.createur = self.request.user.agent.structure
+        if form.is_valid() and zone_infestee_formset.is_valid():
             self.object = form.save()
-            if hors_zone_formset.is_valid():
-                hors_zone_formset.instance = self.object
-                hors_zone_formset.save()
-            if zone_infestee_formset.is_valid():
-                zone_infestee_formset.instance = self.object
-                zone_infestee_formset.save()
-        return super().form_valid(form)
+            zone_infestee_formset.instance = self.object
+            zone_infestee_formset.save()
+            # TODO: Visibilite de la fiche
+            action = form.cleaned_data.get("action")
+            print(action)
+            messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
-
-"""
     def form_invalid(self, form):
         context = self.get_context_data()
-        zone_formset = context['zone_formset']
-        if not zone_formset.is_valid():
-            messages.error(self.request, "Veuillez corriger les erreurs dans le formulaire des zones infestées.")
-        return self.render_to_response(self.get_context_data(form=form))
-"""
+        zone_infestee_formset = context["zone_infestee_formset"]
+
+        if not form.is_valid():
+            messages.error(self.request, f"Erreurs dans le formulaire principal: {form.errors}")
+        if not zone_infestee_formset.is_valid():
+            messages.error(self.request, f"Erreurs dans le formset zone infestée: {zone_infestee_formset.errors}")
+
+        return super().form_invalid(form)

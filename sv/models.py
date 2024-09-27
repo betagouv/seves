@@ -1,7 +1,7 @@
 import datetime
 from django.db import models, transaction
-from django.core.validators import RegexValidator, ValidationError
-from django.db.models import TextChoices
+from django.core.validators import RegexValidator
+from django.db.models import TextChoices, Q
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -392,6 +392,16 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
         db_table = "sv_fiche_detection"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=True)
+                    | Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=False)
+                    | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
+                ),
+                name="check_hors_zone_infestee_or_zone_infestee",
+            )
+        ]
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
@@ -446,20 +456,13 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
     hors_zone_infestee = models.ForeignKey(
-        "HorsZoneInfestee", on_delete=models.CASCADE, null=True, blank=True, related_name="fiches_detection"
+        "HorsZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True, related_name="fiches_detection"
     )
     zone_infestee = models.ForeignKey(
-        "ZoneInfestee", on_delete=models.CASCADE, null=True, blank=True, related_name="fiches_detection"
+        "ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True, related_name="fiches_detection"
     )
 
     objects = FicheDetectionManager()
-
-    def clean(self):
-        super().clean()
-        if self.hors_zone_infestee and self.zone_infestee:
-            raise ValidationError(
-                "Une détection ne peut pas être à la fois dans une zone infestée et hors zone infestée."
-            )
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
@@ -526,10 +529,10 @@ class CaracteristiquesPrincipalesZoneDelimitee(models.Model):
 
 class HorsZoneInfestee(models.Model):
     class Meta:
-        verbose_name = "Détection hors zone infestée"
-        verbose_name_plural = "Détections hors zone infestée"
+        verbose_name = "Hors zone infestée"
+        verbose_name_plural = "Hors zone infestée"
 
-    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    # Pas besoin d'autres champs ici, la relation est gérée par FicheZoneDelimitee
 
 
 class ZoneInfestee(models.Model):
@@ -551,7 +554,6 @@ class ZoneInfestee(models.Model):
         default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
         verbose_name="Unité de la surface infestée totale",
     )
-    # detections = models.ManyToManyField(FicheDetection, verbose_name="Liste des détections", blank=True)
 
 
 class FicheZoneDelimitee(models.Model):
@@ -599,8 +601,11 @@ class FicheZoneDelimitee(models.Model):
     is_zone_tampon_toute_commune = models.BooleanField(
         verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
     )
-
-    # detections_hors_zone_infestee = models.ManyToManyField(FicheDetection, verbose_name="Détections hors zone infestée", blank=True)
+    detections_hors_zone_infestee = models.OneToOneField(
+        HorsZoneInfestee,
+        on_delete=models.CASCADE,
+        related_name="fiche_zone_delimitee",
+    )
 
     def save(self, *args, **kwargs):
         if not self.pk:
