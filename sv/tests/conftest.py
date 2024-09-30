@@ -75,3 +75,14 @@ def document_recipe(fiche_detection_bakery, db):
         )
 
     return _document_recipe
+
+
+@pytest.fixture
+def fill_commune(db, page: Page):
+    def _fill_commune(page):
+        page.query_selector(".fr-modal__content .choices__list--single").click()
+        page.wait_for_selector("*:focus", state="visible", timeout=2_000)
+        page.locator("*:focus").fill("Lille")
+        page.get_by_role("option", name="Lille (59)", exact=True).click()
+
+    return _fill_commune

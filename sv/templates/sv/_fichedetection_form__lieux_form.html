@@ -21,21 +21,13 @@
                             </p>
                             <p>
                                 <label class="fr-label" for="commune">Commune</label>
-                                <input x-model="lieuForm.commune" type="text" id="commune" class="fr-input">
+                                <select id="commune-select" class="fr-input"></select>
                             </p>
-                            <p>
-                                <label class="fr-label" for="code-insee">Code INSEE</label>
-                                <input x-model="lieuForm.codeINSEE" type="number" min="1001" max="99999" id="code-insee" class="fr-input" >
-                            </p>
-                            <p>
-                                <label class="fr-label" for="departement">Département</label>
-                                <select x-model="lieuForm.departementId" class="fr-select" id="departement">
-                                    <option value="">----</option>
-                                    <template x-for="departement in departements" :key="departement.id">
-                                        <option :value="departement.id" x-text="departement.nom + ' (' + departement.numero + ')'"></option>
-                                    </template>
-                                </select>
-                            </p>
+
+                            <input x-model="lieuForm.commune" type="hidden" id="commune">
+                            <input x-model="lieuForm.codeINSEE" type="hidden" id="code-insee">
+                            <input x-model="lieuForm.departementNom" type="hidden" id="departement">
+
                             <p>
                                 <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
                                 <input x-model="lieuForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">

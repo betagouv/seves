@@ -15,7 +15,10 @@ from ..models import (
     Departement,
     TypeExploitant,
     PositionChaineDistribution,
+    Region,
 )
+
+from sv.constants import REGIONS, DEPARTEMENTS
 from core.models import Contact
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
@@ -34,6 +37,12 @@ def create_fixtures_if_needed(db):
 
     for contexte in CONTEXTES:
         Contexte.objects.get_or_create(nom=contexte)
+
+    for nom in REGIONS:
+        Region.objects.get_or_create(nom=nom)
+    for numero, nom, region_nom in DEPARTEMENTS:
+        region = Region.objects.get(nom=region_nom)
+        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
@@ -165,6 +174,7 @@ def test_create_fiche_detection_with_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
+    fill_commune,
 ):
     dept = baker.make(Departement)
     type_exploitant = baker.make(TypeExploitant)
@@ -187,11 +197,10 @@ def test_create_fiche_detection_with_lieu(
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
     form_elements.add_lieu_btn.click()
+    page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
-    lieu_form_elements.commune_input.fill(lieu.commune)
-    lieu_form_elements.code_insee_input.fill(lieu.code_insee)
-    lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
+    fill_commune(page)
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -211,20 +220,19 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.save_btn.click()
     form_elements.save_btn.click()
 
-    page.wait_for_timeout(600)
+    page.wait_for_timeout(1000)
 
-    fiche_detection = FicheDetection.objects.last()
-    assert fiche_detection.lieux.count() == 1
-    lieu = fiche_detection.lieux.first()
+    fiche_detection = FicheDetection.objects.get()
+    lieu = fiche_detection.lieux.get()
     assert lieu.nom == lieu.nom
     assert lieu.wgs84_latitude == lieu.wgs84_latitude
     assert lieu.wgs84_longitude == lieu.wgs84_longitude
     assert lieu.lambert93_latitude == lieu.lambert93_latitude
     assert lieu.lambert93_longitude == lieu.lambert93_longitude
     assert lieu.adresse_lieu_dit == lieu.adresse_lieu_dit
-    assert lieu.commune == lieu.commune
-    assert lieu.code_insee == str(lieu.code_insee)
-    assert lieu.departement == lieu.departement
+    assert lieu.commune == "Lille"
+    assert lieu.code_insee == "59350"
+    assert lieu.departement == Departement.objects.get(nom="Nord")
     assert lieu.is_etablissement == lieu.is_etablissement
     assert lieu.nom_etablissement == lieu.nom_etablissement
     assert lieu.activite_etablissement == lieu.activite_etablissement
