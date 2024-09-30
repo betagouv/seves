@@ -3,6 +3,7 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+
 from ..models import (
     FicheDetection,
     Lieu,
@@ -11,11 +12,25 @@ from ..models import (
     TypeExploitant,
     PositionChaineDistribution,
 )
+from ..models import (
+    Region,
+)
+
+from sv.constants import REGIONS, DEPARTEMENTS
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
 def get_fiche_detection_update_form_url(fiche_detection: FicheDetection):
     return reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.id})
+
+
+@pytest.fixture(autouse=True)
+def create_fixtures_if_needed(db):
+    for nom in REGIONS:
+        Region.objects.get_or_create(nom=nom)
+    for numero, nom, region_nom in DEPARTEMENTS:
+        region = Region.objects.get(nom=region_nom)
+        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
 
 
 @pytest.fixture
@@ -177,6 +192,7 @@ def test_add_new_lieu(
     fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
+    fill_commune,
 ):
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
     lieu = baker.prepare(
@@ -194,9 +210,7 @@ def test_add_new_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
-    lieu_form_elements.commune_input.fill(lieu.commune)
-    lieu_form_elements.code_insee_input.fill(str(lieu.code_insee))
-    lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
+    fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
@@ -210,9 +224,9 @@ def test_add_new_lieu(
     assert fd.lieux.count() == 1
     assert lieu_from_db.nom == lieu.nom
     assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
-    assert lieu_from_db.commune == lieu.commune
-    assert lieu_from_db.code_insee == str(lieu.code_insee)
-    assert lieu_from_db.departement == lieu.departement
+    assert lieu_from_db.commune == "Lille"
+    assert lieu_from_db.code_insee == "59350"
+    assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
     assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
@@ -226,6 +240,7 @@ def test_add_multiple_lieux(
     fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
+    fill_commune,
 ):
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
     lieu_1 = baker.prepare(
@@ -265,9 +280,7 @@ def test_add_multiple_lieux(
         form_elements.add_lieu_btn.click()
         lieu_form_elements.nom_input.fill(lieu.nom)
         lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
-        lieu_form_elements.commune_input.fill(lieu.commune)
-        lieu_form_elements.code_insee_input.fill(lieu.code_insee)
-        lieu_form_elements.departement_input.select_option(value=str(lieu.departement.id))
+        fill_commune(page)
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
         lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
@@ -277,6 +290,7 @@ def test_add_multiple_lieux(
     form_elements.save_btn.click()
     page.wait_for_timeout(600)
 
+    assert Lieu.objects.count() == 3
     lieu_1_from_db = Lieu.objects.get(nom=lieux[0].nom)
     lieu_2_from_db = Lieu.objects.get(nom=lieux[1].nom)
     lieu_3_from_db = Lieu.objects.get(nom=lieux[2].nom)
@@ -284,9 +298,9 @@ def test_add_multiple_lieux(
     for lieu, lieu_from_db in zip(lieux, [lieu_1_from_db, lieu_2_from_db, lieu_3_from_db]):
         assert lieu_from_db.nom == lieu.nom
         assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
-        assert lieu_from_db.commune == lieu.commune
-        assert lieu_from_db.code_insee == str(lieu.code_insee)
-        assert lieu_from_db.departement == lieu.departement
+        assert lieu_from_db.commune == "Lille"
+        assert lieu_from_db.code_insee == "59350"
+        assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
         assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
         assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
         assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
@@ -300,6 +314,7 @@ def test_update_lieu(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
+    fill_commune,
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
 
@@ -326,9 +341,7 @@ def test_update_lieu(
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
-    lieu_form_elements.commune_input.fill(new_lieu.commune)
-    lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
-    lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
+    fill_commune(page)
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
@@ -356,9 +369,9 @@ def test_update_lieu(
     assert lieu_from_db.lambert93_latitude == new_lieu.lambert93_latitude
     assert lieu_from_db.lambert93_longitude == new_lieu.lambert93_longitude
     assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
-    assert lieu_from_db.commune == new_lieu.commune
-    assert lieu_from_db.code_insee == str(new_lieu.code_insee)
-    assert lieu_from_db.departement == new_lieu.departement
+    assert lieu_from_db.commune == "Lille"
+    assert lieu_from_db.code_insee == "59350"
+    assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.is_etablissement == new_lieu.is_etablissement
     assert lieu_from_db.nom_etablissement == new_lieu.nom_etablissement
     assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
@@ -401,9 +414,14 @@ def test_update_two_lieux(
             page.get_by_role("button", name="Modifier le lieu").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
-        lieu_form_elements.commune_input.fill(new_lieu.commune)
-        lieu_form_elements.code_insee_input.fill(new_lieu.code_insee)
-        lieu_form_elements.departement_input.select_option(value=str(new_lieu.departement.id))
+        page.query_selector(".fr-modal__content .choices__list--single").click()
+        page.wait_for_selector("*:focus", state="visible", timeout=2_000)
+        if index == 0:
+            page.locator("*:focus").fill("Lille")
+            page.get_by_role("option", name="Lille (59)", exact=True).click()
+        else:
+            page.locator("*:focus").fill("Paris")
+            page.get_by_role("option", name="Paris (75)", exact=True).click()
         lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
         lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
@@ -418,11 +436,15 @@ def test_update_two_lieux(
     for lieu, new_lieu in zip(lieux_from_db, new_lieux):
         assert lieu.nom == new_lieu.nom
         assert lieu.adresse_lieu_dit == new_lieu.adresse_lieu_dit
-        assert lieu.commune == new_lieu.commune
-        assert lieu.code_insee == str(new_lieu.code_insee)
-        assert lieu.departement == new_lieu.departement
         assert lieu.wgs84_latitude == new_lieu.wgs84_latitude
         assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
+
+    assert lieux_from_db[0].commune == "Lille"
+    assert lieux_from_db[0].code_insee == "59350"
+    assert lieux_from_db[0].departement == Departement.objects.get(nom="Nord")
+    assert lieux_from_db[1].commune == "Paris"
+    assert lieux_from_db[1].code_insee == "75056"
+    assert lieux_from_db[1].departement == Departement.objects.get(nom="Paris")
 
 
 @pytest.mark.django_db

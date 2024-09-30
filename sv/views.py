@@ -15,7 +15,7 @@ from django.views.generic import (
     FormView,
 )
 from django.urls import reverse
-from django.db.models import OuterRef, Subquery, Prefetch
+from django.db.models import OuterRef, Subquery, Prefetch, F
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError
@@ -181,7 +181,6 @@ class FicheDetectionDetailView(
 class FicheDetectionContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["departements"] = list(Departement.objects.values("id", "numero", "nom"))
         context["structures"] = list(Structure.objects.values("id", "libelle"))
         context["statuts_evenement"] = list(StatutEvenement.objects.values("id", "libelle"))
         context["organismes_nuisibles"] = list(OrganismeNuisible.objects.values("id", "libelle_court"))
@@ -249,7 +248,9 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         for lieu in lieux:
             if not lieu["nomLieu"]:
                 errors.append("Le champ nom du lieu est obligatoire")
-            if lieu["departementId"] and not Departement.objects.filter(pk=lieu["departementId"]).exists():
+            try:
+                lieu["departement"] = Departement.objects.get(nom=lieu["departementNom"])
+            except Departement.DoesNotExist:
                 errors.append("Le champ département est invalide")
 
         # Validation des prélèvements
@@ -331,7 +332,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             )
             lambert93_latitude = lieu["coordGPSLambert93Latitude"] if lieu["coordGPSLambert93Latitude"] != "" else None
 
-            # lieu = Lieu(fiche_detection=fiche, **lieu)
             lieu_instance = Lieu(
                 fiche_detection=fiche,
                 nom=lieu["nomLieu"],
@@ -342,7 +342,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 adresse_lieu_dit=lieu["adresseLieuDit"],
                 commune=lieu["commune"],
                 code_insee=lieu["codeINSEE"],
-                departement_id=lieu["departementId"],
+                departement=lieu["departement"],
                 is_etablissement=lieu["isEtablissement"],
                 nom_etablissement=lieu["nomEtablissement"],
                 activite_etablissement=lieu["activiteEtablissement"],
@@ -410,7 +410,9 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         context = super().get_context_data(**kwargs)
 
         # Lieux associés à la fiche de détection
-        lieux = Lieu.objects.filter(fiche_detection=self.object).values()
+        lieux = (
+            Lieu.objects.filter(fiche_detection=self.object).values().annotate(departement_nom=F("departement__nom"))
+        )
 
         # Prélèvements associés à chaque lieu
         prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object).values()
@@ -463,6 +465,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             # si pk -> update
             # si pas de pk -> création
             lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
+            departement = Departement.objects.get(nom=loc["departementNom"])
             lieu.nom = loc["nomLieu"]
             lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
             lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
@@ -475,7 +478,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.adresse_lieu_dit = loc["adresseLieuDit"]
             lieu.commune = loc["commune"]
             lieu.code_insee = loc["codeINSEE"]
-            lieu.departement_id = loc["departementId"]
+            lieu.departement = departement
             lieu.is_etablissement = loc["isEtablissement"]
             if loc["isEtablissement"]:
                 lieu.nom_etablissement = loc["nomEtablissement"]

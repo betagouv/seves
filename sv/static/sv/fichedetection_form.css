@@ -135,7 +135,7 @@ main {
 #lieu-form p label {
     flex: 0.75;
 }
-#lieu-form p input {
+#lieu-form p input, #lieu-form p .choices{
     flex: 1.25;
 }
 #lieu-form p select {

@@ -1,3 +1,21 @@
+function fetchCommunes(query) {
+  return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
+    .then(response => response.json())
+    .then(data => {
+      return data.map(item => ({
+        value: item.nom,
+        label: `${item.nom} (${item.departement.code})` ,
+        customProperties: {
+            "departementNom": item.departement.nom,
+            "inseeCode": item.code
+        }
+      }))
+    })
+    .catch(error => {
+      console.error('Erreur lors de la récupération des données:', error);
+      return []
+    });
+}
 document.addEventListener('DOMContentLoaded', function() {
     const element = document.getElementById('organisme-nuisible-input');
     const choices = new Choices(element, {
@@ -73,7 +91,7 @@ document.addEventListener('alpine:init', () => {
             adresseLieuDit: '',
             commune: '',
             codeINSEE: '',
-            departementId: '',
+            departementNom: '',
             region: '',
             coordGPSLambert93Latitude: '',
             coordGPSLambert93Longitude: '',
@@ -158,7 +176,7 @@ document.addEventListener('alpine:init', () => {
                         adresseLieuDit: lieu.adresse_lieu_dit,
                         commune: lieu.commune,
                         codeINSEE: lieu.code_insee,
-                        departementId: lieu.departement_id,
+                        departementNom: lieu.departement_nom,
                         coordGPSLambert93Latitude: lieu.lambert93_latitude,
                         coordGPSLambert93Longitude: lieu.lambert93_longitude,
                         coordGPSWGS84Latitude: lieu.wgs84_latitude,
@@ -199,6 +217,36 @@ document.addEventListener('alpine:init', () => {
                     };
                 });
             }
+
+            const choicesCommunes = new Choices(document.getElementById('commune-select'), {
+                removeItemButton: true,
+                placeholderValue: 'Recherchez...',
+                noResultsText: 'Aucun résultat trouvé',
+                noChoicesText: 'Aucun résultat trouvé',
+                shouldSort: false,
+                searchResultLimit: 10,
+                classNames: {containerInner: 'fr-select'},
+                itemSelectText: '',
+            });
+
+            choicesCommunes.input.element.addEventListener('input', function (event) {
+                const query = choicesCommunes.input.element.value
+                if (query.length > 2) {
+                    fetchCommunes(query).then(results => {
+                        choicesCommunes.clearChoices()
+                        choicesCommunes.setChoices(results, 'value', 'label', true)
+                    })
+                }
+            })
+
+            choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
+                this.lieuForm.commune = event.detail.choice.value
+                this.lieuForm.codeINSEE = event.detail.choice.customProperties.inseeCode
+                this.lieuForm.departementNom = event.detail.choice.customProperties.departementNom
+            })
+
+            this.choicesCommunes = choicesCommunes
+
         },
 
         getValueById(id) {
@@ -220,6 +268,10 @@ document.addEventListener('alpine:init', () => {
             const lieuToEdit = this.lieux.find(lieu => lieu.id === lieuId);
             this.lieuForm = {...lieuToEdit};
             this.lieuIdToEdit = lieuId;
+            if (!!this.lieuForm.commune && !!this.lieuForm.departementNom) {
+                this.choicesCommunes.setChoices([{ value: this.lieuForm.commune,
+                    label: this.lieuForm.commune, selected: true }],'value', 'label', false);
+            }
         },
 
 		/**
@@ -261,7 +313,7 @@ document.addEventListener('alpine:init', () => {
                 adresseLieuDit: '',
                 commune: '',
                 codeINSEE: '',
-                departementId: '',
+                departementNom: '',
                 region: '',
                 coordGPSLambert93Latitude: '',
                 coordGPSLambert93Longitude: '',
@@ -279,6 +331,7 @@ document.addEventListener('alpine:init', () => {
                 positionEtablissementId: '',
 
             };
+            this.choicesCommunes.clearStore();
         },
 
 		/**
