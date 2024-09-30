@@ -77,7 +77,7 @@ jmespath==1.0.1
     #   botocore
 josepy==1.14.0
     # via mozilla-django-oidc
-model-bakery==1.18.0
+model-bakery==1.19.5
     # via -r requirements.in
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
