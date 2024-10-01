@@ -220,3 +220,6 @@ if env("EMAIL_HOST", default=None):
     EMAIL_PORT = env("EMAIL_PORT")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+
+
+ROOT_URL = env("ROOT_URL", default=None)

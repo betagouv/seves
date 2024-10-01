@@ -31,7 +31,8 @@ def test_notification_message(mailoutbox, fiche_detection):
     message = mailoutbox[0]
     assert message.subject == "SEVES - TITLE"
     assert (
-        message.body == "Bonjour,\n Vous avez reçu un message sur SEVES dont voici le contenu : \n My message \n Thanks"
+        message.body
+        == f"Bonjour,\n Vous avez reçu un message sur SEVES dont voici le contenu : \n My message \n Thanks\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : http://testserver.com/sv/fiches-detection/{fiche_detection.pk}/"
     )
     assert message.from_email == "no-reply@beta.gouv.fr"
     assert set(message.to) == {contact_1.email, contact_2.email}
@@ -63,7 +64,10 @@ def test_notification_demande_intervention(mailoutbox, fiche_detection):
     assert len(mailoutbox) == 1
     message = mailoutbox[0]
     assert message.subject == "SEVES - TITLE"
-    assert message.body == "Bonjour,\n Vous avez reçu un message sur SEVES."
+    assert (
+        message.body
+        == f"Bonjour,\n Vous avez reçu un message sur SEVES.\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : http://testserver.com/sv/fiches-detection/{fiche_detection.pk}/"
+    )
     assert message.from_email == "no-reply@beta.gouv.fr"
     assert set(message.to) == {structure_1.email}
     assert set(message.cc) == {structure_2.email}
@@ -91,7 +95,10 @@ def test_notification_point_de_situation(mailoutbox, fiche_detection):
     assert len(mailoutbox) == 1
     message = mailoutbox[0]
     assert message.subject == "SEVES - TITLE"
-    assert message.body == "Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES."
+    assert (
+        message.body
+        == f"Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES.\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : http://testserver.com/sv/fiches-detection/{fiche_detection.pk}/"
+    )
     assert message.from_email == "no-reply@beta.gouv.fr"
     assert set(message.to) == {agent_1.email}
     assert set(message.cc) == set()
@@ -118,7 +125,10 @@ def test_notification_fin_de_suivi(mailoutbox, fiche_detection):
     assert len(mailoutbox) == 1
     message = mailoutbox[0]
     assert message.subject == "SEVES - TITLE"
-    assert message.body == "Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES."
+    assert (
+        message.body
+        == f"Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES.\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : http://testserver.com/sv/fiches-detection/{fiche_detection.pk}/"
+    )
     assert message.from_email == "no-reply@beta.gouv.fr"
     assert set(message.to) == {agent_1.email}
     assert set(message.cc) == set()
