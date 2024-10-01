@@ -2,9 +2,11 @@ from post_office.mail import send
 
 from core.constants import MUS_STRUCTURE
 from core.models import Message, Contact
+from django.conf import settings
 
 
-def _send_message(recipients: list[str], copy: list[str], subject, message):
+def _send_message(recipients: list[str], copy: list[str], subject, message, instance):
+    message += f"\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : {settings.ROOT_URL}{instance.content_object.get_absolute_url()}"
     send(
         recipients=recipients,
         cc=copy,
@@ -48,4 +50,4 @@ def notify_message(instance: Message):
         recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
 
     if recipients and message:
-        _send_message(recipients, copy, subject=subject, message=message)
+        _send_message(recipients, copy, subject=subject, message=message, instance=instance)
