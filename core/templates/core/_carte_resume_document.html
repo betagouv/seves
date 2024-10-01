@@ -3,7 +3,7 @@
         <div class="fr-card__content document__details {% if document.is_deleted %}document__details--deleted{% endif %}">
             <p class="fr-hint-text fr-mb-0-5v">Ajouté le {{ document.date_creation }}</p>
             <p class="fr-text--sm document__details--structure fr-mb-1v">{{ document.created_by_structure.libelle | default:document.created_by_structure.niveau2 | upper }}</p>
-            <p class="fr-text--sm fr-mb-0-5v">{{ document.nom }}
+            <p class="fr-text--sm fr-mb-0-5v fr-text--bold">{{ document.nom }}
                 {% if document.description %}
                     <button class="fr-btn--tooltip fr-btn" type="button" id="button-{{ document.pk }}" aria-describedby="tooltip-{{ document.pk }}">
                         Information contextuelle

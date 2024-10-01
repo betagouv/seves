@@ -36,3 +36,6 @@ header{
     background-color: white;
     padding: 2rem !important;
 }
+.fr-tabs__panel{
+    transition: none !important;
+}

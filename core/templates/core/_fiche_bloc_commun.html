@@ -11,16 +11,16 @@
                 <button id="tabpanel-documents" class="fr-tabs__tab fr-icon-book-2-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-documents-panel" data-testid="documents">Documents</button>
             </li>
         </ul>
-        <div id="tabpanel-messages-panel" class="bloc-commun__panel--messages fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-messages" tabindex="0">
+        <div id="tabpanel-messages-panel" class="bloc-commun__panel--messages fr-tabs__panel fr-tabs__panel--selected fr-transition-none" role="tabpanel" aria-labelledby="tabpanel-messages" tabindex="0">
             {% include "core/_messages.html" with value="messages" %}
             {% include "core/_fil-de-suivi.html" %}
         </div>
 
-        <div id="tabpanel-contacts-panel" class="bloc-commun__panel--contacts fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-contacts" tabindex="0">
+        <div id="tabpanel-contacts-panel" class="bloc-commun__panel--contacts fr-tabs__panel fr-transition-none" role="tabpanel" aria-labelledby="tabpanel-contacts" tabindex="0">
             {% include "core/_messages.html" with value="contacts" %}
             {% include "core/_contacts.html" %}
         </div>
-        <div id="tabpanel-documents-panel" class="bloc-commun__panel--documents fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-documents" tabindex="0">
+        <div id="tabpanel-documents-panel" class="bloc-commun__panel--documents fr-tabs__panel fr-transition-none" role="tabpanel" aria-labelledby="tabpanel-documents" tabindex="0">
             {% include "core/_messages.html" with value="documents" %}
             {% include "core/_documents.html" %}
         </div>
