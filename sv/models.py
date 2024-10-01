@@ -346,6 +346,10 @@ class Prelevement(models.Model):
     def __str__(self):
         return f"Prélèvement n° {self.id}"
 
+    @property
+    def is_result_positive(self):
+        return self.resultat in Prelevement.Resultat.DETECTE
+
 
 class StatutEvenement(models.Model):
     class Meta:
