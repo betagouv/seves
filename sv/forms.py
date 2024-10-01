@@ -38,6 +38,18 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         self.instance.object_id_2 = obj.id
 
 
+def update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields):
+    # Détections à ajouter
+    detections_a_ajouter = nouvelles_detections - anciennes_detections
+    if detections_a_ajouter:
+        FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(**add_fields)
+
+    # Détections à retirer
+    detections_a_retirer = anciennes_detections - nouvelles_detections
+    if detections_a_retirer:
+        FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(**remove_fields)
+
+
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     detections_hors_zone = forms.ModelMultipleChoiceField(
         queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
@@ -98,17 +110,10 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         nouvelles_detections = set(self.cleaned_data.get("detections_hors_zone", []))
         anciennes_detections = set(FicheDetection.objects.filter(hors_zone_infestee=instance))
 
-        # Détections à ajouter
-        detections_a_ajouter = nouvelles_detections - anciennes_detections
-        if detections_a_ajouter:
-            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(
-                hors_zone_infestee=instance, zone_infestee=None
-            )
+        add_fields = {"hors_zone_infestee": instance, "zone_infestee": None}
+        remove_fields = {"hors_zone_infestee": None}
 
-        # Détections à retirer
-        detections_a_retirer = anciennes_detections - nouvelles_detections
-        if detections_a_retirer:
-            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(hors_zone_infestee=None)
+        update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields)
 
 
 class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
@@ -136,21 +141,13 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         return instance
 
     def save_detections(self, instance):
-        # instance.fiches_detection.set(self.cleaned_data["detections"])
         nouvelles_detections = set(self.cleaned_data.get("detections", []))
         anciennes_detections = set(instance.fiches_detection.all())
 
-        # Détections à ajouter
-        detections_a_ajouter = nouvelles_detections - anciennes_detections
-        if detections_a_ajouter:
-            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(
-                zone_infestee=instance, hors_zone_infestee=None
-            )
+        add_fields = {"zone_infestee": instance, "hors_zone_infestee": None}
+        remove_fields = {"zone_infestee": None}
 
-        # Détections à retirer
-        detections_a_retirer = anciennes_detections - nouvelles_detections
-        if detections_a_retirer:
-            FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(zone_infestee=None)
+        update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields)
 
 
 ZoneInfesteeFormSet = inlineformset_factory(
