@@ -1,13 +1,14 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
+from django.db.models import TextChoices
 import datetime
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin
-from core.models import Document, Message, Contact, Structure, FinSuiviContact
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure
 from sv.managers import FicheDetectionManager
 
 
@@ -444,6 +445,8 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
+    hors_zone_infestee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True)
+    zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
 
     objects = FicheDetectionManager()
 
@@ -496,3 +499,113 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, models.Mod
 
     def is_already_cloturer(self):
         return self.etat.is_cloture()
+
+
+class CaracteristiquesPrincipalesZoneDelimitee(models.TextChoices):
+    PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
+        "plein_air_zone_production_champ",
+        "(1) Plein air — zone de production (1.1) champ (culture, pâturage)",
+    )
+    PLEIN_AIR_ZONE_PRODUCTION_VERGER_VIGNE = (
+        "plein_air_zone_production_verger_vigne",
+        "(1) Plein air — zone de production (1.2) verger/vigne",
+    )
+    PLEIN_AIR_ZONE_PRODUCTION_PEPINIERE = (
+        "plein_air_zone_production_pepiniere",
+        "(1) Plein air — zone de production (1.3) pépinière",
+    )
+    PLEIN_AIR_ZONE_PRODUCTION_FORET = (
+        "plein_air_zone_production_foret",
+        "(1) Plein air — zone de production (1.4) forêt",
+    )
+    PLEIN_AIR_AUTRE_JARDIN_PRIVE = "plein_air_autre_jardin_prive", "(2) Plein air — autre (2.1) jardin privé"
+    PLEIN_AIR_AUTRE_SITES_PUBLICS = "plein_air_autre_sites_publics", "(2) Plein air — autre (2.2) sites publics"
+    PLEIN_AIR_AUTRE_ZONE_PROTEGEE = "plein_air_autre_zone_protegee", "(2) Plein air — autre (2.3) zone protégée"
+    PLEIN_AIR_AUTRE_PLANTES_SAUVAGES = (
+        "plein_air_autre_plantes_sauvages",
+        "(2) Plein air — autre (2.4) plantes sauvages dans des zones non protégées",
+    )
+    PLEIN_AIR_AUTRE_AUTRE = "plein_air_autre_autre", "(2) Plein air — autre (2.5) autre (veuillez préciser)"
+    ENVIRONNEMENT_FERME_SERRE = "environnement_ferme_serre", "(3) Environnement fermé (3.1) serre"
+    ENVIRONNEMENT_FERME_AUTRES_JARDINS_HIVER = (
+        "environnement_ferme_autres_jardins_hiver",
+        "(3) Environnement fermé (3.2) autres jardins d’hiver",
+    )
+    ENVIRONNEMENT_FERME_SITE_PRIVE = (
+        "environnement_ferme_site_prive",
+        "(3) Environnement fermé (3.3) site privé (autre qu’une serre)",
+    )
+    ENVIRONNEMENT_FERME_SITE_PUBLIC = (
+        "environnement_ferme_site_public",
+        "(3) Environnement fermé (3.4) site public (autre qu’une serre)",
+    )
+    ENVIRONNEMENT_FERME_AUTRE = "environnement_ferme_autre", "(3) Environnement fermé (3.5) autre (veuillez préciser)"
+
+
+class ZoneInfestee(models.Model):
+    class UnitesSurfaceInfesteeTotale(TextChoices):
+        HECTARE = UnitesMesure.HECTARE
+        METRE_CARRE = UnitesMesure.METRE_CARRE
+        KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
+
+    class Meta:
+        verbose_name = "Zone infestée"
+        verbose_name_plural = "Zones infestées"
+
+    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    numero = models.CharField(max_length=50, verbose_name="Numéro de la zone")
+    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale")
+    unite_surface_infestee_totale = models.CharField(
+        max_length=3,
+        choices=UnitesSurfaceInfesteeTotale,
+        default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
+        verbose_name="Unité de la surface infestée totale",
+    )
+
+
+class FicheZoneDelimitee(models.Model):
+    class UnitesRayon(TextChoices):
+        METRE = UnitesMesure.METRE
+        KILOMETRE = UnitesMesure.KILOMETRE
+
+    class UnitesSurfaceTamponTolale(TextChoices):
+        METRE_CARRE = UnitesMesure.METRE_CARRE
+        KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
+
+    class Meta:
+        verbose_name = "Fiche zone délimitée"
+        verbose_name_plural = "Fiches zones délimitées"
+
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
+    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
+    caracteristiques_principales_zone_delimitee = models.CharField(
+        max_length=50,
+        choices=CaracteristiquesPrincipalesZoneDelimitee.choices,
+        verbose_name="Caractéristiques principales de la zone délimitée",
+        blank=True,
+    )
+    vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
+    commentaire = models.TextField(verbose_name="Commentaire", blank=True)
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré")
+    unite_rayon_zone_tampon = models.CharField(
+        max_length=2,
+        choices=UnitesRayon,
+        default=UnitesRayon.KILOMETRE,
+        verbose_name="Unité du rayon tampon réglemantaire ou arbitré",
+    )
+    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale")
+    unite_surface_tampon_totale = models.CharField(
+        max_length=3,
+        choices=UnitesSurfaceTamponTolale,
+        default=UnitesSurfaceTamponTolale.METRE_CARRE,
+        verbose_name="Unité de la surface tampon totale",
+    )
+    is_zone_tampon_toute_commune = models.BooleanField(
+        verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.numero = NumeroFiche.get_next_numero()
+        super().save(*args, **kwargs)
