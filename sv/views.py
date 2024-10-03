@@ -5,8 +5,8 @@ import uuid
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from django.shortcuts import redirect
 from django.views import View
+from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
     DetailView,
@@ -14,7 +14,7 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.db.models import OuterRef, Subquery, Prefetch
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -30,7 +30,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.redirect import safe_redirect
-from sv.forms import FreeLinkForm
+from sv.forms import FreeLinkForm, FicheZoneDelimiteeForm, ZoneInfesteeFormSet
 from .export import FicheDetectionExport
 from .models import (
     FicheDetection,
@@ -52,6 +52,7 @@ from .models import (
     Etat,
     TypeExploitant,
     PositionChaineDistribution,
+    FicheZoneDelimitee,
 )
 from core.forms import DSFRForm
 from core.models import Structure
@@ -610,3 +611,77 @@ class FicheDetecionCloturerView(View):
         fiche.cloturer()
         messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
+
+
+class FicheZoneDelimiteeCreateView(CreateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeForm
+    template_name = "sv/fzf.html"
+    success_url = reverse_lazy("fiche-detection-list")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
+        else:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(instance=self.object)
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["createur"] = self.request.user.agent.structure
+        return kwargs
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        zone_infestee_formset = context["zone_infestee_formset"]
+
+        form.instance.createur = self.request.user.agent.structure
+        if form.is_valid() and zone_infestee_formset.is_valid():
+            if self.has_duplicate_detections(form, zone_infestee_formset):
+                return self.form_invalid(form)
+
+            self.object = form.save()
+            zone_infestee_formset.instance = self.object
+            zone_infestee_formset.save()
+
+            # TODO: Visibilite de la fiche
+            action = form.cleaned_data.get("action")
+            print(action)
+
+            messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        context = self.get_context_data()
+        zone_infestee_formset = context["zone_infestee_formset"]
+
+        if not form.is_valid():
+            messages.error(self.request, f"Erreurs dans le formulaire principal: {form.errors}")
+        if not zone_infestee_formset.is_valid():
+            messages.error(self.request, f"Erreurs dans le formset zone infestée: {zone_infestee_formset.errors}")
+
+        return super().form_invalid(form)
+
+    def has_duplicate_detections(self, form, zone_infestee_formset):
+        # Récupérer les détections sélectionnées dans le formulaire principal
+        detections_hors_zone = set(form.cleaned_data.get("detections_hors_zone", []))
+
+        # Récupérer les détections sélectionnées dans le formset
+        detections_infestee = set()
+        for zone_form in zone_infestee_formset:
+            if zone_form.cleaned_data:
+                detections_infestee.update(zone_form.cleaned_data.get("detections", []))
+
+        # Vérifier les duplications
+        duplications = detections_hors_zone.intersection(detections_infestee)
+        if duplications:
+            form.add_error(
+                None,
+                "Certaines détections sont sélectionnées à la fois dans les zones infestées et hors zone infestée.",
+            )
+            return True
+
+        return False

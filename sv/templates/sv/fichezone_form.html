@@ -1,0 +1,189 @@
+{% extends 'sv/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/contact_add_form.css' %}">
+
+    <!-- choicesjs (autocompletion pour select) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'sv/fichezone_form.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="fr-container--fluid fr-m-4w ">
+        <div class="fr-grid-row">
+            <div class="fr-col-9">
+                <h1 class="fr-mb-0-5v">Création d'une fiche zone délimitée</h1>
+            </div>
+            <div class="fr-col-3">
+                <input type="submit" form="fiche-zone-delimitee-form" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">
+                <input type="submit" form="fiche-zone-delimitee-form" name="action" value="Publier" data-action="publier" class="fr-btn">
+            </div>
+        </div>
+
+        <div class="fr-grid-row fr-mb-3w">
+            <div class="fr-col-12">
+                <p class="fr-badge fr-badge--no-icon">brouillon</p>
+            </div>
+        </div>
+
+        <form action="{% url 'fiche-zone-delimitee-creation' %}" id="fiche-zone-delimitee-form" method="post">
+            {% csrf_token %}
+            {{ form.createur }}
+
+            <div class="fr-grid-row">
+                <div class="fr-col-3 fr-mr-4w fr-p-3w" style="background-color: white;">
+                    <h2>Informations</h2>
+                    <p>
+                        <label class="fr-label" for="date-creation-input">Date de création</label>
+                        <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
+                    </p>
+                </div>
+                <div class="fr-col-4 fr-mr-4w fr-p-3w" style="background-color: white;">
+                    <h2>Détails</h2>
+                    <div>
+                        <label class="fr-label" for="{{ form.caracteristiques_principales_zone_delimitee.id_for_label }}">{{ form.caracteristiques_principales_zone_delimitee.label }}</label>
+                        {{ form.caracteristiques_principales_zone_delimitee }}
+                    </div>
+                    <div class="fr-mt-4w">
+                        <label class="fr-label" for="{{ form.vegetaux_infestes.id_for_label }}">{{ form.vegetaux_infestes.label }}</label>
+                        {{ form.vegetaux_infestes }}
+                    </div>
+                    <div class="fr-mt-4w">
+                        <label class="fr-label" for="{{ form.commentaire.id_for_label }}">{{ form.commentaire.label }}</label>
+                        {{ form.commentaire }}
+                    </div>
+                </div>
+                <div class="fr-col-4 fr-p-3w" style="background-color: white;">
+                    <div class="fr-grid-row">
+                        <div class="fr-col-12">
+                            <h2>Zone tampon</h2>
+                        </div>
+                    </div>
+                    <div class="fr-grid-row">
+                        <div class="fr-col-12">
+                            <label class="fr-label" for="{{ form.rayon_zone_tampon.id_for_label }}">{{ form.rayon_zone_tampon.label }}</label>
+                        </div>
+                    </div>
+                    <div class="fr-grid-row fr-mt-1w">
+                        <div class="fr-col-6">
+                            {{ form.rayon_zone_tampon }}
+                        </div>
+                        <div class="fr-col-4">
+                            <fieldset class="fr-fieldset">
+                                {% for unite in form.unite_rayon_zone_tampon %}
+                                    <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                        <div class="fr-radio-group">
+                                            {{ unite.tag }}
+                                            <label class="fr-label fr-ml-2w" for="{{ unite.id_for_label }}">
+                                                {{ unite.choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <div class="fr-grid-row">
+                        <div class="fr-col-12">
+                            <label class="fr-label" for="{{ form.surface_tampon_totale.id_for_label }}">{{ form.surface_tampon_totale.label }}</label>
+                        </div>
+                    </div>
+                    <div class="fr-grid-row fr-mt-1w">
+                        <div class="fr-col-6">
+                            {{ form.surface_tampon_totale }}
+                        </div>
+                        <div class="fr-col-4">
+                            <fieldset class="fr-fieldset">
+                                {% for unite in form.unite_surface_tampon_totale %}
+                                    <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                        <div class="fr-radio-group">
+                                            {{ unite.tag }}
+                                            <label class="fr-label fr-ml-2w" for="{{ unite.id_for_label }}">
+                                                {{ unite.choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="fr-grid-row">
+                        <div class="fr-col-12">
+                            <fieldset class="fr-fieldset">
+                                <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                    <div class="fr-checkbox-group">
+                                        {{ form.is_zone_tampon_toute_commune }}
+                                        <label class="fr-label" for="{{ form.is_zone_tampon_toute_commune.id_for_label}}">
+                                            {{ form.is_zone_tampon_toute_commune.label}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="fr-p-3w fr-mt-4w" style="background-color: white;">
+                <div class="fr-grid-row">
+                    <div class="fr-col-6">
+                        <h2>Détections hors zone infestée</h2>
+                    </div>
+                </div>
+                <div class="fr-grid-row">
+                    <div class="fr-col-4">
+                        {{ form.detections_hors_zone_infestee }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="background-color: white;" class="fr-mt-4w fr-p-3w">
+                <div class="fr-grid-row">
+                    <div class="fr-col-4">
+                        <h2>Zones infestées</h2>
+                    </div>
+                    <div class="fr-col-offset-6"></div>
+                    <div class="fr-col-2">
+                        <button type="button" id="add-zone-infestee" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w">Ajouter une zone infestée</button>
+                    </div>
+                </div>
+                <div class="fr-grid-row" id="zones-infestees">
+                    {{ zone_formset.management_form }}
+                    {% for zone_form in zone_formset %}
+                        <div class="fr-col-3 fr-p-3w fr-mb-2w fr-mr-2w" style="background-color: #EDEDED;
+                                                                               ;">
+                            {{ zone_form.numero.label_tag }}
+                            {{ zone_form.numero }}
+                            {{ zone_form.surface_infestee_totale.label_tag }}
+                            {{ zone_form.surface_infestee_totale }}
+                            {{ zone_form.unite_surface_infestee_totale }}
+                            {{ zone_form.detections.label_tag }}
+                            {{ zone_form.detections }}
+                        </div>
+                    {% endfor %}
+
+                    <template id="zone-form-template">
+                        <div class="fr-col-3 fr-p-3w fr-mr-2w fr-mb-2w" style="background-color: #EDEDED;">
+                            {{ zone_formset.empty_form.numero.label_tag }}
+                            {{ zone_formset.empty_form.numero }}
+                            {{ zone_formset.empty_form.surface_infestee_totale.label_tag }}
+                            {{ zone_formset.empty_form.surface_infestee_totale }}
+                            {{ zone_formset.empty_form.unite_surface_infestee_totale }}
+                            {{ zone_formset.empty_form.detections.label_tag }}
+                            {{ zone_formset.empty_form.detections }}
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}

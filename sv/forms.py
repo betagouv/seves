@@ -4,9 +4,10 @@ from django.contrib.contenttypes.models import ContentType
 
 from core.fields import MultiModelChoiceField
 from django import forms
+from django.forms.models import inlineformset_factory
 
 from core.models import LienLibre
-from sv.models import FicheDetection
+from sv.models import FicheDetection, FicheZoneDelimitee, ZoneInfestee
 
 
 class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
@@ -35,3 +36,120 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         obj = self.cleaned_data["object_choice"]
         self.instance.content_type_2 = ContentType.objects.get_for_model(obj)
         self.instance.object_id_2 = obj.id
+
+
+def update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields):
+    # Détections à ajouter
+    detections_a_ajouter = nouvelles_detections - anciennes_detections
+    if detections_a_ajouter:
+        FicheDetection.objects.filter(id__in=[d.id for d in detections_a_ajouter]).update(**add_fields)
+
+    # Détections à retirer
+    detections_a_retirer = anciennes_detections - nouvelles_detections
+    if detections_a_retirer:
+        FicheDetection.objects.filter(id__in=[d.id for d in detections_a_retirer]).update(**remove_fields)
+
+
+class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
+    detections_hors_zone = forms.ModelMultipleChoiceField(
+        queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
+        widget=forms.SelectMultiple,
+        required=False,
+        label="Détections hors zone infestée",
+    )
+
+    class Meta:
+        model = FicheZoneDelimitee
+        fields = [
+            "createur",
+            "caracteristiques_principales_zone_delimitee",
+            "vegetaux_infestes",
+            "commentaire",
+            "rayon_zone_tampon",
+            "unite_rayon_zone_tampon",
+            "surface_tampon_totale",
+            "unite_surface_tampon_totale",
+            "is_zone_tampon_toute_commune",
+        ]
+        labels = {
+            "caracteristiques_principales_zone_delimitee": "Caractéristiques",
+        }
+        widgets = {
+            "createur": forms.HiddenInput(),
+            "vegetaux_infestes": forms.Textarea(attrs={"rows": 1}),
+            "commentaire": forms.Textarea(attrs={"rows": 5}),
+            "unite_rayon_zone_tampon": forms.RadioSelect(),
+            "unite_surface_tampon_totale": forms.RadioSelect(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        createur = kwargs.pop("createur", None)
+        super().__init__(*args, **kwargs)
+        if createur:
+            self.fields["createur"].initial = createur
+        # Affichage version courte des choix pour les unités (m², ha, km, etc.)
+        self.fields["unite_rayon_zone_tampon"].widget.choices = [
+            (choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesRayon
+        ]
+        self.fields["unite_surface_tampon_totale"].widget.choices = [
+            (choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesSurfaceTamponTolale
+        ]
+        if self.instance.pk:
+            self.fields["detections_hors_zone"].initial = FicheDetection.objects.filter(
+                hors_zone_infestee=self.instance, zone_infestee__isnull=True
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            self.save_detections_hors_zone(instance)
+        return instance
+
+    def save_detections_hors_zone(self, instance):
+        nouvelles_detections = set(self.cleaned_data.get("detections_hors_zone", []))
+        anciennes_detections = set(FicheDetection.objects.filter(hors_zone_infestee=instance))
+
+        add_fields = {"hors_zone_infestee": instance, "zone_infestee": None}
+        remove_fields = {"hors_zone_infestee": None}
+
+        update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields)
+
+
+class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
+    detections = forms.ModelMultipleChoiceField(
+        queryset=FicheDetection.objects.get_all_not_in_fiche_zone_delimitee(),
+        widget=forms.SelectMultiple,
+        required=False,
+        label="Détections dans la zone infestée",
+    )
+
+    class Meta:
+        model = ZoneInfestee
+        exclude = ["fiche_zone_delimitee"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["detections"].initial = self.instance.fiches_detection.all()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            self.save_detections(instance)
+        return instance
+
+    def save_detections(self, instance):
+        nouvelles_detections = set(self.cleaned_data.get("detections", []))
+        anciennes_detections = set(instance.fiches_detection.all())
+
+        add_fields = {"zone_infestee": instance, "hors_zone_infestee": None}
+        remove_fields = {"zone_infestee": None}
+
+        update_detections(instance, nouvelles_detections, anciennes_detections, add_fields, remove_fields)
+
+
+ZoneInfesteeFormSet = inlineformset_factory(
+    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, extra=1, can_delete=False
+)
