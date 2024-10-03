@@ -1,4 +1,5 @@
 {% load static %}
+{% load groups %}
 
 <!doctype html>
 <html lang="fr">
@@ -65,7 +66,9 @@
                                                 <input type="submit" value="Se déconnecter" class="fr-nav__link">
                                             </form>
                                         </li>
-                                        <li class="fr-nav__link"><a href="{% url 'handle-permissions' %}" >Gestion des droits d'accès</a></li>
+                                        {% if request.user|has_group:"access_admin" %}
+                                            <li class="fr-nav__link"><a href="{% url 'handle-permissions' %}" >Gestion des droits d'accès</a></li>
+                                        {% endif %}
                                     </ul>
                                 </div>
                             {% endif %}
