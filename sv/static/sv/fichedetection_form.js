@@ -505,8 +505,9 @@ document.addEventListener('alpine:init', () => {
             const action = boutonClique.dataset.action;
 
             let formData = new FormData();
+            const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
             formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
-            formData.append('organismeNuisibleId', this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : '');
+            formData.append('organismeNuisibleId', organismeNuisibleId);
             formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
             formData.append('contexteId', this.ficheDetection.contexteId);
             formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);

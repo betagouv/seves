@@ -11,6 +11,7 @@ from ..models import (
     Departement,
     TypeExploitant,
     PositionChaineDistribution,
+    OrganismeNuisible,
 )
 from ..models import (
     Region,
@@ -144,15 +145,19 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     mocked_authentification_user,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
-
+    organisme = baker.make(OrganismeNuisible)
     new_fiche_detection = fiche_detection_bakery()
+    new_fiche_detection.organisme_nuisible = baker.make(OrganismeNuisible)
+    new_fiche_detection.save()
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
-    # TODO
-    # page.locator("#organisme-nuisible-input").select_option(str(new_organisme_nuisible.id))
-    # page.locator("#organisme-nuisible").get_by_text("----").nth(1).click()
-    # page.get_by_role("option", name=str(new_organisme_nuisible)).click()
+
+    page.query_selector("#organisme-nuisible .choices__list--single").click()
+    page.wait_for_selector("*:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill(organisme.libelle_court)
+    page.get_by_role("option", name=organisme.libelle_court).click()
+
     form_elements.statut_reglementaire_input.select_option(str(new_fiche_detection.statut_reglementaire.id))
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
@@ -169,8 +174,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
         fiche_detection_updated.createur == fiche_detection.createur
     )  # le createur ne doit pas changer lors d'une modification
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
-    # TODO
-    # assert fiche_detection_updated.organisme_nuisible == new_organisme_nuisible
+    assert fiche_detection_updated.organisme_nuisible == organisme
     assert fiche_detection_updated.statut_reglementaire == new_fiche_detection.statut_reglementaire
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte
     assert fiche_detection_updated.commentaire == new_fiche_detection.commentaire
@@ -183,6 +187,27 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     assert (
         fiche_detection_updated.mesures_surveillance_specifique == new_fiche_detection.mesures_surveillance_specifique
     )
+
+
+@pytest.mark.django_db
+def test_saving_without_changing_organisme_works(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    fiche_detection_bakery,
+    mocked_authentification_user,
+):
+    organisme = baker.make(OrganismeNuisible)
+    new_fiche_detection = fiche_detection_bakery()
+    new_fiche_detection.organisme_nuisible = organisme
+    new_fiche_detection.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(new_fiche_detection)}")
+    form_elements.save_btn.click()
+    page.wait_for_timeout(600)
+
+    new_fiche_detection.refresh_from_db()
+    assert new_fiche_detection.organisme_nuisible == organisme
 
 
 @pytest.mark.django_db
