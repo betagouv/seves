@@ -14,7 +14,6 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
 
     expect(page.get_by_text("L'administration centrale a été notifiée avec succès")).to_be_visible()
 
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_text("Déclaré AC")).to_be_visible()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
