@@ -9,7 +9,7 @@
                     <div class="fr-modal__content">
                         <h1 id="modal-add-edit-prelevement-title"
                             class="fr-modal__title"
-                            x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prelevement'"></h1>
+                            x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prélèvement'"></h1>
                         <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
                             <div id="lieu" class="fr-select-group">
                                 <label class="fr-label">Lieu</label>
@@ -34,7 +34,7 @@
                             </p>
                             <p id="date-prelevement">
                                 <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
-                                <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input">
+                                <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input" max="{% now "Y-m-d" %}">
                             </p>
                             <p id="site-inspection">
                                 <label class="fr-label">Site d'inspection</label>
