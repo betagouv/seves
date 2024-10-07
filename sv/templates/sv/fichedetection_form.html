@@ -20,7 +20,6 @@
 
 {% block content %}
     <main x-data="app">
-
         <input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
         <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
         <input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
