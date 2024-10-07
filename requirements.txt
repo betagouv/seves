@@ -47,7 +47,7 @@ django-debug-toolbar==4.4.6
     # via -r requirements.in
 django-environ==0.11.2
     # via -r requirements.in
-django-filter==24.2
+django-filter==24.3
     # via -r requirements.in
 django-post-office==3.9.0
     # via -r requirements.in
