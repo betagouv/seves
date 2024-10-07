@@ -110,7 +110,7 @@
                                 <div class="fr-card__content">
                                     <div class="fr-grid-row">
                                         <div class="fr-col-11">
-                                            <p class="fr-card__title">{{lieu_initial.nom}}</p>
+                                            <p class="fr-card__title">Nom du lieu : {{lieu_initial.nom}}</p>
                                         </div>
                                         <div class="fr-col-1">
                                             <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
@@ -120,9 +120,9 @@
                                         </div>
                                     </div>
                                     <p class="fr-card__desc">
-                                        {{ lieu_initial.commune|default:"" }} <br/>
+                                        Commune : {{ lieu_initial.commune|default:"" }} <br/>
                                         {% if lieu_initial.departement %}
-                                            {{ lieu_initial.departement.nom }} ({{ lieu_initial.departement.numero }})
+                                            Département : {{ lieu_initial.departement.nom }} ({{ lieu_initial.departement.numero }})
                                         {% endif %}
                                     </p>
                                 </div>
@@ -141,7 +141,7 @@
                                 <div class="fr-card__content">
                                     <div class="fr-grid-row">
                                         <div class="fr-col-11">
-                                            <p class="fr-card__title">{{ prelevement.structure_preleveur }}</p>
+                                            <p class="fr-card__title">Structure : {{ prelevement.structure_preleveur }}</p>
                                         </div>
                                         <div class="fr-col-1">
                                             <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
@@ -153,16 +153,16 @@
                                     </div>
                                     <p class="fr-card__desc">
                                         {% if prelevement.numero_phytopass %}
-                                            {{ prelevement.numero_phytopass }}<br>
+                                            Numéro Phytopass: {{ prelevement.numero_phytopass }}<br>
                                         {% endif %}
                                         {% if prelevement.espece_echantillon %}
-                                            {{ prelevement.espece_echantillon }}<br>
+                                            Espèce : {{ prelevement.espece_echantillon }}<br>
                                         {% endif %}
                                         {% if prelevement.laboratoire_agree %}
-                                            {{ prelevement.laboratoire_agree }} |
+                                            Laboratoire agrée : {{ prelevement.laboratoire_agree }} |
                                         {% endif %}
                                         {% if prelevement.date_prelevement %}
-                                            {{ prelevement.date_prelevement|date:"d/m/Y" }}
+                                            Date de prélèvement : {{ prelevement.date_prelevement|date:"d/m/Y" }}
                                         {% endif %}
                                     </p>
                                     <p class="fr-card__desc prelevement__type {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}">
