@@ -60,6 +60,7 @@ body{
 }
 .fiches__list-link {
     display: block !important;
+    padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
