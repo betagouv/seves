@@ -37,3 +37,14 @@ def mocked_authentification_user(db):
 
     with patch("seves.middlewares.LoginRequiredMiddleware.__call__", mocked):
         yield user
+
+
+@pytest.fixture
+def choice_js_fill(db, page):
+    def _choice_js_fill(page, locator, fill_content, exact_name):
+        page.query_selector(locator).click()
+        page.wait_for_selector("*:focus", state="visible", timeout=2_000)
+        page.locator("*:focus").fill(fill_content)
+        page.get_by_role("option", name=exact_name, exact=True).click()
+
+    return _choice_js_fill

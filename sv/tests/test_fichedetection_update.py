@@ -143,6 +143,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     fiche_detection: FicheDetection,
     fiche_detection_bakery,
     mocked_authentification_user,
+    choice_js_fill,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
     organisme = baker.make(OrganismeNuisible)
@@ -153,10 +154,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
 
-    page.query_selector("#organisme-nuisible .choices__list--single").click()
-    page.wait_for_selector("*:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill(organisme.libelle_court)
-    page.get_by_role("option", name=organisme.libelle_court).click()
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", organisme.libelle_court, organisme.libelle_court)
 
     form_elements.statut_reglementaire_input.select_option(str(new_fiche_detection.statut_reglementaire.id))
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
@@ -417,6 +415,7 @@ def test_update_two_lieux(
     fiche_detection_with_two_lieux: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
     new_lieux = baker.prepare(
@@ -439,14 +438,10 @@ def test_update_two_lieux(
             page.get_by_role("button", name="Modifier le lieu").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
-        page.query_selector(".fr-modal__content .choices__list--single").click()
-        page.wait_for_selector("*:focus", state="visible", timeout=2_000)
         if index == 0:
-            page.locator("*:focus").fill("Lille")
-            page.get_by_role("option", name="Lille (59)", exact=True).click()
+            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Lille", "Lille (59)")
         else:
-            page.locator("*:focus").fill("Paris")
-            page.get_by_role("option", name="Paris (75)", exact=True).click()
+            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
         lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(new_lieu.lambert93_latitude))
         lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(new_lieu.lambert93_longitude))
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))

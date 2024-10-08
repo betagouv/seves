@@ -4,7 +4,9 @@ from core.models import Message, Contact, Agent, Structure
 from ..models import FicheDetection
 
 
-def test_can_add_and_see_message_without_document(live_server, page: Page, fiche_detection: FicheDetection):
+def test_can_add_and_see_message_without_document(
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
+):
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -13,9 +15,7 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
 
     page.wait_for_url(f"**{fiche_detection.add_message_url}")
 
-    page.query_selector(".choices__input--cloned:first-of-type").click()
-    page.locator("*:focus").fill(agent.nom)
-    page.get_by_role("option", name=str(agent)).click()
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -42,7 +42,9 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
 
-def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fiche_detection: FicheDetection):
+def test_can_add_and_see_message_multiple_documents(
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
+):
     agent = baker.make(Agent)
     baker.make(Contact, agent=agent)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -51,9 +53,7 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fic
 
     page.wait_for_url(f"**{fiche_detection.add_message_url}")
 
-    page.query_selector(".choices__input--cloned:first-of-type").click()
-    page.locator("*:focus").fill(agent.nom)
-    page.get_by_role("option", name=str(agent)).click()
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
 
@@ -100,7 +100,7 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fic
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(
-    live_server, page: Page, fiche_detection: FicheDetection
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
 ):
     agents = []
     for _ in range(4):
@@ -115,20 +115,12 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(
     page.wait_for_url(f"**{fiche_detection.add_message_url}")
 
     # Add multiple recipients
-    page.query_selector(".choices__input--cloned:first-of-type").click()
-    page.locator("*:focus").fill(agents[0].nom)
-    page.get_by_role("option", name=str(agents[0])).click()
-    page.query_selector(".choices__input--cloned:first-of-type").click()
-    page.locator("*:focus").fill(agents[1].nom)
-    page.get_by_role("option", name=str(agents[1])).click()
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[0].nom, str(agents[0]))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[1].nom, str(agents[1]))
 
     # Add multiples recipients as copy
-    page.query_selector(".choices__input--cloned:last-of-type").click()
-    page.locator("*:focus").fill(agents[2].nom)
-    page.get_by_role("option", name=str(agents[2])).click()
-    page.query_selector(".choices__input--cloned:last-of-type").click()
-    page.locator("*:focus").fill(agents[3].nom)
-    page.get_by_role("option", name=str(agents[3])).click()
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[2].nom, str(agents[2]))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[3].nom, str(agents[3]))
 
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
