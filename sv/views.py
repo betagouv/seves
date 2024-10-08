@@ -55,7 +55,7 @@ from .models import (
     PositionChaineDistribution,
 )
 from core.forms import DSFRForm
-from core.models import Structure, Visibilite
+from core.models import Visibilite
 
 
 class FicheDetectionSearchForm(forms.Form, DSFRForm):
@@ -197,24 +197,21 @@ class FicheDetectionDetailView(
 class FicheDetectionContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["structures"] = list(Structure.objects.values("id", "libelle"))
-        context["statuts_evenement"] = list(StatutEvenement.objects.values("id", "libelle"))
-        context["organismes_nuisibles"] = list(OrganismeNuisible.objects.values("id", "libelle_court"))
-        context["statuts_reglementaires"] = list(StatutReglementaire.objects.values("id", "libelle"))
-        context["contextes"] = list(Contexte.objects.values("id", "nom"))
+        context["statuts_evenement"] = StatutEvenement.objects.all()
+        context["organismes_nuisibles"] = OrganismeNuisible.objects.all()
+        context["statuts_reglementaires"] = StatutReglementaire.objects.all()
+        context["contextes"] = Contexte.objects.all()
         context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom").order_by("nom"))
         context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
-        context["matrices_prelevees"] = list(MatricePrelevee.objects.values("id", "libelle").order_by("libelle"))
+        context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
         context["especes_echantillon"] = list(EspeceEchantillon.objects.values("id", "libelle").order_by("libelle"))
-        context["laboratoires_agrees"] = list(LaboratoireAgree.objects.values("id", "nom").order_by("nom"))
-        context["laboratoires_confirmation_officielle"] = list(
-            LaboratoireConfirmationOfficielle.objects.values("id", "nom").order_by("nom")
+        context["laboratoires_agrees"] = LaboratoireAgree.objects.all().order_by("nom")
+        context["laboratoires_confirmation_officielle"] = LaboratoireConfirmationOfficielle.objects.all().order_by(
+            "nom"
         )
         context["resultats_prelevement"] = Prelevement.Resultat.choices
-        context["types_etablissement"] = list(TypeExploitant.objects.values("id", "libelle").order_by("libelle"))
-        context["positions_chaine_distribution"] = list(
-            PositionChaineDistribution.objects.values("id", "libelle").order_by("libelle")
-        )
+        context["types_etablissement"] = TypeExploitant.objects.all().order_by("libelle")
+        context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
         return context
 
 

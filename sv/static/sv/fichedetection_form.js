@@ -1,20 +1,20 @@
 function fetchCommunes(query) {
-  return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
-    .then(response => response.json())
-    .then(data => {
-      return data.map(item => ({
-        value: item.nom,
-        label: `${item.nom} (${item.departement.code})` ,
-        customProperties: {
-            "departementNom": item.departement.nom,
-            "inseeCode": item.code
-        }
-      }))
-    })
-    .catch(error => {
-      console.error('Erreur lors de la récupération des données:', error);
-      return []
-    });
+    return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
+        .then(response => response.json())
+        .then(data => {
+            return data.map(item => ({
+                value: item.nom,
+                label: `${item.nom} (${item.departement.code})` ,
+                customProperties: {
+                    "departementNom": item.departement.nom,
+                    "inseeCode": item.code
+                }
+            }))
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données:', error);
+            return []
+        });
 }
 document.addEventListener('DOMContentLoaded', function() {
     const element = document.getElementById('organisme-nuisible-input');
@@ -33,22 +33,8 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('app', () => ({
 
-		// Données de référence pour les listes déroulantes
-        departements: JSON.parse(document.getElementById('departements').textContent),
-        structures: JSON.parse(document.getElementById('structures').textContent),
-        statutsEvenement: JSON.parse(document.getElementById('statuts-evenement').textContent),
-        organismesNuisibles: JSON.parse(document.getElementById('organismes-nuisibles').textContent),
-        statutsReglementaires: JSON.parse(document.getElementById('statuts-reglementaires').textContent),
-        contextes: JSON.parse(document.getElementById('contextes').textContent),
         structuresPreleveurs: JSON.parse(document.getElementById('structures-preleveurs').textContent),
         sitesInspections: JSON.parse(document.getElementById('sites-inspections').textContent),
-        matricesPrelevees: JSON.parse(document.getElementById('matrices-prelevees').textContent),
-        especesEchantillon: JSON.parse(document.getElementById('especes-echantillon').textContent),
-        laboratoiresAgrees: JSON.parse(document.getElementById('laboratoires-agrees').textContent),
-        laboratoiresConfirmationOfficielle: JSON.parse(document.getElementById('laboratoires-confirmation-officielle').textContent),
-        resultatsPrelevement: JSON.parse(document.getElementById('resultats-prelevement').textContent),
-        typesEtablissement: JSON.parse(document.getElementById('types-etablissement').textContent),
-        positionsEtablissement: JSON.parse(document.getElementById('positions-etablissement').textContent),
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {

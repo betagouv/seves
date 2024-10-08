@@ -33,21 +33,8 @@
         <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
         {{ lieux|json_script:"lieux-json" }}
         {{ prelevements|json_script:"prelevements" }}
-        {{ departements|json_script:"departements" }}
-        {{ structures|json_script:"structures" }}
-        {{ statuts_evenement|json_script:"statuts-evenement" }}
-        {{ organismes_nuisibles|json_script:"organismes-nuisibles" }}
-        {{ statuts_reglementaires|json_script:"statuts-reglementaires" }}
-        {{ contextes|json_script:"contextes" }}
         {{ structures_preleveurs|json_script:"structures-preleveurs" }}
         {{ sites_inspections|json_script:"sites-inspections" }}
-        {{ matrices_prelevees|json_script:"matrices-prelevees" }}
-        {{ especes_echantillon|json_script:"especes-echantillon" }}
-        {{ laboratoires_agrees|json_script:"laboratoires-agrees" }}
-        {{ laboratoires_confirmation_officielle|json_script:"laboratoires-confirmation-officielle" }}
-        {{ resultats_prelevement|json_script:"resultats-prelevement"}}
-        {{ types_etablissement|json_script:"types-etablissement" }}
-        {{ positions_chaine_distribution|json_script:"positions-etablissement" }}
 
         <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection($event)">
 
@@ -96,12 +83,9 @@
                             <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
                             <select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
                                 <option value="">----</option>
-                                <template x-for="statutEvenement in statutsEvenement" :key="statutEvenement.id">
-                                    <option
-                                        :value="statutEvenement.id"
-                                        x-text="statutEvenement.libelle"
-                                        :selected="statutEvenement.id == ficheDetection.statutEvenementId"></option>
-                                </template>
+                                {% for statut_evenement in statuts_evenement %}
+                                    <option value="{{ statut_evenement.id }}">{{ statut_evenement.libelle }}</option>
+                                {% endfor %}
                             </select>
                         </p>
                     </div>
@@ -113,36 +97,27 @@
                         <label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
                         <select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
                             <option value="">----</option>
-                            <template x-for="organismeNuisible in organismesNuisibles" :key="organismeNuisible.id">
-                                <option
-                                    :value="organismeNuisible.id"
-                                    x-text="organismeNuisible.libelle_court"
-                                    :selected="organismeNuisible.id == ficheDetection.organismeNuisibleId"></option>
-                            </template>
+                            {% for organisme_nuisible in organismes_nuisibles %}
+                                <option value="{{ organisme_nuisible.id }}">{{ organisme_nuisible.libelle_court }}</option>
+                            {% endfor %}
                         </select>
                     </p>
                     <p id="statut-reglementaire">
                         <label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
                         <select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
                             <option value="">----</option>
-                            <template x-for="statutReglementaire in statutsReglementaires" :key="statutReglementaire.id">
-                                <option
-                                    :value="statutReglementaire.id"
-                                    x-text="statutReglementaire.libelle"
-                                    :selected="statutReglementaire.id == ficheDetection.statutReglementaireId"></option>
-                            </template>
+                            {% for statut_reglementaire in statuts_reglementaires %}
+                                <option value="{{ statut_reglementaire.id }}">{{ statut_reglementaire.libelle }}</option>
+                            {% endfor %}
                         </select>
                     </p>
                     <p id="contexte">
                         <label class="fr-label" for="contexte-input">Contexte</label>
                         <select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
                             <option value="">----</option>
-                            <template x-for="contexte in contextes" :key="contexte.id">
-                                <option
-                                    :value="contexte.id"
-                                    x-text="contexte.nom"
-                                    :selected="contexte.id == ficheDetection.contexteId"></option>
-                            </template>
+                            {% for contexte in contextes %}
+                                <option value="{{ contexte.id }}">{{ contexte.nom }}</option>
+                            {% endfor %}
                         </select>
                     </p>
                     <p id="date-1er-signalement">
