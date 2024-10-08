@@ -15,12 +15,6 @@ from ..models import (
 )
 
 
-def _pick_organisme(page, organisme_name):
-    page.query_selector(".choices__list--single").click()
-    page.locator("*:focus").fill(organisme_name)
-    page.get_by_role("option", name=organisme_name).click()
-
-
 def get_fiche_detection_search_form_url() -> str:
     return reverse("fiche-detection-list")
 
@@ -53,7 +47,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
 
 
 @pytest.mark.django_db
-def test_clear_button_clears_form(live_server, page: Page) -> None:
+def test_clear_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=5)
     baker.make(OrganismeNuisible, _quantity=5)
@@ -62,7 +56,8 @@ def test_clear_button_clears_form(live_server, page: Page) -> None:
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
     page.get_by_label("Région").select_option(index=1)
-    _pick_organisme(page, OrganismeNuisible.objects.first().libelle_court)
+    organisme = OrganismeNuisible.objects.first().libelle_court
+    choice_js_fill(page, ".choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill("2024-06-19")
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_label("État").select_option(index=1)
@@ -131,7 +126,7 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
 
 
-def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user) -> None:
+def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
     """Test la recherche d'une fiche détection en utilisant un organisme nuisible.
     Effectue une recherche en sélectionnant un organisme nuisible spécifique et
     vérifier que les fiches détectées retournées sont associées à cet organisme."""
@@ -150,7 +145,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    _pick_organisme(page, organisme1.libelle_court)
+    choice_js_fill(page, ".choices__list--single", organisme1.libelle_court, organisme1.libelle_court)
     page.get_by_role("button", name="Rechercher").click()
 
     assert (
@@ -223,7 +218,7 @@ def test_search_with_state(live_server, page: Page, mocked_authentification_user
     expect(page.get_by_role("cell", name=str(fiche2.numero))).not_to_be_visible()
 
 
-def test_search_with_multiple_filters(live_server, page: Page, mocked_authentification_user) -> None:
+def test_search_with_multiple_filters(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
     """Test la recherche d'une fiche détection en utilisant plusieurs filtres.
     Effectue une recherche en sélectionnant plusieurs filtres et
     vérifier que les fiches détectées retournées satisfont toutes les conditions spécifiées."""
@@ -238,7 +233,8 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Région").select_option(str(lieu.departement.region.id))
-    _pick_organisme(page, fiche1.organisme_nuisible.libelle_court)
+    organisme = fiche1.organisme_nuisible.libelle_court
+    choice_js_fill(page, ".choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("Au").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("État").select_option(str(fiche1.etat.id))

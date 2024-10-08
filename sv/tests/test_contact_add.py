@@ -2,13 +2,8 @@ import pytest
 from playwright.sync_api import expect
 from model_bakery import baker
 from django.urls import reverse
+
 from core.models import Contact, Structure, Agent
-
-
-def _pick_structure(page, structure_libelle):
-    page.query_selector(".choices__list--single").click()
-    page.locator("*:focus").fill(structure_libelle)
-    page.get_by_role("option", name=structure_libelle).click()
 
 
 @pytest.fixture
@@ -69,12 +64,12 @@ def test_structure_list(client):
     assert all(structure in form_structures for structure in Structure.objects.all())
 
 
-def test_add_contact_form_select_structure(live_server, page, fiche_detection, contacts):
+def test_add_contact_form_select_structure(live_server, page, fiche_detection, contacts, choice_js_fill):
     """Test l'affichage des contacts dans le formulaire de sélection suite à la selection d'une structure"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, "MUS")
+    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
     page.get_by_role("button", name="Rechercher").click()
     contact1 = contacts[0]
     contact2 = contacts[1]
@@ -84,13 +79,13 @@ def test_add_contact_form_select_structure(live_server, page, fiche_detection, c
     expect(page.get_by_text(f"{contact2.agent.nom}")).to_contain_text(f"{contact2.agent.nom} {contact2.agent.prenom}")
 
 
-def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
+def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts, choice_js_fill):
     """Test l'ajout d'un contact à une fiche de détection"""
     contact1 = contacts[0]
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, "MUS")
+    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
     page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
@@ -100,14 +95,14 @@ def test_add_contact_to_a_fiche(live_server, page, fiche_detection, contacts):
     expect(page.locator(".fr-card__content")).to_be_visible()
 
 
-def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, contacts):
+def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, contacts, choice_js_fill):
     """Test l'ajout de plusieurs contacts à une fiche de détection"""
     contact1 = contacts[0]
     contact2 = contacts[1]
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, "MUS")
+    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
     page.get_by_text(f"{contact2.agent.nom} {contact2.agent.prenom}").click()
@@ -119,12 +114,12 @@ def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_detection, co
     expect(page.locator("div:nth-child(2) > .fr-card > .fr-card__body > .fr-card__content")).to_be_visible()
 
 
-def test_no_contact_selected(live_server, page, fiche_detection, contact):
+def test_no_contact_selected(live_server, page, fiche_detection, contact, choice_js_fill):
     """Test l'affichage d'un message d'erreur si aucun contact n'est sélectionné"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, contact.agent.structure.libelle)
+    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
 
@@ -132,24 +127,28 @@ def test_no_contact_selected(live_server, page, fiche_detection, contact):
     expect(page.locator("#form-selection")).to_contain_text("Veuillez sélectionner au moins un contact")
 
 
-def test_add_contact_form_back_to_fiche_after_select_structure(live_server, page, fiche_detection, contact):
+def test_add_contact_form_back_to_fiche_after_select_structure(
+    live_server, page, fiche_detection, contact, choice_js_fill
+):
     """Test le lien de retour vers la fiche après la selection d'une structure et l'affichage des contacts associés"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, contact.agent.structure.libelle)
+    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_role("link", name="Retour à la fiche").click()
 
     expect(page).to_have_url(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
 
-def test_add_contact_form_back_to_fiche_after_error_message(live_server, page, fiche_detection, contact):
+def test_add_contact_form_back_to_fiche_after_error_message(
+    live_server, page, fiche_detection, contact, choice_js_fill
+):
     """Test le lien de retour vers la fiche après l'affichage du message d'erreur si aucun contact n'est sélectionné"""
     page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter un agent").click()
-    _pick_structure(page, contact.agent.structure.libelle)
+    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
     page.get_by_role("link", name="Retour à la fiche").click()

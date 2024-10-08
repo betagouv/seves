@@ -2,6 +2,7 @@ import json
 import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
+
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
     Departement,
@@ -24,7 +25,7 @@ def create_fixtures_if_needed(db):
 
 
 @pytest.fixture(autouse=True)
-def test_goto_fiche_detection_creation_url(live_server, page: Page):
+def test_goto_fiche_detection_creation_url(live_server, page: Page, choice_js_fill):
     """Ouvre la page de création d'une fiche de détection"""
     add_fiche_detection_form_url = reverse("fiche-detection-creation")
     return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
@@ -425,7 +426,11 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
 
 @pytest.mark.django_db
 def test_edit_lieu_is_updated_in_alpinejs_data(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     """Test que le lieu modifié est bien mis à jour dans le tableau de données alpinejs"""
     # ajout d'un lieu
@@ -435,9 +440,7 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
-    page.query_selector(".fr-modal__content .choices__list--single").click()
-    page.locator("*:focus").fill("Paris")
-    page.get_by_role("option", name="Paris (75)", exact=True).click()
+    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
@@ -459,7 +462,11 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
 
 
 def test_add_lieu_form_is_empty_after_edit(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     """Test que le formulaire d'ajout d'un lieu est vide après la modification d'un lieu"""
     # ajout d'un lieu
@@ -469,10 +476,7 @@ def test_add_lieu_form_is_empty_after_edit(
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
-    page.query_selector(".fr-modal__content .choices__list--single").click()
-    page.wait_for_selector("*:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Paris")
-    page.get_by_role("option", name="Paris (75)", exact=True).click()
+    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
