@@ -87,18 +87,18 @@
                                     <label class="fr-label" for="type-etablissement">Type</label>
                                     <select x-model="lieuForm.typeEtablissementId" class="fr-select" data-testid="lieu-form-type-etablissement" id="type-etablissement">
                                         <option value="">----</option>
-                                        <template x-for="typeEtablissement in typesEtablissement" :key="typeEtablissement.id">
-                                            <option :value="typeEtablissement.id" x-text="typeEtablissement.libelle"></option>
-                                        </template>
+                                        {% for type_etablissement in types_etablissement %}
+                                            <option value="{{ type_etablissement.id }}">{{ type_etablissement.libelle }}</option>
+                                        {% endfor %}
                                     </select>
                                 </p>
                                 <p>
                                     <label class="fr-label" for="position-etablissement">Position</label>
                                     <select x-model="lieuForm.positionEtablissementId" class="fr-select" data-testid="lieu-form-position-etablissement" id="position-etablissement">
                                         <option value="">----</option>
-                                        <template x-for="positionEtablissement in positionsEtablissement" :key="positionEtablissement.id">
-                                            <option :value="positionEtablissement.id" x-text="positionEtablissement.libelle"></option>
-                                        </template>
+                                        {% for position_etablissement in positions_chaine_distribution %}
+                                            <option value="{{ position_etablissement.id }}">{{ position_etablissement.libelle }}</option>
+                                        {% endfor %}
                                     </select>
                                 </p>
                             </div>
