@@ -248,3 +248,39 @@ def test_cant_add_compte_rendu_without_recipient(live_server, page: Page, fiche_
 
     page.wait_for_url(f"**{fiche_detection.add_compte_rendu_url}")
     expect(page.get_by_text("Au moins un destinataire doit être sélectionné.")).to_be_visible()
+
+
+def test_fin_de_suivi_my_structure_wont_receive_message(
+    live_server, page: Page, fiche_detection: FicheDetection, mailoutbox, mocked_authentification_user
+):
+    my_structure = mocked_authentification_user.agent.structure.contact_set.get()
+    structure_1 = baker.make(Contact, structure=baker.make(Structure, libelle="Foo"))
+    structure_2 = baker.make(Contact, structure=baker.make(Structure, libelle="Bar"))
+    fiche_detection.contacts.set([my_structure, structure_1, structure_2])
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Signaler la fin de suivi").click()
+    page.get_by_label("Message :").fill("test")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Fin de suivi message are only sent to agents
+    assert len(mailoutbox) == 0
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{fiche_detection.add_message_url}")
+
+    for contact in (my_structure, structure_1, structure_2):
+        page.query_selector(".choices__input--cloned:first-of-type").click()
+        page.locator("*:focus").fill(contact.structure.libelle)
+        page.get_by_role("option", name=str(contact.structure.libelle)).click()
+
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert len(mailoutbox) == 1
+    message = mailoutbox[0]
+    assert set(message.to) == {structure_1.email, structure_2.email}
