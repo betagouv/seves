@@ -103,9 +103,9 @@
                                 </td>
                                 <td>
                                     <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                        <span class="fr-badge">{{ fiche.visibilite }}</span>
-                                    </a>
-                                </tr>
+                                        <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}
+                                        </a>
+                                    </tr>
                         {% endfor %}
                         <tbody>
                         </table>

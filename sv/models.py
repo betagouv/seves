@@ -504,6 +504,10 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
     def is_already_cloturer(self):
         return self.etat.is_cloture()
 
+    @property
+    def is_draft(self):
+        return self.visibilite == Visibilite.BROUILLON
+
     def can_update_visibilite(self, user):
         """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
         match self.visibilite:
