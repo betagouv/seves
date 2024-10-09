@@ -96,7 +96,7 @@ class AllowACNotificationMixin(models.Model):
 
     @property
     def can_notifiy(self):
-        return not self.is_ac_notified
+        return not self.is_ac_notified and not self.is_draft
 
     def notify_ac(self, sender):
         if not self.can_notifiy:

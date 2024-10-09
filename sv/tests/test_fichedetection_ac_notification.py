@@ -1,10 +1,13 @@
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.models import Structure, Contact
+from core.models import Structure, Contact, Visibilite
 from ..models import FicheDetection
 
 
 def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection, mailoutbox):
+    fiche_detection.visibilite = Visibilite.LOCAL
+    fiche_detection.save()
     Contact.objects.create(structure=Structure.objects.create(niveau2="MUS"), email="foo@bar.com")
     Contact.objects.create(structure=Structure.objects.create(niveau2="SAS/SDSPV/BSV"), email="foo@bar.com")
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -28,3 +31,17 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
     assert fiche_detection.is_ac_notified is True
 
     assert len(mailoutbox) == 1
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    cell_selector = ".fiches__list-row td:nth-child(7) a"
+    assert page.text_content(cell_selector).strip() == "local"
+    expect(page.locator(".fiches__list-row td:nth-child(7) a .fr-icon-notification-3-line")).to_be_visible()
+
+
+def test_cant_notify_ac_draft(live_server, page: Page, fiche_detection: FicheDetection, mailoutbox):
+    fiche_detection.visibilite = Visibilite.BROUILLON
+    fiche_detection.save()
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+
+    page.get_by_role("button", name="Actions").click()
+    expect(page.get_by_role("button", name="Déclarer à l'AC")).to_be_disabled()
