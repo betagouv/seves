@@ -261,10 +261,11 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         for lieu in lieux:
             if not lieu["nomLieu"]:
                 errors.append("Le champ nom du lieu est obligatoire")
-            try:
-                lieu["departement"] = Departement.objects.get(nom=lieu["departementNom"])
-            except Departement.DoesNotExist:
-                errors.append("Le champ département est invalide")
+            if lieu["departementNom"]:
+                try:
+                    lieu["departement"] = Departement.objects.get(nom=lieu["departementNom"])
+                except Departement.DoesNotExist:
+                    errors.append("Le champ département est invalide")
 
         # Validation des prélèvements
         lieu_ids = [lieu["id"] for loc in lieux]
@@ -304,7 +305,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                     ).exists()
                 ):
                     errors.append("Le champ laboratoire confirmation officielle est invalide")
-
         return errors
 
     def create_fiche_detection(self, data, user_structure):
@@ -358,8 +358,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 lambert93_latitude=lambert93_latitude,
                 adresse_lieu_dit=lieu["adresseLieuDit"],
                 commune=lieu["commune"],
-                code_insee=lieu["codeINSEE"],
-                departement=lieu["departement"],
+                code_insee=lieu.get("codeINSEE"),
+                departement=lieu.get("departement"),
                 is_etablissement=lieu["isEtablissement"],
                 nom_etablissement=lieu["nomEtablissement"],
                 activite_etablissement=lieu["activiteEtablissement"],
@@ -482,7 +482,9 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             # si pk -> update
             # si pas de pk -> création
             lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
-            departement = Departement.objects.get(nom=loc["departementNom"])
+            departement = None
+            if loc["departementNom"]:
+                departement = Departement.objects.get(nom=loc["departementNom"])
             lieu.nom = loc["nomLieu"]
             lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
             lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
@@ -493,8 +495,8 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 loc["coordGPSLambert93Longitude"] if loc["coordGPSLambert93Longitude"] != "" else None
             )
             lieu.adresse_lieu_dit = loc["adresseLieuDit"]
-            lieu.commune = loc["commune"]
-            lieu.code_insee = loc["codeINSEE"]
+            lieu.commune = loc.get("commune")
+            lieu.code_insee = loc.get("codeINSEE")
             lieu.departement = departement
             lieu.is_etablissement = loc["isEtablissement"]
             if loc["isEtablissement"]:

@@ -795,3 +795,28 @@ def test_delete_multiple_prelevements(
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_1.id)
         Prelevement.objects.get(id=prelevement_2.id)
+
+
+@pytest.mark.django_db
+def test_can_edit_and_save_lieu_with_name_only(
+    live_server,
+    page: Page,
+    fiche_detection_bakery,
+    lieu_form_elements,
+    form_elements: FicheDetectionFormDomElements,
+):
+    fiche = fiche_detection_bakery()
+    Lieu.objects.create(fiche_detection=fiche, nom="Chez moi")
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche)}")
+    page.get_by_role("button", name="Modifier le lieu").click()
+    lieu_form_elements.nom_input.click()
+    lieu_form_elements.nom_input.fill("Chez moi mis à jour")
+    lieu_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+
+    page.wait_for_timeout(600)
+
+    fiche = FicheDetection.objects.get()
+    lieu = fiche.lieux.get()
+    assert lieu.nom == "Chez moi mis à jour"
