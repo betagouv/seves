@@ -278,3 +278,20 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     fiche_detection = FicheDetection.objects.last()
     user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
     assert user_contact_agent in fiche_detection.contacts.all()
+
+
+def test_add_lieu_with_name_only_and_save(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.click()
+    lieu_form_elements.nom_input.fill("Chez moi")
+    lieu_form_elements.save_btn.click()
+    form_elements.save_btn.click()
+
+    page.wait_for_timeout(600)
+
+    fiche = FicheDetection.objects.get()
+    lieu = fiche.lieux.get()
+    assert lieu.nom == "Chez moi"
