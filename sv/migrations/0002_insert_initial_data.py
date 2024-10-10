@@ -910,8 +910,8 @@ TYPES_EXPLOITANT = [
     "Plateforme logistique",
     "Site de stockage de bois",
     "Serre",
-    "Batiment privé",
-    "Batiment public",
+    "Bâtiment privé",
+    "Bâtiment public",
     "Autre (à préciser dans le fil de suivi)",
     "Sans objet",
 ]
@@ -950,8 +950,8 @@ SITES_INSPECTION = [
     "Plateforme logistique",
     "Site de stockage de bois",
     "Serre",
-    "Batiment privé",
-    "Batiment public",
+    "Bâtiment privé",
+    "Bâtiment public",
     "Autre (à préciser dans le fil de suivi)",
     "Sans objet",
 ]
