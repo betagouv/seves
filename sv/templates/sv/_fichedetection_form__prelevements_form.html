@@ -55,13 +55,8 @@
                                 </select>
                             </p>
                             <p id="espece-echantillon" class="prelevement-form--fieldset">
-                                <label class="fr-label">Espèce de l'echantillon</label>
-                                <select x-model="formPrelevement.especeEchantillonId" class="fr-select" data-testid="prelevement-form-espece-echantillon">
-                                    <option value="">----</option>
-                                    {% for espece in especes_echantillon %}
-                                        <option value="{{ espece.id }}">{{ espece.libelle }}</option>
-                                    {% endfor %}
-                                </select>
+                                <label class="fr-label" for="commune">Espèce de l'echantillon</label>
+                                <select id="espece-echantillon-input" class="fr-input"></select>
                             </p>
                             <div id="resultat" class="prelevement-form--fieldset">
                                 <label class="fr-label" style="flex:0.65">Résultat</label>
