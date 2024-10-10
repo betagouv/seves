@@ -44,7 +44,6 @@ from .models import (
     StructurePreleveur,
     SiteInspection,
     MatricePrelevee,
-    EspeceEchantillon,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
@@ -195,7 +194,6 @@ class FicheDetectionContextMixin:
         context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom").order_by("nom"))
         context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
         context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
-        context["especes_echantillon"] = list(EspeceEchantillon.objects.values("id", "libelle").order_by("libelle"))
         context["laboratoires_agrees"] = LaboratoireAgree.objects.all().order_by("nom")
         context["laboratoires_confirmation_officielle"] = LaboratoireConfirmationOfficielle.objects.all().order_by(
             "nom"
@@ -425,7 +423,11 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         )
 
         # Prélèvements associés à chaque lieu
-        prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object).values()
+        prelevements = (
+            Prelevement.objects.filter(lieu__fiche_detection=self.object)
+            .values()
+            .annotate(espece_echantillon_name=F("espece_echantillon__libelle"))
+        )
         for prelevement in prelevements:
             prelevement["uuid"] = str(uuid.uuid4())
 

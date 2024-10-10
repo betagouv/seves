@@ -192,7 +192,7 @@ main {
 #prelevement-form select {
     flex: 1.15;
 }
-#prelevement-form input {
+#prelevement-form input, #prelevement-form .choices {
     flex: 1.25;
 }
 

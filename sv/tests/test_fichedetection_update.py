@@ -530,6 +530,7 @@ def test_add_new_prelevement_non_officiel(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
@@ -543,7 +544,12 @@ def test_add_new_prelevement_non_officiel(
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
-    prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    choice_js_fill(
+        page,
+        "#espece-echantillon .choices__list--single",
+        prelevement.espece_echantillon.libelle,
+        prelevement.espece_echantillon.libelle,
+    )
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
@@ -572,6 +578,7 @@ def test_add_new_prelevement_officiel(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
@@ -585,7 +592,12 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
-    prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+    choice_js_fill(
+        page,
+        "#espece-echantillon .choices__list--single",
+        prelevement.espece_echantillon.libelle,
+        prelevement.espece_echantillon.libelle,
+    )
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     prelevement_form_elements.numero_phytopass_input.fill(prelevement.numero_phytopass)
@@ -623,6 +635,7 @@ def test_add_multiple_prelevements(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
     """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
@@ -637,7 +650,12 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
-        prelevement_form_elements.espece_echantillon_input.select_option(str(prelevement.espece_echantillon.id))
+        choice_js_fill(
+            page,
+            "#espece-echantillon .choices__list--single",
+            prelevement.espece_echantillon.libelle,
+            prelevement.espece_echantillon.libelle,
+        )
         prelevement_form_elements.resultat_input(prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()
 
@@ -663,6 +681,7 @@ def test_update_prelevement(
     fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
     new_lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, _fill_optional=True)
@@ -678,7 +697,12 @@ def test_update_prelevement(
     prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
-    prelevement_form_elements.espece_echantillon_input.select_option(str(new_prelevement.espece_echantillon.id))
+    choice_js_fill(
+        page,
+        "#espece-echantillon .choices__list--single",
+        new_prelevement.espece_echantillon.libelle,
+        new_prelevement.espece_echantillon.libelle,
+    )
     prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_btn.click()
@@ -702,6 +726,7 @@ def test_update_multiple_prelevements(
     fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
     """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
     lieu1, lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, _quantity=2)
@@ -723,8 +748,11 @@ def test_update_multiple_prelevements(
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.site_inspection_input.select_option(value=str(new_prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(value=str(new_prelevement.matrice_prelevee.id))
-        prelevement_form_elements.espece_echantillon_input.select_option(
-            value=str(new_prelevement.espece_echantillon.id)
+        choice_js_fill(
+            page,
+            "#espece-echantillon .choices__list--single",
+            new_prelevement.espece_echantillon.libelle,
+            new_prelevement.espece_echantillon.libelle,
         )
         prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()

@@ -16,6 +16,43 @@ function fetchCommunes(query) {
             return []
         });
 }
+function fetchEspecesEchantillon(query) {
+    return fetch(`/sv/api/espece/recherche/?q=${query}`)
+        .then(response => response.json())
+        .then(data => {
+            return data.results.map(item => ({
+                value: item.id,
+                label: item.name ,
+            }))
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données:', error);
+            return []
+        });
+}
+function addChoicesEspeceEchantillon(){
+    const choicesEspece = new Choices(document.getElementById('espece-echantillon-input'), {
+                removeItemButton: true,
+                placeholderValue: 'Recherchez...',
+                noResultsText: 'Aucun résultat trouvé',
+                noChoicesText: 'Aucun résultat trouvé',
+                shouldSort: false,
+                searchResultLimit: 50,
+                classNames: {containerInner: 'fr-select'},
+                itemSelectText: '',
+            });
+
+    choicesEspece.input.element.addEventListener('input', function (event) {
+        const query = choicesEspece.input.element.value
+        if (query.length > 2) {
+            fetchEspecesEchantillon(query).then(results => {
+                choicesEspece.clearChoices()
+                choicesEspece.setChoices(results, 'value', 'label', true)
+            })
+        }
+    })
+    return choicesEspece
+}
 document.addEventListener('DOMContentLoaded', function() {
     const element = document.getElementById('organisme-nuisible-input');
     const choices = new Choices(element, {
@@ -196,6 +233,7 @@ document.addEventListener('alpine:init', () => {
                         siteInspectionId: prelevement.site_inspection_id,
                         matricePreleveeId: prelevement.matrice_prelevee_id,
                         especeEchantillonId: prelevement.espece_echantillon_id,
+                        especeEchantillonName: prelevement.espece_echantillon_name,
                         isOfficiel: prelevement.is_officiel,
                         numeroPhytopass: prelevement.numero_phytopass,
                         numeroResytal: prelevement.numero_resytal,
@@ -364,11 +402,12 @@ document.addEventListener('alpine:init', () => {
             return lieu ? lieu.nomLieu : '';
         },
 
-		/**
-		 * Selectionne le premier lieu de la liste
-		 * avant d'afficher le formulaire d'ajout d'un prélèvement
-		 */
         addPrelevementForm() {
+            choicesEspece = addChoicesEspeceEchantillon()
+            choicesEspece.passedElement.element.addEventListener("choice", (event) => {
+                this.formPrelevement.especeEchantillonId = event.detail.choice.value
+            })
+            this.choicesEspece = choicesEspece
             if (!this.formPrelevement.lieuId && this.lieux.length > 0) {
                 this.formPrelevement.lieuId = this.lieux[0].id;
             }
@@ -382,6 +421,17 @@ document.addEventListener('alpine:init', () => {
         fillPrelevementEditForm(prelevementIdToEdit) {
             const prelevementToEdit = this.prelevements.find(prelevement => prelevement.id === prelevementIdToEdit);
             this.formPrelevement = {...prelevementToEdit};
+
+            this.choicesEspeceEdit = addChoicesEspeceEchantillon()
+            this.choicesEspeceEdit.passedElement.element.addEventListener("choice", (event) => {
+                    this.formPrelevement.especeEchantillonId = event.detail.choice.value
+            })
+            this.choicesEspeceEdit.setChoices([{
+                value: prelevementToEdit.especeEchantillonId,
+                label: prelevementToEdit.especeEchantillonName,
+                selected: true,
+                disabled: false
+            }])
             this.prelevementIdToEdit = prelevementIdToEdit;
         },
 
@@ -432,6 +482,12 @@ document.addEventListener('alpine:init', () => {
                 laboratoireConfirmationOfficielleId: '',
                 resultat: '',
             };
+            if (this.choicesEspece != undefined) {
+                this.choicesEspece.destroy()
+            }
+            if (this.choicesEspeceEdit != undefined) {
+                this.choicesEspeceEdit.destroy()
+            }
         },
 
 		/**

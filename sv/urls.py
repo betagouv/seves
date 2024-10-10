@@ -1,4 +1,6 @@
 from django.urls import path
+
+from .api_views import search_espece_echantillon
 from .views import (
     FicheDetectionListView,
     FicheDetectionDetailView,
@@ -50,5 +52,10 @@ urlpatterns = [
         "lien/ajout/",
         FreeLinkCreateView.as_view(),
         name="free-link-add",
+    ),
+    path(
+        "api/espece/recherche/",
+        search_espece_echantillon,
+        name="api-search-espece",
     ),
 ]
