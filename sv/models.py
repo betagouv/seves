@@ -343,6 +343,7 @@ class Prelevement(models.Model):
         null=True,
     )
     resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat", blank=True)
+    numero_resytal = models.CharField(max_length=100, verbose_name="Numéro RESYTAL", blank=True)
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"

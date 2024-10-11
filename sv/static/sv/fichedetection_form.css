@@ -180,18 +180,8 @@ main {
     margin-bottom: 0.5rem;
 }
 
-/* Prélèvement (modal) */
-#prelevement-form #lieu,
-#prelevement-form #structure,
-#prelevement-form #numero-echantillon,
-#prelevement-form #date-prelevement,
-#prelevement-form #site-inspection,
-#prelevement-form #matrice-prelevee,
-#prelevement-form #espece-echantillon,
-#prelevement-form #numero-phytopass,
-#prelevement-form #laboratoire-agree,
-#prelevement-form #laboratoire-confirmation,
-#prelevement-form #resultat {
+.prelevement-form--fieldset
+{
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;

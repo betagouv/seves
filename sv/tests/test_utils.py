@@ -410,6 +410,10 @@ class PrelevementFormDomElements:
         return self.page.locator("#numero-phytopass").get_by_role("textbox")
 
     @property
+    def numero_resytal_input(self) -> Locator:
+        return self.page.locator("#numero-resytal").get_by_role("textbox")
+
+    @property
     def laboratoire_agree_label(self) -> Locator:
         return self.page.get_by_text("Laboratoire agréé")
 

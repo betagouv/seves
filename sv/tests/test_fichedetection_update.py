@@ -560,6 +560,7 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is False
     assert prelevement_from_db.numero_phytopass == ""
+    assert prelevement_from_db.numero_resytal == ""
     assert prelevement_from_db.laboratoire_agree is None
     assert prelevement_from_db.laboratoire_confirmation_officielle is None
 
@@ -588,6 +589,7 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     prelevement_form_elements.numero_phytopass_input.fill(prelevement.numero_phytopass)
+    prelevement_form_elements.numero_resytal_input.fill(prelevement.numero_resytal)
     prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
     prelevement_form_elements.laboratoire_confirmation_input.select_option(
         str(prelevement.laboratoire_confirmation_officielle.id)
@@ -607,6 +609,7 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is True
     assert prelevement_from_db.numero_phytopass == prelevement.numero_phytopass
+    assert prelevement_from_db.numero_resytal == prelevement.numero_resytal
     assert prelevement_from_db.laboratoire_agree.id == prelevement.laboratoire_agree.id
     assert (
         prelevement_from_db.laboratoire_confirmation_officielle.id == prelevement.laboratoire_confirmation_officielle.id

@@ -235,6 +235,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         # Validation des données
         errors = self.validate_data(data, lieux, prelevements)
         if errors:
+            for error in errors:
+                messages.error(request, error)
             return HttpResponseBadRequest(json.dumps(errors))
 
         # Création des objets en base de données
@@ -380,7 +382,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 (loc["lieu_pk"] for loc in lieux if loc["id"] == prel["lieuId"]),
                 None,
             )
-
             prelevement = Prelevement(
                 lieu_id=prel["lieu_pk"],
                 structure_preleveur_id=prel["structurePreleveurId"],
@@ -391,6 +392,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 espece_echantillon_id=prel["especeEchantillonId"],
                 is_officiel=prel["isOfficiel"],
                 numero_phytopass=prel["numeroPhytopass"],
+                numero_resytal=prel["numeroResytal"],
                 laboratoire_agree_id=prel["laboratoireAgreeId"],
                 laboratoire_confirmation_officielle_id=prel["laboratoireConfirmationOfficielleId"],
                 resultat=prel["resultat"],
@@ -536,7 +538,10 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
             prelevement.espece_echantillon_id = prel["especeEchantillonId"]
             prelevement.is_officiel = prel["isOfficiel"]
-            prelevement.numero_phytopass = prel["numeroPhytopass"] if prel["isOfficiel"] else ""
+            prelevement.numero_phytopass = (
+                prel["numeroPhytopass"] if prel["isOfficiel"] and prel["numeroPhytopass"] else ""
+            )
+            prelevement.numero_resytal = prel["numeroResytal"] if prel["isOfficiel"] and prel["numeroResytal"] else ""
             prelevement.laboratoire_agree_id = prel["laboratoireAgreeId"] if prel["isOfficiel"] else None
             prelevement.laboratoire_confirmation_officielle_id = (
                 prel["laboratoireConfirmationOfficielleId"] if prel["isOfficiel"] else None

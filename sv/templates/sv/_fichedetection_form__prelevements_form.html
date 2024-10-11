@@ -11,7 +11,7 @@
                             class="fr-modal__title"
                             x-text="(prelevementIdToEdit === null ? 'Ajouter' : 'Modifier') + ' un prélèvement'"></h1>
                         <form id="prelevement-form" x-ref="formPrelevement" @submit.prevent="addOrEditPrelevement(prelevementIdToEdit)">
-                            <div id="lieu" class="fr-select-group">
+                            <div id="lieu" class="fr-select-group prelevement-form--fieldset">
                                 <label class="fr-label">Lieu</label>
                                 <select class="fr-select" x-model="formPrelevement.lieuId" data-testid="prelevement-form-lieu">
                                     <template x-for="lieu in lieux" :key="lieu.id">
@@ -19,7 +19,7 @@
                                     </template>
                                 </select>
                             </div>
-                            <div id="structure" class="fr-select-group">
+                            <div id="structure" class="fr-select-group prelevement-form--fieldset">
                                 <label class="fr-label">Structure</label>
                                 <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required data-testid="prelevement-form-structure">
                                     <option value="">----</option>
@@ -28,15 +28,15 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <p id="numero-echantillon">
+                            <p id="numero-echantillon" class="prelevement-form--fieldset">
                                 <label class="fr-label">N° d'échantillon</label>
                                 <input x-model="formPrelevement.numeroEchantillon" type="text" class="fr-input">
                             </p>
-                            <p id="date-prelevement">
+                            <p id="date-prelevement" class="prelevement-form--fieldset">
                                 <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
                                 <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input" max="{% now "Y-m-d" %}">
                             </p>
-                            <p id="site-inspection">
+                            <p id="site-inspection" class="prelevement-form--fieldset">
                                 <label class="fr-label">Site d'inspection</label>
                                 <select x-model="formPrelevement.siteInspectionId" class="fr-select" data-testid="prelevement-form-site-inspection">
                                     <option value="">----</option>
@@ -45,7 +45,7 @@
                                     {% endfor %}
                                 </select>
                             </p>
-                            <p id="matrice-prelevee">
+                            <p id="matrice-prelevee" class="prelevement-form--fieldset">
                                 <label class="fr-label">Matrice prélevée</label>
                                 <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
                                     <option value="">----</option>
@@ -54,7 +54,7 @@
                                     {% endfor %}
                                 </select>
                             </p>
-                            <p id="espece-echantillon">
+                            <p id="espece-echantillon" class="prelevement-form--fieldset">
                                 <label class="fr-label">Espèce de l'echantillon</label>
                                 <select x-model="formPrelevement.especeEchantillonId" class="fr-select" data-testid="prelevement-form-espece-echantillon">
                                     <option value="">----</option>
@@ -63,7 +63,7 @@
                                     {% endfor %}
                                 </select>
                             </p>
-                            <div id="resultat">
+                            <div id="resultat" class="prelevement-form--fieldset">
                                 <label class="fr-label" style="flex:0.65">Résultat</label>
                                 <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
                                     {% for resultat_value, resultat_label in resultats_prelevement %}
@@ -93,11 +93,15 @@
                                 </div>
                             </p>
                             <div x-show="formPrelevement.isOfficiel">
-                                <p id="numero-phytopass">
+                                <p id="numero-phytopass" class="prelevement-form--fieldset">
                                     <label class="fr-label">N° Phytopass</label>
                                     <input x-model="formPrelevement.numeroPhytopass" type="text" class="fr-input">
                                 </p>
-                                <p id="laboratoire-agree">
+                                <p id="numero-resytal" class="prelevement-form--fieldset">
+                                    <label class="fr-label">N° Resytal</label>
+                                    <input x-model="formPrelevement.numeroResytal" type="text" class="fr-input">
+                                </p>
+                                <p id="laboratoire-agree" class="prelevement-form--fieldset">
                                     <label class="fr-label">Laboratoire agrée</label>
                                     <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select" data-testid="prelevement-form-laboratoire-agree">
                                         <option value="">----</option>
@@ -106,7 +110,7 @@
                                         {% endfor %}
                                     </select>
                                 </p>
-                                <p id="laboratoire-confirmation">
+                                <p id="laboratoire-confirmation" class="prelevement-form--fieldset">
                                     <label class="fr-label">Laboratoire de confirmation</label>
                                     <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select" data-testid="prelevement-form-laboratoire-confirmation">
                                         <option value="">----</option>
