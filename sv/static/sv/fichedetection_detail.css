@@ -128,18 +128,7 @@ main{
     font-weight: var(--field-label-font-weight);
     color: var(--text-title-blue-france);
 }
-.detail-prelevement__label--type,
-.detail-prelevement__label--structure,
-.detail-prelevement__label--numero-echantillon,
-.detail-prelevement__label--date-prelevement,
-.detail-prelevement__label--site-inspection,
-.detail-prelevement__label--matrice-prelevee,
-.detail-prelevement__label--espece-echantillon,
-.detail-prelevement__label--code-oepp,
-.detail-prelevement__label--numero-phytopass,
-.detail-prelevement__label--laboratoire-agree,
-.detail-prelevement__label--laboratoire-confirmation-officielle,
-.detail-prelevement__label--resultat {
+.detail-prelevement__label {
     font-weight: bold;
 }
 
