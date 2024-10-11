@@ -11,7 +11,6 @@ from .models import (
     PositionChaineDistribution,
     StructurePreleveur,
     SiteInspection,
-    MatricePrelevee,
     EspeceEchantillon,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
@@ -35,7 +34,6 @@ admin.site.register(TypeExploitant)
 admin.site.register(PositionChaineDistribution)
 admin.site.register(StructurePreleveur)
 admin.site.register(SiteInspection)
-admin.site.register(MatricePrelevee)
 admin.site.register(EspeceEchantillon)
 admin.site.register(LaboratoireAgree)
 admin.site.register(LaboratoireConfirmationOfficielle)

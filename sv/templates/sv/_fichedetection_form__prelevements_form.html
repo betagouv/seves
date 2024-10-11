@@ -47,10 +47,10 @@
                             </p>
                             <p id="matrice-prelevee">
                                 <label class="fr-label">Matrice prélevée</label>
-                                <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
+                                <select x-model="formPrelevement.matricePrelevee" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
                                     <option value="">----</option>
-                                    {% for matrice in matrices_prelevees %}
-                                        <option value="{{ matrice.id }}">{{ matrice.libelle }}</option>
+                                    {% for value, label in matrices_prelevees %}
+                                        <option value="{{ value }}">{{ label}}</option>
                                     {% endfor %}
                                 </select>
                             </p>

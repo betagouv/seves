@@ -238,18 +238,6 @@ class SiteInspection(models.Model):
         return self.nom
 
 
-class MatricePrelevee(models.Model):
-    class Meta:
-        verbose_name = "Matrice prélevée"
-        verbose_name_plural = "Matrices prélevées"
-        db_table = "sv_matrice_prelevee"
-
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
-
-    def __str__(self):
-        return self.libelle
-
-
 class EspeceEchantillon(models.Model):
     class Meta:
         verbose_name = "Espèce de l'échantillon"
@@ -294,6 +282,19 @@ class Prelevement(models.Model):
         DETECTE = "detecte", "Détecté"
         NON_DETECTE = "non_detecte", "Non détecté"
 
+    class MatricePrelevee(models.TextChoices):
+        PLANTE_VIVANTE = "plante vivante", "Plante vivante"
+        PARTIE_VIVANTE_PLANTE = "partie vivante de plante", "Partie vivante de plante"
+        CAISSE = "caisse", "Caisse"
+        PALETTE = "palette", "Palette"
+        AUTRE_EMBALLAGE = "autre emballage en bois", "Autre emballage en bois"
+        ECORCE = "ecorce", "Ecorce"
+        GRUME = "grume", "Grume"
+        SCIAGE = "sciage", "Sciage"
+        AUTRE_BOIS = "autre bois", "Autre bois"
+        INSECTE = "insecte", "Insecte"
+        ENVIRONNEMENT = "environnement", "Environnement"
+
     class Meta:
         verbose_name = "Prélèvement"
         verbose_name_plural = "Prélèvements"
@@ -312,12 +313,8 @@ class Prelevement(models.Model):
         blank=True,
         null=True,
     )
-    matrice_prelevee = models.ForeignKey(
-        MatricePrelevee,
-        on_delete=models.PROTECT,
-        verbose_name="Matrice prélevée",
-        blank=True,
-        null=True,
+    matrice_prelevee = models.CharField(
+        max_length=50, choices=MatricePrelevee.choices, verbose_name="Matrice prélevée", null=True
     )
     espece_echantillon = models.ForeignKey(
         EspeceEchantillon,
