@@ -14,7 +14,7 @@ from collections import defaultdict
 User = get_user_model()
 
 
-class DSFRForm(forms.BaseForm):
+class DSFRForm(forms.Form):
     input_to_class = defaultdict(lambda: "fr-input")
     input_to_class["ClearableFileInput"] = "fr-upload"
     input_to_class["Select"] = "fr-select"

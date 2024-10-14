@@ -19,28 +19,23 @@
     <div class="fiches__header">
         <h2 class="fiches__title">Rechercher une fiche</h2>
         <form id="search-form" method="get" class="fiches__search-form">
-            {% for field in form %}
-                <p class="form-search__field">
-                    <label for="{{ field.id_for_label }}" class="fr-label"> {{ field.label }}</label>
-                    {{ field }}
-                </p>
-            {% endfor %}
-            <p>
+            {{ filter.form.as_dsfr_div }}
+            <div class="fr-fieldset__element">
                 <button type="reset" class="fr-btn fr-btn--secondary">Effacer</button>
                 <button type="submit" class="fr-btn">Rechercher</button>
-            </p>
+            </div>
         </form>
     </div>
 
     <div class="fiches__list-container">
         <h2>Liste des fiches</h2>
         <div class="fiches__list-header">
-            <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ fichedetection_list.count|pluralize }} au total</span>
+            <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ page_obj.paginator.count|pluralize }} au total</span>
             <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
                 Extraire
             </button>
         </div>
-        {% if fichedetection_list.count %}
+        {% if fiches.count %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="fiches__list-table">
                     <thead>
@@ -55,7 +50,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for fiche in fichedetection_list %}
+                        {% for fiche in fiches %}
                             <tr class="fiches__list-row">
                                 <td>
                                     <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
