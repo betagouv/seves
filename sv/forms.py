@@ -12,10 +12,9 @@ from django.db.models import TextChoices
 
 
 from core.models import LienLibre
-from sv.models import FicheDetection
 from core.models import Visibilite
 from core.fields import DSFRRadioButton, DSFRCheckboxInput
-from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire
+from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
 
 
 class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
@@ -33,7 +32,10 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["object_choice"] = MultiModelChoiceField(
             label="Sélectioner un objet",
-            model_choices=[("FicheDetection", FicheDetection.objects.select_related("numero"))],
+            model_choices=[
+                ("Fiche Detection", FicheDetection.objects.select_related("numero")),
+                ("Fiche Zone Delimitee", FicheZoneDelimitee.objects.select_related("numero")),
+            ],
         )
         self.add_next_field(next)
         self.fields["object_id_1"].initial = object_id_1
