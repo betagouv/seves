@@ -27,7 +27,7 @@ admin.site.site_title = "Sèves"
 admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="fiche-detection-list"), name="index"),
+    path("", RedirectView.as_view(pattern_name="fiche-liste"), name="index"),
     path("login-eap-callback", OIDCCallbackClass.as_view(), name="custom_oidc_authentication_callback"),
     path("admin/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),

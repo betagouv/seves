@@ -16,7 +16,7 @@ from ..models import (
 
 
 def get_fiche_detection_search_form_url() -> str:
-    return reverse("fiche-detection-list")
+    return reverse("fiche-liste")
 
 
 def test_search_form_have_all_fields(live_server, page: Page) -> None:
@@ -92,7 +92,7 @@ def test_search_with_fiche_number(live_server, page: Page, mocked_authentificati
 
 def test_search_with_invalid_fiche_number(client):
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche invalide (format année.numéro)"""
-    response = client.get(reverse("fiche-detection-list"), {"numero": "az.erty"})
+    response = client.get(reverse("fiche-liste"), {"numero": "az.erty"})
     assert response.status_code == 200
     assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
     assert (
@@ -150,7 +150,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-detection-list')}?numero=&lieux__departement__region=&organisme_nuisible={organisme1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('fiche-liste')}?numero=&lieux__departement__region=&organisme_nuisible={organisme1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme1.libelle_court)).to_be_visible()
@@ -283,11 +283,31 @@ def test_list_is_ordered(live_server, page, fiche_detection_bakery):
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(1) a"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(2) a"
     assert page.text_content(cell_selector).strip() == "2024.31"
 
-    cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(1) a"
+    cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(2) a"
     assert page.text_content(cell_selector).strip() == "2024.30"
 
-    cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(1) a"
+    cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(2) a"
     assert page.text_content(cell_selector).strip() == "2023.7"
+
+
+def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fiche_zone_bakery):
+    fiche_1 = fiche_detection_bakery()
+    fiche_2 = fiche_zone_bakery()
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    expect(page.get_by_role("cell", name=str(fiche_1.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
+
+    page.get_by_text("Zone", exact=True).click()
+    page.get_by_role("button", name="Rechercher").click()
+
+    assert (
+        page.url
+        == f"{live_server.url}{reverse('fiche-liste')}?numero=&type_fiche=zone&lieux__departement__region=&organisme_nuisible=&start_date=&end_date=&etat="
+    )
+
+    expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()

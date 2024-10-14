@@ -80,3 +80,16 @@ class FicheDetectionQuerySet(models.QuerySet):
 
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")
+
+
+class FicheZoneManager(models.Manager):
+    def get_queryset(self):
+        return FicheZoneQuerySet(self.model, using=self._db)
+
+
+class FicheZoneQuerySet(models.QuerySet):
+    def optimized_for_list(self):
+        return self.select_related("numero", "createur", "organisme_nuisible")
+
+    def order_by_numero_fiche(self):
+        return self.order_by("-numero__annee", "-numero__numero")

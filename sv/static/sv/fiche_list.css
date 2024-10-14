@@ -4,27 +4,33 @@ body{
 
 .fiches__header {
     background-color: var(--background-open-blue-france);
-    padding: 2rem 0rem 2rem 2rem;
-}
-.fiches__title {
-    margin-bottom: 1.5rem;
 }
 
 .fiches__search-form {
     display: flex;
     align-items: flex-end;
-    gap: 2rem;
-    margin-right: 2rem;
+    gap: 0.5rem;
 }
 .fiches__search-form .fr-fieldset__element{
     flex: 1 !important;
 }
-.fiches__search-form input, .fiches__search-form select {
+.fiches__search-form input, .fiches__search-form select, .fiches__search-form .fr-radio-group {
     margin-top: .5rem;
 }
+
 .choices__list--single{
     overflow: hidden;
     max-height: 1.5rem;
+}
+.fr-fieldset__element:has(.fr-fieldset__element--inline){
+    display: flex;
+    flex-wrap: wrap;
+}
+.fr-fieldset__element:has(.fr-fieldset__element--inline) label{
+    flex-basis: 100%;
+}
+.fr-fieldset__element--inline .fr-radio-group label{
+    font-size: 0.9rem;
 }
 
 

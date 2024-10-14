@@ -50,7 +50,7 @@
                             </div>
                         </li>
                         <li class="fr-nav__item">
-                            <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-detection-list' %}" target="_self" aria-current=”page”>Fiches</a>
+                            <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-liste' %}" target="_self" aria-current=”page”>Fiches</a>
                         </li>
                         <li class="fr-nav__item">
                             {% if user.is_authenticated %}
