@@ -30,13 +30,13 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.locator("#search-form").get_by_text("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_contain_text("---------")
-    expect(page.get_by_text("Organisme", exact=True)).to_be_visible()
+    expect(page.get_by_text("Organisme :", exact=True)).to_be_visible()
     expect(page.locator(".choices__list--single .choices__placeholder")).to_be_visible()
     expect(page.locator(".choices__list--single .choices__placeholder")).to_contain_text("---------")
     expect(page.get_by_text("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_empty()
-    expect(page.get_by_text("Au", exact=True)).to_be_visible()
+    expect(page.get_by_text("Au :", exact=True)).to_be_visible()
     expect(page.get_by_label("Au")).to_be_visible()
     expect(page.get_by_label("Au")).to_be_empty()
     expect(page.locator("#search-form").get_by_text("État")).to_be_visible()
@@ -150,7 +150,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-detection-list')}?numero=&region=&organisme_nuisible={organisme1.id}&date_debut=&date_fin=&etat="
+        == f"{live_server.url}{reverse('fiche-detection-list')}?numero=&lieux__departement__region=&organisme_nuisible={organisme1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme1.libelle_court)).to_be_visible()
