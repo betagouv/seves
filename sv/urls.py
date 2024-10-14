@@ -2,7 +2,7 @@ from django.urls import path
 
 from .api_views import search_espece_echantillon
 from .views import (
-    FicheDetectionListView,
+    FicheListView,
     FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
@@ -18,9 +18,9 @@ from .views import (
 
 urlpatterns = [
     path(
-        "fiches-detection/",
-        FicheDetectionListView.as_view(),
-        name="fiche-detection-list",
+        "fiches/",
+        FicheListView.as_view(),
+        name="fiche-liste",
     ),
     path(
         "fiches-detection/<int:pk>/",

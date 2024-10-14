@@ -38,8 +38,9 @@ from sv.forms import (
     RattachementDetectionForm,
     RattachementChoices,
 )
+from .display import DisplayedFiche
 from .export import FicheDetectionExport
-from .filters import FicheDetectionFilter
+from .filters import FicheFilter
 from .models import (
     FicheDetection,
     Lieu,
@@ -63,20 +64,32 @@ from .models import (
 from core.models import Visibilite
 
 
-class FicheDetectionListView(ListView):
+class FicheListView(ListView):
     model = FicheDetection
     paginate_by = 100
     context_object_name = "fiches"
+    template_name = "sv/fiche_list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.list_of_zones = self.request.GET.get("type_fiche") == "zone"
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
-        queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list().order_by_numero_fiche()
-        self.filter = FicheDetectionFilter(self.request.GET, queryset=queryset)
+        if self.list_of_zones:
+            queryset = FicheZoneDelimitee.objects.all().optimized_for_list().order_by_numero_fiche()
+        else:
+            queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
+            queryset = (
+                queryset.with_list_of_lieux().with_first_region_name().optimized_for_list().order_by_numero_fiche()
+            )
+        self.filter = FicheFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
+        method = DisplayedFiche.from_fiche_zone if self.list_of_zones else DisplayedFiche.from_fiche_detection
+        context["fiches"] = [method(fiche) for fiche in context["page_obj"]]
         return context
 
 

@@ -15,9 +15,10 @@ from core.mixins import (
 )
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.managers import (
-    FicheDetectionManager,
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
+    FicheDetectionManager,
+    FicheZoneManager,
     StructurePreleveurManager,
 )
 
@@ -667,6 +668,8 @@ class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
+
+    objects = FicheZoneManager()
 
     def save(self, *args, **kwargs):
         if not self.pk:

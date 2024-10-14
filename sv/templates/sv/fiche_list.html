@@ -4,11 +4,11 @@
 {% load pagination_tags %}
 
 {% block extrahead %}
-    <link rel="stylesheet" href="{% static 'sv/fichedetection_list.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/fiche_list.css' %}">
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'sv/fichedetection_list.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fiche_list.js' %}"></script>
 {% endblock %}
 
 {% block highlight_menu_fiches %}menu__item--active{% endblock %}
@@ -16,8 +16,8 @@
 {% block content %}
     {% include "sv/_extract_modal.html" %}
 
-    <div class="fiches__header">
-        <h2 class="fiches__title">Rechercher une fiche</h2>
+    <div class="fiches__header fr-p-4v">
+        <h2 class="fr-h3">Rechercher une fiche</h2>
         <form id="search-form" method="get" class="fiches__search-form">
             {{ filter.form.as_dsfr_div }}
             <div class="fr-fieldset__element">
@@ -35,12 +35,13 @@
                 Extraire
             </button>
         </div>
-        {% if fiches.count %}
+        {% if fiches|length > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="fiches__list-table">
                     <thead>
                         <tr class="fiches__table-header">
-                            <th scope="col">N° fiche</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">N°</th>
                             <th scope="col">Organisme nuisible</th>
                             <th scope="col">Création</th>
                             <th scope="col">Créateur</th>
@@ -53,37 +54,42 @@
                         {% for fiche in fiches %}
                             <tr class="fiches__list-row">
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                        {{ fiche.type }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.numero|default:"nc." }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.organisme_nuisible|default:"nc." }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                        {{ fiche.date_creation|date:"d/m/Y" }}
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                        {{ fiche.date_creation }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.createur|truncatechars:30 }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
-                                        {% with fiche.lieux_list|length as num_lieux %}
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                        {% with fiche.communes_list|length as num_lieux %}
                                             {% if num_lieux == 0 %}
                                                 nc.
                                             {% endif %}
                                             {% if num_lieux <= 3 %}
-                                                {% for lieu in fiche.lieux_list %}
+                                                {% for lieu in fiche.communes_list %}
                                                     {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
                                                 {% endfor %}
                                             {% else %}
-                                                {% for lieu in fiche.lieux_list|slice:":3" %}
+                                                {% for lieu in fiche.communes_list|slice:":3" %}
                                                     {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
                                                 {% endfor %}
                                                 ... +{{ num_lieux|add:"-3" }}
@@ -92,12 +98,12 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}
                                         </a>
                                     </tr>
