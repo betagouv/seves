@@ -16,8 +16,11 @@ body{
     gap: 2rem;
     margin-right: 2rem;
 }
-.form-search__field {
-    flex: 1;
+.fiches__search-form .fr-fieldset__element{
+    flex: 1 !important;
+}
+.fiches__search-form input, .fiches__search-form select {
+    margin-top: .5rem;
 }
 .choices__list--single{
     overflow: hidden;

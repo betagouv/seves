@@ -1,10 +1,8 @@
-from typing import Optional, Union, Tuple
 import json
-from datetime import datetime, time
+from datetime import datetime
 import uuid
 
 from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import (
@@ -21,7 +19,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpRespon
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django import forms
+
 
 from core.mixins import (
     WithDocumentUploadFormMixin,
@@ -33,6 +31,7 @@ from core.mixins import (
 from core.redirect import safe_redirect
 from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm
 from .export import FicheDetectionExport
+from .filters import FicheDetectionFilter
 from .models import (
     FicheDetection,
     Lieu,
@@ -48,87 +47,27 @@ from .models import (
     LaboratoireConfirmationOfficielle,
     NumeroFiche,
     Departement,
-    Region,
-    Etat,
     TypeExploitant,
     PositionChaineDistribution,
 )
-from core.forms import DSFRForm
 from core.models import Visibilite
-
-
-class FicheDetectionSearchForm(forms.Form, DSFRForm):
-    numero = forms.CharField(
-        label="Numéro",
-        required=False,
-        widget=forms.TextInput(attrs={"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}),
-    )
-    region = forms.ModelChoiceField(label="Région", queryset=Region.objects.all(), required=False)
-    organisme_nuisible = forms.ModelChoiceField(
-        label="Organisme", queryset=OrganismeNuisible.objects.none(), required=False
-    )
-    date_debut = forms.DateField(label="Période du", widget=forms.DateInput(attrs={"type": "date"}), required=False)
-    date_fin = forms.DateField(label="Au", widget=forms.DateInput(attrs={"type": "date"}), required=False)
-    etat = forms.ModelChoiceField(label="État", queryset=Etat.objects.all(), required=False)
-
-    def clean_numero(self) -> Optional[Union[Tuple[int, int], str]]:
-        """Vérifie que le champ 'numero' est au format 'annee.numero' et le retourne sous forme de tuple (annee, numero)."""
-        numero = self.cleaned_data["numero"]
-        if numero:
-            try:
-                annee, numero = map(int, numero.split("."))
-                return annee, numero
-            except ValueError:
-                raise forms.ValidationError("Format 'numero' invalide. Il devrait être 'annee.numero'")
-        return numero
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["organisme_nuisible"].queryset = OrganismeNuisible.objects.all()
 
 
 class FicheDetectionListView(ListView):
     model = FicheDetection
     ordering = ["-numero"]
     paginate_by = 100
+    context_object_name = "fiches"
 
     def get_queryset(self):
         queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
         queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
-
-        form = FicheDetectionSearchForm(self.request.GET)
-
-        if not form.is_valid():
-            return queryset
-
-        if form.cleaned_data["numero"]:
-            annee, numero = form.cleaned_data["numero"]
-            return queryset.filter(numero__annee=annee, numero__numero=numero)
-
-        if form.cleaned_data["region"]:
-            queryset = queryset.filter(lieux__departement__region=form.cleaned_data["region"])
-
-        if form.cleaned_data["organisme_nuisible"]:
-            queryset = queryset.filter(organisme_nuisible=form.cleaned_data["organisme_nuisible"])
-
-        if form.cleaned_data["date_debut"] and form.cleaned_data["date_fin"]:
-            # Ajustement des dates de début et de fin pour inclure les fiches créées le jour même.
-            # La date de début est définie à minuit (00:00:00) et la date de fin à la dernière seconde de la journée (23:59:59).
-            # Cela permet d'inclure toutes les fiches créées dans la plage de dates spécifiée.
-            # Si ces dates ne sont pas ajustées, les valeurs de date_debut et date_fin serait égales à 2024-06-19 00:00:00 et 2024-06-19 00:00:00 respectivement
-            # donc les fiches créées le 2024-06-19 à 00:00:01 et après ne seraient pas incluses dans les résultats.
-            date_debut = timezone.make_aware(datetime.combine(form.cleaned_data["date_debut"], time.min))
-            date_fin = timezone.make_aware(datetime.combine(form.cleaned_data["date_fin"], time.max))
-            queryset = queryset.filter(date_creation__range=(date_debut, date_fin))
-
-        if form.cleaned_data["etat"]:
-            queryset = queryset.filter(etat=form.cleaned_data["etat"])
-
-        return queryset
+        self.filter = FicheDetectionFilter(self.request.GET, queryset=queryset)
+        return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["form"] = FicheDetectionSearchForm(self.request.GET)
+        context["filter"] = self.filter
         return context
 
 
