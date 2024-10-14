@@ -19,7 +19,7 @@
                                 <input type="hidden" value="{{ fiche.pk }}" name="fiche_pk">
                                 <input type="hidden" value="{{ content_type.pk }}" name="content_type_pk">
                                 <input type="hidden" value="{{ contact.pk }}" name="pk">
-                                <input type="hidden" value="{{ redirect_url }}" name="next">
+                                <input type="hidden" value="{{ fiche.get_absolute_url }}" name="next">
                                 <button type="submit" class="fr-btn" data-testid="contact-delete-{{ contact.pk }}">Oui, je supprime</button>
                             </form>
                         </div>
