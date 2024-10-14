@@ -15,7 +15,7 @@ from django.views.generic import (
     FormView,
 )
 from django.urls import reverse
-from django.db.models import OuterRef, Subquery, Prefetch, F
+from django.db.models import F
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -94,19 +94,8 @@ class FicheDetectionListView(ListView):
     paginate_by = 100
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-
-        queryset = FicheDetection.objects.get_fiches_user_can_view(self.request.user)
-
-        # Pour chaque fiche de détection, on récupère la liste des lieux associés
-        lieux_prefetch = Prefetch("lieux", queryset=Lieu.objects.order_by("id"), to_attr="lieux_list")
-        queryset = queryset.prefetch_related(lieux_prefetch)
-
-        # Pour chaque fiche de détection, on récupère le nom de la région du premier lieu associé
-        first_lieu = Lieu.objects.filter(fiche_detection=OuterRef("pk")).order_by("id")
-        queryset = queryset.annotate(
-            region=Subquery(first_lieu.values("departement__region__nom")[:1]),
-        )
+        queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
+        queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
 
         form = FicheDetectionSearchForm(self.request.GET)
 
@@ -178,7 +167,9 @@ class FicheDetectionDetailView(
         context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
         context["free_link_form"] = self._get_free_link_form()
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(self.get_object())
+        contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
+            self.get_object()
+        )
         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
@@ -619,7 +610,7 @@ class FicheDetecionCloturerView(View):
             messages.error(request, f"La fiche de détection n° {fiche.numero} est déjà clôturée.")
             return redirect(redirect_url)
 
-        contacts_not_in_fin_suivi = FicheDetection.objects.get_contacts_structures_not_in_fin_suivi(fiche)
+        contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(fiche)
         if contacts_not_in_fin_suivi:
             messages.error(
                 request,
