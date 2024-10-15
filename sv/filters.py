@@ -1,5 +1,6 @@
 import django_filters
 
+from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
 from .models import FicheDetection, Region, OrganismeNuisible, Etat
 from django.forms.widgets import DateInput, TextInput
@@ -11,6 +12,7 @@ class FicheDetectionFilter(django_filters.FilterSet):
         label="Numéro",
         widget=TextInput(attrs={"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}),
     )
+    type_fiche = django_filters.ChoiceFilter(choices=[("detection", "Détection"), ("zone", "Zone")], label="Type", widget=DSFRRadioButton, empty_label=None, initial="Détection")
     lieux__departement__region = django_filters.ModelChoiceFilter(label="Région", queryset=Region.objects.all())
     organisme_nuisible = django_filters.ModelChoiceFilter(label="Organisme", queryset=OrganismeNuisible.objects.all())
     start_date = django_filters.DateFilter(
@@ -26,14 +28,18 @@ class FicheDetectionFilter(django_filters.FilterSet):
 
     class Meta:
         model = FicheDetection
-        fields = ["numero", "lieux__departement__region", "organisme_nuisible", "start_date", "end_date", "etat"]
+        fields = ["numero", "type_fiche", "lieux__departement__region", "organisme_nuisible", "start_date", "end_date", "etat"]
         form = DSFRForm
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "numero" in self.data:
+    def __init__(self, data=None, *args, **kwargs):
+        if not data.get("type_fiche"):
+            data = data.copy()
+            data["type_fiche"] = "detection"
+        super().__init__(data, *args, **kwargs)
+
+        if "numero" in data:
             try:
-                _annee, _numero = map(int, self.data.get("numero").split("."))
+                _annee, _numero = map(int, data.get("numero").split("."))
             except ValueError:
                 errors = self.errors.get("numero", [])
                 errors.append("Format 'numero' invalide. Il devrait être 'annee.numero'")

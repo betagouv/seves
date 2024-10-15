@@ -4,17 +4,12 @@ body{
 
 .fiches__header {
     background-color: var(--background-open-blue-france);
-    padding: 2rem 0rem 2rem 2rem;
-}
-.fiches__title {
-    margin-bottom: 1.5rem;
 }
 
 .fiches__search-form {
     display: flex;
     align-items: flex-end;
     gap: 2rem;
-    margin-right: 2rem;
 }
 .fiches__search-form .fr-fieldset__element{
     flex: 1 !important;
