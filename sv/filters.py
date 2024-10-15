@@ -45,6 +45,10 @@ class FicheDetectionFilter(django_filters.FilterSet):
                 errors.append("Format 'numero' invalide. Il devrait être 'annee.numero'")
                 self.errors["numero"] = errors
 
+    def filter_queryset(self, queryset):
+        self.form.cleaned_data.pop("type_fiche")
+        return super().filter_queryset(queryset)
+
     def filter_numero(self, queryset, name, value):
         if not value:
             return queryset

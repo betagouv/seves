@@ -48,21 +48,24 @@ from .models import (
     NumeroFiche,
     Departement,
     TypeExploitant,
-    PositionChaineDistribution,
+    PositionChaineDistribution, FicheZoneDelimitee,
 )
 from core.models import Visibilite
 
 
 class FicheDetectionListView(ListView):
     model = FicheDetection
-    # TODO check if ordering is still the same ?
     ordering = ["-numero"]
     paginate_by = 100
     context_object_name = "fiches"
+    template_name = "sv/fichedetection_list.html"
 
     def get_queryset(self):
-        queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
-        queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
+        if self.request.GET.get("type_fiche") == "zone":
+            queryset = FicheZoneDelimitee.objects.all()
+        else:
+            queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
+            queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
         self.filter = FicheDetectionFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
