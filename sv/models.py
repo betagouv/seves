@@ -639,3 +639,10 @@ class FicheZoneDelimitee(models.Model):
         if not self.pk:
             self.numero = NumeroFiche.get_next_numero()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.numero)
+
+    def get_absolute_url(self):
+        # TODO change me
+        return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
