@@ -499,6 +499,10 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
     def __str__(self):
         return str(self.numero)
 
+    @property
+    def displayed_type(self):
+        return "Détection"
+
     def can_be_cloturer_by(self, user):
         return user.agent.structure.is_ac
 
@@ -640,3 +644,7 @@ class FicheZoneDelimitee(models.Model):
         if not self.pk:
             self.numero = NumeroFiche.get_next_numero()
         super().save(*args, **kwargs)
+
+    @property
+    def displayed_type(self):
+        return "Zone"

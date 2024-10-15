@@ -40,7 +40,8 @@
                 <table class="fiches__list-table">
                     <thead>
                         <tr class="fiches__table-header">
-                            <th scope="col">N° fiche</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">N°</th>
                             <th scope="col">Organisme nuisible</th>
                             <th scope="col">Création</th>
                             <th scope="col">Créateur</th>
@@ -53,27 +54,32 @@
                         {% for fiche in fiches %}
                             <tr class="fiches__list-row">
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                        {{ fiche.displayed_type }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.numero|default:"nc." }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.organisme_nuisible|default:"nc." }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.date_creation|date:"d/m/Y" }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {{ fiche.createur|truncatechars:30 }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         {% with fiche.lieux_list|length as num_lieux %}
                                             {% if num_lieux == 0 %}
                                                 nc.
@@ -92,12 +98,12 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{% url 'fiche-detection-vue-detaillee' fiche.pk %}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
                                         <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}
                                         </a>
                                     </tr>
