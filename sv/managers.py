@@ -3,6 +3,16 @@ from django.db.models import Q, Prefetch, OuterRef, Subquery
 from core.models import Visibilite
 
 
+class LaboratoireAgreeManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
+class LaboratoireConfirmationOfficielleManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class FicheDetectionManager(models.Manager):
     def get_queryset(self):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
