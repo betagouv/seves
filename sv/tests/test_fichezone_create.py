@@ -72,11 +72,6 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(live_server, pag
         )
 
 
-# TODO
-# test l'affichage d'un message d'erreur s'il manque le numéro de la zone infestée et la surface infestée totale
-# dans le formulaire d'une zone infestée
-
-
 def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     live_server, page: Page, choice_js_fill
 ) -> None:
@@ -89,7 +84,11 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     form_page.fill_form(fiche_zone_delimitee, zone_infestee, (detection,), (detection,))
     form_page.send_form()
 
-    # form_page.check_message_erreur()
+    expect(
+        page.get_by_text(
+            f"La fiche détection {str(detection.numero)} ne peut pas être sélectionnée à la fois dans les zones infestées et dans hors zone infestée."
+        )
+    ).to_be_visible()
     assert FicheZoneDelimitee.objects.count() == 0
     assert ZoneInfestee.objects.count() == 0
 
@@ -107,9 +106,10 @@ def test_cant_have_same_detection_in_zone_infestee_forms(live_server, page: Page
     form_page.add_new_zone_infestee(zone_infestee2, (detection,))
     form_page.send_form()
 
+    expect(page.get_by_text("Erreurs dans le(s) formulaire(s) Zones infestées")).to_be_visible()
     expect(
         page.get_by_text(
-            f"La fiche détection {str(detection.numero)} ne peut pas être sélectionnée à la fois dans les zones infestées et dans hors zone infestée."
+            f"Les fiches détection suivantes sont dupliquées dans les zones infestées : {str(detection.numero)}."
         )
     ).to_be_visible()
     assert FicheZoneDelimitee.objects.count() == 0

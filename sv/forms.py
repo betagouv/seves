@@ -75,6 +75,18 @@ class FicheDetectionVisibiliteUpdateForm(DSFRForm, forms.ModelForm):
         self.fields["visibilite"].initial = fiche_detection.visibilite
 
 
+class RattachementDetectionForm(DSFRForm, forms.Form):
+    rattachement = forms.ChoiceField(
+        choices=[
+            ("hors_zone_infestee", "Détections hors zone infestée"),
+            ("zone_infestee", "Zone infestée"),
+        ],
+        widget=DSFRRadioButton,
+        label="Où souhaitez-vous rattacher la détection ?",
+        initial="hors_zone_infestee",
+    )
+
+
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     date_creation = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"disabled": "disabled", "value": now().strftime("%d/%m/%Y")}),
@@ -84,7 +96,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     unite_rayon_zone_tampon = forms.ChoiceField(
         choices=[(choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesRayon],
         widget=DSFRRadioButton(attrs={"layout": "inline"}),
-        initial=FicheZoneDelimitee.UnitesRayon.METRE,
+        initial=FicheZoneDelimitee.UnitesRayon.KILOMETRE,
     )
     unite_surface_tampon_totale = forms.ChoiceField(
         choices=[(choice.value, choice.value) for choice in FicheZoneDelimitee.UnitesSurfaceTamponTolale],
@@ -92,7 +104,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         initial=FicheZoneDelimitee.UnitesSurfaceTamponTolale.METRE_CARRE,
     )
     detections_hors_zone = forms.ModelMultipleChoiceField(
-        queryset=FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(),
+        queryset=FicheDetection.objects.none(),
         widget=forms.SelectMultiple,
         required=False,
         label="Rattacher des détections",
@@ -124,12 +136,18 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         self.user = kwargs.pop("user", None)
         if self.user is None:
             raise ValueError("L'utilisateur doit être passé en paramètre.")
-
         self.detections_zones_infestees_formset = kwargs.pop("detections_zones_infestees_formset", None)
-
+        hors_zone_infestee_detection = kwargs.pop("hors_zone_infestee_detection", None)
         super().__init__(*args, **kwargs)
-
         self.label_suffix = ""
+
+        if hors_zone_infestee_detection:
+            self.fields["detections_hors_zone"].queryset = (
+                FicheDetection.objects.all()
+                .get_all_not_in_fiche_zone_delimitee()
+                .filter(organisme_nuisible=hors_zone_infestee_detection.organisme_nuisible)
+            )
+            self.fields["detections_hors_zone"].initial = [hors_zone_infestee_detection]
 
         is_zone_tampon_toute_commune_field = self.fields["is_zone_tampon_toute_commune"]
         label = self._meta.model._meta.get_field("is_zone_tampon_toute_commune").verbose_name
@@ -228,14 +246,20 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
 
 
 class ZoneInfesteeFormSet(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        detection = kwargs.pop("detection", None)
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk and self.forms and detection:
+            self.forms[0].fields["detections"].initial = [detection]
+
     def clean(self):
         super().clean()
+
         all_detections = set()
         duplicate_detections = set()
         for form in self.forms:
             if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
-                detections = form.cleaned_data.get("detections")
-                if detections:
+                if detections := form.cleaned_data.get("detections"):
                     for detection in detections:
                         if detection in all_detections:
                             duplicate_detections.add(detection)

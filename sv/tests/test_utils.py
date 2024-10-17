@@ -526,13 +526,13 @@ class FicheZoneDelimiteeFormPage:
         self, index, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
     ):
         detections_zone_infestee = detections_zone_infestee or ()
-        # for detection in detections_zone_infestee:
-        #     self.choice_js_fill(
-        #         self.page,
-        #         f".zone-infestees__zone-infestee-form:nth-of-type({index + 1}) .choices__input--cloned:first-of-type",
-        #         str(detection.numero),
-        #         str(detection.numero),
-        #     )
+        for detection in detections_zone_infestee:
+            self.choice_js_fill(
+                self.page,
+                f"#zones-infestees .fr-col-4:nth-of-type({index + 1}) .choices__input--cloned:first-of-type",
+                str(detection.numero),
+                str(detection.numero),
+            )
 
     def navigate(self, live_server):
         self.page.goto(f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}")
