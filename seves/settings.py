@@ -224,5 +224,5 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 
-# TODO : ajouter des tests
+# TODO : ajouter des tests --> En attente de design définitif
 # TODO design du sélecteur de types --> Waiting PR from Alan

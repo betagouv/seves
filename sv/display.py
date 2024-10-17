@@ -20,14 +20,14 @@ class DisplayedFiche:
         return cls(
             type="Zone",
             numero=str(fiche.numero),
-            organisme_nuisible="TODO", # TODO
-            url="TODO", # TODO
+            organisme_nuisible="TODO", # TODO waiting for more details for design
+            url="TODO", # TODO waiting for details view @alan
             is_ac_notified=False,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
-            etat="TODO",
-            visibilite="TODO",
-            communes_list=[] # TODO
+            etat="TODO", # TODO waiting for Alan
+            visibilite="TODO", # TODO waiting for Alan
+            communes_list=[] # TODO waiting for more details for design
         )
 
     # TODO vérifier sur main que tout est similaire

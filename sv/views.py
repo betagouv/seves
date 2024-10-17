@@ -68,7 +68,7 @@ class FicheListView(ListView):
 
     def get_queryset(self):
         if self.list_of_zones:
-            # TODO filter on get_fiches_user_can_view @alan ?
+            # TODO filter on get_fiches_user_can_view --> Waiting for @alan ?
             queryset = FicheZoneDelimitee.objects.all().optimized_for_list()
         else:
             queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
