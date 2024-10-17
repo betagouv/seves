@@ -46,7 +46,7 @@ def test_agent_in_structure_createur_can_view_fiche_detection(
     fiche_detection.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Fiche détection n° {str(fiche_detection.numero)}")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).to_be_visible()
 
 
@@ -62,7 +62,7 @@ def test_agent_not_in_structure_createur_cannot_view_fiche_detection_brouillon_o
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_text("403 Forbidden")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()
 
 
@@ -75,7 +75,7 @@ def test_agent_not_in_structure_createur_can_view_fiche_detection_nationale(
     _update_visibilite_fiche_detection(fiche_detection, Visibilite.NATIONAL)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Fiche détection n° {str(fiche_detection.numero)}")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).to_be_visible()
 
 
@@ -91,7 +91,7 @@ def test_agent_ac_cannot_view_fiche_detection_brouillon(
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_text("403 Forbidden")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()
 
 
@@ -114,7 +114,7 @@ def test_agent_ac_can_view_fiche_detection(
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Fiche détection n° {str(fiche_detection.numero)}")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).to_be_visible()
 
 

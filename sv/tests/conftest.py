@@ -7,7 +7,7 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
-from sv.models import Etat, FicheDetection
+from sv.models import Etat, FicheDetection, FicheZoneDelimitee
 
 User = get_user_model()
 
@@ -53,6 +53,15 @@ def fiche_detection_bakery(db, mocked_authentification_user):
         )
 
     return _fiche_detection_bakery
+
+@pytest.fixture
+def fiche_zone_bakery(db, mocked_authentification_user):
+    def _fiche_zone_bakery():
+        return baker.make(
+            FicheZoneDelimitee, _fill_optional=True, createur=mocked_authentification_user.agent.structure
+        )
+
+    return _fiche_zone_bakery
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ from playwright.sync_api import expect
 
 
 def test_can_download_export_fiche_detection(live_server, page, fiche_detection):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
 
     page.get_by_test_id("extract-open").click()
     expect(page.get_by_test_id("extract-submit")).to_be_visible()

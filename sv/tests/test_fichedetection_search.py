@@ -16,7 +16,7 @@ from ..models import (
 
 
 def get_fiche_detection_search_form_url() -> str:
-    return reverse("fiche-detection-list")
+    return reverse("fiche-liste")
 
 
 def test_search_form_have_all_fields(live_server, page: Page) -> None:
@@ -92,7 +92,7 @@ def test_search_with_fiche_number(live_server, page: Page, mocked_authentificati
 
 def test_search_with_invalid_fiche_number(client):
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche invalide (format année.numéro)"""
-    response = client.get(reverse("fiche-detection-list"), {"numero": "az.erty"})
+    response = client.get(reverse("fiche-liste"), {"numero": "az.erty"})
     assert response.status_code == 200
     assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
     assert (
@@ -150,7 +150,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-detection-list')}?numero=&lieux__departement__region=&organisme_nuisible={organisme1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('fiche-liste')}?numero=&type_fiche=detection&lieux__departement__region=&organisme_nuisible={organisme1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme1.libelle_court)).to_be_visible()

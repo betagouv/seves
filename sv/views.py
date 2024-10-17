@@ -55,16 +55,21 @@ from .models import (
 from core.models import Visibilite
 
 
-class FicheDetectionListView(ListView):
+class FicheListView(ListView):
     model = FicheDetection
     ordering = ["-numero"]
     paginate_by = 100
     context_object_name = "fiches"
     template_name = "sv/fichedetection_list.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        self.list_of_zones = self.request.GET.get("type_fiche") == "zone"
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        if self.request.GET.get("type_fiche") == "zone":
-            queryset = FicheZoneDelimitee.objects.all()
+        if self.list_of_zones:
+            # TODO filter on get_fiches_user_can_view @alan ?
+            queryset = FicheZoneDelimitee.objects.all().optimized_for_list()
         else:
             queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
             queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
@@ -74,11 +79,8 @@ class FicheDetectionListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
-        # TODO find a nicer way to do this ?
-        if self.request.GET.get("type_fiche") == "zone":
-            context["fiches"] = [DisplayedFiche.from_fiche_zone(fiche) for fiche in context["page_obj"]]
-        else:
-            context["fiches"] = [DisplayedFiche.from_fiche_detection(fiche) for fiche in context["page_obj"]]
+        method = DisplayedFiche.from_fiche_zone if self.list_of_zones else DisplayedFiche.from_fiche_detection
+        context["fiches"] = [method(fiche) for fiche in context["page_obj"]]
         return context
 
 

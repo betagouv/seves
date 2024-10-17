@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
-from sv.managers import FicheDetectionManager
+from sv.managers import FicheDetectionManager, FicheZoneManager
 
 
 class NumeroFiche(models.Model):
@@ -639,6 +639,8 @@ class FicheZoneDelimitee(models.Model):
     is_zone_tampon_toute_commune = models.BooleanField(
         verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
     )
+
+    objects = FicheZoneManager()
 
     def save(self, *args, **kwargs):
         if not self.pk:

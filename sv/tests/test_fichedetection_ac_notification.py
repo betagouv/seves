@@ -32,7 +32,7 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
 
     assert len(mailoutbox) == 1
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-list')}")
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     cell_selector = ".fiches__list-row td:nth-child(7) a"
     assert page.text_content(cell_selector).strip() == "local"
     expect(page.locator(".fiches__list-row td:nth-child(7) a .fr-icon-notification-3-line")).to_be_visible()

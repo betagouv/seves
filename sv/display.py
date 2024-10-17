@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sv.models import FicheDetection, OrganismeNuisible
+from sv.models import FicheDetection, OrganismeNuisible, FicheZoneDelimitee
 
 
 @dataclass
@@ -16,13 +16,13 @@ class DisplayedFiche:
     url: str
 
     @classmethod
-    def from_fiche_zone(cls, fiche: FicheDetection):
+    def from_fiche_zone(cls, fiche: FicheZoneDelimitee):
         return cls(
             type="Zone",
             numero=str(fiche.numero),
             organisme_nuisible="TODO", # TODO
             url="TODO", # TODO
-            is_ac_notified=False,  # TODO
+            is_ac_notified=False,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
             etat="TODO",

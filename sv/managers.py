@@ -44,3 +44,14 @@ class FicheDetectionQuerySet(models.QuerySet):
 
     def optimized_for_list(self):
         return self.select_related("etat", "numero", "organisme_nuisible", "createur")
+
+
+class FicheZoneManager(models.Manager):
+    def get_queryset(self):
+        return FicheZoneQuerySet(self.model, using=self._db)
+
+
+class FicheZoneQuerySet(models.QuerySet):
+
+    def optimized_for_list(self):
+        return self.select_related("numero", "createur")
