@@ -194,10 +194,15 @@ class FicheDetectionContextMixin:
         context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom").order_by("nom"))
         context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
         context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
-        context["laboratoires_agrees"] = LaboratoireAgree.objects.all().order_by("nom")
-        context["laboratoires_confirmation_officielle"] = LaboratoireConfirmationOfficielle.objects.all().order_by(
-            "nom"
-        )
+        if self.allows_inactive_laboratoires_agrees_values:
+            context["laboratoires_agrees"] = LaboratoireAgree._base_manager.order_by("nom")
+        else:
+            context["laboratoires_agrees"] = LaboratoireAgree.objects.all().order_by("nom")
+        if self.allows_inactive_laboratoires_confirmation_values:
+            queryset = LaboratoireConfirmationOfficielle._base_manager.order_by("nom")
+        else:
+            queryset = LaboratoireConfirmationOfficielle.objects.all().order_by("nom")
+        context["laboratoires_confirmation_officielle"] = queryset
         context["resultats_prelevement"] = Prelevement.Resultat.choices
         context["types_etablissement"] = TypeExploitant.objects.all().order_by("libelle")
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
@@ -205,6 +210,8 @@ class FicheDetectionContextMixin:
 
 
 class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
+    allows_inactive_laboratoires_agrees_values = False
+    allows_inactive_laboratoires_confirmation_values = False
     model = FicheDetection
     fields = [
         "statut_evenement",
@@ -413,6 +420,24 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         "mesures_surveillance_specifique",
     ]
     success_message = "La fiche détection a été modifiée avec succès."
+
+    @property
+    def allows_inactive_laboratoires_agrees_values(self):
+        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
+            "laboratoire_agree_id", flat=True
+        )
+        inactive_ids = LaboratoireAgree._base_manager.filter(is_active=False).values_list("id", flat=True)
+        return any([pk in inactive_ids for pk in actual_ids if pk])
+
+    @property
+    def allows_inactive_laboratoires_confirmation_values(self):
+        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
+            "laboratoire_confirmation_officielle_id", flat=True
+        )
+        inactive_ids = LaboratoireConfirmationOfficielle._base_manager.filter(is_active=False).values_list(
+            "id", flat=True
+        )
+        return any([pk in inactive_ids for pk in actual_ids if pk])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
