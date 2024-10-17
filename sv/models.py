@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
-from django.db.models import TextChoices
+from django.db.models import TextChoices, Q
 from django.contrib.contenttypes.fields import GenericRelation
 import datetime
 
@@ -397,6 +397,16 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
         db_table = "sv_fiche_detection"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=True)
+                    | Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=False)
+                    | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
+                ),
+                name="check_hors_zone_infestee_or_zone_infestee_or_none",
+            )
+        ]
 
     # Informations générales
     numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
@@ -532,47 +542,6 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
                 return False
 
 
-class CaracteristiquesPrincipalesZoneDelimitee(models.TextChoices):
-    PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
-        "plein_air_zone_production_champ",
-        "(1) Plein air — zone de production (1.1) champ (culture, pâturage)",
-    )
-    PLEIN_AIR_ZONE_PRODUCTION_VERGER_VIGNE = (
-        "plein_air_zone_production_verger_vigne",
-        "(1) Plein air — zone de production (1.2) verger/vigne",
-    )
-    PLEIN_AIR_ZONE_PRODUCTION_PEPINIERE = (
-        "plein_air_zone_production_pepiniere",
-        "(1) Plein air — zone de production (1.3) pépinière",
-    )
-    PLEIN_AIR_ZONE_PRODUCTION_FORET = (
-        "plein_air_zone_production_foret",
-        "(1) Plein air — zone de production (1.4) forêt",
-    )
-    PLEIN_AIR_AUTRE_JARDIN_PRIVE = "plein_air_autre_jardin_prive", "(2) Plein air — autre (2.1) jardin privé"
-    PLEIN_AIR_AUTRE_SITES_PUBLICS = "plein_air_autre_sites_publics", "(2) Plein air — autre (2.2) sites publics"
-    PLEIN_AIR_AUTRE_ZONE_PROTEGEE = "plein_air_autre_zone_protegee", "(2) Plein air — autre (2.3) zone protégée"
-    PLEIN_AIR_AUTRE_PLANTES_SAUVAGES = (
-        "plein_air_autre_plantes_sauvages",
-        "(2) Plein air — autre (2.4) plantes sauvages dans des zones non protégées",
-    )
-    PLEIN_AIR_AUTRE_AUTRE = "plein_air_autre_autre", "(2) Plein air — autre (2.5) autre (veuillez préciser)"
-    ENVIRONNEMENT_FERME_SERRE = "environnement_ferme_serre", "(3) Environnement fermé (3.1) serre"
-    ENVIRONNEMENT_FERME_AUTRES_JARDINS_HIVER = (
-        "environnement_ferme_autres_jardins_hiver",
-        "(3) Environnement fermé (3.2) autres jardins d’hiver",
-    )
-    ENVIRONNEMENT_FERME_SITE_PRIVE = (
-        "environnement_ferme_site_prive",
-        "(3) Environnement fermé (3.3) site privé (autre qu’une serre)",
-    )
-    ENVIRONNEMENT_FERME_SITE_PUBLIC = (
-        "environnement_ferme_site_public",
-        "(3) Environnement fermé (3.4) site public (autre qu’une serre)",
-    )
-    ENVIRONNEMENT_FERME_AUTRE = "environnement_ferme_autre", "(3) Environnement fermé (3.5) autre (veuillez préciser)"
-
-
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
         HECTARE = UnitesMesure.HECTARE
@@ -584,8 +553,8 @@ class ZoneInfestee(models.Model):
         verbose_name_plural = "Zones infestées"
 
     fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
-    numero = models.CharField(max_length=50, verbose_name="Numéro de la zone")
-    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale")
+    numero = models.CharField(max_length=50, verbose_name="Numéro de la zone", blank=True)
+    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale", blank=True, null=True)
     unite_surface_infestee_totale = models.CharField(
         max_length=3,
         choices=UnitesSurfaceInfesteeTotale,
@@ -595,6 +564,49 @@ class ZoneInfestee(models.Model):
 
 
 class FicheZoneDelimitee(models.Model):
+    class CaracteristiquesPrincipales(models.TextChoices):
+        PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
+            "plein_air_zone_production_champ",
+            "(1) Plein air — zone de production (1.1) champ (culture, pâturage)",
+        )
+        PLEIN_AIR_ZONE_PRODUCTION_VERGER_VIGNE = (
+            "plein_air_zone_production_verger_vigne",
+            "(1) Plein air — zone de production (1.2) verger/vigne",
+        )
+        PLEIN_AIR_ZONE_PRODUCTION_PEPINIERE = (
+            "plein_air_zone_production_pepiniere",
+            "(1) Plein air — zone de production (1.3) pépinière",
+        )
+        PLEIN_AIR_ZONE_PRODUCTION_FORET = (
+            "plein_air_zone_production_foret",
+            "(1) Plein air — zone de production (1.4) forêt",
+        )
+        PLEIN_AIR_AUTRE_JARDIN_PRIVE = "plein_air_autre_jardin_prive", "(2) Plein air — autre (2.1) jardin privé"
+        PLEIN_AIR_AUTRE_SITES_PUBLICS = "plein_air_autre_sites_publics", "(2) Plein air — autre (2.2) sites publics"
+        PLEIN_AIR_AUTRE_ZONE_PROTEGEE = "plein_air_autre_zone_protegee", "(2) Plein air — autre (2.3) zone protégée"
+        PLEIN_AIR_AUTRE_PLANTES_SAUVAGES = (
+            "plein_air_autre_plantes_sauvages",
+            "(2) Plein air — autre (2.4) plantes sauvages dans des zones non protégées",
+        )
+        PLEIN_AIR_AUTRE_AUTRE = "plein_air_autre_autre", "(2) Plein air — autre (2.5) autre (veuillez préciser)"
+        ENVIRONNEMENT_FERME_SERRE = "environnement_ferme_serre", "(3) Environnement fermé (3.1) serre"
+        ENVIRONNEMENT_FERME_AUTRES_JARDINS_HIVER = (
+            "environnement_ferme_autres_jardins_hiver",
+            "(3) Environnement fermé (3.2) autres jardins d’hiver",
+        )
+        ENVIRONNEMENT_FERME_SITE_PRIVE = (
+            "environnement_ferme_site_prive",
+            "(3) Environnement fermé (3.3) site privé (autre qu’une serre)",
+        )
+        ENVIRONNEMENT_FERME_SITE_PUBLIC = (
+            "environnement_ferme_site_public",
+            "(3) Environnement fermé (3.4) site public (autre qu’une serre)",
+        )
+        ENVIRONNEMENT_FERME_AUTRE = (
+            "environnement_ferme_autre",
+            "(3) Environnement fermé (3.5) autre (veuillez préciser)",
+        )
+
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -612,20 +624,20 @@ class FicheZoneDelimitee(models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
     caracteristiques_principales_zone_delimitee = models.CharField(
         max_length=50,
-        choices=CaracteristiquesPrincipalesZoneDelimitee.choices,
+        choices=CaracteristiquesPrincipales.choices,
         verbose_name="Caractéristiques principales de la zone délimitée",
         blank=True,
     )
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
-    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré")
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True)
     unite_rayon_zone_tampon = models.CharField(
         max_length=2,
         choices=UnitesRayon,
         default=UnitesRayon.KILOMETRE,
-        verbose_name="Unité du rayon tampon réglemantaire ou arbitré",
+        verbose_name="Unité du rayon tampon réglementaire ou arbitré",
     )
-    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale")
+    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale", null=True, blank=True)
     unite_surface_tampon_totale = models.CharField(
         max_length=3,
         choices=UnitesSurfaceTamponTolale,
