@@ -12,7 +12,13 @@ class FicheDetectionFilter(django_filters.FilterSet):
         label="Numéro",
         widget=TextInput(attrs={"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}),
     )
-    type_fiche = django_filters.ChoiceFilter(choices=[("detection", "Détection"), ("zone", "Zone")], label="Type", widget=DSFRRadioButton, empty_label=None, initial="Détection")
+    type_fiche = django_filters.ChoiceFilter(
+        choices=[("detection", "Détection"), ("zone", "Zone")],
+        label="Type",
+        widget=DSFRRadioButton,
+        empty_label=None,
+        initial="Détection",
+    )
     lieux__departement__region = django_filters.ModelChoiceFilter(label="Région", queryset=Region.objects.all())
     organisme_nuisible = django_filters.ModelChoiceFilter(label="Organisme", queryset=OrganismeNuisible.objects.all())
     start_date = django_filters.DateFilter(
@@ -28,7 +34,15 @@ class FicheDetectionFilter(django_filters.FilterSet):
 
     class Meta:
         model = FicheDetection
-        fields = ["numero", "type_fiche", "lieux__departement__region", "organisme_nuisible", "start_date", "end_date", "etat"]
+        fields = [
+            "numero",
+            "type_fiche",
+            "lieux__departement__region",
+            "organisme_nuisible",
+            "start_date",
+            "end_date",
+            "etat",
+        ]
         form = DSFRForm
 
     def __init__(self, data=None, *args, **kwargs):

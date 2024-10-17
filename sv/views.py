@@ -30,6 +30,7 @@ from core.mixins import (
 )
 from core.redirect import safe_redirect
 from sv.forms import FreeLinkForm, FicheDetectionVisibiliteUpdateForm
+from .display import DisplayedFiche
 from .export import FicheDetectionExport
 from .filters import FicheDetectionFilter
 from .models import (
@@ -48,7 +49,8 @@ from .models import (
     NumeroFiche,
     Departement,
     TypeExploitant,
-    PositionChaineDistribution, FicheZoneDelimitee,
+    PositionChaineDistribution,
+    FicheZoneDelimitee,
 )
 from core.models import Visibilite
 
@@ -72,6 +74,11 @@ class FicheDetectionListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
+        # TODO find a nicer way to do this ?
+        if self.request.GET.get("type_fiche") == "zone":
+            context["fiches"] = [DisplayedFiche.from_fiche_zone(fiche) for fiche in context["page_obj"]]
+        else:
+            context["fiches"] = [DisplayedFiche.from_fiche_detection(fiche) for fiche in context["page_obj"]]
         return context
 
 

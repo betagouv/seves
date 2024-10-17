@@ -224,7 +224,6 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 
-# TODO : vérifier que le tableau est rempli avec les bonnes valeurs
 # TODO : ajouter des tests
 # TODO changer l'url pour correspondre au fait que cette url gère la liste de fiche au global
 # TODO design du sélecteur de types --> Waiting PR from Alan

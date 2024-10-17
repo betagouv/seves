@@ -35,7 +35,7 @@
                 Extraire
             </button>
         </div>
-        {% if fiches.count %}
+        {% if fiches|length > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="fiches__list-table">
                     <thead>
@@ -55,7 +55,7 @@
                             <tr class="fiches__list-row">
                                 <td>
                                     <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        {{ fiche.displayed_type }}
+                                        {{ fiche.type }}
                                     </a>
                                 </td>
                                 <td>
@@ -70,7 +70,7 @@
                                 </td>
                                 <td>
                                     <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        {{ fiche.date_creation|date:"d/m/Y" }}
+                                        {{ fiche.date_creation }}
                                     </a>
                                 </td>
                                 <td>
