@@ -12,6 +12,8 @@ from ..models import (
     TypeExploitant,
     PositionChaineDistribution,
     OrganismeNuisible,
+    LaboratoireAgree,
+    LaboratoireConfirmationOfficielle,
 )
 from ..models import (
     Region,
@@ -851,3 +853,86 @@ def test_can_edit_and_save_lieu_with_name_only(
     fiche = FicheDetection.objects.get()
     lieu = fiche.lieux.get()
     assert lieu.nom == "Chez moi mis à jour"
+
+
+@pytest.mark.django_db
+def test_cant_pick_inactive_labo_agree_in_prelevement(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 0
+
+
+@pytest.mark.django_db
+def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
+    prelevement.laboratoire_agree = labo
+    prelevement.save()
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 1
+
+
+@pytest.mark.django_db
+def test_cant_pick_inactive_labo_confirmation_in_prelevement(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    assert prelevement_form_elements.laboratoire_confirmation_label.locator(f'option[value="{labo.pk}"]').count() == 0
+
+
+@pytest.mark.django_db
+def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
+    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
+    prelevement.laboratoire_confirmation_officielle = labo
+    prelevement.save()
+
+    page.goto(
+        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    )
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    page.wait_for_timeout(6000)
+    assert prelevement_form_elements.laboratoire_confirmation_input.locator(f'option[value="{labo.pk}"]').count() == 1
