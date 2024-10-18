@@ -1,8 +1,8 @@
 <div class="fr-btns-group--right fr-mb-3w">
-    <a href="{% url 'structure-selection-add-form'%}?fiche_id={{fichedetection.pk}}&content_type_id={{content_type_id}}&next={{redirect_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
+    <a href="{% url 'structure-selection-add-form'%}?fiche_id={{fiche.pk}}&content_type_id={{fiche.get_content_type_id}}&next={{fiche.get_absolute_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
         Ajouter une structure
     </a>
-    <a href="{% url 'contact-add-form'%}?fiche_id={{fichedetection.pk}}&content_type_id={{content_type_id}}&next={{redirect_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
+    <a href="{% url 'contact-add-form'%}?fiche_id={{fiche.pk}}&content_type_id={{fiche.get_content_type_id}}&next={{fiche.get_absolute_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
         Ajouter un agent
     </a>
 </div>

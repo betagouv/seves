@@ -222,7 +222,7 @@
         {% include "sv/_fichedetection_synthese.html" %}
 
 
-        {% include "core/_fiche_bloc_commun.html" with redirect_url=fichedetection.get_absolute_url fiche=fichedetection pk=fichedetection.pk content_type_id=fichedetection.get_content_type_id %}
+        {% include "core/_fiche_bloc_commun.html" with fiche=fichedetection %}
     </main>
 
 {% endblock %}
