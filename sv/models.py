@@ -7,9 +7,14 @@ import datetime
 
 from django.urls import reverse
 
-from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin
+from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, IsActiveMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
-from sv.managers import FicheDetectionManager, LaboratoireAgreeManager, LaboratoireConfirmationOfficielleManager
+from sv.managers import (
+    FicheDetectionManager,
+    LaboratoireAgreeManager,
+    LaboratoireConfirmationOfficielleManager,
+    StructurePreleveurManager,
+)
 
 
 class NumeroFiche(models.Model):
@@ -213,7 +218,7 @@ class PositionChaineDistribution(models.Model):
         return self.libelle
 
 
-class StructurePreleveur(models.Model):
+class StructurePreleveur(IsActiveMixin, models.Model):
     class Meta:
         verbose_name = "Structure préleveur"
         verbose_name_plural = "Structures préleveur"
@@ -221,6 +226,8 @@ class StructurePreleveur(models.Model):
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
+
+    objects = StructurePreleveurManager()
 
     def __str__(self):
         return self.nom
@@ -263,7 +270,7 @@ class EspeceEchantillon(models.Model):
         return self.libelle
 
 
-class LaboratoireAgree(models.Model):
+class LaboratoireAgree(IsActiveMixin, models.Model):
     class Meta:
         verbose_name = "Laboratoire agréé"
         verbose_name_plural = "Laboratoires agréés"
@@ -271,7 +278,6 @@ class LaboratoireAgree(models.Model):
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
-    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nom
@@ -279,7 +285,7 @@ class LaboratoireAgree(models.Model):
     objects = LaboratoireAgreeManager()
 
 
-class LaboratoireConfirmationOfficielle(models.Model):
+class LaboratoireConfirmationOfficielle(IsActiveMixin, models.Model):
     class Meta:
         verbose_name = "Laboratoire de confirmation officielle"
         verbose_name_plural = "Laboratoires de confirmation officielle"
@@ -287,7 +293,6 @@ class LaboratoireConfirmationOfficielle(models.Model):
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
-    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nom

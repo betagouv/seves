@@ -91,6 +91,13 @@ class AllowsSoftDeleteMixin(models.Model):
         abstract = True
 
 
+class IsActiveMixin(models.Model):
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+
 class AllowACNotificationMixin(models.Model):
     is_ac_notified = models.BooleanField(default=False)
 

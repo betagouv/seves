@@ -150,7 +150,11 @@ class FicheDetectionContextMixin:
         context["organismes_nuisibles"] = OrganismeNuisible.objects.all()
         context["statuts_reglementaires"] = StatutReglementaire.objects.all()
         context["contextes"] = Contexte.objects.all()
-        context["structures_preleveurs"] = list(StructurePreleveur.objects.values("id", "nom").order_by("nom"))
+        if self.allows_inactive_structure_preleveur_values:
+            queryset = StructurePreleveur._base_manager.values("id", "nom").order_by("nom")
+        else:
+            queryset = StructurePreleveur.objects.values("id", "nom").order_by("nom")
+        context["structures_preleveurs"] = list(queryset)
         context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
         context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
         if self.allows_inactive_laboratoires_agrees_values:
@@ -171,6 +175,7 @@ class FicheDetectionContextMixin:
 class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     allows_inactive_laboratoires_agrees_values = False
     allows_inactive_laboratoires_confirmation_values = False
+    allows_inactive_structure_preleveur_values = False
     model = FicheDetection
     fields = [
         "statut_evenement",
@@ -396,6 +401,14 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         inactive_ids = LaboratoireConfirmationOfficielle._base_manager.filter(is_active=False).values_list(
             "id", flat=True
         )
+        return any([pk in inactive_ids for pk in actual_ids if pk])
+
+    @property
+    def allows_inactive_structure_preleveur_values(self):
+        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
+            "structure_preleveur_id", flat=True
+        )
+        inactive_ids = StructurePreleveur._base_manager.filter(is_active=False).values_list("id", flat=True)
         return any([pk in inactive_ids for pk in actual_ids if pk])
 
     def get_context_data(self, **kwargs):
