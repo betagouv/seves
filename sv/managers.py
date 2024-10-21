@@ -13,6 +13,11 @@ class LaboratoireConfirmationOfficielleManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
+class StructurePreleveurManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class FicheDetectionManager(models.Manager):
     def get_queryset(self):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
