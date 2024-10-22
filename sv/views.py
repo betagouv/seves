@@ -142,7 +142,9 @@ class FicheDetectionDetailView(
     DetailView,
 ):
     model = FicheDetection
-    queryset = FicheDetection.objects.select_related("statut_reglementaire", "etat", "numero", "contexte", "createur")
+    queryset = FicheDetection.objects.select_related(
+        "statut_reglementaire", "etat", "numero", "contexte", "createur", "statut_evenement", "organisme_nuisible"
+    )
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -161,9 +163,18 @@ class FicheDetectionDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["lieux"] = Lieu.objects.filter(fiche_detection=self.get_object()).order_by("id")
+        context["lieux"] = (
+            Lieu.objects.filter(fiche_detection=self.get_object()).order_by("id").select_related("departement__region")
+        )
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
-        context["prelevements"] = prelevement.select_related("structure_preleveur", "lieu")
+        context["prelevements"] = prelevement.select_related(
+            "structure_preleveur",
+            "lieu",
+            "matrice_prelevee",
+            "site_inspection",
+            "espece_echantillon",
+            "laboratoire_agree",
+        )
         context["free_link_form"] = self._get_free_link_form()
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
