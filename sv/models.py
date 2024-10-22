@@ -644,7 +644,7 @@ class FicheZoneDelimitee(models.Model):
         default=UnitesRayon.KILOMETRE,
         verbose_name="Unité du rayon tampon réglemantaire ou arbitré",
     )
-    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale")
+    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale", null=True, blank=True)
     unite_surface_tampon_totale = models.CharField(
         max_length=3,
         choices=UnitesSurfaceTamponTolale,
