@@ -48,7 +48,7 @@ def test_fiche_detection_performances_with_lieux(client, django_assert_num_queri
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche.get_absolute_url())
 
-    baker.make(Lieu, fiche_detection=fiche, _quantity=3)
+    baker.make(Lieu, fiche_detection=fiche, _quantity=3, _fill_optional=True)
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche.get_absolute_url())
 
@@ -76,7 +76,7 @@ def test_fiche_detection_performances_with_prelevement(client, django_assert_num
 
     for _ in range(0, 3):
         lieu = baker.make(Lieu, fiche_detection=fiche)
-        baker.make(Prelevement, lieu=lieu)
+        baker.make(Prelevement, lieu=lieu, _fill_optional=True)
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche.get_absolute_url())
