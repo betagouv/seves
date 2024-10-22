@@ -637,7 +637,7 @@ class FicheZoneDelimitee(models.Model):
     )
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
-    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré")
+    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglemantaire ou arbitré", null=True, blank=True)
     unite_rayon_zone_tampon = models.CharField(
         max_length=2,
         choices=UnitesRayon,
