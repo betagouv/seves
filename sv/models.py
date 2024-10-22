@@ -585,6 +585,10 @@ class ZoneInfestee(models.Model):
         METRE_CARRE = UnitesMesure.METRE_CARRE
         KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
 
+    class UnitesRayon(TextChoices):
+        METRE = UnitesMesure.METRE
+        KILOMETRE = UnitesMesure.KILOMETRE
+
     class Meta:
         verbose_name = "Zone infestée"
         verbose_name_plural = "Zones infestées"
@@ -597,6 +601,13 @@ class ZoneInfestee(models.Model):
         choices=UnitesSurfaceInfesteeTotale,
         default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
         verbose_name="Unité de la surface infestée totale",
+    )
+    rayon = models.FloatField(verbose_name="Rayon de la zone infestée", blank=True, null=True)
+    unite_rayon = models.CharField(
+        max_length=2,
+        choices=UnitesRayon,
+        default=UnitesRayon.KILOMETRE,
+        verbose_name="Unité du rayon de la zone infestée",
     )
 
 
