@@ -61,7 +61,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.mesures_gestion_title).to_be_visible()
     expect(form_elements.save_btn).to_be_visible()
     expect(form_elements.add_lieu_btn).to_be_visible()
-    expect(form_elements.add_prelevement_btn).to_be_hidden()
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
 
     expect(form_elements.date_creation_label).to_be_visible()
     expect(form_elements.date_creation_input).to_be_disabled()
@@ -195,6 +195,7 @@ def test_create_fiche_detection_with_lieu(
     )
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
     form_elements.statut_evenement_input.select_option(label="Foyer")
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
@@ -218,6 +219,7 @@ def test_create_fiche_detection_with_lieu(
         str(lieu.position_chaine_distribution_etablissement.id)
     )
     lieu_form_elements.save_btn.click()
+    expect(form_elements.add_prelevement_btn).to_be_enabled()
     form_elements.save_btn.click()
 
     page.wait_for_timeout(1000)

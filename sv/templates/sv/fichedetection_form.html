@@ -135,6 +135,9 @@
                         <h2>Lieux</h2>
                         <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter un lieu</button>
                     </div>
+                    <template x-if="lieux.length == 0">
+                        <p>Aucun lieu.</p>
+                    </template>
                     {% include 'sv/_fichedetection_form__lieux.html' %}
                 </div>
 
@@ -144,7 +147,14 @@
                         <template x-if="lieux.length > 0">
                             <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter un prélèvement</button>
                         </template>
+                        <template x-if="lieux.length == 0">
+                            <button  type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" disabled>Ajouter un prélèvement</button>
+                        </template>
                     </div>
+                    <template x-if="lieux.length == 0">
+                        <p>Aucun prélèvement. Pour ajouter une prélèvement vous devez avoir renseigné au moins un lieu.</p>
+                    </template>
+
                     {% include 'sv/_fichedetection_form__prelevements.html' %}
                 </div>
 
