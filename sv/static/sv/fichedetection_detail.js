@@ -22,4 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
     detailElement.classList.remove(hiddenClass);
     syntheseElement.classList.add(hiddenClass);
 
+    new Choices(document.getElementById('id_object_choice'), {
+        classNames: {
+            containerInner: 'fr-select',
+        },
+        itemSelectText: ''
+    });
 });

@@ -5,7 +5,7 @@ from core.fields import MultiModelChoiceField
 from django import forms
 
 from core.models import LienLibre
-from sv.models import FicheDetection
+from sv.models import FicheDetection, FicheZoneDelimitee
 from core.models import Visibilite
 from core.fields import DSFRRadioButton
 
@@ -25,7 +25,10 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["object_choice"] = MultiModelChoiceField(
             label="Sélectioner un objet",
-            model_choices=[("FicheDetection", FicheDetection.objects.select_related("numero"))],
+            model_choices=[
+                ("Fiche Detection", FicheDetection.objects.select_related("numero")),
+                ("Fiche Zone Delimitee", FicheZoneDelimitee.objects.select_related("numero")),
+            ],
         )
         self.add_next_field(next)
         self.fields["object_id_1"].initial = object_id_1
