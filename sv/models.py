@@ -9,7 +9,12 @@ from django.urls import reverse
 
 from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
-from sv.managers import FicheDetectionManager, LaboratoireAgreeManager, LaboratoireConfirmationOfficielleManager
+from sv.managers import (
+    FicheDetectionManager,
+    LaboratoireAgreeManager,
+    LaboratoireConfirmationOfficielleManager,
+    StructurePreleveurManager,
+)
 
 
 class NumeroFiche(models.Model):
@@ -221,6 +226,9 @@ class StructurePreleveur(models.Model):
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
+    is_active = models.BooleanField(default=True)
+
+    objects = StructurePreleveurManager()
 
     def __str__(self):
         return self.nom
