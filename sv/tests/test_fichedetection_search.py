@@ -228,6 +228,8 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
         _quantity=2,
         _fill_optional=True,
         createur=mocked_authentification_user.agent.structure,
+        hors_zone_infestee=None,
+        zone_infestee=None,
     )
     lieu = baker.make(Lieu, fiche_detection=fiche1, _fill_optional=True)
 
