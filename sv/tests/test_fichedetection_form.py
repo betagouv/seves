@@ -682,9 +682,8 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
 # Ajouter un prélèvement
 
 
-def test_no_add_prelevement_btn_if_no_lieu(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le bouton d'ajout d'un prélèvement n'est pas visible si aucun lieu dans la liste"""
-    expect(form_elements.add_prelevement_btn).not_to_be_visible()
+def test_add_prelevement_btn_disabled_if_no_lieu(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
 
 
 def test_add_prelevement_btn_is_visible_if_lieu_exists(
@@ -693,3 +692,4 @@ def test_add_prelevement_btn_is_visible_if_lieu_exists(
     """Test que le bouton d'ajout d'un prélèvement est visible si au moins un lieu existe dans la liste"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
     expect(form_elements.add_prelevement_btn).to_be_visible()
+    expect(form_elements.add_prelevement_btn).to_be_enabled()
