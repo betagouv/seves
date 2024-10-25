@@ -683,3 +683,6 @@ class FicheZoneDelimitee(models.Model):
         if not self.pk:
             self.numero = NumeroFiche.get_next_numero()
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("fiche-zone-delimitee-detail", kwargs={"pk": self.pk})

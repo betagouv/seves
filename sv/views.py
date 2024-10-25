@@ -12,8 +12,8 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse, reverse_lazy
-from django.db.models import F
+from django.urls import reverse
+from django.db.models import F, Prefetch
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -57,6 +57,7 @@ from .models import (
     TypeExploitant,
     PositionChaineDistribution,
     FicheZoneDelimitee,
+    ZoneInfestee,
 )
 from core.models import Visibilite
 
@@ -646,7 +647,9 @@ class RattachementDetectionView(FormView):
 class FicheZoneDelimiteeCreateView(CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
-    success_url = reverse_lazy("fiche-detection-list")
+
+    def get_success_url(self):
+        return reverse("fiche-zone-delimitee-detail", args=[self.object.pk])
 
     def get(self, request, *args, **kwargs):
         self.object = None
@@ -735,3 +738,30 @@ class FicheZoneDelimiteeCreateView(CreateView):
             "Erreurs dans le(s) formulaire(s) Zones infestées",
         )
         return self.render_to_response(self.get_context_data())
+
+
+class FicheZoneDelimiteeDetailView(DetailView):
+    model = FicheZoneDelimitee
+    context_object_name = "fiche"
+
+    def get_queryset(self):
+        zone_infestee_detections_prefetch = Prefetch(
+            "fichedetection_set", queryset=FicheDetection.objects.select_related("numero")
+        )
+        zone_infestee_prefetch = Prefetch(
+            "zoneinfestee_set",
+            queryset=ZoneInfestee.objects.prefetch_related(zone_infestee_detections_prefetch),
+        )
+        return FicheZoneDelimitee.objects.select_related(
+            "numero", "createur", "organisme_nuisible", "statut_reglementaire"
+        ).prefetch_related(zone_infestee_prefetch)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        fichezonedelimitee = self.get_object()
+        context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
+        context["zones_infestees"] = [
+            (zone_infestee, zone_infestee.fichedetection_set.all())
+            for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
+        ]
+        return context

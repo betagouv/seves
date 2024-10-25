@@ -1,0 +1,19 @@
+.fichezonedelimitee__actions {
+    display: none;
+}
+.fichezonedelimitee__details,
+.fichezonedelimitee__zone-tampon {
+    height: 432px;
+}
+.fichezonedelimitee__field {
+    font-weight: bold;
+}
+.fichezonedelimitee__zone-tampon-rayon {
+    background-color: var(--background-default-grey-active);
+    border-radius: 5px;
+}
+.fichezonedelimitee__zone-infestee {
+    background-color: var(--background-default-grey-hover);
+    border-radius: 3px;
+    min-height: 230px;
+}
