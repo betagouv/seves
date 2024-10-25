@@ -12,6 +12,7 @@ from .views import (
     FicheDetectionVisibiliteUpdateView,
     FicheZoneDelimiteeCreateView,
     RattachementDetectionView,
+    FicheZoneDelimiteeDetailView,
 )
 
 urlpatterns = [
@@ -69,5 +70,10 @@ urlpatterns = [
         "fiche-zone-delimitee/creation/",
         FicheZoneDelimiteeCreateView.as_view(),
         name="fiche-zone-delimitee-creation",
+    ),
+    path(
+        "fiche-zone-delimitee/<int:pk>/",
+        FicheZoneDelimiteeDetailView.as_view(),
+        name="fiche-zone-delimitee-detail",
     ),
 ]
