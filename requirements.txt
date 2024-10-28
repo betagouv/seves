@@ -53,7 +53,7 @@ django-post-office==3.9.0
     # via -r requirements.in
 django-storages[s3]==1.14.4
     # via -r requirements.in
-djhtml==3.0.6
+djhtml==3.0.7
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
