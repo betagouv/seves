@@ -260,3 +260,34 @@ def test_search_without_filters(live_server, page: Page, mocked_authentification
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(fiche2.numero))).to_be_visible()
     expect(page.locator("body")).to_contain_text("2 fiches au total")
+
+
+def test_list_is_ordered(live_server, page, fiche_detection_bakery):
+    fiche_1 = fiche_detection_bakery()
+    numero = fiche_1.numero
+    numero.annee = 2024
+    numero.numero = 30
+    numero.save()
+
+    fiche_2 = fiche_detection_bakery()
+    numero = fiche_2.numero
+    numero.annee = 2023
+    numero.numero = 7
+    numero.save()
+
+    fiche_3 = fiche_detection_bakery()
+    numero = fiche_3.numero
+    numero.annee = 2024
+    numero.numero = 31
+    numero.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(1) a"
+    assert page.text_content(cell_selector).strip() == "2024.31"
+
+    cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(1) a"
+    assert page.text_content(cell_selector).strip() == "2024.30"
+
+    cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(1) a"
+    assert page.text_content(cell_selector).strip() == "2023.7"
