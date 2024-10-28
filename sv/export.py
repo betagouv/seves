@@ -47,9 +47,19 @@ class FicheDetectionExport:
     def _clean_field_name(self, field):
         return field.replace("_", " ").title()
 
-    def get_queryset(self):
-        queryset = FicheDetection.objects.select_related("etat", "numero")
-        queryset = queryset.prefetch_related("lieux", "lieux__prelevements", "lieux__prelevements__structure_preleveur")
+    def get_queryset(self, user):
+        queryset = FicheDetection.objects.all().get_fiches_user_can_view(user).optimized_for_details()
+        queryset = queryset.prefetch_related(
+            "lieux",
+            "lieux__prelevements",
+            "lieux__departement",
+            "lieux__prelevements__structure_preleveur",
+            "lieux__prelevements__espece_echantillon",
+            "lieux__prelevements__matrice_prelevee",
+            "lieux__prelevements__site_inspection",
+            "lieux__prelevements__laboratoire_agree",
+            "lieux__prelevements__laboratoire_confirmation_officielle",
+        )
         return queryset
 
     def get_fieldnames(self):
@@ -86,8 +96,8 @@ class FicheDetectionExport:
         else:
             yield self.get_fiche_data(fiche_detection)
 
-    def export(self, stream):
-        queryset = self.get_queryset()
+    def export(self, stream, user):
+        queryset = self.get_queryset(user)
         writer = csv.DictWriter(stream, fieldnames=self.get_fieldnames())
         writer.writeheader()
 

@@ -89,9 +89,7 @@ class FicheDetectionDetailView(
     DetailView,
 ):
     model = FicheDetection
-    queryset = FicheDetection.objects.select_related(
-        "statut_reglementaire", "etat", "numero", "contexte", "createur", "statut_evenement", "organisme_nuisible"
-    )
+    queryset = FicheDetection.objects.all().optimized_for_details()
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -593,7 +591,7 @@ class FicheDetectionExportView(View):
 
     def post(self, request):
         response = HttpResponse(content_type="text/csv")
-        FicheDetectionExport().export(stream=response)
+        FicheDetectionExport().export(stream=response, user=request.user)
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
 

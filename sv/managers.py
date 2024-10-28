@@ -63,5 +63,10 @@ class FicheDetectionQuerySet(models.QuerySet):
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
 
+    def optimized_for_details(self):
+        return self.select_related(
+            "statut_reglementaire", "etat", "numero", "contexte", "createur", "statut_evenement", "organisme_nuisible"
+        )
+
     def get_all_not_in_fiche_zone_delimitee(self):
         return self.filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True).order_by("numero")
