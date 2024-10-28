@@ -2,12 +2,14 @@ from io import StringIO
 import pytest
 from model_bakery import baker
 from unittest import mock
+
+from core.models import Visibilite
 from sv.export import FicheDetectionExport
 from sv.models import Etat, FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveur
 import datetime
 
 
-def _create_fiche_with_lieu_and_prelevement(numero=123):
+def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
     etat = Etat.objects.get(id=Etat.get_etat_initial())
     numero = NumeroFiche.objects.create(annee=2024, numero=numero)
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
@@ -24,6 +26,10 @@ def _create_fiche_with_lieu_and_prelevement(numero=123):
             mesures_consignation="MC",
             mesures_phytosanitaires="MP",
             mesures_surveillance_specifique="MSP",
+            visibilite=Visibilite.NATIONAL,
+            hors_zone_infestee=None,
+            zone_infestee=None,
+            _fill_optional=fill_optional,
         )
     lieu = baker.make(
         Lieu,
@@ -36,6 +42,7 @@ def _create_fiche_with_lieu_and_prelevement(numero=123):
         adresse_lieu_dit="L'angle",
         commune="Saint-Pierre",
         code_insee="12345",
+        _fill_optional=fill_optional,
     )
     structure = StructurePreleveur.objects.create(nom="My structure")
     baker.make(
@@ -47,14 +54,15 @@ def _create_fiche_with_lieu_and_prelevement(numero=123):
         numero_phytopass="Phyto123",
         resultat="detecte",
         structure_preleveur=structure,
+        _fill_optional=fill_optional,
     )
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_content():
+def test_export_fiche_detection_content(mocked_authentification_user):
     stream = StringIO()
     _create_fiche_with_lieu_and_prelevement()
-    FicheDetectionExport().export(stream=stream)
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
     lines = stream.readlines()
@@ -104,23 +112,23 @@ def test_export_fiche_detection_content():
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_performance(django_assert_num_queries):
+def test_export_fiche_detection_performance(django_assert_num_queries, mocked_authentification_user):
     stream = StringIO()
-    _create_fiche_with_lieu_and_prelevement()
+    _create_fiche_with_lieu_and_prelevement(fill_optional=True)
 
-    with django_assert_num_queries(4):
-        FicheDetectionExport().export(stream=stream)
+    with django_assert_num_queries(10):
+        FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
     lines = stream.readlines()
     assert len(lines) == 2
 
     stream = StringIO()
-    _create_fiche_with_lieu_and_prelevement(numero=4)
-    _create_fiche_with_lieu_and_prelevement(numero=5)
-    _create_fiche_with_lieu_and_prelevement(numero=6)
-    with django_assert_num_queries(4):
-        FicheDetectionExport().export(stream=stream)
+    _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
+    _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
+    _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
+    with django_assert_num_queries(10):
+        FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
     lines = stream.readlines()
@@ -128,13 +136,13 @@ def test_export_fiche_detection_performance(django_assert_num_queries):
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries):
+def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries, mocked_authentification_user):
     stream = StringIO()
     etat = Etat.objects.get(id=Etat.get_etat_initial())
     numero = NumeroFiche.objects.create(annee=2024, numero=123)
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
-        fiche = baker.make(FicheDetection, etat=etat, numero=numero)
+        fiche = baker.make(FicheDetection, etat=etat, numero=numero, visibilite=Visibilite.NATIONAL)
     _lieu_without_prelevement = baker.make(Lieu, fiche_detection=fiche)
     _lieu_without_prelevement_2 = baker.make(Lieu, fiche_detection=fiche)
     lieu = baker.make(
@@ -152,7 +160,7 @@ def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries):
     baker.make(Prelevement, lieu=lieu)
     baker.make(Prelevement, lieu=lieu)
 
-    FicheDetectionExport().export(stream=stream)
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
     lines = stream.readlines()
