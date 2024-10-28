@@ -63,13 +63,12 @@ from core.models import Visibilite
 
 class FicheDetectionListView(ListView):
     model = FicheDetection
-    ordering = ["-numero"]
     paginate_by = 100
     context_object_name = "fiches"
 
     def get_queryset(self):
         queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
-        queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list()
+        queryset = queryset.with_list_of_lieux().with_first_region_name().optimized_for_list().order_by_numero_fiche()
         self.filter = FicheDetectionFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
