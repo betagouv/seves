@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sv", "0024_laboratoireagree_is_active_and_more"),
+        ("sv", "0025_zoneinfestee_rayon_zoneinfestee_unite_rayon_and_more"),
     ]
 
     operations = [

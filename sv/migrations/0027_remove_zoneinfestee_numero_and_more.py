@@ -18,7 +18,7 @@ def add_organisme_nuisible_and_statut_reglementaire_to_existing_fichezonedelimit
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0017_alter_message_message_type"),
-        ("sv", "0026_zoneinfestee_rayon_zoneinfestee_unite_rayon_and_more"),
+        ("sv", "0026_structurepreleveur_is_active"),
     ]
 
     operations = [
