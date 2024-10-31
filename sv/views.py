@@ -751,7 +751,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeDetailView(DetailView):
+class FicheZoneDelimiteeDetailView(WithFreeLinksListInContextMixin, DetailView):
     model = FicheZoneDelimitee
     context_object_name = "fiche"
 
@@ -761,6 +761,11 @@ class FicheZoneDelimiteeDetailView(DetailView):
 
         self.object = super().get_object(queryset)
         return self.object
+
+    def _get_free_link_form(self):
+        return FreeLinkForm(
+            content_type_1=ContentType.objects.get_for_model(self.get_object()).pk, object_id_1=self.get_object().pk
+        )
 
     def get_queryset(self):
         zone_infestee_detections_prefetch = Prefetch(
@@ -777,6 +782,7 @@ class FicheZoneDelimiteeDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fichezonedelimitee = self.get_object()
+        context["free_link_form"] = self._get_free_link_form()
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
         context["zones_infestees"] = [
             (zone_infestee, zone_infestee.fichedetection_set.all())

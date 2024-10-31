@@ -4,6 +4,7 @@
 {% load etat_tags %}
 
 {% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
 {% endblock %}
 
@@ -44,8 +45,8 @@
                 <button class="fr-btn fr-btn--secondary fr-mr-2w">
                     <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
                 </button>
-                {% include "sv/_action_navigation.html" %}
-                {% include "sv/_lienlibre_modal.html" %}
+                {% include "sv/_detection_action_navigation.html" %}
+                {% include "sv/_lienlibre_modal.html" with fiche=fichedetection %}
                 {% include "sv/_delete_fiche_modal.html" %}
                 {% include "sv/_fichedetection_cloturer_modal.html" %}
                 {% if can_update_visibilite %}
@@ -205,19 +206,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="fiche-detail__liens">
-                    <h2>Liens libres</h2>
-                    {% for link in free_links_list %}
-                        {% if link.related_object_1 == fichedetection and not link.related_object_2.is_deleted %}
-                            <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}">{{ link.related_object_2 }}</a>
-                        {% endif %}
-                        {% if link.related_object_2 == fichedetection and not link.related_object_1.is_deleted %}
-                            <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}">{{ link.related_object_1 }}</a>
-                        {% endif %}
-                    {% empty %}
-                        <p>Pas de liens pour cette fiche.</p>
-                    {% endfor %}
-                </div>
+                {% include "sv/_list_free_links.html" with fiche=fichedetection %}
             </div>
         </div>
         {% include "sv/_fichedetection_synthese.html" %}
