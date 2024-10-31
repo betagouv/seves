@@ -66,6 +66,22 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Statut évènement")
 
     @property
+    def numero_europhyt_label(self) -> Locator:
+        return self.page.get_by_text("Numéro Europhyt")
+
+    @property
+    def numero_europhyt_input(self) -> Locator:
+        return self.page.get_by_label("Numéro Europhyt")
+
+    @property
+    def numero_rasff_label(self) -> Locator:
+        return self.page.get_by_text("Numéro Rasff")
+
+    @property
+    def numero_rasff_input(self) -> Locator:
+        return self.page.get_by_label("Numéro Rasff")
+
+    @property
     def organisme_nuisible_label(self) -> Locator:
         return self.page.get_by_text("Organisme nuisible", exact=True)
 

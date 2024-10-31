@@ -281,6 +281,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             numero=NumeroFiche.get_next_numero(),
             createur=user_structure,
             statut_evenement_id=data["statutEvenementId"],
+            numero_europhyt=data["numeroEurophyt"],
+            numero_rasff=data["numeroRasff"],
             organisme_nuisible_id=data["organismeNuisibleId"],
             statut_reglementaire_id=data["statutReglementaireId"],
             contexte_id=data["contexteId"],
@@ -443,6 +445,8 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         # Mise à jour des champs de l'objet FicheDetection
         fiche_detection.statut_evenement_id = data.get("statutEvenementId")
+        fiche_detection.numero_europhyt = data.get("numeroEurophyt")
+        fiche_detection.numero_rasff = data.get("numeroRasff")
         fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
         fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
         fiche_detection.contexte_id = data.get("contexteId")
