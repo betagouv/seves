@@ -1,0 +1,14 @@
+.fiche-action {
+    display: flex;
+}
+
+.fiche-action .fr-translate__btn {
+    line-height: 1.5rem;
+      min-height: 2.5rem;
+      padding: .5rem 1rem;
+}
+
+.fiche-action .fr-translate .fr-translate__btn::before {
+    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
+    mask-image: url(../../../static/icons/system/add-line.svg);
+}
