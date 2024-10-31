@@ -1,4 +1,4 @@
-from sv.models import Lieu, Prelevement
+from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee
 from model_bakery import baker
 from playwright.sync_api import expect
 
@@ -157,3 +157,26 @@ def test_prelevement_officiel_details(live_server, page, fiche_detection):
     expect(page.get_by_test_id("prelevement-1-laboratoire-confirmation-officielle")).to_contain_text(
         prelevement.laboratoire_confirmation_officielle.nom
     )
+
+
+def test_have_link_to_fiche_zone_delimitee_if_hors_zone_infestee(live_server, page, fiche_detection):
+    "Si une fiche détection est liée à une hors zone infestée d'une fiche zone délimitée, un lien vers cette fiche zone délimitée doit être présent"
+    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
+    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
+    fiche_detection.save()
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
+    expect(link).to_be_visible()
+    expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())
+
+
+def test_have_link_to_fiche_zone_delimitee_if_zone_infestee(live_server, page, fiche_detection):
+    "Si une fiche détection est liée à une zone infestée d'une fiche zone délimitée, un lien vers cette fiche zone délimitée doit être présent"
+    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
+    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection.zone_infestee = zone_infestee
+    fiche_detection.save()
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
+    expect(link).to_be_visible()
+    expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())

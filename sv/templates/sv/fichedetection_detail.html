@@ -23,6 +23,9 @@
                     <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
                 {% endif %}
                 <p class="fr-badge fr-badge--no-icon">{{ fichedetection.visibilite }}</p>
+                {% if fiche_zone_delimitee %}
+                    <a href="{{ fiche_zone_delimitee.get_absolute_url }}" class="fr-badge fr-badge--info fr-badge--no-icon">zone {{ fiche_zone_delimitee.numero }}</a>
+                {% endif %}
             </div>
 
             <p>

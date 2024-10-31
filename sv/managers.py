@@ -70,3 +70,6 @@ class FicheDetectionQuerySet(models.QuerySet):
 
     def get_all_not_in_fiche_zone_delimitee(self):
         return self.filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True).order_by("numero")
+
+    def with_fiche_zone_delimitee_numero(self):
+        return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")

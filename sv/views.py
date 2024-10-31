@@ -89,7 +89,7 @@ class FicheDetectionDetailView(
     DetailView,
 ):
     model = FicheDetection
-    queryset = FicheDetection.objects.all().optimized_for_details()
+    queryset = FicheDetection.objects.all().optimized_for_details().with_fiche_zone_delimitee_numero()
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -130,6 +130,7 @@ class FicheDetectionDetailView(
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
         context["rattachement_detection_form"] = RattachementDetectionForm()
+        context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
         return context
 
     def test_func(self) -> bool | None:
