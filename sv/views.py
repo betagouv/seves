@@ -755,6 +755,13 @@ class FicheZoneDelimiteeDetailView(DetailView):
     model = FicheZoneDelimitee
     context_object_name = "fiche"
 
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        self.object = super().get_object(queryset)
+        return self.object
+
     def get_queryset(self):
         zone_infestee_detections_prefetch = Prefetch(
             "fichedetection_set", queryset=FicheDetection.objects.select_related("numero")

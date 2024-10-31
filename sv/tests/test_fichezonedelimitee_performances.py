@@ -1,7 +1,7 @@
 from model_bakery import baker
 from sv.models import FicheZoneDelimitee, FicheDetection, ZoneInfestee
 
-BASE_NUM_QUERIES = 6
+BASE_NUM_QUERIES = 4
 
 
 def test_empty_fiche_zone_delimitee_performances(client, django_assert_num_queries, mocked_authentification_user):
@@ -36,7 +36,7 @@ def test_fiche_zone_delimitee_with_one_zone_infestee(client, django_assert_num_q
     zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche)
     baker.make(FicheDetection, zone_infestee=zone_infestee)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 2):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(fiche.get_absolute_url())
 
 
@@ -48,5 +48,5 @@ def test_fiche_zone_delimitee_with_multiple_zone_infestee(
     for zone_infestee in zones_infestees:
         baker.make(FicheDetection, zone_infestee=zone_infestee)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 2):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(fiche.get_absolute_url())
