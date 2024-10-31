@@ -77,6 +77,8 @@ document.addEventListener('alpine:init', () => {
         ficheDetection: {
             numero: '',
             statutEvenementId: '',
+            numeroRasff: '',
+            numeroEurophyt: '',
             organismeNuisibleId: '',
             statutReglementaireId: '',
             contexteId: '',
@@ -176,6 +178,8 @@ document.addEventListener('alpine:init', () => {
 
             this.ficheDetection = {
                 numero: this.getValueById('numeroFiche'),
+                numeroEurophyt: this.getValueById('numeroEurophyt'),
+                numeroRasff: this.getValueById('numeroRasff'),
                 statutEvenementId: this.getValueById('statut-evenement-id'),
                 organismeNuisibleId: this.getValueById('organisme-nuisible-id'),
                 statutReglementaireId: this.getValueById('statut-reglementaire-id'),
@@ -552,6 +556,8 @@ document.addEventListener('alpine:init', () => {
             let formData = new FormData();
             const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
             formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
+            formData.append('numeroRasff', this.ficheDetection.numeroRasff);
+            formData.append('numeroEurophyt', this.ficheDetection.numeroEurophyt);
             formData.append('organismeNuisibleId', organismeNuisibleId);
             formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
             formData.append('contexteId', this.ficheDetection.contexteId);

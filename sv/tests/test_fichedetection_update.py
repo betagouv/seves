@@ -159,6 +159,8 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
 
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", organisme.libelle_court, organisme.libelle_court)
 
+    form_elements.numero_rasff_input.fill(str(new_fiche_detection.numero_rasff))
+    form_elements.numero_europhyt_input.fill(str(new_fiche_detection.numero_europhyt))
     form_elements.statut_reglementaire_input.select_option(str(new_fiche_detection.statut_reglementaire.id))
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
@@ -175,6 +177,8 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
         fiche_detection_updated.createur == fiche_detection.createur
     )  # le createur ne doit pas changer lors d'une modification
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
+    assert fiche_detection_updated.numero_europhyt == new_fiche_detection.numero_europhyt
+    assert fiche_detection_updated.numero_rasff == new_fiche_detection.numero_rasff
     assert fiche_detection_updated.organisme_nuisible == organisme
     assert fiche_detection_updated.statut_reglementaire == new_fiche_detection.statut_reglementaire
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte

@@ -21,6 +21,8 @@
 {% block content %}
     <main x-data="app">
         <input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
+        <input type="hidden" id="numeroEurophyt" value="{{ form.instance.numero_europhyt }}">
+        <input type="hidden" id="numeroRasff" value="{{ form.instance.numero_rasff }}">
         <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
         <input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
         <input type="hidden" id="statut-reglementaire-id" value="{{ form.instance.statut_reglementaire_id|default:'' }}">
@@ -75,11 +77,11 @@
                 <div id="informations">
                     <h2>Informations</h2>
                     <div id="informations-content">
-                        <p id="date-creation">
+                        <div id="date-creation">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
-                        </p>
-                        <p id="statut-evenement">
+                        </div>
+                        <div id="statut-evenement">
                             <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
                             <select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
                                 <option value="">----</option>
@@ -87,7 +89,15 @@
                                     <option value="{{ statut_evenement.id }}">{{ statut_evenement.libelle }}</option>
                                 {% endfor %}
                             </select>
-                        </p>
+                        </div>
+                        <div id="numero-europhyt">
+                            <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
+                            <input x-model="ficheDetection.numeroEurophyt" id="numero-europhyt-input" class="fr-input" maxlength="8">
+                        </div>
+                        <div id="numero-rasff">
+                            <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
+                            <input x-model="ficheDetection.numeroRasff" id="numero-rasff-input" class="fr-input" maxlength="9">
+                        </div>
                     </div>
                 </div>
 
