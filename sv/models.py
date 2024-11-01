@@ -676,5 +676,8 @@ class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
     def get_absolute_url(self):
         return reverse("fiche-zone-delimitee-detail", kwargs={"pk": self.pk})
 
+    def get_update_url(self):
+        return reverse("fiche-zone-delimitee-update", kwargs={"pk": self.pk})
+
     def __str__(self):
         return str(self.numero)
