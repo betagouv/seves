@@ -149,13 +149,11 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
         self.fields["detections_hors_zone"].queryset = (
             FicheDetection.objects.all()
-            .get_all_not_in_fiche_zone_delimitee()
-            .filter(organisme_nuisible__libelle_court=organisme_nuisible_libelle)
-        )
-        if self.instance.pk:
-            self.fields["detections_hors_zone"].initial = FicheDetection.objects.filter(
-                hors_zone_infestee=self.instance, zone_infestee__isnull=True
+            .get_all_not_in_fiche_zone_delimitee(
+                organisme_nuisible_libelle, self.instance if self.instance.pk else None
             )
+            .order_by_numero_fiche()
+        )
 
     def clean_organisme_nuisible(self):
         return OrganismeNuisible.objects.get(libelle_court=self.cleaned_data["organisme_nuisible"])
@@ -227,15 +225,25 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         exclude = ["fiche_zone_delimitee"]
 
     def __init__(self, *args, **kwargs):
-        self.organisme_nuisible = kwargs.pop("organisme_nuisible", None)
+        organisme_nuisible_libelle = kwargs.pop("organisme_nuisible_libelle", None)
+        fiche_zone_delimitee = kwargs.pop("fiche_zone_delimitee", None)
+
         super().__init__(*args, **kwargs)
+
         self.label_suffix = ""
-        if self.organisme_nuisible:
-            self.fields["detections"].queryset = (
-                FicheDetection.objects.all()
-                .get_all_not_in_fiche_zone_delimitee()
-                .filter(organisme_nuisible__libelle_court=self.organisme_nuisible)
-            )
+
+        fiche_zone_delimitee = (
+            self.instance.fiche_zone_delimitee
+            if not fiche_zone_delimitee and self.instance.fiche_zone_delimitee_id
+            else fiche_zone_delimitee
+        )
+
+        self.fields["detections"].queryset = (
+            FicheDetection.objects.all()
+            .get_all_not_in_fiche_zone_delimitee(organisme_nuisible_libelle, fiche_zone_delimitee)
+            .order_by_numero_fiche()
+        )
+
         if self.instance.pk:
             self.fields["detections"].initial = self.instance.fichedetection_set.all()
 
@@ -263,22 +271,10 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
 
 
 class ZoneInfesteeFormSet(BaseInlineFormSet):
-    def __init__(self, *args, **kwargs):
-        organisme_nuisible = kwargs.pop("organisme_nuisible", None)
-        detection = kwargs.pop("detection", None)
-        self.organisme_nuisible = organisme_nuisible or args[0].get("organisme_nuisible")
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk and self.forms and detection:
-            self.forms[0].fields["detections"].initial = [detection]
-
-    def get_form_kwargs(self, index):
-        kwargs = super().get_form_kwargs(index)
-        kwargs["organisme_nuisible"] = self.organisme_nuisible
-        return kwargs
-
     def clean(self):
         super().clean()
 
+        # Vérification des doublons de fiches détection dans les zones infestées
         all_detections = set()
         duplicate_detections = set()
         for form in self.forms:
@@ -298,4 +294,8 @@ class ZoneInfesteeFormSet(BaseInlineFormSet):
 
 ZoneInfesteeFormSet = inlineformset_factory(
     FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=1, can_delete=False
+)
+
+ZoneInfesteeFormSetUpdate = inlineformset_factory(
+    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=0, can_delete=False
 )

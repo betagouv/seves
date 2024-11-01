@@ -34,6 +34,7 @@ from sv.forms import (
     FicheDetectionVisibiliteUpdateForm,
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
+    ZoneInfesteeFormSetUpdate,
     RattachementDetectionForm,
     RattachementChoices,
 )
@@ -660,6 +661,7 @@ class RattachementDetectionView(FormView):
 class FicheZoneDelimiteeCreateView(CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
+    context_object_name = "fiche"
 
     def get_success_url(self):
         return reverse("fiche-zone-delimitee-detail", args=[self.object.pk])
@@ -667,12 +669,17 @@ class FicheZoneDelimiteeCreateView(CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
 
-        fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
+        try:
+            fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
+        except FicheDetection.DoesNotExist:
+            return HttpResponseBadRequest("La fiche de détection n'existe pas.")
 
         if fiche_detection.is_linked_to_fiche_zone_delimitee:
             return HttpResponseBadRequest("La fiche de détection est déjà rattachée à une fiche zone délimitée.")
 
-        self.on = fiche_detection.organisme_nuisible
+        self.organisme_nuisible_libelle = fiche_detection.organisme_nuisible.libelle_court
+        self.statut_reglementaire_libelle = fiche_detection.statut_reglementaire.libelle
+
         match self.request.GET.get("rattachement"):
             case RattachementChoices.HORS_ZONE_INFESTEE:
                 self.hors_zone_infestee_detection = [fiche_detection]
@@ -684,11 +691,20 @@ class FicheZoneDelimiteeCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            context["zone_infestee_formset"] = ZoneInfesteeFormSet(self.request.POST)
+            context["zone_infestee_formset"] = ZoneInfesteeFormSet(
+                data=self.request.POST,
+                form_kwargs={
+                    "organisme_nuisible_libelle": self.request.POST.get("organisme_nuisible"),
+                },
+            )
         else:
             context["zone_infestee_formset"] = ZoneInfesteeFormSet(
-                organisme_nuisible=self.on, detection=getattr(self, "zone_infestee_detection", None)
+                form_kwargs={
+                    "organisme_nuisible_libelle": self.organisme_nuisible_libelle,
+                },
+                initial=[{"detections": getattr(self, "zone_infestee_detection", None)}],
             )
+        context["empty_form"] = context["zone_infestee_formset"].empty_form
         return context
 
     def get_form_kwargs(self):
@@ -699,13 +715,11 @@ class FicheZoneDelimiteeCreateView(CreateView):
 
     def get_initial(self):
         if self.request.GET:
-            fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
             return {
-                "organisme_nuisible": fiche_detection.organisme_nuisible,
-                "statut_reglementaire": fiche_detection.statut_reglementaire,
+                "organisme_nuisible": self.organisme_nuisible_libelle,
+                "statut_reglementaire": self.statut_reglementaire_libelle,
                 "detections_hors_zone": getattr(self, "hors_zone_infestee_detection", None),
             }
-
         return super().get_initial()
 
     def post(self, request, *args, **kwargs):
@@ -798,3 +812,105 @@ class FicheZoneDelimiteeDetailView(
             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
         ]
         return context
+
+
+class FicheZoneDelimiteeUpdateView(UpdateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeForm
+    context_object_name = "fiche"
+
+    def get_success_url(self):
+        return self.get_object().get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSetUpdate(
+                data=self.request.POST,
+                instance=self.object,
+                form_kwargs={
+                    "fiche_zone_delimitee": self.object,
+                    "organisme_nuisible_libelle": self.request.POST.get("organisme_nuisible"),
+                },
+            )
+        else:
+            context["zone_infestee_formset"] = ZoneInfesteeFormSetUpdate(
+                instance=self.object,
+                form_kwargs={
+                    "fiche_zone_delimitee": self.object,
+                    "organisme_nuisible_libelle": self.object.organisme_nuisible.libelle_court,
+                },
+            )
+        context["empty_form"] = context["zone_infestee_formset"].empty_form
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["organisme_nuisible"] = self.object.organisme_nuisible
+        initial["statut_reglementaire"] = self.object.statut_reglementaire
+        initial["detections_hors_zone"] = list(
+            FicheDetection.objects.filter(hors_zone_infestee=self.object, zone_infestee__isnull=True).values_list(
+                "id", flat=True
+            )
+        )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+
+        # Lors d'un POST, on utilise detections_zones_infestees_formset déjà défini
+        if hasattr(self, "detections_zones_infestees_formset"):
+            kwargs["detections_zones_infestees_formset"] = self.detections_zones_infestees_formset
+        # Sinon (GET), on récupère les détections existantes en base
+        else:
+            kwargs["detections_zones_infestees_formset"] = set(
+                FicheDetection.objects.filter(zone_infestee__fiche_zone_delimitee=self.object)
+            )
+
+        return kwargs
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        context = self.get_context_data()
+        formset = context["zone_infestee_formset"]
+
+        if not formset.is_valid():
+            return self.formset_invalid()
+
+        # Récupére les détections sélectionnées dans les zones infestées
+        self.detections_zones_infestees_formset = {
+            detection
+            for form in formset
+            for detection in form.cleaned_data.get("detections", [])
+            if not form.cleaned_data.get("DELETE", False)
+        }
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        return self.form_valid(form, formset)
+
+    def form_valid(self, form, formset):
+        with transaction.atomic():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+
+        messages.success(self.request, "La fiche zone délimitée a été modifiée avec succès.")
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+
+    def formset_invalid(self):
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Zones infestées",
+        )
+        return self.render_to_response(self.get_context_data())

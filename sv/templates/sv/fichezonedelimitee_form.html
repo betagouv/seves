@@ -15,16 +15,25 @@
     <div class="fr-container--fluid fr-m-4w ">
 
         <div class="fr-grid-row">
-            <div class="fr-col">
-                <h1 class="fr-mb-0-5v">Création d'une fiche zone délimitée</h1>
+            <div class="fr-col-8">
+                <h1 class="fr-mb-0-5v">
+                    {% if fiche.id %}
+                        Modification de la fiche zone délimitée
+                    {% else %}
+                        Création d'une fiche zone délimitée
+                    {% endif %}
+                </h1>
                 <p class="fr-badge fr-badge--no-icon fr-mb-4w">brouillon</p>
             </div>
             <div class="fr-col fichezone_form__save-btn">
+                {% if fiche.id %}
+                    <a href="{{ fiche.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                {% endif %}
                 <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer" class="fr-btn" >
             </div>
         </div>
 
-        <form action="{% url 'fiche-zone-delimitee-creation' %}" id="fiche-zone-delimitee-form" method="post">
+        <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'fiche-zone-delimitee-creation' %}{% endif %}" id="fiche-zone-delimitee-form" method="post">
             {% csrf_token %}
             <div class="fr-grid-row fr-grid-row--gutters">
                 <div class="fr-col">
@@ -131,6 +140,9 @@
                 <div class="fr-grid-row fr-grid-row--gutters" id="zones-infestees">
                     {{ zone_infestee_formset.management_form }}
                     {% for zone_infestee_form in zone_infestee_formset %}
+                        {% if zone_infestee_form.instance.pk %}
+                            {{ zone_infestee_form.id }}
+                        {% endif %}
                         <div class="fr-col-4">
                             <div class="zone-infestees__zone-infestee-form fr-p-3w">
                                 {% if zone_infestee_form.errors %}
@@ -189,38 +201,38 @@
                         <div class="fr-col-4">
                             <div class="zone-infestees__zone-infestee-form fr-p-3w">
                                 <div class="fr-mb-3w">
-                                    <div>{{ zone_infestee_formset.empty_form.nom.label_tag }}</div>
-                                    <div class="zone-infestee-form__numero-input">{{ zone_infestee_formset.empty_form.nom }}</div>
+                                    <div>{{ empty_form.nom.label_tag }}</div>
+                                    <div class="zone-infestee-form__numero-input">{{ empty_form.nom }}</div>
                                 </div>
                                 <div>
-                                    <div class="fr-mb-1w">{{ zone_infestee_formset.empty_form.rayon.label_tag }}</div>
+                                    <div class="fr-mb-1w">{{ empty_form.rayon.label_tag }}</div>
                                     <div class="fr-grid-row">
                                         <div class="fr-col">
-                                            {{ zone_infestee_formset.empty_form.rayon }}
+                                            {{ empty_form.rayon }}
                                         </div>
                                         <div class="fr-col">
                                             <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                                {{ zone_infestee_formset.empty_form.unite_rayon }}
+                                                {{ empty_form.unite_rayon }}
                                             </fieldset>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="fr-mb-1w">{{ zone_infestee_formset.empty_form.surface_infestee_totale.label_tag }}</div>
+                                    <div class="fr-mb-1w">{{ empty_form.surface_infestee_totale.label_tag }}</div>
                                     <div class="fr-grid-row">
                                         <div class="fr-col">
-                                            {{ zone_infestee_formset.empty_form.surface_infestee_totale }}
+                                            {{ empty_form.surface_infestee_totale }}
                                         </div>
                                         <div class="fr-col">
                                             <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                                {{ zone_infestee_formset.empty_form.unite_surface_infestee_totale }}
+                                                {{ empty_form.unite_surface_infestee_totale }}
                                             </fieldset>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="fr-mb-1w">{{ zone_infestee_formset.empty_form.detections.label_tag }}</div>
-                                    {{ zone_infestee_formset.empty_form.detections }}
+                                    <div class="fr-mb-1w">{{ empty_form.detections.label_tag }}</div>
+                                    {{ empty_form.detections }}
                                 </div>
                             </div>
                         </div>

@@ -68,8 +68,11 @@ class FicheDetectionQuerySet(models.QuerySet):
             "statut_reglementaire", "etat", "numero", "contexte", "createur", "statut_evenement", "organisme_nuisible"
         )
 
-    def get_all_not_in_fiche_zone_delimitee(self):
-        return self.filter(zone_infestee__isnull=True, hors_zone_infestee__isnull=True).order_by("numero")
+    def get_all_not_in_fiche_zone_delimitee(self, organisme_nuisible_libelle, instance=None):
+        query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
+        if instance is not None:
+            query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
+        return self.filter(query).filter(organisme_nuisible__libelle_court=organisme_nuisible_libelle)
 
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")

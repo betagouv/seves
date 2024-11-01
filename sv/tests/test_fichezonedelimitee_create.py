@@ -46,41 +46,34 @@ def test_cant_create_fiche_zone_delimitee_when_statut_reglementaire_of_fiche_det
 
 
 def test_organisme_nuisible_and_statut_reglementaire_are_autoselect_and_readonly_on_fiche_zone_delimitee_form(
-    live_server, page: Page, fiche_detection: FicheDetection
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
 ):
     """Test que l'organisme nuisible et le statut réglementaire de la fiche de détection sont automatiquement renseignés et désactivés (non modifiables)
     sur le formulaire de création de fiche zone délimitée"""
-    page.goto(
-        f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection.pk}&rattachement={RattachementChoices.HORS_ZONE_INFESTEE}"
-    )
-    org_nuisible_label = page.get_by_label("Organisme nuisible")
-    statut_reglementaire_label = page.get_by_label("Statut réglementaire")
-    expect(org_nuisible_label).to_have_value(str(fiche_detection.organisme_nuisible))
-    expect(statut_reglementaire_label).to_have_value(str(fiche_detection.statut_reglementaire))
-    expect(org_nuisible_label).to_have_attribute("readonly", "")
-    expect(statut_reglementaire_label).to_have_attribute("readonly", "")
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.organisme_nuisible_is_autoselect(str(fiche_detection.organisme_nuisible))
+    form_page.statut_reglementaire_is_autoselect(str(fiche_detection.statut_reglementaire))
+    form_page.organisme_nuisible_is_readonly()
+    form_page.statut_reglementaire_is_readonly()
 
 
-def test_fiche_detection_is_add_in_hors_zone_infestee_field(live_server, page: Page, fiche_detection: FicheDetection):
+def test_fiche_detection_is_add_in_hors_zone_infestee_field(
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
+):
     """Test que la fiche détection est ajouté dans le bloc détections hors zone infestée lors de la création d'une fiche zone délimitée"""
-    page.goto(
-        f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection.pk}&rattachement={RattachementChoices.HORS_ZONE_INFESTEE}"
-    )
-    expect(
-        page.locator("#fiche-zone-delimitee-form div")
-        .filter(has_text="Détections hors zone infestée")
-        .locator("select")
-    ).to_have_text(str(fiche_detection.numero))
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.check_detections_in_hors_zone_infestee([fiche_detection])
 
 
-def test_fiche_detection_is_add_in_zone_infestee_field(live_server, page: Page, fiche_detection: FicheDetection):
+def test_fiche_detection_is_add_in_zone_infestee_field(
+    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
+):
     """Test que la fiche détection est ajouté dans le bloc zones infestées lors de la création d'une fiche zone délimitée"""
-    page.goto(
-        f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection.pk}&rattachement={RattachementChoices.ZONE_INFESTEE}"
-    )
-    expect(
-        page.locator("#fiche-zone-delimitee-form div").filter(has_text="Zones infestées").locator("select")
-    ).to_have_text(str(fiche_detection.numero))
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.ZONE_INFESTEE)
+    form_page._check_detections_in_zone_infestee([fiche_detection], 0)
 
 
 @pytest.mark.django_db
@@ -116,9 +109,9 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
-    form_page.navigate(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche)
-    form_page.send_form()
+    form_page.submit_form()
 
     form_page.check_message_succes()
     assert ZoneInfestee.objects.count() == 0
@@ -155,10 +148,10 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
-    form_page.navigate(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche, zone_infestee1, detections_hors_zone_infestee, detections_zone_infestee1)
     form_page.add_new_zone_infestee(zone_infestee2, detections_zone_infestee2)
-    form_page.send_form()
+    form_page.submit_form()
 
     form_page.check_message_succes()
     # Vérification des attributs de FicheZoneDelimitee
@@ -205,9 +198,9 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     zone_infestee = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
-    form_page.navigate(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche_zone_delimitee, zone_infestee, (), (fiche_detection,))
-    form_page.send_form()
+    form_page.submit_form()
 
     expect(
         page.get_by_text(
@@ -227,10 +220,10 @@ def test_cant_have_same_detection_in_zone_infestee_forms(
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
-    form_page.navigate(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche_zone_delimitee, zone_infestee1, (), (fiche_detection,))
     form_page.add_new_zone_infestee(zone_infestee2, (fiche_detection,))
-    form_page.send_form()
+    form_page.submit_form()
 
     expect(page.get_by_text("Erreurs dans le(s) formulaire(s) Zones infestées")).to_be_visible()
     expect(
@@ -276,11 +269,15 @@ def test_cant_link_fiche_detection_to_fiche_zone_delimitee_if_fiche_detection_is
     fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
     fiche_detection.hors_zone_infestee = fiche_zone_delimitee
     fiche_detection.save()
-    fiche_detection2 = baker.make(FicheDetection, organisme_nuisible=fiche_detection.organisme_nuisible)
+    fiche_detection2 = baker.make(
+        FicheDetection,
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+        statut_reglementaire=fiche_detection.statut_reglementaire,
+    )
     zone_infestee = baker.make(ZoneInfestee, _fill_optional=True)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
-    form_page.navigate(live_server, fiche_detection2.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, fiche_detection2.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(baker.prepare(FicheZoneDelimitee, _fill_optional=True), zone_infestee, (), (fiche_detection2,))
     form_page.add_new_zone_infestee(zone_infestee, (fiche_detection2,))
     page.locator(".choices > div").first.click()
