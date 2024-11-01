@@ -95,12 +95,11 @@ def document_recipe(fiche_detection_bakery, db):
 
 
 @pytest.fixture
-def fill_commune(db, page: Page):
+def fill_commune(db, page: Page, choice_js_fill):
     def _fill_commune(page):
-        page.query_selector(".fr-modal__content .choices__list--single").click()
-        page.wait_for_selector("*:focus", state="visible", timeout=2_000)
-        page.locator("*:focus").fill("Lille")
-        page.get_by_role("option", name="Lille (59)", exact=True).click()
+        choice_js_fill(
+            page, locator=".fr-modal__content .choices__list--single", fill_content="Lille", exact_name="Lille (59)"
+        )
 
     return _fill_commune
 
