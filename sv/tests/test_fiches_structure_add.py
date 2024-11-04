@@ -13,9 +13,10 @@ def contacts_structure():
 
 
 @pytest.mark.django_db
-def test_add_structure_form(live_server, page, fiche_detection, contacts_structure):
+def test_add_structure_form(live_server, page, fiche_variable, contacts_structure):
     """Test l'affichage du formulaire d'ajout de structure"""
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
 
@@ -27,22 +28,24 @@ def test_add_structure_form(live_server, page, fiche_detection, contacts_structu
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
 
-def test_add_structure_form_back_to_fiche(live_server, page, fiche_detection):
+def test_add_structure_form_back_to_fiche(live_server, page, fiche_variable):
     """Test le lien de retour vers la fiche"""
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
     page.get_by_role("link", name="Retour à la fiche").click()
 
-    expect(page).to_have_url(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page).to_have_url(f"{live_server.url}{fiche.get_absolute_url()}")
 
 
 @pytest.mark.django_db
 def test_structure_niveau2_are_visible_aftert_select_structure_niveau1(
-    live_server, page, fiche_detection, contacts_structure
+    live_server, page, fiche_variable, contacts_structure
 ):
     """Test l'affichage des structures de niveau 2 suite à la selection d'une structure de niveau 1"""
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
 
@@ -53,8 +56,9 @@ def test_structure_niveau2_are_visible_aftert_select_structure_niveau1(
 
 
 @pytest.mark.django_db
-def test_add_structure_to_a_fiche(live_server, page, fiche_detection, contacts_structure):
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+def test_add_structure_to_a_fiche(live_server, page, fiche_variable, contacts_structure):
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
     page.get_by_text(contacts_structure[0].structure.niveau1).click()
@@ -66,12 +70,13 @@ def test_add_structure_to_a_fiche(live_server, page, fiche_detection, contacts_s
 
 
 @pytest.mark.django_db
-def test_add_multiple_structures_to_a_fiche(live_server, page, fiche_detection):
+def test_add_multiple_structures_to_a_fiche(live_server, page, fiche_variable):
+    fiche = fiche_variable()
     structure1, structure2 = baker.make(Structure, niveau1="AC", _quantity=2, _fill_optional=True)
     contact1 = baker.make(Contact, structure=structure1)
     contact2 = baker.make(Contact, structure=structure2)
 
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
     page.get_by_text(contact1.structure.niveau1, exact=True).click()
@@ -86,9 +91,10 @@ def test_add_multiple_structures_to_a_fiche(live_server, page, fiche_detection):
 
 
 @pytest.mark.django_db
-def test_no_structure_selected(live_server, page, fiche_detection, contacts_structure):
+def test_no_structure_selected(live_server, page, fiche_variable, contacts_structure):
     """Test l'affichage d'un message d'erreur si aucune structure n'est sélectionné lors de l'envoi du formulaire"""
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
     page.get_by_text(contacts_structure[0].structure.niveau1).click()
@@ -99,14 +105,15 @@ def test_no_structure_selected(live_server, page, fiche_detection, contacts_stru
 
 @pytest.mark.django_db
 def test_add_structure_form_back_to_fiche_after_select_structure_niveau1(
-    live_server, page, fiche_detection, contacts_structure
+    live_server, page, fiche_variable, contacts_structure
 ):
     """Test le retour à la fiche après avoir sélectionné une structure de niveau 1"""
-    page.goto(f"{live_server.url}/{fiche_detection.get_absolute_url()}")
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
     page.get_by_text(contacts_structure[0].structure.niveau1).click()
     page.get_by_role("button", name="Rechercher").click()
     page.get_by_role("link", name="Retour à la fiche").click()
 
-    expect(page).to_have_url(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page).to_have_url(f"{live_server.url}{fiche.get_absolute_url()}")

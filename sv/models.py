@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices, Q
@@ -7,7 +6,13 @@ import datetime
 
 from django.urls import reverse
 
-from core.mixins import AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, IsActiveMixin
+from core.mixins import (
+    AllowsSoftDeleteMixin,
+    AllowACNotificationMixin,
+    AllowVisibiliteMixin,
+    IsActiveMixin,
+    WithMessageUrlsMixin,
+)
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.managers import (
     FicheDetectionManager,
@@ -403,7 +408,9 @@ class Etat(models.Model):
         return self.libelle
 
 
-class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, models.Model):
+class FicheDetection(
+    AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, WithMessageUrlsMixin, models.Model
+):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
@@ -479,43 +486,9 @@ class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisib
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
 
-    def get_content_type_id(self) -> int:
-        """Renvoie l'ID du ContentType associé au modèle FicheDetection"""
-        return ContentType.objects.get_for_model(self).pk
-
-    def _add_message_url(self, message_type):
-        content_type = ContentType.objects.get_for_model(self)
-        return reverse(
-            "message-add", kwargs={"message_type": message_type, "obj_type_pk": content_type.pk, "obj_pk": self.pk}
-        )
-
     def cloturer(self):
         self.etat = Etat.get_etat_cloture()
         self.save()
-
-    @property
-    def add_message_url(self):
-        return self._add_message_url(Message.MESSAGE)
-
-    @property
-    def add_note_url(self):
-        return self._add_message_url(Message.NOTE)
-
-    @property
-    def add_point_de_suivi_url(self):
-        return self._add_message_url(Message.POINT_DE_SITUATION)
-
-    @property
-    def add_demande_intervention_url(self):
-        return self._add_message_url(Message.DEMANDE_INTERVENTION)
-
-    @property
-    def add_compte_rendu_url(self):
-        return self._add_message_url(Message.COMPTE_RENDU)
-
-    @property
-    def add_fin_suivi_url(self):
-        return self._add_message_url(Message.FIN_SUIVI)
 
     def __str__(self):
         return str(self.numero)
@@ -595,7 +568,7 @@ class ZoneInfestee(models.Model):
     )
 
 
-class FicheZoneDelimitee(models.Model):
+class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
     class CaracteristiquesPrincipales(models.TextChoices):
         PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
             "plein_air_zone_production_champ",
@@ -689,6 +662,11 @@ class FicheZoneDelimitee(models.Model):
     is_zone_tampon_toute_commune = models.BooleanField(
         verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
     )
+
+    documents = GenericRelation(Document)
+    messages = GenericRelation(Message)
+    contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
+    fin_suivi = GenericRelation(FinSuiviContact)
 
     def save(self, *args, **kwargs):
         if not self.pk:
