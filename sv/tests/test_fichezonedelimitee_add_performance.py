@@ -6,7 +6,7 @@ from core.models import Visibilite
 from sv.forms import RattachementChoices
 from sv.models import Etat, OrganismeNuisible, FicheDetection
 
-BASE_NUM_QUERIES = 7
+BASE_NUM_QUERIES = 9
 
 
 def test_add_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(

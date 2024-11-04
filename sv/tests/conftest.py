@@ -46,9 +46,14 @@ def add_basic_etat_objects():
 
 @pytest.fixture
 def fiche_zone_bakery(db, mocked_authentification_user):
+    etat = Etat.objects.get(id=Etat.get_etat_initial())
+
     def _fiche_zone_bakery():
         return baker.make(
-            FicheZoneDelimitee, _fill_optional=True, createur=mocked_authentification_user.agent.structure
+            FicheZoneDelimitee,
+            _fill_optional=True,
+            createur=mocked_authentification_user.agent.structure,
+            etat=etat,
         )
 
     return _fiche_zone_bakery

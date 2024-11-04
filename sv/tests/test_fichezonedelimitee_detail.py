@@ -2,13 +2,11 @@ from playwright.sync_api import Page, expect
 from model_bakery import baker
 
 from core.models import Visibilite
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+from sv.models import ZoneInfestee, FicheDetection
 
 
-def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, page: Page, mocked_authentification_user):
-    fiche_zone_delimitee = baker.make(
-        FicheZoneDelimitee, createur=mocked_authentification_user.agent.structure, _fill_optional=True
-    )
+def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, fiche_zone, page: Page, mocked_authentification_user):
+    fiche_zone_delimitee = fiche_zone
     zone_infestee_1 = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
     fiche_detection_fiche_zone_delimitee = baker.make(
         FicheDetection, hors_zone_infestee=fiche_zone_delimitee, visibilite=Visibilite.LOCAL

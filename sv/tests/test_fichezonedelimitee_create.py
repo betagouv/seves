@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.urls import reverse
 
 from core.models import Visibilite
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.forms import RattachementChoices
 
@@ -108,7 +108,7 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
     fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
     fiche_detection.save()
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -145,7 +145,7 @@ def test_can_create_fiche_zone_delimitee_in_draft(
     fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
     fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
     fiche_detection.save()
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -171,7 +171,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         )
         for _ in range(3)
     )
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
     zone_infestee1, zone_infestee2 = baker.prepare(
         ZoneInfestee, fiche_zone_delimitee=fiche, _fill_optional=True, _quantity=2
     )
@@ -223,7 +223,9 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
 def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ) -> None:
-    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    fiche_zone_delimitee = baker.prepare(
+        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
+    )
     zone_infestee = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
@@ -243,7 +245,9 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
 def test_cant_have_same_detection_in_zone_infestee_forms(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
-    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    fiche_zone_delimitee = baker.prepare(
+        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
+    )
     zone_infestee1, zone_infestee2 = baker.prepare(
         ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True, _quantity=2
     )
@@ -307,7 +311,12 @@ def test_cant_link_fiche_detection_to_fiche_zone_delimitee_if_fiche_detection_is
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection2.pk, RattachementChoices.HORS_ZONE_INFESTEE)
-    form_page.fill_form(baker.prepare(FicheZoneDelimitee, _fill_optional=True), zone_infestee, (), (fiche_detection2,))
+    form_page.fill_form(
+        baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())),
+        zone_infestee,
+        (),
+        (fiche_detection2,),
+    )
     form_page.add_new_zone_infestee(zone_infestee, (fiche_detection2,))
     page.locator(".choices > div").first.click()
     expect(page.get_by_role("listbox").get_by_text("Aucune fiche détection à sélectionner")).to_be_visible()
