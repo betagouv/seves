@@ -8,7 +8,7 @@ from .views import (
     FicheDetectionUpdateView,
     FreeLinkCreateView,
     FicheDetectionExportView,
-    FicheDetecionCloturerView,
+    FicheCloturerView,
     FicheDetectionVisibiliteUpdateView,
     FicheZoneDelimiteeCreateView,
     RattachementDetectionView,
@@ -43,9 +43,9 @@ urlpatterns = [
         name="fiche-detection-modification",
     ),
     path(
-        "fiches-detection/<int:pk>/cloturer/",
-        FicheDetecionCloturerView.as_view(),
-        name="fiche-detection-cloturer",
+        "fiches/<int:pk>/cloturer/",
+        FicheCloturerView.as_view(),
+        name="fiche-cloturer",
     ),
     path(
         "fiches-detection/<int:pk>/visibilite/",

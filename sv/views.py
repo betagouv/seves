@@ -599,34 +599,32 @@ class FicheDetectionExportView(View):
         return response
 
 
-class FicheDetecionCloturerView(View):
-    redirect_url_name = "fiche-detection-vue-detaillee"
-
-    def get_redirect_url(self, fiche_pk):
-        return reverse(self.redirect_url_name, args=[fiche_pk])
-
+class FicheCloturerView(View):
     def post(self, request, pk):
-        fiche = FicheDetection.objects.get(pk=pk)
-        redirect_url = self.get_redirect_url(pk)
+        # TODO test that this works ?
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data["content_type_id"]).model_class()
+        fiche = content_type.objects.get(pk=pk)
+        redirect_url = fiche.get_absolute_url()
 
         if not fiche.can_be_cloturer_by(request.user):
-            messages.error(request, "Vous n'avez pas les droits pour clôturer une fiche de détection.")
+            messages.error(request, "Vous n'avez pas les droits pour clôturer cette fiche.")
             return redirect(redirect_url)
 
         if fiche.is_already_cloturer():
-            messages.error(request, f"La fiche de détection n° {fiche.numero} est déjà clôturée.")
+            messages.error(request, f"La fiche n° {fiche.numero} est déjà clôturée.")
             return redirect(redirect_url)
 
-        contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(fiche)
+        contacts_not_in_fin_suivi = content_type.objects.all().get_contacts_structures_not_in_fin_suivi(fiche)
         if contacts_not_in_fin_suivi:
             messages.error(
                 request,
-                f"La fiche de détection n° {fiche.numero} ne peut pas être clôturée car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
+                f"La fiche  n° {fiche.numero} ne peut pas être clôturée car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
             )
             return redirect(redirect_url)
 
         fiche.cloturer()
-        messages.success(request, f"La fiche de détection n° {fiche.numero} a bien été clôturée.")
+        messages.success(request, f"La fiche n° {fiche.numero} a bien été clôturée.")
         return redirect(redirect_url)
 
 
@@ -807,6 +805,9 @@ class FicheZoneDelimiteeDetailView(
         fichezonedelimitee = self.get_object()
         context["free_link_form"] = self._get_free_link_form()
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
+        # TODO handle this
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_cloturer_fiche"] = True # TODO  len(contacts_not_in_fin_suivi) == 0
         context["zones_infestees"] = [
             (zone_infestee, zone_infestee.fichedetection_set.all())
             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()

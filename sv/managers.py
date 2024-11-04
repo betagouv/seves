@@ -80,3 +80,15 @@ class FicheDetectionQuerySet(models.QuerySet):
 
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")
+
+
+class FicheZoneDelimiteeManager(models.Manager):
+    def get_queryset(self):
+        return FicheZoneDelimiteeQuerySet(self.model, using=self._db)
+
+class FicheZoneDelimiteeQuerySet(models.QuerySet):
+    def get_contacts_structures_not_in_fin_suivi(self, fiche_zone_delimitee):
+        contacts_structure_fiche = fiche_zone_delimitee.contacts.exclude(structure__isnull=True).select_related("structure")
+        fin_suivi_contacts_ids = fiche_zone_delimitee.fin_suivi.values_list("contact", flat=True)
+        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
+        return contacts_not_in_fin_suivi

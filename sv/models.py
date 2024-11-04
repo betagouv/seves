@@ -18,8 +18,9 @@ from sv.managers import (
     FicheDetectionManager,
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
-    StructurePreleveurManager,
+    StructurePreleveurManager, FicheZoneDelimiteeManager,
 )
+from sv.mixins import WithEtatMixin
 
 
 class NumeroFiche(models.Model):
@@ -408,9 +409,7 @@ class Etat(models.Model):
         return self.libelle
 
 
-class FicheDetection(
-    AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, WithMessageUrlsMixin, models.Model
-):
+class FicheDetection(AllowsSoftDeleteMixin, AllowACNotificationMixin, AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, models.Model):
     class Meta:
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
@@ -486,18 +485,8 @@ class FicheDetection(
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
 
-    def cloturer(self):
-        self.etat = Etat.get_etat_cloture()
-        self.save()
-
     def __str__(self):
         return str(self.numero)
-
-    def can_be_cloturer_by(self, user):
-        return user.agent.structure.is_ac
-
-    def is_already_cloturer(self):
-        return self.etat.is_cloture()
 
     @property
     def is_draft(self):
@@ -568,7 +557,7 @@ class ZoneInfestee(models.Model):
     )
 
 
-class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
+class FicheZoneDelimitee(WithEtatMixin, WithMessageUrlsMixin, models.Model):
     class CaracteristiquesPrincipales(models.TextChoices):
         PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
             "plein_air_zone_production_champ",
@@ -662,6 +651,11 @@ class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
     is_zone_tampon_toute_commune = models.BooleanField(
         verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
     )
+    etat = models.ForeignKey(
+        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
+    )
+
+    objects = FicheZoneDelimiteeManager()
 
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
