@@ -125,24 +125,6 @@ class AllowACNotificationMixin(models.Model):
         abstract = True
 
 
-class AllowVisibiliteMixin(models.Model):
-    visibilite = models.CharField(
-        max_length=100,
-        choices=[
-            ("brouillon", "Vous seul pourrez voir la fiche et la modifier"),
-            (
-                "local",
-                "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche",
-            ),
-            ("national", "La fiche sera et modifiable par toutes les structures"),
-        ],
-        default=Visibilite.BROUILLON,
-    )
-
-    class Meta:
-        abstract = True
-
-
 class WithMessageUrlsMixin:
     def _add_message_url(self, message_type):
         content_type = ContentType.objects.get_for_model(self)
@@ -173,3 +155,47 @@ class WithMessageUrlsMixin:
     @property
     def add_fin_suivi_url(self):
         return self._add_message_url(Message.FIN_SUIVI)
+
+
+class AllowVisibiliteMixin(models.Model):
+    visibilite = models.CharField(
+        max_length=100,
+        choices=[
+            ("brouillon", "Vous seul pourrez voir la fiche et la modifier"),
+            (
+                "local",
+                "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche",
+            ),
+            ("national", "La fiche sera et modifiable par toutes les structures"),
+        ],
+        default=Visibilite.BROUILLON,
+    )
+
+    class Meta:
+        abstract = True
+
+    @property
+    def is_draft(self):
+        return self.visibilite == Visibilite.BROUILLON
+
+    def can_update_visibilite(self, user):
+        """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
+        match self.visibilite:
+            case Visibilite.BROUILLON:
+                return user.agent.is_in_structure(self.createur)
+            case Visibilite.LOCAL | Visibilite.NATIONAL:
+                return user.agent.structure.is_mus_or_bsv
+            case _:
+                return False
+
+    def can_user_access(self, user):
+        """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
+        match self.visibilite:
+            case Visibilite.BROUILLON:
+                return user.agent.is_in_structure(self.createur)
+            case Visibilite.LOCAL:
+                return user.agent.structure.is_mus_or_bsv or user.agent.is_in_structure(self.createur)
+            case Visibilite.NATIONAL:
+                return True
+            case _:
+                return False

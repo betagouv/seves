@@ -53,7 +53,7 @@
                 {% include "sv/_delete_fiche_modal.html" %}
                 {% include "sv/_fichedetection_cloturer_modal.html" %}
                 {% if can_update_visibilite %}
-                    {% include "sv/_fichedetection_update_visibilite_modal.html" %}
+                    {% include "sv/_update_visibilite_modal.html" with fiche=fichedetection %}
                 {% endif %}
                 {% include "sv/_create_fichezonedelimitee_modal.html" %}
             </div>

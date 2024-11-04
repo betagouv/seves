@@ -1,4 +1,4 @@
-from core.forms import DSFRForm, WithNextUrlMixin
+from core.forms import DSFRForm, WithNextUrlMixin, VisibiliteUpdateBaseForm
 
 from django.contrib.contenttypes.models import ContentType
 from core.fields import MultiModelChoiceField
@@ -10,9 +10,7 @@ from django.utils.translation import ngettext
 from django.forms import BaseInlineFormSet
 from django.db.models import TextChoices
 
-
 from core.models import LienLibre
-from core.models import Visibilite
 from core.fields import DSFRRadioButton, DSFRCheckboxInput
 from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
 
@@ -48,34 +46,16 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         self.instance.object_id_2 = obj.id
 
 
-class FicheDetectionVisibiliteUpdateForm(DSFRForm, forms.ModelForm):
+class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
     class Meta:
         model = FicheDetection
         fields = ["visibilite"]
-        widgets = {
-            "visibilite": DSFRRadioButton(
-                attrs={"hint_text": {choice.value: choice.label.capitalize() for choice in Visibilite}}
-            ),
-        }
-        labels = {
-            "visibilite": "",
-        }
 
-    def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
-        super().__init__(*args, **kwargs)
-        fiche_detection = obj or self.instance
 
-        local = (Visibilite.LOCAL, Visibilite.LOCAL.capitalize())
-        national = (Visibilite.NATIONAL, Visibilite.NATIONAL.capitalize())
-        match fiche_detection.visibilite:
-            case Visibilite.BROUILLON:
-                choices = [local]
-            case Visibilite.LOCAL | Visibilite.NATIONAL:
-                choices = [local, national]
-        self.fields["visibilite"].choices = choices
-
-        self.fields["visibilite"].initial = fiche_detection.visibilite
+class FicheZoneDelimiteeVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
+    class Meta:
+        model = FicheZoneDelimitee
+        fields = ["visibilite"]
 
 
 class RattachementChoices(TextChoices):
@@ -145,6 +125,9 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
         self.label_suffix = ""
+
+        if self.instance.pk:
+            self.fields.pop("visibilite")
 
         organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
         self.fields["detections_hors_zone"].queryset = (

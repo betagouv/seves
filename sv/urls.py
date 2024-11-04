@@ -14,6 +14,7 @@ from .views import (
     RattachementDetectionView,
     FicheZoneDelimiteeDetailView,
     FicheZoneDelimiteeUpdateView,
+    FicheZoneDelimiteeVisibiliteUpdateView,
 )
 
 urlpatterns = [
@@ -51,6 +52,11 @@ urlpatterns = [
         "fiches-detection/<int:pk>/visibilite/",
         FicheDetectionVisibiliteUpdateView.as_view(),
         name="fiche-detection-visibilite-update",
+    ),
+    path(
+        "fiches-zone/<int:pk>/visibilite/",
+        FicheZoneDelimiteeVisibiliteUpdateView.as_view(),
+        name="fiche-zone-visibilite-update",
     ),
     path(
         "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",

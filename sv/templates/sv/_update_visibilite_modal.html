@@ -11,7 +11,7 @@
                             <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
                             Modifier la visibilité
                         </h1>
-                        <form action="{% url 'fiche-detection-visibilite-update' fichedetection.pk %}" method="post">
+                        <form action="{{ fiche.get_visibilite_update_url }}" method="post">
                             {% csrf_token %}
                             {{visibilite_form.as_dsfr_div}}
                         </div>

@@ -24,8 +24,8 @@ class DisplayedFiche:
             is_ac_notified=False,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
-            etat=None,
-            visibilite="",
+            etat="",
+            visibilite=str(fiche.visibilite),
             communes_list=[],
             get_absolute_url=fiche.get_absolute_url(),
         )

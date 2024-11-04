@@ -55,6 +55,11 @@ def fiche_zone_bakery(db, mocked_authentification_user):
 
 
 @pytest.fixture
+def fiche_zone(fiche_zone_bakery):
+    return fiche_zone_bakery()
+
+
+@pytest.fixture
 def fiche_detection_bakery(db, mocked_authentification_user):
     def _fiche_detection_bakery():
         etat = Etat.objects.get(id=Etat.get_etat_initial())
