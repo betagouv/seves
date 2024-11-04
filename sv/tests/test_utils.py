@@ -494,7 +494,8 @@ class FicheZoneDelimiteeFormPage:
 
         # Boutons
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
-        self.enregistrer = page.get_by_role("button", name="Enregistrer")
+        self.publier = page.get_by_role("button", name="Publier", exact=True)
+        self.enregistrer = page.get_by_role("button", name="Enregistrer", exact=True)
 
     def _check_is_zone_tampon_toute_commune(self, is_zone_tampon_toute_commune: bool):
         if is_zone_tampon_toute_commune:
@@ -670,6 +671,9 @@ class FicheZoneDelimiteeFormPage:
         self.fill_zone_infestee_form(index, zoneinfestee, detections)
 
     def submit_form(self):
+        self.publier.click()
+
+    def submit_update_form(self):
         self.enregistrer.click()
 
     def check_message_succes(self):
@@ -677,7 +681,6 @@ class FicheZoneDelimiteeFormPage:
 
     def check_update_form_content(self, fiche_zone_delimitee: FicheZoneDelimitee):
         expect(self.caracteristiques).to_have_value(fiche_zone_delimitee.caracteristiques_principales_zone_delimitee)
-        expect(self.vegetaux_infestes).to_have_value(fiche_zone_delimitee.vegetaux_infestes)
         expect(self.commentaire).to_have_value(fiche_zone_delimitee.commentaire)
         expect(self.rayon_zone_tampon).to_have_value(str(fiche_zone_delimitee.rayon_zone_tampon))
         self._check_unite_rayon_zone_tampon_checked(fiche_zone_delimitee.unite_rayon_zone_tampon)

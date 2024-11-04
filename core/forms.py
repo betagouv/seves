@@ -6,8 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from core.fields import DSFRCheckboxSelectMultiple
-from core.models import Document, Contact, Message, Structure
+from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton
+from core.models import Document, Contact, Message, Structure, Visibilite
 from django import forms
 from collections import defaultdict
 
@@ -300,3 +300,20 @@ class StructureSelectionForm(forms.Form):
         )
         # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
         self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
+
+
+class VisibiliteUpdateBaseForm(DSFRForm):
+    visibilite = forms.ChoiceField(
+        label="",
+        widget=DSFRRadioButton(attrs={"hint_text": {choice.value: choice.label.capitalize() for choice in Visibilite}}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("obj", None)
+        super().__init__(*args, **kwargs)
+        fiche_detection = obj or self.instance
+
+        local = (Visibilite.LOCAL, Visibilite.LOCAL.capitalize())
+        national = (Visibilite.NATIONAL, Visibilite.NATIONAL.capitalize())
+        self.fields["visibilite"].choices = [local] if fiche_detection.is_draft else [local, national]
+        self.fields["visibilite"].initial = fiche_detection.visibilite

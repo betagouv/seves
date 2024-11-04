@@ -1,7 +1,7 @@
 from model_bakery import baker
 from sv.models import FicheZoneDelimitee, FicheDetection, ZoneInfestee
 
-BASE_NUM_QUERIES = 13
+BASE_NUM_QUERIES = 14
 
 
 def test_empty_fiche_zone_delimitee_performances(client, django_assert_num_queries, mocked_authentification_user):

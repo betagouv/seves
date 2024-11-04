@@ -3,6 +3,7 @@ from datetime import datetime
 import uuid
 
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.views import View
 from django.shortcuts import redirect
 from django.views.generic import (
@@ -37,6 +38,7 @@ from sv.forms import (
     ZoneInfesteeFormSetUpdate,
     RattachementDetectionForm,
     RattachementChoices,
+    FicheZoneDelimiteeVisibiliteUpdateForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -643,20 +645,31 @@ class FicheDetecionCloturerView(View):
         return redirect(redirect_url)
 
 
-class FicheDetectionVisibiliteUpdateView(UpdateView):
+class FicheDetectionVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
     model = FicheDetection
     form_class = FicheDetectionVisibiliteUpdateForm
     http_method_names = ["post"]
+    success_message = "La visibilité de la fiche détection a bien été modifiée."
 
     def get_success_url(self):
-        return reverse("fiche-detection-vue-detaillee", args=[self.object.pk])
-
-    def form_valid(self, form):
-        messages.success(self.request, "La visibilité de la fiche détection a bien été modifiée.")
-        return super().form_valid(form)
+        return self.object.get_absolute_url()
 
     def form_invalid(self, form):
         messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
+        return super().form_invalid(form)
+
+
+class FicheZoneDelimiteeVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
+    model = FicheZoneDelimitee
+    form_class = FicheZoneDelimiteeVisibiliteUpdateForm
+    http_method_names = ["post"]
+    success_message = "La visibilité de la fiche zone délimitée a bien été modifiée."
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_invalid(self, form):
+        messages.error(self.request, "La visibilité de la fiche zone délimitée n'a pas pu être modifiée.")
         return super().form_invalid(form)
 
 
@@ -786,6 +799,7 @@ class FicheZoneDelimiteeDetailView(
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
+    UserPassesTestMixin,
     DetailView,
 ):
     model = FicheZoneDelimitee
@@ -819,12 +833,18 @@ class FicheZoneDelimiteeDetailView(
         context = super().get_context_data(**kwargs)
         fichezonedelimitee = self.get_object()
         context["free_link_form"] = self._get_free_link_form()
+        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
         context["zones_infestees"] = [
             (zone_infestee, zone_infestee.fichedetection_set.all())
             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
         ]
         return context
+
+    def test_func(self) -> bool | None:
+        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
+        return self.get_object().can_user_access(self.request.user)
 
 
 class FicheZoneDelimiteeUpdateView(UpdateView):

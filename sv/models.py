@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices, Q
@@ -13,7 +14,7 @@ from core.mixins import (
     IsActiveMixin,
     WithMessageUrlsMixin,
 )
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure
 from sv.managers import (
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
@@ -487,6 +488,13 @@ class FicheDetection(
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
 
+    def get_visibilite_update_url(self):
+        return reverse("fiche-detection-visibilite-update", kwargs={"pk": self.pk})
+
+    def get_content_type_id(self) -> int:
+        """Renvoie l'ID du ContentType associé au modèle FicheDetection"""
+        return ContentType.objects.get_for_model(self).pk
+
     def cloturer(self):
         self.etat = Etat.get_etat_cloture()
         self.save()
@@ -499,32 +507,6 @@ class FicheDetection(
 
     def is_already_cloturer(self):
         return self.etat.is_cloture()
-
-    @property
-    def is_draft(self):
-        return self.visibilite == Visibilite.BROUILLON
-
-    def can_update_visibilite(self, user):
-        """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
-        match self.visibilite:
-            case Visibilite.BROUILLON:
-                return user.agent.is_in_structure(self.createur)
-            case Visibilite.LOCAL | Visibilite.NATIONAL:
-                return user.agent.structure.is_mus_or_bsv
-            case _:
-                return False
-
-    def can_user_access(self, user):
-        """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
-        match self.visibilite:
-            case Visibilite.BROUILLON:
-                return user.agent.is_in_structure(self.createur)
-            case Visibilite.LOCAL:
-                return user.agent.structure.is_mus_or_bsv or user.agent.is_in_structure(self.createur)
-            case Visibilite.NATIONAL:
-                return True
-            case _:
-                return False
 
     @property
     def is_linked_to_fiche_zone_delimitee(self):
@@ -569,7 +551,7 @@ class ZoneInfestee(models.Model):
     )
 
 
-class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
+class FicheZoneDelimitee(AllowVisibiliteMixin, WithMessageUrlsMixin, models.Model):
     class CaracteristiquesPrincipales(models.TextChoices):
         PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
             "plein_air_zone_production_champ",
@@ -681,6 +663,9 @@ class FicheZoneDelimitee(WithMessageUrlsMixin, models.Model):
 
     def get_update_url(self):
         return reverse("fiche-zone-delimitee-update", kwargs={"pk": self.pk})
+
+    def get_visibilite_update_url(self):
+        return reverse("fiche-zone-visibilite-update", kwargs={"pk": self.pk})
 
     def __str__(self):
         return str(self.numero)

@@ -3,6 +3,8 @@ from playwright.sync_api import Page, expect
 from model_bakery import baker
 from django.utils import timezone
 from django.urls import reverse
+
+from core.models import Visibilite
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.forms import RattachementChoices
@@ -118,6 +120,7 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     assert FicheZoneDelimitee.objects.count() == 1
     fiche_from_db = FicheZoneDelimitee.objects.get()
     assert fiche_from_db.organisme_nuisible == fiche_detection.organisme_nuisible
+    assert fiche_from_db.visibilite == Visibilite.LOCAL
     assert fiche_from_db.statut_reglementaire == fiche_detection.statut_reglementaire
     assert fiche_from_db.date_creation.date() == timezone.now().date()
     assert (
@@ -133,6 +136,26 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     # Vérification de la détection liée dans hors zone infestée
     fiches_detection_linked = fiche_from_db.fichedetection_set.all()
     assert fiche_detection in fiches_detection_linked
+
+
+@pytest.mark.django_db
+def test_can_create_fiche_zone_delimitee_in_draft(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
+    fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
+    fiche_detection.save()
+    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.fill_form(fiche)
+    page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+
+    form_page.check_message_succes()
+    assert FicheZoneDelimitee.objects.count() == 1
+    fiche_from_db = FicheZoneDelimitee.objects.get()
+    assert fiche_from_db.visibilite == Visibilite.BROUILLON
 
 
 @pytest.mark.django_db
