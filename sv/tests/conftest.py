@@ -103,3 +103,10 @@ def fill_commune(db, page: Page):
         page.get_by_role("option", name="Lille (59)", exact=True).click()
 
     return _fill_commune
+
+
+@pytest.fixture(params=["fiche_detection_bakery", "fiche_zone_bakery"])
+def fiche_variable(request, fiche_detection_bakery, fiche_zone_bakery):
+    if request.param == "fiche_detection_bakery":
+        return fiche_detection_bakery
+    return fiche_zone_bakery

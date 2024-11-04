@@ -98,9 +98,6 @@ class FicheDetectionDetailView(
         self.object = super().get_object(queryset)
         return self.object
 
-    def get_object_linked_to_document(self):
-        return self.get_object()
-
     def _get_free_link_form(self):
         return FreeLinkForm(
             content_type_1=ContentType.objects.get_for_model(self.get_object()).pk, object_id_1=self.get_object().pk
@@ -756,7 +753,14 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeDetailView(WithFreeLinksListInContextMixin, DetailView):
+class FicheZoneDelimiteeDetailView(
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithMessagesListInContextMixin,
+    WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
+    DetailView,
+):
     model = FicheZoneDelimitee
     context_object_name = "fiche"
 
