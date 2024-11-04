@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 from model_bakery import baker
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
-from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection
+from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat
 
 
 def test_fichezonedelimitee_update_form_content(
@@ -47,7 +47,9 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
     live_server, page: Page, fiche_zone_bakery, choice_js_fill
 ):
     fiche_zone_delimitee = fiche_zone_bakery()
-    new_fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
+    new_fiche_zone_delimitee = baker.prepare(
+        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
+    )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.fill_form(new_fiche_zone_delimitee)
@@ -129,6 +131,7 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
 ) -> None:
     fiche_zone_delimitee = baker.make(
         FicheZoneDelimitee,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
         _fill_optional=True,
@@ -154,6 +157,7 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
 ) -> None:
     fiche_zone_delimitee = baker.make(
         FicheZoneDelimitee,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
         _fill_optional=True,

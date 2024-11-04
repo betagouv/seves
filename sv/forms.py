@@ -105,7 +105,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
     class Meta:
         model = FicheZoneDelimitee
-        exclude = ["date_creation", "numero", "createur"]
+        exclude = ["date_creation", "numero", "createur", "etat"]
         labels = {
             "statut_reglementaire": "Statut réglementaire",
             "caracteristiques_principales_zone_delimitee": "Caractéristiques",

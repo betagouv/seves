@@ -12,9 +12,9 @@
                             Clôturer une fiche
                         </h1>
                         {% if can_cloturer_fiche %}
-                            <p>Étes-vous sûr.e de vouloir clôturer la fiche {{ fichedetection.numero }} ?</p>
+                            <p>Étes-vous sûr.e de vouloir clôturer la fiche {{ fiche.numero }} ?</p>
                         {% else %}
-                            <p>Vous ne pouvez pas clôturer la fiche n° {{ fichedetection.numero }} car les structures suivantes n'ont pas signalées la fin de suivi : </p>
+                            <p>Vous ne pouvez pas clôturer la fiche n° {{ fiche.numero }} car les structures suivantes n'ont pas signalées la fin de suivi : </p>
                             <ul>
                                 {% for contact in contacts_not_in_fin_suivi %}
                                     <li>{{ contact.structure }}</li>
@@ -27,8 +27,9 @@
                                 <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cloturer-fiche">
                                     Annuler
                                 </button>
-                                <form method="post" action="{% url 'fiche-detection-cloturer' fichedetection.pk %}">
+                                <form method="post" action="{% url 'fiche-cloturer' fiche.pk %}">
                                     {% csrf_token %}
+                                    <input type="hidden" name="content_type_id" value="{{ content_type.pk }}">
                                     <button type="submit" class="fr-btn">Confirmer la clôture</button>
                                 </form>
                             </div>

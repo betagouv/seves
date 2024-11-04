@@ -89,7 +89,15 @@ class FicheZoneManager(models.Manager):
 
 class FicheZoneQuerySet(models.QuerySet):
     def optimized_for_list(self):
-        return self.select_related("numero", "createur", "organisme_nuisible")
+        return self.select_related("numero", "createur", "organisme_nuisible", "etat")
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
+
+    def get_contacts_structures_not_in_fin_suivi(self, fiche_zone_delimitee):
+        contacts_structure_fiche = fiche_zone_delimitee.contacts.exclude(structure__isnull=True).select_related(
+            "structure"
+        )
+        fin_suivi_contacts_ids = fiche_zone_delimitee.fin_suivi.values_list("contact", flat=True)
+        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
+        return contacts_not_in_fin_suivi

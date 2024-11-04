@@ -8,6 +8,9 @@
                 {% if can_update_visibilite %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
                 {% endif %}
+                {% if user.agent.structure.is_ac and not fiche.etat.is_cloture %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-fiche"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer la fiche</a></li>
+                {% endif %}
             </ul>
         </div>
     </div>
