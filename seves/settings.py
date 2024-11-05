@@ -182,6 +182,7 @@ if all(
         "access_key": env("STORAGE_ACCESS_KEY", default=None),
         "secret_key": env("STORAGE_SECRET_KEY", default=None),
         "endpoint_url": env("STORAGE_URL", default=None),
+        "file_overwrite": False,
     }
 elif environ.Env(TEMP_STORAGE=(bool, False)):
     STORAGES["default"]["OPTIONS"] = {"location": tempfile.mkdtemp()}
