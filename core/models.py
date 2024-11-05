@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from .managers import DocumentQueryset, ContactQueryset
 from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from .storage import get_timestamped_filename
 
 User = get_user_model()
 
@@ -134,7 +135,7 @@ class Document(models.Model):
     nom = models.CharField(max_length=256)
     description = models.TextField()
     document_type = models.CharField(max_length=100, choices=DOCUMENT_TYPE_CHOICES, verbose_name="Type de document")
-    file = models.FileField(upload_to="")
+    file = models.FileField(upload_to=get_timestamped_filename)
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")
