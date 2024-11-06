@@ -72,7 +72,11 @@ class FicheDetectionQuerySet(models.QuerySet):
         query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
         if instance is not None:
             query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
-        return self.filter(query).filter(organisme_nuisible__libelle_court=organisme_nuisible_libelle)
+        return (
+            self.filter(query)
+            .filter(organisme_nuisible__libelle_court=organisme_nuisible_libelle)
+            .select_related("numero")
+        )
 
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")
