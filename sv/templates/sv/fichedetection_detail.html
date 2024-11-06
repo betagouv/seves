@@ -19,7 +19,7 @@
         <div class="fiche-header">
             <div>
                 <h1 class="fiche-header__title">Fiche détection n° {{ fichedetection.numero }}</h1>
-                <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_detection_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
+                <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
                 {% if fichedetection.is_ac_notified %}
                     <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
                 {% endif %}

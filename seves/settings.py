@@ -223,3 +223,5 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
+
+# TODO tests

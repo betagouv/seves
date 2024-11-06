@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("sv", "0027_remove_zoneinfestee_numero_and_more"),
+        ("sv", "0028_fichezonedelimitee_contacts"),
     ]
 
     operations = [

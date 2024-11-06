@@ -601,7 +601,6 @@ class FicheDetectionExportView(View):
 
 class FicheCloturerView(View):
     def post(self, request, pk):
-        # TODO test that this works ?
         data = self.request.POST
         content_type = ContentType.objects.get(pk=data["content_type_id"]).model_class()
         fiche = content_type.objects.get(pk=pk)
@@ -805,9 +804,12 @@ class FicheZoneDelimiteeDetailView(
         fichezonedelimitee = self.get_object()
         context["free_link_form"] = self._get_free_link_form()
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
-        # TODO handle this
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        context["can_cloturer_fiche"] = True # TODO  len(contacts_not_in_fin_suivi) == 0
+        contacts_not_in_fin_suivi = FicheZoneDelimitee.objects.all().get_contacts_structures_not_in_fin_suivi(
+            self.get_object()
+        )
+        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
+        context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         context["zones_infestees"] = [
             (zone_infestee, zone_infestee.fichedetection_set.all())
             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()

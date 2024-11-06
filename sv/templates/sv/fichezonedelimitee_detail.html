@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load remove_trailing_zero %}
+{% load etat_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
@@ -18,6 +19,7 @@
         <div class="fr-grid-row fr-mb-3w">
             <div class="fr-col">
                 <h1 class="fr-mb-0-5v">Fiche zone délimitée n° {{ fiche.numero }}</h1>
+                <p class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</p>
             </div>
             <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right">
                 <li>

@@ -9,15 +9,6 @@ from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.models import Contact, FinSuiviContact, Visibilite
 
 
-@pytest.fixture
-def etat_nouveau(db):
-    return Etat.objects.get_or_create(libelle=Etat.NOUVEAU)[0]
-
-
-@pytest.fixture
-def create_fiche(db):
-    return baker.make(FicheDetection, date_creation=now() - timedelta(days=15))
-
 
 @pytest.fixture
 def contact_ac(db):
@@ -33,15 +24,17 @@ def _add_contacts_to_fiche(fiche_detection, mocked_authentification_user):
     fiche_detection.contacts.add(user_contact_structure)
 
 
-def test_etat_initial(etat_nouveau):
+def test_etat_initial():
     """Test que l'état initial d'une fiche est bien 'nouveau' lors de sa création."""
+    etat_nouveau = Etat.objects.get_or_create(libelle=Etat.NOUVEAU)[0]
     fiche = baker.make(FicheDetection)
     assert fiche.etat == etat_nouveau
 
 
-def test_command_updates_fiche_status(create_fiche):
+def test_command_updates_fiche_status():
     """Test que la commande update_fichedetection_etat met à jour l'état des fiches à 'en cours'
     si elles ont été créées il y a plus de 15 jours."""
+    baker.make(FicheDetection, date_creation=now() - timedelta(days=15))
     call_command("update_fichedetection_etat")
     fiche = FicheDetection.objects.first()
     assert fiche.etat.libelle == Etat.EN_COURS
@@ -118,7 +111,7 @@ def test_can_cloturer_fiche_if_creator_structure_in_fin_suivi(
     page.get_by_role("link", name="Clôturer la fiche").click()
     page.get_by_role("button", name="Confirmer la clôture").click()
 
-    expect(page.get_by_text(f"La fiche de détection n° {fiche_detection.numero} a bien été clôturée.")).to_be_visible()
+    expect(page.get_by_text(f"La fiche n° {fiche_detection.numero} a bien été clôturée.")).to_be_visible()
     expect(page.get_by_text("clôturé", exact=True)).to_be_visible()
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Clôturer la fiche")).not_to_be_visible()
