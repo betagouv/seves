@@ -4,7 +4,7 @@
 		"command": "0 0,5 * * * python manage.py update_fichedetection_etat"
 	  },
 	  {
-		"command": "* * * * * python manage.py send_queued_mail"
+		"command": "*/10 * * * * python manage.py send_queued_mail"
 	  }
 	]
   }
