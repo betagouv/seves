@@ -14,7 +14,7 @@ from core.mixins import (
     IsActiveMixin,
     WithMessageUrlsMixin,
 )
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.managers import (
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
@@ -425,11 +425,17 @@ class FicheDetection(
                     | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
                 ),
                 name="check_hors_zone_infestee_or_zone_infestee_or_none",
-            )
+            ),
+            models.CheckConstraint(
+                check=~(Q(visibilite="brouillon") & Q(numero__isnull=False)),
+                name="check_numero_fiche_is_null_when_visibilite_is_brouillon",
+            ),
         ]
 
     # Informations générales
-    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
+    numero = models.OneToOneField(
+        NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
+    )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
@@ -484,6 +490,11 @@ class FicheDetection(
     zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
 
     objects = FicheDetectionManager()
+
+    def save(self, *args, **kwargs):
+        if not self.numero and self.visibilite == Visibilite.LOCAL:
+            self.numero = NumeroFiche.get_next_numero()
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})

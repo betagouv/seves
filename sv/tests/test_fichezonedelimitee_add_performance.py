@@ -2,6 +2,7 @@ from django.urls import reverse
 
 from model_bakery import baker
 
+from core.models import Visibilite
 from sv.forms import RattachementChoices
 from sv.models import Etat, OrganismeNuisible, FicheDetection
 
@@ -23,6 +24,7 @@ def test_add_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(
         hors_zone_infestee=None,
         zone_infestee=None,
         organisme_nuisible=organisme_nuisible,
+        visibilite=Visibilite.LOCAL,
         _quantity=3,
     )
     url = f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={detections[0].pk}&rattachement={RattachementChoices.HORS_ZONE_INFESTEE}"
@@ -39,6 +41,7 @@ def test_add_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(
         hors_zone_infestee=None,
         zone_infestee=None,
         organisme_nuisible=organisme_nuisible,
+        visibilite=Visibilite.LOCAL,
         _quantity=3,
     )
     with django_assert_num_queries(BASE_NUM_QUERIES):

@@ -4,6 +4,8 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 from django.utils.timezone import make_aware
+
+from core.models import Visibilite
 from ..models import (
     Region,
     OrganismeNuisible,
@@ -77,10 +79,18 @@ def test_search_with_fiche_number(live_server, page: Page, mocked_authentificati
     num1 = NumeroFiche.get_next_numero()
     num2 = NumeroFiche.get_next_numero()
     baker.make(
-        FicheDetection, numero=num1, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure
+        FicheDetection,
+        numero=num1,
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
     )
     baker.make(
-        FicheDetection, numero=num2, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure
+        FicheDetection,
+        numero=num2,
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
@@ -166,12 +176,14 @@ def test_search_with_period(live_server, page: Page, mocked_authentification_use
         date_creation=make_aware(datetime(2024, 6, 19)),
         etat=baker.make(Etat),
         createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
     )
     fiche2 = baker.make(
         FicheDetection,
         date_creation=make_aware(datetime(2024, 6, 20)),
         etat=baker.make(Etat),
         createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
@@ -207,8 +219,12 @@ def test_search_with_state(live_server, page: Page, mocked_authentification_user
     Effectue une recherche en sélectionnant un état spécifique et
     vérifier que les fiches détectées retournées sont celles ayant cet état."""
     etat1, etat2 = baker.make(Etat, _quantity=2)
-    fiche1 = baker.make(FicheDetection, etat=etat1, createur=mocked_authentification_user.agent.structure)
-    fiche2 = baker.make(FicheDetection, etat=etat2, createur=mocked_authentification_user.agent.structure)
+    fiche1 = baker.make(
+        FicheDetection, etat=etat1, createur=mocked_authentification_user.agent.structure, visibilite=Visibilite.LOCAL
+    )
+    fiche2 = baker.make(
+        FicheDetection, etat=etat2, createur=mocked_authentification_user.agent.structure, visibilite=Visibilite.LOCAL
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("État").select_option(str(etat1.id))
@@ -230,6 +246,7 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
         createur=mocked_authentification_user.agent.structure,
         hors_zone_infestee=None,
         zone_infestee=None,
+        visibilite=Visibilite.LOCAL,
     )
     lieu = baker.make(Lieu, fiche_detection=fiche1, _fill_optional=True)
 
@@ -251,7 +268,11 @@ def test_search_without_filters(live_server, page: Page, mocked_authentification
     Effectue une recherche sans entrer de critères dans les filtres pour s'assurer que tous les enregistrements sont retournés
     et qu'aucun filtre n'est appliqué."""
     fiche1, fiche2 = baker.make(
-        FicheDetection, etat=baker.make(Etat), _quantity=2, createur=mocked_authentification_user.agent.structure
+        FicheDetection,
+        etat=baker.make(Etat),
+        _quantity=2,
+        createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
     )
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")

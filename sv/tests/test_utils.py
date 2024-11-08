@@ -39,8 +39,16 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_role("heading", name="Mesures de gestion")
 
     @property
-    def save_btn(self) -> Locator:
+    def save_update_btn(self) -> Locator:
         return self.page.get_by_test_id("fiche-detection-save-btn")
+
+    @property
+    def publish_btn(self) -> Locator:
+        return self.page.get_by_role("button", name="Publier")
+
+    @property
+    def save_brouillon_btn(self) -> Locator:
+        return self.page.get_by_role("button", name="Enregistrer le brouillon")
 
     @property
     def add_lieu_btn(self) -> Locator:

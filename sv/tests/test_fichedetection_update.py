@@ -4,6 +4,7 @@ from playwright.sync_api import Page, expect
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
+from core.models import Visibilite
 from ..models import (
     FicheDetection,
     Lieu,
@@ -15,6 +16,7 @@ from ..models import (
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
     StructurePreleveur,
+    Etat,
 )
 from ..models import (
     Region,
@@ -169,7 +171,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements.mesures_consignation_input.fill(new_fiche_detection.mesures_consignation)
     form_elements.mesures_phytosanitaires_input.fill(new_fiche_detection.mesures_phytosanitaires)
     form_elements.mesures_surveillance_specifique_input.fill(new_fiche_detection.mesures_surveillance_specifique)
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
@@ -208,7 +210,7 @@ def test_saving_without_changing_organisme_works(
     new_fiche_detection.save()
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(new_fiche_detection)}")
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     new_fiche_detection.refresh_from_db()
@@ -246,7 +248,7 @@ def test_add_new_lieu(
     lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
@@ -317,7 +319,7 @@ def test_add_multiple_lieux(
         lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
         lieu_form_elements.save_btn.click()
 
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     assert Lieu.objects.count() == 3
@@ -388,7 +390,7 @@ def test_update_lieu(
         str(new_lieu.position_chaine_distribution_etablissement.id)
     )
     lieu_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
@@ -455,7 +457,7 @@ def test_update_two_lieux(
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
 
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
@@ -488,7 +490,7 @@ def test_delete_lieu(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
@@ -523,7 +525,7 @@ def test_delete_multiple_lieux(
     page.get_by_role("button", name="Supprimer", exact=True).click()
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
@@ -559,7 +561,7 @@ def test_add_new_prelevement_non_officiel(
     )
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
@@ -614,7 +616,7 @@ def test_add_new_prelevement_officiel(
         str(prelevement.laboratoire_confirmation_officielle.id)
     )
     prelevement_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
@@ -666,7 +668,7 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.resultat_input(prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()
 
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     prelevements_from_db = Prelevement.objects.filter(lieu=lieu)
@@ -712,7 +714,7 @@ def test_update_prelevement(
     )
     prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     prelevement_from_db = Prelevement.objects.get(lieu=new_lieu)
@@ -764,7 +766,7 @@ def test_update_multiple_prelevements(
         prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()
 
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     prelevement_from_db_1 = Prelevement.objects.get(lieu=new_prelevement_1.lieu)
@@ -798,7 +800,7 @@ def test_delete_prelevement(
     )
     page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
@@ -827,7 +829,7 @@ def test_delete_multiple_prelevements(
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").nth(1).click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
 
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
@@ -851,7 +853,7 @@ def test_can_edit_and_save_lieu_with_name_only(
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi mis à jour")
     lieu_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
 
     page.wait_for_timeout(600)
 
@@ -980,3 +982,26 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
+
+
+def test_fiche_detection_numero_fiche_is_not_null_when_visibilite_change_from_brouillon_to_local(
+    live_server, page: Page, mocked_authentification_user
+):
+    """Test qu'une fiche détection existante qui passe d'une visibilité brouillon (sans numéro de fiche) à une visibilité locale a un numéro de fiche"""
+    fiche_detection = baker.make(
+        FicheDetection,
+        visibilite=Visibilite.BROUILLON,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        createur=mocked_authentification_user.agent.structure,
+    )
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("link", name="Modifier la visibilité").click()
+    page.get_by_text("Local").click()
+    page.get_by_role("button", name="Valider").click()
+    page.wait_for_timeout(600)
+    fiche_detection.refresh_from_db()
+
+    assert fiche_detection.visibilite == Visibilite.LOCAL
+    assert fiche_detection.numero is not None

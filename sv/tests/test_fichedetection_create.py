@@ -19,7 +19,7 @@ from ..models import (
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
-from core.models import Contact
+from core.models import Contact, Visibilite
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
@@ -59,7 +59,8 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.lieux_title).to_be_visible()
     expect(form_elements.prelevements_title).to_be_visible()
     expect(form_elements.mesures_gestion_title).to_be_visible()
-    expect(form_elements.save_btn).to_be_visible()
+    expect(form_elements.save_brouillon_btn).to_be_visible()
+    expect(form_elements.publish_btn).to_be_visible()
     expect(form_elements.add_lieu_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_disabled()
 
@@ -228,7 +229,7 @@ def test_create_fiche_detection_with_lieu(
     )
     lieu_form_elements.save_btn.click()
     expect(form_elements.add_prelevement_btn).to_be_enabled()
-    form_elements.save_btn.click()
+    form_elements.publish_btn.click()
 
     page.wait_for_timeout(1000)
 
@@ -262,7 +263,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     est ajouté dans la liste des contacts de la fiche détection"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
-    form_elements.save_btn.click()
+    form_elements.publish_btn.click()
 
     page.get_by_test_id("contacts").click()
     expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
@@ -281,7 +282,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     est ajouté dans la liste des contacts de la fiche détection"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
-    form_elements.save_btn.click()
+    form_elements.publish_btn.click()
 
     page.wait_for_timeout(600)
 
@@ -298,10 +299,23 @@ def test_add_lieu_with_name_only_and_save(
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
     lieu_form_elements.save_btn.click()
-    form_elements.save_btn.click()
+    form_elements.publish_btn.click()
 
     page.wait_for_timeout(600)
 
     fiche = FicheDetection.objects.get()
     lieu = fiche.lieux.get()
     assert lieu.nom == "Chez moi"
+
+
+def test_fiche_detection_numero_fiche_is_null_when_save_with_visibilite_brouillon(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements
+):
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.save_brouillon_btn.click()
+
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.numero is None
+    assert fiche_detection.visibilite == Visibilite.BROUILLON

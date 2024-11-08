@@ -163,7 +163,13 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
     detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (
-        baker.make(FicheDetection, organisme_nuisible=fiche_detection.organisme_nuisible, _quantity=2) for _ in range(3)
+        baker.make(
+            FicheDetection,
+            organisme_nuisible=fiche_detection.organisme_nuisible,
+            visibilite=Visibilite.LOCAL,
+            _quantity=2,
+        )
+        for _ in range(3)
     )
     fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True)
     zone_infestee1, zone_infestee2 = baker.prepare(

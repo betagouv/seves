@@ -57,7 +57,7 @@
 
                 <p>
                     {% if is_creation %}
-                        <input type="submit" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w" data-testid="fiche-detection-save-btn">
+                        <input type="submit" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">
                         <input type="submit" name="action" value="Publier" data-action="publier" class="fr-btn">
                     {% else %}
                         <a href="{% url 'fiche-detection-vue-detaillee' fichedetection.pk %}" class="fr-link fr-mr-3w">Annuler</a>

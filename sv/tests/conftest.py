@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from core.models import Agent, Structure, Document
+from core.models import Agent, Structure, Document, Visibilite
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 from model_bakery import baker
@@ -70,6 +70,7 @@ def fiche_detection_bakery(db, mocked_authentification_user):
             createur=mocked_authentification_user.agent.structure,
             hors_zone_infestee=None,
             zone_infestee=None,
+            visibilite=Visibilite.LOCAL,
         )
 
     return _fiche_detection_bakery

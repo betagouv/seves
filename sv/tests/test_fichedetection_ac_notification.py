@@ -1,4 +1,5 @@
 from django.urls import reverse
+from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.models import Structure, Contact, Visibilite
@@ -38,9 +39,10 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
     expect(page.locator(".fiches__list-row td:nth-child(8) a .fr-icon-notification-3-line")).to_be_visible()
 
 
-def test_cant_notify_ac_draft(live_server, page: Page, fiche_detection: FicheDetection, mailoutbox):
-    fiche_detection.visibilite = Visibilite.BROUILLON
-    fiche_detection.save()
+def test_cant_notify_ac_draft(live_server, page: Page, mocked_authentification_user):
+    fiche_detection = baker.make(
+        FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
     page.get_by_role("button", name="Actions").click()
