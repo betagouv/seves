@@ -56,7 +56,6 @@ from .models import (
     MatricePrelevee,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
-    NumeroFiche,
     Departement,
     TypeExploitant,
     PositionChaineDistribution,
@@ -291,7 +290,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
         # Création de la fiche de détection en base de données
         fiche = FicheDetection(
-            numero=NumeroFiche.get_next_numero(),
             createur=user_structure,
             statut_evenement_id=data["statutEvenementId"],
             numero_europhyt=data["numeroEurophyt"],

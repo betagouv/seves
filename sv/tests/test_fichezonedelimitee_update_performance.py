@@ -1,5 +1,6 @@
 from model_bakery import baker
 
+from core.models import Visibilite
 from sv.models import Etat, OrganismeNuisible, FicheDetection
 
 BASE_NUM_QUERIES = 10
@@ -20,6 +21,7 @@ def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection
         hors_zone_infestee=None,
         zone_infestee=None,
         organisme_nuisible=organisme_nuisible,
+        visibilite=Visibilite.LOCAL,
         _quantity=3,
     )
     fiche_zone_delimitee = fiche_zone_bakery()
@@ -38,6 +40,7 @@ def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection
         hors_zone_infestee=None,
         zone_infestee=None,
         organisme_nuisible=organisme_nuisible,
+        visibilite=Visibilite.LOCAL,
         _quantity=3,
     )
     with django_assert_num_queries(BASE_NUM_QUERIES):

@@ -1,7 +1,9 @@
 import pytest
 from model_bakery import baker
 from django.db.utils import IntegrityError
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+
+from core.models import Visibilite
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat
 
 
 @pytest.mark.django_db
@@ -37,4 +39,15 @@ def test_fiche_detection_with_hors_zone_infestee_and_zone_infestee():
             FicheDetection,
             hors_zone_infestee=baker.make(FicheZoneDelimitee),
             zone_infestee=baker.make(ZoneInfestee, fiche_zone_delimitee=baker.make(FicheZoneDelimitee)),
+        )
+
+
+@pytest.mark.django_db
+def test_fiche_detection_numero_fiche_is_null_when_visibilite_is_brouillon():
+    with pytest.raises(IntegrityError):
+        baker.make(
+            FicheDetection,
+            etat=Etat.objects.get(id=Etat.get_etat_initial()),
+            visibilite=Visibilite.BROUILLON,
+            _fill_optional=True,
         )

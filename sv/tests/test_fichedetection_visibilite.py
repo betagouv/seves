@@ -2,6 +2,7 @@ import pytest
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
+
 from sv.tests.test_utils import FicheDetectionFormDomElements
 from sv.models import FicheDetection
 from core.models import Structure, Visibilite
@@ -38,26 +39,26 @@ def test_fiche_detection_visibilite_local(live_server, page: Page, form_elements
 @pytest.mark.django_db
 @pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCAL, Visibilite.NATIONAL])
 def test_agent_in_structure_createur_can_view_fiche_detection(
-    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user, visibilite_libelle: str
+    live_server, page: Page, mocked_authentification_user, visibilite_libelle: str
 ):
     """Test qu'un agent appartennant à la structure créatrice d'une fiche de détection peut voir la fiche quelque soit sa visibilité"""
-    _update_visibilite_fiche_detection(fiche_detection, visibilite_libelle)
-    fiche_detection.createur = mocked_authentification_user.agent.structure
-    fiche_detection.save()
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    expect(page.get_by_role("heading", name=f"Fiche détection n° {str(fiche_detection.numero)}")).to_be_visible()
+    fiche_detection = baker.make(
+        FicheDetection, visibilite=visibilite_libelle, createur=mocked_authentification_user.agent.structure
+    )
+    response = page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    assert response.status == 200
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
-    expect(page.get_by_role("link", name=str(fiche_detection.numero))).to_be_visible()
+    expect(page.get_by_role("link", name=str(fiche_detection.createur))).to_be_visible()
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCAL])
 def test_agent_not_in_structure_createur_cannot_view_fiche_detection_brouillon_or_local(
-    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user, visibilite_libelle: str
+    live_server, page: Page, mocked_authentification_user, visibilite_libelle: str
 ):
     """Test qu'un agent n'appartenant pas à la structure créatrice d'une fiche détection ne peut pas voir la fiche
     si elle est en visibilité brouillon ou local"""
-    _update_visibilite_fiche_detection(fiche_detection, visibilite_libelle)
+    fiche_detection = baker.make(FicheDetection, visibilite=visibilite_libelle)
     mocked_authentification_user.agent.structure = baker.make(Structure)
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -82,9 +83,10 @@ def test_agent_not_in_structure_createur_can_view_fiche_detection_nationale(
 @pytest.mark.django_db
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
 def test_agent_ac_cannot_view_fiche_detection_brouillon(
-    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user, structure_ac: str
+    live_server, page: Page, mocked_authentification_user, structure_ac: str
 ):
     """Test qu'un agent appartenant à l'AC ne peut pas voir une fiche détection en visibilité brouillon"""
+    fiche_detection = baker.make(FicheDetection, visibilite=Visibilite.BROUILLON)
     mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
         niveau1=AC_STRUCTURE, niveau2=structure_ac
     )
@@ -130,12 +132,13 @@ def test_cannot_update_fiche_detection_visibilite_by_other_structures(
 
 
 def test_agent_in_structure_createur_can_update_fiche_detection_visibilite_brouillon(
-    live_server, page: Page, fiche_detection: FicheDetection, mocked_authentification_user
+    live_server, page: Page, mocked_authentification_user
 ):
     """Test qu'un agent appartenant à la structure créatrice d'une fiche détection
     peut modifier la visibilité de cette fiche (passer en local) si elle est en visibilité brouillon"""
-    fiche_detection.createur = mocked_authentification_user.agent.structure
-    fiche_detection.save()
+    fiche_detection = baker.make(
+        FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Modifier la visibilité")).to_be_visible()

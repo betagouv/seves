@@ -1,5 +1,7 @@
 from playwright.sync_api import Page, expect
 from model_bakery import baker
+
+from core.models import Visibilite
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
 
 
@@ -8,8 +10,12 @@ def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, page: Page, mo
         FicheZoneDelimitee, createur=mocked_authentification_user.agent.structure, _fill_optional=True
     )
     zone_infestee_1 = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
-    fiche_detection_fiche_zone_delimitee = baker.make(FicheDetection, hors_zone_infestee=fiche_zone_delimitee)
-    fiche_detection_zone_infestee_1 = baker.make(FicheDetection, zone_infestee=zone_infestee_1)
+    fiche_detection_fiche_zone_delimitee = baker.make(
+        FicheDetection, hors_zone_infestee=fiche_zone_delimitee, visibilite=Visibilite.LOCAL
+    )
+    fiche_detection_zone_infestee_1 = baker.make(
+        FicheDetection, zone_infestee=zone_infestee_1, visibilite=Visibilite.LOCAL
+    )
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Fiche zone délimitée n° {fiche_zone_delimitee.numero}")).to_be_visible()
     expect(page.get_by_text(str(fiche_zone_delimitee.organisme_nuisible))).to_be_visible()
