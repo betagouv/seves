@@ -6,13 +6,16 @@ from django.conf import settings
 
 
 def _send_message(recipients: list[str], copy: list[str], subject, message, instance):
-    message += f"\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : {settings.ROOT_URL}{instance.content_object.get_absolute_url()}"
+    message += (
+        f"\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : "
+        f'<a href="{settings.ROOT_URL}{instance.content_object.get_absolute_url()}" target="_blank">{settings.ROOT_URL}{instance.content_object.get_absolute_url()}</a>'
+    )
     send(
         recipients=recipients,
         cc=copy,
         sender="no-reply@beta.gouv.fr",
         subject=f"SEVES - {subject}",
-        message=message,
+        html_message=message,
     )
 
 
