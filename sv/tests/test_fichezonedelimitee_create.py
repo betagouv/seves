@@ -126,7 +126,6 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     assert (
         fiche_from_db.caracteristiques_principales_zone_delimitee == fiche.caracteristiques_principales_zone_delimitee
     )
-    assert fiche_from_db.vegetaux_infestes == fiche.vegetaux_infestes
     assert fiche_from_db.commentaire == fiche.commentaire
     assert fiche_from_db.rayon_zone_tampon == fiche.rayon_zone_tampon
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon
@@ -192,7 +191,6 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     assert (
         fiche_from_db.caracteristiques_principales_zone_delimitee == fiche.caracteristiques_principales_zone_delimitee
     )
-    assert fiche_from_db.vegetaux_infestes == fiche.vegetaux_infestes
     assert fiche_from_db.commentaire == fiche.commentaire
     assert fiche_from_db.rayon_zone_tampon == fiche.rayon_zone_tampon
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon

@@ -106,6 +106,10 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.commentaire_input).to_be_visible()
     expect(form_elements.commentaire_input).to_be_empty()
 
+    expect(form_elements.vegetaux_infestes_label).to_be_visible()
+    expect(form_elements.vegetaux_infestes_input).to_be_visible()
+    expect(form_elements.vegetaux_infestes_input).to_be_empty()
+
     expect(form_elements.mesures_conservatoires_immediates_label).to_be_visible()
     expect(form_elements.mesures_conservatoires_immediates_input).to_be_visible()
     expect(form_elements.mesures_conservatoires_immediates_input).to_be_empty()
@@ -149,6 +153,8 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
     page.get_by_label("Commentaire").click()
     page.get_by_label("Commentaire").fill("test commentaire")
+    page.get_by_label("Végétaux inféstés").click()
+    page.get_by_label("Végétaux inféstés").fill("3 citronniers")
     page.get_by_label("Mesures conservatoires immé").click()
     page.get_by_label("Mesures conservatoires immé").fill("test mesures conservatoires")
     page.get_by_label("Mesures de consignation").click()
@@ -169,6 +175,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     assert fiche_detection.contexte.id == contexte.id
     assert fiche_detection.date_premier_signalement.strftime("%Y-%m-%d") == "2024-04-21"
     assert fiche_detection.commentaire == "test commentaire"
+    assert fiche_detection.vegetaux_infestes == "3 citronniers"
     assert fiche_detection.mesures_conservatoires_immediates == "test mesures conservatoires"
     assert fiche_detection.mesures_consignation == "test mesures consignation"
     assert fiche_detection.mesures_phytosanitaires == "test mesures phyto"

@@ -494,6 +494,7 @@ class FicheDetection(
     fin_suivi = GenericRelation(FinSuiviContact)
     hors_zone_infestee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True)
     zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
+    vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
 
     objects = FicheDetectionManager()
 
@@ -641,7 +642,6 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
         verbose_name="Caractéristiques principales de la zone délimitée",
         blank=True,
     )
-    vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
     rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True)
     unite_rayon_zone_tampon = models.CharField(

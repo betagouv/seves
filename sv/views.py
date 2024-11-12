@@ -340,6 +340,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             contexte_id=data["contexteId"],
             date_premier_signalement=date_premier_signalement,
             commentaire=data["commentaire"],
+            vegetaux_infestes=data["vegetauxInfestes"],
             mesures_conservatoires_immediates=data["mesuresConservatoiresImmediates"],
             mesures_consignation=data["mesuresConsignation"],
             mesures_phytosanitaires=data["mesuresPhytosanitaires"],
@@ -502,6 +503,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         fiche_detection.contexte_id = data.get("contexteId")
         fiche_detection.date_premier_signalement = date_premier_signalement
         fiche_detection.commentaire = data.get("commentaire")
+        fiche_detection.vegetaux_infestes = data.get("vegetauxInfestes")
         fiche_detection.mesures_conservatoires_immediates = data.get("mesuresConservatoiresImmediates")
         fiche_detection.mesures_consignation = data.get("mesuresConsignation")
         fiche_detection.mesures_phytosanitaires = data.get("mesuresPhytosanitaires")

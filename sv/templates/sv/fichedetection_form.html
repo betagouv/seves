@@ -29,6 +29,7 @@
         <input type="hidden" id="contexte-id" value="{{ form.instance.contexte_id|default:'' }}">
         <input type="hidden" id="date-premier-signalement" value="{{ form.instance.date_premier_signalement|date:'Y-m-d' }}">
         <input type="hidden" id="commentaire" value="{{ form.instance.commentaire }}">
+        <input type="hidden" id="vegetaux-infestes" value="{{ form.instance.vegetaux_infestes }}">
         <input type="hidden" id="mesures-conservatoires-immediates" value="{{ form.instance.mesures_conservatoires_immediates }}">
         <input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
         <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
@@ -139,6 +140,10 @@
                     <p>
                         <label class="fr-label" for="commentaire-input">Commentaire</label>
                         <textarea x-model="ficheDetection.commentaire" id="commentaire-input" class="fr-input" maxlength="500"></textarea>
+                    </p>
+                    <p>
+                        <label class="fr-label" for="vegetaux-infestes-input">Végétaux inféstés</label>
+                        <textarea x-model="ficheDetection.vegetauxInfestes" id="vegetaux-infestes-input" class="fr-input" maxlength="500"></textarea>
                     </p>
                 </div>
 

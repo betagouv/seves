@@ -97,6 +97,9 @@ def test_fiche_detection_update_page_content(
     # Commentaire
     expect(form_elements.commentaire_input).to_have_value(fiche_detection.commentaire)
 
+    # Végétaux inféstés
+    expect(form_elements.vegetaux_infestes_input).to_have_value(fiche_detection.vegetaux_infestes)
+
     # Mesures conservatoires immédiates
     expect(form_elements.mesures_conservatoires_immediates_input).to_have_value(
         fiche_detection.mesures_conservatoires_immediates
@@ -135,6 +138,7 @@ def test_fiche_detection_update_page_content_with_no_data(
     expect(form_elements.contexte_input).to_have_value("")
     expect(form_elements.date_1er_signalement_input).to_have_value("")
     expect(form_elements.commentaire_input).to_have_value("")
+    expect(form_elements.vegetaux_infestes_input).to_have_value("")
     expect(form_elements.mesures_conservatoires_immediates_input).to_have_value("")
     expect(form_elements.mesures_consignation_input).to_have_value("")
     expect(form_elements.mesures_phytosanitaires_input).to_have_value("")
@@ -166,6 +170,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
     form_elements.commentaire_input.fill(new_fiche_detection.commentaire)
+    form_elements.vegetaux_infestes_input.fill(new_fiche_detection.vegetaux_infestes)
     form_elements.mesures_conservatoires_immediates_input.fill(new_fiche_detection.mesures_conservatoires_immediates)
     form_elements.mesures_consignation_input.fill(new_fiche_detection.mesures_consignation)
     form_elements.mesures_phytosanitaires_input.fill(new_fiche_detection.mesures_phytosanitaires)
@@ -182,6 +187,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     assert fiche_detection_updated.statut_reglementaire == new_fiche_detection.statut_reglementaire
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte
     assert fiche_detection_updated.commentaire == new_fiche_detection.commentaire
+    assert fiche_detection_updated.vegetaux_infestes == new_fiche_detection.vegetaux_infestes
     assert (
         fiche_detection_updated.mesures_conservatoires_immediates
         == new_fiche_detection.mesures_conservatoires_immediates

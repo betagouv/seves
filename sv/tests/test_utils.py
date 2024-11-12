@@ -131,6 +131,14 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Commentaire")
 
     @property
+    def vegetaux_infestes_label(self) -> Locator:
+        return self.page.get_by_text("Végétaux inféstés")
+
+    @property
+    def vegetaux_infestes_input(self) -> Locator:
+        return self.page.get_by_label("Végétaux inféstés")
+
+    @property
     def mesures_conservatoires_immediates_label(self) -> Locator:
         return self.page.get_by_text("Mesures conservatoires immédiates")
 
@@ -473,7 +481,6 @@ class FicheZoneDelimiteeFormPage:
 
         # Détails
         self.caracteristiques = page.get_by_label("Caractéristiques")
-        self.vegetaux_infestes = page.get_by_label("Nombre ou volume de végétaux infestés")
         self.commentaire = page.get_by_label("Commentaire")
 
         # Zone tampon
@@ -658,7 +665,6 @@ class FicheZoneDelimiteeFormPage:
     ):
         detections_zone_infestee = detections_zone_infestee or ()
         self.caracteristiques.select_option(fiche_zone_delimitee.caracteristiques_principales_zone_delimitee)
-        self.vegetaux_infestes.fill(fiche_zone_delimitee.vegetaux_infestes)
         self.commentaire.fill(fiche_zone_delimitee.commentaire)
         self.rayon_zone_tampon.fill(str(fiche_zone_delimitee.rayon_zone_tampon))
         self._select_unite_rayon_zone_tampon(fiche_zone_delimitee.unite_rayon_zone_tampon)
