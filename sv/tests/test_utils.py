@@ -44,11 +44,11 @@ class FicheDetectionFormDomElements:
 
     @property
     def add_lieu_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Ajouter un lieu")
+        return self.page.locator("#lieux-header").get_by_role("button", name="Ajouter")
 
     @property
     def add_prelevement_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Ajouter un prélèvement")
+        return self.page.locator("#prelevements-header").get_by_role("button", name="Ajouter")
 
     @property
     def date_creation_label(self) -> Locator:
