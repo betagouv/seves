@@ -32,7 +32,7 @@
                 <div id="en-tete">
                     <img src="{% static 'images/marianne.png' %}" alt="">
                     <p id="seves-title">Sèves</p>
-                    <a href="#" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
+                    <a href="{% url 'fiche-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
                         {% block product_title %}
                         {% endblock product_title %}
                     </a>
