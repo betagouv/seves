@@ -143,7 +143,7 @@
                 <div id="lieux">
                     <div id="lieux-header">
                         <h2>Lieux</h2>
-                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter un lieu</button>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter</button>
                     </div>
                     <template x-if="lieux.length == 0">
                         <p>Aucun lieu.</p>
@@ -155,10 +155,10 @@
                     <div id="prelevements-header">
                         <h2>Prélèvements</h2>
                         <template x-if="lieux.length > 0">
-                            <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter un prélèvement</button>
+                            <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter</button>
                         </template>
                         <template x-if="lieux.length == 0">
-                            <button  type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" disabled>Ajouter un prélèvement</button>
+                            <button  type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" disabled>Ajouter</button>
                         </template>
                     </div>
                     <template x-if="lieux.length == 0">
