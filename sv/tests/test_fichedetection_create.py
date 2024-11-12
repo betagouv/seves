@@ -4,7 +4,7 @@ from datetime import datetime
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 from .conftest import check_select_options
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
     FicheDetection,
     StatutEvenement,
@@ -16,6 +16,7 @@ from ..models import (
     TypeExploitant,
     PositionChaineDistribution,
     Region,
+    StructurePreleveur,
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
@@ -319,3 +320,30 @@ def test_fiche_detection_numero_fiche_is_null_when_save_with_visibilite_brouillo
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.numero is None
     assert fiche_detection.visibilite == Visibilite.BROUILLON
+
+
+def test_prelevements_are_always_linked_to_lieu(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    structures = baker.make(StructurePreleveur, _quantity=2)
+    page.wait_for_timeout(600)
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.save_btn.click()
+    for _ in range(2):
+        form_elements.add_prelevement_btn.click()
+        prelevement_form_elements.structure_input.select_option(str(structures[0].id))
+        prelevement_form_elements.resultat_input("detecte").click()
+        prelevement_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+    page.wait_for_timeout(600)
+
+    lieu = FicheDetection.objects.get().lieux.get()
+    prelevements = lieu.prelevements.all()
+    for prelevement in prelevements:
+        assert prelevement.lieu == lieu

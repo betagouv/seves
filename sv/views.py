@@ -241,7 +241,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                     errors.append("Le champ département est invalide")
 
         # Validation des prélèvements
-        lieu_ids = [lieu["id"] for loc in lieux]
+        lieu_ids = [lieu["id"] for lieu in lieux]
         for prelevement in prelevements:
             # chaque prélèvement doit être associé à un lieu
             if prelevement["lieuId"] not in lieu_ids:
