@@ -49,7 +49,6 @@
                     <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
                 </button>
                 {% include "sv/_detection_action_navigation.html" %}
-                {% include "sv/_lienlibre_modal.html" with fiche=fichedetection %}
                 {% include "sv/_delete_fiche_modal.html" %}
                 {% include "sv/_cloturer_modal.html" with fiche=fichedetection %}
                 {% if can_update_visibilite %}

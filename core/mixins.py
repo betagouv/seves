@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.db import models
 from django.urls import reverse
 
@@ -73,11 +72,7 @@ class WithContactListInContextMixin:
 class WithFreeLinksListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        obj = self.get_object()
-        context["free_links_list"] = LienLibre.objects.filter(
-            (Q(content_type_1=ContentType.objects.get_for_model(obj), object_id_1=obj.id))
-            | (Q(content_type_2=ContentType.objects.get_for_model(obj), object_id_2=obj.id))
-        )
+        context["free_links_list"] = LienLibre.objects.for_object(self.get_object())
         return context
 
 

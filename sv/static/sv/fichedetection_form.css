@@ -16,6 +16,9 @@ main {
 #mesures-gestion{
     grid-column: span 3;
 }
+#liens-libre{
+    grid-column: span 3;
+}
 #lieux, #prelevements {
     overflow-y: auto;
     max-height: 40rem;
@@ -27,7 +30,8 @@ main {
 #objet-evenement,
 #lieux,
 #prelevements,
-#mesures-gestion {
+#mesures-gestion,
+#liens-libre {
     background-color: white;
     padding: 1.5rem;
 }

@@ -29,6 +29,20 @@ header{
 	/* Make sure we never have 2 down arrows (1 via choices js, 1 via DSFR) for select inputs that uses choices js*/
     background-image: none;
 }
+.choices__list--multiple .choices__item {
+    /* Customize ChoicesJS multiple choices picker */
+    min-width: 0px;
+    min-height: 0px;
+    padding: .25rem .75rem !important;
+    background-color: var(--background-active-blue-france) !important;
+    border: 1px solid var(--background-active-blue-france) !important;
+    color: var(--text-inverted-blue-france) !important;
+    margin: 0.25rem;
+}
+.choices__input {
+    background-color: var(--background-contrast-grey) !important;
+    margin-left: 1rem;
+}
 .choices__list--dropdown{
     z-index: 10 !important;
 }

@@ -33,6 +33,7 @@
         <input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
         <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
         <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
+        {{ form.instance.free_link_ids|json_script:"free-links-id" }}
         {{ lieux|json_script:"lieux-json" }}
         {{ prelevements|json_script:"prelevements" }}
         {{ structures_preleveurs|json_script:"structures-preleveurs" }}
@@ -188,6 +189,21 @@
                             <label class="fr-label" for="mesures-surveillance-specifique-input">Mesures de surveillance spécifique</label>
                             <textarea x-model="ficheDetection.mesuresSurveillanceSpecifique" id="mesures-surveillance-specifique-input" class="fr-input" maxlength="500"></textarea>
                         </p>
+                    </div>
+                </div>
+
+                <div id="liens-libre">
+                    <h2>Liens libres</h2>
+                    <div>
+                        <label class="fr-label" for="free-links">Lien vers une fiche</label>
+                        <select id="free-links" multiple="">
+                            <option value="">----</option>
+                            {% for object_type_id, label, queryset in possible_links %}
+                                {% for object in queryset %}
+                                    <option value="{{ object_type_id }}-{{ object.id }}">{{ label }} : {{ object }}</option>
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>

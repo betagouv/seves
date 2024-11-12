@@ -92,6 +92,7 @@ document.addEventListener('alpine:init', () => {
             numeroRasff: '',
             numeroEurophyt: '',
             organismeNuisibleId: '',
+            freeLinksIds: '',
             statutReglementaireId: '',
             contexteId: '',
             datePremierSignalement: '',
@@ -195,6 +196,7 @@ document.addEventListener('alpine:init', () => {
                 statutEvenementId: this.getValueById('statut-evenement-id'),
                 organismeNuisibleId: this.getValueById('organisme-nuisible-id'),
                 statutReglementaireId: this.getValueById('statut-reglementaire-id'),
+                freeLinksIds: JSON.parse(document.getElementById('free-links-id').textContent),
                 contexteId: this.getValueById('contexte-id'),
                 datePremierSignalement: this.getValueById('date-premier-signalement'),
                 commentaire: this.getValueById('commentaire'),
@@ -203,7 +205,6 @@ document.addEventListener('alpine:init', () => {
                 mesuresPhytosanitaires: this.getValueById('mesures-phytosanitaires'),
                 mesuresSurveillanceSpecifique: this.getValueById('mesures-surveillance-specifique')
             };
-
 			// Récupération et initialisation des lieux (si modification d'une fiche de détection existante)
             const lieux = JSON.parse(document.getElementById('lieux-json').textContent);
             if(lieux) {
@@ -288,6 +289,27 @@ document.addEventListener('alpine:init', () => {
             })
 
             this.choicesCommunes = choicesCommunes
+
+            options = {
+                searchResultLimit: 500,
+                classNames: {
+                    containerInner: 'fr-select',
+                },
+                removeItemButton: true,
+                itemSelectText: '',
+                noResultsText: 'Aucun résultat trouvé',
+                noChoicesText: 'Aucune fiche à sélectionner',
+                searchFields: ['label'],
+            };
+            const freeLinksChoices = new Choices(document.getElementById("free-links"), options);
+            freeLinksChoices.passedElement.element.addEventListener("change", (event)=> {
+                this.ficheDetection.freeLinksIds = Array.from(freeLinksChoices.getValue(true))
+            })
+            if (!!this.ficheDetection.freeLinksIds) {
+                this.ficheDetection.freeLinksIds.forEach(value => {
+                  freeLinksChoices.setChoiceByValue(value);
+                });
+            }
 
         },
 
@@ -582,6 +604,9 @@ document.addEventListener('alpine:init', () => {
             formData.append('lieux', JSON.stringify(this.lieux));
             formData.append('prelevements', JSON.stringify(this.prelevements));
             formData.append('action', action);
+            for (var i = 0; i < this.ficheDetection.freeLinksIds.length; i++) {
+              formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
+            }
 
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             const url = document.getElementById('fiche-detection-form-url').dataset.url;
