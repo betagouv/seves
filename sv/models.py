@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices, Q
@@ -13,7 +14,7 @@ from core.mixins import (
     IsActiveMixin,
     WithMessageUrlsMixin,
 )
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite, LienLibre
 from sv.managers import (
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
@@ -519,6 +520,18 @@ class FicheDetection(
             return self.hors_zone_infestee
         if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:
             return self.zone_infestee.fiche_zone_delimitee
+
+    @property
+    def free_link_ids(self):
+        content_type = ContentType.objects.get_for_model(self)
+        links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
+        link_ids = []
+        for link in links:
+            if link.object_id_1 == self.id and link.content_type_1 == content_type:
+                link_ids.append(f"{link.content_type_2.pk}-{link.object_id_2}")
+            else:
+                link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
+        return link_ids
 
 
 class ZoneInfestee(models.Model):

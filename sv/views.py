@@ -17,11 +17,11 @@ from django.urls import reverse
 from django.db.models import F, Prefetch
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-
+from core.content_types import content_type_str_to_obj
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -63,7 +63,7 @@ from .models import (
     FicheZoneDelimitee,
     ZoneInfestee,
 )
-from core.models import Visibilite
+from core.models import Visibilite, LienLibre
 
 
 class FicheListView(ListView):
@@ -193,6 +193,16 @@ class FicheDetectionContextMixin:
             {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
             for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
         ]
+
+        possible_links = []
+        content_type = ContentType.objects.get_for_model(FicheDetection)
+        possible_links.append((content_type.pk, "Fiche Détection", FicheDetection.objects.select_related("numero")))
+        content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
+        possible_links.append(
+            (content_type.pk, "Fiche zone délimitée", FicheZoneDelimitee.objects.select_related("numero"))
+        )
+
+        context["possible_links"] = possible_links
         return context
 
 
@@ -226,7 +236,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         prelevements = json.loads(data["prelevements"])
 
         # Validation des données
-        errors = self.validate_data(data, lieux, prelevements)
+        errors = self.validate_data(request.POST, lieux, prelevements)
         if errors:
             for error in errors:
                 messages.error(request, error)
@@ -237,11 +247,19 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             fiche = self.create_fiche_detection(data, request.user.agent.structure)
             self.create_lieux(lieux, fiche)
             self.create_prelevements(prelevements, lieux)
+            self.create_free_links(data, fiche)
 
         return HttpResponseRedirect(reverse("fiche-detection-vue-detaillee", args=[fiche.pk]))
 
     def validate_data(self, data, lieux, prelevements):
         errors = []
+
+        # Validation des liens libres
+        for free_link in data.getlist("freeLinksIds"):
+            try:
+                content_type_str_to_obj(free_link)
+            except ObjectDoesNotExist:
+                errors.append(f"Impossible de créer le lien libre {free_link}")
 
         # Validation des lieux (nom du lieu obligatoire)
         for lieu in lieux:
@@ -292,6 +310,11 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 ):
                     errors.append("Le champ laboratoire confirmation officielle est invalide")
         return errors
+
+    def create_free_links(self, data, fiche):
+        for free_link in data.getlist("freeLinksIds"):
+            target_obj = content_type_str_to_obj(free_link)
+            LienLibre.objects.create(related_object_1=fiche, related_object_2=target_obj)
 
     def create_fiche_detection(self, data, user_structure):
         # format de la date de premier signalement
@@ -583,6 +606,24 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             prelevement.resultat = prel["resultat"]
             prelevement.save()
 
+    def update_free_links(self, free_links_ids, fiche_detection):
+        links_ids_to_keep = []
+        for free_link_id in free_links_ids:
+            obj = content_type_str_to_obj(free_link_id)
+            if obj == fiche_detection:
+                messages.error(self.request, "Vous ne pouvez pas lier une fiche a elle-même.")
+                continue
+            link = LienLibre.objects.for_both_objects(obj, fiche_detection)
+
+            if link:
+                links_ids_to_keep.append(link.id)
+            else:
+                link = LienLibre.objects.create(related_object_1=fiche_detection, related_object_2=obj)
+                links_ids_to_keep.append(link.id)
+
+        links_to_delete = LienLibre.objects.for_object(fiche_detection).exclude(id__in=links_ids_to_keep)
+        links_to_delete.delete()
+
     def post(self, request, pk):
         data = request.POST
         lieux = json.loads(data["lieux"])
@@ -597,6 +638,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
             self.update_lieux(lieux, fiche_detection)
             self.update_prelevements(prelevements, lieux, fiche_detection)
+            self.update_free_links(request.POST.getlist("freeLinksIds"), fiche_detection)
 
         messages.success(request, self.success_message)
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))

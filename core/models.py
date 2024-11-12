@@ -7,7 +7,7 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth import get_user_model
-from .managers import DocumentQueryset, ContactQueryset
+from .managers import DocumentQueryset, ContactQueryset, LienLibreQueryset
 from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from .storage import get_timestamped_filename
@@ -229,6 +229,8 @@ class LienLibre(models.Model):
     content_type_2 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_2")
     object_id_2 = models.PositiveIntegerField()
     related_object_2 = GenericForeignKey("content_type_2", "object_id_2")
+
+    objects = LienLibreQueryset.as_manager()
 
     class Meta:
         constraints = [

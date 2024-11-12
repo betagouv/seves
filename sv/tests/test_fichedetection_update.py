@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
 from core.constants import AC_STRUCTURE
-from core.models import Visibilite
+from core.models import Visibilite, LienLibre
 from ..models import (
     FicheDetection,
     Lieu,
@@ -1040,3 +1040,36 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.numero_europhyt != "11111111"
     assert fiche_detection.numero_rasff != "222222222"
+
+
+@pytest.mark.django_db
+def test_fiche_can_add_and_delete_free_links(
+    live_server,
+    page: Page,
+    fiche_detection: FicheDetection,
+    fiche_detection_bakery,
+    form_elements: FicheDetectionFormDomElements,
+    choice_js_fill,
+):
+    other_fiche = fiche_detection_bakery()
+    other_fiche_2 = fiche_detection_bakery()
+    LienLibre.objects.create(related_object_1=fiche_detection, related_object_2=other_fiche)
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+
+    expect(page.get_by_text(f"Fiche Détection : {str(other_fiche.numero)}Remove item")).to_be_visible()
+    # Remove existing link
+    page.locator(".choices__button").click()
+
+    # Add new link
+    fiche_input = "Fiche Détection : " + str(other_fiche_2.numero)
+    choice_js_fill(page, "#liens-libre .choices", str(other_fiche_2.numero), fiche_input)
+
+    form_elements.save_update_btn.click()
+
+    page.wait_for_timeout(600)
+
+    assert LienLibre.objects.count() == 1
+    lien_libre = LienLibre.objects.get()
+
+    assert lien_libre.related_object_1 == fiche_detection
+    assert lien_libre.related_object_2 == other_fiche_2

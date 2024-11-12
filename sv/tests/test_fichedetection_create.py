@@ -22,7 +22,7 @@ from ..models import (
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
-from core.models import Contact, Visibilite
+from core.models import Contact, LienLibre, Visibilite
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
@@ -142,7 +142,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
     page.get_by_text("--------").click()
-    page.get_by_label("----").fill("xylela")
+    page.locator("#organisme-nuisible").get_by_label("----").fill("xylela")
     page.get_by_role("option", name=organisme_nuisible.libelle_court).click()
     page.get_by_label("Statut règlementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
@@ -401,3 +401,29 @@ def test_prelevements_are_always_linked_to_lieu(
     prelevements = lieu.prelevements.all()
     for prelevement in prelevements:
         assert prelevement.lieu == lieu
+
+
+@pytest.mark.django_db
+def test_fiche_detection_with_free_link(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
+    fiche_zone_bakery,
+    choice_js_fill,
+):
+    fiche_zone = fiche_zone_bakery()
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
+    choice_js_fill(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
+    form_elements.publish_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.id is not None
+
+    assert LienLibre.objects.count() == 1
+    lien_libre = LienLibre.objects.get()
+
+    assert lien_libre.related_object_1 == fiche_detection
+    assert lien_libre.related_object_2 == fiche_zone

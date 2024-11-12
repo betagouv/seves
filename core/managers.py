@@ -1,5 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, When, Value, IntegerField, QuerySet
+from django.db.models import Case, When, Value, IntegerField, QuerySet, Q
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
 
@@ -55,3 +55,31 @@ class ContactQueryset(QuerySet):
 
     def order_by_structure_and_niveau2(self):
         return self.order_by("services_deconcentres_first", "structure__niveau2")
+
+
+class LienLibreQueryset(QuerySet):
+    def for_object(self, obj):
+        content_type = ContentType.objects.get_for_model(obj)
+        return self.filter(
+            (Q(content_type_1=content_type, object_id_1=obj.id)) | (Q(content_type_2=content_type, object_id_2=obj.id))
+        )
+
+    def for_both_objects(self, object_1, object_2):
+        content_type_1 = ContentType.objects.get_for_model(object_1)
+        content_type_2 = ContentType.objects.get_for_model(object_2)
+        link = self.filter(
+            content_type_1=content_type_1,
+            object_id_1=object_1.id,
+            content_type_2=content_type_2,
+            object_id_2=object_2.id,
+        ).first()
+        if link:
+            return link
+
+        link = self.filter(
+            content_type_2=content_type_1,
+            object_id_2=object_1.id,
+            content_type_1=content_type_2,
+            object_id_1=object_2.id,
+        ).first()
+        return link
