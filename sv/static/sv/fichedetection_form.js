@@ -32,15 +32,15 @@ function fetchEspecesEchantillon(query) {
 }
 function addChoicesEspeceEchantillon(){
     const choicesEspece = new Choices(document.getElementById('espece-echantillon-input'), {
-                removeItemButton: true,
-                placeholderValue: 'Recherchez...',
-                noResultsText: 'Aucun résultat trouvé',
-                noChoicesText: 'Aucun résultat trouvé',
-                shouldSort: false,
-                searchResultLimit: 50,
-                classNames: {containerInner: 'fr-select'},
-                itemSelectText: '',
-            });
+        removeItemButton: true,
+        placeholderValue: 'Recherchez...',
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucun résultat trouvé',
+        shouldSort: false,
+        searchResultLimit: 50,
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: '',
+    });
 
     choicesEspece.input.element.addEventListener('input', function (event) {
         const query = choicesEspece.input.element.value
@@ -97,6 +97,7 @@ document.addEventListener('alpine:init', () => {
             contexteId: '',
             datePremierSignalement: '',
             commentaire: '',
+            vegetauxInfestes: '',
             mesuresConservatoiresImmediates: '',
             mesuresConsignation: '',
             mesuresPhytosanitaires: '',
@@ -200,6 +201,7 @@ document.addEventListener('alpine:init', () => {
                 contexteId: this.getValueById('contexte-id'),
                 datePremierSignalement: this.getValueById('date-premier-signalement'),
                 commentaire: this.getValueById('commentaire'),
+                vegetauxInfestes: this.getValueById('vegetaux-infestes'),
                 mesuresConservatoiresImmediates: this.getValueById('mesures-conservatoires-immediates'),
                 mesuresConsignation: this.getValueById('mesures-consignation'),
                 mesuresPhytosanitaires: this.getValueById('mesures-phytosanitaires'),
@@ -462,7 +464,7 @@ document.addEventListener('alpine:init', () => {
 
             this.choicesEspeceEdit = addChoicesEspeceEchantillon()
             this.choicesEspeceEdit.passedElement.element.addEventListener("choice", (event) => {
-                    this.formPrelevement.especeEchantillonId = event.detail.choice.value
+                this.formPrelevement.especeEchantillonId = event.detail.choice.value
             })
             this.choicesEspeceEdit.setChoices([{
                 value: prelevementToEdit.especeEchantillonId,
@@ -597,6 +599,7 @@ document.addEventListener('alpine:init', () => {
             formData.append('contexteId', this.ficheDetection.contexteId);
             formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
             formData.append('commentaire', this.ficheDetection.commentaire);
+            formData.append('vegetauxInfestes', this.ficheDetection.vegetauxInfestes);
             formData.append('mesuresConservatoiresImmediates', this.ficheDetection.mesuresConservatoiresImmediates);
             formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
             formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
