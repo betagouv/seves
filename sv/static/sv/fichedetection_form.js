@@ -54,6 +54,7 @@ function addChoicesEspeceEchantillon(){
     return choicesEspece
 }
 document.addEventListener('DOMContentLoaded', function() {
+    const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('organisme-nuisible-input');
     const choices = new Choices(element, {
         classNames: {
@@ -61,6 +62,17 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         itemSelectText: ''
     });
+
+    choices.passedElement.element.addEventListener("choice", (event)=> {
+        statusToNuisibleId.forEach((line) =>{
+            if (line.nuisibleIds.includes(parseInt(event.detail.choice.value)))
+            {
+                document.getElementById('statut-reglementaire-input').value=line.statusID
+                document.getElementById('statut-reglementaire-input').dispatchEvent(new Event('change'));
+            }
+        })
+
+    })
 });
 
 document.addEventListener('alpine:init', () => {

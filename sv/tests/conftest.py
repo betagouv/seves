@@ -7,7 +7,7 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
-from sv.models import Etat, FicheDetection, FicheZoneDelimitee
+from sv.models import Etat, FicheDetection, FicheZoneDelimitee, StatutReglementaire
 
 User = get_user_model()
 
@@ -42,6 +42,18 @@ def add_basic_etat_objects():
     Etat.objects.get_or_create(libelle="nouveau")
     Etat.objects.get_or_create(libelle="en cours")
     Etat.objects.get_or_create(libelle="clôturé")
+
+
+@pytest.fixture(autouse=True)
+def add_status_reglementaire_objects():
+    status = {
+        "OQP": "organisme quarantaine prioritaire",
+        "OQ": "organisme quarantaine",
+        "OQZP": "organisme quarantaine zone protégée",
+        "ORNQ": "organisme réglementée non quarantaine",
+    }
+    for code, libelle in status.items():
+        StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
 
 
 @pytest.fixture
