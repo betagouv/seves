@@ -43,6 +43,7 @@ from sv.forms import (
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
 from .filters import FicheFilter
+from .constants import KNOWN_OEPPS, KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES
 from .models import (
     FicheDetection,
     Lieu,
@@ -159,7 +160,8 @@ class FicheDetectionContextMixin:
         context = super().get_context_data(**kwargs)
         context["statuts_evenement"] = StatutEvenement.objects.all()
         context["organismes_nuisibles"] = OrganismeNuisible.objects.all()
-        context["statuts_reglementaires"] = StatutReglementaire.objects.all()
+        status = StatutReglementaire.objects.all()
+        context["statuts_reglementaires"] = status
         context["contextes"] = Contexte.objects.all()
         if self.allows_inactive_structure_preleveur_values:
             queryset = StructurePreleveur._base_manager.values("id", "nom").order_by("nom")
@@ -180,6 +182,17 @@ class FicheDetectionContextMixin:
         context["resultats_prelevement"] = Prelevement.Resultat.choices
         context["types_etablissement"] = TypeExploitant.objects.all().order_by("libelle")
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
+
+        status_code_to_id = {s.code: s.id for s in status}
+
+        oeep_to_nuisible_id = {
+            organisme.code_oepp: organisme.id
+            for organisme in OrganismeNuisible.objects.filter(code_oepp__in=KNOWN_OEPPS)
+        }
+        context["status_to_organisme_nuisible"] = [
+            {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
+            for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
+        ]
         return context
 
 

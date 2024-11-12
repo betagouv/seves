@@ -322,6 +322,26 @@ def test_fiche_detection_numero_fiche_is_null_when_save_with_visibilite_brouillo
     assert fiche_detection.visibilite == Visibilite.BROUILLON
 
 
+@pytest.mark.django_db
+def test_fiche_detection_status_reglementaire_is_pre_selected(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible.libelle_court = "Mon ON"
+    organisme_nuisible.save()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    expect(form_elements.statut_reglementaire_input).to_contain_text("----")
+    page.get_by_role("button", name="Enregistrer").click()
+
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.organisme_nuisible == organisme_nuisible
+    assert fiche_detection.statut_reglementaire.code == "OQ"
+
+
 def test_prelevements_are_always_linked_to_lieu(
     live_server,
     page: Page,

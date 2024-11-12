@@ -154,3 +154,46 @@ CONTEXTES = [
     "notification rasff",
     "autre (à préciser dans le fil de suivi)",
 ]
+
+KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
+    "OQ": [
+        "OE_XYLEFM",
+        "OE_POCZSH",
+        "OE_XYLOCH",
+        "OE_PSDMS2",
+        "OE_HETDPA",
+        "OE_RALSSL",
+        "OE_HETDRO",
+        "OE_MELGCH",
+        "OE_MELGFA",
+        "OE_PHYP64",
+        "OE_CERAFP",
+        "OE_RHIOHI",
+        "OE_ALECSN",
+        "OE_PITOJU",
+        "OE_TOLCND",
+        "OE_GEOHMO",
+        "OE_SCITDO",
+        "OE_DACULA",
+        "OE_MELGMY",
+        "OE_XIPHRI",
+        "OE_1BCTRG",
+        "OE_CORBFL",
+        "OE_PHYPAE",
+        "OE_PHYTRA",
+    ],
+    "OQZP": ["OE_BNYVV0", "OE_RHYCFE"],
+    "OQP": [
+        "OE_GUIGCI",
+        "OE_DACUDO",
+        "OE_POPIJA",
+        "OE_DACUZO",
+        "OE_BURSXY",
+        "OE_ANOLCN",
+        "OE_XYLEFA",
+        "OE_TOBRFV",
+        "OE_1POMAG",
+    ],
+}
+
+KNOWN_OEPPS = [oepp for oepp_list in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.values() for oepp in oepp_list]
