@@ -28,6 +28,15 @@ def test_add_structure_form(live_server, page, fiche_variable, contacts_structur
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
 
+@pytest.mark.django_db
+def test_add_structure_form_service_account_is_hidden(live_server, page, fiche_variable):
+    fiche = fiche_variable()
+    page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter une structure").click()
+    expect(page.get_by_text("service_account")).not_to_be_visible()
+
+
 def test_add_structure_form_back_to_fiche(live_server, page, fiche_variable):
     """Test le lien de retour vers la fiche"""
     fiche = fiche_variable()
