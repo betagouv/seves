@@ -91,11 +91,11 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div id="numero-europhyt">
+                        <div id="numero-europhyt" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
                             <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
                             <input x-model="ficheDetection.numeroEurophyt" id="numero-europhyt-input" class="fr-input" maxlength="8">
                         </div>
-                        <div id="numero-rasff">
+                        <div id="numero-rasff" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
                             <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
                             <input x-model="ficheDetection.numeroRasff" id="numero-rasff-input" class="fr-input" maxlength="9">
                         </div>

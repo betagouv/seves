@@ -4,6 +4,7 @@ from playwright.sync_api import Page, expect
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
+from core.constants import AC_STRUCTURE
 from core.models import Visibilite
 from ..models import (
     FicheDetection,
@@ -161,8 +162,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
 
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", organisme.libelle_court, organisme.libelle_court)
 
-    form_elements.numero_rasff_input.fill(str(new_fiche_detection.numero_rasff))
-    form_elements.numero_europhyt_input.fill(str(new_fiche_detection.numero_europhyt))
     form_elements.statut_reglementaire_input.select_option(str(new_fiche_detection.statut_reglementaire.id))
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
@@ -179,8 +178,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
         fiche_detection_updated.createur == fiche_detection.createur
     )  # le createur ne doit pas changer lors d'une modification
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
-    assert fiche_detection_updated.numero_europhyt == new_fiche_detection.numero_europhyt
-    assert fiche_detection_updated.numero_rasff == new_fiche_detection.numero_rasff
     assert fiche_detection_updated.organisme_nuisible == organisme
     assert fiche_detection_updated.statut_reglementaire == new_fiche_detection.statut_reglementaire
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte
@@ -1005,3 +1002,41 @@ def test_fiche_detection_numero_fiche_is_not_null_when_visibilite_change_from_br
 
     assert fiche_detection.visibilite == Visibilite.LOCAL
     assert fiche_detection.numero is not None
+
+
+@pytest.mark.django_db
+def test_fiche_detection_update_as_ac_can_access_rasff_europhyt(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
+):
+    structure = mocked_authentification_user.agent.structure
+    structure.niveau1 = AC_STRUCTURE
+    structure.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    page.get_by_label("Numéro Europhyt").fill("1" * 8)
+    page.get_by_label("Numéro Rasff").fill("2" * 9)
+
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.numero_europhyt == "11111111"
+    assert fiche_detection.numero_rasff == "222222222"
+
+
+@pytest.mark.django_db
+def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
+):
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    page.locator("#numero-rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
+    page.locator("#numero-europhyt").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
+    page.get_by_label("Numéro Europhyt").fill("1" * 8)
+    page.get_by_label("Numéro Rasff").fill("2" * 9)
+
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.numero_europhyt != "11111111"
+    assert fiche_detection.numero_rasff != "222222222"
