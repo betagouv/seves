@@ -29,7 +29,7 @@ class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
         next = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
         self.fields["object_choice"] = MultiModelChoiceField(
-            label="Sélectioner un objet",
+            label="Sélectionner un objet",
             model_choices=[
                 ("Fiche Detection", FicheDetection.objects.select_related("numero")),
                 ("Fiche Zone Delimitee", FicheZoneDelimitee.objects.select_related("numero")),
