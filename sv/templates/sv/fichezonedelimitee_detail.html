@@ -48,18 +48,18 @@
                         <div class="fr-col">{{ fiche.organisme_nuisible }}</div>
                     </div>
                     <div class="fr-grid-row">
-                        <div class="fr-col fichezonedelimitee__field">Statut reglementaire</div>
+                        <div class="fr-col fichezonedelimitee__field">Statut réglementaire</div>
                         <div class="fr-col">{{ fiche.statut_reglementaire }}</div>
                     </div>
                 </div>
                 <div class="white-container fr-pb-6w">
                     <h2>Informations</h2>
                     <div class="fr-grid-row fr-mb-2w">
-                        <div class="fr-col fichezonedelimitee__field">Createur</div>
+                        <div class="fr-col fichezonedelimitee__field">Créateur</div>
                         <div class="fr-col">{{ fiche.createur }}</div>
                     </div>
                     <div class="fr-grid-row">
-                        <div class="fr-col fichezonedelimitee__field">Date de creation</div>
+                        <div class="fr-col fichezonedelimitee__field">Date de création</div>
                         <div class="fr-col">{{ fiche.date_creation|date:"d/m/Y" }}</div>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
                 <div class="fichezonedelimitee__details white-container">
                     <h2>Détails</h2>
                     <div>
-                        <div class="fichezonedelimitee__field fr-mb-1w">Caracteristiques</div>
+                        <div class="fichezonedelimitee__field fr-mb-1w">Caractéristiques</div>
                         <div>{{ fiche.get_caracteristiques_principales_zone_delimitee_display|default:"nc." }}</div>
                     </div>
                     <div class="fr-mt-4w">
@@ -81,7 +81,7 @@
                 <div class="fichezonedelimitee__zone-tampon white-container">
                     <h2>Zone tampon</h2>
                     <div class="fichezonedelimitee__zone-tampon-rayon fr-grid-row fr-mt-1w fr-p-2w">
-                        <div class="fr-col-8 fichezonedelimitee__field">Rayon tampon règlementaie ou arbitré</div>
+                        <div class="fr-col-8 fichezonedelimitee__field">Rayon tampon réglementaire ou arbitré</div>
                         <div class="fr-col">
                             {% if fiche.rayon_zone_tampon %}
                                 {{ fiche.rayon_zone_tampon|remove_trailing_zero }} {{ fiche.unite_rayon_zone_tampon }}
