@@ -36,15 +36,6 @@
                                 <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
                                 <input x-model="formPrelevement.datePrelevement" type="date" class="fr-input" id="date-prelevement-input" max="{% now "Y-m-d" %}">
                             </p>
-                            <p id="site-inspection" class="prelevement-form--fieldset">
-                                <label class="fr-label">Site d'inspection</label>
-                                <select x-model="formPrelevement.siteInspectionId" class="fr-select" data-testid="prelevement-form-site-inspection">
-                                    <option value="">----</option>
-                                    {% for site in sites_inspections %}
-                                        <option value="{{ site.id }}">{{ site.nom }}</option>
-                                    {% endfor %}
-                                </select>
-                            </p>
                             <p id="matrice-prelevee" class="prelevement-form--fieldset">
                                 <label class="fr-label">Matrice prélevée</label>
                                 <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">

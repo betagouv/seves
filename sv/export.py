@@ -37,7 +37,6 @@ class FicheDetectionExport:
         "numero_phytopass",
         "resultat",
         "structure_preleveur",
-        "site_inspection",
         "matrice_prelevee",
         "espece_echantillon",
         "laboratoire_agree",
@@ -56,7 +55,6 @@ class FicheDetectionExport:
             "lieux__prelevements__structure_preleveur",
             "lieux__prelevements__espece_echantillon",
             "lieux__prelevements__matrice_prelevee",
-            "lieux__prelevements__site_inspection",
             "lieux__prelevements__laboratoire_agree",
             "lieux__prelevements__laboratoire_confirmation_officielle",
         )

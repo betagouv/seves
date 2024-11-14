@@ -80,7 +80,6 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Structure")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Numéro d'échantillon")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Date de prélèvement")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Site d'inspection")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Matrice prélevée")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Espèce de l'échantillon")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Code OEPP")).to_be_visible()
@@ -92,7 +91,6 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text(
         prelevement.date_prelevement.strftime("%d/%m/%Y")
     )
-    expect(page.get_by_test_id("prelevement-1-site-inspection")).to_contain_text(prelevement.site_inspection.nom)
     expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text(prelevement.matrice_prelevee.libelle)
     expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text(
         prelevement.espece_echantillon.libelle
@@ -113,7 +111,6 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     )
     expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text("nc.")
-    expect(page.get_by_test_id("prelevement-1-site-inspection")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text("nc.")
@@ -136,7 +133,6 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
     expect(page.get_by_test_id("prelevement-2-date-prelevement")).to_contain_text(
         prelevement2.date_prelevement.strftime("%d/%m/%Y")
     )
-    expect(page.get_by_test_id("prelevement-2-site-inspection")).to_contain_text(prelevement2.site_inspection.nom)
     expect(page.get_by_test_id("prelevement-2-matrice-prelevee")).to_contain_text(prelevement2.matrice_prelevee.libelle)
     expect(page.get_by_test_id("prelevement-2-espece-echantillon")).to_contain_text(
         prelevement2.espece_echantillon.libelle

@@ -554,7 +554,6 @@ def test_add_new_prelevement_non_officiel(
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
-    prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
     choice_js_fill(
         page,
@@ -572,7 +571,6 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
     assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
-    assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == prelevement.resultat
@@ -630,7 +628,6 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
-    prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
     choice_js_fill(
         page,
@@ -655,7 +652,6 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
     assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
-    assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == prelevement.resultat
@@ -688,7 +684,6 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
-        prelevement_form_elements.site_inspection_input.select_option(str(prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
         choice_js_fill(
             page,
@@ -708,7 +703,6 @@ def test_add_multiple_prelevements(
         assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
         assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
         assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
-        assert prelevement_from_db.site_inspection.id == prelevement.site_inspection.id
         assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
         assert prelevement_from_db.resultat == prelevement.resultat
@@ -735,7 +729,6 @@ def test_update_prelevement(
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
-    prelevement_form_elements.site_inspection_input.select_option(str(new_prelevement.site_inspection.id))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
     choice_js_fill(
         page,
@@ -753,7 +746,6 @@ def test_update_prelevement(
     assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
     assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
-    assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
     assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == new_prelevement.resultat
@@ -786,7 +778,6 @@ def test_update_multiple_prelevements(
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
-        prelevement_form_elements.site_inspection_input.select_option(value=str(new_prelevement.site_inspection.id))
         prelevement_form_elements.matrice_prelevee_input.select_option(value=str(new_prelevement.matrice_prelevee.id))
         choice_js_fill(
             page,
@@ -809,7 +800,6 @@ def test_update_multiple_prelevements(
         assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
         assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
         assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
-        assert prelevement_from_db.site_inspection.id == new_prelevement.site_inspection.id
         assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
         assert prelevement_from_db.resultat == new_prelevement.resultat

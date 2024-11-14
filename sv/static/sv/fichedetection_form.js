@@ -87,7 +87,6 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
 
         structuresPreleveurs: JSON.parse(document.getElementById('structures-preleveurs').textContent),
-        sitesInspections: JSON.parse(document.getElementById('sites-inspections').textContent),
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
@@ -122,7 +121,6 @@ document.addEventListener('alpine:init', () => {
 				isOfficiel: true,
 				datePrelevement: '2021-09-01',
 				structurePreleveurId: '1',
-				siteInspectionId: '1',
 			},
 			*/
         ],
@@ -160,7 +158,6 @@ document.addEventListener('alpine:init', () => {
             structurePreleveurId: null,
             numeroEchantillon: null,
             datePrelevement: null,
-            siteInspectionId: null,
             matricePreleveeId: null,
             especeEchantillonId: null,
             isOfficiel: false,
@@ -253,7 +250,6 @@ document.addEventListener('alpine:init', () => {
                         structurePreleveurId: prelevement.structure_preleveur_id,
                         numeroEchantillon: prelevement.numero_echantillon,
                         datePrelevement: prelevement.date_prelevement,
-                        siteInspectionId: prelevement.site_inspection_id,
                         matricePreleveeId: prelevement.matrice_prelevee_id,
                         especeEchantillonId: prelevement.espece_echantillon_id,
                         especeEchantillonName: prelevement.espece_echantillon_name,
@@ -516,7 +512,6 @@ document.addEventListener('alpine:init', () => {
                 structurePreleveurId: '',
                 numeroEchantillon: '',
                 datePrelevement: '',
-                siteInspectionId: '',
                 matricePreleveeId: '',
                 especeEchantillonId: '',
                 isOfficiel: false,
@@ -562,17 +557,6 @@ document.addEventListener('alpine:init', () => {
 			// ⚠️ structurePreleveur.id est de type number, structurePreleveurId est de type string
             const structurePreleveur = this.structuresPreleveurs.find(structurePreleveur => structurePreleveur.id == structurePreleveurId);
             return structurePreleveur.nom;
-        },
-
-		/**
-		 * Retourne le nom d'un site d'inspection à partir de son ID
-		 * @param {string} siteInspectionId
-		 * @returns le nom du site d'inspection
-		 */
-        getSiteInspectionNameFromId(siteInspectionId) {
-			// ⚠️ siteInspection.id est de type number, siteInspectionId est de type string
-            const siteInspection = this.sitesInspections.find(siteInspection => siteInspection.id == siteInspectionId);
-            return siteInspection ? siteInspection.nom : '';
         },
 
 		/**

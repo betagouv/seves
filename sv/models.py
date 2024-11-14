@@ -324,13 +324,6 @@ class Prelevement(models.Model):
     )
     numero_echantillon = models.CharField(max_length=100, verbose_name="Numéro d'échantillon", blank=True)
     date_prelevement = models.DateField(verbose_name="Date de prélèvement", blank=True, null=True)
-    site_inspection = models.ForeignKey(
-        SiteInspection,
-        on_delete=models.PROTECT,
-        verbose_name="Site d'inspection",
-        blank=True,
-        null=True,
-    )
     matrice_prelevee = models.ForeignKey(
         MatricePrelevee,
         on_delete=models.PROTECT,
