@@ -7,7 +7,6 @@ from .models import (
     Region,
     Lieu,
     StatutEtablissement,
-    TypeExploitant,
     PositionChaineDistribution,
     StructurePreleveur,
     SiteInspection,
@@ -33,7 +32,6 @@ admin.site.register(Departement)
 admin.site.register(Region)
 admin.site.register(Lieu)
 admin.site.register(StatutEtablissement)
-admin.site.register(TypeExploitant)
 admin.site.register(PositionChaineDistribution)
 admin.site.register(StructurePreleveur)
 admin.site.register(SiteInspection)

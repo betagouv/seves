@@ -57,10 +57,10 @@ from .models import (
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
     Departement,
-    TypeExploitant,
     PositionChaineDistribution,
     FicheZoneDelimitee,
     ZoneInfestee,
+    SiteInspection,
 )
 from core.models import Visibilite, LienLibre
 
@@ -177,7 +177,7 @@ class FicheDetectionContextMixin:
             queryset = LaboratoireConfirmationOfficielle.objects.all().order_by("nom")
         context["laboratoires_confirmation_officielle"] = queryset
         context["resultats_prelevement"] = Prelevement.Resultat.choices
-        context["types_etablissement"] = TypeExploitant.objects.all().order_by("libelle")
+        context["sites_inspections"] = list(SiteInspection.objects.all().values("id", "nom").order_by("nom"))
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
 
         status_code_to_id = {s.code: s.id for s in status}
@@ -375,7 +375,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 adresse_etablissement=lieu["adresseEtablissement"],
                 siret_etablissement=lieu["siretEtablissement"],
                 code_inpp_etablissement=lieu["codeInppEtablissement"],
-                type_exploitant_etablissement_id=lieu["typeEtablissementId"],
+                site_inspection_id=lieu["siteInspectionId"],
                 position_chaine_distribution_etablissement_id=lieu["positionEtablissementId"],
             )
             lieu_instance.save()
@@ -547,7 +547,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 lieu.adresse_etablissement = loc["adresseEtablissement"]
                 lieu.siret_etablissement = loc["siretEtablissement"]
                 lieu.code_inpp_etablissement = loc["codeInppEtablissement"]
-                lieu.type_exploitant_etablissement_id = loc["typeEtablissementId"]
+                lieu.site_inspection_id = loc["siteInspectionId"]
                 lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
             else:
                 lieu.nom_etablissement = ""
@@ -556,7 +556,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 lieu.raison_sociale_etablissement = ""
                 lieu.adresse_etablissement = ""
                 lieu.siret_etablissement = ""
-                lieu.type_exploitant_etablissement_id = None
+                lieu.site_inspection_id = None
                 lieu.position_chaine_distribution_etablissement_id = None
             lieu.save()
             loc["lieu_pk"] = lieu.pk

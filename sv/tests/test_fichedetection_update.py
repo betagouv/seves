@@ -11,13 +11,13 @@ from ..models import (
     Lieu,
     Prelevement,
     Departement,
-    TypeExploitant,
     PositionChaineDistribution,
     OrganismeNuisible,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
     StructurePreleveur,
     Etat,
+    SiteInspection,
 )
 from ..models import (
     Region,
@@ -354,7 +354,7 @@ def test_update_lieu(
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
 
     dept = baker.make(Departement)
-    type_exploitant = baker.make(TypeExploitant)
+    site_inspection = baker.make(SiteInspection)
     position = baker.make(PositionChaineDistribution)
     new_lieu = baker.prepare(
         Lieu,
@@ -366,7 +366,7 @@ def test_update_lieu(
         siret_etablissement="12345678901234",
         departement=dept,
         is_etablissement=True,
-        type_exploitant_etablissement=type_exploitant,
+        site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
         _fill_optional=True,
         _save_related=True,
@@ -388,7 +388,7 @@ def test_update_lieu(
     lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
     lieu_form_elements.adresse_etablissement_input.fill(new_lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
-    lieu_form_elements.type_etablissement_input.select_option(str(new_lieu.type_exploitant_etablissement.id))
+    lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection.id))
     lieu_form_elements.position_etablissement_input.select_option(
         str(new_lieu.position_chaine_distribution_etablissement.id)
     )
@@ -414,7 +414,7 @@ def test_update_lieu(
     assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
     assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement
     assert lieu_from_db.siret_etablissement == new_lieu.siret_etablissement
-    assert lieu_from_db.type_exploitant_etablissement == new_lieu.type_exploitant_etablissement
+    assert lieu_from_db.site_inspection == new_lieu.site_inspection
     assert (
         lieu_from_db.position_chaine_distribution_etablissement == new_lieu.position_chaine_distribution_etablissement
     )

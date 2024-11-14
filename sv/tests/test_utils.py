@@ -334,12 +334,8 @@ class LieuFormDomElements:
         return self.page.get_by_label("Code INPP")
 
     @property
-    def type_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Type")
-
-    @property
-    def type_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Type")
+    def lieu_site_inspection_input(self) -> Locator:
+        return self.page.get_by_label("Site d'inspection")
 
     @property
     def position_etablissement_label(self) -> Locator:
