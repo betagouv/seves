@@ -592,7 +592,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             prelevement.lieu_id = prel["lieu_pk"]
             prelevement.structure_preleveur_id = prel["structurePreleveurId"]
             prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
-            prelevement.date_prelevement = prel["datePrelevement"]
+            prelevement.date_prelevement = prel["datePrelevement"] if prel["datePrelevement"] else None
             prelevement.site_inspection_id = prel["siteInspectionId"]
             prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
             prelevement.espece_echantillon_id = prel["especeEchantillonId"]
