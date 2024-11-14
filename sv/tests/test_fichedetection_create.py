@@ -15,10 +15,10 @@ from ..models import (
     OrganismeNuisible,
     Lieu,
     Departement,
-    TypeExploitant,
     PositionChaineDistribution,
     Region,
     StructurePreleveur,
+    SiteInspection,
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
@@ -228,7 +228,7 @@ def test_create_fiche_detection_with_lieu(
     fill_commune,
 ):
     dept = baker.make(Departement)
-    type_exploitant = baker.make(TypeExploitant)
+    site_inspection = baker.make(SiteInspection)
     position = baker.make(PositionChaineDistribution)
     lieu = baker.prepare(
         Lieu,
@@ -240,7 +240,7 @@ def test_create_fiche_detection_with_lieu(
         siret_etablissement="12345678901234",
         departement=dept,
         is_etablissement=True,
-        type_exploitant_etablissement=type_exploitant,
+        site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
         _fill_optional=True,
     )
@@ -258,14 +258,14 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.is_etablissement_checkbox.click()
-    lieu_form_elements.nom_etablissement_input.fill(lieu.nom)
+    lieu_form_elements.nom_etablissement_input.fill(lieu.nom_etablissement)
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
     lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
     lieu_form_elements.code_inpp_etablissement_input.fill(lieu.code_inpp_etablissement)
-    lieu_form_elements.type_etablissement_input.select_option(str(lieu.type_exploitant_etablissement.id))
+    lieu_form_elements.lieu_site_inspection_input.select_option(str(lieu.site_inspection.id))
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
     )
@@ -276,26 +276,26 @@ def test_create_fiche_detection_with_lieu(
     page.wait_for_timeout(1000)
 
     fiche_detection = FicheDetection.objects.get()
-    lieu = fiche_detection.lieux.get()
-    assert lieu.nom == lieu.nom
-    assert lieu.wgs84_latitude == lieu.wgs84_latitude
-    assert lieu.wgs84_longitude == lieu.wgs84_longitude
-    assert lieu.lambert93_latitude == lieu.lambert93_latitude
-    assert lieu.lambert93_longitude == lieu.lambert93_longitude
-    assert lieu.adresse_lieu_dit == lieu.adresse_lieu_dit
-    assert lieu.commune == "Lille"
-    assert lieu.code_insee == "59350"
-    assert lieu.departement == Departement.objects.get(nom="Nord")
-    assert lieu.is_etablissement == lieu.is_etablissement
-    assert lieu.nom_etablissement == lieu.nom_etablissement
-    assert lieu.activite_etablissement == lieu.activite_etablissement
-    assert lieu.pays_etablissement == lieu.pays_etablissement
-    assert lieu.raison_sociale_etablissement == lieu.raison_sociale_etablissement
-    assert lieu.adresse_etablissement == lieu.adresse_etablissement
-    assert lieu.siret_etablissement == lieu.siret_etablissement
-    assert lieu.code_inpp_etablissement == lieu.code_inpp_etablissement
-    assert lieu.type_exploitant_etablissement == lieu.type_exploitant_etablissement
-    assert lieu.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
+    lieu_from_db = fiche_detection.lieux.get()
+    assert lieu_from_db.nom == lieu.nom
+    assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
+    assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+    assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
+    assert lieu_from_db.lambert93_longitude == lieu.lambert93_longitude
+    assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
+    assert lieu_from_db.commune == "Lille"
+    assert lieu_from_db.code_insee == "59350"
+    assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
+    assert lieu_from_db.is_etablissement == lieu.is_etablissement
+    assert lieu_from_db.nom_etablissement == lieu.nom_etablissement
+    assert lieu_from_db.activite_etablissement == lieu.activite_etablissement
+    assert lieu_from_db.pays_etablissement == lieu.pays_etablissement
+    assert lieu_from_db.raison_sociale_etablissement == lieu.raison_sociale_etablissement
+    assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement
+    assert lieu_from_db.siret_etablissement == lieu.siret_etablissement
+    assert lieu_from_db.code_inpp_etablissement == lieu.code_inpp_etablissement
+    assert lieu_from_db.site_inspection == lieu.site_inspection
+    assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
 
 
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(

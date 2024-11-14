@@ -170,10 +170,10 @@ class Lieu(models.Model):
     )
     adresse_etablissement = models.CharField(max_length=100, verbose_name="Adresse établissement", blank=True)
     siret_etablissement = models.CharField(max_length=100, verbose_name="SIRET établissement", blank=True)
-    type_exploitant_etablissement = models.ForeignKey(
-        "TypeExploitant",
+    site_inspection = models.ForeignKey(
+        "SiteInspection",
         on_delete=models.PROTECT,
-        verbose_name="Type d'exploitant établissement",
+        verbose_name="Site d'inspection",
         blank=True,
         null=True,
     )
@@ -195,18 +195,6 @@ class StatutEtablissement(models.Model):
         verbose_name = "Statut de l'établissement"
         verbose_name_plural = "Statuts de l'établissement"
         db_table = "sv_statut_etablissement"
-
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
-
-    def __str__(self):
-        return self.libelle
-
-
-class TypeExploitant(models.Model):
-    class Meta:
-        verbose_name = "Type d'exploitant"
-        verbose_name_plural = "Types d'exploitant"
-        db_table = "sv_type_exploitant"
 
     libelle = models.CharField(max_length=100, verbose_name="Libellé")
 

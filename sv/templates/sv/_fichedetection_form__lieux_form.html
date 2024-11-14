@@ -29,6 +29,16 @@
                             <input x-model="lieuForm.departementNom" type="hidden" id="departement">
 
                             <p>
+                                <label class="fr-label" for="site-inspection">Site d'inspection</label>
+                                <select x-model="lieuForm.siteInspectionId" class="fr-select" data-testid="lieu-form-type-etablissement" id="site-inspection">
+                                    <option value="">----</option>
+                                    {% for site_inspection in sites_inspections %}
+                                        <option value="{{ site_inspection.id }}">{{ site_inspection.libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </p>
+
+                            <p>
                                 <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
                                 <input x-model="lieuForm.coordGPSLambert93Latitude" style="flex: 0.55; margin-right: 0.5rem;" type="number" step="1" min="6000000" max="7200000" id="coordonnees-gps-lambert-93-latitude" class="fr-input" placeholder="Latitude">
                                 <input x-model="lieuForm.coordGPSLambert93Longitude" style="flex: 0.55; margin-top: .5rem;" type="number" step="1" min="200000" max="1200000" id="coordonnees-gps-lambert-93-longitude" class="fr-input" placeholder="Longitude">
@@ -82,15 +92,6 @@
                                 <p>
                                     <label class="fr-label" for="code-inpp-etablissement">Code INPP</label>
                                     <input x-model="lieuForm.codeInppEtablissement" type="text" class="fr-input" id="code-inpp-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="type-etablissement">Type</label>
-                                    <select x-model="lieuForm.typeEtablissementId" class="fr-select" data-testid="lieu-form-type-etablissement" id="type-etablissement">
-                                        <option value="">----</option>
-                                        {% for type_etablissement in types_etablissement %}
-                                            <option value="{{ type_etablissement.id }}">{{ type_etablissement.libelle }}</option>
-                                        {% endfor %}
-                                    </select>
                                 </p>
                                 <p>
                                     <label class="fr-label" for="position-etablissement">Position</label>
