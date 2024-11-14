@@ -37,14 +37,14 @@ class Command(BaseCommand):
                 return
 
             structure, _ = Structure.objects.get_or_create(
-                niveau1=niveau1, niveau2=niveau2, defaults={"libelle": niveau2}
+                niveau1=niveau1, niveau2=niveau2, defaults={"libelle": niveau2 or niveau1}
             )
 
             Contact.objects.get_or_create(structure=structure)
 
             # Contact pour agent
             User = get_user_model()
-            user, _ = User.objects.update_or_create(username=row["Mail"], is_active=False)
+            user, _ = User.objects.get_or_create(username=row["Mail"], defaults={"is_active": False})
 
             agent, _ = Agent.objects.update_or_create(
                 user=user,

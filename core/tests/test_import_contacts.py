@@ -2,6 +2,7 @@ import pytest
 from io import StringIO
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import get_user_model
 
 from core.models import Contact, Agent, Structure
 
@@ -95,3 +96,14 @@ def test_ignore_unknown_email(mock_csv_data):
     assert Contact.objects.filter(agent__isnull=False).count() == 2
     with pytest.raises(ObjectDoesNotExist):
         Contact.objects.get(email="inconnu")
+
+
+def test_import_contacts_twice_with_user_activation(mock_csv_data):
+    """Test pour s'assurer que deux importations des contacts fonctionnent en ayant activé un user entre les deux"""
+    _reset_contacts()
+    call_command("import_contacts", mock_csv_data)
+    User = get_user_model()
+    user = User.objects.get(username="test@example.com")
+    user.is_active = True
+    user.save()
+    call_command("import_contacts", mock_csv_data)
