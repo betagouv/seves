@@ -38,7 +38,6 @@
         {{ lieux|json_script:"lieux-json" }}
         {{ prelevements|json_script:"prelevements" }}
         {{ structures_preleveurs|json_script:"structures-preleveurs" }}
-        {{ sites_inspections|json_script:"sites-inspections" }}
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
 
         <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection($event)">

@@ -53,7 +53,6 @@ from .models import (
     StatutReglementaire,
     Contexte,
     StructurePreleveur,
-    SiteInspection,
     MatricePrelevee,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
@@ -129,7 +128,6 @@ class FicheDetectionDetailView(
             "structure_preleveur",
             "lieu",
             "matrice_prelevee",
-            "site_inspection",
             "espece_echantillon",
             "laboratoire_agree",
         )
@@ -168,7 +166,6 @@ class FicheDetectionContextMixin:
         else:
             queryset = StructurePreleveur.objects.values("id", "nom").order_by("nom")
         context["structures_preleveurs"] = list(queryset)
-        context["sites_inspections"] = list(SiteInspection.objects.values("id", "nom").order_by("nom"))
         context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
         if self.allows_inactive_laboratoires_agrees_values:
             context["laboratoires_agrees"] = LaboratoireAgree._base_manager.order_by("nom")
@@ -283,12 +280,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 and not StructurePreleveur.objects.filter(pk=prelevement["structurePreleveurId"]).exists()
             ):
                 errors.append("Le champ structure preleveur est invalide")
-            # site inspection doit être valide (existe en base de données)
-            if (
-                prelevement["siteInspectionId"]
-                and not SiteInspection.objects.filter(pk=prelevement["siteInspectionId"]).exists()
-            ):
-                errors.append("Le champ site inspection est invalide")
             # matrice prelevée doit être valide (existe en base de données)
             if (
                 prelevement["matricePreleveeId"]
@@ -410,7 +401,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 structure_preleveur_id=prel["structurePreleveurId"],
                 numero_echantillon=prel["numeroEchantillon"],
                 date_prelevement=prel["datePrelevement"],
-                site_inspection_id=prel["siteInspectionId"],
                 matrice_prelevee_id=prel["matricePreleveeId"],
                 espece_echantillon_id=prel["especeEchantillonId"],
                 is_officiel=prel["isOfficiel"],
@@ -593,7 +583,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             prelevement.structure_preleveur_id = prel["structurePreleveurId"]
             prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
             prelevement.date_prelevement = prel["datePrelevement"] if prel["datePrelevement"] else None
-            prelevement.site_inspection_id = prel["siteInspectionId"]
             prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
             prelevement.espece_echantillon_id = prel["especeEchantillonId"]
             prelevement.is_officiel = prel["isOfficiel"]

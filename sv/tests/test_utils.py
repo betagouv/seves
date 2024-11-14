@@ -405,14 +405,6 @@ class PrelevementFormDomElements:
         return self.page.get_by_label("Date prélèvement")
 
     @property
-    def site_inspection_label(self) -> Locator:
-        return self.page.get_by_text("Site d'inspection")
-
-    @property
-    def site_inspection_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-site-inspection")
-
-    @property
     def matrice_prelevee_label(self) -> Locator:
         return self.page.get_by_text("Matrice prélevée")
 
