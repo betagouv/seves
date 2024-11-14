@@ -373,7 +373,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
-    expect(form_elements.statut_reglementaire_input).to_contain_text("----")
+    expect(form_elements.statut_reglementaire_input).to_have_value("2")
     page.get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
@@ -381,6 +381,32 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.organisme_nuisible == organisme_nuisible
     assert fiche_detection.statut_reglementaire.code == "OQ"
+
+
+@pytest.mark.django_db
+def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible.libelle_court = "Mon ON"
+    organisme_nuisible.save()
+
+    organisme_nuisible_no_status, _ = OrganismeNuisible.objects.get_or_create(code_oepp="FOO")
+    organisme_nuisible_no_status.libelle_court = "Pas mon ON"
+    organisme_nuisible_no_status.save()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    expect(form_elements.statut_reglementaire_input).to_have_value("2")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Pas mon ON", "Pas mon ON")
+    expect(form_elements.statut_reglementaire_input).to_have_value("")
+    page.get_by_role("button", name="Enregistrer").click()
+
+    page.wait_for_timeout(600)
+
+    fiche_detection = FicheDetection.objects.get()
+    assert fiche_detection.organisme_nuisible == organisme_nuisible_no_status
+    assert fiche_detection.statut_reglementaire is None
 
 
 def test_prelevements_are_always_linked_to_lieu(
