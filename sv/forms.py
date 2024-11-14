@@ -1,6 +1,5 @@
-from core.forms import DSFRForm, WithNextUrlMixin, VisibiliteUpdateBaseForm
+from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 
-from django.contrib.contenttypes.models import ContentType
 from core.fields import MultiModelChoiceField
 from django import forms
 from django.forms.models import inlineformset_factory
@@ -13,37 +12,6 @@ from django.db.models import TextChoices
 from core.models import LienLibre
 from core.fields import DSFRRadioButton, DSFRCheckboxInput
 from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
-
-
-class FreeLinkForm(DSFRForm, WithNextUrlMixin, forms.ModelForm):
-    object_id_1 = forms.IntegerField(widget=forms.HiddenInput())
-    content_type_1 = forms.ModelChoiceField(widget=forms.HiddenInput(), queryset=ContentType.objects.all())
-
-    class Meta:
-        fields = ["object_id_1", "content_type_1"]
-        model = LienLibre
-
-    def __init__(self, *args, **kwargs):
-        object_id_1 = kwargs.pop("object_id_1", None)
-        content_type_1 = kwargs.pop("content_type_1", None)
-        next = kwargs.pop("next", None)
-        super().__init__(*args, **kwargs)
-        self.fields["object_choice"] = MultiModelChoiceField(
-            label="Sélectionner un objet",
-            model_choices=[
-                ("Fiche Detection", FicheDetection.objects.select_related("numero")),
-                ("Fiche Zone Delimitee", FicheZoneDelimitee.objects.select_related("numero")),
-            ],
-        )
-        self.add_next_field(next)
-        self.fields["object_id_1"].initial = object_id_1
-        self.fields["content_type_1"].initial = content_type_1
-
-    def clean(self):
-        super().clean()
-        obj = self.cleaned_data["object_choice"]
-        self.instance.content_type_2 = ContentType.objects.get_for_model(obj)
-        self.instance.object_id_2 = obj.id
 
 
 class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -129,6 +97,17 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         if self.instance.pk:
             self.fields.pop("visibilite")
 
+        qs_detection = FicheDetection.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
+        qs_zone = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=[
+                ("Fiche Détection", qs_detection),
+                ("Fiche zone délimitée", qs_zone),
+            ],
+        )
+
         organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
         self.fields["detections_hors_zone"].queryset = (
             FicheDetection.objects.all()
@@ -167,7 +146,22 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         if commit:
             instance.save()
             self.save_detections_hors_zone(instance)
+            self.save_free_links(instance)
         return instance
+
+    def save_free_links(self, instance):
+        links_ids_to_keep = []
+        for obj in self.cleaned_data["free_link"]:
+            link = LienLibre.objects.for_both_objects(obj, instance)
+
+            if link:
+                links_ids_to_keep.append(link.id)
+            else:
+                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
+                links_ids_to_keep.append(link.id)
+
+        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
+        links_to_delete.delete()
 
     def save_detections_hors_zone(self, instance):
         detections_from_form = set(self.cleaned_data.get("detections_hors_zone", []))

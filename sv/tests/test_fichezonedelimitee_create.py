@@ -4,7 +4,7 @@ from model_bakery import baker
 from django.utils import timezone
 from django.urls import reverse
 
-from core.models import Visibilite
+from core.models import Visibilite, LienLibre
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.forms import RattachementChoices
@@ -322,3 +322,31 @@ def test_cant_link_fiche_detection_to_fiche_zone_delimitee_if_fiche_detection_is
     expect(page.get_by_text("Aucune fiche détection à sélectionner").nth(1)).to_be_visible()
     page.get_by_text("Rattacher des détections").nth(2).click()
     expect(page.get_by_text("Aucune fiche détection à sélectionner").nth(2)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_can_create_fiche_zone_with_free_links(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_zone_bakery
+):
+    other_fiche = fiche_zone_bakery()
+    other_fiche.visibilite = Visibilite.NATIONAL
+    other_fiche.save()
+    fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
+    fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
+    fiche_detection.save()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    fiche_input = "Fiche zone délimitée : " + str(other_fiche.numero)
+    choice_js_fill(page, "#liens-libre .choices", str(other_fiche.numero), fiche_input)
+    form_page.submit_form()
+
+    form_page.check_message_succes()
+    assert FicheZoneDelimitee.objects.count() == 2
+    fiche_from_db = FicheZoneDelimitee.objects.last()
+
+    assert LienLibre.objects.count() == 1
+    lien_libre = LienLibre.objects.get()
+
+    assert lien_libre.related_object_1 == fiche_from_db
+    assert lien_libre.related_object_2 == other_fiche

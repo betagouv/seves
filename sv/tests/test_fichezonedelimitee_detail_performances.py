@@ -1,7 +1,7 @@
 from model_bakery import baker
 from sv.models import FicheDetection, ZoneInfestee
 
-BASE_NUM_QUERIES = 16
+BASE_NUM_QUERIES = 14
 
 
 def test_empty_fiche_zone_delimitee_performances(

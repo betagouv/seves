@@ -236,7 +236,17 @@
                     </div>
                 </template>
             </div>
+
         </div>
+
+        <div id="liens-libre" class="white-container fr-mt-4w">
+            {{ form.instance.free_link_ids|json_script:"free-links-id" }}
+            <h2>Liens libres</h2>
+            <div>
+                {{ form.free_link }}
+            </div>
+        </div>
+
     </div>
     </form>
 {% endblock %}

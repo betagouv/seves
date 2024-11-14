@@ -194,3 +194,17 @@ class AllowVisibiliteMixin(models.Model):
                 return True
             case _:
                 return False
+
+
+class WithFreeLinkIdsMixin:
+    @property
+    def free_link_ids(self):
+        content_type = ContentType.objects.get_for_model(self)
+        links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
+        link_ids = []
+        for link in links:
+            if link.object_id_1 == self.id and link.content_type_1 == content_type:
+                link_ids.append(f"{link.content_type_2.pk}-{link.object_id_2}")
+            else:
+                link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
+        return link_ids

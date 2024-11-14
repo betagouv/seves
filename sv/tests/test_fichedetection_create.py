@@ -22,7 +22,7 @@ from ..models import (
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
-from core.models import Contact, LienLibre, Visibilite
+from core.models import Contact, LienLibre, Visibilite, Structure
 
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
@@ -462,3 +462,24 @@ def test_fiche_detection_with_free_link(
 
     assert lien_libre.related_object_1 == fiche_detection
     assert lien_libre.related_object_2 == fiche_zone
+
+
+@pytest.mark.django_db
+def test_fiche_detection_with_free_link_cant_see_draft(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
+    fiche_zone_bakery,
+):
+    fiche_zone = fiche_zone_bakery()
+    fiche_zone.visibilite = Visibilite.BROUILLON
+    fiche_zone.createur = baker.make(Structure)
+    fiche_zone.save()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
+    page.query_selector("#liens-libre .choices").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill(str(fiche_zone.numero))
+    expect(page.get_by_role("option", name=fiche_input, exact=True)).not_to_be_visible()

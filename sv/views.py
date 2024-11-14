@@ -15,7 +15,7 @@ from django.views.generic import (
 )
 from django.urls import reverse
 from django.db.models import F, Prefetch
-from django.db import transaction, IntegrityError
+from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.contrib import messages
@@ -31,7 +31,6 @@ from core.mixins import (
 )
 from core.redirect import safe_redirect
 from sv.forms import (
-    FreeLinkForm,
     FicheDetectionVisibiliteUpdateForm,
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -113,11 +112,6 @@ class FicheDetectionDetailView(
         self.object = super().get_object(queryset)
         return self.object
 
-    def _get_free_link_form(self):
-        return FreeLinkForm(
-            content_type_1=ContentType.objects.get_for_model(self.get_object()).pk, object_id_1=self.get_object().pk
-        )
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lieux"] = (
@@ -131,7 +125,6 @@ class FicheDetectionDetailView(
             "espece_echantillon",
             "laboratoire_agree",
         )
-        context["free_link_form"] = self._get_free_link_form()
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
             self.get_object()
@@ -154,6 +147,29 @@ class FicheDetectionDetailView(
 
 
 class FicheDetectionContextMixin:
+    def _add_status_to_organisme_nuisible(self, context, status):
+        status_code_to_id = {s.code: s.id for s in status}
+        oeep_to_nuisible_id = {
+            organisme.code_oepp: organisme.id
+            for organisme in OrganismeNuisible.objects.filter(code_oepp__in=KNOWN_OEPPS)
+        }
+        context["status_to_organisme_nuisible"] = [
+            {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
+            for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
+        ]
+
+    def _add_possible_links(self, context, user):
+        possible_links = []
+
+        content_type = ContentType.objects.get_for_model(FicheDetection)
+        queryset = FicheDetection.objects.all().get_fiches_user_can_view(user).select_related("numero")
+        possible_links.append((content_type.pk, "Fiche Détection", queryset))
+
+        content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
+        queryset = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(user).select_related("numero")
+        possible_links.append((content_type.pk, "Fiche zone délimitée", queryset))
+        context["possible_links"] = possible_links
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["statuts_evenement"] = StatutEvenement.objects.all()
@@ -180,26 +196,8 @@ class FicheDetectionContextMixin:
         context["sites_inspections"] = list(SiteInspection.objects.all().values("id", "nom").order_by("nom"))
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
 
-        status_code_to_id = {s.code: s.id for s in status}
-
-        oeep_to_nuisible_id = {
-            organisme.code_oepp: organisme.id
-            for organisme in OrganismeNuisible.objects.filter(code_oepp__in=KNOWN_OEPPS)
-        }
-        context["status_to_organisme_nuisible"] = [
-            {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
-            for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
-        ]
-
-        possible_links = []
-        content_type = ContentType.objects.get_for_model(FicheDetection)
-        possible_links.append((content_type.pk, "Fiche Détection", FicheDetection.objects.select_related("numero")))
-        content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        possible_links.append(
-            (content_type.pk, "Fiche zone délimitée", FicheZoneDelimitee.objects.select_related("numero"))
-        )
-
-        context["possible_links"] = possible_links
+        self._add_status_to_organisme_nuisible(context, status)
+        self._add_possible_links(context, self.request.user)
         return context
 
 
@@ -635,25 +633,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
 
 
-class FreeLinkCreateView(FormView):
-    form_class = FreeLinkForm
-
-    def post(self, request, *args, **kwargs):
-        form = FreeLinkForm(request.POST)
-        if not form.is_valid():
-            messages.error(request, "Ce lien existe déjà.")
-            return safe_redirect(self.request.POST.get("next"))
-
-        try:
-            form.save()
-        except IntegrityError:
-            messages.error(request, "Vous ne pouvez pas lier un objet à lui même.")
-            return safe_redirect(self.request.POST.get("next"))
-
-        messages.success(request, "Le lien a été créé avec succès.")
-        return safe_redirect(self.request.POST.get("next"))
-
-
 class FicheDetectionExportView(View):
     http_method_names = ["post"]
 
@@ -859,11 +838,6 @@ class FicheZoneDelimiteeDetailView(
         self.object = super().get_object(queryset)
         return self.object
 
-    def _get_free_link_form(self):
-        return FreeLinkForm(
-            content_type_1=ContentType.objects.get_for_model(self.get_object()).pk, object_id_1=self.get_object().pk
-        )
-
     def get_queryset(self):
         zone_infestee_detections_prefetch = Prefetch(
             "fichedetection_set", queryset=FicheDetection.objects.select_related("numero")
@@ -879,7 +853,6 @@ class FicheZoneDelimiteeDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fichezonedelimitee = self.get_object()
-        context["free_link_form"] = self._get_free_link_form()
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()

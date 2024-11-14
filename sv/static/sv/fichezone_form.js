@@ -20,6 +20,26 @@ function initializeAllChoices() {
     }
 }
 
+function inititializeFreeLinksChoices(){
+    const freeLinksChoices = new Choices(document.getElementById("id_free_link"), {
+        searchResultLimit: 500,
+        classNames: {
+            containerInner: 'fr-select',
+        },
+        removeItemButton: true,
+        itemSelectText: '',
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucune fiche à sélectionner',
+        searchFields: ['label'],
+    });
+    const freeLinksIds = JSON.parse(document.getElementById('free-links-id').textContent);
+    if (!!freeLinksIds) {
+        freeLinksIds.forEach(value => {
+            freeLinksChoices.setChoiceByValue(value);
+        });
+    }
+}
+
 function addZoneInfesteeForm() {
     const totalFormsInput = document.getElementById('id_zoneinfestee_set-TOTAL_FORMS');
     let totalForms = parseInt(totalFormsInput.value);
@@ -37,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initializeChoices('id_detections_hors_zone');
     initializeAllChoices();
+    inititializeFreeLinksChoices();
     const addZoneButton = document.getElementById('add-zone-infestee');
     addZoneButton.addEventListener('click', function(event) {
         event.preventDefault();
