@@ -83,3 +83,6 @@ body{
     padding-bottom: 0.50rem !important;
     background-image: none !important;
 }
+.fiches__list-link-no-wrap {
+    text-wrap: nowrap;
+}
