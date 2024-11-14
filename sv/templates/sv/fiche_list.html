@@ -53,12 +53,12 @@
                         {% for fiche in fiches %}
                             <tr class="fiches__list-row">
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
                                         {{ fiche.type }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
                                         {{ fiche.numero|default:"nc." }}
                                     </a>
                                 </td>
@@ -68,7 +68,7 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
                                         {{ fiche.date_creation }}
                                     </a>
                                 </td>
