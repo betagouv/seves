@@ -64,14 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     choices.passedElement.element.addEventListener("choice", (event)=> {
-        statusToNuisibleId.forEach((line) =>{
-            if (line.nuisibleIds.includes(parseInt(event.detail.choice.value)))
-            {
-                document.getElementById('statut-reglementaire-input').value=line.statusID
+        let found = false;
+        statusToNuisibleId.forEach((status) =>{
+            if (status.nuisibleIds.includes(parseInt(event.detail.choice.value))) {
+                document.getElementById('statut-reglementaire-input').value = status.statusID;
                 document.getElementById('statut-reglementaire-input').dispatchEvent(new Event('change'));
+                found = true;
             }
         })
-
+        if (found === false){
+            document.getElementById('statut-reglementaire-input').value="";
+            document.getElementById('statut-reglementaire-input').dispatchEvent(new Event('change'));
+        }
     })
 });
 
@@ -309,7 +313,7 @@ document.addEventListener('alpine:init', () => {
             })
             if (!!this.ficheDetection.freeLinksIds) {
                 this.ficheDetection.freeLinksIds.forEach(value => {
-                  freeLinksChoices.setChoiceByValue(value);
+                    freeLinksChoices.setChoiceByValue(value);
                 });
             }
 
@@ -608,7 +612,7 @@ document.addEventListener('alpine:init', () => {
             formData.append('prelevements', JSON.stringify(this.prelevements));
             formData.append('action', action);
             for (var i = 0; i < this.ficheDetection.freeLinksIds.length; i++) {
-              formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
+                formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
             }
 
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
