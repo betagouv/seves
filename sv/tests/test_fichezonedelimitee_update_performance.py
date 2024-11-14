@@ -3,7 +3,7 @@ from model_bakery import baker
 from core.models import Visibilite
 from sv.models import Etat, OrganismeNuisible, FicheDetection
 
-BASE_NUM_QUERIES = 10
+BASE_NUM_QUERIES = 13
 
 
 def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(

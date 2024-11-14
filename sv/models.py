@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices, Q
@@ -13,8 +12,9 @@ from core.mixins import (
     AllowVisibiliteMixin,
     IsActiveMixin,
     WithMessageUrlsMixin,
+    WithFreeLinkIdsMixin,
 )
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite, LienLibre
+from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.managers import (
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
@@ -398,6 +398,7 @@ class FicheDetection(
     AllowVisibiliteMixin,
     WithEtatMixin,
     WithMessageUrlsMixin,
+    WithFreeLinkIdsMixin,
     models.Model,
 ):
     class Meta:
@@ -503,18 +504,6 @@ class FicheDetection(
         if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:
             return self.zone_infestee.fiche_zone_delimitee
 
-    @property
-    def free_link_ids(self):
-        content_type = ContentType.objects.get_for_model(self)
-        links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
-        link_ids = []
-        for link in links:
-            if link.object_id_1 == self.id and link.content_type_1 == content_type:
-                link_ids.append(f"{link.content_type_2.pk}-{link.object_id_2}")
-            else:
-                link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
-        return link_ids
-
 
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
@@ -548,7 +537,7 @@ class ZoneInfestee(models.Model):
     )
 
 
-class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, models.Model):
+class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, WithFreeLinkIdsMixin, models.Model):
     class CaracteristiquesPrincipales(models.TextChoices):
         PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
             "plein_air_zone_production_champ",

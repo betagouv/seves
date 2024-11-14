@@ -6,7 +6,6 @@ from .views import (
     FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
-    FreeLinkCreateView,
     FicheDetectionExportView,
     FicheCloturerView,
     FicheDetectionVisibiliteUpdateView,
@@ -62,11 +61,6 @@ urlpatterns = [
         "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",
         RattachementDetectionView.as_view(),
         name="rattachement-fiche-zone-delimitee",
-    ),
-    path(
-        "lien/ajout/",
-        FreeLinkCreateView.as_view(),
-        name="free-link-add",
     ),
     path(
         "api/espece/recherche/",

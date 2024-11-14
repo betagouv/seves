@@ -1,5 +1,7 @@
 from playwright.sync_api import Page, expect
 from model_bakery import baker
+
+from core.models import LienLibre
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat
 
@@ -174,3 +176,42 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
             f"Les fiches détection suivantes sont dupliquées dans les zones infestées : {str(fiche_detection.numero)}."
         )
     ).to_be_visible()
+
+
+def test_update_fiche_can_add_and_delete_free_links(
+    live_server,
+    page: Page,
+    fiche_detection: FicheDetection,
+    fiche_detection_bakery,
+    choice_js_fill,
+):
+    other_fiche = fiche_detection_bakery()
+    other_fiche_2 = fiche_detection_bakery()
+    fiche_zone_delimitee = baker.make(
+        FicheZoneDelimitee,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+        statut_reglementaire=fiche_detection.statut_reglementaire,
+        _fill_optional=True,
+    )
+    LienLibre.objects.create(related_object_1=fiche_zone_delimitee, related_object_2=other_fiche)
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+
+    expect(page.get_by_text(f"Fiche Détection : {str(other_fiche.numero)}Remove item")).to_be_visible()
+    # Remove existing link
+    page.locator(".choices__button").click()
+
+    # Add new link
+    fiche_input = "Fiche Détection : " + str(other_fiche_2.numero)
+    choice_js_fill(page, "#liens-libre .choices", str(other_fiche_2.numero), fiche_input)
+
+    form_page.submit_update_form()
+
+    page.wait_for_timeout(600)
+
+    assert LienLibre.objects.count() == 1
+    lien_libre = LienLibre.objects.get()
+
+    assert lien_libre.related_object_1 == fiche_zone_delimitee
+    assert lien_libre.related_object_2 == other_fiche_2

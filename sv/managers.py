@@ -23,15 +23,9 @@ class FicheDetectionManager(models.Manager):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
 
 
-class FicheDetectionQuerySet(models.QuerySet):
-    def get_contacts_structures_not_in_fin_suivi(self, fiche_detection):
-        contacts_structure_fiche = fiche_detection.contacts.exclude(structure__isnull=True).select_related("structure")
-        fin_suivi_contacts_ids = fiche_detection.fin_suivi.values_list("contact", flat=True)
-        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
-        return contacts_not_in_fin_suivi
-
+class BaseVisibilityQuerySet(models.QuerySet):
     def get_fiches_user_can_view(self, user):
-        """Renvoi les fiches (queryset) que l'utilisateur peut voir en fonction de sa structure et de la visibilité de la fiche"""
+        """Renvoi les fiches que l'utilisateur peut voir en fonction de sa structure et de la visibilité de la fiche"""
         if user.agent.structure.is_mus_or_bsv:
             return self.filter(
                 Q(visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
@@ -44,6 +38,14 @@ class FicheDetectionQuerySet(models.QuerySet):
                 createur=user.agent.structure,
             )
         )
+
+
+class FicheDetectionQuerySet(BaseVisibilityQuerySet):
+    def get_contacts_structures_not_in_fin_suivi(self, fiche_detection):
+        contacts_structure_fiche = fiche_detection.contacts.exclude(structure__isnull=True).select_related("structure")
+        fin_suivi_contacts_ids = fiche_detection.fin_suivi.values_list("contact", flat=True)
+        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
+        return contacts_not_in_fin_suivi
 
     def with_list_of_lieux(self):
         from sv.models import Lieu
@@ -87,7 +89,7 @@ class FicheZoneManager(models.Manager):
         return FicheZoneQuerySet(self.model, using=self._db)
 
 
-class FicheZoneQuerySet(models.QuerySet):
+class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
         return self.select_related("numero", "createur", "organisme_nuisible", "etat")
 
