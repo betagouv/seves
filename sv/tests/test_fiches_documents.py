@@ -1,7 +1,10 @@
+from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.models import Structure
+from core.models import Structure, Document, Visibilite
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -145,3 +148,78 @@ def test_can_filter_documents_by_unit_on_fiche_detection(live_server, page: Page
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
+
+
+def test_cant_add_document_if_brouillon(client, fiche_variable):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    test_file = SimpleUploadedFile(name="test.pdf", content=b"contenu du fichier test", content_type="application/pdf")
+    data = {
+        "nom": "Un fichier test",
+        "document_type": Document.TypeDocument.AUTRE,
+        "description": "Description du fichier test",
+        "file": test_file,
+        "content_type": ContentType.objects.get_for_model(fiche).pk,
+        "object_id": fiche.id,
+        "next": fiche.get_absolute_url(),
+    }
+
+    response = client.post(
+        reverse("document-upload"),
+        data=data,
+        format="multipart",
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+def test_cant_delete_document_if_brouillon(client, fiche_variable, document_recipe):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    document = document_recipe().make(nom="Test document", description="un document")
+    fiche.documents.set([document])
+
+    response = client.post(
+        reverse("document-delete", kwargs={"pk": document.pk}),
+        data={"next": fiche.get_absolute_url()},
+        follow=True,
+    )
+    document.refresh_from_db()
+
+    assert document.is_deleted is False
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+def test_cant_edit_document_if_brouillon(client, fiche_variable, document_recipe):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    document = document_recipe().make(nom="Test document", description="un document")
+    fiche.documents.set([document])
+
+    response = client.post(
+        reverse("document-update", kwargs={"pk": document.pk}),
+        data={"next": fiche.get_absolute_url(), "nom": "Nouveau nom", "description": "Nouvelle description"},
+        follow=True,
+    )
+    document.refresh_from_db()
+
+    assert document.nom == "Test document"
+    assert document.description == "un document"
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"

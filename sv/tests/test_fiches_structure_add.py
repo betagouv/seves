@@ -1,7 +1,9 @@
 import pytest
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from playwright.sync_api import expect
 from model_bakery import baker
-from core.models import Structure, Contact
+from core.models import Structure, Contact, Visibilite
 
 
 @pytest.fixture
@@ -157,3 +159,71 @@ def test_add_structure_form_back_to_fiche_after_select_structure_niveau1(
     page.get_by_role("link", name="Retour à la fiche").click()
 
     expect(page).to_have_url(f"{live_server.url}{fiche.get_absolute_url()}")
+
+
+@pytest.mark.django_db
+def test_cant_access_structure_selection_add_form_if_fiche_brouillon(live_server, page, fiche_variable):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    content_type = ContentType.objects.get_for_model(fiche)
+    page.goto(
+        f"{live_server.url}/{reverse('structure-selection-add-form')}?fiche_id={fiche.id}&content_type_id={content_type.id}&next={fiche.get_absolute_url()}"
+    )
+    expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_post_structure_selection_add_form_if_fiche_brouillon(
+    client, fiche_variable, mocked_authentification_user
+):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+
+    response = client.post(
+        reverse("structure-selection-add-form"),
+        data={
+            "fiche_id": fiche.id,
+            "next": fiche.get_absolute_url(),
+            "content_type_id": ContentType.objects.get_for_model(fiche).id,
+            "structure_niveau1": fiche.createur,
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+@pytest.mark.django_db
+def test_cant_post_structure_add_form_if_fiche_brouillon(client, fiche_variable, mocked_authentification_user):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    structure = Structure.objects.create(
+        niveau1=fiche.createur, niveau2="une autre structure", libelle="une autre structure"
+    )
+    contact = Contact.objects.create(structure=structure)
+
+    response = client.post(
+        reverse("structure-add"),
+        data={
+            "content_type_id": ContentType.objects.get_for_model(fiche).id,
+            "fiche_id": fiche.id,
+            "next": fiche.get_absolute_url(),
+            "structure_selected": fiche.createur,
+            "contacts": [contact],
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
