@@ -33,7 +33,7 @@
                                 <select x-model="lieuForm.siteInspectionId" class="fr-select" data-testid="lieu-form-type-etablissement" id="site-inspection">
                                     <option value="">----</option>
                                     {% for site_inspection in sites_inspections %}
-                                        <option value="{{ site_inspection.id }}">{{ site_inspection.libelle }}</option>
+                                        <option value="{{ site_inspection.id }}">{{ site_inspection.nom }}</option>
                                     {% endfor %}
                                 </select>
                             </p>

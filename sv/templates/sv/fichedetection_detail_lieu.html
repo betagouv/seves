@@ -22,6 +22,11 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
+                            <div class="fr-col-4 detail-lieu__label--site-inspection">Site d'inspection</div>
+                            <div class="fr-col-6">{{lieu.site_inspection.nom|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 detail-lieu__label--code-insee">Code INSEE</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-insee">{{lieu.code_insee|default:"nc."}}</div>
                         </div>
@@ -104,11 +109,6 @@
                                 <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 detail-lieu__label--code-inpp-etablissement">Code INPP</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-inpp-etablissement">{{lieu.code_inpp_etablissement|default:"nc."}}</div>
-                            </div>
-                            <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--type-etablissement">Type</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-type-etablissement">{{lieu.type_exploitant_etablissement.libelle|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
