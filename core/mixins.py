@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 
 from core.forms import DocumentUploadForm, DocumentEditForm
@@ -108,15 +108,21 @@ class AllowACNotificationMixin(models.Model):
             raise ValidationError("Cet objet est déjà notifié à l'AC")
 
         self.is_ac_notified = True
-        message = Message.objects.create(
+        message = Message(
             message_type=Message.NOTIFICATION_AC,
             title="Notification à l'AC",
             content="L'administration a été notifiée de cette fiche.",
             sender=sender,
             content_object=self,
         )
-        notify_message(message)
-        self.save()
+
+        try:
+            notify_message(message)
+            with transaction.atomic():
+                self.save()
+                message.save()
+        except ValidationError as e:
+            raise ValidationError(f"Une erreur s'est produite lors de la notification : {e.message}")
 
     class Meta:
         abstract = True
