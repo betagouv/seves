@@ -181,6 +181,9 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "OE_CORBFL",
         "OE_PHYPAE",
         "OE_PHYTRA",
+        "OE_1BEGOG",
+        "OE_ALECCT",
+        "OE_LIBEAM",
     ],
     "OQZP": ["OE_BNYVV0", "OE_RHYCFE"],
     "OQP": [
@@ -193,6 +196,9 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "OE_XYLEFA",
         "OE_TOBRFV",
         "OE_1POMAG",
+    ],
+    "OE": [
+        "OE_TOUMPA",
     ],
 }
 

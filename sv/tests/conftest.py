@@ -51,6 +51,8 @@ def add_status_reglementaire_objects():
         "OQ": "organisme quarantaine",
         "OQZP": "organisme quarantaine zone protégée",
         "ORNQ": "organisme réglementée non quarantaine",
+        "OTR": "organisme temporairement réglementé",
+        "OE": "organisme émergent",
     }
     for code, libelle in status.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
