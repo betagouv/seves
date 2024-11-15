@@ -508,6 +508,8 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         if self.request.user.agent.structure.is_ac:
             fiche_detection.numero_europhyt = data.get("numeroEurophyt")
             fiche_detection.numero_rasff = data.get("numeroRasff")
+        if data.get("action") == "publier":
+            fiche_detection.visibilite = Visibilite.LOCAL
 
         try:
             fiche_detection.full_clean()

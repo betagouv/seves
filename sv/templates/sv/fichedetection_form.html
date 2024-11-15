@@ -58,7 +58,7 @@
                 </div>
 
                 <p>
-                    {% if is_creation %}
+                    {% if form.instance.is_draft %}
                         <input type="submit" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">
                         <input type="submit" name="action" value="Publier" data-action="publier" class="fr-btn">
                     {% else %}

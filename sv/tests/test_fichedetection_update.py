@@ -1097,3 +1097,22 @@ def test_fiche_can_add_and_delete_free_links(
 
     assert lien_libre.related_object_1 == fiche_detection
     assert lien_libre.related_object_2 == other_fiche_2
+
+
+def test_can_publish_fiche_detection_in_visibilite_brouillon_from_update_form(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
+):
+    fiche_detection = FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        createur=mocked_authentification_user.agent.structure,
+    )
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    form_elements.publish_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.visibilite == Visibilite.LOCAL
