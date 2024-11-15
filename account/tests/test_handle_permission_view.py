@@ -71,7 +71,7 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
 
 @pytest.mark.django_db
 def test_cant_remove_permissions_for_myself(live_server, page, mocked_authentification_user):
-    group = Group.objects.create(name="access_admin")
+    group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
