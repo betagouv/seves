@@ -1,4 +1,7 @@
-from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee
+import pytest
+
+from core.models import Visibilite
+from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from model_bakery import baker
 from playwright.sync_api import expect
 
@@ -176,3 +179,34 @@ def test_have_link_to_fiche_zone_delimitee_if_zone_infestee(live_server, page, f
     link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
     expect(link).to_be_visible()
     expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())
+
+
+def test_fiche_detection_brouillon_does_not_have_bloc_suivi_display(live_server, page, mocked_authentification_user):
+    fiche_detection = baker.make(
+        FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_label("Fil de suivi")).not_to_be_visible()
+    expect(page.get_by_label("Contacts")).not_to_be_visible()
+    expect(page.get_by_label("Documents")).not_to_be_visible()
+
+
+@pytest.mark.parametrize(
+    "visibilite",
+    [
+        Visibilite.LOCAL,
+        Visibilite.NATIONAL,
+    ],
+)
+def test_fiche_detection_local_have_bloc_suivi_display(
+    live_server, page, visibilite: Visibilite, mocked_authentification_user
+):
+    fiche_detection = baker.make(
+        FicheDetection, visibilite=visibilite, createur=mocked_authentification_user.agent.structure
+    )
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_label("Fil de suivi")).to_be_visible()
+    expect(page.get_by_label("Contacts")).to_have_count(1)
+    expect(page.get_by_label("Contacts")).to_be_hidden()
+    expect(page.get_by_label("Documents")).to_have_count(1)
+    expect(page.get_by_label("Documents")).to_be_hidden()
