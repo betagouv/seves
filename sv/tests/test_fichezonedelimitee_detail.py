@@ -18,9 +18,6 @@ def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, fiche_zone, pa
     expect(page.get_by_role("heading", name=f"Fiche zone délimitée n° {fiche_zone_delimitee.numero}")).to_be_visible()
     expect(page.get_by_text(str(fiche_zone_delimitee.organisme_nuisible))).to_be_visible()
     expect(page.get_by_text(str(fiche_zone_delimitee.statut_reglementaire))).to_be_visible()
-    expect(
-        page.get_by_text(fiche_zone_delimitee.get_caracteristiques_principales_zone_delimitee_display())
-    ).to_be_visible()
     expect(page.get_by_text(fiche_zone_delimitee.commentaire)).to_be_visible()
     expect(
         page.get_by_text(f"{fiche_zone_delimitee.rayon_zone_tampon} {fiche_zone_delimitee.unite_rayon_zone_tampon}")
@@ -36,6 +33,7 @@ def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, fiche_zone, pa
     expect(page.get_by_text(fiche_zone_delimitee.date_creation.strftime("%d/%m/%Y"))).to_be_visible()
     expect(page.get_by_role("link", name=f"{str(fiche_detection_fiche_zone_delimitee.numero)}")).to_be_visible()
     expect(page.get_by_text(f"{zone_infestee_1.nom}")).to_be_visible()
+    expect(page.get_by_text(f"{zone_infestee_1.get_caracteristique_principale_display()}")).to_be_visible()
     expect(page.get_by_text(f"{zone_infestee_1.rayon} {zone_infestee_1.unite_rayon}")).to_be_visible()
     expect(
         page.get_by_text(f"{zone_infestee_1.surface_infestee_totale} {zone_infestee_1.unite_surface_infestee_totale}")

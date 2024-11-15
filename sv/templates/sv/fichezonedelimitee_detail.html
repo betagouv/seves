@@ -64,10 +64,6 @@
             <div class="fr-col">
                 <div class="fichezonedelimitee__details white-container">
                     <h2>Détails</h2>
-                    <div>
-                        <div class="fichezonedelimitee__field fr-mb-1w">Caractéristiques</div>
-                        <div>{{ fiche.get_caracteristiques_principales_zone_delimitee_display|default:"nc." }}</div>
-                    </div>
                     <div class="fr-mt-4w">
                         <div class="fichezonedelimitee__field fr-mb-1w">Commentaire</div>
                         <div>{{ fiche.commentaire|default:"nc." }}</div>
@@ -132,6 +128,10 @@
                                 <div class="fr-grid-row fr-mb-1w">
                                     <div class="fr-col-7 fichezonedelimitee__field">Nom de la zone</div>
                                     <div class="fr-col">{{ zone_infestee.nom|default:"nc." }}</div>
+                                </div>
+                                <div class="fr-grid-row fr-mb-1w">
+                                    <div class="fr-col-7 fichezonedelimitee__field">Caractéristique</div>
+                                    <div class="fr-col">{{ zone_infestee.get_caracteristique_principale_display|default:"nc." }}</div>
                                 </div>
                                 <div class="fr-grid-row fr-mb-1w">
                                     <div class="fr-col-7 fichezonedelimitee__field">Rayon de la zone infestée</div>

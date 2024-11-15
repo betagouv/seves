@@ -76,7 +76,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         exclude = ["date_creation", "numero", "createur", "etat"]
         labels = {
             "statut_reglementaire": "Statut réglementaire",
-            "caracteristiques_principales_zone_delimitee": "Caractéristiques",
         }
         widgets = {
             "createur": forms.HiddenInput,
@@ -200,6 +199,9 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = ZoneInfestee
         exclude = ["fiche_zone_delimitee"]
+        labels = {
+            "caracteristique_principale": "Caractéristique",
+        }
 
     def __init__(self, *args, **kwargs):
         organisme_nuisible_libelle = kwargs.pop("organisme_nuisible_libelle", None)
