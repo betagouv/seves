@@ -115,7 +115,9 @@ class FicheDetectionDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lieux"] = (
-            Lieu.objects.filter(fiche_detection=self.get_object()).order_by("id").select_related("departement__region")
+            Lieu.objects.filter(fiche_detection=self.get_object())
+            .order_by("id")
+            .select_related("departement__region", "site_inspection")
         )
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related(
@@ -534,6 +536,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             )
             lieu.adresse_lieu_dit = loc["adresseLieuDit"]
             lieu.commune = loc.get("commune")
+            lieu.site_inspection_id = loc["siteInspectionId"]
             lieu.code_insee = loc.get("codeINSEE")
             lieu.departement = departement
             lieu.is_etablissement = loc["isEtablissement"]
@@ -545,7 +548,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 lieu.adresse_etablissement = loc["adresseEtablissement"]
                 lieu.siret_etablissement = loc["siretEtablissement"]
                 lieu.code_inpp_etablissement = loc["codeInppEtablissement"]
-                lieu.site_inspection_id = loc["siteInspectionId"]
                 lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
             else:
                 lieu.nom_etablissement = ""
@@ -554,7 +556,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 lieu.raison_sociale_etablissement = ""
                 lieu.adresse_etablissement = ""
                 lieu.siret_etablissement = ""
-                lieu.site_inspection_id = None
                 lieu.position_chaine_distribution_etablissement_id = None
             lieu.save()
             loc["lieu_pk"] = lieu.pk
