@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 from model_bakery import baker
 
-from core.models import LienLibre
+from core.models import LienLibre, Visibilite
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat
 
@@ -210,3 +210,26 @@ def test_update_fiche_can_add_and_delete_free_links(
 
     assert lien_libre.related_object_1 == fiche_zone_delimitee
     assert lien_libre.related_object_2 == other_fiche_2
+
+
+def test_update_fiche_zone_cant_add_self_links(
+    live_server,
+    page: Page,
+    fiche_detection: FicheDetection,
+    choice_js_fill,
+):
+    fiche_zone_delimitee = baker.make(
+        FicheZoneDelimitee,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+        statut_reglementaire=fiche_detection.statut_reglementaire,
+        _fill_optional=True,
+        visibilite=Visibilite.NATIONAL,
+    )
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+
+    fiche_input = "Fiche zone délimitée : " + str(fiche_zone_delimitee.numero)
+    page.query_selector("#liens-libre .choices").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill(fiche_input)
+    expect(page.get_by_role("option", name=fiche_input, exact=True)).not_to_be_visible()

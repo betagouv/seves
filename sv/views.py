@@ -165,6 +165,10 @@ class FicheDetectionContextMixin:
 
         content_type = ContentType.objects.get_for_model(FicheDetection)
         queryset = FicheDetection.objects.all().get_fiches_user_can_view(user).select_related("numero")
+        try:
+            queryset = queryset.exclude(pk=self.get_object().pk)
+        except AttributeError:
+            pass
         possible_links.append((content_type.pk, "Fiche Détection", queryset))
 
         content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)

@@ -95,6 +95,8 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
         qs_detection = FicheDetection.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
         qs_zone = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
+        if self.instance:
+            qs_zone = qs_zone.exclude(id=self.instance.id)
         self.fields["free_link"] = MultiModelChoiceField(
             required=False,
             label="Sélectionner un objet",
@@ -118,6 +120,11 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
     def clean_statut_reglementaire(self):
         return StatutReglementaire.objects.get(libelle=self.cleaned_data["statut_reglementaire"])
+
+    def clean_free_link(self):
+        if self.instance and self.instance in self.cleaned_data["free_link"]:
+            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
+        return self.cleaned_data["free_link"]
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():
