@@ -31,7 +31,7 @@
             <header role="banner" class="fr-header">
                 <div id="en-tete">
                     <img src="{% static 'images/marianne.png' %}" alt="">
-                    <p id="seves-title">Sèves</p>
+                    <p id="seves-title"><a href="{% url 'fiche-liste' %}">Sèves</a></p>
                     <a href="{% url 'fiche-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
                         {% block product_title %}
                         {% endblock product_title %}
