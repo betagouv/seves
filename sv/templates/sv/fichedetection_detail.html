@@ -229,8 +229,9 @@
         </div>
         {% include "sv/_fichedetection_synthese.html" %}
 
-
-        {% include "core/_fiche_bloc_commun.html" with fiche=fichedetection %}
+        {% if not fichedetection.is_draft %}
+            {% include "core/_fiche_bloc_commun.html" with fiche=fichedetection %}
+        {% endif %}
     </main>
 
 {% endblock %}

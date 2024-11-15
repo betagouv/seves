@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-from core.models import Message, Contact, Agent, Structure
+from core.models import Message, Contact, Agent, Structure, Visibilite
 
 User = get_user_model()
 
@@ -338,3 +338,70 @@ def test_cant_only_pick_structure_with_email(
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", "FOO", "FOO")
     choice_js_cant_pick(page, ".choices__input--cloned:first-of-type", "BAR", "BAR")
+
+
+@pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
+def test_cant_access_add_message_form_if_fiche_brouillon(client, fiche_variable, message_type, message_label):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+
+    response = client.get(fiche.get_add_message_url(message_type), follow=True)
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+@pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
+def test_cant_add_message_if_fiche_brouillon(
+    client, fiche_variable, mocked_authentification_user, with_active_contact, message_type, message_label
+):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+
+    response = client.post(
+        fiche.get_add_message_url(message_type),
+        data={
+            "sender": Contact.objects.get(agent=mocked_authentification_user.agent).pk,
+            "recipients": [with_active_contact.pk],
+            "message_type": message_type,
+            "content": "My content \n with a line return",
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+@pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
+def test_cant_access_message_details_if_fiche_brouillon(
+    client, fiche_variable, mocked_authentification_user, with_active_contact, message_type, message_label
+):
+    fiche = fiche_variable()
+    fiche.visibilite = Visibilite.BROUILLON
+    fiche.numero = None
+    fiche.save()
+    message = Message.objects.create(
+        message_type=message_type,
+        title="un titre",
+        content="un contenu",
+        sender=Contact.objects.get(agent=mocked_authentification_user.agent),
+        content_object=fiche,
+    )
+    recipient_contact = Contact.objects.get(agent=with_active_contact)
+    message.recipients.set([recipient_contact])
+
+    response = client.get(message.get_absolute_url(), follow=True)
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"

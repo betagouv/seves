@@ -28,8 +28,13 @@ from django.core.exceptions import ValidationError
 from .redirect import safe_redirect
 
 
-class DocumentUploadView(FormView):
+class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     form_class = DocumentUploadForm
+
+    def get_fiche_object(self):
+        content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
+        ModelClass = content_type.model_class()
+        return get_object_or_404(ModelClass, pk=self.request.POST.get("object_id"))
 
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -46,20 +51,27 @@ class DocumentUploadView(FormView):
         return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentDeleteView(View):
+class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
+    def get_fiche_object(self):
+        self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
+        return self.document.content_object
+
     def post(self, request, *args, **kwargs):
-        document = get_object_or_404(Document, pk=kwargs.get("pk"))
-        document.is_deleted = True
-        document.deleted_by = self.request.user.agent
-        document.save()
+        self.document.is_deleted = True
+        self.document.deleted_by = self.request.user.agent
+        self.document.save()
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
         return safe_redirect(request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentUpdateView(UpdateView):
+class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UpdateView):
     model = Document
     form_class = DocumentEditForm
     http_method_names = ["post"]
+
+    def get_fiche_object(self):
+        self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
+        return self.document.content_object
 
     def get_success_url(self):
         return self.request.POST.get("next") + "#tabpanel-documents-panel"
@@ -70,9 +82,16 @@ class DocumentUpdateView(UpdateView):
         return response
 
 
-class ContactAddFormView(FormView):
+class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     template_name = "core/_contact_add_form.html"
     form_class = ContactAddForm
+
+    def get_fiche_object(self):
+        content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
+        fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
+        content_type = ContentType.objects.get(pk=content_type_id)
+        ModelClass = content_type.model_class()
+        return get_object_or_404(ModelClass, pk=fiche_id)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -94,9 +113,16 @@ class ContactAddFormView(FormView):
         return render(self.request, self.template_name, {"form": form, "selection_form": selection_form})
 
 
-class ContactSelectionView(FormView):
+class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     template_name = "core/_contact_add_form.html"
     form_class = ContactSelectionForm
+
+    def get_fiche_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        fiche_id = self.request.POST.get("fiche_id")
+        content_type = ContentType.objects.get(pk=content_type_id)
+        ModelClass = content_type.model_class()
+        return get_object_or_404(ModelClass, pk=fiche_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -147,19 +173,21 @@ class ContactSelectionView(FormView):
         )
 
 
-class ContactDeleteView(View):
-    def post(self, request, *args, **kwargs):
-        content_type = ContentType.objects.get(id=request.POST.get("content_type_pk"))
+class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
+    def get_fiche_object(self):
+        content_type = ContentType.objects.get(id=self.request.POST.get("content_type_pk"))
         ModelClass = content_type.model_class()
-        fiche = get_object_or_404(ModelClass, pk=request.POST.get("fiche_pk"))
-        contact = Contact.objects.get(pk=self.request.POST.get("pk"))
+        self.fiche = get_object_or_404(ModelClass, pk=self.request.POST.get("fiche_pk"))
+        return self.fiche
 
-        fiche.contacts.remove(contact)
+    def post(self, request, *args, **kwargs):
+        contact = Contact.objects.get(pk=self.request.POST.get("pk"))
+        self.fiche.contacts.remove(contact)
         messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
-class MessageCreateView(CreateView):
+class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, CreateView):
     model = Message
     form_class = MessageForm
 
@@ -168,6 +196,9 @@ class MessageCreateView(CreateView):
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
         self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
         return super().dispatch(request, *args, **kwargs)
+
+    def get_fiche_object(self):
+        return self.obj
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -243,13 +274,25 @@ class MessageCreateView(CreateView):
         return response
 
 
-class MessageDetailsView(DetailView):
+class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):
     model = Message
 
+    def get_fiche_object(self):
+        message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
+        fiche = message.content_object
+        return fiche
 
-class StructureAddFormView(FormView):
+
+class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     template_name = "core/_structure_add_form.html"
     form_class = StructureAddForm
+
+    def get_fiche_object(self):
+        content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
+        fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
+        content_type = ContentType.objects.get(pk=content_type_id)
+        ModelClass = content_type.model_class()
+        return get_object_or_404(ModelClass, pk=fiche_id)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -270,9 +313,16 @@ class StructureAddFormView(FormView):
         return render(self.request, self.template_name, {"form": form, "selection_form": selection_form})
 
 
-class StructureSelectionView(FormView):
+class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     template_name = "core/_structure_add_form.html"
     form_class = StructureSelectionForm
+
+    def get_fiche_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        fiche_id = self.request.POST.get("fiche_id")
+        content_type = ContentType.objects.get(pk=content_type_id)
+        ModelClass = content_type.model_class()
+        return get_object_or_404(ModelClass, pk=fiche_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -343,7 +393,7 @@ class SoftDeleteView(View):
 
 
 class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
-    def get_object(self):
+    def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")
         content_id = self.request.POST.get("content_id")
         content_type = ContentType.objects.get(pk=content_type_id).model_class()

@@ -733,7 +733,7 @@ class FicheZoneDelimiteeVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
 class RattachementDetectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     form_class = RattachementDetectionForm
 
-    def get_object(self):
+    def get_fiche_object(self):
         self.fiche_detection = FicheDetection.objects.get(pk=self.kwargs.get("pk"))
         return self.fiche_detection
 
