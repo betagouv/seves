@@ -468,7 +468,6 @@ class FicheZoneDelimiteeFormPage:
         self.statut_reglementaire = page.get_by_label("statut réglementaire")
 
         # Détails
-        self.caracteristiques = page.get_by_label("Caractéristiques")
         self.commentaire = page.get_by_label("Commentaire")
 
         # Zone tampon
@@ -487,6 +486,9 @@ class FicheZoneDelimiteeFormPage:
 
         # Zones infestées
         self.zone_infestee_nom_base_locator = "#id_zoneinfestee_set-{}-nom"
+        self.zone_infestee_caracteristique_principale_base_locator = (
+            "#id_zoneinfestee_set-{}-caracteristique_principale"
+        )
         self.zone_infestee_rayon_base_locator = "#id_zoneinfestee_set-{}-rayon"
         self.zone_infestee_rayon_unite_base_locator = "input[name='zoneinfestee_set-{}-unite_rayon'][value='{}']"
         self.zone_infestee_surface_infestee_totale_base_locator = "#id_zoneinfestee_set-{}-surface_infestee_totale"
@@ -612,6 +614,9 @@ class FicheZoneDelimiteeFormPage:
             expect(self.page.locator(self.zone_infestee_nom_base_locator.format(index))).to_have_value(
                 zone_infestee.nom
             )
+            expect(
+                self.page.locator(self.zone_infestee_caracteristique_principale_base_locator.format(index))
+            ).to_have_value(zone_infestee.caracteristique_principale)
             expect(self.page.locator(self.zone_infestee_rayon_base_locator.format(index))).to_have_value(
                 str(zone_infestee.rayon)
             )
@@ -636,6 +641,9 @@ class FicheZoneDelimiteeFormPage:
     ):
         detections_zone_infestee = detections_zone_infestee or ()
         self.page.locator(self.zone_infestee_nom_base_locator.format(index)).fill(zoneinfestee.nom)
+        self.page.locator(self.zone_infestee_caracteristique_principale_base_locator.format(index)).select_option(
+            zoneinfestee.caracteristique_principale
+        )
         self.page.locator(self.zone_infestee_rayon_base_locator.format(index)).fill(str(zoneinfestee.rayon))
         self._select_unite_rayon_zone_infestee(zoneinfestee.unite_rayon, index)
         self.page.locator(self.zone_infestee_surface_infestee_totale_base_locator.format(index)).fill(
@@ -652,7 +660,6 @@ class FicheZoneDelimiteeFormPage:
         detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None,
     ):
         detections_zone_infestee = detections_zone_infestee or ()
-        self.caracteristiques.select_option(fiche_zone_delimitee.caracteristiques_principales_zone_delimitee)
         self.commentaire.fill(fiche_zone_delimitee.commentaire)
         self.rayon_zone_tampon.fill(str(fiche_zone_delimitee.rayon_zone_tampon))
         self._select_unite_rayon_zone_tampon(fiche_zone_delimitee.unite_rayon_zone_tampon)
@@ -682,7 +689,6 @@ class FicheZoneDelimiteeFormPage:
         expect(self.page.get_by_text("La fiche zone délimitée a été créée avec succès.")).to_be_visible()
 
     def check_update_form_content(self, fiche_zone_delimitee: FicheZoneDelimitee):
-        expect(self.caracteristiques).to_have_value(fiche_zone_delimitee.caracteristiques_principales_zone_delimitee)
         expect(self.commentaire).to_have_value(fiche_zone_delimitee.commentaire)
         expect(self.rayon_zone_tampon).to_have_value(str(fiche_zone_delimitee.rayon_zone_tampon))
         self._check_unite_rayon_zone_tampon_checked(fiche_zone_delimitee.unite_rayon_zone_tampon)

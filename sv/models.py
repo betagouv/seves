@@ -515,30 +515,7 @@ class ZoneInfestee(models.Model):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
 
-    class Meta:
-        verbose_name = "Zone infestée"
-        verbose_name_plural = "Zones infestées"
-
-    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
-    nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
-    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale", blank=True, null=True)
-    unite_surface_infestee_totale = models.CharField(
-        max_length=3,
-        choices=UnitesSurfaceInfesteeTotale,
-        default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
-        verbose_name="Unité de la surface infestée totale",
-    )
-    rayon = models.FloatField(verbose_name="Rayon de la zone infestée", blank=True, null=True)
-    unite_rayon = models.CharField(
-        max_length=2,
-        choices=UnitesRayon,
-        default=UnitesRayon.KILOMETRE,
-        verbose_name="Unité du rayon de la zone infestée",
-    )
-
-
-class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, WithFreeLinkIdsMixin, models.Model):
-    class CaracteristiquesPrincipales(models.TextChoices):
+    class CaracteristiquePrincipale(models.TextChoices):
         PLEIN_AIR_ZONE_PRODUCTION_CHAMP = (
             "plein_air_zone_production_champ",
             "(1) Plein air — zone de production (1.1) champ (culture, pâturage)",
@@ -581,6 +558,35 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
             "(3) Environnement fermé (3.5) autre (veuillez préciser)",
         )
 
+    class Meta:
+        verbose_name = "Zone infestée"
+        verbose_name_plural = "Zones infestées"
+
+    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
+    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale", blank=True, null=True)
+    unite_surface_infestee_totale = models.CharField(
+        max_length=3,
+        choices=UnitesSurfaceInfesteeTotale,
+        default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
+        verbose_name="Unité de la surface infestée totale",
+    )
+    rayon = models.FloatField(verbose_name="Rayon de la zone infestée", blank=True, null=True)
+    unite_rayon = models.CharField(
+        max_length=2,
+        choices=UnitesRayon,
+        default=UnitesRayon.KILOMETRE,
+        verbose_name="Unité du rayon de la zone infestée",
+    )
+    caracteristique_principale = models.CharField(
+        max_length=50,
+        choices=CaracteristiquePrincipale.choices,
+        verbose_name="Caractéristique principale",
+        blank=True,
+    )
+
+
+class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, WithFreeLinkIdsMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -605,12 +611,6 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
         StatutReglementaire,
         on_delete=models.PROTECT,
         verbose_name="Statut règlementaire de l'organisme nuisible",
-    )
-    caracteristiques_principales_zone_delimitee = models.CharField(
-        max_length=50,
-        choices=CaracteristiquesPrincipales.choices,
-        verbose_name="Caractéristiques principales de la zone délimitée",
-        blank=True,
     )
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
     rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True)

@@ -123,9 +123,6 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     assert fiche_from_db.visibilite == Visibilite.LOCAL
     assert fiche_from_db.statut_reglementaire == fiche_detection.statut_reglementaire
     assert fiche_from_db.date_creation.date() == timezone.now().date()
-    assert (
-        fiche_from_db.caracteristiques_principales_zone_delimitee == fiche.caracteristiques_principales_zone_delimitee
-    )
     assert fiche_from_db.commentaire == fiche.commentaire
     assert fiche_from_db.rayon_zone_tampon == fiche.rayon_zone_tampon
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon
@@ -188,9 +185,6 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     assert fiche_from_db.organisme_nuisible == fiche_detection.organisme_nuisible
     assert fiche_from_db.statut_reglementaire == fiche_detection.statut_reglementaire
     assert fiche_from_db.date_creation.date() == timezone.now().date()
-    assert (
-        fiche_from_db.caracteristiques_principales_zone_delimitee == fiche.caracteristiques_principales_zone_delimitee
-    )
     assert fiche_from_db.commentaire == fiche.commentaire
     assert fiche_from_db.rayon_zone_tampon == fiche.rayon_zone_tampon
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon
@@ -211,6 +205,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         zones_infestees_from_db,
     ):
         assert zone_infestee_from_db.nom == zone_infestee.nom
+        assert zone_infestee_from_db.caracteristique_principale == zone_infestee.caracteristique_principale
         assert zone_infestee_from_db.surface_infestee_totale == zone_infestee.surface_infestee_totale
         assert zone_infestee_from_db.unite_surface_infestee_totale == zone_infestee.unite_surface_infestee_totale
         assert all(

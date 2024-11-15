@@ -64,10 +64,6 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
     assert fiche_zone_delimitee_updated.createur == fiche_zone_delimitee.createur
     assert fiche_zone_delimitee_updated.organisme_nuisible == fiche_zone_delimitee.organisme_nuisible
     assert fiche_zone_delimitee_updated.statut_reglementaire == fiche_zone_delimitee.statut_reglementaire
-    assert (
-        fiche_zone_delimitee_updated.caracteristiques_principales_zone_delimitee
-        == new_fiche_zone_delimitee.caracteristiques_principales_zone_delimitee
-    )
     assert fiche_zone_delimitee_updated.commentaire == new_fiche_zone_delimitee.commentaire
     assert fiche_zone_delimitee_updated.rayon_zone_tampon == new_fiche_zone_delimitee.rayon_zone_tampon
     assert fiche_zone_delimitee_updated.unite_rayon_zone_tampon == new_fiche_zone_delimitee.unite_rayon_zone_tampon
@@ -97,6 +93,7 @@ def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice
     zone_infestee_updated = ZoneInfestee.objects.get(id=zone_infestee.id)
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
     assert zone_infestee_updated.nom == new_zone_infestee.nom
+    assert zone_infestee_updated.caracteristique_principale == new_zone_infestee.caracteristique_principale
     assert zone_infestee_updated.surface_infestee_totale == new_zone_infestee.surface_infestee_totale
     assert zone_infestee_updated.unite_surface_infestee_totale == new_zone_infestee.unite_surface_infestee_totale
     assert zone_infestee_updated.rayon == new_zone_infestee.rayon
@@ -121,6 +118,8 @@ def test_add_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js
         fiche_zone_delimitee=fiche_zone_delimitee, nom=new_zone_infestee.nom
     )
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
+    assert zone_infestee_created.nom == new_zone_infestee.nom
+    assert zone_infestee_created.caracteristique_principale == new_zone_infestee.caracteristique_principale
     assert zone_infestee_created.surface_infestee_totale == new_zone_infestee.surface_infestee_totale
     assert zone_infestee_created.unite_surface_infestee_totale == new_zone_infestee.unite_surface_infestee_totale
     assert zone_infestee_created.rayon == new_zone_infestee.rayon

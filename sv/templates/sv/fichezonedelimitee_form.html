@@ -61,10 +61,6 @@
             <div class="fr-col">
                 <div class="fichezoneform__details white-container">
                     <h2>Détails</h2>
-                    <div>
-                        <div class="fr-mb-1w">{{ form.caracteristiques_principales_zone_delimitee.label_tag }}</div>
-                        {{ form.caracteristiques_principales_zone_delimitee }}
-                    </div>
                     <div class="fr-mt-4w">
                         <div class="fr-mb-1w">{{ form.commentaire.label_tag }}</div>
                         {{ form.commentaire }}
@@ -161,6 +157,10 @@
                                 <div>{{ zone_infestee_form.nom.label_tag }}</div>
                                 <div class="zone-infestee-form__numero-input">{{ zone_infestee_form.nom }}</div>
                             </div>
+                            <div class="fr-mb-3w">
+                                <div>{{ zone_infestee_form.caracteristique_principale.label_tag }}</div>
+                                {{ zone_infestee_form.caracteristique_principale }}
+                            </div>
                             <div>
                                 <div class="fr-mb-1w">{{ zone_infestee_form.rayon.label_tag }}</div>
                                 <div class="fr-grid-row">
@@ -201,6 +201,10 @@
                             <div class="fr-mb-3w">
                                 <div>{{ empty_form.nom.label_tag }}</div>
                                 <div class="zone-infestee-form__numero-input">{{ empty_form.nom }}</div>
+                            </div>
+                            <div class="fr-mb-3w">
+                                <div>{{ empty_form.caracteristique_principale.label_tag }}</div>
+                                {{ empty_form.caracteristique_principale }}
                             </div>
                             <div>
                                 <div class="fr-mb-1w">{{ empty_form.rayon.label_tag }}</div>
