@@ -103,14 +103,13 @@
                         <p class="objet-evenement__field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
                     </div>
                     <div class="objet-evenement__field">
+                        <p class="objet-evenement__field-label">Végétaux infestés</p>
+                        <p class="objet-evenement__field-value">{{ fichedetection.vegetaux_infestes|default:"nc." }}</p>
+                    </div>
+                    <div class="objet-evenement__field">
                         <p class="objet-evenement__field-label">Commentaire</p>
                         <p class="objet-evenement__field-value">{{ fichedetection.commentaire|default:"nc." }}</p>
                     </div>
-                    <div class="objet-evenement__field">
-                        <p class="objet-evenement__field-label">Végétaux inféstés</p>
-                        <p class="objet-evenement__field-value">{{ fichedetection.vegetaux_infestes|default:"nc." }}</p>
-                    </div>
-
                 </div>
 
                 <!-- Lieux -->

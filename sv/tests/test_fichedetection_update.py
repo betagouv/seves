@@ -97,7 +97,7 @@ def test_fiche_detection_update_page_content(
     # Commentaire
     expect(form_elements.commentaire_input).to_have_value(fiche_detection.commentaire)
 
-    # Végétaux inféstés
+    # Végétaux infestés
     expect(form_elements.vegetaux_infestes_input).to_have_value(fiche_detection.vegetaux_infestes)
 
     # Mesures conservatoires immédiates
