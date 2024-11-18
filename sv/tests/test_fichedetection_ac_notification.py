@@ -1,5 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.models import Structure, Contact, Visibilite
@@ -39,11 +39,30 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
     expect(page.locator(".fiches__list-row td:nth-child(8) a .fr-icon-notification-3-line")).to_be_visible()
 
 
-def test_cant_notify_ac_draft(live_server, page: Page, mocked_authentification_user):
-    fiche_detection = baker.make(
-        FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):
+    fiche_detection = FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
     )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
 
-    page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).to_be_disabled()
+
+def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, client):
+    fiche_detection = FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+
+    response = client.post(
+        reverse("notify-ac"),
+        {
+            "next": fiche_detection.get_absolute_url(),
+            "content_id": fiche_detection.id,
+            "content_type_id": ContentType.objects.get_for_model(FicheDetection).id,
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"

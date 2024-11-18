@@ -1,4 +1,7 @@
-from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee
+from django.urls import reverse
+
+from core.models import Visibilite
+from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from model_bakery import baker
 from playwright.sync_api import expect
 
@@ -189,3 +192,16 @@ def test_have_link_to_fiche_zone_delimitee_if_zone_infestee(live_server, page, f
     link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
     expect(link).to_be_visible()
     expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())
+
+
+def test_fiche_detection_brouillon_cannot_add_zone(live_server, page, mocked_authentification_user):
+    fiche_detection = FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ajouter une zone")).not_to_be_visible()
+
+    # simule le fait d'effectuer la requete GET directement pour ajouter une zone
+    page.goto(f"{live_server.url}{reverse('rattachement-fiche-zone-delimitee', args=[fiche_detection.id])}")
+    expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()

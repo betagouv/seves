@@ -223,3 +223,20 @@ class CanUpdateVisibiliteRequiredMixin:
             messages.error(request, "Vous n'avez pas les droits pour modifier la visibilité de cette fiche.")
             return safe_redirect(self.object.get_absolute_url())
         return super().dispatch(request, *args, **kwargs)
+
+
+class PreventActionIfVisibiliteBrouillonMixin:
+    """
+    Mixin pour empêcher des actions sur des objets ayant la visibilité 'brouillon'.
+    """
+
+    def get_object(self):
+        raise NotImplementedError("Vous devez implémenter la méthode `get_object` pour ce mixin.")
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.visibilite == Visibilite.BROUILLON:
+            messages.error(request, "Action impossible car la fiche est en brouillon")
+            return safe_redirect(request.POST.get("next") or obj.get_absolute_url() or "/")
+
+        return super().dispatch(request, *args, **kwargs)

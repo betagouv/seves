@@ -54,11 +54,7 @@ def test_agent_in_structure_createur_can_update_fiche_detection_visibilite_broui
         FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
     )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("link", name="Modifier la visibilité")).to_be_visible()
-    page.get_by_role("link", name="Modifier la visibilité").click()
-    page.get_by_text("Local").click()
-    page.get_by_role("button", name="Valider").click()
+    page.get_by_role("button", name="Publier").click()
     expect(page.get_by_role("heading", name="La visibilité de la fiche détection a bien été modifiée")).to_be_visible()
     expect(page.get_by_text(Visibilite.LOCAL)).to_be_visible()
     fiche_detection.refresh_from_db()
@@ -138,3 +134,14 @@ def test_publier_fiche_detection_from_btn(live_server, page: Page, mocked_authen
     expect(page.get_by_text(Visibilite.LOCAL)).to_be_visible()
     fiche_detection.refresh_from_db()
     assert fiche_detection.visibilite == Visibilite.LOCAL
+
+
+def test_fiche_detection_brouillon_cannot_change_visibility_through_actions_btn(
+    live_server, page, mocked_authentification_user, client
+):
+    fiche_detection = FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Modifier la visibilité")).not_to_be_visible()
