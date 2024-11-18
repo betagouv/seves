@@ -1,19 +1,33 @@
+import pytest
+from django.contrib.auth import get_user_model
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 from core.models import Message, Contact, Agent, Structure
 
+User = get_user_model()
 
-def test_can_add_and_see_message_without_document(live_server, page: Page, fiche_variable, choice_js_fill):
-    fiche = fiche_variable()
+
+@pytest.fixture
+def with_active_contact(tmp_path):
     agent = baker.make(Agent)
+    agent.user.is_active = True
+    agent.user.save()
     baker.make(Contact, agent=agent)
+    return agent
+
+
+def test_can_add_and_see_message_without_document(
+    live_server, page: Page, fiche_variable, with_active_contact, choice_js_fill
+):
+    fiche = fiche_variable()
+
     page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
     expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
     page.get_by_test_id("fildesuivi-add").click()
 
     page.wait_for_url(f"**{fiche.add_message_url}")
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -24,7 +38,7 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
     assert page.text_content(cell_selector) == "Structure Test"
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
-    assert page.text_content(cell_selector).strip() == str(agent)
+    assert page.text_content(cell_selector).strip() == str(with_active_contact)
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
     assert page.text_content(cell_selector) == "Title of the message"
@@ -40,17 +54,17 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, fiche
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
 
-def test_can_add_and_see_message_multiple_documents(live_server, page: Page, fiche_variable, choice_js_fill):
+def test_can_add_and_see_message_multiple_documents(
+    live_server, page: Page, fiche_variable, with_active_contact, choice_js_fill
+):
     fiche = fiche_variable()
-    agent = baker.make(Agent)
-    baker.make(Contact, agent=agent)
     page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
     expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
     page.get_by_test_id("fildesuivi-add").click()
 
     page.wait_for_url(f"**{fiche.add_message_url}")
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
 
@@ -103,6 +117,8 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(
     agents = []
     for _ in range(4):
         agent = baker.make(Agent)
+        agent.user.is_active = True
+        agent.user.save()
         baker.make(Contact, agent=agent)
         agents.append(agent)
 
@@ -157,8 +173,6 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(
 
 def test_can_add_and_see_note_without_document(live_server, page: Page, fiche_variable):
     fiche = fiche_variable()
-    agent = baker.make(Agent)
-    baker.make(Contact, agent=agent)
     page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Note").click()
@@ -291,3 +305,36 @@ def test_formatting_contacts_messages_details_page(live_server, page: Page, fich
     page.goto(f"{live_server.url}{message.get_absolute_url()}")
     expect(page.get_by_text("De : Reinhardt Django (MUS)", exact=True)).to_be_visible()
     expect(page.get_by_text("A : Reinhardt Jean (MUS)", exact=True)).to_be_visible()
+
+
+def test_cant_pick_inactive_user_in_message(live_server, page: Page, fiche_variable, choice_js_cant_pick):
+    fiche = fiche_variable()
+    user = baker.make(User, is_active=False)
+    agent = baker.make(Agent, user=user)
+    baker.make(Contact, agent=agent, structure=None)
+
+    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+
+    page.wait_for_url(f"**{fiche.add_message_url}")
+
+    choice_js_cant_pick(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
+
+
+def test_cant_only_pick_structure_with_email(
+    live_server, page: Page, fiche_variable, choice_js_fill, choice_js_cant_pick
+):
+    fiche = fiche_variable()
+    structure_with_email = baker.make(Structure, niveau1="FOO", niveau2="FOO", libelle="FOO")
+    baker.make(Contact, agent=None, structure=structure_with_email)
+
+    structure_without_email = baker.make(Structure, niveau1="BAR", niveau2="BAR", libelle="BAR")
+    baker.make(Contact, agent=None, email="", structure=structure_without_email)
+
+    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+
+    page.wait_for_url(f"**{fiche.add_message_url}")
+
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", "FOO", "FOO")
+    choice_js_cant_pick(page, ".choices__input--cloned:first-of-type", "BAR", "BAR")

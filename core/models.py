@@ -7,7 +7,7 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth import get_user_model
-from .managers import DocumentQueryset, ContactQueryset, LienLibreQueryset
+from .managers import DocumentQueryset, ContactQueryset, LienLibreQueryset, StructureQueryset
 from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from .storage import get_timestamped_filename
@@ -50,6 +50,8 @@ class Structure(models.Model):
     niveau1 = models.CharField(max_length=255)
     niveau2 = models.CharField(max_length=255, blank=True)
     libelle = models.CharField(max_length=255, blank=True)
+
+    objects = StructureQueryset.as_manager()
 
     def __str__(self):
         return self.libelle

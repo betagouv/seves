@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from playwright.sync_api import expect
 
 from core.models import Agent, Structure, Contact
 from model_bakery import baker
@@ -26,6 +27,8 @@ def set_django_allow_async_unsafe():
 @pytest.fixture(autouse=True)
 def mocked_authentification_user(db):
     user = baker.make(get_user_model(), email="test@example.com")
+    user.is_active = True
+    user.save()
     structure = baker.make(Structure, niveau2="Structure Test", libelle="Structure Test")
     Contact.objects.create(structure=structure, email="structure_test@test.fr")
     agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")
@@ -48,3 +51,14 @@ def choice_js_fill(db, page):
         page.get_by_role("option", name=exact_name, exact=True).click()
 
     return _choice_js_fill
+
+
+@pytest.fixture
+def choice_js_cant_pick(db, page):
+    def _choice_js_cant_pick(page, locator, fill_content, exact_name):
+        page.query_selector(locator).click()
+        page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        page.locator("*:focus").fill(fill_content)
+        expect(page.get_by_role("option", name=exact_name, exact=True)).not_to_be_visible()
+
+    return _choice_js_cant_pick

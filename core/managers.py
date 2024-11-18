@@ -41,6 +41,15 @@ class ContactQueryset(QuerySet):
     def structures_only(self):
         return self.exclude(structure__isnull=True)
 
+    def with_active_agent(self):
+        return self.filter(agent__user__is_active=True)
+
+    def exclude_empty_emails(self):
+        return self.exclude(email="")
+
+    def can_be_emailed(self):
+        return self.exclude_empty_emails().with_active_agent() | self.exclude_empty_emails().structures_only()
+
     def services_deconcentres_first(self):
         return self.annotate(
             services_deconcentres_first=Case(
@@ -83,3 +92,8 @@ class LienLibreQueryset(QuerySet):
             object_id_1=object_2.id,
         ).first()
         return link
+
+
+class StructureQueryset(QuerySet):
+    def has_at_least_one_active_contact(self):
+        return self.filter(agent__user__is_active=True).distinct()
