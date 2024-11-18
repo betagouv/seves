@@ -9,7 +9,11 @@ from core.models import Contact, Structure, Agent
 @pytest.fixture
 def contact(db):
     structure = baker.make(Structure, _fill_optional=True)
-    return baker.make(Contact, agent=baker.make(Agent, structure=structure))
+    agent = baker.make(Agent, structure=structure)
+    user = agent.user
+    user.is_active = True
+    user.save()
+    return baker.make(Contact, agent=agent)
 
 
 @pytest.fixture
@@ -21,6 +25,10 @@ def contacts(db):
     # création de la structure MUS et de deux contacts de type Agent associés
     structure_mus = baker.make(Structure, libelle="MUS")
     agentMUS1, agentMUS2 = baker.make(Agent, _quantity=2, structure=structure_mus)
+    for agent in (agentMUS1, agentMUS2):
+        user = agent.user
+        user.is_active = True
+        user.save()
     contactMUS1 = baker.make(Contact, agent=agentMUS1)
     contactMUS2 = baker.make(Contact, agent=agentMUS2)
     return [contactMUS1, contactMUS2]
@@ -57,7 +65,14 @@ def test_structure_list(client):
     Contact.objects.all().delete()
     Agent.objects.all().delete()
     Structure.objects.all().delete()
-    baker.make(Structure, _quantity=3)
+    for _ in range(0, 3):
+        structure = baker.make(Structure)
+        agent = baker.make(Agent, structure=structure)
+        user = agent.user
+        user.is_active = True
+        user.save()
+        baker.make(Contact, email="foo@example.com", agent=agent)
+
     url = reverse("contact-add-form")
     response = client.get(url)
     form = response.context["form"]
@@ -97,6 +112,21 @@ def test_add_contact_to_a_fiche(live_server, page, fiche_variable, contacts, cho
 
     expect(page.get_by_text("Le contact a été ajouté avec succès.")).to_be_visible()
     expect(page.locator(".fr-card__content")).to_be_visible()
+
+
+def test_cant_add_inactive_contact_to_a_fiche(live_server, page, fiche_variable, contacts, choice_js_fill):
+    contact1 = contacts[0]
+    user = contact1.agent.user
+    user.is_active = False
+    user.save()
+
+    page.goto(f"{live_server.url}/{fiche_variable().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter un agent").click()
+    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
+    page.get_by_role("button", name="Rechercher").click()
+    expect(page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}")).not_to_be_visible()
+    expect(page.get_by_text(f"{contacts[1].agent.nom} {contacts[1].agent.prenom}")).to_be_visible()
 
 
 def test_add_multiple_contacts_to_a_fiche(live_server, page, fiche_variable, contacts, choice_js_fill):

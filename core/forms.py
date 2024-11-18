@@ -88,12 +88,16 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
 class ContactAddForm(DSFRForm, forms.Form):
     fiche_id = forms.IntegerField(widget=forms.HiddenInput())
     structure = forms.ModelChoiceField(
-        queryset=Structure.objects.all(),
+        queryset=Structure.objects.none(),
         empty_label="Choisir dans la liste",
         label_suffix="",
     )
     next = forms.CharField(widget=forms.HiddenInput(), required=False)
     content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["structure"].queryset = Structure.objects.has_at_least_one_active_contact()
 
 
 class ContactSelectionForm(forms.Form):
@@ -119,12 +123,10 @@ class ContactSelectionForm(forms.Form):
         self.fields["content_type_id"].initial = content_type_id
         content_type = ContentType.objects.get(pk=content_type_id).model_class()
         fiche = content_type.objects.get(pk=fiche_id)
-        # Obtention des contacts déjà liés à la fiche
-        existing_contacts = fiche.contacts.all()
-        # Filtrage pour exclure les contacts déjà associés à la fiche
         self.fields["contacts"].queryset = (
             Contact.objects.filter(agent__structure=structure)
-            .exclude(pk__in=existing_contacts)
+            .can_be_emailed()
+            .exclude(pk__in=fiche.contacts.all())
             .order_by("structure", "agent__nom")
         )
         # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
@@ -136,10 +138,10 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}), label="De")
     sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
     recipients = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.with_structure_and_agent(), label_suffix="", label="Destinataires :"
+        queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
     )
     recipients_copy = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.with_structure_and_agent(), required=False, label="Copie :", label_suffix=""
+        queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
     )
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 4}))
@@ -193,6 +195,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         obj = kwargs.pop("obj", None)
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+        self.fields["recipients"].queryset = Contact.objects.with_structure_and_agent().can_be_emailed()
+        self.fields["recipients_copy"].queryset = Contact.objects.with_structure_and_agent().can_be_emailed()
 
         if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_label(obj)
@@ -268,7 +272,7 @@ class StructureAddForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        niveau1_choices = Structure.objects.exclude(niveau1=SERVICE_ACCOUNT_NAME)
+        niveau1_choices = Structure.objects.exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
         niveau1_choices = niveau1_choices.values_list("niveau1", flat=True).distinct().order_by("niveau1")
         self.fields["structure_niveau1"].choices = [(niveau1, niveau1) for niveau1 in niveau1_choices]
         self.fields["structure_niveau1"].initial = niveau1_choices.first()
@@ -297,13 +301,12 @@ class StructureSelectionForm(forms.Form):
         self.fields["structure_selected"].initial = structure_selected
         content_type = ContentType.objects.get(pk=content_type_id).model_class()
         fiche = content_type.objects.get(pk=fiche_id)
-        # Obtention des structures déjà liées à la fiche
-        existing_structures = fiche.contacts.all()
-        # Exclut les contacts déjà associés à la fiche
+        existing_contact = fiche.contacts.all()
         self.fields["contacts"].queryset = (
             Contact.objects.filter(structure__niveau1=structure_selected)
-            .exclude(pk__in=existing_structures)
-            .order_by("structure__niveau2")
+            .can_be_emailed()
+            .exclude(pk__in=existing_contact)
+            .order_by("structure", "agent__nom")
         )
         # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
         self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)

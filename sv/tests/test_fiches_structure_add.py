@@ -29,6 +29,21 @@ def test_add_structure_form(live_server, page, fiche_variable, contacts_structur
 
 
 @pytest.mark.django_db
+def test_add_structure_form_hides_empty_emails(live_server, page, fiche_variable, contacts_structure):
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1"), email="")
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1"), email="foo@example.com")
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 2"), email="")
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 3"), email="bar@example.com")
+    page.goto(f"{live_server.url}/{fiche_variable().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter une structure").click()
+
+    expect(page.get_by_text("Level 1")).to_be_visible()
+    expect(page.get_by_text("Level 2")).not_to_be_visible()
+    expect(page.get_by_text("Level 3")).to_be_visible()
+
+
+@pytest.mark.django_db
 def test_add_structure_form_service_account_is_hidden(live_server, page, fiche_variable):
     fiche = fiche_variable()
     page.goto(f"{live_server.url}/{fiche.get_absolute_url()}")
@@ -62,6 +77,22 @@ def test_structure_niveau2_are_visible_aftert_select_structure_niveau1(
         page.get_by_text(contact.structure.niveau1).click()
         page.get_by_role("button", name="Rechercher").click()
         expect(page.get_by_text(contact.structure.libelle)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_structure_niveau2_without_emails_are_not_visible_aftert_select_structure_niveau1(
+    live_server, page, fiche_variable
+):
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1", libelle="Foo"), email="foo@example.com")
+    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1", libelle="Bar"), email="")
+    page.goto(f"{live_server.url}/{fiche_variable().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter une structure").click()
+
+    page.get_by_text("Level 1").click()
+    page.get_by_role("button", name="Rechercher").click()
+    expect(page.get_by_text("Foo")).to_be_visible()
+    expect(page.get_by_text("Bar")).not_to_be_visible()
 
 
 @pytest.mark.django_db
