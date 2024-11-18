@@ -128,7 +128,6 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon
     assert fiche_from_db.surface_tampon_totale == fiche.surface_tampon_totale
     assert fiche_from_db.unite_surface_tampon_totale == fiche.unite_surface_tampon_totale
-    assert fiche_from_db.is_zone_tampon_toute_commune == fiche.is_zone_tampon_toute_commune
     # Vérification de la détection liée dans hors zone infestée
     fiches_detection_linked = fiche_from_db.fichedetection_set.all()
     assert fiche_detection in fiches_detection_linked
@@ -190,7 +189,6 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     assert fiche_from_db.unite_rayon_zone_tampon == fiche.unite_rayon_zone_tampon
     assert fiche_from_db.surface_tampon_totale == fiche.surface_tampon_totale
     assert fiche_from_db.unite_surface_tampon_totale == fiche.unite_surface_tampon_totale
-    assert fiche_from_db.is_zone_tampon_toute_commune == fiche.is_zone_tampon_toute_commune
 
     # Vérification des détections hors zone infestée
     detections_hors_zone_infestee.append(fiche_detection)

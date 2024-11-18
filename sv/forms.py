@@ -10,7 +10,7 @@ from django.forms import BaseInlineFormSet
 from django.db.models import TextChoices
 
 from core.models import LienLibre
-from core.fields import DSFRRadioButton, DSFRCheckboxInput
+from core.fields import DSFRRadioButton
 from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
 
 
@@ -81,9 +81,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
             "createur": forms.HiddenInput,
             "vegetaux_infestes": forms.Textarea(attrs={"rows": 1}),
             "commentaire": forms.Textarea(attrs={"rows": 5}),
-            "is_zone_tampon_toute_commune": DSFRCheckboxInput(
-                label="La zone tampon s'étend à toute la ou les commune(s)"
-            ),
         }
 
     def __init__(self, *args, **kwargs):

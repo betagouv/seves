@@ -71,10 +71,6 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
     assert (
         fiche_zone_delimitee_updated.unite_surface_tampon_totale == new_fiche_zone_delimitee.unite_surface_tampon_totale
     )
-    assert (
-        fiche_zone_delimitee_updated.is_zone_tampon_toute_commune
-        == new_fiche_zone_delimitee.is_zone_tampon_toute_commune
-    )
 
 
 def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js_fill):
