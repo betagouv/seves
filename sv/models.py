@@ -627,9 +627,6 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
         default=UnitesSurfaceTamponTolale.METRE_CARRE,
         verbose_name="Unité de la surface tampon totale",
     )
-    is_zone_tampon_toute_commune = models.BooleanField(
-        verbose_name="La zone tampon s'étend à toute la ou les commune(s)", default=False
-    )
     etat = models.ForeignKey(
         Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
     )

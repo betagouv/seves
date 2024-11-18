@@ -477,7 +477,6 @@ class FicheZoneDelimiteeFormPage:
         self.surface_tampon_totale = page.get_by_label("Surface tampon totale")
         self.surface_tampon_totale_unite_m2 = page.get_by_label("m2", exact=True).first
         self.surface_tampon_totale_unite_km2 = page.get_by_label("km2", exact=True).first
-        self.is_zone_tampon_toute_commune = page.get_by_label("La zone tampon s'étend à toute la ou les commune(s)")
 
         # Détections hors zone infestée
         self.detections_hors_zone_infestee = page.locator(
@@ -501,10 +500,6 @@ class FicheZoneDelimiteeFormPage:
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
         self.publier = page.get_by_role("button", name="Publier", exact=True)
         self.enregistrer = page.get_by_role("button", name="Enregistrer", exact=True)
-
-    def _check_is_zone_tampon_toute_commune(self, is_zone_tampon_toute_commune: bool):
-        if is_zone_tampon_toute_commune:
-            expect(self.is_zone_tampon_toute_commune).to_be_checked()
 
     def _select_unite_rayon_zone_tampon(self, unite: FicheZoneDelimitee.UnitesRayon):
         match unite:
@@ -665,8 +660,6 @@ class FicheZoneDelimiteeFormPage:
         self._select_unite_rayon_zone_tampon(fiche_zone_delimitee.unite_rayon_zone_tampon)
         self.surface_tampon_totale.fill(str(fiche_zone_delimitee.surface_tampon_totale))
         self._select_unite_surface_tampon_totale(fiche_zone_delimitee.unite_surface_tampon_totale)
-        if fiche_zone_delimitee.is_zone_tampon_toute_commune:
-            self.is_zone_tampon_toute_commune.click(force=True)
         self._select_detections_in_hors_zone_infestee(detections_hors_zone_infestee)
         if zone_infestee is not None:
             self.fill_zone_infestee_form(0, zone_infestee, detections_zone_infestee)
@@ -694,7 +687,6 @@ class FicheZoneDelimiteeFormPage:
         self._check_unite_rayon_zone_tampon_checked(fiche_zone_delimitee.unite_rayon_zone_tampon)
         expect(self.surface_tampon_totale).to_have_value(str(fiche_zone_delimitee.surface_tampon_totale))
         self._check_unite_surface_tampon_totale_checked(fiche_zone_delimitee.unite_surface_tampon_totale)
-        self._check_is_zone_tampon_toute_commune(fiche_zone_delimitee.is_zone_tampon_toute_commune)
         self.check_detections_in_hors_zone_infestee(fiche_zone_delimitee.fichedetection_set.all())
         self._check_zones_infestees(fiche_zone_delimitee.zoneinfestee_set.all())
 
