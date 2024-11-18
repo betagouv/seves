@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -7,6 +8,7 @@ from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
 from core.models import Document, LienLibre, Contact, Message, Visibilite
 from .notifications import notify_message
+from .redirect import safe_redirect
 
 
 class WithDocumentUploadFormMixin:
@@ -208,3 +210,22 @@ class WithFreeLinkIdsMixin:
             else:
                 link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
         return link_ids
+
+
+class PreventActionIfVisibiliteBrouillonMixin:
+    """
+    Mixin pour empêcher des actions sur des objets ayant la visibilité 'brouillon'.
+    """
+
+    def get_object(self):
+        raise NotImplementedError("Vous devez implémenter la méthode `get_object` pour ce mixin.")
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        visibility = getattr(obj, "visibilite", None)
+
+        if visibility == Visibilite.BROUILLON:
+            messages.error(request, "Action impossible : l'objet est en visibilité 'brouillon'.")
+            return safe_redirect(request.POST.get("next") or "/")
+
+        return super().dispatch(request, *args, **kwargs)
