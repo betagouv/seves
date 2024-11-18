@@ -58,13 +58,16 @@
                     </div>
                 {% endif %}
                 {% include "sv/_detection_action_navigation.html" %}
-                {% include "sv/_delete_fiche_modal.html" %}
-                {% include "sv/_cloturer_modal.html" with fiche=fichedetection %}
-                {% if can_update_visibilite %}
-                    {% include "sv/_update_visibilite_modal.html" with fiche=fichedetection %}
+                {% if not fichedetection.is_draft %}
+                    {% include "sv/_delete_fiche_modal.html" %}
+                    {% include "sv/_cloturer_modal.html" with fiche=fichedetection %}
+                    {% if can_update_visibilite %}
+                        {% include "sv/_update_visibilite_modal.html" with fiche=fichedetection %}
+                    {% endif %}
+                    {% include "sv/_create_fichezonedelimitee_modal.html" %}
                 {% endif %}
-                {% include "sv/_create_fichezonedelimitee_modal.html" %}
             </div>
+
         </div>
 
         <div class="fiche-detail">

@@ -1018,10 +1018,7 @@ def test_fiche_detection_numero_fiche_is_not_null_when_visibilite_change_from_br
     )
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name="Actions").click()
-    page.get_by_role("link", name="Modifier la visibilité").click()
-    page.get_by_text("Local").click()
-    page.get_by_role("button", name="Valider").click()
+    page.get_by_role("button", name="Publier").click()
     page.wait_for_timeout(600)
     fiche_detection.refresh_from_db()
 

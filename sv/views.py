@@ -29,6 +29,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
+    PreventActionIfVisibiliteBrouillonMixin,
 )
 from core.redirect import safe_redirect
 from sv.forms import (
@@ -729,14 +730,17 @@ class FicheZoneDelimiteeVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class RattachementDetectionView(FormView):
+class RattachementDetectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
     form_class = RattachementDetectionForm
 
+    def get_object(self):
+        self.fiche_detection = FicheDetection.objects.get(pk=self.kwargs.get("pk"))
+        return self.fiche_detection
+
     def form_valid(self, form):
-        fiche_detection_id = self.kwargs.get("pk")
         rattachement = form.cleaned_data["rattachement"]
         return safe_redirect(
-            f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection_id}&rattachement={rattachement}"
+            f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={self.fiche_detection.id}&rattachement={rattachement}"
         )
 
 

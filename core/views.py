@@ -16,6 +16,8 @@ from .forms import (
 )
 from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
+
+from .mixins import PreventActionIfVisibiliteBrouillonMixin
 from .notifications import notify_message
 
 from .models import Document, Message, Contact, FinSuiviContact
@@ -340,20 +342,21 @@ class SoftDeleteView(View):
         return safe_redirect(request.POST.get("next"))
 
 
-class ACNotificationView(View):
-    def post(self, request):
-        content_type_id = request.POST.get("content_type_id")
-        content_id = request.POST.get("content_id")
-
+class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
+    def get_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        content_id = self.request.POST.get("content_id")
         content_type = ContentType.objects.get(pk=content_type_id).model_class()
-        obj = content_type.objects.get(pk=content_id)
+        self.obj = content_type.objects.get(pk=content_id)
+        return self.obj
 
+    def post(self, request):
         try:
-            obj.notify_ac(sender=self.request.user.agent.contact_set.get())
+            self.obj.notify_ac(sender=self.request.user.agent.contact_set.get())
             messages.success(request, "L'administration centrale a été notifiée avec succès")
         except AttributeError:
             messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
-        except ValidationError:
-            messages.error(request, "Cet objet est déjà notifié à l'AC")
+        except ValidationError as e:
+            messages.error(request, e.message)
 
         return safe_redirect(request.POST.get("next"))
