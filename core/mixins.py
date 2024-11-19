@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -7,6 +8,7 @@ from core.forms import DocumentUploadForm, DocumentEditForm
 from .filters import DocumentFilter
 from core.models import Document, LienLibre, Contact, Message, Visibilite
 from .notifications import notify_message
+from .redirect import safe_redirect
 
 
 class WithDocumentUploadFormMixin:
@@ -208,3 +210,16 @@ class WithFreeLinkIdsMixin:
             else:
                 link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
         return link_ids
+
+
+class CanUpdateVisibiliteRequiredMixin:
+    """
+    Mixin pour vérifier que l'utilisateur connecté a le droit de modifier la visibilité de la fiche.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.can_update_visibilite(request.user):
+            messages.error(request, "Vous n'avez pas les droits pour modifier la visibilité de cette fiche.")
+            return safe_redirect(self.object.get_absolute_url())
+        return super().dispatch(request, *args, **kwargs)
