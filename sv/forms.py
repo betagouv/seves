@@ -93,8 +93,10 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         if self.instance.pk:
             self.fields.pop("visibilite")
 
-        qs_detection = FicheDetection.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
-        qs_zone = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.user).select_related("numero")
+        qs_detection = FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
+        qs_detection = qs_detection.select_related("numero")
+        qs_zone = FicheZoneDelimitee.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
+        qs_zone = qs_zone.select_related("numero")
         if self.instance:
             qs_zone = qs_zone.exclude(id=self.instance.id)
         self.fields["free_link"] = MultiModelChoiceField(

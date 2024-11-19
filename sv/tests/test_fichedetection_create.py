@@ -481,3 +481,33 @@ def test_fiche_detection_with_free_link_cant_see_draft(
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
     choice_js_cant_pick(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
+
+
+@pytest.mark.django_db
+def test_free_links_are_ordered_in_fiche_detection_form(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
+    fiche_zone_bakery,
+    choice_js_fill,
+):
+    for i in range(1, 3):
+        other_fiche = fiche_zone_bakery()
+        other_fiche.visibilite = Visibilite.NATIONAL
+        other_fiche.save()
+        numero = other_fiche.numero
+        numero.annee = 2024
+        numero.numero = 3 - i
+        numero.save()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.query_selector("#liens-libre .choices").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Fiche Zone")
+    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(1)")).to_contain_text(
+        "Fiche zone délimitée : 2024.2"
+    )
+    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(2)")).to_contain_text(
+        "Fiche zone délimitée : 2024.1"
+    )

@@ -298,6 +298,7 @@ document.addEventListener('alpine:init', () => {
                     containerInner: 'fr-select',
                 },
                 removeItemButton: true,
+                shouldSort: false,
                 itemSelectText: '',
                 noResultsText: 'Aucun résultat trouvé',
                 noChoicesText: 'Aucune fiche à sélectionner',

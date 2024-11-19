@@ -386,3 +386,36 @@ def test_cant_add_fiche_detection_brouillon_in_zone_infestee(
     )
     expect(select_options).to_have_count(1)
     expect(select_options).to_have_text(str(fiche_detection.numero))
+
+
+def test_free_links_are_ordered_in_form(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_detection_bakery
+):
+    for i in range(1, 3):
+        other_fiche = fiche_detection_bakery()
+        other_fiche.visibilite = Visibilite.NATIONAL
+        other_fiche.save()
+        numero = other_fiche.numero
+        numero.annee = 2024
+        numero.numero = 3 - i
+        numero.save()
+
+    fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
+    fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
+    fiche_detection.save()
+    numero = fiche_detection.numero
+    numero.annee = 2000
+    numero.numero = 1
+    numero.save()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    page.query_selector("#liens-libre .choices").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Fiche Détection")
+    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(1)")).to_contain_text(
+        "Fiche Détection : 2024.2"
+    )
+    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(2)")).to_contain_text(
+        "Fiche Détection : 2024.1"
+    )
