@@ -28,6 +28,7 @@ from core.mixins import (
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
+    CanUpdateVisibiliteRequiredMixin,
 )
 from core.redirect import safe_redirect
 from sv.forms import (
@@ -135,6 +136,9 @@ class FicheDetectionDetailView(
         context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
+        context["publier_form"] = FicheDetectionVisibiliteUpdateForm(
+            obj=self.get_object(), action="publier" if self.get_object().is_draft else None
+        )
         context["rattachement_detection_form"] = RattachementDetectionForm()
         context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
         return context
@@ -681,11 +685,16 @@ class FicheCloturerView(View):
         return redirect(redirect_url)
 
 
-class FicheDetectionVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
+class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
     model = FicheDetection
     form_class = FicheDetectionVisibiliteUpdateForm
     http_method_names = ["post"]
     success_message = "La visibilité de la fiche détection a bien été modifiée."
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["action"] = self.request.POST.get("action")
+        return kwargs
 
     def get_success_url(self):
         return self.object.get_absolute_url()

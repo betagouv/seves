@@ -320,10 +320,16 @@ class VisibiliteUpdateBaseForm(DSFRForm):
 
     def __init__(self, *args, **kwargs):
         obj = kwargs.pop("obj", None)
+        action = kwargs.pop("action", None)
         super().__init__(*args, **kwargs)
         fiche_detection = obj or self.instance
 
         local = (Visibilite.LOCAL, Visibilite.LOCAL.capitalize())
         national = (Visibilite.NATIONAL, Visibilite.NATIONAL.capitalize())
-        self.fields["visibilite"].choices = [local] if fiche_detection.is_draft else [local, national]
-        self.fields["visibilite"].initial = fiche_detection.visibilite
+        if action == "publier":
+            self.fields["visibilite"].choices = [local]
+            self.fields["visibilite"].initial = Visibilite.LOCAL
+            self.fields["visibilite"].widget = forms.HiddenInput()
+        else:
+            self.fields["visibilite"].choices = [local] if fiche_detection.is_draft else [local, national]
+            self.fields["visibilite"].initial = fiche_detection.visibilite

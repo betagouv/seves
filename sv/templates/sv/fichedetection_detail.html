@@ -48,6 +48,15 @@
                 <button class="fr-btn fr-btn--secondary fr-mr-2w">
                     <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
                 </button>
+                {% if fichedetection.is_draft %}
+                    <div>
+                        <form method="post" action="{{ fichedetection.get_visibilite_update_url }}">
+                            {% csrf_token %}
+                            {{ publier_form.as_dsfr_div }}
+                            <button type="submit" name="action" value="publier" class="fr-btn fr-btn--secondary fr-mr-2w">Publier</button>
+                        </form>
+                    </div>
+                {% endif %}
                 {% include "sv/_detection_action_navigation.html" %}
                 {% include "sv/_delete_fiche_modal.html" %}
                 {% include "sv/_cloturer_modal.html" with fiche=fichedetection %}
