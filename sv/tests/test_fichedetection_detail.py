@@ -38,7 +38,7 @@ def test_lieu_details(live_server, page, fiche_detection):
     )
     expect(page.get_by_test_id("lieu-1-adresse-etablissement")).to_contain_text(lieu.adresse_etablissement)
     expect(page.get_by_test_id("lieu-1-siret-etablissement")).to_contain_text(lieu.siret_etablissement)
-    expect(page.get_by_test_id("lieu-1-code-inpp-etablissement")).to_contain_text(lieu.code_inpp_etablissement)
+    expect(page.get_by_test_id("lieu-1-code-inupp-etablissement")).to_contain_text(lieu.code_inupp_etablissement)
     expect(page.get_by_test_id("lieu-1-position-etablissement")).to_contain_text(
         lieu.position_chaine_distribution_etablissement.libelle
     )

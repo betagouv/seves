@@ -27,6 +27,7 @@ function inititializeFreeLinksChoices(){
             containerInner: 'fr-select',
         },
         removeItemButton: true,
+        shouldSort: false,
         itemSelectText: '',
         noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche à sélectionner',

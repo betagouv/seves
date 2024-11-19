@@ -164,7 +164,9 @@ class FicheDetectionContextMixin:
         possible_links = []
 
         content_type = ContentType.objects.get_for_model(FicheDetection)
-        queryset = FicheDetection.objects.all().get_fiches_user_can_view(user).select_related("numero")
+        queryset = (
+            FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(user).select_related("numero")
+        )
         try:
             queryset = queryset.exclude(pk=self.get_object().pk)
         except AttributeError:
@@ -172,7 +174,8 @@ class FicheDetectionContextMixin:
         possible_links.append((content_type.pk, "Fiche Détection", queryset))
 
         content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        queryset = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(user).select_related("numero")
+        queryset = FicheZoneDelimitee.objects.all().order_by_numero_fiche()
+        queryset = queryset.get_fiches_user_can_view(user).select_related("numero")
         possible_links.append((content_type.pk, "Fiche zone délimitée", queryset))
         context["possible_links"] = possible_links
 
