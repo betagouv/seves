@@ -378,7 +378,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 raison_sociale_etablissement=lieu["raisonSocialeEtablissement"],
                 adresse_etablissement=lieu["adresseEtablissement"],
                 siret_etablissement=lieu["siretEtablissement"],
-                code_inpp_etablissement=lieu["codeInppEtablissement"],
+                code_inupp_etablissement=lieu["codeInuppEtablissement"],
                 site_inspection_id=lieu["siteInspectionId"],
                 position_chaine_distribution_etablissement_id=lieu["positionEtablissementId"],
             )
@@ -551,7 +551,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
                 lieu.raison_sociale_etablissement = loc["raisonSocialeEtablissement"]
                 lieu.adresse_etablissement = loc["adresseEtablissement"]
                 lieu.siret_etablissement = loc["siretEtablissement"]
-                lieu.code_inpp_etablissement = loc["codeInppEtablissement"]
+                lieu.code_inupp_etablissement = loc["codeInuppEtablissement"]
                 lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
             else:
                 lieu.nom_etablissement = ""
