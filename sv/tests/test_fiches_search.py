@@ -115,7 +115,12 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     Effectuer une recherche en sélectionnant uniquement une région.
     Vérifier que tous les résultats retournés sont bien associés à cette région."""
     region1, region2 = baker.make(Region, _quantity=2)
-    fiche1 = baker.make(FicheDetection, etat=baker.make(Etat), createur=mocked_authentification_user.agent.structure)
+    fiche1 = baker.make(
+        FicheDetection,
+        etat=baker.make(Etat),
+        createur=mocked_authentification_user.agent.structure,
+        visibilite=Visibilite.LOCAL,
+    )
     baker.make(
         Lieu,
         departement=baker.make(Departement, region=region1),
