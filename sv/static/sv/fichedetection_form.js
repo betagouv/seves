@@ -90,7 +90,6 @@ document.addEventListener('alpine:init', () => {
 
 		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
         ficheDetection: {
-            numero: '',
             statutEvenementId: '',
             numeroRasff: '',
             numeroEurophyt: '',
@@ -192,7 +191,6 @@ document.addEventListener('alpine:init', () => {
             });
 
             this.ficheDetection = {
-                numero: this.getValueById('numeroFiche'),
                 numeroEurophyt: this.getValueById('numeroEurophyt'),
                 numeroRasff: this.getValueById('numeroRasff'),
                 statutEvenementId: this.getValueById('statut-evenement-id'),
@@ -319,11 +317,6 @@ document.addEventListener('alpine:init', () => {
         getValueById(id) {
             const element = document.getElementById(id);
             return element ? element.value : null;
-        },
-
-        getNumeroIfExist() {
-            const numero = document.getElementById('fiche-detection-numero');
-            return numero ? numero.textContent : '';
         },
 
 		/**
