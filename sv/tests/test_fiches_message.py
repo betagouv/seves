@@ -276,3 +276,18 @@ def test_can_click_on_shortcut_when_fiche_has_structure(live_server, page: Page,
 
     fiche.refresh_from_db()
     assert fiche.messages.get().recipients.get() == contact
+
+
+def test_formatting_contacts_messages_details_page(live_server, page: Page, fiche_variable):
+    fiche = fiche_variable()
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    sender = Contact.objects.create(agent=baker.make(Agent, nom="Reinhardt", prenom="Django", structure=structure))
+    fiche.contacts.add(sender)
+    contact = Contact.objects.create(agent=baker.make(Agent, nom="Reinhardt", prenom="Jean", structure=structure))
+    fiche.contacts.add(contact)
+    message = Message.objects.create(content_object=fiche, sender=sender, title="Minor", content="Swing")
+    message.recipients.set([contact])
+
+    page.goto(f"{live_server.url}{message.get_absolute_url()}")
+    expect(page.get_by_text("De : Reinhardt Django (MUS)", exact=True)).to_be_visible()
+    expect(page.get_by_text("A : Reinhardt Jean (MUS)", exact=True)).to_be_visible()

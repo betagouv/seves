@@ -220,7 +220,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             )
 
         self.initial["sender"] = sender.agent.contact_set.get()
-        self.initial["displayed_sender"] = sender.agent.name_with_structure
+        self.initial["displayed_sender"] = sender.agent.contact_set.get().display_with_agent_unit
 
         if message_type == Message.FIN_SUIVI:
             self.initial["title"] = "Fin de suivi"
