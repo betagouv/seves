@@ -12,30 +12,23 @@
 
 {% block content %}
     <div class="fr-container--fluid fr-m-4w ">
-
-        <div class="fr-grid-row fr-mb-3w">
-            <div class="fr-col">
+        <div class="fiche-header">
+            <div>
                 <h1 class="fr-mb-0-5v">Fiche zone délimitée n° {{ fiche.numero }}</h1>
                 <p class="fr-badge fr-badge--no-icon">{{ fiche.visibilite }}</p>
                 <p class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</p>
             </div>
-            <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right">
-                <li>
-                    <a href="{{ fiche.get_update_url }}" class="fr-btn fr-btn--secondary">Modifier</a>
-                </li>
-                <li>
-                    <div class="fiche-action">
-                        {% include "sv/_zone_action_navigation.html" %}
-                        {% if can_update_visibilite %}
-                            {% include "sv/_update_visibilite_modal.html" %}
-                        {% endif %}
-                        {% include "sv/_cloturer_modal.html" %}
-
-                    </div>
-                </li>
-            </ul>
+            <div class="fiche-action">
+                <button class="fr-btn fr-btn--secondary fr-mr-2w">
+                    <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
+                </button>
+                {% include "sv/_zone_action_navigation.html" %}
+                {% if can_update_visibilite %}
+                    {% include "sv/_update_visibilite_modal.html" %}
+                {% endif %}
+                {% include "sv/_cloturer_modal.html" %}
+            </div>
         </div>
-
         <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col">
                 <div class="white-container fr-mb-3w">

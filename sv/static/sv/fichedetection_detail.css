@@ -20,21 +20,6 @@ main{
 }
 
 
-/* Bloc en-entête (titres et actions) */
-.fiche-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-.fiche-header__title{
-    margin-bottom: 0.5rem;
-}
-.fiche-header__message {
-    margin-bottom: 3rem;
-}
-
-
 /* Bloc Informations */
 .fiche-detail__informations{
     grid-column: span 3;
