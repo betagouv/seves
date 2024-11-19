@@ -97,7 +97,7 @@ main{
 .detail-lieu__label--raison-sociale-etablissement,
 .detail-lieu__label--adresse-etablissement,
 .detail-lieu__label--siret-etablissement,
-.detail-lieu__label--code-inpp-etablissement,
+.detail-lieu__label--code-inupp-etablissement,
 .detail-lieu__label--site-inspection,
 .detail-lieu__label--position-etablissement {
     font-weight: bold;

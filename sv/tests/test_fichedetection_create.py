@@ -264,7 +264,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
     lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
-    lieu_form_elements.code_inpp_etablissement_input.fill(lieu.code_inpp_etablissement)
+    lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
     lieu_form_elements.lieu_site_inspection_input.select_option(str(lieu.site_inspection.id))
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
@@ -293,7 +293,7 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.raison_sociale_etablissement == lieu.raison_sociale_etablissement
     assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement
     assert lieu_from_db.siret_etablissement == lieu.siret_etablissement
-    assert lieu_from_db.code_inpp_etablissement == lieu.code_inpp_etablissement
+    assert lieu_from_db.code_inupp_etablissement == lieu.code_inupp_etablissement
     assert lieu_from_db.site_inspection == lieu.site_inspection
     assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
 

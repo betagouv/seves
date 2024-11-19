@@ -184,7 +184,7 @@ class Lieu(models.Model):
         blank=True,
         null=True,
     )
-    code_inpp_etablissement = models.CharField(max_length=50, verbose_name="Code INPP", blank=True)
+    code_inupp_etablissement = models.CharField(max_length=50, verbose_name="Code INUPP", blank=True)
 
     def __str__(self):
         return str(self.id)
