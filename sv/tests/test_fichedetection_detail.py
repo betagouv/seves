@@ -5,7 +5,7 @@ from playwright.sync_api import expect
 
 def test_lieu_details(live_server, page, fiche_detection):
     "Test que les détails d'un lieu s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, is_etablissement=True)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
@@ -29,6 +29,19 @@ def test_lieu_details(live_server, page, fiche_detection):
     )
     expect(page.get_by_test_id("lieu-1-wgs84-latitude")).to_contain_text(str(lieu.wgs84_latitude).replace(".", ","))
     expect(page.get_by_test_id("lieu-1-wgs84-longitude")).to_contain_text(str(lieu.wgs84_longitude).replace(".", ","))
+    expect(page.get_by_text("Il s'agit d'un établissement", exact=True)).to_be_visible()
+    expect(page.get_by_test_id("lieu-1-nom-etablissement")).to_contain_text(lieu.nom_etablissement)
+    expect(page.get_by_test_id("lieu-1-activite-etablissement")).to_contain_text(lieu.activite_etablissement)
+    expect(page.get_by_test_id("lieu-1-pays-etablissement")).to_contain_text(lieu.pays_etablissement)
+    expect(page.get_by_test_id("lieu-1-raison-sociale-etablissement")).to_contain_text(
+        lieu.raison_sociale_etablissement
+    )
+    expect(page.get_by_test_id("lieu-1-adresse-etablissement")).to_contain_text(lieu.adresse_etablissement)
+    expect(page.get_by_test_id("lieu-1-siret-etablissement")).to_contain_text(lieu.siret_etablissement)
+    expect(page.get_by_test_id("lieu-1-code-inpp-etablissement")).to_contain_text(lieu.code_inpp_etablissement)
+    expect(page.get_by_test_id("lieu-1-position-etablissement")).to_contain_text(
+        lieu.position_chaine_distribution_etablissement.libelle
+    )
 
 
 def test_lieu_details_second_lieu(live_server, page, fiche_detection):
