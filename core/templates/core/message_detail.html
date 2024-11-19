@@ -12,7 +12,7 @@
                 <div class="fr-container--fluid">
                     <div class="fr-grid-row">
                         <div class="fr-col-9">
-                            <p><span class="fr-text--bold">De : </span>{{ message.sender.agent.name_with_structure }}</p>
+                            <p><span class="fr-text--bold">De : </span>{{ message.sender.display_with_agent_unit }}</p>
                             {% if message.recipients.all|length %}
                                 <p><span class="fr-text--bold">A : </span>
                                     {% for recipient in message.recipients.all %}
