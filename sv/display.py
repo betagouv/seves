@@ -19,7 +19,7 @@ class DisplayedFiche:
     def from_fiche_zone(cls, fiche: FicheZoneDelimitee):
         return cls(
             type="Zone",
-            numero=str(fiche.numero),
+            numero=str(fiche.numero) if fiche.numero else "non attribué",
             organisme_nuisible=fiche.organisme_nuisible,
             is_ac_notified=False,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
@@ -34,7 +34,7 @@ class DisplayedFiche:
     def from_fiche_detection(cls, fiche: FicheDetection):
         return cls(
             type="Détection",
-            numero=str(fiche.numero),
+            numero=str(fiche.numero) if fiche.numero else "non attribué",
             organisme_nuisible=fiche.organisme_nuisible,
             is_ac_notified=fiche.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
