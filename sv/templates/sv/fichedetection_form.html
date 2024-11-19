@@ -20,7 +20,6 @@
 
 {% block content %}
     <main x-data="app">
-        <input type="hidden" id="numeroFiche" value="{{ form.instance.numero }}">
         <input type="hidden" id="numeroEurophyt" value="{{ form.instance.numero_europhyt }}">
         <input type="hidden" id="numeroRasff" value="{{ form.instance.numero_rasff }}">
         <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
@@ -48,7 +47,7 @@
                         {% if is_creation %}
                             Création d'une fiche détection
                         {% else %}
-                            Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
+                            Modification de la fiche détection {% if form.instance.numero %}n°{{ form.instance.numero }}{% endif %}
                         {% endif %}
                     </h1>
                     {% if not is_creation %}
