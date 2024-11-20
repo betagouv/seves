@@ -3,11 +3,13 @@ import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
+from core.models import Visibilite
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
     Departement,
     Region,
     StructurePreleveur,
+    FicheDetection,
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUR
@@ -743,3 +745,18 @@ def test_add_prelevement_btn_is_visible_if_lieu_exists(
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
     expect(form_elements.add_prelevement_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_enabled()
+
+
+@pytest.mark.django_db
+def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(
+    page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_zone
+):
+    FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+    fiche_zone.visibilite = Visibilite.BROUILLON
+    fiche_zone.save()
+    page.reload()
+    select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text("Aucune fiche à sélectionner")

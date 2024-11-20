@@ -419,3 +419,17 @@ def test_free_links_are_ordered_in_form(
     expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(2)")).to_contain_text(
         "Fiche Détection : 2024.1"
     )
+
+
+@pytest.mark.django_db
+def test_cant_see_fiches_brouillon_in_liens_libres(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_zone
+):
+    FicheDetection.objects.create(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
+    fiche_zone.visibilite = Visibilite.BROUILLON
+    fiche_zone.save()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text(f"Fiche Détection : {str(fiche_detection.numero)}")

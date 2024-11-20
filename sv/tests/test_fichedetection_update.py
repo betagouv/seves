@@ -1116,3 +1116,23 @@ def test_can_publish_fiche_detection_in_visibilite_brouillon_from_update_form(
 
     fiche_detection.refresh_from_db()
     assert fiche_detection.visibilite == Visibilite.LOCAL
+
+
+@pytest.mark.django_db
+def test_cant_see_fiches_brouillon_in_liens_libres_in_update_form(
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
+    fiche_detection,
+    fiche_zone,
+):
+    FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
+    )
+    fiche_zone.visibilite = Visibilite.BROUILLON
+    fiche_zone.save()
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
+    select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text("Aucune fiche à sélectionner")

@@ -1,7 +1,9 @@
+import pytest
 from playwright.sync_api import Page, expect
 from model_bakery import baker
 
 from core.models import LienLibre, Visibilite
+from sv.forms import RattachementChoices
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat
 
@@ -235,3 +237,17 @@ def test_update_fiche_zone_cant_add_self_links(
     page.wait_for_selector("input:focus", state="visible", timeout=2_000)
     page.locator("*:focus").fill(fiche_input)
     expect(page.get_by_role("option", name=fiche_input, exact=True)).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_see_fiches_brouillon_in_liens_libres(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_zone
+):
+    FicheDetection.objects.create(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
+    fiche_zone.visibilite = Visibilite.BROUILLON
+    fiche_zone.save()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text(f"Fiche Détection : {str(fiche_detection.numero)}")
