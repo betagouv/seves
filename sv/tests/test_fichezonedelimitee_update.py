@@ -81,6 +81,7 @@ def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice
         FicheDetection,
         organisme_nuisible=fiche_zone_delimitee.organisme_nuisible,
         statut_reglementaire=fiche_zone_delimitee.statut_reglementaire,
+        visibilite=Visibilite.LOCAL,
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
@@ -105,6 +106,7 @@ def test_add_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js
         FicheDetection,
         organisme_nuisible=fiche_zone_delimitee.organisme_nuisible,
         statut_reglementaire=fiche_zone_delimitee.statut_reglementaire,
+        visibilite=Visibilite.LOCAL,
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")

@@ -112,6 +112,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
             .get_all_not_in_fiche_zone_delimitee(
                 organisme_nuisible_libelle, self.instance if self.instance.pk else None
             )
+            .exclude_brouillon()
             .order_by_numero_fiche()
         )
 
@@ -224,6 +225,7 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         self.fields["detections"].queryset = (
             FicheDetection.objects.all()
             .get_all_not_in_fiche_zone_delimitee(organisme_nuisible_libelle, fiche_zone_delimitee)
+            .exclude_brouillon()
             .order_by_numero_fiche()
         )
 

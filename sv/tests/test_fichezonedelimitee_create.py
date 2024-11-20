@@ -85,10 +85,18 @@ def test_fiche_detection_are_filtered_by_organisme_nuisible_of_fiche_detection(c
     on1, on2 = baker.make("OrganismeNuisible", _quantity=2)
     statut_reglementaire = baker.make("StatutReglementaire")
     fiches_with_on1 = baker.make(
-        FicheDetection, organisme_nuisible=on1, statut_reglementaire=statut_reglementaire, _quantity=3
+        FicheDetection,
+        organisme_nuisible=on1,
+        statut_reglementaire=statut_reglementaire,
+        _quantity=3,
+        visibilite=Visibilite.LOCAL,
     )
     fiches_with_on2 = baker.make(
-        FicheDetection, organisme_nuisible=on2, statut_reglementaire=statut_reglementaire, _quantity=3
+        FicheDetection,
+        organisme_nuisible=on2,
+        statut_reglementaire=statut_reglementaire,
+        _quantity=3,
+        visibilite=Visibilite.LOCAL,
     )
 
     url = f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiches_with_on1[0].pk}&rattachement={RattachementChoices.HORS_ZONE_INFESTEE}"
@@ -297,6 +305,7 @@ def test_cant_link_fiche_detection_to_fiche_zone_delimitee_if_fiche_detection_is
         FicheDetection,
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
+        visibilite=Visibilite.LOCAL,
     )
     zone_infestee = baker.make(ZoneInfestee, _fill_optional=True)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
@@ -343,3 +352,37 @@ def test_can_create_fiche_zone_with_free_links(
 
     assert lien_libre.related_object_1 == fiche_from_db
     assert lien_libre.related_object_2 == other_fiche
+
+
+def test_cant_add_fiche_detection_brouillon_in_hors_zone_infestee(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=fiche_detection.createur,
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+    )
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.ZONE_INFESTEE)
+    select_options = page.locator(
+        ".fichezoneform__detections-hors-zone-infestee .choices__list--dropdown .choices__item"
+    )
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text(str(fiche_detection.numero))
+
+
+def test_cant_add_fiche_detection_brouillon_in_zone_infestee(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    FicheDetection.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=fiche_detection.createur,
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+    )
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    select_options = (
+        page.locator(".zone-infestees__zone-infestee-form").nth(0).locator(".choices__list--dropdown .choices__item")
+    )
+    expect(select_options).to_have_count(1)
+    expect(select_options).to_have_text(str(fiche_detection.numero))
