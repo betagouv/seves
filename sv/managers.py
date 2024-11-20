@@ -83,6 +83,9 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")
 
+    def exclude_brouillon(self):
+        return self.exclude(visibilite=Visibilite.BROUILLON)
+
 
 class FicheZoneManager(models.Manager):
     def get_queryset(self):
