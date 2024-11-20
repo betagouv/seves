@@ -448,6 +448,8 @@ def test_fiche_detection_with_free_link(
     choice_js_fill,
 ):
     fiche_zone = fiche_zone_bakery()
+    fiche_zone.visibilite = Visibilite.LOCAL
+    fiche_zone.save()
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
     choice_js_fill(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)

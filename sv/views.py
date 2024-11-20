@@ -169,7 +169,11 @@ class FicheDetectionContextMixin:
 
         content_type = ContentType.objects.get_for_model(FicheDetection)
         queryset = (
-            FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(user).select_related("numero")
+            FicheDetection.objects.all()
+            .order_by_numero_fiche()
+            .get_fiches_user_can_view(user)
+            .select_related("numero")
+            .exclude_brouillon()
         )
         try:
             queryset = queryset.exclude(pk=self.get_object().pk)
@@ -178,8 +182,13 @@ class FicheDetectionContextMixin:
         possible_links.append((content_type.pk, "Fiche Détection", queryset))
 
         content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        queryset = FicheZoneDelimitee.objects.all().order_by_numero_fiche()
-        queryset = queryset.get_fiches_user_can_view(user).select_related("numero")
+        queryset = (
+            FicheZoneDelimitee.objects.all()
+            .order_by_numero_fiche()
+            .get_fiches_user_can_view(user)
+            .select_related("numero")
+            .exclude_brouillon()
+        )
         possible_links.append((content_type.pk, "Fiche zone délimitée", queryset))
         context["possible_links"] = possible_links
 
@@ -265,7 +274,9 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         # Validation des liens libres
         for free_link in data.getlist("freeLinksIds"):
             try:
-                content_type_str_to_obj(free_link)
+                fiche_detection = content_type_str_to_obj(free_link)
+                if fiche_detection.is_draft:
+                    errors.append(f"Vous ne pouvez pas lier {free_link} car la fiche est en visibilité brouillon")
             except ObjectDoesNotExist:
                 errors.append(f"Impossible de créer le lien libre {free_link}")
 
