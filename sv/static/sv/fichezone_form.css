@@ -8,13 +8,6 @@
     text-align: right;
 }
 
-.zone-tampon__rayon-input {
-    background-color: var(--background-default-grey-active);
-}
-.zone-tampon__rayon-input input {
-    background-color: var(--background-default-grey);
-}
-
 .zone-infestees__zone-infestee-form {
     background-color: var(--background-alt-grey);
 }
