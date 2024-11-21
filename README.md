@@ -157,19 +157,35 @@ python -m pytest
 
 # Recette
 ## Déploiement
-git push scalingo main
+
+Tous les commits pour lesquels la CI passe sur main sont automatiquement déployés en recette.
+
 ## Django admin
 Création d'un super user (commande CLI scalingo à éxecuter en local) :
 scalingo --app my-app run python manage.py createsuperuser
 
 # Production
 
+## Mise en production
 
+Scalingo est configuré pour déployer automatiquement tous les commits dont la CI passe qui sont sur la branche production.
 
-# CRON
+Pour le processus plus détaillé de mise en production:
+
+- Merger les PRs qui sont prêtes dans la branche `main`
+- Une fois toutes les PR déployées et testées sur la recette, la décision est prise de déployer le lot en cours en production.
+- Sur un repo à jour lancer la commande `git log --pretty=format:"%s" origin/production..main` ce qui permet de récupérer le titre des commits qui sont dans `main` mais pas dans `production`.
+- Copier le changelog et vérifier que tous les points sont OK.
+- Sur Github [créer une nouvelle PR](https://github.com/betagouv/seves/compare/production...main). Vérifiez que la base soit sur `production` et compare sur `main`. Nommer la PR avec comme titre "Mise en production DATE" et ouvrir la PR
+- Une fois la CI OK, merger la PR dans la branche `production`
+- Le déploiement se fait automatiquement dans Scalingo, suivre que tout se passe bien dans l'interface de Scalingo
+- Vérifier que la mise en production s'est bien déroulée
+- Annoncer la liste des changements à l'équipe
+
+## CRON
 Sur Scalingo, des crons sont configurés via Scalingo Scheduler (cf. fichier cron.json à la racine du projet).
 Ils sont monitorés via Sentry Cron Monitors.
 
 
-# Import du fichier d'extraction des contacts Agricoll
+## Import du fichier d'extraction des contacts Agricoll
 scalingo --app APP_NAME run --file FILE_PATH python manage.py import_contacts /tmp/uploads/FILE_NAME.csv
