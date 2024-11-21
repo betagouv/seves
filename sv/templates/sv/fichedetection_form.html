@@ -168,18 +168,10 @@
                     </div>
                 </div>
 
-                <div id="liens-libre">
+                <div id="liens-libre" class="white-container fr-mt-4w">
                     <h2>Liens libres</h2>
                     <div>
-                        <label class="fr-label" for="free-links">Lien vers une fiche</label>
-                        <select id="free-links" multiple="">
-                            <option value="">----</option>
-                            {% for object_type_id, label, queryset in possible_links %}
-                                {% for object in queryset %}
-                                    <option value="{{ object_type_id }}-{{ object.id }}">{{ label }} : {{ object }}</option>
-                                {% endfor %}
-                            {% endfor %}
-                        </select>
+                        {{ form.free_link }}
                     </div>
                 </div>
             </div>

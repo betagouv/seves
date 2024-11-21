@@ -53,7 +53,6 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = FicheDetection
         exclude = ["numero", "createur", "etat"]
-        # TODO handle date creation
         fields = [
             "statut_evenement",
             "numero_europhyt",  # TODO only for AC
@@ -75,15 +74,54 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
+        self._add_free_links()
+
         # if self.instance.pk:
         #     self.fields.pop("visibilite")
+
+    # TODO factorize all this with other form
+    def save_free_links(self, instance):
+        links_ids_to_keep = []
+        for obj in self.cleaned_data["free_link"]:
+            link = LienLibre.objects.for_both_objects(obj, instance)
+
+            if link:
+                links_ids_to_keep.append(link.id)
+            else:
+                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
+                links_ids_to_keep.append(link.id)
+
+        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
+        links_to_delete.delete()
 
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.createur = self.user.agent.structure
         if commit:
             instance.save()
+            self.save_free_links(instance)
         return instance
+
+    def _add_free_links(self):
+        qs_detection = FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
+        qs_detection = qs_detection.select_related("numero")
+        qs_zone = FicheZoneDelimitee.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
+        qs_zone = qs_zone.select_related("numero")
+        if self.instance:
+            qs_detection = qs_detection.exclude(id=self.instance.id)
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=[
+                ("Fiche Détection", qs_detection),
+                ("Fiche zone délimitée", qs_zone),
+            ],
+        )
+
+    def clean_free_link(self):
+        if self.instance and self.instance in self.cleaned_data["free_link"]:
+            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
+        return self.cleaned_data["free_link"]
 
 
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):

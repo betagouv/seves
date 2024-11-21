@@ -162,26 +162,6 @@ class FicheDetectionContextMixin:
             for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
         ]
 
-    def _add_possible_links(self, context, user):
-        return
-        possible_links = []
-
-        content_type = ContentType.objects.get_for_model(FicheDetection)
-        queryset = (
-            FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(user).select_related("numero")
-        )
-        try:
-            queryset = queryset.exclude(pk=self.get_object().pk)
-        except AttributeError:
-            pass
-        possible_links.append((content_type.pk, "Fiche Détection", queryset))
-
-        content_type = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        queryset = FicheZoneDelimitee.objects.all().order_by_numero_fiche()
-        queryset = queryset.get_fiches_user_can_view(user).select_related("numero")
-        possible_links.append((content_type.pk, "Fiche zone délimitée", queryset))
-        context["possible_links"] = possible_links
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["statuts_evenement"] = StatutEvenement.objects.all()
@@ -209,7 +189,6 @@ class FicheDetectionContextMixin:
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
 
         self._add_status_to_organisme_nuisible(context, status)
-        self._add_possible_links(context, self.request.user)
         return context
 
 

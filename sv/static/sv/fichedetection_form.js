@@ -239,7 +239,7 @@ document.addEventListener('alpine:init', () => {
 
             this.choicesCommunes = choicesCommunes
 
-            options = {
+            const freeLinksChoices = new Choices(document.getElementById("id_free_link"), {
                 searchResultLimit: 500,
                 classNames: {
                     containerInner: 'fr-select',
@@ -250,16 +250,13 @@ document.addEventListener('alpine:init', () => {
                 noResultsText: 'Aucun résultat trouvé',
                 noChoicesText: 'Aucune fiche à sélectionner',
                 searchFields: ['label'],
-            };
-            // const freeLinksChoices = new Choices(document.getElementById("free-links"), options);
-            // freeLinksChoices.passedElement.element.addEventListener("change", (event)=> {
-            //     this.ficheDetection.freeLinksIds = Array.from(freeLinksChoices.getValue(true))
-            // })
-            // if (!!this.ficheDetection.freeLinksIds) {
-            //     this.ficheDetection.freeLinksIds.forEach(value => {
-            //         freeLinksChoices.setChoiceByValue(value);
-            //     });
-            // }
+            });
+            const freeLinksIds = JSON.parse(document.getElementById('free-links-id').textContent);
+            if (!!freeLinksIds) {
+                freeLinksIds.forEach(value => {
+                    freeLinksChoices.setChoiceByValue(value);
+                });
+            }
 
         },
 

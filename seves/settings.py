@@ -225,7 +225,6 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 
-# TODO gérer les liens libre
 # TODO gérer la visibilité en fonction du bouton cliqué
 # TODO gérer les lieux et prélévement
 # TODO gérér l'édition
