@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
@@ -31,7 +32,7 @@ def check_select_options(page, label, expected_options):
     options = page.locator(f"label:has-text('{label}') ~ select option").element_handles()
     option_texts = [option.inner_text() for option in options]
     assert (
-        option_texts == ["----"] + expected_options
+        option_texts == [settings.SELECT_EMPTY_CHOICE] + expected_options
     ), f"Les options pour {label} ne correspondent pas aux options attendues"
 
 

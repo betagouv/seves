@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from model_bakery import baker
 from datetime import datetime
 from playwright.sync_api import Page, expect
@@ -76,24 +77,24 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.numero_europhyt_input).not_to_be_visible()
     expect(form_elements.numero_rasff_label).not_to_be_visible()
     expect(form_elements.numero_rasff_input).not_to_be_visible()
-    expect(form_elements.statut_evenement_input).to_contain_text("----")
+    expect(form_elements.statut_evenement_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_evenement_input).to_have_value("")
     statuts_evenement = list(StatutEvenement.objects.values_list("libelle", flat=True))
     check_select_options(page, "Statut évènement", statuts_evenement)
 
     expect(form_elements.organisme_nuisible_label).to_be_visible()
-    expect(form_elements.organisme_nuisible_input).to_contain_text("----")
+    expect(form_elements.organisme_nuisible_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
 
     expect(form_elements.statut_reglementaire_label).to_be_visible()
     expect(form_elements.statut_reglementaire_input).to_be_visible()
-    expect(form_elements.statut_reglementaire_input).to_contain_text("----")
+    expect(form_elements.statut_reglementaire_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_reglementaire_input).to_have_value("")
     statuts_reglementaire = list(StatutReglementaire.objects.values_list("libelle", flat=True))
     check_select_options(page, "Statut règlementaire", statuts_reglementaire)
 
     expect(form_elements.contexte_label).to_be_visible()
     expect(form_elements.contexte_input).to_be_visible()
-    expect(form_elements.contexte_input).to_contain_text("----")
+    expect(form_elements.contexte_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.contexte_input).to_have_value("")
     contextes = list(Contexte.objects.values_list("nom", flat=True))
     check_select_options(page, "Contexte", contextes)
@@ -135,7 +136,7 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
 
 @pytest.mark.django_db
 def test_fiche_detection_create_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, choice_js_fill
 ):
     statut_evenement = StatutEvenement.objects.first()
     organisme_nuisible = OrganismeNuisible.objects.get(libelle_court="Xylella fastidiosa (maladie de Pierce)")
@@ -145,9 +146,12 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    page.get_by_text("--------").click()
-    page.locator("#organisme-nuisible").get_by_label("----").fill("xylela")
-    page.get_by_role("option", name=organisme_nuisible.libelle_court).click()
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
     page.get_by_label("Statut règlementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")

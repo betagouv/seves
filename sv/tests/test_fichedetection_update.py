@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
@@ -128,13 +129,13 @@ def test_fiche_detection_update_page_content_with_no_data(
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
 
-    expect(form_elements.statut_evenement_input).to_contain_text("----")
+    expect(form_elements.statut_evenement_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_evenement_input).to_have_value("")
-    expect(form_elements.organisme_nuisible_input).to_contain_text("----")
+    expect(form_elements.organisme_nuisible_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.organisme_nuisible_input).to_have_value("")
-    expect(form_elements.statut_reglementaire_input).to_contain_text("----")
+    expect(form_elements.statut_reglementaire_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_reglementaire_input).to_have_value("")
-    expect(form_elements.contexte_input).to_contain_text("----")
+    expect(form_elements.contexte_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.contexte_input).to_have_value("")
     expect(form_elements.date_1er_signalement_input).to_have_value("")
     expect(form_elements.commentaire_input).to_have_value("")
