@@ -1,6 +1,9 @@
+import datetime
+
+from django.conf import settings
+
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 
-from core.fields import MultiModelChoiceField
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
@@ -9,9 +12,19 @@ from django.utils.translation import ngettext
 from django.forms import BaseInlineFormSet
 from django.db.models import TextChoices
 
-from core.models import LienLibre
 from core.fields import DSFRRadioButton
-from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
+from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
+from sv.models import (
+    FicheZoneDelimitee,
+    ZoneInfestee,
+    OrganismeNuisible,
+    StatutReglementaire,
+    FicheDetection,
+    Lieu,
+    Prelevement,
+    Departement,
+    EspeceEchantillon,
+)
 
 
 class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -40,7 +53,202 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
     )
 
 
-class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
+class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+    nom = forms.CharField(widget=forms.TextInput(), required=True)
+    commune = forms.CharField(widget=forms.HiddenInput(), required=False)
+    code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.all(),
+        to_field_name="numero",
+        required=False,
+        widget=forms.Select(attrs={"class": "fr-hidden"}),
+    )
+    wgs84_longitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "style": "flex: 0.55; margin-right: .5rem;",
+                "placeholder": "Longitude",
+            }
+        ),
+    )
+    wgs84_latitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "style": "flex: 0.55; margin-top: .5rem;",
+                "placeholder": "Latitude",
+            }
+        ),
+    )
+
+    class Meta:
+        model = Lieu
+        exclude = []
+        labels = {"is_etablissement": "Il s'agit d'un établissement"}
+
+    def clean_departement(self):
+        if self.cleaned_data["departement"] == "":
+            return None
+        return self.cleaned_data["departement"]
+
+    def __init__(self, *args, **kwargs):
+        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
+        super().__init__(*args, **kwargs)
+
+        if convert_required_to_data_required:
+            self._convert_required_to_data_required()
+
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["is_etablissement"]:
+            for field in Lieu.ETABLISSEMENT_FIELDS:
+                self.cleaned_data.pop(field)
+
+
+class CustomLieuFormSet(BaseInlineFormSet):
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        if hasattr(self, "custom_kwargs"):
+            kwargs.update(self.custom_kwargs)
+        return kwargs
+
+
+LieuFormSet = inlineformset_factory(
+    FicheDetection, Lieu, form=LieuForm, formset=CustomLieuFormSet, extra=10, can_delete=True
+)
+
+
+class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+    id = forms.IntegerField(widget=forms.HiddenInput, required=False)
+    resultat = forms.ChoiceField(
+        required=True,
+        choices=Prelevement.Resultat.choices,
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mt-4v fr-mb-0-5v"}),
+    )
+    lieu = forms.ModelChoiceField(
+        queryset=Lieu.objects.none(),
+        to_field_name="nom",
+        required=True,
+        empty_label=None,
+    )
+    espece_echantillon = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+
+    class Meta:
+        model = Prelevement
+        exclude = []
+        labels = {"date_prelevement": "Date prélèvement"}
+
+    def __init__(self, *args, **kwargs):
+        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
+        cached_choices = kwargs.pop("cached_choices", {})
+        labo_agree_values = kwargs.pop("labo_agree_values", None)
+        labo_confirmation_values = kwargs.pop("labo_confirmation_values", None)
+        structure_values = kwargs.pop("structure_values", None)
+        super().__init__(*args, **kwargs)
+
+        for field_name, choices in cached_choices.items():
+            if choices is not None and field_name in self.fields:
+                self.fields[field_name].choices = choices
+
+        if labo_agree_values:
+            self.fields["laboratoire_agree"].queryset = labo_agree_values
+        if labo_confirmation_values:
+            self.fields["laboratoire_confirmation_officielle"].queryset = labo_confirmation_values
+        if structure_values:
+            self.fields["structure_preleveur"].queryset = structure_values
+
+        if convert_required_to_data_required:
+            self._convert_required_to_data_required()
+
+    def clean_espece_echantillon(self):
+        if self.cleaned_data["espece_echantillon"]:
+            return EspeceEchantillon.objects.get(pk=self.cleaned_data["espece_echantillon"])
+
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["is_officiel"]:
+            for field in Prelevement.OFFICIEL_FIELDS:
+                self.cleaned_data.pop(field)
+
+
+class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+    vegetaux_infestes = forms.CharField(
+        label="Végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
+    )
+    commentaire = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_conservatoires_immediates = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+        label="Mesures conservatoires immédiates",
+    )
+    mesures_consignation = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}), required=False, label="Mesures de consignation"
+    )
+    mesures_phytosanitaires = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_surveillance_specifique = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}), required=False, label="Mesures de surveillance spécifique"
+    )
+    date_premier_signalement = forms.DateField(
+        label="Date 1er signalement",
+        required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
+    )
+
+    class Meta:
+        model = FicheDetection
+        fields = [
+            "statut_evenement",
+            "numero_europhyt",
+            "numero_rasff",
+            "organisme_nuisible",
+            "statut_reglementaire",
+            "contexte",
+            "date_premier_signalement",
+            "vegetaux_infestes",
+            "commentaire",
+            "mesures_conservatoires_immediates",
+            "mesures_consignation",
+            "mesures_phytosanitaires",
+            "mesures_surveillance_specifique",
+        ]
+        labels = {
+            "statut_evenement": "Statut évènement",
+            "organisme_nuisible": "Organisme nuisible",
+            "statut_reglementaire": "Statut réglementaire",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+
+        super().__init__(*args, **kwargs)
+
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_europhyt")
+            self.fields.pop("numero_rasff")
+
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.ModelChoiceField):
+                field.empty_label = settings.SELECT_EMPTY_CHOICE
+
+        self._add_free_links(obj_type="detection")
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.createur = self.user.agent.structure
+        if commit:
+            instance.save()
+            self.save_free_links(instance)
+        return instance
+
+
+class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     organisme_nuisible = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": ""}),
         label="Organisme nuisible",
@@ -88,35 +296,11 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         self.detections_zones_infestees_formset = kwargs.pop("detections_zones_infestees_formset", None)
 
         super().__init__(*args, **kwargs)
-        self.label_suffix = ""
 
         if self.instance.pk:
             self.fields.pop("visibilite")
 
-        qs_detection = (
-            FicheDetection.objects.all()
-            .order_by_numero_fiche()
-            .get_fiches_user_can_view(self.user)
-            .select_related("numero")
-            .exclude_brouillon()
-        )
-        qs_zone = (
-            FicheZoneDelimitee.objects.all()
-            .order_by_numero_fiche()
-            .get_fiches_user_can_view(self.user)
-            .select_related("numero")
-            .exclude_brouillon()
-        )
-        if self.instance:
-            qs_zone = qs_zone.exclude(id=self.instance.id)
-        self.fields["free_link"] = MultiModelChoiceField(
-            required=False,
-            label="Sélectionner un objet",
-            model_choices=[
-                ("Fiche Détection", qs_detection),
-                ("Fiche zone délimitée", qs_zone),
-            ],
-        )
+        self._add_free_links(obj_type="zone")
 
         organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
         self.fields["detections_hors_zone"].queryset = (
@@ -133,11 +317,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
     def clean_statut_reglementaire(self):
         return StatutReglementaire.objects.get(libelle=self.cleaned_data["statut_reglementaire"])
-
-    def clean_free_link(self):
-        if self.instance and self.instance in self.cleaned_data["free_link"]:
-            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
-        return self.cleaned_data["free_link"]
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():
@@ -164,20 +343,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
             self.save_detections_hors_zone(instance)
             self.save_free_links(instance)
         return instance
-
-    def save_free_links(self, instance):
-        links_ids_to_keep = []
-        for obj in self.cleaned_data["free_link"]:
-            link = LienLibre.objects.for_both_objects(obj, instance)
-
-            if link:
-                links_ids_to_keep.append(link.id)
-            else:
-                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
-                links_ids_to_keep.append(link.id)
-
-        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
 
     def save_detections_hors_zone(self, instance):
         detections_from_form = set(self.cleaned_data.get("detections_hors_zone", []))
@@ -225,8 +390,6 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         fiche_zone_delimitee = kwargs.pop("fiche_zone_delimitee", None)
 
         super().__init__(*args, **kwargs)
-
-        self.label_suffix = ""
 
         fiche_zone_delimitee = (
             self.instance.fiche_zone_delimitee

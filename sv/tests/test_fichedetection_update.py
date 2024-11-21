@@ -44,23 +44,24 @@ def create_fixtures_if_needed(db):
 
 
 @pytest.fixture
-def fiche_detection_with_one_lieu(fiche_detection, db):
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+def fiche_detection_with_one_lieu(fiche_detection, lieu_bakery, db):
+    lieu = lieu_bakery()
+    lieu.fiche_detection = fiche_detection
+    lieu.save()
     return fiche_detection
 
 
 @pytest.fixture
 def fiche_detection_with_two_lieux(fiche_detection, db):
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
-def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection, db):
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    baker.make(Prelevement, lieu=lieu, _fill_optional=True)
-    return fiche_detection
+def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection_with_one_lieu, db):
+    baker.make(Prelevement, lieu=fiche_detection_with_one_lieu.lieux.get(), _fill_optional=True)
+    return fiche_detection_with_one_lieu
 
 
 def test_page_title(
@@ -364,7 +365,7 @@ def test_update_lieu(
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
-    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
     lieu_form_elements.nom_etablissement_input.fill(new_lieu.nom_etablissement)
     lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
@@ -430,9 +431,19 @@ def test_update_two_lieux(
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
         if index == 0:
-            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Lille", "Lille (59)")
+            choice_js_fill(
+                page,
+                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.first().id} .fr-modal__content .choices__list--single",
+                "Lille",
+                "Lille (59)",
+            )
         else:
-            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
+            choice_js_fill(
+                page,
+                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.last().id} .fr-modal__content .choices__list--single",
+                "Paris",
+                "Paris (75)",
+            )
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
@@ -440,13 +451,12 @@ def test_update_two_lieux(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
-    lieux_from_db = fd.lieux.all()
-    for lieu, new_lieu in zip(lieux_from_db, new_lieux):
-        assert lieu.nom == new_lieu.nom
-        assert lieu.adresse_lieu_dit == new_lieu.adresse_lieu_dit
-        assert lieu.wgs84_latitude == new_lieu.wgs84_latitude
-        assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
+    lieux_from_db = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id).lieux.all()
+    for lieu_from_db, new_lieu in zip(lieux_from_db, new_lieux):
+        assert lieu_from_db.nom == new_lieu.nom
+        assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
+        assert lieu_from_db.wgs84_latitude == new_lieu.wgs84_latitude
+        assert lieu_from_db.wgs84_longitude == new_lieu.wgs84_longitude
 
     assert lieux_from_db[0].commune == "Lille"
     assert lieux_from_db[0].code_insee == "59350"
@@ -522,12 +532,12 @@ def test_add_new_prelevement_non_officiel(
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
-    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+    lieu = fiche_detection_with_one_lieu.lieux.first()
+    prelevement = baker.prepare(Prelevement, lieu=lieu, resultat="detecte", _fill_optional=True, _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
-    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -576,7 +586,7 @@ def test_add_new_prelevement_with_empty_date(
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option("Test")
     prelevement_form_elements.structure_input.select_option("DSF")
-    page.get_by_test_id("prelevement-form-resultat-detecte").click()
+    prelevement_form_elements.resultat_input("detecte").click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -593,15 +603,18 @@ def test_add_new_prelevement_officiel(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    lieu_bakery,
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
-    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+    lieu = lieu_bakery()
+    lieu.fiche_detection = fiche_detection_with_one_lieu
+    lieu.save()
+    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, resultat="detecte", _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
-    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -648,7 +661,7 @@ def test_add_multiple_prelevements(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
+    choice_js_fill_from_element,
 ):
     """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
@@ -657,14 +670,15 @@ def test_add_multiple_prelevements(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     for prelevement in prelevements:
         form_elements.add_prelevement_btn.click()
-        prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+        prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
         prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
-        choice_js_fill(
+        element = page.locator(".fr-modal__content").locator("visible=true").locator(".choices__list--single")
+        choice_js_fill_from_element(
             page,
-            "#espece-echantillon .choices__list--single",
+            element,
             prelevement.espece_echantillon.libelle,
             prelevement.espece_echantillon.libelle,
         )
@@ -691,18 +705,23 @@ def test_update_prelevement(
     page: Page,
     fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
+    lieu_bakery,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
-    new_lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, _fill_optional=True)
-    new_prelevement = baker.prepare(Prelevement, lieu=new_lieu, _fill_optional=True, _save_related=True)
-
-    page.goto(
-        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
+    fiche = fiche_detection_with_one_lieu_and_one_prelevement
+    new_lieu = lieu_bakery()
+    new_lieu.fiche_detection = fiche
+    new_lieu.save()
+    new_prelevement = baker.prepare(
+        Prelevement, lieu=new_lieu, resultat="detecte", _fill_optional=True, _save_related=True
     )
+
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche)}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+    page.wait_for_timeout(10_000)
+    prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -735,30 +754,36 @@ def test_update_multiple_prelevements(
     fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
+    lieu_bakery,
+    choice_js_fill_from_element,
 ):
     """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
-    lieu1, lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, _quantity=2)
+    lieu1, lieu2 = lieu_bakery(), lieu_bakery()
+    lieu1.fiche_detection = fiche_detection
+    lieu1.save()
+    lieu2.fiche_detection = fiche_detection
+    lieu2.save()
     baker.make(Prelevement, lieu=lieu1, _fill_optional=True)
     baker.make(Prelevement, lieu=lieu2, _fill_optional=True)
-    new_prelevement_1 = baker.prepare(Prelevement, lieu=lieu2, _fill_optional=True, _save_related=True)
-    new_prelevement_2 = baker.prepare(Prelevement, lieu=lieu1, _fill_optional=True, _save_related=True)
+    new_prelevement_1 = baker.prepare(
+        Prelevement, lieu=lieu1, resultat="detecte", _fill_optional=True, _save_related=True
+    )
+    new_prelevement_2 = baker.prepare(
+        Prelevement, lieu=lieu2, resultat="detecte", _fill_optional=True, _save_related=True
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
-        if index == 0:
-            page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-        else:
-            page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(3).click()
-
-        prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+        page.locator(".prelevement-edit-btn").nth(index).click()
+        prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.matrice_prelevee_input.select_option(value=str(new_prelevement.matrice_prelevee.id))
-        choice_js_fill(
+        espece = prelevement_form_elements.espece_echantillon_choices
+        choice_js_fill_from_element(
             page,
-            "#espece-echantillon .choices__list--single",
+            espece,
             new_prelevement.espece_echantillon.libelle,
             new_prelevement.espece_echantillon.libelle,
         )
@@ -768,8 +793,9 @@ def test_update_multiple_prelevements(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    prelevement_from_db_1 = Prelevement.objects.get(lieu=new_prelevement_1.lieu)
-    prelevement_from_db_2 = Prelevement.objects.get(lieu=new_prelevement_2.lieu)
+    assert Prelevement.objects.count() == 2
+    prelevement_from_db_1 = Prelevement.objects.get(lieu=lieu1)
+    prelevement_from_db_2 = Prelevement.objects.get(lieu=lieu2)
     for prelevement_from_db, new_prelevement in zip(
         [prelevement_from_db_1, prelevement_from_db_2], [new_prelevement_1, new_prelevement_2]
     ):
@@ -814,25 +840,21 @@ def test_delete_multiple_prelevements(
     prelevement_form_elements: PrelevementFormDomElements,
 ):
     """Test que la suppression de plusieurs prelevements existants est bien enregistrée en base de données."""
-    prelevement_1, prelevement_2 = baker.make(
-        Prelevement, lieu=fiche_detection_with_one_lieu.lieux.first(), _quantity=2
-    )
+    lieu = fiche_detection_with_one_lieu.lieux.first()
+    prelevement_1, prelevement_2 = baker.make(Prelevement, lieu=lieu, _quantity=2, _fill_optional=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     # Supprime le premier prélèvement
-    page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(2).click()
+    page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
 
     # Supprime le deuxième prélèvement
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").nth(1).click()
+    page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
-
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    with pytest.raises(ObjectDoesNotExist):
-        Prelevement.objects.get(id=prelevement_1.id)
-        Prelevement.objects.get(id=prelevement_2.id)
+    assert Prelevement.objects.count() == 0
 
 
 @pytest.mark.django_db
@@ -860,7 +882,6 @@ def test_can_edit_and_save_lieu_with_name_only(
     assert lieu.nom == "Chez moi mis à jour"
 
 
-@pytest.mark.django_db
 def test_cant_pick_inactive_labo_agree_in_prelevement(
     live_server,
     page: Page,
@@ -892,12 +913,12 @@ def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
     prelevement.laboratoire_agree = labo
     prelevement.save()
-
     page.goto(
         f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
     )
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
+
     assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
 
@@ -939,6 +960,7 @@ def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
     )
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
+
     assert prelevement_form_elements.laboratoire_confirmation_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
 
@@ -1027,10 +1049,18 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
 ):
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
-    page.locator("#numero-rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.locator("#numero-europhyt").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
+    page.evaluate("""
+            const form = document.querySelector('main form');
+            const input1 = document.createElement('input');
+            input1.name = 'numero_europhyt';
+            input1.value = '11111111';
+            form.appendChild(input1);
+
+            const input2 = document.createElement('input');
+            input2.name = 'numero_rasff';
+            input2.placeholder = '222222222';
+            form.appendChild(input2);
+        """)
 
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)

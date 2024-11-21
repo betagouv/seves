@@ -154,7 +154,7 @@ class Lieu(models.Model):
         verbose_name="Latitude WGS84", blank=True, null=True, validators=[validate_wgs84_latitude]
     )
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
-    commune = models.CharField(max_length=100, verbose_name="Commune")
+    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
     code_insee = models.CharField(
         max_length=5,
         blank=True,
@@ -199,8 +199,20 @@ class Lieu(models.Model):
     )
     code_inupp_etablissement = models.CharField(max_length=50, verbose_name="Code INUPP", blank=True)
 
+    ETABLISSEMENT_FIELDS = [
+        "nom_etablissement",
+        "activite_etablissement",
+        "pays_etablissement",
+        "raison_sociale_etablissement",
+        "adresse_etablissement",
+        "siret_etablissement",
+        "site_inspection",
+        "position_chaine_distribution_etablissement",
+        "code_inupp_etablissement",
+    ]
+
     def __str__(self):
-        return str(self.id)
+        return str(self.nom)
 
 
 class StatutEtablissement(models.Model):
@@ -357,6 +369,8 @@ class Prelevement(models.Model):
     )
     resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat")
     numero_resytal = models.CharField(max_length=100, verbose_name="Numéro RESYTAL", blank=True)
+
+    OFFICIEL_FIELDS = ["numero_phytopass", "numero_resytal", "laboratoire_agree", "laboratoire_confirmation_officielle"]
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"

@@ -96,15 +96,15 @@ class FicheDetectionFormDomElements:
 
     @property
     def organisme_nuisible_input(self) -> Locator:
-        return self.page.locator("#organisme-nuisible-input")
+        return self.page.locator("#id_organisme_nuisible")
 
     @property
     def statut_reglementaire_label(self) -> Locator:
-        return self.page.get_by_text("Statut règlementaire")
+        return self.page.get_by_text("Statut réglementaire")
 
     @property
     def statut_reglementaire_input(self) -> Locator:
-        return self.page.get_by_label("Statut règlementaire")
+        return self.page.get_by_label("Statut réglementaire")
 
     @property
     def contexte_label(self) -> Locator:
@@ -183,151 +183,103 @@ class LieuFormDomElements:
 
     @property
     def cancel_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Annuler")
-
-    @property
-    def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("lieu-save-btn")
+        return self.page.get_by_role("link", name="Annuler")
 
     @property
     def title(self) -> Locator:
-        return self.page.get_by_role("heading", name="Ajouter un lieu")
+        return self.page.locator('[id^="modal-add-edit-lieu-title-"]').locator("visible=true")
+
+    @property
+    def save_btn(self) -> Locator:
+        return self.page.locator('[data-testid^="lieu-save-btn-"]').locator("visible=true")
 
     @property
     def nom_label(self) -> Locator:
-        return self.page.get_by_text("Nom du lieu")
+        return self.page.get_by_text("Nom du lieu").locator("visible=true")
 
     @property
     def nom_input(self) -> Locator:
-        return self.page.get_by_label("Nom du lieu")
+        return self.page.locator('[id^="id_lieux-"][id$="-nom"]').locator("visible=true")
 
     @property
     def adresse_label(self) -> Locator:
-        return self.page.get_by_text("Adresse ou lieu-dit")
+        return self.page.get_by_text("Adresse ou lieu-dit").locator("visible=true")
 
     @property
     def adresse_input(self) -> Locator:
-        return self.page.get_by_label("Adresse ou lieu-dit")
+        return self.page.locator('[id^="id_lieux-"][id$="-adresse_lieu_dit"]').locator("visible=true")
 
     @property
     def commune_label(self) -> Locator:
-        return self.page.get_by_text("Commune", exact=True)
-
-    @property
-    def commune_choice_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content .choices__item--selectable")
+        return self.page.get_by_text("Commune", exact=True).locator("visible=true")
 
     @property
     def commune_input(self) -> Locator:
-        return self.page.locator("#commune-select")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id^="commune-select-"]')
 
     @property
     def commune_hidden_input(self) -> Locator:
-        return self.page.locator("#commune")
-
-    @property
-    def code_insee_label(self) -> Locator:
-        return self.page.get_by_text("Code INSEE")
-
-    @property
-    def code_insee_input(self) -> Locator:
-        return self.page.get_by_label("Code INSEE")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="commune"]')
 
     @property
     def code_insee_hidden_input(self) -> Locator:
-        return self.page.locator("#code-insee")
-
-    @property
-    def departement_label(self) -> Locator:
-        return self.page.get_by_text("Département")
-
-    @property
-    def departement_input(self) -> Locator:
-        return self.page.get_by_label("Département")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_insee"]')
 
     @property
     def departement_hidden_input(self) -> Locator:
-        return self.page.locator("#departement")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="departement"]')
 
     @property
     def coord_gps_wgs84_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Coordonnées GPS (WGS84)")
+        return self.page.get_by_text("Coordonnées GPS (WGS84)").locator("visible=true")
 
     @property
     def coord_gps_wgs84_latitude_input(self) -> Locator:
-        return self.page.get_by_label("Coordonnées GPS (WGS84)")
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_latitude"]').locator("visible=true")
 
     @property
     def coord_gps_wgs84_longitude_input(self) -> Locator:
-        return self.page.locator("#coordonnees-gps-wgs84-longitude")
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_longitude"]').locator("visible=true")
 
     @property
     def is_etablissement_checkbox(self) -> Locator:
-        return self.page.get_by_text("Il s'agit d'un établissement")
-
-    @property
-    def nom_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Nom")
+        return self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').locator("visible=true")
 
     @property
     def nom_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Nom", exact=True)
-
-    @property
-    def activite_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Activité")
+        return self.page.locator('[id^="id_lieux-"][id$="nom_etablissement"]').locator("visible=true")
 
     @property
     def activite_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Activité")
-
-    @property
-    def pays_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Pays")
+        return self.page.locator('[id^="id_lieux-"][id$="activite_etablissement"]').locator("visible=true")
 
     @property
     def pays_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Pays")
-
-    @property
-    def raison_sociale_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Raison sociale")
+        return self.page.locator('[id^="id_lieux-"][id$="pays_etablissement"]').locator("visible=true")
 
     @property
     def raison_sociale_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Raison sociale")
-
-    @property
-    def adresse_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Adresse")
+        return self.page.locator('[id^="id_lieux-"][id$="raison_sociale_etablissement"]').locator("visible=true")
 
     @property
     def adresse_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Adresse", exact=True)
-
-    @property
-    def siret_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("N° SIRET")
+        return self.page.locator('[id^="id_lieux-"][id$="adresse_etablissement"]').locator("visible=true")
 
     @property
     def siret_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("N° SIRET")
+        return self.page.locator('[id^="id_lieux-"][id$="siret_etablissement"]').locator("visible=true")
 
     @property
     def code_inupp_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Code INuPP")
+        return self.page.locator('[id^="id_lieux-"][id$="inupp_etablissement"]').locator("visible=true")
 
     @property
     def lieu_site_inspection_input(self) -> Locator:
-        return self.page.get_by_label("Site d'inspection")
-
-    @property
-    def position_etablissement_label(self) -> Locator:
-        return self.page.get_by_text("Position")
+        return self.page.locator('[id^="id_lieux-"][id$="site_inspection"]').locator("visible=true")
 
     @property
     def position_etablissement_input(self) -> Locator:
-        return self.page.get_by_label("Position")
+        return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
 
 
 class PrelevementFormDomElements:
@@ -338,7 +290,7 @@ class PrelevementFormDomElements:
 
     @property
     def close_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Fermer")
+        return self.page.get_by_role("link", name="Fermer")
 
     @property
     def cancel_btn(self) -> Locator:
@@ -346,74 +298,49 @@ class PrelevementFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-save-btn")
+        return self.page.locator(".prelevement-save-btn").locator("visible=true")
 
     @property
     def title(self) -> Locator:
         return self.page.get_by_role("heading", name="Ajouter un prelevement")
 
     @property
-    def lieu_label(self) -> Locator:
-        return self.page.get_by_text("Lieu", exact=True)
-
-    @property
     def lieu_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-lieu")
-
-    @property
-    def structure_label(self) -> Locator:
-        return self.page.get_by_text("Structure")
+        return self.page.locator('[id^="id_prelevements-"][id$="lieu"]').locator("visible=true")
 
     @property
     def structure_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-structure")
-
-    @property
-    def numero_echantillon_label(self) -> Locator:
-        return self.page.get_by_text("N° d'échantillon")
+        return self.page.locator('[id^="id_prelevements-"][id$="structure_preleveur"]').locator("visible=true")
 
     @property
     def numero_echantillon_input(self) -> Locator:
         return self.page.locator("#numero-echantillon").get_by_role("textbox")
 
     @property
-    def date_prelevement_label(self) -> Locator:
-        return self.page.get_by_text("Date de prélèvement")
-
-    @property
     def date_prelevement_input(self) -> Locator:
-        return self.page.get_by_label("Date prélèvement")
-
-    @property
-    def matrice_prelevee_label(self) -> Locator:
-        return self.page.get_by_text("Matrice prélevée")
+        return self.page.get_by_label("Date prélèvement").locator("visible=true")
 
     @property
     def matrice_prelevee_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-matrice-prelevee")
+        return self.page.locator('[id^="id_prelevements-"][id$="matrice_prelevee"]').locator("visible=true")
 
     @property
-    def espece_echantillon_label(self) -> Locator:
-        return self.page.get_by_text("Espèce de l'échantillon")
-
-    @property
-    def espece_echantillon_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-espece-echantillon")
-
-    @property
-    def resultat_label(self) -> Locator:
-        return self.page.get_by_text("Résultat")
+    def espece_echantillon_choices(self) -> Locator:
+        return (
+            self.page.locator(".fr-modal__content")
+            .locator("visible=true")
+            .locator("#espece-echantillon .choices__list--single")
+        )
 
     def resultat_input(self, resultat_value) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-resultat-" + resultat_value)
+        modal = self.page.locator(".fr-modal__content").locator("visible=true")
+        if resultat_value in ("non detecte", "Non détecté"):
+            return modal.get_by_text("Non détecté", exact=True)
+        return modal.get_by_text("Détecté", exact=True)
 
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
-        return self.page.get_by_text("Prélèvement officiel")
-
-    @property
-    def numero_phytopass_label(self) -> Locator:
-        return self.page.get_by_text("N° Phytopass")
+        return self.page.locator('[for^="id_prelevements-"][for$="is_officiel"]').locator("visible=true")
 
     @property
     def numero_phytopass_input(self) -> Locator:
@@ -424,12 +351,8 @@ class PrelevementFormDomElements:
         return self.page.locator("#numero-resytal").get_by_role("textbox")
 
     @property
-    def laboratoire_agree_label(self) -> Locator:
-        return self.page.get_by_text("Laboratoire agréé")
-
-    @property
     def laboratoire_agree_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-laboratoire-agree")
+        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_agree"]').locator("visible=true")
 
     @property
     def laboratoire_confirmation_label(self) -> Locator:
@@ -437,7 +360,9 @@ class PrelevementFormDomElements:
 
     @property
     def laboratoire_confirmation_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-laboratoire-confirmation")
+        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_confirmation_officielle"]').locator(
+            "visible=true"
+        )
 
 
 class FicheZoneDelimiteeFormPage:

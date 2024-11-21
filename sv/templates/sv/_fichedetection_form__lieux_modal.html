@@ -1,0 +1,86 @@
+<!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
+<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-lieu-{{ id }}"></button>
+<dialog aria-labelledby="modal-add-edit-lieu-title-{{ id }}" id="modal-add-lieu-{{ id }}" data-id={{ id }} class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6" id="lieu-form">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-lieu-{{ id }}" >Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <div>
+                            <h1 id="modal-add-edit-lieu-title-{{ id }}"
+                                class="fr-modal__title">Ajouter un lieu
+                            </h1>
+                            {% if delete %}
+                                <p class="fr-hidden">{{ form.DELETE }}</p>
+                            {% endif %}
+
+                            <p>
+                                <label class="fr-label" for="id_lieux-{{ id }}-nom">Nom du lieu</label>
+                                {{ form.nom }}
+                            </p>
+                            <p>
+                                <label class="fr-label" for="id_lieux-{{ id }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
+                                {{ form.adresse_lieu_dit }}
+                            </p>
+                            <div class="commune">
+                                <label class="fr-label" for="commune">Commune</label>
+                                <select id="commune-select-{{ id }}" class="fr-input"></select>
+                            </div>
+                            {{ form.commune }}
+                            {{ form.code_insee }}
+                            {{ form.departement }}
+                            <p>
+                                <label class="fr-label" for="site-inspection">Site d'inspection</label>
+                                {{ form.site_inspection }}
+                            </p>
+                            <p>
+                                <label class="fr-label" for="id_lieux-{{ id }}-wgs84_longitude">Coordonnées GPS (WGS84)</label>
+                                {{ form.wgs84_longitude }}
+                                {{ form.wgs84_latitude }}
+                            </p>
+                            <p class="fr-checkbox-group">
+                                {{ form.is_etablissement }} {{ form.is_etablissement.label_tag}}
+                            </p>
+                            <div class="etablissement-fields">
+                                <p>
+                                    {{ form.nom_etablissement.label_tag }}{{ form.nom_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.activite_etablissement.label_tag }}{{ form.activite_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.pays_etablissement.label_tag }}{{ form.pays_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.raison_sociale_etablissement.label_tag }}{{ form.raison_sociale_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.adresse_etablissement.label_tag }}{{ form.adresse_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.siret_etablissement.label_tag }}{{ form.siret_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.code_inupp_etablissement.label_tag }}{{ form.code_inupp_etablissement }}
+                                </p>
+                                <p>
+                                    {{ form.position_chaine_distribution_etablissement.label_tag }}{{ form.position_chaine_distribution_etablissement }}
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="fr-modal__footer">
+                        <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                            <a href="#" class="fr-btn fr-btn--secondary lieu-cancel-btn" aria-controls="modal-add-edit-lieu-{{ id }}">Annuler</a>
+                            <a href="#" class="fr-btn lieu-save-btn" data-testid="lieu-save-btn-{{ id }}" data-id="{{ id }}">Enregistrer</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
