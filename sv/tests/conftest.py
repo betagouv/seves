@@ -1,3 +1,5 @@
+import random
+
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -8,7 +10,7 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
-from sv.models import Etat, FicheDetection, FicheZoneDelimitee, StatutReglementaire
+from sv.models import Etat, FicheDetection, FicheZoneDelimitee, StatutReglementaire, Lieu
 
 User = get_user_model()
 
@@ -98,6 +100,19 @@ def fiche_detection_bakery(db, mocked_authentification_user):
 
 
 @pytest.fixture
+def lieu_bakery(db, mocked_authentification_user):
+    def _lieu_bakery():
+        code_insee = str(random.randint(10000, 99999))
+        latitude = random.uniform(-90, 90)
+        longitude = random.uniform(-180, 180)
+        return baker.make(
+            Lieu, code_insee=code_insee, wgs84_latitude=latitude, wgs84_longitude=longitude, _fill_optional=True
+        )
+
+    return _lieu_bakery
+
+
+@pytest.fixture
 def fiche_detection(fiche_detection_bakery):
     return fiche_detection_bakery()
 
@@ -122,11 +137,10 @@ def document_recipe(fiche_detection_bakery, db):
 
 
 @pytest.fixture
-def fill_commune(db, page: Page, choice_js_fill):
+def fill_commune(db, page: Page, choice_js_fill_from_element):
     def _fill_commune(page):
-        choice_js_fill(
-            page, locator=".fr-modal__content .choices__list--single", fill_content="Lille", exact_name="Lille (59)"
-        )
+        element = page.locator(".fr-modal__content").locator("visible=true").locator(".choices__list--single")
+        choice_js_fill_from_element(page, element, fill_content="Lille", exact_name="Lille (59)")
 
     return _fill_commune
 

@@ -69,19 +69,19 @@ main {
 #numero-rasff label {
     flex: 0.65;
 }
-#numero-rasff-input {
+#id_numero_rasff {
     flex: 1.35;
 }
 #statut-evenement label {
     flex: 0.75;
 }
-#statut-evenement-input {
+#id_statut_evenement {
     flex: 1.25;
 }
 #numero-europhyt label {
     flex: 0.75;
 }
-#numero-europhyt-input {
+#id_numero_europhyt {
     flex: 1.25;
 }
 
@@ -98,18 +98,18 @@ main {
 #contexte label {
     flex: 0.85;
 }
-#organisme-nuisible-input,
-#statut-reglementaire-input,
-#contexte-input {
+#organisme-nuisible select,
+#statut-reglementaire select,
+#contexte select {
     flex: 1.15;
 }
 #date-1er-signalement label {
     flex: 0.80;
 }
-#date-1er-signalement-input {
+#date-1er-signalement input {
     flex: 1.20;
 }
-#commentaire-input {
+#id_commentaire {
     min-height: 10rem;
 }
 
@@ -145,18 +145,20 @@ main {
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
 }
-#lieu-form p {
+
+[id^=lieu-form] p, [id^=lieu-form] .commune {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-#lieu-form p label {
+[id^=lieu-form] p label, [id^=lieu-form] .commune label {
     flex: 0.75;
 }
-#lieu-form p input, #lieu-form p .choices{
+[id^=lieu-form] p input, #lieu-form .commune .choices{
     flex: 1.25;
+    margin-top: .5rem;
 }
-#lieu-form p select {
+[id^=lieu-form] p select {
     flex: 1.15;
 }
 .lieu-initial,
@@ -164,6 +166,12 @@ main {
     background-color: #E3E3FD;
     margin-bottom: 1rem;
     padding: 1rem;
+}
+.etablissement-fields {
+    display: none;
+}
+.fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields {
+    display: block;
 }
 
 
@@ -204,14 +212,20 @@ main {
     align-items: center;
     margin-bottom: 0.5rem;
 }
-#prelevement-form label {
+[id^=modal-add-edit-prelevement] label {
     flex: 0.75;
 }
-#prelevement-form select {
+[id^=modal-add-edit-prelevement] select {
     flex: 1.15;
 }
-#prelevement-form input, #prelevement-form .choices {
+[id^=modal-add-edit-prelevement] input, [id^=modal-add-edit-prelevement] .choices {
     flex: 1.25;
+}
+.officiel-fields {
+    display: none;
+}
+.fr-modal__content:has(input[type="checkbox"][id^="id_prelevements-"][id$="-is_officiel"]:checked) .officiel-fields {
+    display: block;
 }
 
 

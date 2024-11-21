@@ -91,7 +91,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.statut_reglementaire_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_reglementaire_input).to_have_value("")
     statuts_reglementaire = list(StatutReglementaire.objects.values_list("libelle", flat=True))
-    check_select_options(page, "Statut règlementaire", statuts_reglementaire)
+    check_select_options(page, "Statut réglementaire", statuts_reglementaire)
 
     expect(form_elements.contexte_label).to_be_visible()
     expect(form_elements.contexte_input).to_be_visible()
@@ -147,27 +147,16 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    choice_js_fill(
-        page,
-        "#organisme-nuisible .choices__list--single",
-        organisme_nuisible.libelle_court,
-        organisme_nuisible.libelle_court,
-    )
-    page.get_by_label("Statut règlementaire").select_option(value=str(statut_reglementaire.id))
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
-    page.get_by_label("Commentaire").click()
     page.get_by_label("Commentaire").fill("test commentaire")
-    page.get_by_label("Végétaux infestés").click()
     page.get_by_label("Végétaux infestés").fill("3 citronniers")
-    page.get_by_label("Mesures conservatoires immé").click()
-    page.get_by_label("Mesures conservatoires immé").fill("test mesures conservatoires")
-    page.get_by_label("Mesures de consignation").click()
+    page.get_by_label("Mesures conservatoires immédiates").fill("test mesures conservatoires")
     page.get_by_label("Mesures de consignation").fill("test mesures consignation")
-    page.get_by_label("Mesures phytosanitaires").click()
     page.get_by_label("Mesures phytosanitaires").fill("test mesures phyto")
-    page.get_by_label("Mesures de surveillance spé").click()
-    page.get_by_label("Mesures de surveillance spé").fill("test mesures surveillance")
+    page.get_by_label("Mesures de surveillance spécifique").fill("test mesures surveillance")
     page.get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
@@ -207,23 +196,6 @@ def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_create_cant_forge_form_to_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    page.locator("#numero-rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.locator("#numero-europhyt").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-    page.get_by_role("button", name="Enregistrer").click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == ""
-    assert fiche_detection.numero_rasff == ""
-
-
-@pytest.mark.django_db
 def test_create_fiche_detection_with_lieu(
     live_server,
     page: Page,
@@ -258,7 +230,7 @@ def test_create_fiche_detection_with_lieu(
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
     lieu_form_elements.nom_etablissement_input.fill(lieu.nom_etablissement)
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)

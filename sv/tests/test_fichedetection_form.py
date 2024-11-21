@@ -1,4 +1,3 @@
-import json
 import pytest
 from model_bakery import baker
 from playwright.sync_api import Page, expect
@@ -52,7 +51,11 @@ def _add_new_lieu(
     lieu_form_elements.adresse_input.fill(f"une adresse{extra_str}")
 
     page.wait_for_timeout(100)
-    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Lille", "Lille (59)")
+
+    page.locator(".fr-modal__content .choices__list--single").locator("visible=true").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Lille")
+    page.get_by_role("option", name="Lille (59)", exact=True).click()
 
     lieu_form_elements.coord_gps_wgs84_latitude_input.click()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(1 + extra_int))
@@ -103,7 +106,7 @@ def test_close_button_of_add_lieu_form_modal(live_server, page: Page, form_eleme
 def test_cancel_button_of_add_lieu_form_modal(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que le bouton Annuler ferme la modal d'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
-    page.get_by_role("button", name="Annuler").click()
+    page.get_by_role("link", name="Annuler").click()
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
@@ -171,8 +174,7 @@ def test_add_lieu_to_list(
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
     expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
 
 def test_added_lieu_content_in_list(
@@ -186,33 +188,10 @@ def test_added_lieu_content_in_list(
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
     expect(page.locator("#lieux").get_by_text("nom lieu")).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("nom lieu")
-    expect(page.get_by_text("Lille")).to_be_visible()
+    expect(page.get_by_text("Lille", exact=True)).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("Lille")
     expect(page.get_by_role("button", name="Modifier le lieu")).to_be_visible()
     expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
-
-
-@pytest.mark.django_db
-def test_lieu_is_added_to_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que le lieu ajouté est bien ajouté dans le tableau de données alpinejs"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "nom lieu"
-    assert lieux[0]["adresseLieuDit"] == "une adresse"
-    assert lieux[0]["commune"] == "Lille"
-    assert lieux[0]["codeINSEE"] == "59350"
-    assert lieux[0]["departementNom"] == "Nord"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
 
 
 def test_add_two_lieux_to_list(
@@ -233,40 +212,7 @@ def test_add_two_lieux_to_list(
     expect(page.locator("#lieux").get_by_text("test lieu 2", exact=True)).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("a")
     expect(page.locator("#lieux")).to_contain_text("b")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 2
-
-
-@pytest.mark.django_db
-def test_two_lieux_are_added_to_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que les lieux ajoutés sont bien ajoutés dans le tableau de données alpinejs"""
-    # ajout du premier lieu
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill, extra_str=" 2")
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 2
-    assert lieux[0]["nomLieu"] == "nom lieu"
-    assert lieux[0]["adresseLieuDit"] == "une adresse"
-    assert lieux[0]["commune"] == "Lille"
-    assert lieux[0]["codeINSEE"] == "59350"
-    assert lieux[0]["departementNom"] == "Nord"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
-    assert lieux[1]["nomLieu"] == "nom lieu 2"
-    assert lieux[1]["adresseLieuDit"] == "une adresse 2"
-    assert lieux[1]["commune"] == "Lille"
-    assert lieux[1]["codeINSEE"] == "59350"
-    assert lieux[1]["departementNom"] == "Nord"
-    assert lieux[1]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[1]["coordGPSWGS84Longitude"] == "2"
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 2
 
 
 # Modifier un lieu
@@ -300,10 +246,8 @@ def test_edit_lieu_modal_title_and_actions_btn(
     page.get_by_role("button", name="Modifier le lieu").click()
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
-    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
-    expect(page.get_by_label("Modifier le lieu").locator('input[type="submit"]')).to_have_text(
-        "Enregistrer les modifications"
-    )
+    expect(lieu_form_elements.title).to_have_text("Modifier le lieu")
+    expect(lieu_form_elements.save_btn).to_have_text("Enregistrer")
 
 
 def test_edit_lieu_form_with_only_nom_lieu(
@@ -322,7 +266,7 @@ def test_edit_lieu_form_with_only_nom_lieu(
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
     expect(lieu_form_elements.code_insee_hidden_input).to_be_empty()
-    expect(lieu_form_elements.departement_hidden_input).to_be_empty()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
@@ -343,7 +287,7 @@ def test_edit_lieu_form_have_all_fields(
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
-    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
+    expect(lieu_form_elements.title).to_have_text("Modifier le lieu")
 
     expect(lieu_form_elements.nom_label).to_be_visible()
     expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
@@ -357,8 +301,8 @@ def test_edit_lieu_form_have_all_fields(
 
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(page.get_by_text("LilleRemove item")).to_be_visible()
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
+    expect(page.get_by_text("Lille (59)Remove item")).to_be_visible()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
@@ -387,7 +331,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("1")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value("2")
     page.get_by_role("button", name="Fermer").click()
@@ -398,43 +342,10 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse 2")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("3")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value("4")
     page.get_by_role("button", name="Fermer").click()
-
-
-@pytest.mark.django_db
-def test_edit_lieu_is_updated_in_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que le lieu modifié est bien mis à jour dans le tableau de données alpinejs"""
-    # ajout d'un lieu
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-
-    # modification du lieu
-    page.get_by_role("button", name="Modifier le lieu").click()
-    lieu_form_elements.nom_input.fill("nom lieu modifié")
-    lieu_form_elements.adresse_input.fill("une adresse modifiée")
-    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
-    lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
-    lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_role("button", name="Enregistrer les modifications").click()
-
-    # vérification des valeurs du lieu modifié
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert lieux[0]["nomLieu"] == "nom lieu modifié"
-    assert lieux[0]["adresseLieuDit"] == "une adresse modifiée"
-    assert lieux[0]["commune"] == "Paris"
-    assert lieux[0]["codeINSEE"] == "75056"
-    assert lieux[0]["departementNom"] == "Paris"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "11"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "21"
 
 
 def test_add_lieu_form_is_empty_after_edit(
@@ -455,7 +366,7 @@ def test_add_lieu_form_is_empty_after_edit(
     choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_role("button", name="Enregistrer les modifications").click()
+    lieu_form_elements.save_btn.click()
 
     # vérification que le formulaire d'ajout d'un lieu est vide
     form_elements.add_lieu_btn.click()
@@ -463,7 +374,7 @@ def test_add_lieu_form_is_empty_after_edit(
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
     expect(lieu_form_elements.code_insee_hidden_input).to_be_empty()
-    expect(lieu_form_elements.departement_hidden_input).to_be_empty()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
@@ -498,7 +409,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
 
     page.get_by_role("button", name="Modifier le lieu").click()
-    page.get_by_role("button", name="Annuler").click()
+    page.get_by_role("link", name="Annuler").click()
     form_elements.add_lieu_btn.click()
 
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
@@ -554,19 +465,14 @@ def test_delete_lieu_from_list(
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("nom lieu")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 0
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 0
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 0
 
 
 def test_delete_lieu_from_list_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le lieu est bien supprimée de la liste des lieux après confirmation
-    et que c'est le bon lieu qui est supprimée"""
+    """Test que le lieu est bien supprimé de la liste des lieux après confirmation
+    et que c'est le bon lieu qui est supprimé"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -585,21 +491,16 @@ def test_delete_lieu_from_list_with_multiple_lieux(
 
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "ipsum"
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "ipsum"}]
 
 
 def test_delete_correct_lieu(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test si j'affiche la modal de confirmation de la suppression d'un lieu,
-    que je quitte la modal sans supprimer le lieu et que je supprime un autre lieu
-    → vérifier que c’est le bon lieu qui est supprimée"""
+    """Test si j'affiche la modale de confirmation de la suppression d'un lieu,
+    que je quitte la modale sans supprimer le lieu et que je supprime un autre lieu
+    → vérifier que c’est le bon lieu qui est supprimé"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -613,20 +514,18 @@ def test_delete_correct_lieu(
     lieu_form_elements.save_btn.click()
 
     page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Fermer").click()
-
+    page.locator(".fr-btn--close").locator("visible=true").click()
     page.get_by_role("button", name="Supprimer le lieu").nth(1).click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("ipsum")
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "lorem"
+    cards = page.evaluate("document.lieuxCards")
+    assert len(cards) == 1
+    assert cards[0]["commune"] == ""
+    assert cards[0]["nom"] == "lorem"
 
 
 @pytest.mark.django_db
@@ -635,7 +534,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
 ):
     page.wait_for_timeout(600)
 
-    """Test que la suppression d'un lieu est impossible si elle est liée à un prélèvement"""
+    """Test que la suppression d'un lieu est impossible si il est lié à un prélèvement"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -649,7 +548,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     assert StructurePreleveur.objects.count() > 0
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveur.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
-    page.get_by_test_id("prelevement-form-resultat-detecte").click()
+    prelevement_form_elements.resultat_input("detecte").click()
     prelevement_form_elements.save_btn.click()
 
     # suppression du lieu
@@ -658,13 +557,8 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     expect(page.get_by_role("dialog")).to_be_visible()
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "lorem"
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "0", "nom": "lorem"}]
 
 
 # =============

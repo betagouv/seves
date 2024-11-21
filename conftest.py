@@ -54,6 +54,17 @@ def choice_js_fill(db, page):
 
 
 @pytest.fixture
+def choice_js_fill_from_element(db, page):
+    def _choice_js_fill(page, element, fill_content, exact_name):
+        element.click()
+        page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        page.locator("*:focus").fill(fill_content)
+        page.get_by_role("option", name=exact_name, exact=True).click()
+
+    return _choice_js_fill
+
+
+@pytest.fixture
 def choice_js_cant_pick(db, page):
     def _choice_js_cant_pick(page, locator, fill_content, exact_name):
         page.query_selector(locator).click()

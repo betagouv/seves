@@ -5,41 +5,22 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
-
-<!-- Alpine Core -->
-    <script defer src="{% static 'alpineV3.cdn.min.js' %}"></script>
-
-
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript" src="{% static 'sv/fichedetection_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fichedetection_common.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fichedetection_lieux_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fichedetection_prelevement_form.js' %}"></script>
 {% endblock %}
 
-{% block highlight_menu_fiches %}menu__item--active{% endblock %}
-
 {% block content %}
-    <main x-data="app">
-        <input type="hidden" id="numeroEurophyt" value="{{ form.instance.numero_europhyt }}">
-        <input type="hidden" id="numeroRasff" value="{{ form.instance.numero_rasff }}">
-        <input type="hidden" id="statut-evenement-id" value="{{ form.instance.statut_evenement_id|default:'' }}">
-        <input type="hidden" id="organisme-nuisible-id" value="{{ form.instance.organisme_nuisible_id|default:'' }}">
-        <input type="hidden" id="statut-reglementaire-id" value="{{ form.instance.statut_reglementaire_id|default:'' }}">
-        <input type="hidden" id="contexte-id" value="{{ form.instance.contexte_id|default:'' }}">
-        <input type="hidden" id="date-premier-signalement" value="{{ form.instance.date_premier_signalement|date:'Y-m-d' }}">
-        <input type="hidden" id="commentaire" value="{{ form.instance.commentaire }}">
-        <input type="hidden" id="vegetaux-infestes" value="{{ form.instance.vegetaux_infestes }}">
-        <input type="hidden" id="mesures-conservatoires-immediates" value="{{ form.instance.mesures_conservatoires_immediates }}">
-        <input type="hidden" id="mesures-consignation" value="{{ form.instance.mesures_consignation }}">
-        <input type="hidden" id="mesures-phytosanitaires" value="{{ form.instance.mesures_phytosanitaires }}">
-        <input type="hidden" id="mesures-surveillance-specifique" value="{{ form.instance.mesures_surveillance_specifique }}">
+    <main>
         {{ form.instance.free_link_ids|json_script:"free-links-id" }}
-        {{ lieux|json_script:"lieux-json" }}
-        {{ prelevements|json_script:"prelevements" }}
-        {{ structures_preleveurs|json_script:"structures-preleveurs" }}
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
 
-        <form x-ref="fichedetectionForm" @submit.prevent="saveFicheDetection($event)">
+        <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
+            {% csrf_token %}
 
             <div id="fiche-detection-form-header">
                 <div>
@@ -48,6 +29,7 @@
                             Création d'une fiche détection
                         {% else %}
                             Modification de la fiche détection {% if form.instance.numero %}n°{{ form.instance.numero }}{% endif %}
+                            Modification de la fiche détection n°{{ fichedetection.numero }}
                         {% endif %}
                     </h1>
                     {% if not is_creation %}
@@ -68,13 +50,6 @@
             </div>
 
             <div id="fiche-detection-form">
-                {% csrf_token %}
-                {% if is_creation %}
-                    <div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-creation' %}" ></div>
-                {% else %}
-                    <div id="fiche-detection-form-url" data-url="{% url 'fiche-detection-modification' form.instance.id  %}"></div>
-                {% endif %}
-
                 <div id="informations">
                     <h2>Informations</h2>
                     <div id="informations-content">
@@ -83,139 +58,120 @@
                             <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
                         </div>
                         <div id="statut-evenement">
-                            <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
-                            <select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
-                                <option value="">{{ select_empty_choice }}</option>
-                                {% for statut_evenement in statuts_evenement %}
-                                    <option value="{{ statut_evenement.id }}">{{ statut_evenement.libelle }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.statut_evenement.label_tag }} {{ form.statut_evenement }}
                         </div>
-                        <div id="numero-europhyt" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                            <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
-                            <input x-model="ficheDetection.numeroEurophyt" id="numero-europhyt-input" class="fr-input" maxlength="8">
-                        </div>
-                        <div id="numero-rasff" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                            <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
-                            <input x-model="ficheDetection.numeroRasff" id="numero-rasff-input" class="fr-input" maxlength="9">
-                        </div>
+                        {% if form.numero_europhyt %}
+                            <div id="numero-europhyt">
+                                {{ form.numero_europhyt.label_tag }} {{ form.numero_europhyt }}
+                            </div>
+                        {% endif %}
+                        {% if form.numero_rasff %}
+                            <div id="numero-rasff">
+                                {{ form.numero_rasff.label_tag }} {{ form.numero_rasff }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <div id="objet-evenement">
                     <h2>Objet de l'évènement</h2>
                     <p id="organisme-nuisible">
-                        <label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
-                        <select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
-                            <option value="">{{ select_empty_choice }}</option>
-                            {% for organisme_nuisible in organismes_nuisibles %}
-                                <option value="{{ organisme_nuisible.id }}">{{ organisme_nuisible.libelle_court }}</option>
-                            {% endfor %}
-                        </select>
+                        {{ form.organisme_nuisible.label_tag }} {{ form.organisme_nuisible }}
                     </p>
                     <p id="statut-reglementaire">
-                        <label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
-                        <select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
-                            <option value="">{{ select_empty_choice }}</option>
-                            {% for statut_reglementaire in statuts_reglementaires %}
-                                <option value="{{ statut_reglementaire.id }}">{{ statut_reglementaire.libelle }}</option>
-                            {% endfor %}
-                        </select>
+                        {{ form.statut_reglementaire.label_tag }}{{ form.statut_reglementaire }}
                     </p>
                     <p id="contexte">
-                        <label class="fr-label" for="contexte-input">Contexte</label>
-                        <select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
-                            <option value="">{{ select_empty_choice }}</option>
-                            {% for contexte in contextes %}
-                                <option value="{{ contexte.id }}">{{ contexte.nom }}</option>
-                            {% endfor %}
-                        </select>
+                        {{ form.contexte.label_tag }}{{ form.contexte }}
                     </p>
                     <p id="date-1er-signalement">
-                        <label class="fr-label" for="date-1er-signalement-input">Date 1er signalement</label>
-                        <input x-text="ficheDetection.datePremierSignalement" x-model="ficheDetection.datePremierSignalement" type="date" id="date-1er-signalement-input" class="fr-input" max="{% now "Y-m-d" %}">
+                        {{ form.date_premier_signalement.label_tag }}{{ form.date_premier_signalement }}
                     </p>
                     <p>
-                        <label class="fr-label" for="vegetaux-infestes-input">Végétaux infestés</label>
-                        <textarea x-model="ficheDetection.vegetauxInfestes" id="vegetaux-infestes-input" class="fr-input" maxlength="500"></textarea>
+                        {{ form.vegetaux_infestes.label_tag }}{{ form.vegetaux_infestes }}
                     </p>
                     <p>
-                        <label class="fr-label" for="commentaire-input">Commentaire</label>
-                        <textarea x-model="ficheDetection.commentaire" id="commentaire-input" class="fr-input" maxlength="500"></textarea>
+                        {{ form.commentaire.label_tag }}{{ form.commentaire }}
                     </p>
                 </div>
 
                 <div id="lieux">
                     <div id="lieux-header">
                         <h2>Lieux</h2>
-                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter</button>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+                                id="add-lieu-bouton">Ajouter</button>
                     </div>
-                    <template x-if="lieux.length == 0">
-                        <p>Aucun lieu.</p>
-                    </template>
-                    {% include 'sv/_fichedetection_form__lieux.html' %}
+
+                    {{ lieu_formset.management_form }}
+
+                    {% for form in lieu_formset %}
+                        {% if form.instance.pk %}
+                            {{ form.id }}
+                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk delete=True %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for form in lieu_formset %}
+                        {% if not form.instance.pk %}
+                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=forloop.counter0 %}
+                        {% endif %}
+                    {% endfor %}
+
+                    <div id="lieux-list">
+                    </div>
                 </div>
 
                 <div id="prelevements">
                     <div id="prelevements-header">
                         <h2>Prélèvements</h2>
-                        <template x-if="lieux.length > 0">
-                            <button  type="button" @click="addPrelevementForm()" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" data-fr-opened="false" aria-controls="modal-add-edit-prelevement">Ajouter</button>
-                        </template>
-                        <template x-if="lieux.length == 0">
-                            <button  type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" disabled>Ajouter</button>
-                        </template>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" id="btn-add-prelevment">Ajouter</button>
                     </div>
-                    <template x-if="lieux.length == 0">
-                        <p>Aucun prélèvement. Pour ajouter une prélèvement vous devez avoir renseigné au moins un lieu.</p>
-                    </template>
 
-                    {% include 'sv/_fichedetection_form__prelevements.html' %}
+                    {% for form in existing_prelevements %}
+                        {{ form.id }}
+                        {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=form.instance.pk existing="true" %}
+                    {% endfor %}
+
+                    {% for form in prelevement_forms %}
+                        {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=forloop.counter0 %}
+                    {% endfor %}
+
+                    <div id="prelevements-list"></div>
+                    <p id="no-lieux-text">Aucun prélèvement. Pour ajouter une prélèvement vous devez avoir renseigné au moins un lieu.</p>
                 </div>
 
                 <div id="mesures-gestion">
                     <h2>Mesures de gestion</h2>
                     <div id="mesures-gestion-content">
                         <p id="mesures-conservatoires-immediates">
-                            <label class="fr-label" for="mesures-conservatoires-immediates-input">Mesures conservatoires immédiates</label>
-                            <textarea x-model="ficheDetection.mesuresConservatoiresImmediates" id="mesures-conservatoires-immediates-input" class="fr-input" maxlength="500"></textarea>
+                            {{ form.mesures_conservatoires_immediates.label_tag }} {{ form.mesures_conservatoires_immediates }}
                         </p>
                         <p id="mesures-consignation">
-                            <label class="fr-label" for="mesures-consignation-input">Mesures de consignation</label>
-                            <textarea x-model="ficheDetection.mesuresConsignation" id="mesures-consignation-input" class="fr-input" maxlength="500"></textarea>
+                            {{ form.mesures_consignation.label_tag }} {{ form.mesures_consignation }}
                         </p>
                         <p id="mesures-phytosanitaires">
-                            <label class="fr-label" for="mesures-phytosanitaires-input">Mesures phytosanitaires</label>
-                            <textarea x-model="ficheDetection.mesuresPhytosanitaires" id="mesures-phytosanitaires-input" class="fr-input" maxlength="500"></textarea>
+                            {{ form.mesures_phytosanitaires.label_tag }}{{ form.mesures_phytosanitaires }}
                         </p>
                         <p id="mesures-surveillance-specifique">
-                            <label class="fr-label" for="mesures-surveillance-specifique-input">Mesures de surveillance spécifique</label>
-                            <textarea x-model="ficheDetection.mesuresSurveillanceSpecifique" id="mesures-surveillance-specifique-input" class="fr-input" maxlength="500"></textarea>
+                            {{ form.mesures_surveillance_specifique.label_tag }}{{ form.mesures_surveillance_specifique }}
                         </p>
                     </div>
                 </div>
 
-                <div id="liens-libre">
+                <div id="liens-libre" class="white-container fr-mt-4w">
                     <h2>Liens libres</h2>
                     <div>
-                        <label class="fr-label" for="free-links">Lien vers une fiche</label>
-                        <select id="free-links" multiple="">
-                            <option value="">{{ select_empty_choice }}</option>
-                            {% for object_type_id, label, queryset in possible_links %}
-                                {% for object in queryset %}
-                                    <option value="{{ object_type_id }}-{{ object.id }}">{{ label }} : {{ object }}</option>
-                                {% endfor %}
-                            {% endfor %}
-                        </select>
+                        {{ form.free_link }}
                     </div>
                 </div>
             </div>
         </form>
 
-	<!-- Modal ajout/modif lieu -->
-        {% include 'sv/_fichedetection_form__lieux_form.html' %}
+        {% include "sv/_fichedetection_form__lieu_card.html" %}
+        {% include "sv/_fichedetection_form__prelevement_card.html" %}
+        {% include "sv/_fichedetection_form__prelevement_delete_modal.html" %}
+        {% include "sv/_fichedetection_form__lieu_delete_modal.html" %}
+        {% include "sv/_fichedetection_form__lieu_cant_delete_modal.html" %}
 
-	<!-- Modal ajout/modif prélèvement -->
-        {% include 'sv/_fichedetection_form__prelevements_form.html' %}
     </main>
 {% endblock %}
