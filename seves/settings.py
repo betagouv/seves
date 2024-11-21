@@ -84,6 +84,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "seves.context_processors.select_empty_choice",
             ],
         },
     },
@@ -224,3 +225,5 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
+
+SELECT_EMPTY_CHOICE = "Choisir dans la liste"

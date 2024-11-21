@@ -22,7 +22,7 @@
                             <div id="structure" class="fr-select-group prelevement-form--fieldset">
                                 <label class="fr-label">Structure</label>
                                 <select x-model="formPrelevement.structurePreleveurId" class="fr-select" required data-testid="prelevement-form-structure">
-                                    <option value="">----</option>
+                                    <option value="">{{ select_empty_choice }}</option>
                                     {% for structure in structures_preleveurs %}
                                         <option value="{{ structure.id }}">{{ structure.nom }}</option>
                                     {% endfor %}
@@ -39,7 +39,7 @@
                             <p id="matrice-prelevee" class="prelevement-form--fieldset">
                                 <label class="fr-label">Matrice prélevée</label>
                                 <select x-model="formPrelevement.matricePreleveeId" class="fr-select" data-testid="prelevement-form-matrice-prelevee">
-                                    <option value="">----</option>
+                                    <option value="">{{ select_empty_choice }}</option>
                                     {% for matrice in matrices_prelevees %}
                                         <option value="{{ matrice.id }}">{{ matrice.libelle }}</option>
                                     {% endfor %}
@@ -90,7 +90,7 @@
                                 <p id="laboratoire-agree" class="prelevement-form--fieldset">
                                     <label class="fr-label">Laboratoire agréé</label>
                                     <select x-model="formPrelevement.laboratoireAgreeId" class="fr-select" data-testid="prelevement-form-laboratoire-agree">
-                                        <option value="">----</option>
+                                        <option value="">{{ select_empty_choice }}</option>
                                         {% for laboratoire_agree in laboratoires_agrees %}
                                             <option value="{{ laboratoire_agree.id }}">{{ laboratoire_agree.nom }}</option>
                                         {% endfor %}
@@ -99,7 +99,7 @@
                                 <p id="laboratoire-confirmation" class="prelevement-form--fieldset">
                                     <label class="fr-label">Laboratoire de confirmation</label>
                                     <select x-model="formPrelevement.laboratoireConfirmationOfficielleId" class="fr-select" data-testid="prelevement-form-laboratoire-confirmation">
-                                        <option value="">----</option>
+                                        <option value="">{{ select_empty_choice }}</option>
                                         {% for laboratoire_confirmation_officielle in laboratoires_confirmation_officielle %}
                                             <option value="{{ laboratoire_confirmation_officielle.id }}">{{ laboratoire_confirmation_officielle.nom }}</option>
                                         {% endfor %}

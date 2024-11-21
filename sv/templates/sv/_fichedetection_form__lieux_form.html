@@ -31,7 +31,7 @@
                             <p>
                                 <label class="fr-label" for="site-inspection">Site d'inspection</label>
                                 <select x-model="lieuForm.siteInspectionId" class="fr-select" data-testid="lieu-form-type-etablissement" id="site-inspection">
-                                    <option value="">----</option>
+                                    <option value="">{{ select_empty_choice }}</option>
                                     {% for site_inspection in sites_inspections %}
                                         <option value="{{ site_inspection.id }}">{{ site_inspection.nom }}</option>
                                     {% endfor %}
@@ -96,7 +96,7 @@
                                 <p>
                                     <label class="fr-label" for="position-etablissement">Position</label>
                                     <select x-model="lieuForm.positionEtablissementId" class="fr-select" data-testid="lieu-form-position-etablissement" id="position-etablissement">
-                                        <option value="">----</option>
+                                        <option value="">{{ select_empty_choice }}</option>
                                         {% for position_etablissement in positions_chaine_distribution %}
                                             <option value="{{ position_etablissement.id }}">{{ position_etablissement.libelle }}</option>
                                         {% endfor %}

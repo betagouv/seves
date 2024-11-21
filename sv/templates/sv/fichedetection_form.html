@@ -85,7 +85,7 @@
                         <div id="statut-evenement">
                             <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
                             <select x-model="ficheDetection.statutEvenementId" id="statut-evenement-input" class="fr-select">
-                                <option value="">----</option>
+                                <option value="">{{ select_empty_choice }}</option>
                                 {% for statut_evenement in statuts_evenement %}
                                     <option value="{{ statut_evenement.id }}">{{ statut_evenement.libelle }}</option>
                                 {% endfor %}
@@ -107,7 +107,7 @@
                     <p id="organisme-nuisible">
                         <label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
                         <select x-model="ficheDetection.organismeNuisibleId" id="organisme-nuisible-input">
-                            <option value="">----</option>
+                            <option value="">{{ select_empty_choice }}</option>
                             {% for organisme_nuisible in organismes_nuisibles %}
                                 <option value="{{ organisme_nuisible.id }}">{{ organisme_nuisible.libelle_court }}</option>
                             {% endfor %}
@@ -116,7 +116,7 @@
                     <p id="statut-reglementaire">
                         <label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
                         <select x-model="ficheDetection.statutReglementaireId" id="statut-reglementaire-input" class="fr-select">
-                            <option value="">----</option>
+                            <option value="">{{ select_empty_choice }}</option>
                             {% for statut_reglementaire in statuts_reglementaires %}
                                 <option value="{{ statut_reglementaire.id }}">{{ statut_reglementaire.libelle }}</option>
                             {% endfor %}
@@ -125,7 +125,7 @@
                     <p id="contexte">
                         <label class="fr-label" for="contexte-input">Contexte</label>
                         <select x-model="ficheDetection.contexteId" id="contexte-input" class="fr-select">
-                            <option value="">----</option>
+                            <option value="">{{ select_empty_choice }}</option>
                             {% for contexte in contextes %}
                                 <option value="{{ contexte.id }}">{{ contexte.nom }}</option>
                             {% endfor %}
@@ -200,7 +200,7 @@
                     <div>
                         <label class="fr-label" for="free-links">Lien vers une fiche</label>
                         <select id="free-links" multiple="">
-                            <option value="">----</option>
+                            <option value="">{{ select_empty_choice }}</option>
                             {% for object_type_id, label, queryset in possible_links %}
                                 {% for object in queryset %}
                                     <option value="{{ object_type_id }}-{{ object.id }}">{{ label }} : {{ object }}</option>
