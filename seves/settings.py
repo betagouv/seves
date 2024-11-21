@@ -230,3 +230,4 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO gérer les lieux et prélévement
 # TODO gérér l'édition
 # TODO test ?
+# TODO styles et alignements

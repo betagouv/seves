@@ -110,10 +110,21 @@
                         <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
                                 data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter</button>
                     </div>
+
+
+                    {{ lieu_formset.management_form }}
+                    {% for form in lieu_formset %}
+                        {% if form.instance.pk %}
+                            {{ form.id }}
+                        {% endif %}
+                    {% endfor %}
+
+
                     <template x-if="lieux.length == 0">
                         <p>Aucun lieu.</p>
                     </template>
-                    {% include 'sv/_fichedetection_form__lieux.html' %}
+
+
                 </div>
 
                 <div id="prelevements">
@@ -174,7 +185,7 @@
         </form>
 
 	<!-- Modal ajout/modif lieu -->
-        {% include 'sv/_fichedetection_form__lieux_form.html' %}
+        {% include 'sv/_fichedetection_form__lieux_form.html' with form=lieu_empty_form %}
 
 	<!-- Modal ajout/modif prélèvement -->
         {% include 'sv/_fichedetection_form__prelevements_form.html' %}

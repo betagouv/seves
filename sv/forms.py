@@ -11,7 +11,7 @@ from django.db.models import TextChoices
 
 from core.models import LienLibre
 from core.fields import DSFRRadioButton
-from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection
+from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection, Lieu
 
 
 class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -38,6 +38,15 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
         label="Où souhaitez-vous rattacher la détection ?",
         initial=RattachementChoices.HORS_ZONE_INFESTEE,
     )
+
+
+class LieuForm(DSFRForm, forms.ModelForm):
+    class Meta:
+        model = Lieu
+        exclude = []
+
+
+LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=1, can_delete=True)
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):

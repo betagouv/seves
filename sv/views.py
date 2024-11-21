@@ -39,6 +39,7 @@ from sv.forms import (
     RattachementChoices,
     FicheZoneDelimiteeVisibiliteUpdateForm,
     FicheDetectionForm,
+    LieuFormSet,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -227,11 +228,11 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
+        context["lieu_formset"] = LieuFormSet()
+        context["lieu_empty_form"] = context["lieu_formset"].empty_form
         return context
 
-    # TODO remove me
-    def form_invalid(self, form):
-        print(form.errors)
+    # TODO rewrite post to do something with lieux
 
 
 class OldFicheDetectionCreateView(FicheDetectionContextMixin, CreateView):

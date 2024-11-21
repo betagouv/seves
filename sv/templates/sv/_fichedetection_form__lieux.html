@@ -2,6 +2,8 @@
 <input type="hidden" disabled data-testid="lieux" :value="JSON.stringify(lieux)">
 
 <!-- Liste des lieux -->
+
+
 <template x-for="(lieu, index) in lieux" :key="lieu.id">
     <div class="lieu-initial">
         <div class="lieu-header">

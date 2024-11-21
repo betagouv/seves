@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('alpine:init', () => {
     const MODAL_ADD_EDIT_LIEU = document.getElementById('modal-add-edit-lieu');
     const MODAL_ADD_EDIT_PRELEVEMENT = document.getElementById('modal-add-edit-prelevement');
+    const TEMPLATE_LIEU = document.getElementById('lieu-template');
 
     Alpine.data('app', () => ({
 
@@ -250,15 +251,15 @@ document.addEventListener('alpine:init', () => {
                 noChoicesText: 'Aucune fiche à sélectionner',
                 searchFields: ['label'],
             };
-            const freeLinksChoices = new Choices(document.getElementById("free-links"), options);
-            freeLinksChoices.passedElement.element.addEventListener("change", (event)=> {
-                this.ficheDetection.freeLinksIds = Array.from(freeLinksChoices.getValue(true))
-            })
-            if (!!this.ficheDetection.freeLinksIds) {
-                this.ficheDetection.freeLinksIds.forEach(value => {
-                    freeLinksChoices.setChoiceByValue(value);
-                });
-            }
+            // const freeLinksChoices = new Choices(document.getElementById("free-links"), options);
+            // freeLinksChoices.passedElement.element.addEventListener("change", (event)=> {
+            //     this.ficheDetection.freeLinksIds = Array.from(freeLinksChoices.getValue(true))
+            // })
+            // if (!!this.ficheDetection.freeLinksIds) {
+            //     this.ficheDetection.freeLinksIds.forEach(value => {
+            //         freeLinksChoices.setChoiceByValue(value);
+            //     });
+            // }
 
         },
 
@@ -505,59 +506,6 @@ document.addEventListener('alpine:init', () => {
             return datePrelevement ? new Date(datePrelevement).toLocaleDateString('fr-FR') : '';
         },
 
-        // saveFicheDetection(event) {
-        //     if(!this.$refs.fichedetectionForm.checkValidity()) {
-        //         this.$refs.fichedetectionForm.reportValidity();
-        //         return;
-        //     }
-        //
-        //     const boutonClique = event.submitter;
-        //     const action = boutonClique.dataset.action;
-        //
-        //     let formData = new FormData();
-        //     const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
-        //     formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
-        //     formData.append('numeroRasff', this.ficheDetection.numeroRasff);
-        //     formData.append('numeroEurophyt', this.ficheDetection.numeroEurophyt);
-        //     formData.append('organismeNuisibleId', organismeNuisibleId);
-        //     formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
-        //     formData.append('contexteId', this.ficheDetection.contexteId);
-        //     formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
-        //     formData.append('commentaire', this.ficheDetection.commentaire);
-        //     formData.append('vegetauxInfestes', this.ficheDetection.vegetauxInfestes);
-        //     formData.append('mesuresConservatoiresImmediates', this.ficheDetection.mesuresConservatoiresImmediates);
-        //     formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
-        //     formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
-        //     formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
-        //     formData.append('lieux', JSON.stringify(this.lieux));
-        //     formData.append('prelevements', JSON.stringify(this.prelevements));
-        //     formData.append('action', action);
-        //     for (var i = 0; i < this.ficheDetection.freeLinksIds.length; i++) {
-        //         formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
-        //     }
-        //
-        //     const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        //     const url = document.getElementById('fiche-detection-form-url').dataset.url;
-        //
-        //     fetch(url, {
-        //         method: 'POST',
-        //         body: formData,
-        //         headers: {
-        //             'X-CSRFToken': csrfToken,
-        //         },
-        //     })
-        //         .then(response => {
-        //             if (!response.ok) {
-        //                 response.text().then(errorText => {
-        //                     console.log(errorText);
-        //                 });
-        //             }
-        //             window.location.href = response.url;
-        //         })
-        //         .catch(error => {
-        //             console.error(error);
-        //         });
-        // },
 
     }));
 
