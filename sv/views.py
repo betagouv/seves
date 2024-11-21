@@ -38,6 +38,7 @@ from sv.forms import (
     RattachementDetectionForm,
     RattachementChoices,
     FicheZoneDelimiteeVisibiliteUpdateForm,
+    FicheDetectionForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -161,6 +162,7 @@ class FicheDetectionContextMixin:
         ]
 
     def _add_possible_links(self, context, user):
+        return
         possible_links = []
 
         content_type = ContentType.objects.get_for_model(FicheDetection)
@@ -211,6 +213,28 @@ class FicheDetectionContextMixin:
 
 
 class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
+    allows_inactive_laboratoires_agrees_values = False
+    allows_inactive_laboratoires_confirmation_values = False
+    allows_inactive_structure_preleveur_values = False
+    form_class = FicheDetectionForm
+    template_name = "sv/fichedetection_form.html"  # TODO why is this needed ?
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_creation"] = True
+        return context
+
+    # TODO remove me
+    def form_invalid(self, form):
+        print(form.errors)
+
+
+class OldFicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     allows_inactive_laboratoires_agrees_values = False
     allows_inactive_laboratoires_confirmation_values = False
     allows_inactive_structure_preleveur_values = False

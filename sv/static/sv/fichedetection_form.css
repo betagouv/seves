@@ -69,19 +69,19 @@ main {
 #numero-rasff label {
     flex: 0.65;
 }
-#numero-rasff-input {
+#id_numero_rasff {
     flex: 1.35;
 }
 #statut-evenement label {
     flex: 0.75;
 }
-#statut-evenement-input {
+#id_statut_evenement {
     flex: 1.25;
 }
 #numero-europhyt label {
     flex: 0.75;
 }
-#numero-europhyt-input {
+#id_numero_europhyt {
     flex: 1.25;
 }
 

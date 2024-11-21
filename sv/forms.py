@@ -40,6 +40,43 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
     )
 
 
+class FicheDetectionForm(DSFRForm, forms.ModelForm):
+    class Meta:
+        model = FicheDetection
+        exclude = ["numero", "createur", "etat"]
+        # TODO handle date creation
+        fields = [
+            "statut_evenement",
+            "numero_europhyt",  # TODO only for AC
+            "numero_rasff",  # TODO only for AC
+            "organisme_nuisible",
+            "statut_reglementaire",
+            "contexte",
+            "date_premier_signalement",
+            "vegetaux_infestes",
+            "commentaire",
+            "mesures_conservatoires_immediates",
+            "mesures_consignation",
+            "mesures_phytosanitaires",
+            "mesures_surveillance_specifique",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+
+        super().__init__(*args, **kwargs)
+
+        # if self.instance.pk:
+        #     self.fields.pop("visibilite")
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.createur = self.user.agent.structure
+        if commit:
+            instance.save()
+        return instance
+
+
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     organisme_nuisible = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": ""}),
@@ -88,7 +125,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         self.detections_zones_infestees_formset = kwargs.pop("detections_zones_infestees_formset", None)
 
         super().__init__(*args, **kwargs)
-        self.label_suffix = ""
 
         if self.instance.pk:
             self.fields.pop("visibilite")
@@ -215,8 +251,6 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         fiche_zone_delimitee = kwargs.pop("fiche_zone_delimitee", None)
 
         super().__init__(*args, **kwargs)
-
-        self.label_suffix = ""
 
         fiche_zone_delimitee = (
             self.instance.fiche_zone_delimitee

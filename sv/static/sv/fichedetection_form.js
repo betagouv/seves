@@ -55,7 +55,7 @@ function addChoicesEspeceEchantillon(){
 }
 document.addEventListener('DOMContentLoaded', function() {
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
-    const element = document.getElementById('organisme-nuisible-input');
+    const element = document.getElementById('id_organisme_nuisible');
     const choices = new Choices(element, {
         classNames: {
             containerInner: 'fr-select',
@@ -80,52 +80,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('alpine:init', () => {
-
     const MODAL_ADD_EDIT_LIEU = document.getElementById('modal-add-edit-lieu');
     const MODAL_ADD_EDIT_PRELEVEMENT = document.getElementById('modal-add-edit-prelevement');
 
     Alpine.data('app', () => ({
 
         structuresPreleveurs: JSON.parse(document.getElementById('structures-preleveurs').textContent),
+        lieux: [],
+        prelevements: [],
 
-		// Données du formulaire de la fiche détection (champs fiche détection et listes des lieux et prélèvements)
-        ficheDetection: {
-            numero: '',
-            statutEvenementId: '',
-            numeroRasff: '',
-            numeroEurophyt: '',
-            organismeNuisibleId: '',
-            freeLinksIds: '',
-            statutReglementaireId: '',
-            contexteId: '',
-            datePremierSignalement: '',
-            commentaire: '',
-            vegetauxInfestes: '',
-            mesuresConservatoiresImmediates: '',
-            mesuresConsignation: '',
-            mesuresPhytosanitaires: '',
-            mesuresSurveillanceSpecifique: '',
-        },
-
-        lieux: [
-			//{ id: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', nomLieu: 'Lieu 1', adresseLieuDit: 'Adresse 1', commune: 'Commune 1', codeINSEE: '12345', departementId: '1', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'e16e5305-76c0-4758-a0c7-e6674cff5086', nomLieu: 'Lieu 2', adresseLieuDit: 'Adresse 2', commune: 'Commune 2', codeINSEE: '54321', departementId: '2', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'b5492275-a960-477a-aeca-af50932ca21e', nomLieu: 'Lieu 3', adresseLieuDit: 'Adresse 3', commune: 'Commune 3', codeINSEE: '54321', departementId: '3', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-        ],
-
-        prelevements: [
-			/*{
-				id: crypto.randomUUID(),
-				nom: 'Prélèvement 1',
-				lieuId: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09',
-				isOfficiel: true,
-				datePrelevement: '2021-09-01',
-				structurePreleveurId: '1',
-			},
-			*/
-        ],
-
-		// Données du formulaire d'ajout d'un lieu
         lieuForm: {
             id: '',
             nomLieu: '',
@@ -191,23 +154,6 @@ document.addEventListener('alpine:init', () => {
                 this.prelevementIdToEdit = null;
             });
 
-            this.ficheDetection = {
-                numero: this.getValueById('numeroFiche'),
-                numeroEurophyt: this.getValueById('numeroEurophyt'),
-                numeroRasff: this.getValueById('numeroRasff'),
-                statutEvenementId: this.getValueById('statut-evenement-id'),
-                organismeNuisibleId: this.getValueById('organisme-nuisible-id'),
-                statutReglementaireId: this.getValueById('statut-reglementaire-id'),
-                freeLinksIds: JSON.parse(document.getElementById('free-links-id').textContent),
-                contexteId: this.getValueById('contexte-id'),
-                datePremierSignalement: this.getValueById('date-premier-signalement'),
-                commentaire: this.getValueById('commentaire'),
-                vegetauxInfestes: this.getValueById('vegetaux-infestes'),
-                mesuresConservatoiresImmediates: this.getValueById('mesures-conservatoires-immediates'),
-                mesuresConsignation: this.getValueById('mesures-consignation'),
-                mesuresPhytosanitaires: this.getValueById('mesures-phytosanitaires'),
-                mesuresSurveillanceSpecifique: this.getValueById('mesures-surveillance-specifique')
-            };
 			// Récupération et initialisation des lieux (si modification d'une fiche de détection existante)
             const lieux = JSON.parse(document.getElementById('lieux-json').textContent);
             if(lieux) {
@@ -314,16 +260,6 @@ document.addEventListener('alpine:init', () => {
                 });
             }
 
-        },
-
-        getValueById(id) {
-            const element = document.getElementById(id);
-            return element ? element.value : null;
-        },
-
-        getNumeroIfExist() {
-            const numero = document.getElementById('fiche-detection-numero');
-            return numero ? numero.textContent : '';
         },
 
 		/**
@@ -569,59 +505,59 @@ document.addEventListener('alpine:init', () => {
             return datePrelevement ? new Date(datePrelevement).toLocaleDateString('fr-FR') : '';
         },
 
-        saveFicheDetection(event) {
-            if(!this.$refs.fichedetectionForm.checkValidity()) {
-                this.$refs.fichedetectionForm.reportValidity();
-                return;
-            }
-
-            const boutonClique = event.submitter;
-            const action = boutonClique.dataset.action;
-
-            let formData = new FormData();
-            const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
-            formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
-            formData.append('numeroRasff', this.ficheDetection.numeroRasff);
-            formData.append('numeroEurophyt', this.ficheDetection.numeroEurophyt);
-            formData.append('organismeNuisibleId', organismeNuisibleId);
-            formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
-            formData.append('contexteId', this.ficheDetection.contexteId);
-            formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
-            formData.append('commentaire', this.ficheDetection.commentaire);
-            formData.append('vegetauxInfestes', this.ficheDetection.vegetauxInfestes);
-            formData.append('mesuresConservatoiresImmediates', this.ficheDetection.mesuresConservatoiresImmediates);
-            formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
-            formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
-            formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
-            formData.append('lieux', JSON.stringify(this.lieux));
-            formData.append('prelevements', JSON.stringify(this.prelevements));
-            formData.append('action', action);
-            for (var i = 0; i < this.ficheDetection.freeLinksIds.length; i++) {
-                formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
-            }
-
-            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            const url = document.getElementById('fiche-detection-form-url').dataset.url;
-
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                },
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        response.text().then(errorText => {
-                            console.log(errorText);
-                        });
-                    }
-                    window.location.href = response.url;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
+        // saveFicheDetection(event) {
+        //     if(!this.$refs.fichedetectionForm.checkValidity()) {
+        //         this.$refs.fichedetectionForm.reportValidity();
+        //         return;
+        //     }
+        //
+        //     const boutonClique = event.submitter;
+        //     const action = boutonClique.dataset.action;
+        //
+        //     let formData = new FormData();
+        //     const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
+        //     formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);
+        //     formData.append('numeroRasff', this.ficheDetection.numeroRasff);
+        //     formData.append('numeroEurophyt', this.ficheDetection.numeroEurophyt);
+        //     formData.append('organismeNuisibleId', organismeNuisibleId);
+        //     formData.append('statutReglementaireId', this.ficheDetection.statutReglementaireId);
+        //     formData.append('contexteId', this.ficheDetection.contexteId);
+        //     formData.append('datePremierSignalement', this.ficheDetection.datePremierSignalement);
+        //     formData.append('commentaire', this.ficheDetection.commentaire);
+        //     formData.append('vegetauxInfestes', this.ficheDetection.vegetauxInfestes);
+        //     formData.append('mesuresConservatoiresImmediates', this.ficheDetection.mesuresConservatoiresImmediates);
+        //     formData.append('mesuresConsignation', this.ficheDetection.mesuresConsignation);
+        //     formData.append('mesuresPhytosanitaires', this.ficheDetection.mesuresPhytosanitaires);
+        //     formData.append('mesuresSurveillanceSpecifique', this.ficheDetection.mesuresSurveillanceSpecifique);
+        //     formData.append('lieux', JSON.stringify(this.lieux));
+        //     formData.append('prelevements', JSON.stringify(this.prelevements));
+        //     formData.append('action', action);
+        //     for (var i = 0; i < this.ficheDetection.freeLinksIds.length; i++) {
+        //         formData.append('freeLinksIds', this.ficheDetection.freeLinksIds[i]);
+        //     }
+        //
+        //     const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        //     const url = document.getElementById('fiche-detection-form-url').dataset.url;
+        //
+        //     fetch(url, {
+        //         method: 'POST',
+        //         body: formData,
+        //         headers: {
+        //             'X-CSRFToken': csrfToken,
+        //         },
+        //     })
+        //         .then(response => {
+        //             if (!response.ok) {
+        //                 response.text().then(errorText => {
+        //                     console.log(errorText);
+        //                 });
+        //             }
+        //             window.location.href = response.url;
+        //         })
+        //         .catch(error => {
+        //             console.error(error);
+        //         });
+        // },
 
     }));
 
