@@ -136,17 +136,10 @@
                     <div id="prelevements-header">
                         <h2>Prélèvements</h2>
 
-                        {{ prelevement_formset.management_form }}
-                        {% for form in prelevement_formset %}
-                            {% if form.instance.pk %}
-                                {{ form.id }}
-                            {% endif %}
-                        {% endfor %}
 
-                        {% for form in prelevement_formset %}
-                            {% if not form.instance.pk %}
-                                {% include 'sv/_fichedetection_form__prelevements_modal.html' %}
-                            {% endif %}
+
+                        {% for form in prelevement_forms %}
+                            {% include 'sv/_fichedetection_form__prelevements_modal.html' %}
                         {% endfor %}
 
                         <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" id="btn-add-prelevment">Ajouter</button>

@@ -48,10 +48,16 @@ function displayPrelevementsCards(prelevementCards) {
         selectElement.innerHTML = '';
         document.lieuxCards.forEach(option => {
             const opt = document.createElement('option');
-            opt.value = option.id;
+            opt.value = option.nom;
             opt.textContent = option.nom;
             selectElement.appendChild(opt);
         });
+
+        currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
+            if (input.hasAttribute("data-required")){
+                input.required = true
+            }
+        })
 
         dsfr(currentModal).modal.disclose();
     })
@@ -91,8 +97,16 @@ function displayPrelevementsCards(prelevementCards) {
         }
 
         displayPrelevementsCards(prelevementCards)
+        inputs.forEach((input) =>{
+            if (input.hasAttribute("required")){
+                input.required = false
+            }
+        })
         dsfr(modal).modal.conceal();
     }))
 
 
 })();
+
+// TODO retirer le required dans le form lors de la fermeture de la modale
+// TODO remettre les required dans les form à l'ouverture de la modale

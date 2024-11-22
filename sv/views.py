@@ -40,7 +40,7 @@ from sv.forms import (
     FicheZoneDelimiteeVisibiliteUpdateForm,
     FicheDetectionForm,
     LieuFormSet,
-    PrelevementFormSet,
+    PrelevementForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -210,42 +210,41 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
         context["lieu_formset"] = LieuFormSet()
-        context["prelevement_formset"] = PrelevementFormSet()
+        context["prelevement_forms"] = [
+            PrelevementForm(by_pass_required=True, prefix=f"prelevements-{i}") for i in range(10)
+        ]
         return context
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
-        mutable_post = request.POST.copy()
-        keys_to_remove = [
-            key for key in mutable_post.keys() if key.startswith("prelevements-") and key.endswith("-lieu")
-        ]
-        for key in keys_to_remove:
-            del mutable_post[key]
-        prelevement_formset = PrelevementFormSet(mutable_post)
-
         if not form.is_valid():
             return self.form_invalid(form)
 
         if not lieu_formset.is_valid():
-            # TODO make sure the error are handled for the formset
-            return self.form_invalid(form)
-
-        if not prelevement_formset.is_valid():
-            print(prelevement_formset.errors)
-            print(prelevement_formset.non_form_errors())
-            # TODO make sure the error are handled for the formset
             return self.form_invalid(form)
 
         with transaction.atomic():
             self.object = form.save()
             lieu_formset.instance = self.object
-            lieu_formset.save()
-            print(request.POST)
-            # TODO we need to set the correct lieu here
-            prelevement_formset.instance = self.object
-            prelevement_formset.save()
+            allowed_lieux = lieu_formset.save()
+
+            mutable_post = request.POST.copy()
+            lieux_keys = [
+                key for key in mutable_post.keys() if key.startswith("prelevements-") and key.endswith("-lieu")
+            ]
+            for lieu_key in lieux_keys:
+                # TODO this won't work if multiple lieux have the same name add check on this
+                mutable_post[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == mutable_post[lieu_key])
+
+            prelevement_forms = [PrelevementForm(mutable_post, prefix=f"prelevements-{i}") for i in range(10)]
+            for prelevement_form in prelevement_forms:
+                if not prelevement_form.is_valid():
+                    if not any(form.cleaned_data.values()):
+                        continue
+                    raise ValidationError(prelevement_form.errors)
+                prelevement_form.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

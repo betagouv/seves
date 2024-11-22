@@ -121,8 +121,17 @@ class PrelevementForm(DSFRForm, forms.ModelForm):
         model = Prelevement
         exclude = []
 
+    def __init__(self, *args, **kwargs):
+        by_pass_required = kwargs.pop("by_pass_required", False)
+        super().__init__(*args, **kwargs)
+        # TODO add other required fields
+        self.fields["structure_preleveur"].widget.attrs["data-required"] = "required"
 
-PrelevementFormSet = inlineformset_factory(Lieu, Prelevement, form=PrelevementForm, extra=10, can_delete=True)
+        if by_pass_required:
+            for field in self:
+                if field.field.required:
+                    field.field.widget.attrs["data-required"] = "true"
+                    field.field.required = False
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):
