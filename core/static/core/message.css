@@ -9,7 +9,7 @@
 .message-container .fr-grid-row .fr-card {
     height: unset;
 }
-.message-container--date {
+.message-container--date, .message-send-btn {
     text-align: right;
 }
 .message-document-container {
