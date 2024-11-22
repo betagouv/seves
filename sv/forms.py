@@ -41,6 +41,10 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
 
 
 class LieuForm(DSFRForm, forms.ModelForm):
+    commune = forms.CharField(widget=forms.HiddenInput())
+    code_insee = forms.CharField(widget=forms.HiddenInput())
+    departement = forms.CharField(widget=forms.HiddenInput())
+
     class Meta:
         model = Lieu
         exclude = []
@@ -55,8 +59,8 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
         exclude = ["numero", "createur", "etat"]
         fields = [
             "statut_evenement",
-            "numero_europhyt",  # TODO only for AC
-            "numero_rasff",  # TODO only for AC
+            "numero_europhyt",
+            "numero_rasff",
             "organisme_nuisible",
             "statut_reglementaire",
             "contexte",
@@ -73,6 +77,10 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
         self.user = kwargs.pop("user")
 
         super().__init__(*args, **kwargs)
+
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_europhyt")
+            self.fields.pop("numero_rasff")
 
         self._add_free_links()
 

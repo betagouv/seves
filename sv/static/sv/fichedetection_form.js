@@ -1,72 +1,26 @@
-(function() {
-    let lieuxCards = []
-    let extraFormSaved = 0
-    const lieuListElement = document.getElementById("lieux-list")
-    const lieuTemplateElement = document.getElementById("lieu-carte")
+document.addEventListener('DOMContentLoaded', function() {
+    const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
+    const element = document.getElementById('id_organisme_nuisible');
+    const choices = new Choices(element, {
+        classNames: {
+            containerInner: 'fr-select',
+        },
+        itemSelectText: ''
+    });
 
-    function displayLieuxCards() {
-        lieuListElement.innerHTML = ""
-        if (lieuxCards.length === 0) {
-            lieuListElement.innerHTML = "Aucun lieu."
-            return
+    choices.passedElement.element.addEventListener("choice", (event)=> {
+        let found = false;
+        const statutElement = document.getElementById('id_statut_reglementaire')
+        statusToNuisibleId.forEach((status) =>{
+            if (status.nuisibleIds.includes(parseInt(event.detail.choice.value))) {
+                statutElement.value = status.statusID;
+                statutElement.dispatchEvent(new Event('change'));
+                found = true;
+            }
+        })
+        if (found === false){
+            statutElement.value="";
+            statutElement.dispatchEvent(new Event('change'));
         }
-
-        lieuxCards.forEach(card =>{
-            const clone = lieuTemplateElement.cloneNode(true);
-            clone.classList.remove('fr-hidden');
-            clone.querySelector('.lieu-nom').textContent = card.nom;
-            clone.querySelector('.lieu-commune').textContent = card.commune;
-            clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
-                dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
-            })
-            lieuListElement.appendChild(clone);
-        })
-    }
-
-    function showLieuDetailsIfIsEtablissement(){
-        const elements = document.querySelectorAll('[id^="id_lieux-"][id$="-is_etablissement"]');
-        elements.forEach((element) => element.addEventListener("change", (event) =>{
-            console.log("clicked")
-            event.target.closest("p").nextElementSibling.classList.toggle("fr-hidden")
-        })
-        )}
-
-
-    document.querySelector("#add-lieu-bouton").addEventListener("click", function(event){
-        event.preventDefault()
-        const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
-        dsfr(currentModal).modal.disclose();
     })
-
-    document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", function(event){
-        const id = event.target.dataset.id
-        let data = {
-            "id": id,
-            "nom": document.getElementById(`id_lieux-${id}-nom`).value,
-            "commune": document.getElementById(`commune-select-${id}`).value
-        }
-
-        const index = lieuxCards.findIndex(element => element.id === data.id);
-        if (index === -1) {
-            lieuxCards.push(data);
-            extraFormSaved++;
-        } else {
-            lieuxCards[index] = data;
-        }
-
-        displayLieuxCards()
-        dsfr(event.target.closest("[id^=modal-add-lieu]")).modal.conceal();
-
-    }))
-
-
-    showLieuDetailsIfIsEtablissement();
-
-    // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
-
-    // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés
-
-})();
-
-
-// TODO gérer les fermetures du modale (annuler et fermer)
+});

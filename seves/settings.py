@@ -230,5 +230,5 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO gérér l'édition de la fiche
 # TODO test ?
 # TODO styles et alignements
-# TODO nom du lieu should be required in modale
 # TODO remettre le fonctionneement des communes
+# TODO ajouter le required sur le nom du lieu à l'ouverture de la modale

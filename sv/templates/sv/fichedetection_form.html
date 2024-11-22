@@ -11,6 +11,7 @@
 
 {% block scripts %}
     <script type="text/javascript" src="{% static 'sv/fichedetection_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/fichedetection_lieux_form.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -62,14 +63,18 @@
                             <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
                             {{ form.statut_evenement }}
                         </div>
-                        <div id="numero-europhyt" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                            <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
-                            {{ form.numero_europhyt }}
-                        </div>
-                        <div id="numero-rasff" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                            <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
-                            {{ form.numero_rasff }}
-                        </div>
+                        {% if form.numero_europhyt %}
+                            <div id="numero-europhyt" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
+                                <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
+                                {{ form.numero_europhyt }}
+                            </div>
+                        {% endif %}
+                        {% if form.numero_rasff %}
+                            <div id="numero-rasff" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
+                                <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
+                                {{ form.numero_rasff }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -200,9 +205,6 @@
 	<!-- Modal ajout/modif lieu -->
     {#    TODO do we still need this ?#}
         {% include 'sv/_fichedetection_form__lieux_form.html'%}
-
-{#    TODO do we still need this ?#}
-{#        {% include 'sv/_fiche_detection_lieu_template.html' with form=lieu_empty_form  %}#}
 
 {#        # TODO move this somewhere else#}
         <div id="lieu-carte" class="fr-hidden">

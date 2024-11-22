@@ -161,6 +161,7 @@ class FicheDetectionContextMixin:
             {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
             for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
         ]
+        return context
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -188,7 +189,7 @@ class FicheDetectionContextMixin:
         context["sites_inspections"] = list(SiteInspection.objects.all().values("id", "nom").order_by("nom"))
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
 
-        self._add_status_to_organisme_nuisible(context, status)
+        context = self._add_status_to_organisme_nuisible(context, status)
         return context
 
 
@@ -208,14 +209,9 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
         context["lieu_formset"] = LieuFormSet()
-        context["lieu_empty_form"] = context["lieu_formset"].empty_form
         return context
 
     def post(self, request, *args, **kwargs):
-        from pprint import pprint
-
-        pprint(self.request.POST)
-
         form = self.get_form()
         formset = LieuFormSet(request.POST)
 

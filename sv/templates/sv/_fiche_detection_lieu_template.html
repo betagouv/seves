@@ -17,10 +17,9 @@
         <select id="commune-select-{{ id }}" class="fr-input"></select>
     </p>
 
-{#                            TODO fix those#}
-    <input x-model="lieuForm.commune" type="hidden" id="commune">
-    <input x-model="lieuForm.codeINSEE" type="hidden" id="code-insee">
-    <input x-model="lieuForm.departementNom" type="hidden" id="departement">
+    {{ form.commune }}
+    {{ form.code_insee }}
+    {{ form.departement }}
 
     <p>
         <label class="fr-label" for="site-inspection">Site d'inspection</label>

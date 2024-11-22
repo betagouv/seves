@@ -53,31 +53,7 @@ function addChoicesEspeceEchantillon(){
     })
     return choicesEspece
 }
-document.addEventListener('DOMContentLoaded', function() {
-    const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
-    const element = document.getElementById('id_organisme_nuisible');
-    const choices = new Choices(element, {
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        itemSelectText: ''
-    });
 
-    choices.passedElement.element.addEventListener("choice", (event)=> {
-        let found = false;
-        statusToNuisibleId.forEach((status) =>{
-            if (status.nuisibleIds.includes(parseInt(event.detail.choice.value))) {
-                document.getElementById('statut-reglementaire-input').value = status.statusID;
-                document.getElementById('statut-reglementaire-input').dispatchEvent(new Event('change'));
-                found = true;
-            }
-        })
-        if (found === false){
-            document.getElementById('statut-reglementaire-input').value="";
-            document.getElementById('statut-reglementaire-input').dispatchEvent(new Event('change'));
-        }
-    })
-});
 
 document.addEventListener('alpine:init', () => {
     const MODAL_ADD_EDIT_LIEU = document.getElementById('modal-add-edit-lieu');
