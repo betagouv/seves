@@ -45,15 +45,7 @@ function displayLieuxCards() {
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", function(event){
         const id = event.target.dataset.id
         const modal = document.getElementById(`modal-add-lieu-${id}`)
-
-        const inputs = modal.querySelectorAll('input, textarea, select');
-        let isValid = true;
-        inputs.forEach(input => {
-            if (!input.checkValidity()) {
-                input.reportValidity();
-                isValid = false;
-            }
-        });
+        const isValid = formIsValid(modal)
         if (isValid === false){
             return
         }
@@ -73,8 +65,7 @@ function displayLieuxCards() {
         }
 
         displayLieuxCards()
-        // TODO use modal var here?
-        dsfr(event.target.closest("[id^=modal-add-lieu]")).modal.conceal();
+        dsfr(modal).modal.conceal();
 
     }))
 

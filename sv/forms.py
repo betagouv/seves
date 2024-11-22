@@ -51,6 +51,8 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
 
 
 class LieuForm(DSFRForm, forms.ModelForm):
+    # TODO handle this properly, see how we can do this
+    nom = forms.CharField(widget=forms.TextInput(attrs={"required": "true"}))
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -106,6 +108,7 @@ class LieuForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Lieu
         exclude = []
+        labels = {"is_etablissement": "Il s'agit d'un établissement"}
 
     def clean_departement(self):
         if self.cleaned_data["departement"] == "":
@@ -117,15 +120,23 @@ LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=1
 
 
 class PrelevementForm(DSFRForm, forms.ModelForm):
+    # TODO when this is created as detecté the object is non detecté
+    resultat = forms.ChoiceField(
+        required=True,
+        choices=Prelevement.Resultat.choices,
+        widget=DSFRRadioButton(),
+    )
+
     class Meta:
         model = Prelevement
         exclude = []
 
     def __init__(self, *args, **kwargs):
+        # TODO better naming for this ?
         by_pass_required = kwargs.pop("by_pass_required", False)
         super().__init__(*args, **kwargs)
         # TODO add other required fields
-        self.fields["structure_preleveur"].widget.attrs["data-required"] = "required"
+        self.fields["structure_preleveur"].widget.attrs["required"] = "required"
 
         if by_pass_required:
             for field in self:

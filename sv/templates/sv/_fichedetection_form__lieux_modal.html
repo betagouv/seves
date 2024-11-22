@@ -45,7 +45,7 @@
                                 {{ form.wgs84_longitude }}
                                 {{ form.wgs84_latitude }}
                             </p>
-                            <p>
+                            <p class="fr-checkbox-group">
                                 {{ form.is_etablissement }}
                                 {{ form.is_etablissement.label_tag}}
                             </p>
@@ -77,7 +77,6 @@
                                 <p>
                                     <label class="fr-label" for="code-inupp-etablissement">Code INUPP</label>
                                     {{ form.code_inupp_etablissement }}
-                                    <input x-model="lieuForm.codeInuppEtablissement" type="text" class="fr-input" id="code-inupp-etablissement">
                                 </p>
                                 <p>
                                     <label class="fr-label" for="position-etablissement">Position</label>

@@ -65,15 +65,7 @@ function displayPrelevementsCards(prelevementCards) {
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", function(event){
         const id = event.target.dataset.id
         const modal = document.getElementById(`modal-add-edit-prelevement-${id}`)
-        // TODO factorize this
-        const inputs = modal.querySelectorAll('input, textarea, select');
-        let isValid = true;
-        inputs.forEach(input => {
-            if (!input.checkValidity()) {
-                input.reportValidity();
-                isValid = false;
-            }
-        });
+        const isValid = formIsValid(modal)
         if (isValid === false){
             return
         }
@@ -97,7 +89,7 @@ function displayPrelevementsCards(prelevementCards) {
         }
 
         displayPrelevementsCards(prelevementCards)
-        inputs.forEach((input) =>{
+        modal.querySelectorAll('input, textarea, select').forEach((input) =>{
             if (input.hasAttribute("required")){
                 input.required = false
             }
