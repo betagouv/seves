@@ -2,110 +2,18 @@
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-                <form x-ref="lieuForm" @submit.prevent="addOrEditLieu(lieuIdToEdit)" id="lieu-form">
+                <form id="lieu-form">
                     <div class="fr-modal__body">
                         <div class="fr-modal__header">
                             <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-lieu">Fermer</button>
                         </div>
                         <div class="fr-modal__content">
-                            <h1 id="modal-add-edit-lieu-title"
-                                class="fr-modal__title">Ajouter un lieu:
-{#                        TODO handle modifier le#}
-                            </h1>
 
-                            <p>
-                                <label class="fr-label" for="nom-lieu">Nom du lieu</label>
-                                {{ form.nom }}
-                            </p>
-                            <p>
-                                <label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
-                                {{ form.adresse_lieu_dit }}
-                            </p>
-                            <p>
-                                <label class="fr-label" for="commune">Commune</label>
-                                <select id="commune-select" class="fr-input"></select>
-                            </p>
-
-{#                            TODO fix those#}
-                            <input x-model="lieuForm.commune" type="hidden" id="commune">
-                            <input x-model="lieuForm.codeINSEE" type="hidden" id="code-insee">
-                            <input x-model="lieuForm.departementNom" type="hidden" id="departement">
-
-                            <p>
-                                <label class="fr-label" for="site-inspection">Site d'inspection</label>
-                                {{ form.site_inspection }}
-                            </p>
-
-                            <p>
-                                <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
-                                {{ form.lambert93_latitude }}
-                                {{ form.lambert93_longitude }}
-                            </p>
-                            <p>
-                                <label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
-                                {{ form.wgs84_longitude }}
-                                {{ form.wgs84_latitude }}
-                            </p>
-                            <p>
-                                <div class="fr-checkbox-group">
-                                    <input x-model="lieuForm.isEtablissement"
-                                           x-on:change="
-                                                        await $nextTick();
-                                                        if(lieuForm.isEtablissement) {
-                                                        document.getElementById('position-etablissement').scrollIntoView({ behavior: 'smooth'});
-                                                        }
-                                                       "
-                                           name="is-etablissement"
-                                           id="is-etablissement"
-                                           type="checkbox"
-                                           aria-describedby="is-etablissement-messages">
-                                    <label class="fr-label" for="is-etablissement">Il s'agit d'un établissement</label>
-                                </div>
-                            </p>
-                            <div x-show="lieuForm.isEtablissement">
-                                <p>
-                                    <label class="fr-label" for="nom-etablissement">Nom</label>
-                                    <input x-model="lieuForm.nomEtablissement" type="text" class="fr-input" id="nom-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="activite-etablissement">Activité</label>
-                                    <input x-model="lieuForm.activiteEtablissement" type="text" class="fr-input" id="activite-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="pays-etablissement">Pays</label>
-                                    <input x-model="lieuForm.paysEtablissement" type="text" class="fr-input" id="pays-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="raison-sociale-etablissement">Raison sociale</label>
-                                    <input x-model="lieuForm.raisonSocialeEtablissement" type="text" class="fr-input" id="raison-sociale-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="adresse-etablissement">Adresse</label>
-                                    <input x-model="lieuForm.adresseEtablissement" type="text" class="fr-input" id="adresse-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="siret-etablissement">N° SIRET</label>
-                                    <input x-model="lieuForm.siretEtablissement" type="number" class="fr-input" id="siret-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="code-inupp-etablissement">Code INUPP</label>
-                                    <input x-model="lieuForm.codeInuppEtablissement" type="text" class="fr-input" id="code-inupp-etablissement">
-                                </p>
-                                <p>
-                                    <label class="fr-label" for="position-etablissement">Position</label>
-                                    <select x-model="lieuForm.positionEtablissementId" class="fr-select" data-testid="lieu-form-position-etablissement" id="position-etablissement">
-                                        <option value="">----</option>
-                                        {% for position_etablissement in positions_chaine_distribution %}
-                                            <option value="{{ position_etablissement.id }}">{{ position_etablissement.libelle }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </p>
-                            </div>
                         </div>
                         <div class="fr-modal__footer">
                             <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-                                <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-lieu">Annuler</button>
-                                <button type="submit" class="fr-btn" data-testid="lieu-save-btn">Enregistrer</button>
+                                <a href="#" class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-lieu">Annuler</a>
+                                <a href="#" class="fr-btn" id="lieu-save-btn" data-testid="lieu-save-btn">Enregistrer</a>
                             </div>
                         </div>
                     </div>
