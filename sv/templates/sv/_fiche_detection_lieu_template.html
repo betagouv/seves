@@ -38,12 +38,10 @@
         {{ form.wgs84_latitude }}
     </p>
     <p>
-        <div class="fr-checkbox-group">
-            {{ form.is_etablissement }}
-            <label class="fr-label" for="is-etablissement">Il s'agit d'un établissement</label>
-        </div>
+        {{ form.is_etablissement }}
+        {{ form.is_etablissement.label_tag}}
     </p>
-    <div id="etablissement-fields">
+    <div class="fr-hidden etablissement-fields">
         <p>
             <label class="fr-label" for="nom-etablissement">Nom</label>
             {{ form.nom_etablissement }}

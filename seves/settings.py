@@ -227,9 +227,8 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 # TODO gérer la visibilité en fonction du bouton cliqué
 # TODO gérer les lieux et prélévement
-# TODO gérér l'édition
+# TODO gérér l'édition de la fiche
 # TODO test ?
 # TODO styles et alignements
-# TODO dans la modale de lieu n'ajouter le bas du form que si c'est un établissement
-## TODO nom du lieu should be required in modale
+# TODO nom du lieu should be required in modale
 # TODO remettre le fonctionneement des communes

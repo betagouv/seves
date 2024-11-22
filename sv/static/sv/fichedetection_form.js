@@ -23,6 +23,15 @@
         })
     }
 
+    function showLieuDetailsIfIsEtablissement(){
+        const elements = document.querySelectorAll('[id^="id_lieux-"][id$="-is_etablissement"]');
+        elements.forEach((element) => element.addEventListener("change", (event) =>{
+            console.log("clicked")
+            event.target.closest("p").nextElementSibling.classList.toggle("fr-hidden")
+        })
+        )}
+
+
     document.querySelector("#add-lieu-bouton").addEventListener("click", function(event){
         event.preventDefault()
         const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
@@ -50,9 +59,12 @@
 
     }))
 
+
+    showLieuDetailsIfIsEtablissement();
+
     // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
 
-    // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus
+    // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés
 
 })();
 
