@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.urls import reverse
 
 from core.models import Visibilite, LienLibre
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat, OrganismeNuisible, StatutReglementaire
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 from sv.forms import RattachementChoices
 
@@ -159,6 +159,27 @@ def test_can_create_fiche_zone_delimitee_in_draft(
     assert FicheZoneDelimitee.objects.count() == 1
     fiche_from_db = FicheZoneDelimitee.objects.get()
     assert fiche_from_db.visibilite == Visibilite.BROUILLON
+
+
+@pytest.mark.django_db
+def test_fiche_zone_delimitee_numero_is_null_when_save_with_visibilite_brouillon(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
+    fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
+    fiche_detection.save()
+    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.fill_form(fiche)
+    page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+
+    form_page.check_message_succes()
+    assert FicheZoneDelimitee.objects.count() == 1
+    fiche_from_db = FicheZoneDelimitee.objects.get()
+    assert fiche_from_db.visibilite == Visibilite.BROUILLON
+    assert fiche_from_db.numero is None
 
 
 @pytest.mark.django_db
@@ -423,11 +444,15 @@ def test_free_links_are_ordered_in_form(
 
 @pytest.mark.django_db
 def test_cant_see_fiches_brouillon_in_liens_libres(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_zone
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
     FicheDetection.objects.create(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
-    fiche_zone.visibilite = Visibilite.BROUILLON
-    fiche_zone.save()
+    FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=fiche_detection.createur,
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")

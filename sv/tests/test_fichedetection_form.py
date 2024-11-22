@@ -1,5 +1,6 @@
 import json
 import pytest
+from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
@@ -10,6 +11,9 @@ from ..models import (
     Region,
     StructurePreleveur,
     FicheDetection,
+    FicheZoneDelimitee,
+    StatutReglementaire,
+    OrganismeNuisible,
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUR
@@ -748,14 +752,16 @@ def test_add_prelevement_btn_is_visible_if_lieu_exists(
 
 
 @pytest.mark.django_db
-def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(
-    page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_zone
-):
+def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(page, mocked_authentification_user):
     FicheDetection.objects.create(
         visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
     )
-    fiche_zone.visibilite = Visibilite.BROUILLON
-    fiche_zone.save()
+    FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=mocked_authentification_user.agent.structure,
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     page.reload()
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)

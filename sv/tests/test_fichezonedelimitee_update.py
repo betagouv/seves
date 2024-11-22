@@ -5,7 +5,7 @@ from model_bakery import baker
 from core.models import LienLibre, Visibilite
 from sv.forms import RattachementChoices
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
-from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat
+from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat, OrganismeNuisible, StatutReglementaire
 
 
 def test_fichezonedelimitee_update_form_content(
@@ -135,7 +135,7 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
         etat=Etat.objects.get(id=Etat.get_etat_initial()),
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
-        _fill_optional=True,
+        visibilite=Visibilite.BROUILLON,
     )
     baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
     fiche_detection.hors_zone_infestee = fiche_zone_delimitee
@@ -161,7 +161,7 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
         etat=Etat.objects.get(id=Etat.get_etat_initial()),
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
-        _fill_optional=True,
+        visibilite=Visibilite.BROUILLON,
     )
     zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
     fiche_detection.zone_infestee = zone_infestee
@@ -191,6 +191,7 @@ def test_update_fiche_can_add_and_delete_free_links(
         etat=Etat.objects.get(id=Etat.get_etat_initial()),
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
+        visibilite=Visibilite.LOCAL,
         _fill_optional=True,
     )
     LienLibre.objects.create(related_object_1=fiche_zone_delimitee, related_object_2=other_fiche)
@@ -241,11 +242,15 @@ def test_update_fiche_zone_cant_add_self_links(
 
 @pytest.mark.django_db
 def test_cant_see_fiches_brouillon_in_liens_libres(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection, fiche_zone
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
     FicheDetection.objects.create(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
-    fiche_zone.visibilite = Visibilite.BROUILLON
-    fiche_zone.save()
+    FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=fiche_detection.createur,
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")

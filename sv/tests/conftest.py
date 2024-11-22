@@ -69,6 +69,7 @@ def fiche_zone_bakery(db, mocked_authentification_user):
             _fill_optional=True,
             createur=mocked_authentification_user.agent.structure,
             etat=etat,
+            visibilite=Visibilite.LOCAL,
         )
 
     return _fiche_zone_bakery

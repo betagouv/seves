@@ -20,6 +20,7 @@ from ..models import (
     Region,
     StructurePreleveur,
     SiteInspection,
+    FicheZoneDelimitee,
 )
 
 from sv.constants import REGIONS, DEPARTEMENTS
@@ -452,8 +453,6 @@ def test_fiche_detection_with_free_link(
     choice_js_fill,
 ):
     fiche_zone = fiche_zone_bakery()
-    fiche_zone.visibilite = Visibilite.LOCAL
-    fiche_zone.save()
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
     choice_js_fill(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
@@ -474,16 +473,14 @@ def test_fiche_detection_with_free_link(
 def test_fiche_detection_with_free_link_cant_see_draft(
     live_server,
     page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    mocked_authentification_user,
-    fiche_zone_bakery,
     choice_js_cant_pick,
 ):
-    fiche_zone = fiche_zone_bakery()
-    fiche_zone.visibilite = Visibilite.BROUILLON
-    fiche_zone.createur = baker.make(Structure)
-    fiche_zone.save()
-
+    fiche_zone = FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=baker.make(Structure),
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
     choice_js_cant_pick(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
