@@ -145,18 +145,19 @@ main {
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
 }
-#lieu-form p {
+
+[id^=lieu-form] p {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-#lieu-form p label {
+[id^=lieu-form] p label {
     flex: 0.75;
 }
-#lieu-form p input, #lieu-form p .choices{
+[id^=lieu-form] p input, #lieu-form p .choices{
     flex: 1.25;
 }
-#lieu-form p select {
+[id^=lieu-form] p select {
     flex: 1.15;
 }
 .lieu-initial,

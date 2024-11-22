@@ -1,4 +1,4 @@
-<template id="lieu-form-template">
+<div id="lieu-form-template-{{ id }}">
     <h1 id="modal-add-edit-lieu-title"
         class="fr-modal__title">Ajouter un lieu:
 {#                        TODO handle modifier le#}
@@ -14,7 +14,7 @@
     </p>
     <p>
         <label class="fr-label" for="commune">Commune</label>
-        <select id="commune-select" class="fr-input"></select>
+        <select id="commune-select-{{ id }}" class="fr-input"></select>
     </p>
 
 {#                            TODO fix those#}
@@ -78,4 +78,4 @@
             {{ form.position_chaine_distribution_etablissement }}
         </p>
     </div>
-</template>
+</div>

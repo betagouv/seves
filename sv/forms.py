@@ -46,7 +46,7 @@ class LieuForm(DSFRForm, forms.ModelForm):
         exclude = []
 
 
-LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=1, can_delete=True)
+LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=10, can_delete=True)
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):

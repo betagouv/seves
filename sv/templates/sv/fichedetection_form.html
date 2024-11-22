@@ -105,10 +105,8 @@
                     <div id="lieux-header">
                         <h2>Lieux</h2>
                         <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-                                id="add-lieu-bouton"
-                                data-fr-opened="false" aria-controls="modal-add-edit-lieu">Ajouter</button>
+                                id="add-lieu-bouton">Ajouter</button>
                     </div>
-
 
                     {{ lieu_formset.management_form }}
                     {% for form in lieu_formset %}
@@ -117,13 +115,37 @@
                         {% endif %}
                     {% endfor %}
 
+                    {% for form in lieu_formset %}
+                        {% if not form.instance.pk %}
+                            <dialog aria-labelledby="modal-add-edit-lieu-title" id="modal-add-lieu-{{ forloop.counter0 }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+                                <div class="fr-container fr-container--fluid fr-container-md">
+                                    <div class="fr-grid-row fr-grid-row--center">
+                                        <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                                            <form id="lieu-form">
+                                                <div class="fr-modal__body">
+                                                    <div class="fr-modal__header">
+                                                        <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-lieu">Fermer</button>
+                                                    </div>
+                                                    <div class="fr-modal__content">
+                                                        {% include 'sv/_fiche_detection_lieu_template.html' with form=form id=forloop.counter0 %}
+                                                    </div>
+                                                    <div class="fr-modal__footer">
+                                                        <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                                                            <a href="#" class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-lieu">Annuler</a>
+                                                            <a href="#" class="fr-btn lieu-save-btn">Enregistrer</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </dialog>
+                        {% endif %}
+                    {% endfor %}
 
-                    <template x-if="lieux.length == 0">
-                        <p>Aucun lieu.</p>
-                    </template>
-                    {% include 'sv/_fichedetection_form__lieux.html' %}
-
-
+                    <div id="lieux-list">
+                    </div>
                 </div>
 
                 <div id="prelevements">
@@ -179,14 +201,14 @@
         {% include 'sv/_fichedetection_form__lieux_form.html'%}
         {% include 'sv/_fiche_detection_lieu_template.html' with form=lieu_empty_form  %}
 
-        <template id="lieu-carte">
+        <div id="lieu-carte" class="fr-hidden">
             <div class="lieu-initial">
                 <div class="lieu-header">
-                    <p x-text="lieu.nomLieu" class="lieu-nom"></p>
-                    <p x-text="lieu.commune" class="lieu-commune"></p>
+                    <p class="lieu-nom"></p>
+                    <p class="lieu-commune"></p>
                 </div>
             </div>
-        </template>
+        </div>
 
 	<!-- Modal ajout/modif prélèvement -->
         {% include 'sv/_fichedetection_form__prelevements_form.html' %}

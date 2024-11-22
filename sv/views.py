@@ -211,7 +211,27 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         context["lieu_empty_form"] = context["lieu_formset"].empty_form
         return context
 
-    # TODO rewrite post to do something with lieux
+    def post(self, request, *args, **kwargs):
+        from pprint import pprint
+
+        pprint(self.request.POST)
+
+        form = self.get_form()
+        formset = LieuFormSet(request.POST)
+
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        if not formset.is_valid():
+            # TODO make sure the error are handled for the formset
+            return self.form_invalid(form)
+
+        with transaction.atomic():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class OldFicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
