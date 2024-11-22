@@ -14,7 +14,7 @@
     <div class="fr-container--fluid fr-m-4w ">
         <div class="fiche-header">
             <div>
-                <h1 class="fr-mb-0-5v">Fiche zone délimitée n° {{ fiche.numero }}</h1>
+                <h1 class="fr-mb-0-5v">Fiche zone délimitée{% if fiche.numero %} n° {{ fiche.numero }}{% endif %}</h1>
                 <p class="fr-badge fr-badge--no-icon">{{ fiche.visibilite }}</p>
                 <p class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</p>
             </div>

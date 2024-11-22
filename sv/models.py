@@ -598,9 +598,17 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
     class Meta:
         verbose_name = "Fiche zone délimitée"
         verbose_name_plural = "Fiches zones délimitées"
+        constraints = [
+            models.CheckConstraint(
+                check=~(Q(visibilite="brouillon") & Q(numero__isnull=False)),
+                name="check_fiche_zone_delimitee_numero_fiche_is_null_when_visibilite_is_brouillon",
+            ),
+        ]
 
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    numero = models.OneToOneField(NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche")
+    numero = models.OneToOneField(
+        NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
+    )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
     organisme_nuisible = models.ForeignKey(
         OrganismeNuisible,
@@ -639,7 +647,7 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
     objects = FicheZoneManager()
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.numero and self.visibilite == Visibilite.LOCAL:
             self.numero = NumeroFiche.get_next_numero()
         super().save(*args, **kwargs)
 

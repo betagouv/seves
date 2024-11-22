@@ -51,3 +51,14 @@ def test_fiche_detection_numero_fiche_is_null_when_visibilite_is_brouillon():
             visibilite=Visibilite.BROUILLON,
             _fill_optional=True,
         )
+
+
+@pytest.mark.django_db
+def test_constraint_check_fiche_zone_delimitee_numero_fiche_is_null_when_visibilite_is_brouillon():
+    with pytest.raises(IntegrityError):
+        baker.make(
+            FicheZoneDelimitee,
+            etat=Etat.objects.get(id=Etat.get_etat_initial()),
+            visibilite=Visibilite.BROUILLON,
+            _fill_optional=True,
+        )

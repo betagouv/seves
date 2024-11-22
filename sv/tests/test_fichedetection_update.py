@@ -19,6 +19,8 @@ from ..models import (
     StructurePreleveur,
     Etat,
     SiteInspection,
+    FicheZoneDelimitee,
+    StatutReglementaire,
 )
 from ..models import (
     Region,
@@ -1120,16 +1122,18 @@ def test_can_publish_fiche_detection_in_visibilite_brouillon_from_update_form(
 def test_cant_see_fiches_brouillon_in_liens_libres_in_update_form(
     live_server,
     page,
-    form_elements: FicheDetectionFormDomElements,
     mocked_authentification_user,
     fiche_detection,
-    fiche_zone,
 ):
     FicheDetection.objects.create(
         visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
     )
-    fiche_zone.visibilite = Visibilite.BROUILLON
-    fiche_zone.save()
+    FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=mocked_authentification_user.agent.structure,
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)

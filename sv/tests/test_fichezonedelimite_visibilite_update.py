@@ -1,7 +1,9 @@
 import pytest
+from model_bakery import baker
 from playwright.sync_api import Page, expect
 from core.models import Structure, Visibilite
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, AC_STRUCTURE
+from sv.models import FicheZoneDelimitee, OrganismeNuisible, StatutReglementaire
 
 
 def _update_visibilite_fiche(fiche, visibilite_libelle):
@@ -20,13 +22,18 @@ def test_cannot_update_fiche_zone_delimitee_visibilite_by_other_structures(
     expect(page.get_by_text("Modifier la visibilité")).not_to_be_visible()
 
 
+@pytest.mark.django_db
 def test_agent_in_structure_createur_can_update_fiche_zone_delimitee_visibilite_brouillon(
-    live_server, page: Page, fiche_zone, mocked_authentification_user
+    live_server, page: Page, mocked_authentification_user
 ):
     """Test qu'un agent appartenant à la structure créatrice d'une fiche
     peut modifier la visibilité de cette fiche (passer en local) si elle est en visibilité brouillon"""
-    fiche_zone.createur = mocked_authentification_user.agent.structure
-    fiche_zone.save()
+    fiche_zone = FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=mocked_authentification_user.agent.structure,
+        organisme_nuisible=baker.make(OrganismeNuisible),
+        statut_reglementaire=baker.make(StatutReglementaire),
+    )
     page.goto(f"{live_server.url}{fiche_zone.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Modifier la visibilité")).to_be_visible()
@@ -61,7 +68,6 @@ def test_agent_ac_can_update_fiche_zone_delimitee_visibilite_local_to_national(
     live_server, page: Page, fiche_zone, mocked_authentification_user, structure_ac: str
 ):
     """Test qu'un agent appartenant à l'AC peut modifier la visibilité d'une fiche de local à national"""
-    _update_visibilite_fiche(fiche_zone, Visibilite.LOCAL)
     mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
         niveau1=AC_STRUCTURE, niveau2=structure_ac
     )
