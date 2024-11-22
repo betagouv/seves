@@ -44,6 +44,15 @@ function displayPrelevementsCards(prelevementCards) {
     document.getElementById("btn-add-prelevment").addEventListener("click", (event)=>{
         event.preventDefault()
         const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
+        const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
+        selectElement.innerHTML = '';
+        document.lieuxCards.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option.id;
+            opt.textContent = option.nom;
+            selectElement.appendChild(opt);
+        });
+
         dsfr(currentModal).modal.disclose();
     })
 

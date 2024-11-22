@@ -216,7 +216,14 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
-        # prelevement_formset = PrelevementFormSet(request.POST)
+
+        mutable_post = request.POST.copy()
+        keys_to_remove = [
+            key for key in mutable_post.keys() if key.startswith("prelevements-") and key.endswith("-lieu")
+        ]
+        for key in keys_to_remove:
+            del mutable_post[key]
+        prelevement_formset = PrelevementFormSet(mutable_post)
 
         if not form.is_valid():
             return self.form_invalid(form)
@@ -225,16 +232,20 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             # TODO make sure the error are handled for the formset
             return self.form_invalid(form)
 
-        # if not prelevement_formset.is_valid():
-        #     # TODO make sure the error are handled for the formset
-        #     return self.form_invalid(form)
+        if not prelevement_formset.is_valid():
+            print(prelevement_formset.errors)
+            print(prelevement_formset.non_form_errors())
+            # TODO make sure the error are handled for the formset
+            return self.form_invalid(form)
 
         with transaction.atomic():
             self.object = form.save()
             lieu_formset.instance = self.object
             lieu_formset.save()
-            # prelevement_formset.instance = self.object
-            # prelevement_formset.save()
+            print(request.POST)
+            # TODO we need to set the correct lieu here
+            prelevement_formset.instance = self.object
+            prelevement_formset.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

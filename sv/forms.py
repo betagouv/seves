@@ -54,6 +54,54 @@ class LieuForm(DSFRForm, forms.ModelForm):
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = forms.CharField(widget=forms.HiddenInput(), required=False)
+    wgs84_longitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "step": 0.000001,
+                "min": "-180",
+                "max": "180",
+                "style": "flex: 0.55; margin-right: .5rem;",
+                "placeholder": "Latitude",
+            }
+        ),
+    )
+    wgs84_latitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "step": 0.000001,
+                "min": "-90",
+                "max": "90",
+                "style": "flex: 0.55; margin-top: .5rem;",
+                "placeholder": "Longitude",
+            }
+        ),
+    )
+    lambert93_latitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "step": 1,
+                "min": "6000000",
+                "max": "7200000",
+                "style": "flex: 0.55; margin-right: .5rem;",
+                "placeholder": "Latitude",
+            }
+        ),
+    )
+    lambert93_longitude = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "step": 1,
+                "min": "200000",
+                "max": "1200000",
+                "style": "flex: 0.55; margin-top: .5rem;",
+                "placeholder": "Longitude",
+            }
+        ),
+    )
 
     class Meta:
         model = Lieu
@@ -65,7 +113,7 @@ class LieuForm(DSFRForm, forms.ModelForm):
         return self.cleaned_data["departement"]
 
 
-LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=20, can_delete=True)
+LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=10, can_delete=True)
 
 
 class PrelevementForm(DSFRForm, forms.ModelForm):
@@ -74,7 +122,7 @@ class PrelevementForm(DSFRForm, forms.ModelForm):
         exclude = []
 
 
-PrelevementFormSet = inlineformset_factory(Lieu, Prelevement, form=PrelevementForm, extra=20, can_delete=True)
+PrelevementFormSet = inlineformset_factory(Lieu, Prelevement, form=PrelevementForm, extra=10, can_delete=True)
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):

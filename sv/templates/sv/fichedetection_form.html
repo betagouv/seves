@@ -115,6 +115,7 @@
                     </div>
 
                     {{ lieu_formset.management_form }}
+
                     {% for form in lieu_formset %}
                         {% if form.instance.pk %}
                             {{ form.id }}
@@ -134,6 +135,13 @@
                 <div id="prelevements">
                     <div id="prelevements-header">
                         <h2>Prélèvements</h2>
+
+                        {{ prelevement_formset.management_form }}
+                        {% for form in prelevement_formset %}
+                            {% if form.instance.pk %}
+                                {{ form.id }}
+                            {% endif %}
+                        {% endfor %}
 
                         {% for form in prelevement_formset %}
                             {% if not form.instance.pk %}

@@ -13,11 +13,7 @@
                             class="fr-modal__title">Ajouter un prélèvement</h1>
                         <div id="lieu" class="fr-select-group prelevement-form--fieldset">
                             <label class="fr-label">Lieu</label>
-{#                                TODO make this dynamic ?#}
-                            <select class="fr-select" x-model="formPrelevement.lieuId" data-testid="prelevement-form-lieu">
-                                <template x-for="lieu in lieux" :key="lieu.id">
-                                    <option :value="lieu.id" x-text="lieu.nomLieu"></option>
-                                </template>
+                            <select class="fr-select"  id="id_prelevements-{{ forloop.counter0 }}-lieu" name="prelevements-{{ forloop.counter0 }}-lieu">
                             </select>
                         </div>
                         <div id="structure" class="fr-select-group prelevement-form--fieldset">

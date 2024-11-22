@@ -1,13 +1,15 @@
-function displayLieuxCards(lieuxCards) {
+document.lieuxCards = []
+
+function displayLieuxCards() {
     const lieuListElement = document.getElementById("lieux-list")
     const lieuTemplateElement = document.getElementById("lieu-carte")
     lieuListElement.innerHTML = ""
-    if (lieuxCards.length === 0) {
+    if (document.lieuxCards.length === 0) {
         lieuListElement.innerHTML = "Aucun lieu."
         return
     }
 
-    lieuxCards.forEach(card =>{
+    document.lieuxCards.forEach(card =>{
         const clone = lieuTemplateElement.cloneNode(true);
         clone.classList.remove('fr-hidden');
         clone.querySelector('.lieu-nom').textContent = card.nom;
@@ -23,7 +25,6 @@ function displayLieuxCards(lieuxCards) {
 
 
 (function() {
-    let lieuxCards = []
     let extraFormSaved = 0
 
 
@@ -63,15 +64,15 @@ function displayLieuxCards(lieuxCards) {
             "commune": document.getElementById(`commune-select-${id}`).value
         }
 
-        const index = lieuxCards.findIndex(element => element.id === data.id);
+        const index = document.lieuxCards.findIndex(element => element.id === data.id);
         if (index === -1) {
-            lieuxCards.push(data);
+            document.lieuxCards.push(data);
             extraFormSaved++;
         } else {
-            lieuxCards[index] = data;
+            document.lieuxCards[index] = data;
         }
 
-        displayLieuxCards(lieuxCards)
+        displayLieuxCards()
         // TODO use modal var here?
         dsfr(event.target.closest("[id^=modal-add-lieu]")).modal.conceal();
 
