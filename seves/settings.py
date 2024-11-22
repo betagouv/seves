@@ -226,10 +226,12 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 
 # TODO gérer la visibilité en fonction du bouton cliqué
-# TODO gérer les lieux et prélévement
+# TODO gérer les prélévements
 # TODO gérér l'édition de la fiche
 # TODO test ?
 # TODO styles et alignements dans la modale de lieu
 # TODO fix les liens libres
 # TODO remettre le fonctionneement des communes
 # TODO ajouter le required sur le nom du lieu à l'ouverture de la modale
+# TODO s'assurer que is_officiel affiche ou masque des champs dans le prevélement
+# TODO modale prelevmenet mettre le résultat en bouton radio

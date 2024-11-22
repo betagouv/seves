@@ -205,13 +205,13 @@ main {
     align-items: center;
     margin-bottom: 0.5rem;
 }
-#prelevement-form label {
+[id^=modal-add-edit-prelevement] label {
     flex: 0.75;
 }
-#prelevement-form select {
+[id^=modal-add-edit-prelevement] select {
     flex: 1.15;
 }
-#prelevement-form input, #prelevement-form .choices {
+[id^=modal-add-edit-prelevement] input, [id^=modal-add-edit-prelevement] .choices {
     flex: 1.25;
 }
 

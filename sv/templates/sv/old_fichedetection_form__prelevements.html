@@ -1,7 +1,3 @@
-<!-- Liste des prélèvements (pour tests e2e Playwright) -->
-<input type="hidden" disabled data-testid="prelevements" :value="JSON.stringify(prelevements)">
-
-<!-- Liste des prélèvements -->
 <template x-for="prelevement in prelevements" :key="prelevement.id">
     <div class="prelevement">
         <div class="prelevement-header">

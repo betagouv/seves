@@ -1,0 +1,84 @@
+<!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
+<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}"></button>
+<dialog aria-labelledby="modal-add-edit-prelevement-title-{{ forloop.counter0 }}" id="modal-add-edit-prelevement-{{ forloop.counter0 }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="modal-add-edit-prelevement-title-{{ forloop.counter0 }}"
+                            class="fr-modal__title">Ajouter un prélèvement</h1>
+                        <div id="lieu" class="fr-select-group prelevement-form--fieldset">
+                            <label class="fr-label">Lieu</label>
+{#                                TODO make this dynamic ?#}
+                            <select class="fr-select" x-model="formPrelevement.lieuId" data-testid="prelevement-form-lieu">
+                                <template x-for="lieu in lieux" :key="lieu.id">
+                                    <option :value="lieu.id" x-text="lieu.nomLieu"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div id="structure" class="fr-select-group prelevement-form--fieldset">
+                            <label class="fr-label">Structure</label>
+                            {{ form.structure_preleveur }}
+                        </div>
+                        <p id="numero-echantillon" class="prelevement-form--fieldset">
+                            <label class="fr-label">N° d'échantillon</label>
+                            {{ form.numero_echantillon }}
+                        </p>
+                        <p id="date-prelevement" class="prelevement-form--fieldset">
+                            <label class="fr-label" for="date-prelevement-input">Date prélèvement</label>
+                            {{ form.date_prelevement }}
+                        </p>
+                        <p id="matrice-prelevee" class="prelevement-form--fieldset">
+                            <label class="fr-label">Matrice prélevée</label>
+                            {{ form.matrice_prelevee }}
+                        </p>
+                        <p id="espece-echantillon" class="prelevement-form--fieldset">
+                            <label class="fr-label" for="commune">Espèce de l'échantillon</label>
+                            <select id="espece-echantillon-input" class="fr-input"></select>
+                        </p>
+                        <div id="resultat" class="prelevement-form--fieldset">
+                            <label class="fr-label" style="flex:0.65">Résultat</label>
+                            <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
+                                {{ form.resultat }}
+                            </fieldset>
+                        </div>
+                        <p>
+                            <div class="fr-checkbox-group">
+                                {{ form.is_officiel }}
+                                <label class="fr-label" for="is-prelevement-officiel">Prélèvement officiel</label>
+                            </div>
+                        </p>
+                        <div class="fr-hidden officiel-fields">
+                            <p id="numero-phytopass" class="prelevement-form--fieldset">
+                                <label class="fr-label">N° Phytopass</label>
+                                {{ form.numero_phytopass }}
+                            </p>
+                            <p id="numero-resytal" class="prelevement-form--fieldset">
+                                <label class="fr-label">N° Resytal</label>
+                                {{ form.numero_resytal }}
+                            </p>
+                            <p id="laboratoire-agree" class="prelevement-form--fieldset">
+                                <label class="fr-label">Laboratoire agréé</label>
+                                {{ form.laboratoire_agree }}
+                            </p>
+                            <p id="laboratoire-confirmation" class="prelevement-form--fieldset">
+                                <label class="fr-label">Laboratoire de confirmation</label>
+                                {{ form.laboratoire_confirmation_officielle }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="fr-modal__footer">
+                        <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
+                            <button class="fr-btn fr-btn--secondary" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}">Annuler</button>
+                            <a class="fr-btn prelevement-save-btn" data-id="{{ forloop.counter0 }}" href="#">Enregistrer</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

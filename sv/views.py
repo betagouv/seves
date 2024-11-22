@@ -219,15 +219,9 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         # prelevement_formset = PrelevementFormSet(request.POST)
 
         if not form.is_valid():
-            print("ooo")
-            print(form.errors)
-            print("ooo")
             return self.form_invalid(form)
 
         if not lieu_formset.is_valid():
-            print("ooo")
-            print(lieu_formset.errors)
-            print("ooo")
             # TODO make sure the error are handled for the formset
             return self.form_invalid(form)
 

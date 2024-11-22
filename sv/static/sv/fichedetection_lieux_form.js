@@ -1,27 +1,31 @@
+function displayLieuxCards(lieuxCards) {
+    const lieuListElement = document.getElementById("lieux-list")
+    const lieuTemplateElement = document.getElementById("lieu-carte")
+    lieuListElement.innerHTML = ""
+    if (lieuxCards.length === 0) {
+        lieuListElement.innerHTML = "Aucun lieu."
+        return
+    }
+
+    lieuxCards.forEach(card =>{
+        const clone = lieuTemplateElement.cloneNode(true);
+        clone.classList.remove('fr-hidden');
+        clone.querySelector('.lieu-nom').textContent = card.nom;
+        clone.querySelector('.lieu-commune').textContent = card.commune;
+        clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
+            dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
+        })
+        lieuListElement.appendChild(clone);
+    })
+    showOrHidePrelevementUI()
+}
+
+
+
 (function() {
     let lieuxCards = []
     let extraFormSaved = 0
-    const lieuListElement = document.getElementById("lieux-list")
-    const lieuTemplateElement = document.getElementById("lieu-carte")
 
-    function displayLieuxCards() {
-        lieuListElement.innerHTML = ""
-        if (lieuxCards.length === 0) {
-            lieuListElement.innerHTML = "Aucun lieu."
-            return
-        }
-
-        lieuxCards.forEach(card =>{
-            const clone = lieuTemplateElement.cloneNode(true);
-            clone.classList.remove('fr-hidden');
-            clone.querySelector('.lieu-nom').textContent = card.nom;
-            clone.querySelector('.lieu-commune').textContent = card.commune;
-            clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
-                dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
-            })
-            lieuListElement.appendChild(clone);
-        })
-    }
 
     function showLieuDetailsIfIsEtablissement(){
         const elements = document.querySelectorAll('[id^="id_lieux-"][id$="-is_etablissement"]');
@@ -67,7 +71,8 @@
             lieuxCards[index] = data;
         }
 
-        displayLieuxCards()
+        displayLieuxCards(lieuxCards)
+        // TODO use modal var here?
         dsfr(event.target.closest("[id^=modal-add-lieu]")).modal.conceal();
 
     }))
