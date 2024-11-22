@@ -232,3 +232,4 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO styles et alignements
 # TODO dans la modale de lieu n'ajouter le bas du form que si c'est un établissement
 ## TODO nom du lieu should be required in modale
+# TODO remettre le fonctionneement des communes

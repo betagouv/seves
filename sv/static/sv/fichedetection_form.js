@@ -16,6 +16,9 @@
             clone.classList.remove('fr-hidden');
             clone.querySelector('.lieu-nom').textContent = card.nom;
             clone.querySelector('.lieu-commune').textContent = card.commune;
+            clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
+                dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
+            })
             lieuListElement.appendChild(clone);
         })
     }
@@ -27,17 +30,27 @@
     })
 
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", function(event){
-        data = {
-            "nom": document.getElementById(`id_lieux-${extraFormSaved}-nom`).value,
-            "commune": document.getElementById(`commune-select-${extraFormSaved}`).value
+        const id = event.target.dataset.id
+        let data = {
+            "id": id,
+            "nom": document.getElementById(`id_lieux-${id}-nom`).value,
+            "commune": document.getElementById(`commune-select-${id}`).value
         }
-        lieuxCards.push(data)
+
+        const index = lieuxCards.findIndex(element => element.id === data.id);
+        if (index === -1) {
+            lieuxCards.push(data);
+            extraFormSaved++;
+        } else {
+            lieuxCards[index] = data;
+        }
+
         displayLieuxCards()
         dsfr(event.target.closest("[id^=modal-add-lieu]")).modal.conceal();
-        extraFormSaved++;
+
     }))
 
-    // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annluation, et mettre à jour les cartes en identifiant celui qui a été modifié
+    // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
 
     // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus
 
