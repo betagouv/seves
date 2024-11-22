@@ -1,3 +1,5 @@
+import datetime
+
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 
 from core.fields import MultiModelChoiceField
@@ -60,6 +62,9 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
     mesures_consignation = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
     mesures_phytosanitaires = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
     mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    date_premier_signalement = forms.DateField(
+        widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"})
+    )
 
     class Meta:
         model = FicheDetection

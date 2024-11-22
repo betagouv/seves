@@ -233,4 +233,3 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO fix les liens libres
 # TODO remettre le fonctionneement des communes
 # TODO ajouter le required sur le nom du lieu à l'ouverture de la modale
-# TODO date picker for date premier signalement
