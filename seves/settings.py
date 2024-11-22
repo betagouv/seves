@@ -229,6 +229,8 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO gérer les lieux et prélévement
 # TODO gérér l'édition de la fiche
 # TODO test ?
-# TODO styles et alignements
+# TODO styles et alignements dans la modale de lieu
+# TODO fix les liens libres
 # TODO remettre le fonctionneement des communes
 # TODO ajouter le required sur le nom du lieu à l'ouverture de la modale
+# TODO date picker for date premier signalement

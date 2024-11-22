@@ -54,6 +54,13 @@ LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=1
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):
+    vegetaux_infestes = forms.CharField(max_length=500, widget=forms.Textarea(attrs={"rows": ""}))
+    commentaire = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    mesures_conservatoires_immediates = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    mesures_consignation = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    mesures_phytosanitaires = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+
     class Meta:
         model = FicheDetection
         exclude = ["numero", "createur", "etat"]
