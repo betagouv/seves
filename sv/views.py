@@ -40,6 +40,7 @@ from sv.forms import (
     FicheZoneDelimiteeVisibiliteUpdateForm,
     FicheDetectionForm,
     LieuFormSet,
+    PrelevementFormSet,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -209,23 +210,37 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
         context["lieu_formset"] = LieuFormSet()
+        context["prelevement_formset"] = PrelevementFormSet()
         return context
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
-        formset = LieuFormSet(request.POST)
+        lieu_formset = LieuFormSet(request.POST)
+        # prelevement_formset = PrelevementFormSet(request.POST)
 
         if not form.is_valid():
+            print("ooo")
+            print(form.errors)
+            print("ooo")
             return self.form_invalid(form)
 
-        if not formset.is_valid():
+        if not lieu_formset.is_valid():
+            print("ooo")
+            print(lieu_formset.errors)
+            print("ooo")
             # TODO make sure the error are handled for the formset
             return self.form_invalid(form)
 
+        # if not prelevement_formset.is_valid():
+        #     # TODO make sure the error are handled for the formset
+        #     return self.form_invalid(form)
+
         with transaction.atomic():
             self.object = form.save()
-            formset.instance = self.object
-            formset.save()
+            lieu_formset.instance = self.object
+            lieu_formset.save()
+            # prelevement_formset.instance = self.object
+            # prelevement_formset.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

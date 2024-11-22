@@ -13,7 +13,15 @@ from django.db.models import TextChoices
 
 from core.models import LienLibre
 from core.fields import DSFRRadioButton
-from sv.models import FicheZoneDelimitee, ZoneInfestee, OrganismeNuisible, StatutReglementaire, FicheDetection, Lieu
+from sv.models import (
+    FicheZoneDelimitee,
+    ZoneInfestee,
+    OrganismeNuisible,
+    StatutReglementaire,
+    FicheDetection,
+    Lieu,
+    Prelevement,
+)
 
 
 class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -43,27 +51,53 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
 
 
 class LieuForm(DSFRForm, forms.ModelForm):
-    commune = forms.CharField(widget=forms.HiddenInput())
-    code_insee = forms.CharField(widget=forms.HiddenInput())
-    departement = forms.CharField(widget=forms.HiddenInput())
+    commune = forms.CharField(widget=forms.HiddenInput(), required=False)
+    code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    departement = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = Lieu
         exclude = []
 
+    def clean_departement(self):
+        if self.cleaned_data["departement"] == "":
+            return None
+        return self.cleaned_data["departement"]
 
-LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=10, can_delete=True)
+
+LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=20, can_delete=True)
+
+
+class PrelevementForm(DSFRForm, forms.ModelForm):
+    class Meta:
+        model = Prelevement
+        exclude = []
+
+
+PrelevementFormSet = inlineformset_factory(Lieu, Prelevement, form=PrelevementForm, extra=20, can_delete=True)
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):
-    vegetaux_infestes = forms.CharField(max_length=500, widget=forms.Textarea(attrs={"rows": ""}))
-    commentaire = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
-    mesures_conservatoires_immediates = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
-    mesures_consignation = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
-    mesures_phytosanitaires = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
-    mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}))
+    vegetaux_infestes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""}))
+    commentaire = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_conservatoires_immediates = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_consignation = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_phytosanitaires = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}),
+        required=False,
+    )
+    mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}), required=False)
     date_premier_signalement = forms.DateField(
-        widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"})
+        required=False, widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"})
     )
 
     class Meta:
