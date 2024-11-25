@@ -245,11 +245,16 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             return self.form_invalid(form)
 
         with transaction.atomic():
-            self.object = form.save()
+            self.object = form.save(commit=False)
+            if request.POST["action"] == "Publier":
+                self.object.visibilite = Visibilite.LOCAL
+            self.object.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
             self._save_prelevement_if_not_empty(data)
+            self.object.contacts.add(self.request.user.agent.contact_set.get())
+            self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         return HttpResponseRedirect(self.get_success_url())
 

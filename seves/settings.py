@@ -225,7 +225,6 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 
-# TODO gérer la visibilité en fonction du bouton cliqué
 # TODO remettre le fonctionneement des communes
 # TODO faire l'édtion prélévement
 # TODO faire suppression lieu
