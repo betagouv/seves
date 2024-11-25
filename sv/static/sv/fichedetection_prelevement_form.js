@@ -15,17 +15,13 @@ function displayPrelevementsCards(prelevementCards) {
     const prelevementListElement = document.getElementById("prelevements-list")
     const prelevementTemplateElement = document.getElementById("prelevement-carte")
     prelevementListElement.innerHTML = ""
-        // if (prelevementCards.length === 0) {
-        //     // TODO adapt this
-        //     lieuListElement.innerHTML = "Aucun lieu."
-        //     return
-        // }
-
     prelevementCards.forEach(card =>{
         const clone = prelevementTemplateElement.cloneNode(true);
         clone.classList.remove('fr-hidden');
         clone.querySelector('.prelevement-nom').textContent = card.structure;
-            // clone.querySelector('.lieu-commune').textContent = card.commune;
+        clone.querySelector('.prelevement-lieu').textContent = "Lieu : " + card.lieu;
+        clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.detecte}`;
+        // TODO add edit btn
             // clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
             //     dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
             // })
@@ -70,14 +66,16 @@ function displayPrelevementsCards(prelevementCards) {
             return
         }
 
-        // TODO fill all this
         const structureElement = document.getElementById(`id_prelevements-${id}-structure_preleveur`)
+        const lieuElement = document.getElementById(`id_prelevements-${id}-lieu`)
+        const officielElement = document.getElementById(`id_prelevements-${id}-is_officiel`)
+        const resultatElement = document.querySelector('input[name="prelevements-' + id + '-resultat"]:checked')
         let data = {
             "id": id,
             "structure":structureElement.options[structureElement.selectedIndex].text,
-            "lieu": "",
-            "officiel": "",
-            "detecte": "",
+            "lieu": lieuElement.options[lieuElement.selectedIndex].text,
+            "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
+            "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
         }
 
         const index = prelevementCards.findIndex(element => element.id === data.id);
