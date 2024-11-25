@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 from core.models import Structure, Visibilite
@@ -68,3 +69,15 @@ def test_agent_ac_can_view_fiche_zone_delimitee(
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{fiche_zone.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Fiche zone délimitée n° {str(fiche_zone.numero)}")).to_be_visible()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCAL])
+def test_agent_not_in_structure_createur_cannot_view_fiche_zone_delimitee_brouillon_or_local_in_list_view(
+    live_server, page: Page, fiche_zone, mocked_authentification_user, visibilite_libelle: str
+):
+    _update_visibilite_fiche(fiche_zone, visibilite_libelle)
+    mocked_authentification_user.agent.structure = baker.make(Structure)
+    mocked_authentification_user.agent.save()
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}?type_fiche=zone")
+    expect(page.get_by_text(str(fiche_zone.numero))).not_to_be_visible()
