@@ -199,7 +199,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     allows_inactive_laboratoires_confirmation_values = False
     allows_inactive_structure_preleveur_values = False
     form_class = FicheDetectionForm
-    template_name = "sv/fichedetection_form.html"  # TODO why is this needed ?
+    template_name = "sv/fichedetection_form.html"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -245,10 +245,10 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             return self.form_invalid(form)
 
         with transaction.atomic():
-            self.object = form.save(commit=False)
+            self.object = form.save()
             if request.POST["action"] == "Publier":
                 self.object.visibilite = Visibilite.LOCAL
-            self.object.save()
+                self.object.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)

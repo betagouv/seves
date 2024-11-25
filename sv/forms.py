@@ -2,7 +2,6 @@ import datetime
 
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 
-from core.fields import MultiModelChoiceField
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
@@ -11,8 +10,8 @@ from django.utils.translation import ngettext
 from django.forms import BaseInlineFormSet
 from django.db.models import TextChoices
 
-from core.models import LienLibre
 from core.fields import DSFRRadioButton
+from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -49,15 +48,6 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
         label="Où souhaitez-vous rattacher la détection ?",
         initial=RattachementChoices.HORS_ZONE_INFESTEE,
     )
-
-
-class WithDataRequiredConversionMixin:
-    def _convert_required_to_data_required(self):
-        for field in self:
-            if field.field.required:
-                field.field.widget.attrs["data-required"] = "true"
-                field.field.widget.attrs.pop("required", None)
-                field.field.required = False
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
@@ -170,7 +160,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             self._convert_required_to_data_required()
 
 
-class FicheDetectionForm(DSFRForm, forms.ModelForm):
+class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     vegetaux_infestes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""}))
     commentaire = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
@@ -221,25 +211,10 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
             self.fields.pop("numero_europhyt")
             self.fields.pop("numero_rasff")
 
-        self._add_free_links()
+        self._add_free_links(obj_type="detection")
 
         # if self.instance.pk:
         #     self.fields.pop("visibilite")
-
-    # TODO factorize all this with other form
-    def save_free_links(self, instance):
-        links_ids_to_keep = []
-        for obj in self.cleaned_data["free_link"]:
-            link = LienLibre.objects.for_both_objects(obj, instance)
-
-            if link:
-                links_ids_to_keep.append(link.id)
-            else:
-                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
-                links_ids_to_keep.append(link.id)
-
-        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -249,29 +224,8 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
             self.save_free_links(instance)
         return instance
 
-    def _add_free_links(self):
-        qs_detection = FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
-        qs_detection = qs_detection.select_related("numero")
-        qs_zone = FicheZoneDelimitee.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
-        qs_zone = qs_zone.select_related("numero")
-        if self.instance:
-            qs_detection = qs_detection.exclude(id=self.instance.id)
-        self.fields["free_link"] = MultiModelChoiceField(
-            required=False,
-            label="Sélectionner un objet",
-            model_choices=[
-                ("Fiche Détection", qs_detection),
-                ("Fiche zone délimitée", qs_zone),
-            ],
-        )
 
-    def clean_free_link(self):
-        if self.instance and self.instance in self.cleaned_data["free_link"]:
-            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
-        return self.cleaned_data["free_link"]
-
-
-class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
+class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     organisme_nuisible = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": ""}),
         label="Organisme nuisible",
@@ -323,20 +277,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         if self.instance.pk:
             self.fields.pop("visibilite")
 
-        qs_detection = FicheDetection.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
-        qs_detection = qs_detection.select_related("numero")
-        qs_zone = FicheZoneDelimitee.objects.all().order_by_numero_fiche().get_fiches_user_can_view(self.user)
-        qs_zone = qs_zone.select_related("numero")
-        if self.instance:
-            qs_zone = qs_zone.exclude(id=self.instance.id)
-        self.fields["free_link"] = MultiModelChoiceField(
-            required=False,
-            label="Sélectionner un objet",
-            model_choices=[
-                ("Fiche Détection", qs_detection),
-                ("Fiche zone délimitée", qs_zone),
-            ],
-        )
+        self._add_free_links(obj_type="zone")
 
         organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
         self.fields["detections_hors_zone"].queryset = (
@@ -353,11 +294,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
     def clean_statut_reglementaire(self):
         return StatutReglementaire.objects.get(libelle=self.cleaned_data["statut_reglementaire"])
-
-    def clean_free_link(self):
-        if self.instance and self.instance in self.cleaned_data["free_link"]:
-            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
-        return self.cleaned_data["free_link"]
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():
@@ -384,20 +320,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
             self.save_detections_hors_zone(instance)
             self.save_free_links(instance)
         return instance
-
-    def save_free_links(self, instance):
-        links_ids_to_keep = []
-        for obj in self.cleaned_data["free_link"]:
-            link = LienLibre.objects.for_both_objects(obj, instance)
-
-            if link:
-                links_ids_to_keep.append(link.id)
-            else:
-                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
-                links_ids_to_keep.append(link.id)
-
-        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
 
     def save_detections_hors_zone(self, instance):
         detections_from_form = set(self.cleaned_data.get("detections_hors_zone", []))
