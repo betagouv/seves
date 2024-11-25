@@ -236,3 +236,4 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO faire l'édtion prélévement
 # TODO faire suppression prélévement
 # TODO faire suppression lieu
+# TODO fixer tous les tools tips

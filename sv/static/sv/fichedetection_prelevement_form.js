@@ -1,3 +1,6 @@
+let prelevementCards =[]
+let extraFormSaved = 0
+
 function showOrHidePrelevementUI(){
     const nbLieux = document.getElementById("lieux-list").childElementCount
 
@@ -11,7 +14,16 @@ function showOrHidePrelevementUI(){
     }
 }
 
-function displayPrelevementsCards(prelevementCards) {
+
+function deletePrelevement(event) {
+    const id = event.target.dataset.id
+    prelevementCards = prelevementCards.filter(function(item) {return item.id !== id})
+    // TODO empty form or do something ?  : : todo we need and empty template to do this
+    displayPrelevementsCards()
+    dsfr(document.getElementById('modal-delete-prelevement-confirmation')).modal.conceal();
+}
+
+function displayPrelevementsCards() {
     const prelevementListElement = document.getElementById("prelevements-list")
     const prelevementTemplateElement = document.getElementById("prelevement-carte")
     prelevementListElement.innerHTML = ""
@@ -21,42 +33,47 @@ function displayPrelevementsCards(prelevementCards) {
         clone.querySelector('.prelevement-nom').textContent = card.structure;
         clone.querySelector('.prelevement-lieu').textContent = "Lieu : " + card.lieu;
         clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.detecte}`;
+        clone.querySelector('.prelevement-delete-btn').setAttribute("data-id", card.id)
         // TODO add edit btn
             // clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
             //     dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
             // })
+        clone.querySelector('.prelevement-delete-btn').addEventListener("click", (event)=>{
+            dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
+            document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)
+        })
         prelevementListElement.appendChild(clone);
     })
     showOrHidePrelevementUI()
 }
 
+function addPrelevementmodal(event) {
+    event.preventDefault()
+    const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
+    const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
+    selectElement.innerHTML = '';
+    document.lieuxCards.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.nom;
+        opt.textContent = option.nom;
+        selectElement.appendChild(opt);
+    });
+
+    currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
+        if (input.hasAttribute("data-required")){
+            input.required = true
+        }
+    })
+
+    dsfr(currentModal).modal.disclose();
+}
+
 (function() {
-    let extraFormSaved = 0
-    let prelevementCards =[]
+
 
     showOrHidePrelevementUI()
-
-
-    document.getElementById("btn-add-prelevment").addEventListener("click", (event)=>{
-        event.preventDefault()
-        const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
-        const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
-        selectElement.innerHTML = '';
-        document.lieuxCards.forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option.nom;
-            opt.textContent = option.nom;
-            selectElement.appendChild(opt);
-        });
-
-        currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
-            if (input.hasAttribute("data-required")){
-                input.required = true
-            }
-        })
-
-        dsfr(currentModal).modal.disclose();
-    })
+    document.getElementById("btn-add-prelevment").addEventListener("click", addPrelevementmodal)
+    document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
 
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", function(event){
         const id = event.target.dataset.id
@@ -86,7 +103,7 @@ function displayPrelevementsCards(prelevementCards) {
             prelevementCards[index] = data;
         }
 
-        displayPrelevementsCards(prelevementCards)
+        displayPrelevementsCards()
         modal.querySelectorAll('input, textarea, select').forEach((input) =>{
             if (input.hasAttribute("required")){
                 input.required = false
