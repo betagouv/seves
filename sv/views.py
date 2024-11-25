@@ -218,6 +218,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        # TODO split this method
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
@@ -240,13 +241,15 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 # TODO this won't work if multiple lieux have the same name add check on this
                 mutable_post[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == mutable_post[lieu_key])
 
-            prelevement_forms = [PrelevementForm(mutable_post, prefix=f"prelevements-{i}") for i in range(10)]
-            for prelevement_form in prelevement_forms:
-                if not prelevement_form.is_valid():
-                    if not any(form.cleaned_data.values()):
-                        continue
-                    raise ValidationError(prelevement_form.errors)
-                prelevement_form.save()
+            for i in range(10):
+                prefix = f"prelevements-{i}"
+                form_data = {key: value for key, value in request.POST.items() if key.startswith(prefix)}
+                if any(form_data.values()):
+                    prelevement_form = PrelevementForm(form_data, prefix=prefix)
+                    if prelevement_form.is_valid():
+                        prelevement_form.save()
+                    else:
+                        raise ValidationError(prelevement_form.errors)
 
         return HttpResponseRedirect(self.get_success_url())
 
