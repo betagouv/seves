@@ -232,3 +232,4 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO gérér l'édition de la fiche
 # TODO fix test ?
 # TODO s'assurer que les données etablissement ou officiel ne sont pris en compte que si la case est cochée
+# TODO should be use label tags everywhere ?

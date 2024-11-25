@@ -34,31 +34,27 @@
                             </p>
 
                             <p>
-                                <label class="fr-label" for="coordonnees-gps-lambert-93-latitude">Coordonnées GPS (Lambert 93)</label>
+                                <label class="fr-label" for="id_lieux-{{ forloop.counter0 }}-lambert93_latitude">Coordonnées GPS (Lambert 93)</label>
                                 {{ form.lambert93_latitude }}
                                 {{ form.lambert93_longitude }}
                             </p>
                             <p>
-                                <label class="fr-label" for="coordonnees-gps-wgs84-latitude">Coordonnées GPS (WGS84)</label>
+                                <label class="fr-label" for="id_lieux-{{ forloop.counter0 }}-wgs84_longitude">Coordonnées GPS (WGS84)</label>
                                 {{ form.wgs84_longitude }}
                                 {{ form.wgs84_latitude }}
                             </p>
                             <p class="fr-checkbox-group">
-                                {{ form.is_etablissement }}
-                                {{ form.is_etablissement.label_tag}}
+                                {{ form.is_etablissement }} {{ form.is_etablissement.label_tag}}
                             </p>
                             <div class="etablissement-fields">
                                 <p>
-                                    <label class="fr-label" for="nom-etablissement">Nom</label>
-                                    {{ form.nom_etablissement }}
+                                    {{ form.nom_etablissement }}{{ form.nom_etablissement.label_tag }}
                                 </p>
                                 <p>
-                                    <label class="fr-label" for="activite-etablissement">Activité</label>
-                                    {{ form.activite_etablissement }}
+                                    {{ form.activite_etablissement }}{{ form.activite_etablissement.label_tag }}
                                 </p>
                                 <p>
-                                    <label class="fr-label" for="pays-etablissement">Pays</label>
-                                    {{ form.pays_etablissement }}
+                                    {{ form.pays_etablissement }}{{ form.pays_etablissement.label_tag }}
                                 </p>
                                 <p>
                                     <label class="fr-label" for="raison-sociale-etablissement">Raison sociale</label>

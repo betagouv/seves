@@ -199,8 +199,7 @@ class LieuFormDomElements:
 
     @property
     def nom_input(self) -> Locator:
-        # TODO : not a perfect fix. Check test that are faillig du to change
-        return self.page.locator("#id_lieux-0-nom")
+        return self.page.locator('[id^="id_lieux-"][id$="-nom"]').locator("visible=true")
 
     @property
     def adresse_label(self) -> Locator:
@@ -208,7 +207,7 @@ class LieuFormDomElements:
 
     @property
     def adresse_input(self) -> Locator:
-        return self.page.locator("id_lieux-0-adresse_lieu_dit")
+        return self.page.locator('[id^="id_lieux-"][id$="-adresse_lieu_dit"]').locator("visible=true")
 
     @property
     def commune_label(self) -> Locator:
@@ -256,11 +255,11 @@ class LieuFormDomElements:
 
     @property
     def coord_gps_lamber93_latitude_input(self) -> Locator:
-        return self.page.get_by_label("Coordonnées GPS (Lambert 93)")
+        return self.page.locator('[id$="-lambert93_latitude"]').locator("visible=true")
 
     @property
     def coord_gps_lamber93_longitude_input(self) -> Locator:
-        return self.page.locator("#coordonnees-gps-lambert-93-longitude")
+        return self.page.locator('[id^="id_lieux-"][id$="-lambert93_longitude"]').locator("visible=true")
 
     @property
     def coord_gps_wgs84_latitude_label(self) -> Locator:
@@ -268,11 +267,11 @@ class LieuFormDomElements:
 
     @property
     def coord_gps_wgs84_latitude_input(self) -> Locator:
-        return self.page.get_by_label("Coordonnées GPS (WGS84)")
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_latitude"]').locator("visible=true")
 
     @property
     def coord_gps_wgs84_longitude_input(self) -> Locator:
-        return self.page.locator("#coordonnees-gps-wgs84-longitude")
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_longitude"]').locator("visible=true")
 
     @property
     def is_etablissement_checkbox(self) -> Locator:

@@ -201,6 +201,9 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             "mesures_phytosanitaires",
             "mesures_surveillance_specifique",
         ]
+        labels = {
+            "statut_evenement": "Statut évènement",
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")

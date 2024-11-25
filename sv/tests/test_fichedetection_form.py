@@ -213,7 +213,7 @@ def test_added_lieu_content_in_list(
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
     expect(page.locator("#lieux").get_by_text("nom lieu")).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("nom lieu")
-    expect(page.get_by_text("Lille")).to_be_visible()
+    expect(page.get_by_text("Lille", exact=True)).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("Lille")
     expect(page.get_by_role("button", name="Modifier le lieu")).to_be_visible()
     expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
