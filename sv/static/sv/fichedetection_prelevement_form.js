@@ -19,7 +19,6 @@ function deletePrelevement(event) {
     const id = event.target.dataset.id
     prelevementCards = prelevementCards.filter(function(item) {return item.id !== id})
     const form = document.getElementById("modal-add-edit-prelevement-" + id)
-    // TODO test the prelevement is not saved
     form.querySelectorAll('input, select, textarea').forEach(field => {
         if (field.type === 'checkbox' || field.type === 'radio') {
             field.checked = false;
