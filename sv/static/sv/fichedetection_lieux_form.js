@@ -1,4 +1,24 @@
 document.lieuxCards = []
+extraFormSaved = 0
+
+function fetchCommunes(query) {
+    return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
+        .then(response => response.json())
+        .then(data => {
+            return data.map(item => ({
+                value: item.nom,
+                label: `${item.nom} (${item.departement.code})` ,
+                customProperties: {
+                    "departementCode": item.departement.code,
+                    "inseeCode": item.code
+                }
+            }))
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données:', error);
+            return []
+        });
+}
 
 function displayLieuxCards() {
     const lieuListElement = document.getElementById("lieux-list")
@@ -22,43 +42,78 @@ function displayLieuxCards() {
     showOrHidePrelevementUI()
 }
 
-(function() {
-    let extraFormSaved = 0
-    document.querySelector("#add-lieu-bouton").addEventListener("click", function(event){
-        event.preventDefault()
-        const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
-        dataRequiredToRequired(currentModal)
-        dsfr(currentModal).modal.disclose();
+function showLieuModal(event){
+    event.preventDefault()
+    const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
+    dataRequiredToRequired(currentModal)
+    dsfr(currentModal).modal.disclose();
+}
+
+function saveLieu(event){
+    const id = event.target.dataset.id
+    const modal = document.getElementById(`modal-add-lieu-${id}`)
+    const isValid = formIsValid(modal)
+    if (isValid === false){
+        return
+    }
+
+    let data = {
+        "id": id,
+        "nom": document.getElementById(`id_lieux-${id}-nom`).value,
+        "commune": document.getElementById(`commune-select-${id}`).value
+    }
+
+    const index = document.lieuxCards.findIndex(element => element.id === data.id);
+    if (index === -1) {
+        document.lieuxCards.push(data);
+        extraFormSaved++;
+    } else {
+        document.lieuxCards[index] = data;
+    }
+
+    displayLieuxCards()
+    removeRequired(modal)
+    dsfr(modal).modal.conceal();
+}
+
+function setUpCommune(element) {
+    const choicesCommunes = new Choices(element, {
+        removeItemButton: true,
+        placeholderValue: 'Recherchez...',
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucun résultat trouvé',
+        shouldSort: false,
+        searchResultLimit: 10,
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: '',
+    });
+
+    choicesCommunes.input.element.addEventListener('input', function (event) {
+        const query = choicesCommunes.input.element.value
+        if (query.length > 2) {
+            fetchCommunes(query).then(results => {
+                choicesCommunes.clearChoices()
+                choicesCommunes.setChoices(results, 'value', 'label', true)
+            })
+        }
     })
 
-    document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", function(event){
-        const id = event.target.dataset.id
-        const modal = document.getElementById(`modal-add-lieu-${id}`)
-        const isValid = formIsValid(modal)
-        if (isValid === false){
-            return
-        }
+    choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
+        const currentModal = Array.from(document.querySelectorAll(".fr-modal")).find(el => getComputedStyle(el).display !== "none");
+        currentModal.querySelector('[id$=commune]').value = event.detail.choice.value
+        currentModal.querySelector('[id$=insee]').value = event.detail.choice.customProperties.inseeCode
+        currentModal.querySelector('[id$=departement]').value = event.detail.choice.customProperties.departementCode
+        // TODO maybe departement should be a list of known elements ?
+    })
+}
 
-        let data = {
-            "id": id,
-            "nom": document.getElementById(`id_lieux-${id}-nom`).value,
-            "commune": document.getElementById(`commune-select-${id}`).value
-        }
-
-        const index = document.lieuxCards.findIndex(element => element.id === data.id);
-        if (index === -1) {
-            document.lieuxCards.push(data);
-            extraFormSaved++;
-        } else {
-            document.lieuxCards[index] = data;
-        }
-
-        displayLieuxCards()
-        removeRequired(modal)
-        dsfr(modal).modal.conceal();
-    }))
-    // TODO gérer les fermetures du modale (annuler et fermer)
-    // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
-    // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés
-
+(function() {
+    document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
+    document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
+    document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
+    // TODO should we clear store of commune when the modal is closed ????
 })();
+
+// TODO gérer les fermetures du modale (annuler et fermer)
+// TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
+// TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés

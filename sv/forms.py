@@ -21,6 +21,7 @@ from sv.models import (
     FicheDetection,
     Lieu,
     Prelevement,
+    Departement,
 )
 
 
@@ -63,7 +64,12 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
-    departement = forms.CharField(widget=forms.HiddenInput(), required=False)
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.all(),
+        to_field_name="numero",
+        required=False,
+        widget=forms.Select(attrs={"class": "fr-hidden"}),
+    )
     wgs84_longitude = forms.FloatField(
         required=False,
         widget=forms.NumberInput(

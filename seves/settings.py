@@ -224,10 +224,9 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-
-# TODO remettre le fonctionneement des communes
 # TODO faire l'édtion prélévement
 # TODO faire suppression lieu
+# TODO fix espece echantillon dans prelevement
 
 # TODO fixer tous les toolstips
 # TODO gérér l'édition de la fiche

@@ -7,7 +7,7 @@
                         <button class="fr-btn--close fr-btn" aria-controls="modal-add-edit-lieu">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <div id="lieu-form-template-{{ forloop.counter0 }}}">
+                        <div>
                             <h1 id="modal-add-edit-lieu-title"
                                 class="fr-modal__title">Ajouter un lieu:
 {#                        TODO handle modifier le#}
@@ -25,11 +25,9 @@
                                 <label class="fr-label" for="commune">Commune</label>
                                 <select id="commune-select-{{ forloop.counter0 }}" class="fr-input"></select>
                             </p>
-
                             {{ form.commune }}
                             {{ form.code_insee }}
                             {{ form.departement }}
-
                             <p>
                                 <label class="fr-label" for="site-inspection">Site d'inspection</label>
                                 {{ form.site_inspection }}
