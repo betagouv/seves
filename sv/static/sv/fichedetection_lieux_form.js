@@ -22,18 +22,6 @@ function displayLieuxCards() {
     showOrHidePrelevementUI()
 }
 
-function showLieuDetailsIfIsEtablissement(){
-    const elements = document.querySelectorAll('[id^="id_lieux-"][id$="-is_etablissement"]');
-    elements.forEach((element) => element.addEventListener("change", (event) =>{
-        event.target.closest("p").nextElementSibling.classList.toggle("fr-hidden")
-    })
-    )}
-
-
-
-
-
-
 (function() {
     let extraFormSaved = 0
     document.querySelector("#add-lieu-bouton").addEventListener("click", function(event){
@@ -69,10 +57,6 @@ function showLieuDetailsIfIsEtablissement(){
         removeRequired(modal)
         dsfr(modal).modal.conceal();
     }))
-
-
-    showLieuDetailsIfIsEtablissement();
-
     // TODO gérer les fermetures du modale (annuler et fermer)
     // TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
     // TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés

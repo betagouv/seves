@@ -2,12 +2,9 @@ let prelevementCards =[]
 let extraFormSaved = 0
 
 function showOrHidePrelevementUI(){
-    const nbLieux = document.getElementById("lieux-list").childElementCount
-
-    if (nbLieux === 0){
+    if (document.getElementById("lieux-list").childElementCount === 0){
         document.getElementById("no-lieux-text").classList.remove("fr-hidden")
         document.getElementById("btn-add-prelevment").disabled = true
-
     } else {
         document.getElementById("no-lieux-text").classList.add("fr-hidden")
         document.getElementById("btn-add-prelevment").disabled = false
@@ -26,7 +23,6 @@ function deletePrelevement(event) {
             field.value = '';
         }
     });
-
     displayPrelevementsCards()
     dsfr(document.getElementById('modal-delete-prelevement-confirmation')).modal.conceal();
 }
@@ -72,53 +68,46 @@ function showAddPrelevementmodal(event) {
             input.required = true
         }
     })
-
     dsfr(currentModal).modal.disclose();
     dataRequiredToRequired(currentModal)
 }
 
+function savePrelevement(event){
+    const id = event.target.dataset.id
+    const modal = document.getElementById(`modal-add-edit-prelevement-${id}`)
+    if (formIsValid(modal) === false){
+        return
+    }
+
+    const structureElement = document.getElementById(`id_prelevements-${id}-structure_preleveur`)
+    const lieuElement = document.getElementById(`id_prelevements-${id}-lieu`)
+    const officielElement = document.getElementById(`id_prelevements-${id}-is_officiel`)
+    const resultatElement = document.querySelector('input[name="prelevements-' + id + '-resultat"]:checked')
+    let data = {
+        "id": id,
+        "structure":structureElement.options[structureElement.selectedIndex].text,
+        "lieu": lieuElement.options[lieuElement.selectedIndex].text,
+        "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
+        "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
+    }
+
+    const index = prelevementCards.findIndex(element => element.id === data.id);
+    if (index === -1) {
+        prelevementCards.push(data);
+        extraFormSaved++;
+    } else {
+        prelevementCards[index] = data;
+    }
+
+    displayPrelevementsCards()
+    removeRequired(modal)
+    dsfr(modal).modal.conceal();
+
+}
+
 (function() {
-
-
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
-
-    document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", function(event){
-        const id = event.target.dataset.id
-        const modal = document.getElementById(`modal-add-edit-prelevement-${id}`)
-        const isValid = formIsValid(modal)
-        if (isValid === false){
-            return
-        }
-
-        const structureElement = document.getElementById(`id_prelevements-${id}-structure_preleveur`)
-        const lieuElement = document.getElementById(`id_prelevements-${id}-lieu`)
-        const officielElement = document.getElementById(`id_prelevements-${id}-is_officiel`)
-        const resultatElement = document.querySelector('input[name="prelevements-' + id + '-resultat"]:checked')
-        let data = {
-            "id": id,
-            "structure":structureElement.options[structureElement.selectedIndex].text,
-            "lieu": lieuElement.options[lieuElement.selectedIndex].text,
-            "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
-            "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
-        }
-
-        const index = prelevementCards.findIndex(element => element.id === data.id);
-        if (index === -1) {
-            prelevementCards.push(data);
-            extraFormSaved++;
-        } else {
-            prelevementCards[index] = data;
-        }
-
-        displayPrelevementsCards()
-        removeRequired(modal)
-        dsfr(modal).modal.conceal();
-    }))
-
-
+    document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
 })();
-
-// TODO retirer le required dans le form lors de la fermeture de la modale
-// TODO remettre les required dans les form à l'ouverture de la modale

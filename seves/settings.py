@@ -225,11 +225,12 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 
-# TODO s'assurer que is_officiel affiche ou masque des champs dans le prevélement
 # TODO gérer la visibilité en fonction du bouton cliqué
-# TODO gérér l'édition de la fiche
-# TODO test ?
 # TODO remettre le fonctionneement des communes
 # TODO faire l'édtion prélévement
 # TODO faire suppression lieu
+
 # TODO fixer tous les toolstips
+# TODO gérér l'édition de la fiche
+# TODO fix test ?
+# TODO s'assurer que les données etablissement ou officiel ne sont pris en compte que si la case est cochée
