@@ -1,4 +1,4 @@
-let prelevementCards =[]
+document.prelevementCards =[]
 let extraFormSaved = 0
 
 function showOrHidePrelevementUI(){
@@ -14,7 +14,7 @@ function showOrHidePrelevementUI(){
 
 function deletePrelevement(event) {
     const id = event.target.dataset.id
-    prelevementCards = prelevementCards.filter(function(item) {return item.id !== id})
+    document.prelevementCards = document.prelevementCards.filter(function(item) {return item.id !== id})
     const form = document.getElementById("modal-add-edit-prelevement-" + id)
     // TODO use resetForm instead
     form.querySelectorAll('input, select, textarea').forEach(field => {
@@ -32,7 +32,7 @@ function displayPrelevementsCards() {
     const prelevementListElement = document.getElementById("prelevements-list")
     const prelevementTemplateElement = document.getElementById("prelevement-carte")
     prelevementListElement.innerHTML = ""
-    prelevementCards.forEach(card =>{
+    document.prelevementCards.forEach(card =>{
         const clone = prelevementTemplateElement.cloneNode(true);
         clone.classList.remove('fr-hidden');
         clone.querySelector('.prelevement-nom').textContent = card.structure;
@@ -92,12 +92,12 @@ function savePrelevement(event){
         "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
     }
 
-    const index = prelevementCards.findIndex(element => element.id === data.id);
+    const index = document.prelevementCards.findIndex(element => element.id === data.id);
     if (index === -1) {
-        prelevementCards.push(data);
+        document.prelevementCards.push(data);
         extraFormSaved++;
     } else {
-        prelevementCards[index] = data;
+        document.prelevementCards[index] = data;
     }
 
     displayPrelevementsCards()

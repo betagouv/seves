@@ -47,9 +47,9 @@ function displayLieuxCards() {
             dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
         })
         clone.querySelector('.lieu-delete-btn').addEventListener("click", (event)=>{
-            const lieuLinkedToPrelevement = false // TODO
+            let lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
             if (lieuLinkedToPrelevement === true){
-                // TODO
+                dsfr(document.getElementById("fr-modal-suppression-lieu")).modal.disclose()
             } else {
                 document.getElementById("delete-lieu-confirm-btn").setAttribute("data-id", event.target.dataset.id)
                 dsfr(document.getElementById("modal-delete-lieu-confirmation")).modal.disclose()
