@@ -16,22 +16,21 @@
                         Modifier le lieu
                     </span>
                 </li>
-{#                    <li>#}
-{#                        <button#}
-{#                            type="button"#}
-{#                            class="lieu-delete-btn fr-btn fr-btn--secondary fr-icon-delete-fill"#}
-{#                            title="Supprimer le lieu"#}
-{#                            @click="canDeleteLieu(lieu.id)"#}
-{#                            :aria-describedby="'tooltip-delete-lieu-' + lieu.id">#}
-{#                        </button>#}
-{#                        <span#}
-{#                            class="fr-tooltip fr-placement"#}
-{#                            :id="'tooltip-delete-lieu-' + lieu.id"#}
-{#                            role="tooltip"#}
-{#                            aria-hidden="true">#}
-{#                            Supprimer le lieu#}
-{#                        </span>#}
-{#                    </li>#}
+                <li>
+                    <button
+                        type="button"
+                        class="lieu-delete-btn fr-btn fr-btn--secondary fr-icon-delete-fill"
+                        title="Supprimer le lieu"
+                        :aria-describedby="'tooltip-delete-lieu-' + lieu.id">
+                    </button>
+                    <span
+                        class="fr-tooltip fr-placement"
+                        :id="'tooltip-delete-lieu-' + lieu.id"
+                        role="tooltip"
+                        aria-hidden="true">
+                        Supprimer le lieu
+                    </span>
+                </li>
             </ul>
         </div>
         <p class="lieu-commune"></p>

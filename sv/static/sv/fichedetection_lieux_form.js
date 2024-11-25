@@ -20,6 +20,14 @@ function fetchCommunes(query) {
         });
 }
 
+function deleteLieu(event) {
+    const id = event.target.dataset.id
+    document.lieuxCards = document.lieuxCards.filter(function(item) {return item.id != id})
+    resetForm(document.getElementById("modal-add-lieu-" + id))
+    displayLieuxCards()
+    dsfr(document.getElementById('modal-delete-lieu-confirmation')).modal.conceal();
+}
+
 function displayLieuxCards() {
     const lieuListElement = document.getElementById("lieux-list")
     const lieuTemplateElement = document.getElementById("lieu-carte")
@@ -34,8 +42,18 @@ function displayLieuxCards() {
         clone.classList.remove('fr-hidden');
         clone.querySelector('.lieu-nom').textContent = card.nom;
         clone.querySelector('.lieu-commune').textContent = card.commune;
+        clone.querySelector('.lieu-delete-btn').setAttribute("data-id", card.id)
         clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
             dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
+        })
+        clone.querySelector('.lieu-delete-btn').addEventListener("click", (event)=>{
+            const lieuLinkedToPrelevement = false // TODO
+            if (lieuLinkedToPrelevement === true){
+                // TODO
+            } else {
+                document.getElementById("delete-lieu-confirm-btn").setAttribute("data-id", event.target.dataset.id)
+                dsfr(document.getElementById("modal-delete-lieu-confirmation")).modal.disclose()
+            }
         })
         lieuListElement.appendChild(clone);
     })
@@ -103,7 +121,6 @@ function setUpCommune(element) {
         currentModal.querySelector('[id$=commune]').value = event.detail.choice.value
         currentModal.querySelector('[id$=insee]').value = event.detail.choice.customProperties.inseeCode
         currentModal.querySelector('[id$=departement]').value = event.detail.choice.customProperties.departementCode
-        // TODO maybe departement should be a list of known elements ?
     })
 }
 
@@ -111,6 +128,8 @@ function setUpCommune(element) {
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
     document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
+    document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
+
     // TODO should we clear store of commune when the modal is closed ????
 })();
 

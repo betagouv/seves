@@ -151,10 +151,8 @@ LieuFormSet = inlineformset_factory(
 
 
 class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
-    # TODO when this is created as detecté the object is non detecté
     resultat = forms.ChoiceField(
         required=True,
-        label="oooooooooooo",
         choices=Prelevement.Resultat.choices,
         widget=DSFRRadioButton(attrs={"required": "true"}),
     )

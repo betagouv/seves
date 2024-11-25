@@ -1,0 +1,24 @@
+
+<!-- bouton relié à la modal en display non -> https://github.com/GouvernementFR/dsfr/issues/728 -->
+<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-delete-lieu-confirmation"></button>
+<dialog aria-labelledby="fr-modal-delete-lieu-confirmation-title" id="modal-delete-lieu-confirmation" class="fr-modal" role="dialog">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button type="button" class="fr-btn--close fr-btn" aria-controls="fr-modal-cant-delete-lieu">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-delete-lieu-confirmation-title" class="fr-modal__title">Supprimer</h1>
+                        <p>Souhaitez-vous réellement supprimer le lieu ?</p>
+                        <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
+                            <button type="button" class="fr-btn" id="delete-lieu-confirm-btn">Supprimer</button>
+                            <button type="button" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cant-delete-lieu">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

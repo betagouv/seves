@@ -225,9 +225,10 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 # TODO faire l'édtion prélévement
-# TODO faire suppression lieu
+# TODO faire suppression lieu partie 2 (avec impossibilité de le faire)
 # TODO fix espece echantillon dans prelevement
 
+# TODO tous les problèmes relié a la fermeture de la modale
 # TODO fixer tous les toolstips
 # TODO gérér l'édition de la fiche
 # TODO fix test ?

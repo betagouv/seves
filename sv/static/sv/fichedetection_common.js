@@ -23,3 +23,13 @@ function removeRequired(element){
         field.required = ""
     })
 }
+
+function resetForm(element){
+    element.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = false;
+        } else {
+            field.value = '';
+        }
+    });
+}

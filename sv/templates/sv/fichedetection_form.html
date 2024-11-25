@@ -34,7 +34,7 @@
                         {% if is_creation %}
                             Création d'une fiche détection
                         {% else %}
-                            Modification de la fiche détection n°<span x-text="ficheDetection.numero" x-model="ficheDetection.numero"></span>
+                            Modification de la fiche détection n°{{ fichedetection.numero }}
                         {% endif %}
                     </h1>
                     {% if not is_creation %}
@@ -188,6 +188,7 @@
         {% include "sv/_fichedetection_form__lieu_card.html" %}
         {% include "sv/_fichedetection_form__prelevement_card.html" %}
         {% include "sv/_fichedetection_form__prelevement_delete_modal.html" %}
+        {% include "sv/_fichedetection_form__lieu_delete_modal.html" %}
 
     </main>
 {% endblock %}
