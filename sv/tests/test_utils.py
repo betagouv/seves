@@ -187,7 +187,7 @@ class LieuFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("lieu-save-btn")
+        return self.page.get_by_test_id("lieu-save-btn-0")
 
     @property
     def title(self) -> Locator:
@@ -199,7 +199,8 @@ class LieuFormDomElements:
 
     @property
     def nom_input(self) -> Locator:
-        return self.page.get_by_label("Nom du lieu")
+        # TODO : not a perfect fix. Check test that are faillig du to change
+        return self.page.locator("#id_lieux-0-nom")
 
     @property
     def adresse_label(self) -> Locator:
@@ -207,7 +208,7 @@ class LieuFormDomElements:
 
     @property
     def adresse_input(self) -> Locator:
-        return self.page.get_by_label("Adresse ou lieu-dit")
+        return self.page.locator("id_lieux-0-adresse_lieu_dit")
 
     @property
     def commune_label(self) -> Locator:

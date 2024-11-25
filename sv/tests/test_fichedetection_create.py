@@ -206,8 +206,10 @@ def test_fiche_detection_create_cant_forge_form_to_access_rasff_europhyt(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    page.locator("#numero-rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.locator("#numero-europhyt").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
+    page.locator("#id_numero_rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
+    page.locator("#id_numero_europhyt").evaluate(
+        "element => element.style.setProperty('display', 'block' , 'important')"
+    )
     page.get_by_label("Numéro Europhyt").fill("1" * 8)
     page.get_by_label("Numéro Rasff").fill("2" * 9)
     page.get_by_role("button", name="Enregistrer").click()
