@@ -14,11 +14,11 @@
                             </h1>
 
                             <p>
-                                <label class="fr-label" for="nom-lieu">Nom du lieu</label>
+                                <label class="fr-label" for="id_lieux-{{ forloop.counter0 }}-nom">Nom du lieu</label>
                                 {{ form.nom }}
                             </p>
                             <p>
-                                <label class="fr-label" for="adresse-lieu-dit">Adresse ou lieu-dit</label>
+                                <label class="fr-label" for="id_lieux-{{ forloop.counter0 }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
                                 {{ form.adresse_lieu_dit }}
                             </p>
                             <p>

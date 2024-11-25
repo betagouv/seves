@@ -63,18 +63,18 @@
                             <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
                         </div>
                         <div id="statut-evenement">
-                            <label class="fr-label" for="statut-evenement-input">Statut évènement</label>
+                            <label class="fr-label" for="id_statut_evenement">Statut évènement</label>
                             {{ form.statut_evenement }}
                         </div>
                         {% if form.numero_europhyt %}
                             <div id="numero-europhyt" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                                <label class="fr-label" for="numero-europhyt-input">Numéro Europhyt</label>
+                                <label class="fr-label" for="id_numero_europhyt">Numéro Europhyt</label>
                                 {{ form.numero_europhyt }}
                             </div>
                         {% endif %}
                         {% if form.numero_rasff %}
                             <div id="numero-rasff" {% if not user.agent.structure.is_ac %}class="fr-hidden"{% endif %}>
-                                <label class="fr-label" for="numero-rasff-input">Numéro Rasff</label>
+                                <label class="fr-label" for="id_numero_rasff">Numéro Rasff</label>
                                 {{ form.numero_rasff }}
                             </div>
                         {% endif %}
@@ -84,27 +84,27 @@
                 <div id="objet-evenement">
                     <h2>Objet de l'évènement</h2>
                     <p id="organisme-nuisible">
-                        <label class="fr-label" for="organisme-nuisible-input">Organisme nuisible</label>
+                        <label class="fr-label" for="id_organisme_nuisible">Organisme nuisible</label>
                         {{ form.organisme_nuisible }}
                     </p>
                     <p id="statut-reglementaire">
-                        <label class="fr-label" for="statut-reglementaire-input">Statut règlementaire</label>
+                        <label class="fr-label" for="id_statut_reglementaire">Statut réglementaire</label>
                         {{ form.statut_reglementaire }}
                     </p>
                     <p id="contexte">
-                        <label class="fr-label" for="contexte-input">Contexte</label>
+                        <label class="fr-label" for="id_contexte">Contexte</label>
                         {{ form.contexte }}
                     </p>
                     <p id="date-1er-signalement">
-                        <label class="fr-label" for="date-1er-signalement-input">Date 1er signalement</label>
+                        <label class="fr-label" for="id_date_premier_signalement">Date 1er signalement</label>
                         {{ form.date_premier_signalement }}
                     </p>
                     <p>
-                        <label class="fr-label" for="vegetaux-infestes-input">Végétaux infestés</label>
+                        <label class="fr-label" for="id_vegetaux_infestes">Végétaux infestés</label>
                         {{ form.vegetaux_infestes }}
                     </p>
                     <p>
-                        <label class="fr-label" for="commentaire-input">Commentaire</label>
+                        <label class="fr-label" for="id_commentaire">Commentaire</label>
                         {{ form.commentaire }}
                     </p>
                 </div>

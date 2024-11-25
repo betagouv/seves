@@ -100,11 +100,11 @@ class FicheDetectionFormDomElements:
 
     @property
     def statut_reglementaire_label(self) -> Locator:
-        return self.page.get_by_text("Statut règlementaire")
+        return self.page.get_by_text("Statut réglementaire")
 
     @property
     def statut_reglementaire_input(self) -> Locator:
-        return self.page.get_by_label("Statut règlementaire")
+        return self.page.get_by_label("Statut réglementaire")
 
     @property
     def contexte_label(self) -> Locator:

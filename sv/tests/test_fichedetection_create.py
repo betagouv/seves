@@ -89,7 +89,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.statut_reglementaire_input).to_contain_text("----")
     expect(form_elements.statut_reglementaire_input).to_have_value("")
     statuts_reglementaire = list(StatutReglementaire.objects.values_list("libelle", flat=True))
-    check_select_options(page, "Statut règlementaire", statuts_reglementaire)
+    check_select_options(page, "Statut réglementaire", statuts_reglementaire)
 
     expect(form_elements.contexte_label).to_be_visible()
     expect(form_elements.contexte_input).to_be_visible()
@@ -148,7 +148,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_text("--------").click()
     page.locator("#organisme-nuisible").get_by_label("----").fill("xylela")
     page.get_by_role("option", name=organisme_nuisible.libelle_court).click()
-    page.get_by_label("Statut règlementaire").select_option(value=str(statut_reglementaire.id))
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
     page.get_by_label("Commentaire").click()
