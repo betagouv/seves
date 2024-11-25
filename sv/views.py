@@ -209,9 +209,11 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
-        context["lieu_formset"] = LieuFormSet()
+        formset = LieuFormSet()
+        formset.custom_kwargs = {"convert_required_to_data_required": True}
+        context["lieu_formset"] = formset
         context["prelevement_forms"] = [
-            PrelevementForm(by_pass_required=True, prefix=f"prelevements-{i}") for i in range(10)
+            PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)
         ]
         return context
 

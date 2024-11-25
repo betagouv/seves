@@ -50,9 +50,17 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
     )
 
 
-class LieuForm(DSFRForm, forms.ModelForm):
-    # TODO handle this properly, see how we can do this
-    nom = forms.CharField(widget=forms.TextInput(attrs={"required": "true"}))
+class WithDataRequiredConversionMixin:
+    def _convert_required_to_data_required(self):
+        for field in self:
+            if field.field.required:
+                field.field.widget.attrs["data-required"] = "true"
+                field.field.widget.attrs.pop("required", None)
+                field.field.required = False
+
+
+class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+    nom = forms.CharField(widget=forms.TextInput(), required=True)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -107,7 +115,7 @@ class LieuForm(DSFRForm, forms.ModelForm):
 
     class Meta:
         model = Lieu
-        exclude = []
+        exclude = ["fiche_detection"]
         labels = {"is_etablissement": "Il s'agit d'un établissement"}
 
     def clean_departement(self):
@@ -115,16 +123,34 @@ class LieuForm(DSFRForm, forms.ModelForm):
             return None
         return self.cleaned_data["departement"]
 
+    def __init__(self, *args, **kwargs):
+        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
+        super().__init__(*args, **kwargs)
 
-LieuFormSet = inlineformset_factory(FicheDetection, Lieu, form=LieuForm, extra=10, can_delete=True)
+        if convert_required_to_data_required:
+            self._convert_required_to_data_required()
 
 
-class PrelevementForm(DSFRForm, forms.ModelForm):
+class CustomLieuFormSet(BaseInlineFormSet):
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        if hasattr(self, "custom_kwargs"):
+            kwargs.update(self.custom_kwargs)
+        return kwargs
+
+
+LieuFormSet = inlineformset_factory(
+    FicheDetection, Lieu, form=LieuForm, formset=CustomLieuFormSet, extra=10, can_delete=True
+)
+
+
+class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     # TODO when this is created as detecté the object is non detecté
     resultat = forms.ChoiceField(
         required=True,
+        label="oooooooooooo",
         choices=Prelevement.Resultat.choices,
-        widget=DSFRRadioButton(),
+        widget=DSFRRadioButton(attrs={"required": "true"}),
     )
 
     class Meta:
@@ -132,17 +158,12 @@ class PrelevementForm(DSFRForm, forms.ModelForm):
         exclude = []
 
     def __init__(self, *args, **kwargs):
-        # TODO better naming for this ?
-        by_pass_required = kwargs.pop("by_pass_required", False)
+        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
-        # TODO add other required fields
-        self.fields["structure_preleveur"].widget.attrs["required"] = "required"
+        self.fields["structure_preleveur"].required = "required"
 
-        if by_pass_required:
-            for field in self:
-                if field.field.required:
-                    field.field.widget.attrs["data-required"] = "true"
-                    field.field.required = False
+        if convert_required_to_data_required:
+            self._convert_required_to_data_required()
 
 
 class FicheDetectionForm(DSFRForm, forms.ModelForm):

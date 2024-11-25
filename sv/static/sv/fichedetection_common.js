@@ -9,3 +9,17 @@ function formIsValid(element){
     });
     return isValid
 }
+
+function dataRequiredToRequired(element){
+    element.querySelectorAll('[data-required]').forEach(field =>{
+        field.required = "true"
+    })
+}
+
+// TODO il faut faire ça à la sauvegarde mais aussi à chaque fois que la modale est cachée mais non sauvegarder
+// TODO idem a ce moment il faut vider tous les champs ?
+function removeRequired(element){
+    element.querySelectorAll('[required]').forEach(field =>{
+        field.required = ""
+    })
+}

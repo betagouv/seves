@@ -231,9 +231,6 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO test ?
 # TODO fix les liens libres
 # TODO remettre le fonctionneement des communes
-# TODO ajouter le required sur le nom du lieu à l'ouverture de la modale
-# TODO définir les bons champs en required dans le prelevement
 # TODO faire l'édtion prélévement
-# TODO faire suppression prélévement
 # TODO faire suppression lieu
-# TODO fixer tous les tools tips
+# TODO fixer tous les toolstips

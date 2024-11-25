@@ -56,7 +56,7 @@ function displayPrelevementsCards() {
     showOrHidePrelevementUI()
 }
 
-function addPrelevementmodal(event) {
+function showAddPrelevementmodal(event) {
     event.preventDefault()
     const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
     const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
@@ -75,13 +75,14 @@ function addPrelevementmodal(event) {
     })
 
     dsfr(currentModal).modal.disclose();
+    dataRequiredToRequired(currentModal)
 }
 
 (function() {
 
 
     showOrHidePrelevementUI()
-    document.getElementById("btn-add-prelevment").addEventListener("click", addPrelevementmodal)
+    document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
 
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", function(event){
@@ -113,11 +114,7 @@ function addPrelevementmodal(event) {
         }
 
         displayPrelevementsCards()
-        modal.querySelectorAll('input, textarea, select').forEach((input) =>{
-            if (input.hasAttribute("required")){
-                input.required = false
-            }
-        })
+        removeRequired(modal)
         dsfr(modal).modal.conceal();
     }))
 

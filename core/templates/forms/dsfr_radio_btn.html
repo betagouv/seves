@@ -11,7 +11,7 @@
                        {% if option.attrs.checked %}checked{% endif %}
                        {% if option.attrs.required %}required{% endif %}
                        {% if option.attrs.disabled %}disabled{% endif %}
-                       {% include "django/forms/attrs.html" %}
+                       {% for name, value in option.attrs.items %}{% if value is not False %} {{ name }}{% if value is not True %}="{{ value|stringformat:'s' }}"{% endif %}{% endif %}{% endfor %}
                 >
                 <label class="fr-label" for="{{ option.attrs.id }}">
                     {{ option.label }}
