@@ -212,13 +212,29 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         formset = LieuFormSet()
         formset.custom_kwargs = {"convert_required_to_data_required": True}
         context["lieu_formset"] = formset
-        context["prelevement_forms"] = [
-            PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)
-        ]
+        forms = [PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)]
+        context["prelevement_forms"] = forms
         return context
 
+    def _set_lieux_from_nom(self, data, allowed_lieux):
+        lieux_keys = [key for key in data.keys() if key.startswith("prelevements-") and key.endswith("-lieu")]
+        for lieu_key in lieux_keys:
+            # TODO this won't work if multiple lieux have the same name add check on this
+            data[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == data[lieu_key])
+        return data
+
+    def _save_prelevement_if_not_empty(self, data):
+        for i in range(10):
+            prefix = f"prelevements-{i}"
+            form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
+            if any(form_data.values()):
+                prelevement_form = PrelevementForm(data, prefix=prefix)
+                if prelevement_form.is_valid():
+                    prelevement_form.save()
+                else:
+                    raise ValidationError(prelevement_form.errors)
+
     def post(self, request, *args, **kwargs):
-        # TODO split this method
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
@@ -232,24 +248,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             self.object = form.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
-
-            mutable_post = request.POST.copy()
-            lieux_keys = [
-                key for key in mutable_post.keys() if key.startswith("prelevements-") and key.endswith("-lieu")
-            ]
-            for lieu_key in lieux_keys:
-                # TODO this won't work if multiple lieux have the same name add check on this
-                mutable_post[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == mutable_post[lieu_key])
-
-            for i in range(10):
-                prefix = f"prelevements-{i}"
-                form_data = {key: value for key, value in request.POST.items() if key.startswith(prefix)}
-                if any(form_data.values()):
-                    prelevement_form = PrelevementForm(form_data, prefix=prefix)
-                    if prelevement_form.is_valid():
-                        prelevement_form.save()
-                    else:
-                        raise ValidationError(prelevement_form.errors)
+            data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
+            self._save_prelevement_if_not_empty(data)
 
         return HttpResponseRedirect(self.get_success_url())
 
