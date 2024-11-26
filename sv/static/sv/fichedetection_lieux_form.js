@@ -1,5 +1,6 @@
 document.lieuxCards = []
 extraFormSaved = 0
+modalHTMLContent = {}
 
 function fetchCommunes(query) {
     return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
@@ -61,6 +62,7 @@ function displayLieuxCards() {
 function showLieuModal(event){
     event.preventDefault()
     const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
+    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
     dataRequiredToRequired(currentModal)
     dsfr(currentModal).modal.disclose();
 }
@@ -122,15 +124,29 @@ function setUpCommune(element) {
     })
 }
 
+function resetModalWhenClosing(event){
+    const originalTarget = event.explicitOriginalTarget
+    if (! originalTarget.classList.contains("lieu-save-btn")){
+        const modalId = event.originalTarget.getAttribute("id").split("-").pop()
+        event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
+    }
+}
+
+function closeDSFRModal(event){
+    // Normally using type="button" show be enough to avoid submitting the form and still closing the modal
+    // https://github.com/GouvernementFR/dsfr/issues/1040
+    const modal = event.target.closest("dialog")
+    dsfr(modal).modal.conceal();
+}
+
+
 (function() {
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
     document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
-
-    // TODO should we clear store of commune when the modal is closed ????
+    document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
+    document.querySelectorAll(".fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
 })();
 
-// TODO gérer les fermetures du modale (annuler et fermer)
-// TODO EDIter : ouvrir la modale, copier en cas d'annulation, remettre si annulation
-// TODO Supprimer : Remettre la modale à zero ? Si on créé et supprime X lieu ça ne marchera plus :possibilité d'avoir une listes des ids déjàs utilisés
+// TODO vérifier qu'a l'ouverture on refait pas le choices pour la commune

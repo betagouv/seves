@@ -224,7 +224,7 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO tous les problèmes relié a la fermeture de la modale
+# TODO tous les problèmes relié a la fermeture de la modale. A l'ouverture de la modale (avant le changement de required, on copie le contenu et on le remet si fermeture par annuler ou titre, ou échap)
 # TODO fixer tous les toolstips
 # TODO gérér l'édition de la fiche
 # TODO fix test ?
