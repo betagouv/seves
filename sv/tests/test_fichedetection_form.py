@@ -1,4 +1,3 @@
-import json
 import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
@@ -533,19 +532,15 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "ipsum"
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "ipsum"}]
 
 
 def test_delete_correct_lieu(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test si j'affiche la modal de confirmation de la suppression d'un lieu,
-    que je quitte la modal sans supprimer le lieu et que je supprime un autre lieu
-    → vérifier que c’est le bon lieu qui est supprimée"""
+    """Test si j'affiche la modale de confirmation de la suppression d'un lieu,
+    que je quitte la modale sans supprimer le lieu et que je supprime un autre lieu
+    → vérifier que c’est le bon lieu qui est supprimé"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -568,10 +563,7 @@ def test_delete_correct_lieu(
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "lorem"
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "lorem"}]
 
 
 @pytest.mark.django_db
@@ -580,7 +572,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
 ):
     page.wait_for_timeout(600)
 
-    """Test que la suppression d'un lieu est impossible si elle est liée à un prélèvement"""
+    """Test que la suppression d'un lieu est impossible si il est lié à un prélèvement"""
     # ajout d'un lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -604,11 +596,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "lorem"
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "0", "nom": "lorem"}]
 
 
 # =============
