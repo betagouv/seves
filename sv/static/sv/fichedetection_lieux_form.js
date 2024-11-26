@@ -129,6 +129,8 @@ function resetModalWhenClosing(event){
     if (! originalTarget.classList.contains("lieu-save-btn")){
         const modalId = event.originalTarget.getAttribute("id").split("-").pop()
         event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
+        console.log("reset with")
+        console.log(modalHTMLContent[modalId])
     }
 }
 
@@ -141,5 +143,3 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 })();
-
-// TODO vérifier qu'a l'ouverture on refait pas le choices pour la commune

@@ -103,7 +103,7 @@ def test_close_button_of_add_lieu_form_modal(live_server, page: Page, form_eleme
 def test_cancel_button_of_add_lieu_form_modal(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que le bouton Annuler ferme la modal d'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
-    page.get_by_role("button", name="Annuler").click()
+    page.get_by_role("link", name="Annuler").click()
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
@@ -450,7 +450,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
 
     page.get_by_role("button", name="Modifier le lieu").click()
-    page.get_by_role("button", name="Annuler").click()
+    page.get_by_role("link", name="Annuler").click()
     form_elements.add_lieu_btn.click()
 
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)

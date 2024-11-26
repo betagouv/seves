@@ -23,10 +23,10 @@
                                 <label class="fr-label" for="id_lieux-{{ forloop.counter0 }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
                                 {{ form.adresse_lieu_dit }}
                             </p>
-                            <p>
+                            <div class="commune">
                                 <label class="fr-label" for="commune">Commune</label>
                                 <select id="commune-select-{{ forloop.counter0 }}" class="fr-input"></select>
-                            </p>
+                            </div>
                             {{ form.commune }}
                             {{ form.code_insee }}
                             {{ form.departement }}

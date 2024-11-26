@@ -146,15 +146,15 @@ main {
     margin-bottom: 2rem;
 }
 
-[id^=lieu-form] p {
+[id^=lieu-form] p, [id^=lieu-form] .commune {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-[id^=lieu-form] p label {
+[id^=lieu-form] p label, [id^=lieu-form] .commune label {
     flex: 0.75;
 }
-[id^=lieu-form] p input, #lieu-form p .choices{
+[id^=lieu-form] p input, #lieu-form .commune .choices{
     flex: 1.25;
     margin-top: .5rem;
 }
