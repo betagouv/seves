@@ -219,7 +219,7 @@ class LieuFormDomElements:
 
     @property
     def commune_input(self) -> Locator:
-        return self.page.locator("#commune-select")
+        return self.page.locator('[id^="commune-select-"]').locator("visible=true")
 
     @property
     def commune_hidden_input(self) -> Locator:

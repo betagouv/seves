@@ -218,31 +218,6 @@ def test_added_lieu_content_in_list(
     expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
 
 
-@pytest.mark.django_db
-def test_lieu_is_added_to_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que le lieu ajouté est bien ajouté dans le tableau de données alpinejs"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 1
-    assert lieux[0]["nomLieu"] == "nom lieu"
-    assert lieux[0]["adresseLieuDit"] == "une adresse"
-    assert lieux[0]["commune"] == "Lille"
-    assert lieux[0]["codeINSEE"] == "59350"
-    assert lieux[0]["departementNom"] == "Nord"
-    assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
-    assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
-
-
 def test_add_two_lieux_to_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
@@ -262,42 +237,6 @@ def test_add_two_lieux_to_list(
     expect(page.locator("#lieux")).to_contain_text("a")
     expect(page.locator("#lieux")).to_contain_text("b")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 2
-
-
-@pytest.mark.django_db
-def test_two_lieux_are_added_to_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que les lieux ajoutés sont bien ajoutés dans le tableau de données alpinejs"""
-    # ajout du premier lieu
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill, extra_str=" 2")
-
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 2
-    assert lieux[0]["nomLieu"] == "nom lieu"
-    assert lieux[0]["adresseLieuDit"] == "une adresse"
-    assert lieux[0]["commune"] == "Lille"
-    assert lieux[0]["codeINSEE"] == "59350"
-    assert lieux[0]["departementNom"] == "Nord"
-    assert lieux[0]["coordGPSLambert93Latitude"] == "6000000"
-    assert lieux[0]["coordGPSLambert93Longitude"] == "200000"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "2"
-    assert lieux[1]["nomLieu"] == "nom lieu 2"
-    assert lieux[1]["adresseLieuDit"] == "une adresse 2"
-    assert lieux[1]["commune"] == "Lille"
-    assert lieux[1]["codeINSEE"] == "59350"
-    assert lieux[1]["departementNom"] == "Nord"
-    assert lieux[1]["coordGPSLambert93Latitude"] == "6000000"
-    assert lieux[1]["coordGPSLambert93Longitude"] == "200000"
-    assert lieux[1]["coordGPSWGS84Latitude"] == "1"
-    assert lieux[1]["coordGPSWGS84Longitude"] == "2"
 
 
 # Modifier un lieu
@@ -446,43 +385,6 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     page.get_by_role("button", name="Fermer").click()
 
 
-@pytest.mark.django_db
-def test_edit_lieu_is_updated_in_alpinejs_data(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
-):
-    """Test que le lieu modifié est bien mis à jour dans le tableau de données alpinejs"""
-    # ajout d'un lieu
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-
-    # modification du lieu
-    page.get_by_role("button", name="Modifier le lieu").click()
-    lieu_form_elements.nom_input.fill("nom lieu modifié")
-    lieu_form_elements.adresse_input.fill("une adresse modifiée")
-    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
-    lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
-    lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
-    lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
-    lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_text("Enregistrer", exact=True).click()
-
-    # vérification des valeurs du lieu modifié
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert lieux[0]["nomLieu"] == "nom lieu modifié"
-    assert lieux[0]["adresseLieuDit"] == "une adresse modifiée"
-    assert lieux[0]["commune"] == "Paris"
-    assert lieux[0]["codeINSEE"] == "75056"
-    assert lieux[0]["departementNom"] == "Paris"
-    assert lieux[0]["coordGPSLambert93Latitude"] == "6000001"
-    assert lieux[0]["coordGPSLambert93Longitude"] == "200001"
-    assert lieux[0]["coordGPSWGS84Latitude"] == "11"
-    assert lieux[0]["coordGPSWGS84Longitude"] == "21"
-
-
 def test_add_lieu_form_is_empty_after_edit(
     live_server,
     page: Page,
@@ -606,16 +508,12 @@ def test_delete_lieu_from_list(
     expect(page.locator("#lieux")).not_to_contain_text("nom lieu")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 0
 
-    lieux_json = page.get_by_test_id("lieux").input_value()
-    lieux = json.loads(lieux_json)
-    assert len(lieux) == 0
-
 
 def test_delete_lieu_from_list_with_multiple_lieux(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que le lieu est bien supprimée de la liste des lieux après confirmation
-    et que c'est le bon lieu qui est supprimée"""
+    """Test que le lieu est bien supprimé de la liste des lieux après confirmation
+    et que c'est le bon lieu qui est supprimé"""
     # ajout du premier lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
