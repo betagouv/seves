@@ -44,7 +44,11 @@ function displayLieuxCards() {
         clone.querySelector('.lieu-nom').textContent = card.nom;
         clone.querySelector('.lieu-commune').textContent = card.commune;
         clone.querySelector('.lieu-delete-btn').setAttribute("data-id", card.id)
+        clone.querySelector('.lieu-delete-btn').setAttribute("aria-describedby", "tooltip-delete-lieu-" + card.id)
+        clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-lieu-" + card.id)
         clone.querySelector(".lieu-edit-btn").setAttribute("aria-controls", "modal-add-lieu-" + card.id)
+        clone.querySelector(".lieu-edit-btn").setAttribute("aria-describedby", "tooltip-lieu-" + card.id)
+        clone.querySelector(".edit-tooltip").setAttribute("id", "tooltip-lieu-" + card.id)
         clone.querySelector('.lieu-delete-btn').addEventListener("click", (event)=>{
             let lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
             if (lieuLinkedToPrelevement === true){
@@ -129,8 +133,6 @@ function resetModalWhenClosing(event){
     if (! originalTarget.classList.contains("lieu-save-btn")){
         const modalId = event.originalTarget.getAttribute("id").split("-").pop()
         event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
-        console.log("reset with")
-        console.log(modalHTMLContent[modalId])
     }
 }
 

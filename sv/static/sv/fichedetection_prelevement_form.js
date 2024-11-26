@@ -70,7 +70,11 @@ function displayPrelevementsCards() {
         clone.querySelector('.prelevement-lieu').textContent = "Lieu : " + card.lieu;
         clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.detecte}`;
         clone.querySelector('.prelevement-delete-btn').setAttribute("data-id", card.id)
+        clone.querySelector('.prelevement-delete-btn').setAttribute("aria-describedby", "tooltip-delete-prelevement-" + card.id)
+        clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-prelevement-" + card.id)
         clone.querySelector(".prelevement-edit-btn").setAttribute("aria-controls", "modal-add-edit-prelevement-" + card.id)
+        clone.querySelector(".prelevement-edit-btn").setAttribute("aria-describedby", "tooltip-prelevement-" + card.id)
+        clone.querySelector(".edit-tooltip").setAttribute("id", "tooltip-prelevement-" + card.id)
         clone.querySelector('.prelevement-delete-btn').addEventListener("click", (event)=>{
             dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
             document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)

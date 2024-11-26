@@ -219,7 +219,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
     def _set_lieux_from_nom(self, data, allowed_lieux):
         lieux_keys = [key for key in data.keys() if key.startswith("prelevements-") and key.endswith("-lieu")]
         for lieu_key in lieux_keys:
-            # TODO this won't work if multiple lieux have the same name add check on this
             data[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == data[lieu_key])
         return data
 
