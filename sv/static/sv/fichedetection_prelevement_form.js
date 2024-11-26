@@ -1,5 +1,6 @@
 document.prelevementCards =[]
 let extraFormSaved = 0
+modalHTMLContent = {}
 
 function fetchEspecesEchantillon(query) {
     return fetch(`/sv/api/espece/recherche/?q=${query}`)
@@ -82,6 +83,7 @@ function displayPrelevementsCards() {
 function showAddPrelevementmodal(event) {
     event.preventDefault()
     const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
+    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
     const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
     selectElement.innerHTML = '';
     document.lieuxCards.forEach(option => {
@@ -133,10 +135,31 @@ function savePrelevement(event){
 
 }
 
+// TODO refacto theses
+function resetModalWhenClosing(event){
+    const originalTarget = event.explicitOriginalTarget
+    if (! originalTarget.classList.contains("prelevement-save-btn")){
+        const modalId = event.originalTarget.getAttribute("id").split("-").pop()
+        event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
+    }
+}
+
+function closeDSFRModal(event){
+    // Normally using type="button" show be enough to avoid submitting the form and still closing the modal
+    // https://github.com/GouvernementFR/dsfr/issues/1040
+    const modal = event.target.closest("dialog")
+    dsfr(modal).modal.conceal();
+}
+
+
 (function() {
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
 })();
+
+// TODO vérifier qu'a l'ouverture on refait pas le choices pour la l'espece et autre champ choices

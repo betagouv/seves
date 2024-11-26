@@ -1,14 +1,16 @@
-<dialog aria-labelledby="modal-add-edit-lieu-title" id="modal-add-lieu-{{ forloop.counter0 }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+<!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
+<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-lieu-{{ forloop.counter0 }}"></button>
+<dialog aria-labelledby="modal-add-edit-lieu-title-{{ forloop.counter0 }}" id="modal-add-lieu-{{ forloop.counter0 }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-8 fr-col-lg-6" id="lieu-form">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
-                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-lieu">Fermer</button>
+                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-lieu-{{ forloop.counter0 }}" >Fermer</button>
                     </div>
                     <div class="fr-modal__content">
                         <div>
-                            <h1 id="modal-add-edit-lieu-title"
+                            <h1 id="modal-add-edit-lieu-title-{{ forloop.counter0 }}"
                                 class="fr-modal__title">Ajouter un lieu:
 {#                        TODO handle modifier le#}
                             </h1>

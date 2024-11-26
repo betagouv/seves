@@ -224,10 +224,9 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO tous les problèmes relié a la fermeture de la modale. A l'ouverture de la modale (avant le changement de required, on copie le contenu et on le remet si fermeture par annuler ou titre, ou échap)
 # TODO fixer tous les toolstips
-# TODO gérér l'édition de la fiche
 # TODO fix test ?
+# TODO fix les boutons annuler des deux modales
 # TODO s'assurer que les données etablissement ou officiel ne sont pris en compte que si la case est cochée
-# TODO should be use label tags everywhere ?
 # TODO gérer le problème de form qui s'eppuise dans on delete un lieu/prélévement ?
+# TODO gérér l'édition de la fiche
