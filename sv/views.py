@@ -1,7 +1,3 @@
-import json
-from datetime import datetime
-import uuid
-
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views import View
@@ -14,14 +10,13 @@ from django.views.generic import (
     FormView,
 )
 from django.urls import reverse
-from django.db.models import F, Prefetch
+from django.db.models import Prefetch
 from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from core.content_types import content_type_str_to_obj
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -58,13 +53,12 @@ from .models import (
     MatricePrelevee,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
-    Departement,
     PositionChaineDistribution,
     FicheZoneDelimitee,
     ZoneInfestee,
     SiteInspection,
 )
-from core.models import Visibilite, LienLibre
+from core.models import Visibilite
 
 
 class FicheListView(ListView):
@@ -189,7 +183,6 @@ class FicheDetectionContextMixin:
         context["resultats_prelevement"] = Prelevement.Resultat.choices
         context["sites_inspections"] = list(SiteInspection.objects.all().values("id", "nom").order_by("nom"))
         context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
-
         context = self._add_status_to_organisme_nuisible(context, status)
         return context
 
@@ -260,19 +253,9 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
 
 class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
     model = FicheDetection
-    fields = [
-        "statut_evenement",
-        "organisme_nuisible",
-        "statut_reglementaire",
-        "contexte",
-        "date_premier_signalement",
-        "commentaire",
-        "mesures_conservatoires_immediates",
-        "mesures_consignation",
-        "mesures_phytosanitaires",
-        "mesures_surveillance_specifique",
-    ]
-    success_message = "La fiche détection a été modifiée avec succès."
+    form_class = FicheDetectionForm
+    context_object_name = "fichedetection"
+    success_message = "La fiche détection a été modifiée avec succès."  # TODO make sure this is displayed
 
     @property
     def allows_inactive_laboratoires_agrees_values(self):
@@ -302,181 +285,202 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Lieux associés à la fiche de détection
-        lieux = (
-            Lieu.objects.filter(fiche_detection=self.object).values().annotate(departement_nom=F("departement__nom"))
-        )
-
-        # Prélèvements associés à chaque lieu
-        prelevements = (
-            Prelevement.objects.filter(lieu__fiche_detection=self.object)
-            .values()
-            .annotate(espece_echantillon_name=F("espece_echantillon__libelle"))
-        )
-        for prelevement in prelevements:
-            prelevement["uuid"] = str(uuid.uuid4())
-
         context["is_creation"] = False
-        context["lieux"] = list(lieux)
-        context["prelevements"] = list(prelevements)
+        forms = [PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)]
+        context["prelevement_forms"] = forms
 
+        formset = LieuFormSet(
+            instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
+        )
+
+        formset.custom_kwargs = {"convert_required_to_data_required": True}
+        context["lieu_formset"] = formset
         return context
 
-    def update_fiche_detection(self, data, fiche_detection):
-        # Format de la date de premier signalement
-        date_premier_signalement = data["datePremierSignalement"]
-        try:
-            datetime.strptime(date_premier_signalement, "%Y-%m-%d")
-        except ValueError:
-            date_premier_signalement = None
+    #
+    # def update_fiche_detection(self, data, fiche_detection):
+    #     # Format de la date de premier signalement
+    #     date_premier_signalement = data["datePremierSignalement"]
+    #     try:
+    #         datetime.strptime(date_premier_signalement, "%Y-%m-%d")
+    #     except ValueError:
+    #         date_premier_signalement = None
+    #
+    #     # Mise à jour des champs de l'objet FicheDetection
+    #     fiche_detection.statut_evenement_id = data.get("statutEvenementId")
+    #     fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
+    #     fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
+    #     fiche_detection.contexte_id = data.get("contexteId")
+    #     fiche_detection.date_premier_signalement = date_premier_signalement
+    #     fiche_detection.commentaire = data.get("commentaire")
+    #     fiche_detection.vegetaux_infestes = data.get("vegetauxInfestes")
+    #     fiche_detection.mesures_conservatoires_immediates = data.get("mesuresConservatoiresImmediates")
+    #     fiche_detection.mesures_consignation = data.get("mesuresConsignation")
+    #     fiche_detection.mesures_phytosanitaires = data.get("mesuresPhytosanitaires")
+    #     fiche_detection.mesures_surveillance_specifique = data.get("mesuresSurveillanceSpecifique")
+    #     if self.request.user.agent.structure.is_ac:
+    #         fiche_detection.numero_europhyt = data.get("numeroEurophyt")
+    #         fiche_detection.numero_rasff = data.get("numeroRasff")
+    #
+    #     try:
+    #         fiche_detection.full_clean()
+    #     except ValidationError as e:
+    #         return fiche_detection, e
+    #
+    #     return fiche_detection, None
+    #
+    # def update_lieux(self, lieux, fiche_detection):
+    #     # Suppression des lieux qui ne sont plus dans la liste
+    #     lieux_a_supprimer = Lieu.objects.filter(fiche_detection=fiche_detection).exclude(
+    #         pk__in=[loc["pk"] for loc in lieux if "pk" in loc]
+    #     )
+    #     lieux_a_supprimer.delete()
+    #
+    #     # Création ou mise à jour des lieux
+    #     for loc in lieux:
+    #         # Création ou récupération de l'objet Lieu
+    #         # si pk -> update
+    #         # si pas de pk -> création
+    #         lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
+    #         departement = None
+    #         if loc["departementNom"]:
+    #             departement = Departement.objects.get(nom=loc["departementNom"])
+    #         lieu.nom = loc["nomLieu"]
+    #         lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
+    #         lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
+    #         lieu.lambert93_latitude = (
+    #             loc["coordGPSLambert93Latitude"] if loc["coordGPSLambert93Latitude"] != "" else None
+    #         )
+    #         lieu.lambert93_longitude = (
+    #             loc["coordGPSLambert93Longitude"] if loc["coordGPSLambert93Longitude"] != "" else None
+    #         )
+    #         lieu.adresse_lieu_dit = loc["adresseLieuDit"]
+    #         lieu.commune = loc.get("commune")
+    #         lieu.site_inspection_id = loc["siteInspectionId"]
+    #         lieu.code_insee = loc.get("codeINSEE")
+    #         lieu.departement = departement
+    #         lieu.is_etablissement = loc["isEtablissement"]
+    #         if loc["isEtablissement"]:
+    #             lieu.nom_etablissement = loc["nomEtablissement"]
+    #             lieu.activite_etablissement = loc["activiteEtablissement"]
+    #             lieu.pays_etablissement = loc["paysEtablissement"]
+    #             lieu.raison_sociale_etablissement = loc["raisonSocialeEtablissement"]
+    #             lieu.adresse_etablissement = loc["adresseEtablissement"]
+    #             lieu.siret_etablissement = loc["siretEtablissement"]
+    #             lieu.code_inupp_etablissement = loc["codeInuppEtablissement"]
+    #             lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
+    #         else:
+    #             lieu.nom_etablissement = ""
+    #             lieu.activite_etablissement = ""
+    #             lieu.pays_etablissement = ""
+    #             lieu.raison_sociale_etablissement = ""
+    #             lieu.adresse_etablissement = ""
+    #             lieu.siret_etablissement = ""
+    #             lieu.position_chaine_distribution_etablissement_id = None
+    #         lieu.save()
+    #         loc["lieu_pk"] = lieu.pk
+    #
+    # def update_prelevements(self, prelevements, lieux, fiche_detection):
+    #     # Suppression des prélèvements qui ne sont plus dans la liste
+    #     prelevements_a_supprimer = Prelevement.objects.filter(lieu__fiche_detection=fiche_detection).exclude(
+    #         pk__in=[prel["pk"] for prel in prelevements if "pk" in prel]
+    #     )
+    #     prelevements_a_supprimer.delete()
+    #
+    #     for prel in prelevements:
+    #         # recupérer le lieu_pk associé à chaque prélèvement prel
+    #         prel["lieu_pk"] = next(
+    #             (loc["lieu_pk"] for loc in lieux if loc["id"] == prel["lieuId"]),
+    #             None,
+    #         )
+    #
+    #         # Création ou récupération de l'objet Prelevement
+    #         # si pk -> update
+    #         # si pas de pk -> création
+    #         prelevement = Prelevement.objects.get(pk=prel["pk"]) if prel.get("pk") else Prelevement()
+    #         prelevement.lieu_id = prel["lieu_pk"]
+    #         prelevement.structure_preleveur_id = prel["structurePreleveurId"]
+    #         prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
+    #         prelevement.date_prelevement = prel["datePrelevement"] if prel["datePrelevement"] else None
+    #         prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
+    #         prelevement.espece_echantillon_id = prel["especeEchantillonId"]
+    #         prelevement.is_officiel = prel["isOfficiel"]
+    #         prelevement.numero_phytopass = (
+    #             prel["numeroPhytopass"] if prel["isOfficiel"] and prel["numeroPhytopass"] else ""
+    #         )
+    #         prelevement.numero_resytal = prel["numeroResytal"] if prel["isOfficiel"] and prel["numeroResytal"] else ""
+    #         prelevement.laboratoire_agree_id = prel["laboratoireAgreeId"] if prel["isOfficiel"] else None
+    #         prelevement.laboratoire_confirmation_officielle_id = (
+    #             prel["laboratoireConfirmationOfficielleId"] if prel["isOfficiel"] else None
+    #         )
+    #         prelevement.resultat = prel["resultat"]
+    #         prelevement.save()
+    #
+    # def update_free_links(self, free_links_ids, fiche_detection):
+    #     links_ids_to_keep = []
+    #     for free_link_id in free_links_ids:
+    #         obj = content_type_str_to_obj(free_link_id)
+    #         if obj == fiche_detection:
+    #             messages.error(self.request, "Vous ne pouvez pas lier une fiche a elle-même.")
+    #             continue
+    #         link = LienLibre.objects.for_both_objects(obj, fiche_detection)
+    #
+    #         if link:
+    #             links_ids_to_keep.append(link.id)
+    #         else:
+    #             link = LienLibre.objects.create(related_object_1=fiche_detection, related_object_2=obj)
+    #             links_ids_to_keep.append(link.id)
+    #
+    #     links_to_delete = LienLibre.objects.for_object(fiche_detection).exclude(id__in=links_ids_to_keep)
+    #     links_to_delete.delete()
 
-        # Mise à jour des champs de l'objet FicheDetection
-        fiche_detection.statut_evenement_id = data.get("statutEvenementId")
-        fiche_detection.organisme_nuisible_id = data.get("organismeNuisibleId")
-        fiche_detection.statut_reglementaire_id = data.get("statutReglementaireId")
-        fiche_detection.contexte_id = data.get("contexteId")
-        fiche_detection.date_premier_signalement = date_premier_signalement
-        fiche_detection.commentaire = data.get("commentaire")
-        fiche_detection.vegetaux_infestes = data.get("vegetauxInfestes")
-        fiche_detection.mesures_conservatoires_immediates = data.get("mesuresConservatoiresImmediates")
-        fiche_detection.mesures_consignation = data.get("mesuresConsignation")
-        fiche_detection.mesures_phytosanitaires = data.get("mesuresPhytosanitaires")
-        fiche_detection.mesures_surveillance_specifique = data.get("mesuresSurveillanceSpecifique")
-        if self.request.user.agent.structure.is_ac:
-            fiche_detection.numero_europhyt = data.get("numeroEurophyt")
-            fiche_detection.numero_rasff = data.get("numeroRasff")
-
-        try:
-            fiche_detection.full_clean()
-        except ValidationError as e:
-            return fiche_detection, e
-
-        return fiche_detection, None
-
-    def update_lieux(self, lieux, fiche_detection):
-        # Suppression des lieux qui ne sont plus dans la liste
-        lieux_a_supprimer = Lieu.objects.filter(fiche_detection=fiche_detection).exclude(
-            pk__in=[loc["pk"] for loc in lieux if "pk" in loc]
-        )
-        lieux_a_supprimer.delete()
-
-        # Création ou mise à jour des lieux
-        for loc in lieux:
-            # Création ou récupération de l'objet Lieu
-            # si pk -> update
-            # si pas de pk -> création
-            lieu = Lieu.objects.get(pk=loc["pk"]) if loc.get("pk") else Lieu(fiche_detection=fiche_detection)
-            departement = None
-            if loc["departementNom"]:
-                departement = Departement.objects.get(nom=loc["departementNom"])
-            lieu.nom = loc["nomLieu"]
-            lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
-            lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
-            lieu.lambert93_latitude = (
-                loc["coordGPSLambert93Latitude"] if loc["coordGPSLambert93Latitude"] != "" else None
-            )
-            lieu.lambert93_longitude = (
-                loc["coordGPSLambert93Longitude"] if loc["coordGPSLambert93Longitude"] != "" else None
-            )
-            lieu.adresse_lieu_dit = loc["adresseLieuDit"]
-            lieu.commune = loc.get("commune")
-            lieu.site_inspection_id = loc["siteInspectionId"]
-            lieu.code_insee = loc.get("codeINSEE")
-            lieu.departement = departement
-            lieu.is_etablissement = loc["isEtablissement"]
-            if loc["isEtablissement"]:
-                lieu.nom_etablissement = loc["nomEtablissement"]
-                lieu.activite_etablissement = loc["activiteEtablissement"]
-                lieu.pays_etablissement = loc["paysEtablissement"]
-                lieu.raison_sociale_etablissement = loc["raisonSocialeEtablissement"]
-                lieu.adresse_etablissement = loc["adresseEtablissement"]
-                lieu.siret_etablissement = loc["siretEtablissement"]
-                lieu.code_inupp_etablissement = loc["codeInuppEtablissement"]
-                lieu.position_chaine_distribution_etablissement_id = loc["positionEtablissementId"]
-            else:
-                lieu.nom_etablissement = ""
-                lieu.activite_etablissement = ""
-                lieu.pays_etablissement = ""
-                lieu.raison_sociale_etablissement = ""
-                lieu.adresse_etablissement = ""
-                lieu.siret_etablissement = ""
-                lieu.position_chaine_distribution_etablissement_id = None
-            lieu.save()
-            loc["lieu_pk"] = lieu.pk
-
-    def update_prelevements(self, prelevements, lieux, fiche_detection):
-        # Suppression des prélèvements qui ne sont plus dans la liste
-        prelevements_a_supprimer = Prelevement.objects.filter(lieu__fiche_detection=fiche_detection).exclude(
-            pk__in=[prel["pk"] for prel in prelevements if "pk" in prel]
-        )
-        prelevements_a_supprimer.delete()
-
-        for prel in prelevements:
-            # recupérer le lieu_pk associé à chaque prélèvement prel
-            prel["lieu_pk"] = next(
-                (loc["lieu_pk"] for loc in lieux if loc["id"] == prel["lieuId"]),
-                None,
-            )
-
-            # Création ou récupération de l'objet Prelevement
-            # si pk -> update
-            # si pas de pk -> création
-            prelevement = Prelevement.objects.get(pk=prel["pk"]) if prel.get("pk") else Prelevement()
-            prelevement.lieu_id = prel["lieu_pk"]
-            prelevement.structure_preleveur_id = prel["structurePreleveurId"]
-            prelevement.numero_echantillon = prel["numeroEchantillon"] if prel["numeroEchantillon"] else ""
-            prelevement.date_prelevement = prel["datePrelevement"] if prel["datePrelevement"] else None
-            prelevement.matrice_prelevee_id = prel["matricePreleveeId"]
-            prelevement.espece_echantillon_id = prel["especeEchantillonId"]
-            prelevement.is_officiel = prel["isOfficiel"]
-            prelevement.numero_phytopass = (
-                prel["numeroPhytopass"] if prel["isOfficiel"] and prel["numeroPhytopass"] else ""
-            )
-            prelevement.numero_resytal = prel["numeroResytal"] if prel["isOfficiel"] and prel["numeroResytal"] else ""
-            prelevement.laboratoire_agree_id = prel["laboratoireAgreeId"] if prel["isOfficiel"] else None
-            prelevement.laboratoire_confirmation_officielle_id = (
-                prel["laboratoireConfirmationOfficielleId"] if prel["isOfficiel"] else None
-            )
-            prelevement.resultat = prel["resultat"]
-            prelevement.save()
-
-    def update_free_links(self, free_links_ids, fiche_detection):
-        links_ids_to_keep = []
-        for free_link_id in free_links_ids:
-            obj = content_type_str_to_obj(free_link_id)
-            if obj == fiche_detection:
-                messages.error(self.request, "Vous ne pouvez pas lier une fiche a elle-même.")
-                continue
-            link = LienLibre.objects.for_both_objects(obj, fiche_detection)
-
-            if link:
-                links_ids_to_keep.append(link.id)
-            else:
-                link = LienLibre.objects.create(related_object_1=fiche_detection, related_object_2=obj)
-                links_ids_to_keep.append(link.id)
-
-        links_to_delete = LienLibre.objects.for_object(fiche_detection).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def post(self, request, pk):
-        data = request.POST
-        lieux = json.loads(data["lieux"])
-        prelevements = json.loads(data["prelevements"])
+        form = self.get_form()
+        lieu_formset = LieuFormSet(request.POST)
 
-        # Mise à jour des objets en base de données
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        if not lieu_formset.is_valid():
+            return self.form_invalid(form)
+
         with transaction.atomic():
-            fiche_detection, error = self.update_fiche_detection(data, self.get_object())
-            if error:
-                return HttpResponseBadRequest(str(error))
-            fiche_detection.save()
+            self.object = form.save()
+            if request.POST["action"] == "Publier":
+                self.object.visibilite = Visibilite.LOCAL
+                self.object.save()
+            lieu_formset.instance = self.object
+            # allowed_lieux = lieu_formset.save()
+            # data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
+            # self._save_prelevement_if_not_empty(data)
 
-            self.update_lieux(lieux, fiche_detection)
-            self.update_prelevements(prelevements, lieux, fiche_detection)
-            self.update_free_links(request.POST.getlist("freeLinksIds"), fiche_detection)
+        # TODO handle deletion of objects
+        return HttpResponseRedirect(self.get_success_url())
 
-        messages.success(request, self.success_message)
-        return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
+    #
+    # def old_post(self, request, pk):
+    #     data = request.POST
+    #     lieux = json.loads(data["lieux"])
+    #     prelevements = json.loads(data["prelevements"])
+    #
+    #     # Mise à jour des objets en base de données
+    #     with transaction.atomic():
+    #         fiche_detection, error = self.update_fiche_detection(data, self.get_object())
+    #         if error:
+    #             return HttpResponseBadRequest(str(error))
+    #         fiche_detection.save()
+    #
+    #         self.update_lieux(lieux, fiche_detection)
+    #         self.update_prelevements(prelevements, lieux, fiche_detection)
+    #         self.update_free_links(request.POST.getlist("freeLinksIds"), fiche_detection)
+    #
+    #     messages.success(request, self.success_message)
+    #     return redirect(reverse("fiche-detection-vue-detaillee", args=[fiche_detection.pk]))
 
 
 class FicheDetectionExportView(View):
