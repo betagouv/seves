@@ -1,6 +1,21 @@
 document.prelevementCards =[]
 let extraFormSaved = 0
 
+function fetchEspecesEchantillon(query) {
+    return fetch(`/sv/api/espece/recherche/?q=${query}`)
+        .then(response => response.json())
+        .then(data => {
+            return data.results.map(item => ({
+                value: item.id,
+                label: item.name ,
+            }))
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données:', error);
+            return []
+        });
+}
+
 function showOrHidePrelevementUI(){
     if (document.getElementById("lieux-list").childElementCount === 0){
         document.getElementById("no-lieux-text").classList.remove("fr-hidden")
@@ -10,6 +25,30 @@ function showOrHidePrelevementUI(){
         document.getElementById("btn-add-prelevment").disabled = false
     }
 }
+
+function addChoicesEspeceEchantillon(element){
+    const choicesEspece = new Choices(element, {
+        removeItemButton: true,
+        placeholderValue: 'Recherchez...',
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucun résultat trouvé',
+        shouldSort: false,
+        searchResultLimit: 50,
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: '',
+    });
+    choicesEspece.input.element.addEventListener('input', function (event) {
+        const query = choicesEspece.input.element.value
+        if (query.length > 2) {
+            fetchEspecesEchantillon(query).then(results => {
+                choicesEspece.clearChoices()
+                choicesEspece.setChoices(results, 'value', 'label', true)
+            })
+        }
+    })
+    return choicesEspece
+}
+
 
 
 function deletePrelevement(event) {
@@ -111,4 +150,5 @@ function savePrelevement(event){
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
+    document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
 })();

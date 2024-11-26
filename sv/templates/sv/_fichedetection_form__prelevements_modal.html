@@ -13,28 +13,24 @@
                             class="fr-modal__title">Ajouter un prélèvement</h1>
                         <div id="lieu" class="fr-select-group prelevement-form--fieldset">
                             <label class="fr-label">Lieu</label>
-                            <select class="fr-select"  id="id_prelevements-{{ forloop.counter0 }}-lieu" name="prelevements-{{ forloop.counter0 }}-lieu">
+                            <select class="fr-select" id="id_prelevements-{{ forloop.counter0 }}-lieu" name="prelevements-{{ forloop.counter0 }}-lieu">
                             </select>
                         </div>
                         <div id="structure" class="fr-select-group prelevement-form--fieldset">
-                            <label class="fr-label">Structure</label>
-                            {{ form.structure_preleveur }}
+                            {{ form.structure_preleveur.label_tag }}{{ form.structure_preleveur }}
                         </div>
                         <p id="numero-echantillon" class="prelevement-form--fieldset">
-                            <label class="fr-label">N° d'échantillon</label>
-                            {{ form.numero_echantillon }}
+                            {{ form.numero_echantillon.label_tag }}{{ form.numero_echantillon }}
                         </p>
                         <p id="date-prelevement" class="prelevement-form--fieldset">
-                            <label class="fr-label" for="id_prelevements-{{ forloop.counter0 }}-date_prelevement">Date prélèvement</label>
-                            {{ form.date_prelevement }}
+                            {{ form.date_prelevement.label_tag }}{{ form.date_prelevement }}
                         </p>
                         <p id="matrice-prelevee" class="prelevement-form--fieldset">
-                            <label class="fr-label">Matrice prélevée</label>
-                            {{ form.matrice_prelevee }}
+                            {{ form.matrice_prelevee.label_tag }}{{ form.matrice_prelevee }}
                         </p>
                         <p id="espece-echantillon" class="prelevement-form--fieldset">
-                            <label class="fr-label" for="commune">Espèce de l'échantillon</label>
-                            <select id="espece-echantillon-input" class="fr-input"></select>
+                            <label class="fr-label" for="id_prelevements-{{ forloop.counter0 }}-espece-echantillon">Espèce de l'échantillon</label>
+                            <select id="id_prelevements-{{ forloop.counter0 }}-espece-echantillon" class="fr-input" name="prelevements-{{ forloop.counter0 }}-espece_echantillon"></select>
                         </p>
                         <div id="resultat" class="prelevement-form--fieldset">
                             <label class="fr-label" style="flex:0.65">Résultat</label>

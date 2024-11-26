@@ -187,11 +187,11 @@ class LieuFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("lieu-save-btn-0")
+        return self.page.locator('[data-testid^="lieu-save-btn-"]').locator("visible=true")
 
     @property
     def title(self) -> Locator:
-        return self.page.get_by_role("heading", name="Ajouter un lieu")
+        return self.page.get_by_role("heading", name="Ajouter un lieu").locator("visible=true")
 
     @property
     def nom_label(self) -> Locator:

@@ -228,7 +228,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
             prefix = f"prelevements-{i}"
             form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
             if any(form_data.values()):
-                prelevement_form = PrelevementForm(data, prefix=prefix)
+                print(form_data)
+                prelevement_form = PrelevementForm(form_data, prefix=prefix)
                 if prelevement_form.is_valid():
                     prelevement_form.save()
                 else:

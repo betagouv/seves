@@ -198,8 +198,7 @@ def test_add_lieu_to_list(
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
     expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
 
 def test_added_lieu_content_in_list(
@@ -262,8 +261,7 @@ def test_add_two_lieux_to_list(
     expect(page.locator("#lieux").get_by_text("test lieu 2", exact=True)).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("a")
     expect(page.locator("#lieux")).to_contain_text("b")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 2
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 2
 
 
 @pytest.mark.django_db
@@ -334,9 +332,7 @@ def test_edit_lieu_modal_title_and_actions_btn(
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
     expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
-    expect(page.get_by_label("Modifier le lieu").locator('input[type="submit"]')).to_have_text(
-        "Enregistrer les modifications"
-    )
+    expect(page.get_by_label("Modifier le lieu").locator('input[type="submit"]')).to_have_text("Enregistrer")
 
 
 def test_edit_lieu_form_with_only_nom_lieu(
@@ -471,7 +467,7 @@ def test_edit_lieu_is_updated_in_alpinejs_data(
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_role("button", name="Enregistrer les modifications").click()
+    page.get_by_text("Enregistrer", exact=True).click()
 
     # vérification des valeurs du lieu modifié
     lieux_json = page.get_by_test_id("lieux").input_value()
@@ -507,7 +503,7 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_role("button", name="Enregistrer les modifications").click()
+    page.get_by_text("Enregistrer", exact=True).click()
 
     # vérification que le formulaire d'ajout d'un lieu est vide
     form_elements.add_lieu_btn.click()
@@ -608,8 +604,7 @@ def test_delete_lieu_from_list(
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("nom lieu")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 0
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 0
 
     lieux_json = page.get_by_test_id("lieux").input_value()
     lieux = json.loads(lieux_json)
@@ -639,8 +634,7 @@ def test_delete_lieu_from_list_with_multiple_lieux(
 
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
     lieux_json = page.get_by_test_id("lieux").input_value()
     lieux = json.loads(lieux_json)
@@ -674,8 +668,7 @@ def test_delete_correct_lieu(
 
     expect(page.locator("#lieux")).not_to_contain_text("ipsum")
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
     lieux_json = page.get_by_test_id("lieux").input_value()
     lieux = json.loads(lieux_json)
@@ -712,8 +705,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     expect(page.get_by_role("dialog")).to_be_visible()
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    elements = page.query_selector_all(".lieu-initial")
-    assert len(elements) == 1
+    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
     lieux_json = page.get_by_test_id("lieux").input_value()
     lieux = json.loads(lieux_json)

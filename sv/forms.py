@@ -21,6 +21,7 @@ from sv.models import (
     Lieu,
     Prelevement,
     Departement,
+    EspeceEchantillon,
 )
 
 
@@ -146,6 +147,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         choices=Prelevement.Resultat.choices,
         widget=DSFRRadioButton(attrs={"required": "true"}),
     )
+    espece_echantillon = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = Prelevement
@@ -158,6 +160,9 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 
         if convert_required_to_data_required:
             self._convert_required_to_data_required()
+
+    def clean_espece_echantillon(self):
+        return EspeceEchantillon.objects.get(pk=self.cleaned_data["espece_echantillon"])
 
 
 class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
