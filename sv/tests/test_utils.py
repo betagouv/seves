@@ -219,35 +219,19 @@ class LieuFormDomElements:
 
     @property
     def commune_input(self) -> Locator:
-        return self.page.locator('[id^="commune-select-"]').locator("visible=true")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id^="commune-select-"]')
 
     @property
     def commune_hidden_input(self) -> Locator:
         return self.page.locator("#commune")
 
     @property
-    def code_insee_label(self) -> Locator:
-        return self.page.get_by_text("Code INSEE")
-
-    @property
-    def code_insee_input(self) -> Locator:
-        return self.page.get_by_label("Code INSEE")
-
-    @property
     def code_insee_hidden_input(self) -> Locator:
-        return self.page.locator("#code-insee")
-
-    @property
-    def departement_label(self) -> Locator:
-        return self.page.get_by_text("Département")
-
-    @property
-    def departement_input(self) -> Locator:
-        return self.page.get_by_label("Département")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_insee"]')
 
     @property
     def departement_hidden_input(self) -> Locator:
-        return self.page.locator("#departement")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="departement"]')
 
     @property
     def coord_gps_lamber93_latitude_label(self) -> Locator:
