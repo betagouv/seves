@@ -135,7 +135,6 @@ function savePrelevement(event){
 
 }
 
-// TODO refacto theses
 function resetModalWhenClosing(event){
     const originalTarget = event.explicitOriginalTarget
     if (! originalTarget.classList.contains("prelevement-save-btn")){
@@ -143,14 +142,6 @@ function resetModalWhenClosing(event){
         event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
     }
 }
-
-function closeDSFRModal(event){
-    // Normally using type="button" show be enough to avoid submitting the form and still closing the modal
-    // https://github.com/GouvernementFR/dsfr/issues/1040
-    const modal = event.target.closest("dialog")
-    dsfr(modal).modal.conceal();
-}
-
 
 (function() {
     showOrHidePrelevementUI()

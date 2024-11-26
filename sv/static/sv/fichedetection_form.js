@@ -1,5 +1,3 @@
-
-
 function setUpOrganismeNuisible(){
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('id_organisme_nuisible');
@@ -49,11 +47,7 @@ function setUpFreeLinks(){
     }
 }
 
-
-
 document.addEventListener('DOMContentLoaded', function() {
     setUpOrganismeNuisible()
     setUpFreeLinks()
-
-
 });

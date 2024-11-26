@@ -127,6 +127,12 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         if convert_required_to_data_required:
             self._convert_required_to_data_required()
 
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["is_etablissement"]:
+            for field in Lieu.ETABLISSEMENT_FIELDS:
+                self.cleaned_data.pop(field)
+
 
 class CustomLieuFormSet(BaseInlineFormSet):
     def get_form_kwargs(self, index):
@@ -162,7 +168,14 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             self._convert_required_to_data_required()
 
     def clean_espece_echantillon(self):
-        return EspeceEchantillon.objects.get(pk=self.cleaned_data["espece_echantillon"])
+        if self.cleaned_data["espece_echantillon"]:
+            return EspeceEchantillon.objects.get(pk=self.cleaned_data["espece_echantillon"])
+
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["is_officiel"]:
+            for field in Prelevement.OFFICIEL_FIELDS:
+                self.cleaned_data.pop(field)
 
 
 class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):

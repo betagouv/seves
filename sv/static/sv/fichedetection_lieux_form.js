@@ -132,14 +132,6 @@ function resetModalWhenClosing(event){
     }
 }
 
-function closeDSFRModal(event){
-    // Normally using type="button" show be enough to avoid submitting the form and still closing the modal
-    // https://github.com/GouvernementFR/dsfr/issues/1040
-    const modal = event.target.closest("dialog")
-    dsfr(modal).modal.conceal();
-}
-
-
 (function() {
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))

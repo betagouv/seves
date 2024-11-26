@@ -156,6 +156,7 @@ main {
 }
 [id^=lieu-form] p input, #lieu-form p .choices{
     flex: 1.25;
+    margin-top: .5rem;
 }
 [id^=lieu-form] p select {
     flex: 1.15;
