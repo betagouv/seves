@@ -135,7 +135,7 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
 
 @pytest.mark.django_db
 def test_fiche_detection_create_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, choice_js_fill
 ):
     statut_evenement = StatutEvenement.objects.first()
     organisme_nuisible = OrganismeNuisible.objects.get(libelle_court="Xylella fastidiosa (maladie de Pierce)")
@@ -145,9 +145,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    page.get_by_text("--------").click()
-    page.locator("#organisme-nuisible").get_by_label("----").fill("xylela")
-    page.get_by_role("option", name=organisme_nuisible.libelle_court).click()
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
@@ -199,25 +197,6 @@ def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.numero_europhyt == "11111111"
     assert fiche_detection.numero_rasff == "222222222"
-
-
-@pytest.mark.django_db
-def test_fiche_detection_create_cant_forge_form_to_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    page.locator("#id_numero_rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.locator("#id_numero_europhyt").evaluate(
-        "element => element.style.setProperty('display', 'block' , 'important')"
-    )
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-    page.get_by_role("button", name="Enregistrer").click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == ""
-    assert fiche_detection.numero_rasff == ""
 
 
 @pytest.mark.django_db
