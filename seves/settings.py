@@ -226,6 +226,5 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 # TODO fixer tous les toolstips
 # TODO fix test ?
-# TODO fix les boutons annuler des deux modales
 # TODO gérer le problème de form qui s'eppuise dans on delete un lieu/prélévement ?
 # TODO gérér l'édition de la fiche

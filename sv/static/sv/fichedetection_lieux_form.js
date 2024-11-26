@@ -139,6 +139,7 @@ function resetModalWhenClosing(event){
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
+    document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 })();
 
 // TODO vérifier qu'a l'ouverture on refait pas le choices pour la commune

@@ -151,6 +151,7 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-] .prelevement-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 })();
 
 // TODO vérifier qu'a l'ouverture on refait pas le choices pour la l'espece et autre champ choices
