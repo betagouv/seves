@@ -224,11 +224,10 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO faire l'édtion prélévement
-
 # TODO tous les problèmes relié a la fermeture de la modale
 # TODO fixer tous les toolstips
 # TODO gérér l'édition de la fiche
 # TODO fix test ?
 # TODO s'assurer que les données etablissement ou officiel ne sont pris en compte que si la case est cochée
 # TODO should be use label tags everywhere ?
+# TODO gérer le problème de form qui s'eppuise dans on delete un lieu/prélévement ?

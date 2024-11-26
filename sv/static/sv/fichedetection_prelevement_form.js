@@ -50,19 +50,10 @@ function addChoicesEspeceEchantillon(element){
 }
 
 
-
 function deletePrelevement(event) {
     const id = event.target.dataset.id
     document.prelevementCards = document.prelevementCards.filter(function(item) {return item.id !== id})
-    const form = document.getElementById("modal-add-edit-prelevement-" + id)
-    // TODO use resetForm instead
-    form.querySelectorAll('input, select, textarea').forEach(field => {
-        if (field.type === 'checkbox' || field.type === 'radio') {
-            field.checked = false;
-        } else {
-            field.value = '';
-        }
-    });
+    resetForm(document.getElementById("modal-add-edit-prelevement-" + id))
     displayPrelevementsCards()
     dsfr(document.getElementById('modal-delete-prelevement-confirmation')).modal.conceal();
 }
@@ -78,10 +69,7 @@ function displayPrelevementsCards() {
         clone.querySelector('.prelevement-lieu').textContent = "Lieu : " + card.lieu;
         clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.detecte}`;
         clone.querySelector('.prelevement-delete-btn').setAttribute("data-id", card.id)
-        // TODO add edit btn
-            // clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
-            //     dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
-            // })
+        clone.querySelector(".prelevement-edit-btn").setAttribute("aria-controls", "modal-add-edit-prelevement-" + card.id)
         clone.querySelector('.prelevement-delete-btn').addEventListener("click", (event)=>{
             dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
             document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)

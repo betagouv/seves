@@ -43,9 +43,7 @@ function displayLieuxCards() {
         clone.querySelector('.lieu-nom').textContent = card.nom;
         clone.querySelector('.lieu-commune').textContent = card.commune;
         clone.querySelector('.lieu-delete-btn').setAttribute("data-id", card.id)
-        clone.querySelector('.lieu-edit-btn').addEventListener("click", (event)=>{
-            dsfr(document.getElementById("modal-add-lieu-" + card.id)).modal.disclose()
-        })
+        clone.querySelector(".lieu-edit-btn").setAttribute("aria-controls", "modal-add-lieu-" + card.id)
         clone.querySelector('.lieu-delete-btn').addEventListener("click", (event)=>{
             let lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
             if (lieuLinkedToPrelevement === true){
