@@ -230,4 +230,3 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO s'assurer que les données etablissement ou officiel ne sont pris en compte que si la case est cochée
 # TODO gérer le problème de form qui s'eppuise dans on delete un lieu/prélévement ?
 # TODO gérér l'édition de la fiche
-# TODO check label of main form

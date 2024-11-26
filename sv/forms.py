@@ -185,7 +185,9 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     )
     mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}), required=False)
     date_premier_signalement = forms.DateField(
-        required=False, widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"})
+        label="Date 1er signalement",
+        required=False,
+        widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"}),
     )
 
     class Meta:
@@ -208,6 +210,8 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
         ]
         labels = {
             "statut_evenement": "Statut évènement",
+            "organisme_nuisible": "Organisme nuisible",
+            "statut_reglementaire": "Statut réglementaire",
         }
 
     def __init__(self, *args, **kwargs):

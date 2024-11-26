@@ -20,9 +20,6 @@
 {% block content %}
     <main>
         {{ form.instance.free_link_ids|json_script:"free-links-id" }}
-        {{ lieux|json_script:"lieux-json" }}
-        {{ prelevements|json_script:"prelevements" }}
-        {{ structures_preleveurs|json_script:"structures-preleveurs" }}
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
 
         <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
@@ -90,7 +87,7 @@
                         {{ form.contexte.label_tag }}{{ form.contexte }}
                     </p>
                     <p id="date-1er-signalement">
-                        {{ form.date_premier_signalement.label_tag }} {{ form.date_premier_signalement }}
+                        {{ form.date_premier_signalement.label_tag }}{{ form.date_premier_signalement }}
                     </p>
                     <p>
                         {{ form.vegetaux_infestes.label_tag }}{{ form.vegetaux_infestes }}
