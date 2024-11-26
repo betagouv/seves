@@ -158,6 +158,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
     class Meta:
         model = Prelevement
         exclude = []
+        labels = {"date_prelevement": "Date prélèvement"}
 
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
@@ -179,7 +180,9 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 
 
 class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
-    vegetaux_infestes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""}))
+    vegetaux_infestes = forms.CharField(
+        label="Végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
+    )
     commentaire = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
         required=False,
@@ -187,16 +190,18 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     mesures_conservatoires_immediates = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
         required=False,
+        label="Mesures conservatoires immédiates",
     )
     mesures_consignation = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": ""}),
-        required=False,
+        widget=forms.Textarea(attrs={"rows": ""}), required=False, label="Mesures de consignation"
     )
     mesures_phytosanitaires = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
         required=False,
     )
-    mesures_surveillance_specifique = forms.CharField(widget=forms.Textarea(attrs={"rows": ""}), required=False)
+    mesures_surveillance_specifique = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": ""}), required=False, label="Mesures de surveillance spécifique"
+    )
     date_premier_signalement = forms.DateField(
         label="Date 1er signalement",
         required=False,

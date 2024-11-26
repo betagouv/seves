@@ -149,18 +149,12 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
-    page.get_by_label("Commentaire").click()
     page.get_by_label("Commentaire").fill("test commentaire")
-    page.get_by_label("Végétaux infestés").click()
     page.get_by_label("Végétaux infestés").fill("3 citronniers")
-    page.get_by_label("Mesures conservatoires immé").click()
-    page.get_by_label("Mesures conservatoires immé").fill("test mesures conservatoires")
-    page.get_by_label("Mesures de consignation").click()
+    page.get_by_label("Mesures conservatoires immédiates").fill("test mesures conservatoires")
     page.get_by_label("Mesures de consignation").fill("test mesures consignation")
-    page.get_by_label("Mesures phytosanitaires").click()
     page.get_by_label("Mesures phytosanitaires").fill("test mesures phyto")
-    page.get_by_label("Mesures de surveillance spé").click()
-    page.get_by_label("Mesures de surveillance spé").fill("test mesures surveillance")
+    page.get_by_label("Mesures de surveillance spécifique").fill("test mesures surveillance")
     page.get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
@@ -238,7 +232,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
     lieu_form_elements.nom_etablissement_input.fill(lieu.nom_etablissement)
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
@@ -349,12 +343,13 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
     organisme_nuisible.libelle_court = "Mon ON"
     organisme_nuisible.save()
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    page.wait_for_timeout(4000)
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     page.get_by_role("button", name="Enregistrer").click()
 
@@ -370,7 +365,7 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
     organisme_nuisible.libelle_court = "Mon ON"
     organisme_nuisible.save()
 

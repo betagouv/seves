@@ -405,7 +405,7 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
-    page.get_by_text("Enregistrer", exact=True).click()
+    lieu_form_elements.save_btn.click()
 
     # vérification que le formulaire d'ajout d'un lieu est vide
     form_elements.add_lieu_btn.click()
@@ -594,7 +594,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     assert StructurePreleveur.objects.count() > 0
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveur.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
-    page.get_by_test_id("prelevement-form-resultat-detecte").click()
+    prelevement_form_elements.resultat_input("detecte").click()
     prelevement_form_elements.save_btn.click()
 
     # suppression du lieu

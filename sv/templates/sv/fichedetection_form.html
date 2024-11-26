@@ -136,20 +136,16 @@
                     <h2>Mesures de gestion</h2>
                     <div id="mesures-gestion-content">
                         <p id="mesures-conservatoires-immediates">
-                            <label class="fr-label" for="mesures-conservatoires-immediates-input">Mesures conservatoires immédiates</label>
-                            {{ form.mesures_conservatoires_immediates }}
+                            {{ form.mesures_conservatoires_immediates.label_tag }} {{ form.mesures_conservatoires_immediates }}
                         </p>
                         <p id="mesures-consignation">
-                            <label class="fr-label" for="mesures-consignation-input">Mesures de consignation</label>
-                            {{ form.mesures_consignation }}
+                            {{ form.mesures_consignation.label_tag }} {{ form.mesures_consignation }}
                         </p>
                         <p id="mesures-phytosanitaires">
-                            <label class="fr-label" for="mesures-phytosanitaires-input">Mesures phytosanitaires</label>
-                            {{ form.mesures_phytosanitaires }}
+                            {{ form.mesures_phytosanitaires.label_tag }}{{ form.mesures_phytosanitaires }}
                         </p>
                         <p id="mesures-surveillance-specifique">
-                            <label class="fr-label" for="mesures-surveillance-specifique-input">Mesures de surveillance spécifique</label>
-                            {{ form.mesures_surveillance_specifique }}
+                            {{ form.mesures_surveillance_specifique.label_tag }}{{ form.mesures_surveillance_specifique }}
                         </p>
                     </div>
                 </div>

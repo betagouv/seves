@@ -311,7 +311,7 @@ class LieuFormDomElements:
 
     @property
     def position_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="disctribution_etablissement"]').locator("visible=true")
+        return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
 
 
 class PrelevementFormDomElements:
@@ -330,7 +330,7 @@ class PrelevementFormDomElements:
 
     @property
     def save_btn(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-save-btn")
+        return self.page.locator(".prelevement-save-btn").locator("visible=true")
 
     @property
     def title(self) -> Locator:
@@ -342,7 +342,7 @@ class PrelevementFormDomElements:
 
     @property
     def structure_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-structure")
+        return self.page.locator('[id^="id_prelevements-"][id$="structure_preleveur"]').locator("visible=true")
 
     @property
     def numero_echantillon_input(self) -> Locator:
@@ -350,7 +350,7 @@ class PrelevementFormDomElements:
 
     @property
     def date_prelevement_input(self) -> Locator:
-        return self.page.get_by_label("Date prélèvement")
+        return self.page.get_by_label("Date prélèvement").locator("visible=true")
 
     @property
     def matrice_prelevee_input(self) -> Locator:
@@ -361,7 +361,13 @@ class PrelevementFormDomElements:
         return self.page.get_by_test_id("prelevement-form-espece-echantillon")
 
     def resultat_input(self, resultat_value) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-resultat-" + resultat_value)
+        if resultat_value == "non detecte":
+            return (
+                self.page.locator("label")
+                .filter(has_text="Détecté", has_not_text="Non détecté")
+                .locator("visible=true")
+            )
+        return self.page.locator("label").filter(has_text="Non détecté").locator("visible=true")
 
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
