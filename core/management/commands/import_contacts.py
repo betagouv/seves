@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
             # Contact pour agent
             User = get_user_model()
-            user, _ = User.objects.get_or_create(username=row["Mail"], defaults={"is_active": False})
+            user, _ = User.objects.get_or_create(username=row["Mail"], email=row["Mail"], defaults={"is_active": False})
 
             agent, _ = Agent.objects.update_or_create(
                 user=user,
