@@ -31,6 +31,8 @@ def _reset_contacts():
     Contact.objects.all().delete()
     Agent.objects.all().delete()
     Structure.objects.all().delete()
+    User = get_user_model()
+    User.objects.all().delete()
 
 
 @pytest.mark.django_db
@@ -44,6 +46,8 @@ def test_import_contacts(mock_csv_data):
     assert Agent.objects.count() == 2
     assert Structure.objects.count() == 2
     assert Contact.objects.count() == 4
+    User = get_user_model()
+    assert User.objects.count() == 2
 
 
 @pytest.mark.django_db
@@ -77,6 +81,9 @@ def test_data_integrity(mock_csv_data):
     assert contact.agent.complement_fonction == ""
     assert contact.agent.telephone == "+33 5 46 00 00 00"
     assert contact.agent.mobile == "+33 6 00 00 00 00"
+    assert contact.agent.user.username == "test@example.com"
+    assert contact.agent.user.email == "test@example.com"
+    assert contact.agent.user.is_active is False
 
     contact2 = Contact.objects.get(email="test2@example2.com")
     assert contact2.agent.structure == structure_mus
@@ -86,6 +93,9 @@ def test_data_integrity(mock_csv_data):
     assert contact2.agent.fonction_hierarchique == "Super Manager"
     assert contact2.agent.complement_fonction == ""
     assert contact2.agent.telephone == "+33 5 46 01 00 00"
+    assert contact2.agent.user.username == "test2@example2.com"
+    assert contact2.agent.user.email == "test2@example2.com"
+    assert contact2.agent.user.is_active is False
 
 
 @pytest.mark.django_db
