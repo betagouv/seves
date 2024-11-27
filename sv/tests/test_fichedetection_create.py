@@ -34,8 +34,10 @@ def create_fixtures_if_needed(db):
     for statut in STATUTS_EVENEMENT:
         StatutEvenement.objects.get_or_create(libelle=statut)
 
-    OrganismeNuisible.objects.get_or_create(libelle_court="Xylella fastidiosa (maladie de Pierce)")
-    OrganismeNuisible.objects.get_or_create(libelle_court="lorem ipsum")
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Xylella fastidiosa (maladie de Pierce)", defaults={"code_oepp": "OE_XYLEFA"}
+    )
+    OrganismeNuisible.objects.get_or_create(libelle_court="lorem ipsum", defaults={"code_oepp": "LOREM"})
 
     for code, libelle in STATUTS_REGLEMENTAIRES.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)

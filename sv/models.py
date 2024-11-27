@@ -67,9 +67,14 @@ class OrganismeNuisible(models.Model):
         verbose_name = "Organisme nuisible"
         verbose_name_plural = "Organismes nuisibles"
         db_table = "sv_organisme_nuisible"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code_oepp", "libelle_court"], name="unique_organisme_nuisible_code_libelle"
+            )
+        ]
 
-    code_oepp = models.CharField(verbose_name="Code OEPP")
-    libelle_court = models.CharField(max_length=255, verbose_name="Nom")
+    code_oepp = models.CharField(verbose_name="Code OEPP", unique=True)
+    libelle_court = models.CharField(max_length=255, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.libelle_court
@@ -80,9 +85,12 @@ class StatutReglementaire(models.Model):
         verbose_name = "Statut règlementaire de l'organisme"
         verbose_name_plural = "Statuts règlementaires de l'organisme"
         db_table = "sv_statut_reglementaire"
+        constraints = [
+            models.UniqueConstraint(fields=["code", "libelle"], name="unique_statut_reglementaire_code_libelle")
+        ]
 
-    code = models.CharField(max_length=10, verbose_name="Code")
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    code = models.CharField(max_length=10, verbose_name="Code", unique=True)
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
@@ -93,7 +101,7 @@ class Contexte(models.Model):
         verbose_name = "Contexte"
         verbose_name_plural = "Contextes"
 
-    nom = models.CharField(max_length=100, verbose_name="Nom")
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.nom
@@ -116,6 +124,7 @@ class Departement(models.Model):
         verbose_name = "Département"
         verbose_name_plural = "Départements"
         ordering = ["numero"]
+        constraints = [models.UniqueConstraint(fields=["numero", "nom"], name="unique_departement_numero_nom")]
 
     numero = models.CharField(max_length=3, verbose_name="Numéro", unique=True)
     nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
@@ -221,7 +230,7 @@ class StatutEtablissement(models.Model):
         verbose_name_plural = "Statuts de l'établissement"
         db_table = "sv_statut_etablissement"
 
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
@@ -233,7 +242,7 @@ class PositionChaineDistribution(models.Model):
         verbose_name_plural = "Positions dans la chaîne de distribution"
         db_table = "sv_position_chaine_distribution"
 
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
@@ -246,7 +255,7 @@ class StructurePreleveuse(IsActiveMixin, models.Model):
         db_table = "sv_structure_preleveur"
         ordering = ["nom"]
 
-    nom = models.CharField(max_length=100, verbose_name="Nom")
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
 
     objects = StructurePreleveuseManager()
 
@@ -260,7 +269,7 @@ class SiteInspection(models.Model):
         verbose_name_plural = "Sites d'inspection"
         db_table = "sv_site_inspection"
 
-    nom = models.CharField(max_length=100, verbose_name="Nom")
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.nom
@@ -272,7 +281,7 @@ class MatricePrelevee(models.Model):
         verbose_name_plural = "Matrices prélevées"
         db_table = "sv_matrice_prelevee"
 
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
@@ -283,9 +292,12 @@ class EspeceEchantillon(models.Model):
         verbose_name = "Espèce de l'échantillon"
         verbose_name_plural = "Espèces de l'échantillon"
         db_table = "sv_espece_echantillon"
+        constraints = [
+            models.UniqueConstraint(fields=["code_oepp", "libelle"], name="unique_espece_echantillon_codeoepp_libelle")
+        ]
 
     code_oepp = models.CharField(max_length=100, verbose_name="Code OEPP", unique=True)
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
@@ -298,7 +310,7 @@ class LaboratoireAgree(IsActiveMixin, models.Model):
         db_table = "sv_laboratoire_agree"
         ordering = ["nom"]
 
-    nom = models.CharField(max_length=100, verbose_name="Nom")
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.nom
@@ -313,7 +325,7 @@ class LaboratoireConfirmationOfficielle(IsActiveMixin, models.Model):
         db_table = "sv_laboratoire_confirmation_officielle"
         ordering = ["nom"]
 
-    nom = models.CharField(max_length=100, verbose_name="Nom")
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.nom
@@ -385,7 +397,7 @@ class StatutEvenement(models.Model):
         verbose_name_plural = "Statuts de l'événement"
         db_table = "sv_statut_evenement"
 
-    libelle = models.CharField(max_length=100, verbose_name="Libellé")
+    libelle = models.CharField(max_length=100, verbose_name="Libellé", unique=True)
 
     def __str__(self):
         return self.libelle
