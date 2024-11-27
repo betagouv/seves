@@ -1,9 +1,10 @@
 import pytest
+from django.core.exceptions import ValidationError
 from model_bakery import baker
 from django.db.utils import IntegrityError
 
 from core.models import Visibilite
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat, Lieu
 
 
 @pytest.mark.django_db
@@ -62,3 +63,29 @@ def test_constraint_check_fiche_zone_delimitee_numero_fiche_is_null_when_visibil
             visibilite=Visibilite.BROUILLON,
             _fill_optional=True,
         )
+
+
+@pytest.mark.django_db
+def test_valid_wgs84_coordinates(fiche_detection):
+    lieu = Lieu(
+        fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=45.0, wgs84_latitude=45.0
+    )
+    lieu.full_clean()
+
+
+@pytest.mark.django_db
+def test_invalid_wgs84_longitude(fiche_detection):
+    lieu = Lieu(
+        fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=181.0, wgs84_latitude=45.0
+    )
+    with pytest.raises(ValidationError):
+        lieu.full_clean()
+
+
+@pytest.mark.django_db
+def test_invalid_wgs84_latitude(fiche_detection):
+    lieu = Lieu(
+        fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=45.0, wgs84_latitude=91.0
+    )
+    with pytest.raises(ValidationError):
+        lieu.full_clean()
