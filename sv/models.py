@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import TextChoices, Q
@@ -124,6 +125,16 @@ class Departement(models.Model):
         return f"{self.numero} - {self.nom}"
 
 
+def validate_wgs84_longitude(value):
+    if value is not None and (value < -180 or value > 180):
+        raise ValidationError("La longitude doit être comprise entre -180° et +180°")
+
+
+def validate_wgs84_latitude(value):
+    if value is not None and (value < -90 or value > 90):
+        raise ValidationError("La latitude doit être comprise entre -90° et +90°")
+
+
 class Lieu(models.Model):
     class Meta:
         verbose_name = "Lieu"
@@ -135,9 +146,13 @@ class Lieu(models.Model):
         verbose_name="Fiche de détection",
         related_name="lieux",
     )
-    nom = models.CharField(max_length=100, verbose_name="Nom", blank=True)
-    wgs84_longitude = models.FloatField(verbose_name="Longitude WGS84", blank=True, null=True)
-    wgs84_latitude = models.FloatField(verbose_name="Latitude WGS84", blank=True, null=True)
+    nom = models.CharField(max_length=100, verbose_name="Nom")
+    wgs84_longitude = models.FloatField(
+        verbose_name="Longitude WGS84", blank=True, null=True, validators=[validate_wgs84_longitude]
+    )
+    wgs84_latitude = models.FloatField(
+        verbose_name="Latitude WGS84", blank=True, null=True, validators=[validate_wgs84_latitude]
+    )
     lambert93_latitude = models.FloatField(verbose_name="Latitude Lambert 93", blank=True, null=True)
     lambert93_longitude = models.FloatField(verbose_name="Longitude Lambert 93", blank=True, null=True)
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
@@ -342,7 +357,7 @@ class Prelevement(models.Model):
         blank=True,
         null=True,
     )
-    resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat", blank=True)
+    resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat")
     numero_resytal = models.CharField(max_length=100, verbose_name="Numéro RESYTAL", blank=True)
 
     def __str__(self):

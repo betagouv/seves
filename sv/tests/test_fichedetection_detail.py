@@ -132,7 +132,6 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text("nc.")
-    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text("nc.")
 
 
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page, fiche_detection):
