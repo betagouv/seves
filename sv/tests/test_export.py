@@ -42,7 +42,7 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
         code_insee="12345",
         _fill_optional=fill_optional,
     )
-    structure = StructurePreleveuse.objects.create(nom="My structure")
+    structure, _ = StructurePreleveuse.objects.get_or_create(nom="My structure")
     baker.make(
         Prelevement,
         lieu=lieu,
