@@ -571,6 +571,10 @@ document.addEventListener('alpine:init', () => {
             const boutonClique = event.submitter;
             const action = boutonClique.dataset.action;
 
+            document.querySelectorAll('input[name="action"]').forEach(button => {
+                button.disabled = true;
+            });
+
             let formData = new FormData();
             const organismeNuisibleId = this.ficheDetection.organismeNuisibleId.value ? this.ficheDetection.organismeNuisibleId.value : this.ficheDetection.organismeNuisibleId
             formData.append('statutEvenementId', this.ficheDetection.statutEvenementId);

@@ -514,3 +514,19 @@ def test_free_links_are_ordered_in_fiche_detection_form(
     expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(2)")).to_contain_text(
         "Fiche zone délimitée : 2024.1"
     )
+
+
+@pytest.mark.django_db
+def test_one_fiche_detection_is_created_when_double_click_on_save_btn(live_server, page: Page):
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.get_by_role("button", name="Enregistrer").dblclick()
+    page.wait_for_timeout(600)
+    assert FicheDetection.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_one_fiche_detection_is_created_when_double_click_on_publish_btn(live_server, page: Page):
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.get_by_role("button", name="Publier").dblclick()
+    page.wait_for_timeout(600)
+    assert FicheDetection.objects.count() == 1
