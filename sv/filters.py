@@ -2,6 +2,7 @@ import django_filters
 
 from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
+from seves import settings
 from .models import FicheDetection, Region, OrganismeNuisible, Etat
 from django.forms.widgets import DateInput, TextInput
 
@@ -19,8 +20,12 @@ class FicheFilter(django_filters.FilterSet):
         empty_label=None,
         initial="Détection",
     )
-    lieux__departement__region = django_filters.ModelChoiceFilter(label="Région", queryset=Region.objects.all())
-    organisme_nuisible = django_filters.ModelChoiceFilter(label="Organisme", queryset=OrganismeNuisible.objects.all())
+    lieux__departement__region = django_filters.ModelChoiceFilter(
+        label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+    )
+    organisme_nuisible = django_filters.ModelChoiceFilter(
+        label="Organisme", queryset=OrganismeNuisible.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+    )
     start_date = django_filters.DateFilter(
         field_name="date_creation__date",
         lookup_expr="gte",
@@ -30,7 +35,9 @@ class FicheFilter(django_filters.FilterSet):
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
-    etat = django_filters.ModelChoiceFilter(label="État", queryset=Etat.objects.all())
+    etat = django_filters.ModelChoiceFilter(
+        label="État", queryset=Etat.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+    )
 
     class Meta:
         model = FicheDetection
