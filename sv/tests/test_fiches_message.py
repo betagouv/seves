@@ -405,3 +405,34 @@ def test_cant_access_message_details_if_fiche_brouillon(
     assert len(messages) == 1
     assert messages[0].level_tag == "error"
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(
+    live_server, page: Page, fiche_variable
+):
+    fiche = fiche_variable()
+    nb_structure = 20
+    for i in range(nb_structure):
+        structure = Structure.objects.create(niveau1=f"Structure {i+1}", libelle=f"Structure {i+1}")
+        Contact.objects.create(structure=structure, email=f"structure{i}@test.fr")
+
+    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{fiche.add_message_url}")
+
+    # Test le champ Destinataires
+    page.locator(".choices__input--cloned:first-of-type").nth(0).click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Structure")
+    for i in range(nb_structure):
+        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
+
+    page.locator(".fr-select").first.press("Escape")
+
+    # Test le champ Copie
+    page.locator(".choices__input--cloned:first-of-type").nth(1).click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Structure")
+    for i in range(nb_structure):
+        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()

@@ -7,17 +7,17 @@ function cloneDocumentInput(input, currentID, destination){
 }
 
 function cloneDocumentTypeInput(input, currentID, destination){
-        let newTypeInput = input.cloneNode(true)
-        newTypeInput.setAttribute("id", `document_type_${currentID}`)
-        newTypeInput.setAttribute("name", `document_type_${currentID}`)
-        newTypeInput.value = input.value;
-        destination.appendChild(newTypeInput)
+    let newTypeInput = input.cloneNode(true)
+    newTypeInput.setAttribute("id", `document_type_${currentID}`)
+    newTypeInput.setAttribute("name", `document_type_${currentID}`)
+    newTypeInput.value = input.value;
+    destination.appendChild(newTypeInput)
 }
 
 function addDocumentCard(currentID, fileInput){
     const toShow = `<div class="fr-p-1w fr-mb-2w document-to-add" id="document_card_${currentID}">`
-        + `<span>${fileInput.files[0].name}</span><a href="#" id="document_remove_${currentID}" data-document-id="${currentID}">`
-        + `<span class="fr-icon-close-circle-line" aria-hidden="true"></span></a></div>`
+    + `<span>${fileInput.files[0].name}</span><a href="#" id="document_remove_${currentID}" data-document-id="${currentID}">`
+    + `<span class="fr-icon-close-circle-line" aria-hidden="true"></span></a></div>`
 
     document.getElementById("documents-to-upload").insertAdjacentHTML("beforeend", toShow);
     const deleteButton = document.getElementById(`document_remove_${currentID}`)
@@ -30,7 +30,7 @@ function addDocumentCard(currentID, fileInput){
 }
 
 function allowToUploadWhenTypeIsSelected(typeInput, fileInput,messageAddDocumentButton){
-        typeInput.addEventListener("change", ()=>{
+    typeInput.addEventListener("change", ()=>{
         if (typeInput.value !== ""){
             fileInput.removeAttribute("disabled")
         } else {
@@ -40,7 +40,7 @@ function allowToUploadWhenTypeIsSelected(typeInput, fileInput,messageAddDocument
 }
 
 function allowToValidateWhenDocumentIsSelected(typeInput, fileInput,messageAddDocumentButton){
-        fileInput.addEventListener("change", ()=>{
+    fileInput.addEventListener("change", ()=>{
         if (typeInput.value !== ""){
             messageAddDocumentButton.removeAttribute("disabled")
         }
@@ -84,12 +84,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const choicesRecipients = new Choices(document.getElementById('id_recipients'), {
         removeItemButton: true,
         classNames: {containerInner: 'fr-select'},
-        itemSelectText: ''
+        itemSelectText: '',
+        searchResultLimit: 500,
     });
     const choicesCopy = new Choices(document.getElementById('id_recipients_copy'), {
         removeItemButton: true,
         classNames: {containerInner: 'fr-select'},
-        itemSelectText: ''
+        itemSelectText: '',
+        searchResultLimit: 500,
     });
 
     document.querySelector(".destinataires-shortcut").addEventListener("click", event => addStructuresToRecipients(event, choicesRecipients))
