@@ -76,7 +76,11 @@ class Contact(models.Model):
         ordering = ["structure", "agent"]
         constraints = [
             models.CheckConstraint(
-                check=Q(structure__isnull=False) | Q(agent__isnull=False), name="contact_has_structure_or_agent"
+                check=(
+                    (Q(structure__isnull=False) & Q(agent__isnull=True))
+                    | (Q(structure__isnull=True) & Q(agent__isnull=False))
+                ),
+                name="contact_has_structure_or_agent",
             ),
         ]
 
