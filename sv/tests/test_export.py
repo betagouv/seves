@@ -37,8 +37,6 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
         nom="Mon lieu",
         wgs84_longitude=10,
         wgs84_latitude=20,
-        lambert93_latitude=30,
-        lambert93_longitude=40,
         adresse_lieu_dit="L'angle",
         commune="Saint-Pierre",
         code_insee="12345",
@@ -86,8 +84,6 @@ def test_export_fiche_detection_content(mocked_authentification_user):
         "Nom",
         "Wgs84 Longitude",
         "Wgs84 Latitude",
-        "Lambert93 Latitude",
-        "Lambert93 Longitude",
         "Adresse Lieu Dit",
         "Commune",
         "Code Insee",
@@ -106,7 +102,7 @@ def test_export_fiche_detection_content(mocked_authentification_user):
     assert lines[0] == ",".join(headers) + "\r\n"
     assert (
         lines[1]
-        == "2024.123,EUROPHYT,RASFF,,,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,nouveau,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,30.0,40.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,Phyto123,detecte,My structure,,,,\r\n"
+        == "2024.123,EUROPHYT,RASFF,,,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,nouveau,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,Phyto123,detecte,My structure,,,,\r\n"
     )
 
 
@@ -150,8 +146,6 @@ def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries, mock
         nom="Mon lieu",
         wgs84_longitude=10,
         wgs84_latitude=20,
-        lambert93_latitude=30,
-        lambert93_longitude=40,
         adresse_lieu_dit="L'angle",
         commune="Saint-Pierre",
         code_insee="12345",

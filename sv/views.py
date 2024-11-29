@@ -374,18 +374,11 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         for lieu in lieux:
             wgs84_longitude = lieu["coordGPSWGS84Longitude"] if lieu["coordGPSWGS84Longitude"] != "" else None
             wgs84_latitude = lieu["coordGPSWGS84Latitude"] if lieu["coordGPSWGS84Latitude"] != "" else None
-            lambert93_longitude = (
-                lieu["coordGPSLambert93Longitude"] if lieu["coordGPSLambert93Longitude"] != "" else None
-            )
-            lambert93_latitude = lieu["coordGPSLambert93Latitude"] if lieu["coordGPSLambert93Latitude"] != "" else None
-
             lieu_instance = Lieu(
                 fiche_detection=fiche,
                 nom=lieu["nomLieu"],
                 wgs84_longitude=wgs84_longitude,
                 wgs84_latitude=wgs84_latitude,
-                lambert93_longitude=lambert93_longitude,
-                lambert93_latitude=lambert93_latitude,
                 adresse_lieu_dit=lieu["adresseLieuDit"],
                 commune=lieu["commune"],
                 code_insee=lieu.get("codeINSEE"),
@@ -553,12 +546,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             lieu.nom = loc["nomLieu"]
             lieu.wgs84_longitude = loc["coordGPSWGS84Longitude"] if loc["coordGPSWGS84Longitude"] != "" else None
             lieu.wgs84_latitude = loc["coordGPSWGS84Latitude"] if loc["coordGPSWGS84Latitude"] != "" else None
-            lieu.lambert93_latitude = (
-                loc["coordGPSLambert93Latitude"] if loc["coordGPSLambert93Latitude"] != "" else None
-            )
-            lieu.lambert93_longitude = (
-                loc["coordGPSLambert93Longitude"] if loc["coordGPSLambert93Longitude"] != "" else None
-            )
             lieu.adresse_lieu_dit = loc["adresseLieuDit"]
             lieu.commune = loc.get("commune")
             lieu.site_inspection_id = loc["siteInspectionId"]

@@ -42,20 +42,6 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--gps-lambert93">Coord. Lambert 93</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-lambert93">
-                                {% if lieu.lambert93_latitude and lieu.lambert93_longitude %}
-                                    <div class="fr-grid-row">
-                                        <div class="fr-col-5" data-testid="lieu-{{lieu_index}}-lambert93-latitude">{{lieu.lambert93_latitude}}</div>
-                                        <div class="fr-col-7" data-testid="lieu-{{lieu_index}}-lambert93-longitude">{{lieu.lambert93_longitude}}</div>
-                                    </div>
-                                {% else %}
-                                    nc.
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 detail-lieu__label--gps-wgs84">Coord. WGS84</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-wgs84">
                                 {% if lieu.wgs84_latitude and lieu.wgs84_longitude %}
