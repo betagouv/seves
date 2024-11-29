@@ -23,8 +23,6 @@ class FicheDetectionExport:
         "nom",
         "wgs84_longitude",
         "wgs84_latitude",
-        "lambert93_latitude",
-        "lambert93_longitude",
         "adresse_lieu_dit",
         "commune",
         "code_insee",
