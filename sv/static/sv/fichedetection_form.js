@@ -107,9 +107,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         lieux: [
-			//{ id: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', nomLieu: 'Lieu 1', adresseLieuDit: 'Adresse 1', commune: 'Commune 1', codeINSEE: '12345', departementId: '1', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'e16e5305-76c0-4758-a0c7-e6674cff5086', nomLieu: 'Lieu 2', adresseLieuDit: 'Adresse 2', commune: 'Commune 2', codeINSEE: '54321', departementId: '2', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
-			//{ id: 'b5492275-a960-477a-aeca-af50932ca21e', nomLieu: 'Lieu 3', adresseLieuDit: 'Adresse 3', commune: 'Commune 3', codeINSEE: '54321', departementId: '3', coordGPSLambert93Latitude: '6000000', coordGPSLambert93Longitude: '200000', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+			//{ id: '0c5bed5c-9f3f-4e0d-83b8-e52e89b9eb09', nomLieu: 'Lieu 1', adresseLieuDit: 'Adresse 1', commune: 'Commune 1', codeINSEE: '12345', departementId: '1', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+			//{ id: 'e16e5305-76c0-4758-a0c7-e6674cff5086', nomLieu: 'Lieu 2', adresseLieuDit: 'Adresse 2', commune: 'Commune 2', codeINSEE: '54321', departementId: '2', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
+			//{ id: 'b5492275-a960-477a-aeca-af50932ca21e', nomLieu: 'Lieu 3', adresseLieuDit: 'Adresse 3', commune: 'Commune 3', codeINSEE: '54321', departementId: '3', coordGPSWGS84Latitude: '0', coordGPSWGS84Longitude: '0' },
         ],
 
         prelevements: [
@@ -133,8 +133,6 @@ document.addEventListener('alpine:init', () => {
             codeINSEE: '',
             departementNom: '',
             region: '',
-            coordGPSLambert93Latitude: '',
-            coordGPSLambert93Longitude: '',
             coordGPSWGS84Latitude: '',
             coordGPSWGS84Longitude: '',
             isEtablissement: false,
@@ -373,8 +371,6 @@ document.addEventListener('alpine:init', () => {
                 codeINSEE: '',
                 departementNom: '',
                 region: '',
-                coordGPSLambert93Latitude: '',
-                coordGPSLambert93Longitude: '',
                 coordGPSWGS84Latitude: '',
                 coordGPSWGS84Longitude: '',
                 isEtablissement: false,
