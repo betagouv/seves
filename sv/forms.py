@@ -69,7 +69,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
                 "min": "-180",
                 "max": "180",
                 "style": "flex: 0.55; margin-right: .5rem;",
-                "placeholder": "Latitude",
+                "placeholder": "Longitude",
             }
         ),
     )
@@ -81,7 +81,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
                 "min": "-90",
                 "max": "90",
                 "style": "flex: 0.55; margin-top: .5rem;",
-                "placeholder": "Longitude",
+                "placeholder": "Latitude",
             }
         ),
     )

@@ -95,7 +95,8 @@ function saveLieu(event){
 
     displayLieuxCards()
     removeRequired(modal)
-    dsfr(modal).modal.conceal();
+    dsfr(modal).modal.conceal()
+    modal.querySelector(".fr-modal__title").textContent = "Modifier le lieu"
 }
 
 function setUpCommune(element) {

@@ -255,7 +255,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
-    success_message = "La fiche détection a été modifiée avec succès."  # TODO make sure this is displayed
 
     @property
     def allows_inactive_laboratoires_agrees_values(self):

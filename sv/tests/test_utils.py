@@ -183,19 +183,19 @@ class LieuFormDomElements:
 
     @property
     def cancel_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Annuler")
+        return self.page.get_by_role("link", name="Annuler")
+
+    @property
+    def title(self) -> Locator:
+        return self.page.locator('[id^="modal-add-edit-lieu-title-"]').locator("visible=true")
 
     @property
     def save_btn(self) -> Locator:
         return self.page.locator('[data-testid^="lieu-save-btn-"]').locator("visible=true")
 
     @property
-    def title(self) -> Locator:
-        return self.page.get_by_role("heading", name="Ajouter un lieu").locator("visible=true")
-
-    @property
     def nom_label(self) -> Locator:
-        return self.page.get_by_text("Nom du lieu")
+        return self.page.get_by_text("Nom du lieu").locator("visible=true")
 
     @property
     def nom_input(self) -> Locator:
@@ -203,7 +203,7 @@ class LieuFormDomElements:
 
     @property
     def adresse_label(self) -> Locator:
-        return self.page.get_by_text("Adresse ou lieu-dit")
+        return self.page.get_by_text("Adresse ou lieu-dit").locator("visible=true")
 
     @property
     def adresse_input(self) -> Locator:
@@ -211,7 +211,7 @@ class LieuFormDomElements:
 
     @property
     def commune_label(self) -> Locator:
-        return self.page.get_by_text("Commune", exact=True)
+        return self.page.get_by_text("Commune", exact=True).locator("visible=true")
 
     @property
     def commune_choice_input(self) -> Locator:
@@ -223,7 +223,7 @@ class LieuFormDomElements:
 
     @property
     def commune_hidden_input(self) -> Locator:
-        return self.page.locator("#commune")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="commune"]')
 
     @property
     def code_insee_hidden_input(self) -> Locator:
@@ -234,20 +234,8 @@ class LieuFormDomElements:
         return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="departement"]')
 
     @property
-    def coord_gps_lamber93_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Coordonnées GPS (Lambert 93)")
-
-    @property
-    def coord_gps_lamber93_latitude_input(self) -> Locator:
-        return self.page.locator('[id$="-lambert93_latitude"]').locator("visible=true")
-
-    @property
-    def coord_gps_lamber93_longitude_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="-lambert93_longitude"]').locator("visible=true")
-
-    @property
     def coord_gps_wgs84_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Coordonnées GPS (WGS84)")
+        return self.page.get_by_text("Coordonnées GPS (WGS84)").locator("visible=true")
 
     @property
     def coord_gps_wgs84_latitude_input(self) -> Locator:
@@ -306,7 +294,7 @@ class PrelevementFormDomElements:
 
     @property
     def close_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Fermer")
+        return self.page.get_by_role("link", name="Fermer")
 
     @property
     def cancel_btn(self) -> Locator:

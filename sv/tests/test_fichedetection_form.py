@@ -45,12 +45,12 @@ def _add_new_lieu(
     lieu_form_elements.adresse_input.fill(f"une adresse{extra_str}")
 
     page.wait_for_timeout(100)
-    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Lille", "Lille (59)")
 
-    lieu_form_elements.coord_gps_lamber93_latitude_input.click()
-    lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(6_000_000 + extra_int))
-    lieu_form_elements.coord_gps_lamber93_longitude_input.click()
-    lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(200_000 + extra_int))
+    page.locator(".fr-modal__content .choices__list--single").locator("visible=true").click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("Lille")
+    page.get_by_role("option", name="Lille (59)", exact=True).click()
+
     lieu_form_elements.coord_gps_wgs84_latitude_input.click()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(1 + extra_int))
     lieu_form_elements.coord_gps_wgs84_longitude_input.click()
@@ -63,8 +63,6 @@ def _check_add_lieu_form_fields_are_empty(page: Page, lieu_form_elements: LieuFo
     expect(lieu_form_elements.nom_input).to_be_empty()
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
@@ -130,13 +128,6 @@ def test_add_lieu_form_have_all_fields(
     expect(lieu_form_elements.commune_label).to_have_text("Commune")
     expect(lieu_form_elements.commune_input).to_be_empty()
 
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_have_text("Coordonnées GPS (Lambert 93)")
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_attribute("placeholder", "Latitude")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_attribute("placeholder", "Longitude")
-
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
@@ -162,30 +153,10 @@ def test_nom_lieu_is_required_in_add_lieu_form(
 def test_coordonnees_gps_are_numeric_in_add_lieu_form(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
-    """Test que les champs de coordonnées GPS (Lambert 93 et WGS84) sont des champs numériques"""
+    """Test que les champs de coordonnées GPS sont des champs numériques"""
     form_elements.add_lieu_btn.click()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_attribute("type", "number")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_attribute("type", "number")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_attribute("type", "number")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_attribute("type", "number")
-
-
-def test_latitude_min_max_value_of_lambert93_format_in_add_lieu_form(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
-):
-    """Test que la valeur minimal de la latitude du format lambert 93 est de 6000000 et la valeur max est de 7200000"""
-    form_elements.add_lieu_btn.click()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_attribute("min", "6000000")
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_attribute("max", "7200000")
-
-
-def test_longitude_min_max_value_of_lambert93_format_in_add_lieu_form(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
-):
-    """Test que la valeur minimal de la longitude du format lambert 93 est de 200000 et la valeur max est de 1200000"""
-    form_elements.add_lieu_btn.click()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_attribute("min", "200000")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_attribute("max", "1200000")
 
 
 def test_add_lieu_to_list(
@@ -269,8 +240,8 @@ def test_edit_lieu_modal_title_and_actions_btn(
     page.get_by_role("button", name="Modifier le lieu").click()
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
-    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
-    expect(page.get_by_label("Modifier le lieu").locator('input[type="submit"]')).to_have_text("Enregistrer")
+    expect(lieu_form_elements.title).to_have_text("Modifier le lieu")
+    expect(lieu_form_elements.save_btn).to_have_text("Enregistrer")
 
 
 def test_edit_lieu_form_with_only_nom_lieu(
@@ -289,9 +260,7 @@ def test_edit_lieu_form_with_only_nom_lieu(
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
     expect(lieu_form_elements.code_insee_hidden_input).to_be_empty()
-    expect(lieu_form_elements.departement_hidden_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_be_empty()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
@@ -312,7 +281,7 @@ def test_edit_lieu_form_have_all_fields(
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
-    expect(page.locator("#modal-add-edit-lieu-title")).to_have_text("Modifier le lieu")
+    expect(lieu_form_elements.title).to_have_text("Modifier le lieu")
 
     expect(lieu_form_elements.nom_label).to_be_visible()
     expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
@@ -326,15 +295,8 @@ def test_edit_lieu_form_have_all_fields(
 
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(page.get_by_text("LilleRemove item")).to_be_visible()
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
-
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_label).to_have_text("Coordonnées GPS (Lambert 93)")
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_be_visible()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_value("6000000")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_be_visible()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_value("200000")
+    expect(page.get_by_text("Lille (59)Remove item")).to_be_visible()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
@@ -363,9 +325,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_value("6000000")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_value("200000")
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("1")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value("2")
     page.get_by_role("button", name="Fermer").click()
@@ -376,9 +336,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse 2")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(lieu_form_elements.departement_hidden_input).to_have_value("Nord")
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_have_value("6000002")
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_have_value("200002")
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("3")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value("4")
     page.get_by_role("button", name="Fermer").click()
@@ -400,8 +358,6 @@ def test_add_lieu_form_is_empty_after_edit(
     lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.adresse_input.fill("une adresse modifiée")
     choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
-    lieu_form_elements.coord_gps_lamber93_latitude_input.fill("6000001")
-    lieu_form_elements.coord_gps_lamber93_longitude_input.fill("200001")
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
     lieu_form_elements.save_btn.click()
@@ -412,9 +368,7 @@ def test_add_lieu_form_is_empty_after_edit(
     expect(lieu_form_elements.adresse_input).to_be_empty()
     expect(lieu_form_elements.commune_input).to_be_empty()
     expect(lieu_form_elements.code_insee_hidden_input).to_be_empty()
-    expect(lieu_form_elements.departement_hidden_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_latitude_input).to_be_empty()
-    expect(lieu_form_elements.coord_gps_lamber93_longitude_input).to_be_empty()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value("")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
 
