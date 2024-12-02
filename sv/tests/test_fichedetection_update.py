@@ -42,20 +42,20 @@ def create_fixtures_if_needed(db):
 
 @pytest.fixture
 def fiche_detection_with_one_lieu(fiche_detection, db):
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
 def fiche_detection_with_two_lieux(fiche_detection, db):
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
+    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
     return fiche_detection
 
 
 @pytest.fixture
 def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection, db):
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
     baker.make(Prelevement, lieu=lieu, _fill_optional=True)
     return fiche_detection
 
@@ -528,12 +528,12 @@ def test_add_new_prelevement_non_officiel(
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    lieu = fiche_detection_with_one_lieu.lieux.first()
     prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
-    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -607,7 +607,7 @@ def test_add_new_prelevement_officiel(
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
-    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -663,7 +663,7 @@ def test_add_multiple_prelevements(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     for prelevement in prelevements:
         form_elements.add_prelevement_btn.click()
-        prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.id))
+        prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
         prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -701,14 +701,16 @@ def test_update_prelevement(
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
-    new_lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, _fill_optional=True)
+    new_lieu = baker.make(
+        Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, code_insee="65455", _fill_optional=True
+    )
     new_prelevement = baker.prepare(Prelevement, lieu=new_lieu, _fill_optional=True, _save_related=True)
 
     page.goto(
         f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
     )
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+    prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
@@ -757,7 +759,7 @@ def test_update_multiple_prelevements(
         else:
             page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(3).click()
 
-        prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu.id))
+        prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveur.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))

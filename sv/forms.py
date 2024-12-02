@@ -52,6 +52,7 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+    # TODO add id here and change saving logic
     nom = forms.CharField(widget=forms.TextInput(), required=True)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -65,9 +66,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "step": 0.000001,
-                "min": "-180",
-                "max": "180",
                 "style": "flex: 0.55; margin-right: .5rem;",
                 "placeholder": "Longitude",
             }
@@ -77,9 +75,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "step": 0.000001,
-                "min": "-90",
-                "max": "90",
                 "style": "flex: 0.55; margin-top: .5rem;",
                 "placeholder": "Latitude",
             }
@@ -124,6 +119,7 @@ LieuFormSet = inlineformset_factory(
 
 
 class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+    id = forms.IntegerField(widget=forms.HiddenInput, required=False)
     resultat = forms.ChoiceField(
         required=True,
         choices=Prelevement.Resultat.choices,

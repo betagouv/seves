@@ -189,6 +189,7 @@ class FicheDetectionContextMixin:
 
 class WithPrelevementHandlingMixin:
     def _save_prelevement_if_not_empty(self, data, allowed_lieux):
+        # TODO clean this mess
         # TODO review this to "filter" data for each prelvements
         prelevement_ids = [key.removeprefix("prelevements-") for key in data.keys() if key.startswith("prelevements-")]
         prelevement_ids = set([id.split("-")[0] for id in prelevement_ids])
@@ -198,7 +199,12 @@ class WithPrelevementHandlingMixin:
             if any(form_data.values()):
                 # TODO edit prelvement instead of add if known prelevement
                 print(form_data)
-                prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
+                # TODO only for edit
+                if form_data.get(prefix + "id"):
+                    prelevement = Prelevement.objects.get(id=form_data[prefix + "id"])
+                    prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
+                else:
+                    prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
                 prelevement_form.fields["lieu"].queryset = allowed_lieux
                 if prelevement_form.is_valid():
                     prelevement_form.save()
@@ -245,6 +251,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
                 self.object.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
+            allowed_lieux = Lieu.objects.filter(pk__in=[lieu.id for lieu in allowed_lieux])
             self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
             self.object.contacts.add(self.request.user.agent.contact_set.get())
             self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
@@ -336,11 +343,16 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         )
 
         if not form.is_valid():
+            print("FORMS INVALID")
+            print(form.errors)
             return self.form_invalid(form)
 
         self.object = form.save()
 
         if not lieu_formset.is_valid():
+            print("FORMSET LIEU INVALID")
+            print(lieu_formset.data)
+            print(lieu_formset.errors)
             return self.form_invalid(form)
 
         self.object.save()  # TODO do we need this ?
