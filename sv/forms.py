@@ -85,30 +85,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
-    lambert93_latitude = forms.FloatField(
-        required=False,
-        widget=forms.NumberInput(
-            attrs={
-                "step": 1,
-                "min": "6000000",
-                "max": "7200000",
-                "style": "flex: 0.55; margin-right: .5rem;",
-                "placeholder": "Latitude",
-            }
-        ),
-    )
-    lambert93_longitude = forms.FloatField(
-        required=False,
-        widget=forms.NumberInput(
-            attrs={
-                "step": 1,
-                "min": "200000",
-                "max": "1200000",
-                "style": "flex: 0.55; margin-top: .5rem;",
-                "placeholder": "Longitude",
-            }
-        ),
-    )
 
     class Meta:
         model = Lieu
@@ -153,6 +129,12 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         choices=Prelevement.Resultat.choices,
         widget=DSFRRadioButton(attrs={"required": "true"}),
     )
+    lieu = forms.ModelChoiceField(
+        queryset=Lieu.objects.none(),
+        to_field_name="nom",
+        required=True,
+        empty_label=None,
+    )
     espece_echantillon = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
@@ -164,6 +146,11 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
         self.fields["structure_preleveur"].required = "required"
+
+        # if self.instance:
+        #     self.fields["lieu"].queryset = Lieu.objects.filter(fiche_detection=self.instance.lieu.fiche_detection)
+        #     print("ALLOWED")
+        #     print(self.fields["lieu"].queryset)
 
         if convert_required_to_data_required:
             self._convert_required_to_data_required()

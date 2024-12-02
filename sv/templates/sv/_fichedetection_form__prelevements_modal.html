@@ -1,20 +1,19 @@
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
-<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}"></button>
-<dialog aria-labelledby="modal-add-edit-prelevement-title-{{ forloop.counter0 }}" id="modal-add-edit-prelevement-{{ forloop.counter0 }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-edit-prelevement-{{ id }}"></button>
+<dialog aria-labelledby="title-modal-add-edit-prelevement-{{ id }}" id="modal-add-edit-prelevement-{{ id }}" data-id={{ id }} data-already-existing="{{ existing }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
-                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}">Fermer</button>
+                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-prelevement-{{ id }}">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1 id="modal-add-edit-prelevement-title-{{ forloop.counter0 }}"
+                        <h1 id="title-modal-add-edit-prelevement-{{ id }}"
                             class="fr-modal__title">Ajouter un prélèvement</h1>
                         <div id="lieu" class="fr-select-group prelevement-form--fieldset">
                             <label class="fr-label">Lieu</label>
-                            <select class="fr-select" id="id_prelevements-{{ forloop.counter0 }}-lieu" name="prelevements-{{ forloop.counter0 }}-lieu">
-                            </select>
+                            {{ form.lieu }}
                         </div>
                         <div id="structure" class="fr-select-group prelevement-form--fieldset">
                             {{ form.structure_preleveur.label_tag }}{{ form.structure_preleveur }}
@@ -29,8 +28,8 @@
                             {{ form.matrice_prelevee.label_tag }}{{ form.matrice_prelevee }}
                         </p>
                         <p id="espece-echantillon" class="prelevement-form--fieldset">
-                            <label class="fr-label" for="id_prelevements-{{ forloop.counter0 }}-espece-echantillon">Espèce de l'échantillon</label>
-                            <select id="id_prelevements-{{ forloop.counter0 }}-espece-echantillon" class="fr-input" name="prelevements-{{ forloop.counter0 }}-espece_echantillon"></select>
+                            <label class="fr-label" for="id_prelevements-{{ id }}-espece-echantillon">Espèce de l'échantillon</label>
+                            <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input" name="prelevements-{{ id }}-espece_echantillon"></select>
                         </p>
                         <div id="resultat" class="prelevement-form--fieldset">
                             <label class="fr-label" style="flex:0.65">Résultat</label>
@@ -41,7 +40,7 @@
                         <p>
                             <div class="fr-checkbox-group">
                                 {{ form.is_officiel }}
-                                <label class="fr-label" for="id_prelevements-{{ forloop.counter0 }}-is_officiel">Prélèvement officiel</label>
+                                <label class="fr-label" for="id_prelevements-{{ id }}-is_officiel">Prélèvement officiel</label>
                             </div>
                         </p>
                         <div class="officiel-fields">
@@ -65,8 +64,8 @@
                     </div>
                     <div class="fr-modal__footer">
                         <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-                            <a href="#" class="fr-btn fr-btn--secondary prelevement-cancel-btn" aria-controls="modal-add-edit-prelevement-{{ forloop.counter0 }}">Annuler</a>
-                            <a class="fr-btn prelevement-save-btn" data-id="{{ forloop.counter0 }}" href="#">Enregistrer</a>
+                            <a href="#" class="fr-btn fr-btn--secondary prelevement-cancel-btn" aria-controls="modal-add-edit-prelevement-{{ id }}">Annuler</a>
+                            <a class="fr-btn prelevement-save-btn" data-id="{{ id }}" href="#">Enregistrer</a>
                         </div>
                     </div>
                 </div>

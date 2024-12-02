@@ -199,7 +199,7 @@ class Lieu(models.Model):
     ]
 
     def __str__(self):
-        return str(self.id)
+        return str(self.nom)
 
 
 class StatutEtablissement(models.Model):

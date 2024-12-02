@@ -310,7 +310,7 @@ class PrelevementFormDomElements:
 
     @property
     def lieu_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-lieu")
+        return self.page.locator('[id^="id_prelevements-"][id$="lieu"]').locator("visible=true")
 
     @property
     def structure_input(self) -> Locator:
@@ -326,11 +326,11 @@ class PrelevementFormDomElements:
 
     @property
     def matrice_prelevee_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-matrice-prelevee")
+        return self.page.locator('[id^="id_prelevements-"][id$="matrice_prelevee"]').locator("visible=true")
 
     @property
     def espece_echantillon_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-espece-echantillon")
+        return self.page.locator('[id^="id_prelevements-"][id$="espece-echantillon"]').locator("visible=true")
 
     def resultat_input(self, resultat_value) -> Locator:
         if resultat_value == "non detecte":
@@ -343,7 +343,7 @@ class PrelevementFormDomElements:
 
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
-        return self.page.get_by_text("Prélèvement officiel")
+        return self.page.locator('[for^="id_prelevements-"][for$="is_officiel"]').locator("visible=true")
 
     @property
     def numero_phytopass_input(self) -> Locator:

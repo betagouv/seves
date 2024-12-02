@@ -225,6 +225,7 @@ if env("EMAIL_HOST", default=None):
 
 ROOT_URL = env("ROOT_URL", default=None)
 # TODO gérer le problème de form qui s'eppuise dans on delete un lieu/prélévement ?
-# TODO gérér l'édition de la fiche
 # TODO editer un lieu ne montre la bonne chose que la première fois ?
 # TODO problème sur la gestion des communes test_edit_lieu_form_have_all_fields_with_multiple_lieux
+# TODO la modale d'edit de prélévement ne marche d'une fois : idem que pour les lieux a cause de la manière dont sont construits les form ?
+# TODO structure preleveur is not correct on edit prelevement

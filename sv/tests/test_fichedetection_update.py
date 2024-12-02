@@ -427,9 +427,19 @@ def test_update_two_lieux(
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
         if index == 0:
-            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Lille", "Lille (59)")
+            choice_js_fill(
+                page,
+                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.first().id} .fr-modal__content .choices__list--single",
+                "Lille",
+                "Lille (59)",
+            )
         else:
-            choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
+            choice_js_fill(
+                page,
+                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.last().id} .fr-modal__content .choices__list--single",
+                "Paris",
+                "Paris (75)",
+            )
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
@@ -437,13 +447,12 @@ def test_update_two_lieux(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
-    lieux_from_db = fd.lieux.all()
-    for lieu, new_lieu in zip(lieux_from_db, new_lieux):
-        assert lieu.nom == new_lieu.nom
-        assert lieu.adresse_lieu_dit == new_lieu.adresse_lieu_dit
-        assert lieu.wgs84_latitude == new_lieu.wgs84_latitude
-        assert lieu.wgs84_longitude == new_lieu.wgs84_longitude
+    lieux_from_db = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id).lieux.all()
+    for lieu_from_db, new_lieu in zip(lieux_from_db, new_lieux):
+        assert lieu_from_db.nom == new_lieu.nom
+        assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
+        assert lieu_from_db.wgs84_latitude == new_lieu.wgs84_latitude
+        assert lieu_from_db.wgs84_longitude == new_lieu.wgs84_longitude
 
     assert lieux_from_db[0].commune == "Lille"
     assert lieux_from_db[0].code_insee == "59350"

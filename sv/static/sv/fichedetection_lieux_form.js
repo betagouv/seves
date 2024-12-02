@@ -71,7 +71,7 @@ function showLieuModal(event){
     dsfr(currentModal).modal.disclose();
 }
 
-function buildCardFromModal(element){
+function buildLieuCardFromModal(element){
     return {
         "id": element.dataset.id,
         "nom": element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
@@ -88,10 +88,10 @@ function saveLieu(event){
 
     const index = document.lieuxCards.findIndex(element => element.id === id);
     if (index === -1) {
-        document.lieuxCards.push(buildCardFromModal(modal));
+        document.lieuxCards.push(buildLieuCardFromModal(modal));
         extraFormSaved++;
     } else {
-        document.lieuxCards[index] = buildCardFromModal(modal);
+        document.lieuxCards[index] = buildLieuCardFromModal(modal);
     }
 
     displayLieuxCards()
@@ -148,10 +148,11 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(element =>{
-        const data = buildCardFromModal(element)
+        const data = buildLieuCardFromModal(element)
         if (!!data.nom){
             document.lieuxCards.push(data)
         }
     })
+    // TODO edit on page with no lieux and prelevements gives JS error
     displayLieuxCards()
 })();

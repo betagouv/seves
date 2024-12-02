@@ -75,18 +75,21 @@ function displayPrelevementsCards() {
     showOrHidePrelevementUI()
 }
 
-function showAddPrelevementmodal(event) {
-    event.preventDefault()
-    const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
-    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
-    const selectElement = document.getElementById('id_prelevements-' + extraFormSaved + "-lieu");
-    selectElement.innerHTML = '';
+function populateLieuSelect(element){
+    element.innerHTML = '';
     document.lieuxCards.forEach(option => {
         const opt = document.createElement('option');
         opt.value = option.nom;
         opt.textContent = option.nom;
-        selectElement.appendChild(opt);
+        element.appendChild(opt);
     });
+}
+
+function showAddPrelevementmodal(event) {
+    event.preventDefault()
+    const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
+    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
+    populateLieuSelect(document.getElementById('id_prelevements-' + extraFormSaved + "-lieu"))
 
     currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
         if (input.hasAttribute("data-required")){
@@ -97,6 +100,20 @@ function showAddPrelevementmodal(event) {
     dataRequiredToRequired(currentModal)
 }
 
+function buildPrelevementCardFromModal(element){
+    const structureElement = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveur"]`)
+    const lieuElement = element.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`)
+    const officielElement = element.querySelector(`[id^="id_prelevements-"][id$="-is_officiel"]`)
+    const resultatElement = element.querySelector(`input[name*="-resultat"]:checked`)
+    return {
+        "id": element.dataset.id,
+        "structure":structureElement.options[structureElement.selectedIndex].text,
+        "lieu": lieuElement.options[lieuElement.selectedIndex].text,
+        "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
+        "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
+    }
+}
+
 function savePrelevement(event){
     const id = event.target.dataset.id
     const modal = document.getElementById(`modal-add-edit-prelevement-${id}`)
@@ -104,18 +121,7 @@ function savePrelevement(event){
         return
     }
 
-    const structureElement = document.getElementById(`id_prelevements-${id}-structure_preleveur`)
-    const lieuElement = document.getElementById(`id_prelevements-${id}-lieu`)
-    const officielElement = document.getElementById(`id_prelevements-${id}-is_officiel`)
-    const resultatElement = document.querySelector('input[name="prelevements-' + id + '-resultat"]:checked')
-    let data = {
-        "id": id,
-        "structure":structureElement.options[structureElement.selectedIndex].text,
-        "lieu": lieuElement.options[lieuElement.selectedIndex].text,
-        "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
-        "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
-    }
-
+    const data = buildPrelevementCardFromModal(modal)
     const index = document.prelevementCards.findIndex(element => element.id === data.id);
     if (index === -1) {
         document.prelevementCards.push(data);
@@ -123,11 +129,9 @@ function savePrelevement(event){
     } else {
         document.prelevementCards[index] = data;
     }
-
     displayPrelevementsCards()
     removeRequired(modal)
     dsfr(modal).modal.conceal();
-
 }
 
 function resetModalWhenClosing(event){
@@ -147,6 +151,16 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .prelevement-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(element =>{
+        if (element.dataset.alreadyExisting){
+            const data = buildPrelevementCardFromModal(element)
+            document.prelevementCards.push(data)
+        }
+    })
+    displayPrelevementsCards()
+
 })();
 
 // TODO vérifier qu'a l'ouverture on refait pas le choices pour la l'espece et autre champ choices
+// TODO edit on page with no lieux and prelevements gives JS error
+// TODO représentation sous forme de STR des lieux dans le form d'edit des prévements

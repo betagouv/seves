@@ -76,8 +76,6 @@ def test_lieu_details_with_no_data(live_server, page, fiche_detection):
     expect(page.get_by_test_id("lieu-1-code-insee")).to_contain_text("nc.")
     expect(page.get_by_test_id("lieu-1-departement")).to_contain_text("nc.")
     expect(page.get_by_test_id("lieu-1-region")).to_contain_text("nc.")
-    expect(page.get_by_test_id("lieu-1-lambert93")).to_contain_text("nc.")
-    expect(page.get_by_test_id("lieu-1-lambert93")).to_contain_text("nc.")
     expect(page.get_by_test_id("lieu-1-wgs84")).to_contain_text("nc.")
     expect(page.get_by_test_id("lieu-1-wgs84")).to_contain_text("nc.")
 

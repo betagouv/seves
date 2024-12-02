@@ -187,7 +187,26 @@ class FicheDetectionContextMixin:
         return context
 
 
-class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
+class WithPrelevementHandlingMixin:
+    def _save_prelevement_if_not_empty(self, data, allowed_lieux):
+        # TODO review this to "filter" data for each prelvements
+        prelevement_ids = [key.removeprefix("prelevements-") for key in data.keys() if key.startswith("prelevements-")]
+        prelevement_ids = set([id.split("-")[0] for id in prelevement_ids])
+        for i in prelevement_ids:
+            prefix = f"prelevements-{i}-"
+            form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
+            if any(form_data.values()):
+                # TODO edit prelvement instead of add if known prelevement
+                print(form_data)
+                prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
+                prelevement_form.fields["lieu"].queryset = allowed_lieux
+                if prelevement_form.is_valid():
+                    prelevement_form.save()
+                else:
+                    raise ValidationError(prelevement_form.errors)
+
+
+class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
     allows_inactive_laboratoires_agrees_values = False
     allows_inactive_laboratoires_confirmation_values = False
     allows_inactive_structure_preleveur_values = False
@@ -209,23 +228,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
         context["prelevement_forms"] = forms
         return context
 
-    def _set_lieux_from_nom(self, data, allowed_lieux):
-        lieux_keys = [key for key in data.keys() if key.startswith("prelevements-") and key.endswith("-lieu")]
-        for lieu_key in lieux_keys:
-            data[lieu_key] = next(lieu.id for lieu in allowed_lieux if lieu.nom == data[lieu_key])
-        return data
-
-    def _save_prelevement_if_not_empty(self, data):
-        for i in range(10):
-            prefix = f"prelevements-{i}"
-            form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
-            if any(form_data.values()):
-                prelevement_form = PrelevementForm(form_data, prefix=prefix)
-                if prelevement_form.is_valid():
-                    prelevement_form.save()
-                else:
-                    raise ValidationError(prelevement_form.errors)
-
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
@@ -243,15 +245,14 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, CreateView):
                 self.object.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
-            data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
-            self._save_prelevement_if_not_empty(data)
+            self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
             self.object.contacts.add(self.request.user.agent.contact_set.get())
             self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
+class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, UpdateView):
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
@@ -292,8 +293,22 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = False
+        # TODO handle colission pk and id ?
         forms = [PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)]
         context["prelevement_forms"] = forms
+
+        prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object)  # TODO handle espece echantillon
+        lieux = self.object.lieux.all()
+        existing_prelevements_forms = []
+        for existing_prelevement in prelevements:
+            form = PrelevementForm(
+                instance=existing_prelevement,
+                convert_required_to_data_required=True,
+                prefix=f"prelevements-{existing_prelevement.pk}",
+            )
+            form.fields["lieu"].queryset = lieux
+            existing_prelevements_forms.append(form)
+        context["existing_prelevements"] = existing_prelevements_forms
 
         formset = LieuFormSet(
             instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
@@ -330,14 +345,14 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
 
         self.object.save()  # TODO do we need this ?
         lieu_formset.save()
+        allowed_lieux = self.object.lieux.all()
+        print("Lieu modification autorisée")
+        print(allowed_lieux)
+        self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
 
-        # # with transaction.atomic(): TODO ?
-        # self.object = form.save()
-        #
-        # lieu_formset.instance = self.object
-        # allowed_lieux = lieu_formset.save()
-        # data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
-        # self._save_prelevement_if_not_empty(data)
+        # TODO do we need this ?
+        self.object.contacts.add(self.request.user.agent.contact_set.get())
+        self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         # TODO handle deletion of objects
         # TODO handle prélvements ?
