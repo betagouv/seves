@@ -209,8 +209,6 @@ def test_create_fiche_detection_with_lieu(
         Lieu,
         wgs84_latitude=48.8566,
         wgs84_longitude=2.3522,
-        lambert93_latitude=6000000,
-        lambert93_longitude=200000,
         code_insee="17000",
         siret_etablissement="12345678901234",
         departement=dept,
@@ -228,8 +226,6 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
     fill_commune(page)
-    lieu_form_elements.coord_gps_lamber93_latitude_input.fill(str(lieu.lambert93_latitude))
-    lieu_form_elements.coord_gps_lamber93_longitude_input.fill(str(lieu.lambert93_longitude))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.is_etablissement_checkbox.click(force=True)
@@ -255,8 +251,6 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.nom == lieu.nom
     assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
-    assert lieu_from_db.lambert93_latitude == lieu.lambert93_latitude
-    assert lieu_from_db.lambert93_longitude == lieu.lambert93_longitude
     assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
     assert lieu_from_db.commune == "Lille"
     assert lieu_from_db.code_insee == "59350"

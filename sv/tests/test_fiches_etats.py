@@ -57,7 +57,7 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(
     page.get_by_role("tab", name="Fil de suivi").click()
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message :").fill("test")
+    page.get_by_label("Message").fill("test")
     page.get_by_test_id("fildesuivi-add-submit").click()
     page.get_by_test_id("contacts").click()
     expect(page.get_by_label("Contacts").get_by_text("Fin de suivi")).to_be_visible()
@@ -72,7 +72,7 @@ def test_element_suivi_fin_suivi_already_exists(live_server, page: Page, fiche_v
         page.get_by_role("tab", name="Fil de suivi").click()
         page.get_by_test_id("element-actions").click()
         page.get_by_role("link", name="Signaler la fin de suivi").click()
-        page.get_by_label("Message :").fill("test")
+        page.get_by_label("Message").fill("test")
         page.get_by_test_id("fildesuivi-add-submit").click()
 
     expect(page.locator("body")).to_contain_text(
@@ -91,7 +91,7 @@ def test_cannot_create_fin_suivi_if_structure_not_in_contacts(
     page.get_by_role("tab", name="Fil de suivi").click()
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message :").fill("test")
+    page.get_by_label("Message").fill("test")
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("body")).to_contain_text(
         "Vous ne pouvez pas signaler la fin de suivi pour cette fiche car votre structure n'est pas dans la liste des contacts."
@@ -113,7 +113,7 @@ def test_can_cloturer_fiche_if_creator_structure_in_fin_suivi(
     page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message :").fill("a")
+    page.get_by_label("Message").fill("a")
     page.get_by_test_id("fildesuivi-add-submit").click()
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer la fiche").click()

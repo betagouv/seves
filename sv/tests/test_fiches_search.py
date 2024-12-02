@@ -32,7 +32,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.locator("#search-form").get_by_text("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_contain_text("---------")
-    expect(page.get_by_text("Organisme :", exact=True)).to_be_visible()
+    expect(page.get_by_text("Organisme", exact=True)).to_be_visible()
     expect(page.locator(".choices__list--single .choices__placeholder")).to_be_visible()
     expect(page.locator(".choices__list--single .choices__placeholder")).to_contain_text("---------")
     expect(page.get_by_text("Période du")).to_be_visible()
