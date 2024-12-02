@@ -1,5 +1,4 @@
 document.lieuxCards = []
-extraFormSaved = 0
 modalHTMLContent = {}
 
 function fetchCommunes(query) {
@@ -65,8 +64,8 @@ function displayLieuxCards() {
 
 function showLieuModal(event){
     event.preventDefault()
-    const currentModal = document.getElementById("modal-add-lieu-" + extraFormSaved)
-    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
+    const currentModal = getNextAvailableModal()
+    modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     dataRequiredToRequired(currentModal)
     dsfr(currentModal).modal.disclose();
 }
@@ -130,12 +129,28 @@ function setUpCommune(element) {
     })
 }
 
+
+function saveModalWhenOpening(event){
+    const modalId = event.target.getAttribute("id").split("-").pop()
+    modalHTMLContent[modalId] = event.target.querySelector(".fr-modal__content").innerHTML
+}
+
 function resetModalWhenClosing(event){
     const originalTarget = event.explicitOriginalTarget
     if (! originalTarget.classList.contains("lieu-save-btn")){
         const modalId = event.originalTarget.getAttribute("id").split("-").pop()
         event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
     }
+}
+function getNextAvailableModal() {
+    const elements = document.querySelectorAll("[id^=modal-add-lieu-]")
+    for (const element of elements) {
+        const input = element.querySelector(`[id^="id_lieux-"][id$="-nom"]`)
+        if (input && input.value === "") {
+            return element
+        }
+    }
+    // TODO what to do in this case ?
 }
 
 (function() {
@@ -144,6 +159,7 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
+    document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 
@@ -155,4 +171,5 @@ function resetModalWhenClosing(event){
     })
     // TODO edit on page with no lieux and prelevements gives JS error
     displayLieuxCards()
+
 })();
