@@ -355,8 +355,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         # TODO handle deletion of objects
-        # TODO handle prélvements ?
-        # TODO test edit free links
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
 
         return HttpResponseRedirect(self.get_success_url())

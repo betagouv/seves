@@ -169,7 +169,6 @@ function getNextAvailableModal() {
             document.lieuxCards.push(data)
         }
     })
-    // TODO edit on page with no lieux and prelevements gives JS error
     displayLieuxCards()
 
 })();
