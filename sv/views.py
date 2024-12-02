@@ -282,6 +282,13 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
         inactive_ids = StructurePreleveur._base_manager.filter(is_active=False).values_list("id", flat=True)
         return any([pk in inactive_ids for pk in actual_ids if pk])
 
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        self.object = super().get_object(queryset)
+        return self.object
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = False
@@ -292,9 +299,52 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
             instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
         )
 
+        # TODO do we want this ?
+        # TODO uniformize the way we get the form
         formset.custom_kwargs = {"convert_required_to_data_required": True}
         context["lieu_formset"] = formset
         return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def post(self, request, pk):
+        # TODO add atomic
+        self.object = self.get_object()
+        form = self.get_form()
+        lieu_formset = LieuFormSet(
+            request.POST,
+            instance=self.get_object(),
+            queryset=Lieu.objects.filter(fiche_detection=self.get_object()),
+        )
+
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        self.object = form.save()
+
+        if not lieu_formset.is_valid():
+            return self.form_invalid(form)
+
+        self.object.save()  # TODO do we need this ?
+        lieu_formset.save()
+
+        # # with transaction.atomic(): TODO ?
+        # self.object = form.save()
+        #
+        # lieu_formset.instance = self.object
+        # allowed_lieux = lieu_formset.save()
+        # data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
+        # self._save_prelevement_if_not_empty(data)
+
+        # TODO handle deletion of objects
+        # TODO handle prélvements ?
+        # TODO test edit free links
+        messages.success(self.request, "La fiche détection a été modifiée avec succès.")
+
+        return HttpResponseRedirect(self.get_success_url())
 
     #
     # def update_fiche_detection(self, data, fiche_detection):
@@ -432,34 +482,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, UpdateView):
     #
     #     links_to_delete = LienLibre.objects.for_object(fiche_detection).exclude(id__in=links_ids_to_keep)
     #     links_to_delete.delete()
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
-
-    def post(self, request, pk):
-        form = self.get_form()
-        lieu_formset = LieuFormSet(request.POST)
-
-        if not form.is_valid():
-            return self.form_invalid(form)
-
-        if not lieu_formset.is_valid():
-            return self.form_invalid(form)
-
-        with transaction.atomic():
-            self.object = form.save()
-            if request.POST["action"] == "Publier":
-                self.object.visibilite = Visibilite.LOCAL
-                self.object.save()
-            lieu_formset.instance = self.object
-            # allowed_lieux = lieu_formset.save()
-            # data = self._set_lieux_from_nom(request.POST.copy(), allowed_lieux)
-            # self._save_prelevement_if_not_empty(data)
-
-        # TODO handle deletion of objects
-        return HttpResponseRedirect(self.get_success_url())
 
     #
     # def old_post(self, request, pk):

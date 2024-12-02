@@ -112,7 +112,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
 
     class Meta:
         model = Lieu
-        exclude = ["fiche_detection"]
+        exclude = []
         labels = {"is_etablissement": "Il s'agit d'un établissement"}
 
     def clean_departement(self):
@@ -242,9 +242,6 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("numero_rasff")
 
         self._add_free_links(obj_type="detection")
-
-        # if self.instance.pk:
-        #     self.fields.pop("visibilite")
 
     def save(self, commit=True):
         instance = super().save(commit=False)

@@ -100,18 +100,20 @@
                         <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
                                 id="add-lieu-bouton">Ajouter</button>
                     </div>
+{#                    TODO gérer le cas ou en théorie le PK et l'extra peuvent avoir le même id ?#}
 
                     {{ lieu_formset.management_form }}
 
                     {% for form in lieu_formset %}
                         {% if form.instance.pk %}
-                            {{ form }}
+                            {{ form.id }}
+                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk %}
                         {% endif %}
                     {% endfor %}
 
                     {% for form in lieu_formset %}
                         {% if not form.instance.pk %}
-                            {% include 'sv/_fichedetection_form__lieux_modal.html'%}
+                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=forloop.counter0 %}
                         {% endif %}
                     {% endfor %}
 

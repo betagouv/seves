@@ -71,26 +71,27 @@ function showLieuModal(event){
     dsfr(currentModal).modal.disclose();
 }
 
+function buildCardFromModal(element){
+    return {
+        "id": element.dataset.id,
+        "nom": element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
+        "commune": element.querySelector(`[id^="commune-select-"]`).value,
+    }
+}
+
 function saveLieu(event){
     const id = event.target.dataset.id
     const modal = document.getElementById(`modal-add-lieu-${id}`)
-    const isValid = formIsValid(modal)
-    if (isValid === false){
+    if (formIsValid(modal) === false){
         return
     }
 
-    let data = {
-        "id": id,
-        "nom": document.getElementById(`id_lieux-${id}-nom`).value,
-        "commune": document.getElementById(`commune-select-${id}`).value
-    }
-
-    const index = document.lieuxCards.findIndex(element => element.id === data.id);
+    const index = document.lieuxCards.findIndex(element => element.id === id);
     if (index === -1) {
-        document.lieuxCards.push(data);
+        document.lieuxCards.push(buildCardFromModal(modal));
         extraFormSaved++;
     } else {
-        document.lieuxCards[index] = data;
+        document.lieuxCards[index] = buildCardFromModal(modal);
     }
 
     displayLieuxCards()
@@ -145,4 +146,12 @@ function resetModalWhenClosing(event){
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
+
+    document.querySelectorAll("[id^=modal-add-lieu-]").forEach(element =>{
+        const data = buildCardFromModal(element)
+        if (!!data.nom){
+            document.lieuxCards.push(data)
+        }
+    })
+    displayLieuxCards()
 })();
