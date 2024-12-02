@@ -250,18 +250,6 @@ class LieuFormDomElements:
         return self.page.locator("#departement")
 
     @property
-    def coord_gps_lamber93_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Coordonnées GPS (Lambert 93)")
-
-    @property
-    def coord_gps_lamber93_latitude_input(self) -> Locator:
-        return self.page.get_by_label("Coordonnées GPS (Lambert 93)")
-
-    @property
-    def coord_gps_lamber93_longitude_input(self) -> Locator:
-        return self.page.locator("#coordonnees-gps-lambert-93-longitude")
-
-    @property
     def coord_gps_wgs84_latitude_label(self) -> Locator:
         return self.page.get_by_text("Coordonnées GPS (WGS84)")
 
