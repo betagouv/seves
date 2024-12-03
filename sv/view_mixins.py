@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-
+from collections import defaultdict
 from sv.forms import (
     PrelevementForm,
 )
@@ -28,18 +28,18 @@ class FicheDetectionContextMixin:
 
 class WithPrelevementHandlingMixin:
     def _save_prelevement_if_not_empty(self, data, allowed_lieux):
-        # TODO clean this mess
-        # TODO review this to "filter" data for each prelvements
-        prelevement_ids = [key.removeprefix("prelevements-") for key in data.keys() if key.startswith("prelevements-")]
-        prelevement_ids = set([id.split("-")[0] for id in prelevement_ids])
-        for i in prelevement_ids:
-            prefix = f"prelevements-{i}-"
-            form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
+        sub_dicts = defaultdict(dict)
+        for key, value in data.items():
+            if key.startswith("prelevements-"):
+                form_id = key.split("-")[1]
+                sub_dicts[form_id][key] = value
+
+        for form_id, form_data in sub_dicts.items():
             form_is_empty = not any(form_data.values())
             if form_is_empty:
                 continue
 
-            prelevement_id = form_data.pop(prefix + "id", None)
+            prelevement_id = form_data.pop("prelevements-" + form_id + "-id", None)
             form_is_empty = not any(form_data.values())
 
             if form_is_empty and prelevement_id:
@@ -49,9 +49,9 @@ class WithPrelevementHandlingMixin:
 
             if prelevement_id:
                 prelevement = Prelevement.objects.get(id=prelevement_id)
-                prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
+                prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{form_id}")
             else:
-                prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
+                prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{form_id}")
 
             prelevement_form.fields["lieu"].queryset = allowed_lieux
 
