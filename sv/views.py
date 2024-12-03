@@ -136,9 +136,6 @@ class FicheDetectionDetailView(
 
 
 class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
-    allows_inactive_laboratoires_agrees_values = False
-    allows_inactive_laboratoires_confirmation_values = False
-    allows_inactive_structure_preleveur_values = False
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
 
