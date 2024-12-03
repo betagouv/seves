@@ -70,8 +70,9 @@ function showLieuModal(event){
     event.preventDefault()
     const currentModal = getNextAvailableModal()
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
+    dsfr(currentModal).modal.disclose()
     dataRequiredToRequired(currentModal)
-    dsfr(currentModal).modal.disclose();
+
 }
 
 function buildLieuCardFromModal(element){

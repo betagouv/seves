@@ -18,7 +18,7 @@ function dataRequiredToRequired(element){
 
 function removeRequired(element){
     element.querySelectorAll('[required]').forEach(field =>{
-        field.required = ""
+        field.required = false
     })
 }
 

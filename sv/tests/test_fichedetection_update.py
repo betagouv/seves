@@ -704,7 +704,9 @@ def test_update_prelevement(
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
     fiche = fiche_detection_with_one_lieu_and_one_prelevement
     new_lieu = baker.make(Lieu, fiche_detection=fiche, code_insee="65455", _fill_optional=True)
-    new_prelevement = baker.prepare(Prelevement, lieu=new_lieu, _fill_optional=True, _save_related=True)
+    new_prelevement = baker.prepare(
+        Prelevement, lieu=new_lieu, resultat="detecte", _fill_optional=True, _save_related=True
+    )
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche)}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()

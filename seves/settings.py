@@ -224,5 +224,4 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO structure preleveur is not correct on edit prelevement
-# TODO : le scénarion en édition : J'ajoute un lieu, et je veux mettre un ancien prélvement sur un nouveau lieu n'est pas possible
+# TODO : le scénarion en édition : J'ajoute un lieu, et je veux mettre un ancien prélevement sur un nouveau lieu n'est pas possible

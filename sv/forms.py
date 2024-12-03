@@ -125,7 +125,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
     resultat = forms.ChoiceField(
         required=True,
         choices=Prelevement.Resultat.choices,
-        widget=DSFRRadioButton(attrs={"required": "true"}),
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mt-4v fr-mb-0-5v"}),
     )
     lieu = forms.ModelChoiceField(
         queryset=Lieu.objects.none(),

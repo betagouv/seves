@@ -98,7 +98,7 @@ function showAddPrelevementmodal(event) {
     event.preventDefault()
     const currentModal = getNextAvailablePrelevementModal()
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
-    populateLieuSelect(document.querySelector((`[id^="id_prelevements-"][id$="-lieu"]`)))
+    populateLieuSelect(currentModal.querySelector((`[id^="id_prelevements-"][id$="-lieu"]`)))
 
     currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
         if (input.hasAttribute("data-required")){
