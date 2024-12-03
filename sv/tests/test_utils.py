@@ -214,10 +214,6 @@ class LieuFormDomElements:
         return self.page.get_by_text("Commune", exact=True).locator("visible=true")
 
     @property
-    def commune_choice_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content .choices__item--selectable")
-
-    @property
     def commune_input(self) -> Locator:
         return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id^="commune-select-"]')
 
