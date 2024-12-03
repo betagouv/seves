@@ -236,7 +236,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         return kwargs
 
     def post(self, request, pk):
-        # TODO add atomic
         print(request.POST)
         self.object = self.get_object()
         form = self.get_form()
@@ -251,17 +250,18 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             print(form.errors)
             return self.form_invalid(form)
 
-        self.object = form.save()
+        with transaction.atomic():
+            self.object = form.save()
 
-        if not lieu_formset.is_valid():
-            print("FORMSET LIEU INVALID")
-            print(lieu_formset.data)
-            print(lieu_formset.errors)
-            return self.form_invalid(form)
+            if not lieu_formset.is_valid():
+                print("FORMSET LIEU INVALID")
+                print(lieu_formset.data)
+                print(lieu_formset.errors)
+                return self.form_invalid(form)
 
-        lieu_formset.save()
-        allowed_lieux = self.object.lieux.all()
-        self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+            lieu_formset.save()
+            allowed_lieux = self.object.lieux.all()
+            self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 
