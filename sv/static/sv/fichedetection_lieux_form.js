@@ -92,7 +92,6 @@ function saveLieu(event){
     const index = document.lieuxCards.findIndex(element => element.id === id);
     if (index === -1) {
         document.lieuxCards.push(buildLieuCardFromModal(modal));
-        extraFormSaved++;
     } else {
         document.lieuxCards[index] = buildLieuCardFromModal(modal);
     }

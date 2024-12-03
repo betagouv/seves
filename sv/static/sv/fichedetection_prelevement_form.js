@@ -1,5 +1,4 @@
 document.prelevementCards =[]
-let extraFormSaved = 0
 modalHTMLContent = {}
 
 function fetchEspecesEchantillon(query) {
@@ -85,11 +84,21 @@ function populateLieuSelect(element){
     });
 }
 
+function getNextAvailablePrelevementModal() {
+    const elements = document.querySelectorAll("[id^=modal-add-edit-prelevement-]")
+    for (const element of elements) {
+        const input = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveur"]`)
+        if (input && input.value === "") {
+            return element
+        }
+    }
+}
+
 function showAddPrelevementmodal(event) {
     event.preventDefault()
-    const currentModal = document.getElementById("modal-add-edit-prelevement-" + extraFormSaved)
-    modalHTMLContent[extraFormSaved] = currentModal.querySelector(".fr-modal__content").innerHTML
-    populateLieuSelect(document.getElementById('id_prelevements-' + extraFormSaved + "-lieu"))
+    const currentModal = getNextAvailablePrelevementModal()
+    modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
+    populateLieuSelect(document.querySelector((`[id^="id_prelevements-"][id$="-lieu"]`)))
 
     currentModal.querySelectorAll('input, textarea, select').forEach((input) =>{
         if (input.hasAttribute("data-required")){
@@ -125,7 +134,6 @@ function savePrelevement(event){
     const index = document.prelevementCards.findIndex(element => element.id === data.id);
     if (index === -1) {
         document.prelevementCards.push(data);
-        extraFormSaved++;
     } else {
         document.prelevementCards[index] = data;
     }
@@ -133,6 +141,12 @@ function savePrelevement(event){
     removeRequired(modal)
     dsfr(modal).modal.conceal();
 }
+
+function saveModalWhenOpening(event){
+    const modalId = event.target.getAttribute("id").split("-").pop()
+    modalHTMLContent[modalId] = event.target.querySelector(".fr-modal__content").innerHTML
+}
+
 
 function resetModalWhenClosing(event){
     const originalTarget = event.explicitOriginalTarget
@@ -149,6 +163,7 @@ function resetModalWhenClosing(event){
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .prelevement-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(element =>{
