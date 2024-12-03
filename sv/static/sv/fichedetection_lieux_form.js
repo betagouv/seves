@@ -154,7 +154,6 @@ function getNextAvailableModal() {
             return element
         }
     }
-    // TODO what to do in this case ?
 }
 
 (function() {

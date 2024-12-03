@@ -194,17 +194,10 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         self.object = super().get_object(queryset)
         return self.object
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["is_creation"] = False
-        # TODO handle colission pk and id ?
-        forms = [PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in range(10)]
-        context["prelevement_forms"] = forms
-
-        prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object)  # TODO handle espece echantillon
+    def _get_existing_prelevement_forms(self, existing_prelevements):
         lieux = self.object.lieux.all()
         existing_prelevements_forms = []
-        for existing_prelevement in prelevements:
+        for existing_prelevement in existing_prelevements:
             form = PrelevementForm(
                 instance=existing_prelevement,
                 convert_required_to_data_required=True,
@@ -212,13 +205,27 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             )
             form.fields["lieu"].queryset = lieux
             existing_prelevements_forms.append(form)
-        context["existing_prelevements"] = existing_prelevements_forms
+        return existing_prelevements_forms
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_creation"] = False
+        existing_prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object)
+
+        existing_prelevements_ids = [p.id for p in existing_prelevements]
+        possible_ids = list(range(100))
+        possible_ids = [i for i in possible_ids if i not in existing_prelevements_ids][:20]
+        forms = [
+            PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in possible_ids
+        ]
+        context["prelevement_forms"] = forms
+
+        # TODO handle espece echantillon
+
+        context["existing_prelevements"] = self._get_existing_prelevement_forms(existing_prelevements)
         formset = LieuFormSet(
             instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
         )
-
-        # TODO do we want this ?
-        # TODO uniformize the way we get the form
         formset.custom_kwargs = {"convert_required_to_data_required": True}
         context["lieu_formset"] = formset
         return context
@@ -230,6 +237,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
 
     def post(self, request, pk):
         # TODO add atomic
+        print(request.POST)
         self.object = self.get_object()
         form = self.get_form()
         lieu_formset = LieuFormSet(
@@ -250,8 +258,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             print(lieu_formset.data)
             print(lieu_formset.errors)
             return self.form_invalid(form)
-
-        self.object.save()  # TODO do we need this ?
 
         lieu_formset.save()
         allowed_lieux = self.object.lieux.all()
