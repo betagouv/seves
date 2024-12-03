@@ -5,6 +5,7 @@ from django.db import transaction
 from django.contrib.auth import get_user_model
 import csv
 from core.models import Contact, Structure, Agent
+from core.allowed_structures import ALLOWED_STRUCTURES
 
 
 class Command(BaseCommand):
@@ -22,7 +23,12 @@ class Command(BaseCommand):
     def save_contact(self, row, ligne):
         try:
             # Contact pour structure
-            parts = row["Structure"].split("/")
+            structure_complete = row["Structure"].strip()
+
+            if structure_complete not in ALLOWED_STRUCTURES:
+                return
+
+            parts = structure_complete.split("/")
             niveau1 = ""
             niveau2 = ""
 
@@ -50,7 +56,7 @@ class Command(BaseCommand):
                 user=user,
                 defaults={
                     "structure": structure,
-                    "structure_complete": row["Structure"],
+                    "structure_complete": structure_complete,
                     "prenom": row["Prénom"],
                     "nom": row["Nom"],
                     "fonction_hierarchique": row.get("Fonction_hiérarchique", ""),
