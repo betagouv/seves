@@ -13,6 +13,9 @@
                             <h1 id="modal-add-edit-lieu-title-{{ id }}"
                                 class="fr-modal__title">Ajouter un lieu
                             </h1>
+                            {% if delete %}
+                                <p class="fr-hidden">{{ form.DELETE }}</p>
+                            {% endif %}
 
                             <p>
                                 <label class="fr-label" for="id_lieux-{{ id }}-nom">Nom du lieu</label>

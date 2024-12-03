@@ -529,7 +529,7 @@ def test_add_new_prelevement_non_officiel(
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = fiche_detection_with_one_lieu.lieux.first()
-    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+    prelevement = baker.prepare(Prelevement, lieu=lieu, resultat="detecte", _fill_optional=True, _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
@@ -603,7 +603,7 @@ def test_add_new_prelevement_officiel(
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, code_insee="59350", _fill_optional=True)
-    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
+    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, resultat="detecte", _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
@@ -654,7 +654,7 @@ def test_add_multiple_prelevements(
     fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
+    choice_js_fill_from_element,
 ):
     """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
     lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
@@ -668,9 +668,10 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
-        choice_js_fill(
+        element = page.locator(".fr-modal__content").locator("visible=true").locator(".choices__list--single")
+        choice_js_fill_from_element(
             page,
-            "#espece-echantillon .choices__list--single",
+            element,
             prelevement.espece_echantillon.libelle,
             prelevement.espece_echantillon.libelle,
         )
@@ -701,14 +702,11 @@ def test_update_prelevement(
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
-    new_lieu = baker.make(
-        Lieu, fiche_detection=fiche_detection_with_one_lieu_and_one_prelevement, code_insee="65455", _fill_optional=True
-    )
+    fiche = fiche_detection_with_one_lieu_and_one_prelevement
+    new_lieu = baker.make(Lieu, fiche_detection=fiche, code_insee="65455", _fill_optional=True)
     new_prelevement = baker.prepare(Prelevement, lieu=new_lieu, _fill_optional=True, _save_related=True)
 
-    page.goto(
-        f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
-    )
+    page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche)}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
@@ -870,7 +868,6 @@ def test_can_edit_and_save_lieu_with_name_only(
     assert lieu.nom == "Chez moi mis à jour"
 
 
-@pytest.mark.django_db
 def test_cant_pick_inactive_labo_agree_in_prelevement(
     live_server,
     page: Page,
@@ -902,12 +899,13 @@ def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
     prelevement.laboratoire_agree = labo
     prelevement.save()
-
     page.goto(
         f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
     )
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
+    assert prelevement_form_elements.laboratoire_agree_input.all_inner_texts() == []
+
     assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
 

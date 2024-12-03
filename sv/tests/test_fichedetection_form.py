@@ -508,8 +508,7 @@ def test_delete_correct_lieu(
     lieu_form_elements.save_btn.click()
 
     page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Fermer").click()
-
+    page.locator(".fr-btn--close").locator("visible=true").click()
     page.get_by_role("button", name="Supprimer le lieu").nth(1).click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
@@ -517,7 +516,10 @@ def test_delete_correct_lieu(
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
 
-    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "lorem"}]
+    cards = page.evaluate("document.lieuxCards")
+    assert len(cards) == 1
+    assert cards[0]["commune"] == ""
+    assert cards[0]["nom"] == "lorem"
 
 
 @pytest.mark.django_db

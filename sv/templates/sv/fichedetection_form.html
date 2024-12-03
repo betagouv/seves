@@ -107,7 +107,7 @@
                     {% for form in lieu_formset %}
                         {% if form.instance.pk %}
                             {{ form.id }}
-                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk %}
+                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk delete=True %}
                         {% endif %}
                     {% endfor %}
 

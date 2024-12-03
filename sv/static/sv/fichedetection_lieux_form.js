@@ -23,7 +23,11 @@ function fetchCommunes(query) {
 function deleteLieu(event) {
     const id = event.target.dataset.id
     document.lieuxCards = document.lieuxCards.filter(function(item) {return item.id != id})
-    resetForm(document.getElementById("modal-add-lieu-" + id))
+    const modal = document.getElementById("modal-add-lieu-" + id)
+    resetForm(modal)
+    if(!!modal.querySelector('[id$=DELETE]')){
+        modal.querySelector('[id$=DELETE]').checked = true
+    }
     displayLieuxCards()
     dsfr(document.getElementById('modal-delete-lieu-confirmation')).modal.conceal();
 }

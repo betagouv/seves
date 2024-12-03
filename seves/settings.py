@@ -229,4 +229,4 @@ ROOT_URL = env("ROOT_URL", default=None)
 # TODO structure preleveur is not correct on edit prelevement
 # TODO : l'ajout d'un lieu dans une modification de fiche ne marche pas a cause d'un décallage sur le compteur de modale a ouvrir : initialiser avec id_lieux-INITIAL_FORMS
 # TODO : le todo précédent est réglé mais on doit avoir le même sur les prelevement
-# Todo : edition prelevement créé un nouveau
+# TODO : le scénarion en édition : J'ajoute un lieu, et je veux mettre un ancien prélvement sur un nouveau lieu n'est pas possible

@@ -231,6 +231,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
     def post(self, request, pk):
         # TODO add atomic
         self.object = self.get_object()
+        print(request.POST)
         form = self.get_form()
         lieu_formset = LieuFormSet(
             request.POST,
@@ -252,6 +253,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             return self.form_invalid(form)
 
         self.object.save()  # TODO do we need this ?
+
         lieu_formset.save()
         allowed_lieux = self.object.lieux.all()
         self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
@@ -260,9 +262,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         self.object.contacts.add(self.request.user.agent.contact_set.get())
         self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
-        # TODO handle deletion of lieux
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
-
         return HttpResponseRedirect(self.get_success_url())
 
     #

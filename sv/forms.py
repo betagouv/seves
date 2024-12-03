@@ -141,24 +141,25 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         exclude = []
         labels = {"date_prelevement": "Date prélèvement"}
 
-    def _change_queryset_if_inactive_value(self, model, field_name):
-        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.instance.pk)
+    def _handle_inactive_values(self, model, field_name, pk):
+        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=pk)
         actual_ids = actual_ids.values_list(field_name + "_id", flat=True)
         inactive_ids = model._base_manager.filter(is_active=False).values_list("id", flat=True)
         if any([pk in inactive_ids for pk in actual_ids if pk]):
             self.fields[field_name].queryset = model._base_manager.order_by("nom")
+        else:
+            self.fields[field_name].queryset = model.objects.order_by("nom")
 
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
         self.fields["structure_preleveur"].required = "required"
-
         if self.instance:
-            self._change_queryset_if_inactive_value(LaboratoireAgree, "laboratoire_agree")
-            self._change_queryset_if_inactive_value(
-                LaboratoireConfirmationOfficielle, "laboratoire_confirmation_officielle"
+            self._handle_inactive_values(LaboratoireAgree, "laboratoire_agree", self.instance.pk)
+            self._handle_inactive_values(
+                LaboratoireConfirmationOfficielle, "laboratoire_confirmation_officielle", self.instance.pk
             )
-            self._change_queryset_if_inactive_value(StructurePreleveur, "structure_preleveur")
+            self._handle_inactive_values(StructurePreleveur, "structure_preleveur", self.instance.pk)
 
         if convert_required_to_data_required:
             self._convert_required_to_data_required()
