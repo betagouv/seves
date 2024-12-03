@@ -224,4 +224,4 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO : le scénarion en édition : J'ajoute un lieu, et je veux mettre un ancien prélevement sur un nouveau lieu n'est pas possible
+# TODO : le scénario en édition : J'ajoute un lieu, et je veux mettre un ancien prélevement sur un nouveau lieu n'est pas possible

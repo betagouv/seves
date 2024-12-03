@@ -236,7 +236,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         return kwargs
 
     def post(self, request, pk):
-        print(request.POST)
         self.object = self.get_object()
         form = self.get_form()
         lieu_formset = LieuFormSet(
@@ -246,17 +245,12 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         )
 
         if not form.is_valid():
-            print("FORMS INVALID")
-            print(form.errors)
             return self.form_invalid(form)
 
         with transaction.atomic():
             self.object = form.save()
 
             if not lieu_formset.is_valid():
-                print("FORMSET LIEU INVALID")
-                print(lieu_formset.data)
-                print(lieu_formset.errors)
                 return self.form_invalid(form)
 
             lieu_formset.save()
