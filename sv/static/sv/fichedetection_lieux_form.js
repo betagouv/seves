@@ -126,7 +126,7 @@ function setUpCommune(element) {
     })
 
     choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
-        const currentModal = Array.from(document.querySelectorAll(".fr-modal")).find(el => getComputedStyle(el).display !== "none");
+        const currentModal = event.target.closest("dialog")
         currentModal.querySelector('[id$=commune]').value = event.detail.choice.value
         currentModal.querySelector('[id$=insee]').value = event.detail.choice.customProperties.inseeCode
         currentModal.querySelector('[id$=departement]').value = event.detail.choice.customProperties.departementCode

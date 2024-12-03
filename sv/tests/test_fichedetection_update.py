@@ -833,9 +833,10 @@ def test_delete_multiple_prelevements(
     # Supprime le deuxième prélèvement
     page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
-
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
+
+    assert Prelevement.objects.count() == 0
 
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_1.id)
@@ -1039,10 +1040,18 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
 ):
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
-    page.locator("#numero-rasff").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.locator("#numero-europhyt").evaluate("element => element.style.setProperty('display', 'block' , 'important')")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
+    page.evaluate("""
+            const form = document.querySelector('main form');
+            const input1 = document.createElement('input');
+            input1.name = 'numero_europhyt';
+            input1.value = '11111111';
+            form.appendChild(input1);
+
+            const input2 = document.createElement('input');
+            input2.name = 'numero_rasff';
+            input2.placeholder = '222222222';
+            form.appendChild(input2);
+        """)
 
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)

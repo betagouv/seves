@@ -160,7 +160,3 @@ function resetModalWhenClosing(event){
     displayPrelevementsCards()
 
 })();
-
-// TODO vérifier qu'a l'ouverture on refait pas le choices pour la l'espece et autre champ choices
-// TODO edit on page with no lieux and prelevements gives JS error
-// TODO représentation sous forme de STR des lieux dans le form d'edit des prévements

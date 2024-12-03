@@ -55,7 +55,6 @@ class RattachementDetectionForm(DSFRForm, forms.Form):
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
-    # TODO add id here and change saving logic
     nom = forms.CharField(widget=forms.TextInput(), required=True)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)

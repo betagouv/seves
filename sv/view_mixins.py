@@ -39,17 +39,17 @@ class WithPrelevementHandlingMixin:
             if form_is_empty:
                 continue
 
-            print(form_data)
             prelevement_id = form_data.pop(prefix + "id", None)
             form_is_empty = not any(form_data.values())
 
+            if form_is_empty and prelevement_id:
+                prelevement = Prelevement.objects.get(id=prelevement_id)
+                prelevement.delete()
+                continue
+
             if prelevement_id:
                 prelevement = Prelevement.objects.get(id=prelevement_id)
-                if form_is_empty:
-                    prelevement.delete()
-                    return
-                else:
-                    prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
+                prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
             else:
                 prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
 

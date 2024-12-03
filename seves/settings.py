@@ -224,7 +224,6 @@ if env("EMAIL_HOST", default=None):
 
 
 ROOT_URL = env("ROOT_URL", default=None)
-# TODO problème sur la gestion des communes test_edit_lieu_form_have_all_fields_with_multiple_lieux
 # TODO la modale d'edit de prélévement ne marche d'une fois : idem que pour les lieux a cause de la manière dont sont construits les form ?
 # TODO structure preleveur is not correct on edit prelevement
 # TODO : l'ajout d'un lieu dans une modification de fiche ne marche pas a cause d'un décallage sur le compteur de modale a ouvrir : initialiser avec id_lieux-INITIAL_FORMS
