@@ -14,19 +14,12 @@ def test_lieu_details(live_server, page, fiche_detection):
     expect(page.locator("#fr-modal-lieu-1").get_by_text("Code INSEE")).to_be_visible()
     expect(page.locator("#fr-modal-lieu-1").get_by_text("Département")).to_be_visible()
     expect(page.locator("#fr-modal-lieu-1").get_by_text("Région")).to_be_visible()
-    expect(page.locator("#fr-modal-lieu-1").get_by_text("Coord. Lambert")).to_be_visible()
     expect(page.locator("#fr-modal-lieu-1").get_by_text("Coord. WGS84")).to_be_visible()
     expect(page.get_by_test_id("lieu-1-adresse")).to_contain_text(lieu.adresse_lieu_dit)
     expect(page.get_by_test_id("lieu-1-commune")).to_contain_text(lieu.commune)
     expect(page.get_by_test_id("lieu-1-code-insee")).to_contain_text(lieu.code_insee)
     expect(page.get_by_test_id("lieu-1-departement")).to_contain_text(lieu.departement.nom)
     expect(page.get_by_test_id("lieu-1-region")).to_contain_text(lieu.departement.region.nom)
-    expect(page.get_by_test_id("lieu-1-lambert93-latitude")).to_contain_text(
-        str(lieu.lambert93_latitude).replace(".", ",")
-    )
-    expect(page.get_by_test_id("lieu-1-lambert93-longitude")).to_contain_text(
-        str(lieu.lambert93_longitude).replace(".", ",")
-    )
     expect(page.get_by_test_id("lieu-1-wgs84-latitude")).to_contain_text(str(lieu.wgs84_latitude).replace(".", ","))
     expect(page.get_by_test_id("lieu-1-wgs84-longitude")).to_contain_text(str(lieu.wgs84_longitude).replace(".", ","))
     expect(page.get_by_text("Il s'agit d'un établissement", exact=True)).to_be_visible()
@@ -56,12 +49,6 @@ def test_lieu_details_second_lieu(live_server, page, fiche_detection):
     expect(page.get_by_test_id("lieu-2-code-insee")).to_contain_text(lieu2.code_insee)
     expect(page.get_by_test_id("lieu-2-departement")).to_contain_text(lieu2.departement.nom)
     expect(page.get_by_test_id("lieu-2-region")).to_contain_text(lieu2.departement.region.nom)
-    expect(page.get_by_test_id("lieu-2-lambert93-latitude")).to_contain_text(
-        str(lieu2.lambert93_latitude).replace(".", ",")
-    )
-    expect(page.get_by_test_id("lieu-2-lambert93-longitude")).to_contain_text(
-        str(lieu2.lambert93_longitude).replace(".", ",")
-    )
     expect(page.get_by_test_id("lieu-2-wgs84-latitude")).to_contain_text(str(lieu2.wgs84_latitude).replace(".", ","))
     expect(page.get_by_test_id("lieu-2-wgs84-longitude")).to_contain_text(str(lieu2.wgs84_longitude).replace(".", ","))
 

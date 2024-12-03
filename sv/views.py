@@ -1,7 +1,14 @@
+from django.contrib import messages
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
-from django.views import View
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.db.models import Prefetch
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
+from django.views import View
 from django.views.generic import (
     ListView,
     DetailView,
@@ -9,13 +16,6 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse
-from django.db.models import Prefetch
-from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
-from django.core.exceptions import ValidationError, PermissionDenied
-from django.contrib import messages
-from django.contrib.auth.mixins import UserPassesTestMixin
 
 from core.mixins import (
     WithDocumentUploadFormMixin,
@@ -24,6 +24,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
 )
+from core.models import Visibilite
 from core.redirect import safe_redirect
 from sv.forms import (
     FicheDetectionVisibiliteUpdateForm,
@@ -40,25 +41,14 @@ from sv.forms import (
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
 from .filters import FicheFilter
-from .constants import KNOWN_OEPPS, KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES
 from .models import (
     FicheDetection,
     Lieu,
     Prelevement,
-    StatutEvenement,
-    OrganismeNuisible,
-    StatutReglementaire,
-    Contexte,
-    StructurePreleveur,
-    MatricePrelevee,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
-    PositionChaineDistribution,
     FicheZoneDelimitee,
     ZoneInfestee,
-    SiteInspection,
 )
-from core.models import Visibilite
+from .view_mixins import FicheDetectionContextMixin, WithPrelevementHandlingMixin
 
 
 class FicheListView(ListView):
@@ -145,73 +135,6 @@ class FicheDetectionDetailView(
         raise PermissionDenied()
 
 
-class FicheDetectionContextMixin:
-    def _add_status_to_organisme_nuisible(self, context, status):
-        status_code_to_id = {s.code: s.id for s in status}
-        oeep_to_nuisible_id = {
-            organisme.code_oepp: organisme.id
-            for organisme in OrganismeNuisible.objects.filter(code_oepp__in=KNOWN_OEPPS)
-        }
-        context["status_to_organisme_nuisible"] = [
-            {"statusID": status_code_to_id[code], "nuisibleIds": [oeep_to_nuisible_id.get(oepp) for oepp in oepps]}
-            for code, oepps in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.items()
-        ]
-        return context
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["statuts_evenement"] = StatutEvenement.objects.all()
-        context["organismes_nuisibles"] = OrganismeNuisible.objects.all()
-        status = StatutReglementaire.objects.all()
-        context["statuts_reglementaires"] = status
-        context["contextes"] = Contexte.objects.all()
-        if self.allows_inactive_structure_preleveur_values:
-            queryset = StructurePreleveur._base_manager.values("id", "nom").order_by("nom")
-        else:
-            queryset = StructurePreleveur.objects.values("id", "nom").order_by("nom")
-        context["structures_preleveurs"] = list(queryset)
-        context["matrices_prelevees"] = MatricePrelevee.objects.all().order_by("libelle")
-        if self.allows_inactive_laboratoires_agrees_values:
-            context["laboratoires_agrees"] = LaboratoireAgree._base_manager.order_by("nom")
-        else:
-            context["laboratoires_agrees"] = LaboratoireAgree.objects.all().order_by("nom")
-        if self.allows_inactive_laboratoires_confirmation_values:
-            queryset = LaboratoireConfirmationOfficielle._base_manager.order_by("nom")
-        else:
-            queryset = LaboratoireConfirmationOfficielle.objects.all().order_by("nom")
-        context["laboratoires_confirmation_officielle"] = queryset
-        context["resultats_prelevement"] = Prelevement.Resultat.choices
-        context["sites_inspections"] = list(SiteInspection.objects.all().values("id", "nom").order_by("nom"))
-        context["positions_chaine_distribution"] = PositionChaineDistribution.objects.all().order_by("libelle")
-        context = self._add_status_to_organisme_nuisible(context, status)
-        return context
-
-
-class WithPrelevementHandlingMixin:
-    def _save_prelevement_if_not_empty(self, data, allowed_lieux):
-        # TODO clean this mess
-        # TODO review this to "filter" data for each prelvements
-        prelevement_ids = [key.removeprefix("prelevements-") for key in data.keys() if key.startswith("prelevements-")]
-        prelevement_ids = set([id.split("-")[0] for id in prelevement_ids])
-        for i in prelevement_ids:
-            prefix = f"prelevements-{i}-"
-            form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
-            if any(form_data.values()):
-                # TODO edit prelvement instead of add if known prelevement
-                print(form_data)
-                # TODO only for edit
-                if form_data.get(prefix + "id"):
-                    prelevement = Prelevement.objects.get(id=form_data[prefix + "id"])
-                    prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
-                else:
-                    prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
-                prelevement_form.fields["lieu"].queryset = allowed_lieux
-                if prelevement_form.is_valid():
-                    prelevement_form.save()
-                else:
-                    raise ValidationError(prelevement_form.errors)
-
-
 class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
     allows_inactive_laboratoires_agrees_values = False
     allows_inactive_laboratoires_confirmation_values = False
@@ -263,32 +186,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
-
-    @property
-    def allows_inactive_laboratoires_agrees_values(self):
-        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
-            "laboratoire_agree_id", flat=True
-        )
-        inactive_ids = LaboratoireAgree._base_manager.filter(is_active=False).values_list("id", flat=True)
-        return any([pk in inactive_ids for pk in actual_ids if pk])
-
-    @property
-    def allows_inactive_laboratoires_confirmation_values(self):
-        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
-            "laboratoire_confirmation_officielle_id", flat=True
-        )
-        inactive_ids = LaboratoireConfirmationOfficielle._base_manager.filter(is_active=False).values_list(
-            "id", flat=True
-        )
-        return any([pk in inactive_ids for pk in actual_ids if pk])
-
-    @property
-    def allows_inactive_structure_preleveur_values(self):
-        actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=self.object.pk).values_list(
-            "structure_preleveur_id", flat=True
-        )
-        inactive_ids = StructurePreleveur._base_manager.filter(is_active=False).values_list("id", flat=True)
-        return any([pk in inactive_ids for pk in actual_ids if pk])
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):

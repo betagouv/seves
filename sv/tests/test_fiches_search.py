@@ -38,7 +38,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_text("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_empty()
-    expect(page.get_by_text("Au :", exact=True)).to_be_visible()
+    expect(page.get_by_text("Au", exact=True)).to_be_visible()
     expect(page.get_by_label("Au")).to_be_visible()
     expect(page.get_by_label("Au")).to_be_empty()
     expect(page.locator("#search-form").get_by_text("État")).to_be_visible()
