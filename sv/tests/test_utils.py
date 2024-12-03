@@ -96,7 +96,7 @@ class FicheDetectionFormDomElements:
 
     @property
     def organisme_nuisible_input(self) -> Locator:
-        return self.page.locator("#organisme-nuisible-input")
+        return self.page.locator("#id_organisme_nuisible")
 
     @property
     def statut_reglementaire_label(self) -> Locator:
@@ -333,13 +333,10 @@ class PrelevementFormDomElements:
         return self.page.locator('[id^="id_prelevements-"][id$="espece-echantillon"]').locator("visible=true")
 
     def resultat_input(self, resultat_value) -> Locator:
-        if resultat_value == "non detecte":
-            return (
-                self.page.locator("label")
-                .filter(has_text="Détecté", has_not_text="Non détecté")
-                .locator("visible=true")
-            )
-        return self.page.locator("label").filter(has_text="Non détecté").locator("visible=true")
+        modal = self.page.locator(".fr-modal__content").locator("visible=true")
+        if resultat_value in ("non detecte", "Non détecté"):
+            return modal.get_by_text("Non détecté", exact=True)
+        return modal.get_by_text("Détecté", exact=True)
 
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
@@ -355,7 +352,7 @@ class PrelevementFormDomElements:
 
     @property
     def laboratoire_agree_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-laboratoire-agree")
+        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_agree"]').locator("visible=true")
 
     @property
     def laboratoire_confirmation_label(self) -> Locator:
@@ -363,7 +360,9 @@ class PrelevementFormDomElements:
 
     @property
     def laboratoire_confirmation_input(self) -> Locator:
-        return self.page.get_by_test_id("prelevement-form-laboratoire-confirmation")
+        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_confirmation_officielle"]').locator(
+            "visible=true"
+        )
 
 
 class FicheZoneDelimiteeFormPage:

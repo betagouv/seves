@@ -602,7 +602,7 @@ def test_add_new_prelevement_officiel(
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, code_insee="59350", _fill_optional=True)
     prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, _save_related=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
@@ -746,7 +746,9 @@ def test_update_multiple_prelevements(
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
-    lieu1, lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, _quantity=2)
+    lieu1, lieu2 = baker.make(
+        Lieu, fiche_detection=fiche_detection, code_insee="59350", _fill_optional=True, _quantity=2
+    )
     baker.make(Prelevement, lieu=lieu1, _fill_optional=True)
     baker.make(Prelevement, lieu=lieu2, _fill_optional=True)
     new_prelevement_1 = baker.prepare(Prelevement, lieu=lieu2, _fill_optional=True, _save_related=True)
@@ -822,17 +824,16 @@ def test_delete_multiple_prelevements(
     prelevement_form_elements: PrelevementFormDomElements,
 ):
     """Test que la suppression de plusieurs prelevements existants est bien enregistrée en base de données."""
-    prelevement_1, prelevement_2 = baker.make(
-        Prelevement, lieu=fiche_detection_with_one_lieu.lieux.first(), _quantity=2
-    )
+    lieu = fiche_detection_with_one_lieu.lieux.first()
+    prelevement_1, prelevement_2 = baker.make(Prelevement, lieu=lieu, _quantity=2, _fill_optional=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     # Supprime le premier prélèvement
-    page.locator("#fiche-detection-form #prelevements").get_by_role("button").nth(2).click()
+    page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
 
     # Supprime le deuxième prélèvement
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").nth(1).click()
+    page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
 
     form_elements.save_update_btn.click()
@@ -840,6 +841,7 @@ def test_delete_multiple_prelevements(
 
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_1.id)
+    with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement_2.id)
 
 
@@ -947,6 +949,7 @@ def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
     )
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
+
     assert prelevement_form_elements.laboratoire_confirmation_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
 

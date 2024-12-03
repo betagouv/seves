@@ -35,15 +35,27 @@ class WithPrelevementHandlingMixin:
         for i in prelevement_ids:
             prefix = f"prelevements-{i}-"
             form_data = {key: value for key, value in data.items() if key.startswith(prefix)}
-            if any(form_data.values()):
-                print(form_data)
-                if form_data.get(prefix + "id"):
-                    prelevement = Prelevement.objects.get(id=form_data[prefix + "id"])
+            form_is_empty = not any(form_data.values())
+            if form_is_empty:
+                continue
+
+            print(form_data)
+            prelevement_id = form_data.pop(prefix + "id", None)
+            form_is_empty = not any(form_data.values())
+
+            if prelevement_id:
+                prelevement = Prelevement.objects.get(id=prelevement_id)
+                if form_is_empty:
+                    prelevement.delete()
+                    return
+                else:
                     prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{i}")
-                else:
-                    prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
-                prelevement_form.fields["lieu"].queryset = allowed_lieux
-                if prelevement_form.is_valid():
-                    prelevement_form.save()
-                else:
-                    raise ValidationError(prelevement_form.errors)
+            else:
+                prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{i}")
+
+            prelevement_form.fields["lieu"].queryset = allowed_lieux
+
+            if prelevement_form.is_valid():
+                prelevement_form.save()
+            else:
+                raise ValidationError(prelevement_form.errors)

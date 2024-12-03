@@ -200,7 +200,7 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     date_premier_signalement = forms.DateField(
         label="Date 1er signalement",
         required=False,
-        widget=forms.DateInput(attrs={"max": datetime.date.today(), "type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
     )
 
     class Meta:

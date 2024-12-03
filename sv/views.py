@@ -213,7 +213,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             form.fields["lieu"].queryset = lieux
             existing_prelevements_forms.append(form)
         context["existing_prelevements"] = existing_prelevements_forms
-
         formset = LieuFormSet(
             instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
         )
@@ -255,15 +254,13 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         self.object.save()  # TODO do we need this ?
         lieu_formset.save()
         allowed_lieux = self.object.lieux.all()
-        print("Lieu modification autorisée")
-        print(allowed_lieux)
         self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
 
         # TODO do we need this ?
         self.object.contacts.add(self.request.user.agent.contact_set.get())
         self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
-        # TODO handle deletion of objects
+        # TODO handle deletion of lieux
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
 
         return HttpResponseRedirect(self.get_success_url())
