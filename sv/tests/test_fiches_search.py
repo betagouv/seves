@@ -400,3 +400,23 @@ def test_link_fiche_zone(live_server, page, fiche_zone_bakery, fiche_detection_b
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
     assert page.locator(cell_selector).inner_text().strip() == "3"
+
+
+@pytest.mark.django_db
+def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
+    live_server, page: Page, fiche_detection
+):
+    """Test que lorsqu'une fiche de détection a plusieurs lieux dans la même région, elle n'apparaît qu'une seule fois dans la liste
+    lors d'une recherche par région"""
+    region_na, _ = Region.objects.get_or_create(nom="Nouvelle-Aquitaine")
+    dpt_cm, _ = Departement.objects.get_or_create(nom="Charente-Maritime", region=region_na)
+    lieu1 = Lieu.objects.create(fiche_detection=fiche_detection, nom="lieu 1", departement=dpt_cm)
+    lieu2 = Lieu.objects.create(fiche_detection=fiche_detection, nom="lieu 2", departement=dpt_cm)
+    fiche_detection.lieux.add(lieu1)
+    fiche_detection.lieux.add(lieu2)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Région").select_option(str(region_na.id))
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name=str(fiche_detection.numero))).to_have_count(1)
