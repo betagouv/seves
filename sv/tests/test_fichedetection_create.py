@@ -367,7 +367,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
     organisme_nuisible.libelle_court = "Mon ON"
     organisme_nuisible.save()
 
@@ -388,7 +388,7 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="OE_XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
     organisme_nuisible.libelle_court = "Mon ON"
     organisme_nuisible.save()
 
