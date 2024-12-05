@@ -44,8 +44,7 @@
                 <main>
                     <div>
                         <h1 class="fr-h1">Connexion</h1>
-
-                        <a href="{% url 'oidc_authentication_init' %}" class="fr-btn">Me connecter via le portail EAP</a>
+                        <a href="{% url 'oidc_authentication_init' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="fr-btn">Me connecter via le portail EAP</a>
                     </div>
                 </main>
 
