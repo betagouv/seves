@@ -5,6 +5,7 @@ from django.db import models, transaction
 from django.urls import reverse
 
 from core.forms import DocumentUploadForm, DocumentEditForm
+from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
 from core.models import Document, LienLibre, Contact, Message, Visibilite
 from .notifications import notify_message
@@ -103,6 +104,11 @@ class AllowACNotificationMixin(models.Model):
     def can_notifiy(self):
         return not self.is_ac_notified and not self.is_draft
 
+    def _add_bsv_and_mus_to_contacts(self):
+        bsv_contact = Contact.objects.get(structure__niveau2=BSV_STRUCTURE)
+        mus_contact = Contact.objects.get(structure__niveau2=MUS_STRUCTURE)
+        self.contacts.add(bsv_contact, mus_contact)
+
     def notify_ac(self, sender):
         if not self.can_notifiy:
             raise ValidationError("Cet objet est déjà notifié à l'AC")
@@ -121,6 +127,7 @@ class AllowACNotificationMixin(models.Model):
             with transaction.atomic():
                 self.save()
                 message.save()
+                self._add_bsv_and_mus_to_contacts()
         except ValidationError as e:
             raise ValidationError(f"Une erreur s'est produite lors de la notification : {e.message}")
 

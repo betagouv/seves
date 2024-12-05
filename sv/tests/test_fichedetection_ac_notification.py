@@ -8,8 +8,6 @@ from ..models import FicheDetection
 
 
 def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection, mailoutbox):
-    fiche_detection.visibilite = Visibilite.LOCAL
-    fiche_detection.save()
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -84,3 +82,16 @@ def test_if_email_notification_fails_does_not_create_message_or_update_status(
     assert not fiche_detection.messages.filter(message_type=Message.NOTIFICATION_AC).exists()
     fiche_detection.refresh_from_db()
     assert fiche_detection.is_ac_notified is False
+
+
+def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page, fiche_detection: FicheDetection):
+    Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
+    Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
+
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("button", name="Déclarer à l'AC").click()
+
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.contacts.filter(structure__niveau2=MUS_STRUCTURE).exists()
+    assert fiche_detection.contacts.filter(structure__niveau2=BSV_STRUCTURE).exists()
