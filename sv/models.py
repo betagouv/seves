@@ -621,6 +621,7 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
     class UnitesSurfaceTamponTolale(TextChoices):
         METRE_CARRE = UnitesMesure.METRE_CARRE
         KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
+        HECTARE = UnitesMesure.HECTARE
 
     class Meta:
         verbose_name = "Fiche zone délimitée"
