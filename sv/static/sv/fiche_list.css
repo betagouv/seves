@@ -86,3 +86,6 @@ body{
 .fiches__list-link-no-wrap {
     text-wrap: nowrap;
 }
+.ri-1x:has(+ a){
+    color: var(--text-action-high-blue-france);
+}

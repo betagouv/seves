@@ -15,6 +15,7 @@ from ..models import (
     NumeroFiche,
     Departement,
     Lieu,
+    ZoneInfestee,
 )
 
 
@@ -353,3 +354,50 @@ def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fich
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()
+
+
+def test_link_fiche_detection(live_server, page, fiche_detection_bakery, fiche_zone_bakery):
+    fiche_detection_bakery()
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    assert page.locator(cell_selector).inner_text().strip() == "Pas de zone"
+
+    fiche_zone = fiche_zone_bakery()
+    numero = fiche_zone.numero
+    numero.annee = 2024
+    numero.numero = 1
+    numero.save()
+    fiche = fiche_detection_bakery()
+    fiche.hors_zone_infestee = fiche_zone
+    fiche.save()
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    assert page.locator(cell_selector).inner_text().strip() == "2024.1"
+
+
+def test_link_fiche_zone(live_server, page, fiche_zone_bakery, fiche_detection_bakery):
+    fiche_zone = fiche_zone_bakery()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    assert page.locator(cell_selector).inner_text().strip() == "0"
+
+    fiche = fiche_detection_bakery()
+    fiche.hors_zone_infestee = fiche_zone
+    fiche.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    assert page.locator(cell_selector).inner_text().strip() == "1"
+
+    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+    for _ in range(2):
+        detection = fiche_detection_bakery()
+        detection.zone_infestee = zone_infestee
+        detection.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    assert page.locator(cell_selector).inner_text().strip() == "3"
