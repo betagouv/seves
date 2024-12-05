@@ -511,7 +511,7 @@ class FicheDetection(
     def is_linked_to_fiche_zone_delimitee(self):
         return self.hors_zone_infestee is not None or self.zone_infestee is not None
 
-    def get_fiche_zone_delimitee(self) -> "FicheZoneDelimitee":
+    def get_fiche_zone_delimitee(self) -> "FicheZoneDelimitee | None":
         if self.hors_zone_infestee:
             return self.hors_zone_infestee
         if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:

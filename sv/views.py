@@ -79,7 +79,7 @@ class FicheListView(ListView):
     def get_queryset(self):
         if self.list_of_zones:
             queryset = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.request.user)
-            queryset = queryset.optimized_for_list().order_by_numero_fiche()
+            queryset = queryset.optimized_for_list().order_by_numero_fiche().with_nb_fiches_detection()
         else:
             queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
             queryset = queryset.with_list_of_lieux().with_first_region_name()
