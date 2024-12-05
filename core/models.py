@@ -145,6 +145,7 @@ class Document(models.Model):
         RAPPORT_INSPECTION = "rapport_inspection", "Rapport d'inspection"
         REGLEMENTATION = "reglementation", "Réglementation"
         TRANSPORT = "document_de_transport", "Document de transport"
+        TRAÇABILITE = "traçabilité", "Traçabilité"
 
     nom = models.CharField(max_length=256)
     description = models.TextField()
