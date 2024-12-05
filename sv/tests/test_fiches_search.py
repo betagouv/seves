@@ -50,7 +50,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
 
 
 @pytest.mark.django_db
-def test_clear_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
+def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=5)
     baker.make(OrganismeNuisible, _quantity=5)
@@ -72,6 +72,21 @@ def test_clear_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     expect(page.get_by_label("Période du")).to_be_empty()
     expect(page.get_by_label("Au")).to_be_empty()
     expect(page.get_by_label("État")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+
+
+@pytest.mark.django_db
+def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, choice_js_fill) -> None:
+    """Test que le bouton Effacer efface les champs du formulaire de recherche."""
+    baker.make(Region, _quantity=2)
+    baker.make(OrganismeNuisible, _quantity=2)
+    baker.make(Etat, _quantity=2)
+    on = OrganismeNuisible.objects.first()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?organisme_nuisible={on.pk}")
+    expect(page.get_by_label("Organisme")).to_contain_text(on.libelle_court)
+    page.get_by_role("button", name="Effacer").click()
+
+    expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
 
 
 @pytest.mark.django_db
