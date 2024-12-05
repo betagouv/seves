@@ -47,6 +47,7 @@
                             <th scope="col">Commune</th>
                             <th scope="col">État</th>
                             <th scope="col">Visibilité</th>
+                            <th scope="col">Lien(s)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,9 +104,19 @@
                                 </td>
                                 <td>
                                     <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}
-                                        </a>
-                                    </tr>
+                                        <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}</span>
+                                    </a>
+                                    <td>
+                                        {% if fiche.link.url %}
+                                            <i class="{{ fiche.link.icon }} fr-mr-2v ri-1x" aria-hidden="true"></i>
+                                            <a class="fr-link" href="{{ fiche.link.url }}">{{ fiche.link.text }}</a>
+                                        {% else %}
+                                            <button {% if not fiche.link.enabled %}disabled {% endif %}>
+                                                <i class="{{ fiche.link.icon }} fr-mr-2v ri-1x" aria-hidden="true"></i>{{ fiche.link.text }}
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                         {% endfor %}
                         <tbody>
                         </table>

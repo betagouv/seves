@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, Prefetch, OuterRef, Subquery
+from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
 from core.models import Visibilite
 
 
@@ -106,3 +106,9 @@ class FicheZoneQuerySet(BaseVisibilityQuerySet):
         fin_suivi_contacts_ids = fiche_zone_delimitee.fin_suivi.values_list("contact", flat=True)
         contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
         return contacts_not_in_fin_suivi
+
+    def with_nb_fiches_detection(self):
+        return self.annotate(
+            nb_fiches_detection=Count("fichedetection__id", distinct=True)
+            + Count("zoneinfestee__fichedetection__id", distinct=True)
+        )
