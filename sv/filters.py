@@ -21,7 +21,7 @@ class FicheFilter(django_filters.FilterSet):
         initial="Détection",
     )
     lieux__departement__region = django_filters.ModelChoiceFilter(
-        label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+        label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_region"
     )
     organisme_nuisible = django_filters.ModelChoiceFilter(
         label="Organisme", queryset=OrganismeNuisible.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
@@ -71,3 +71,6 @@ class FicheFilter(django_filters.FilterSet):
             return queryset
         annee, numero = map(int, value.split("."))
         return queryset.filter(numero__annee=annee, numero__numero=numero)
+
+    def filter_region(self, queryset, name, value):
+        return queryset.filter(lieux__departement__region=value).distinct()
