@@ -16,7 +16,7 @@
                             {% if message.recipients.all|length %}
                                 <p><span class="fr-text--bold">A : </span>
                                     {% for recipient in message.recipients.all %}
-                                        {{ recipient.display_with_agent_unit }}
+                                        {{ recipient.display_with_agent_unit }}{% if not forloop.last %} ; {% endif %}
                                     {% endfor %}
                                 </p>
                             {% endif %}
@@ -24,7 +24,7 @@
                                 <p>
                                     <span class="fr-text--bold">CC : </span>
                                     {% for recipient in message.recipients_copy.all %}
-                                        {{ recipient.display_with_agent_unit }}
+                                        {{ recipient.display_with_agent_unit }}{% if not forloop.last %} ; {% endif %}
                                     {% endfor %}
                                 </p>
                             {% endif %}
