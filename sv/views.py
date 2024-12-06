@@ -690,11 +690,6 @@ class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, Succe
     http_method_names = ["post"]
     success_message = "La visibilité de la fiche détection a bien été modifiée."
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["action"] = self.request.POST.get("action")
-        return kwargs
-
     def get_success_url(self):
         return self.object.get_absolute_url()
 
@@ -703,7 +698,7 @@ class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, Succe
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
+class FicheZoneDelimiteeVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeVisibiliteUpdateForm
     http_method_names = ["post"]
