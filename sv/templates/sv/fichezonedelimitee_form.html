@@ -26,12 +26,12 @@
                 <p class="fr-badge fr-badge--no-icon fr-mb-4w">{{ fiche.visibilite }}</p>
             </div>
             <div class="fr-col fichezone_form__save-btn">
-                {% if fiche.id %}
-                    <a href="{{ fiche.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
-                    <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer" class="fr-btn" >
-                {% else %}
+                {% if form.instance.is_draft %}
                     <button type="submit" name="visibilite" value="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
                     <button type="submit" name="visibilite" value="local" class="fr-btn">Publier</button>
+                {% else %}
+                    <a href="{{ fiche.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                    <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer les modifications" class="fr-btn" >
                 {% endif %}
             </div>
         </div>
