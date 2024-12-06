@@ -330,11 +330,6 @@ class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, Succe
     http_method_names = ["post"]
     success_message = "La visibilité de la fiche détection a bien été modifiée."
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["action"] = self.request.POST.get("action")
-        return kwargs
-
     def get_success_url(self):
         return self.object.get_absolute_url()
 
@@ -343,7 +338,7 @@ class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, Succe
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeVisibiliteUpdateView(SuccessMessageMixin, UpdateView):
+class FicheZoneDelimiteeVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeVisibiliteUpdateForm
     http_method_names = ["post"]
@@ -514,8 +509,7 @@ class FicheZoneDelimiteeDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fichezonedelimitee = self.get_object()
-        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
-        context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
+        self._add_visibilite_update_form_to_context(context)
         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         contacts_not_in_fin_suivi = FicheZoneDelimitee.objects.all().get_contacts_structures_not_in_fin_suivi(
@@ -528,6 +522,16 @@ class FicheZoneDelimiteeDetailView(
             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
         ]
         return context
+
+    def _add_visibilite_update_form_to_context(self, context):
+        if not self.get_object().can_update_visibilite(self.request.user):
+            return
+
+        if self.get_object().is_draft:
+            context["publish_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object(), action="publier")
+            return
+
+        context["visibilite_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object())
 
     def test_func(self) -> bool | None:
         """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
