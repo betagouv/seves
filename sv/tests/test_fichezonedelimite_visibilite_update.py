@@ -35,11 +35,7 @@ def test_agent_in_structure_createur_can_update_fiche_zone_delimitee_visibilite_
         statut_reglementaire=baker.make(StatutReglementaire),
     )
     page.goto(f"{live_server.url}{fiche_zone.get_absolute_url()}")
-    page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("link", name="Modifier la visibilité")).to_be_visible()
-    page.get_by_role("link", name="Modifier la visibilité").click()
-    page.get_by_text("Local").click()
-    page.get_by_role("button", name="Valider").click()
+    page.get_by_role("button", name="Publier").click()
     expect(
         page.get_by_role("heading", name="La visibilité de la fiche zone délimitée a bien été modifiée")
     ).to_be_visible()
