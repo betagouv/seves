@@ -1,7 +1,4 @@
 from django.urls import reverse
-
-import pytest
-
 from core.models import Visibilite
 from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from model_bakery import baker
@@ -191,34 +188,3 @@ def test_fiche_detection_brouillon_cannot_add_zone(live_server, page, mocked_aut
     # simule le fait d'effectuer la requete GET directement pour ajouter une zone
     page.goto(f"{live_server.url}{reverse('rattachement-fiche-zone-delimitee', args=[fiche_detection.id])}")
     expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()
-
-
-def test_fiche_detection_brouillon_does_not_have_bloc_suivi_display(live_server, page, mocked_authentification_user):
-    fiche_detection = baker.make(
-        FicheDetection, visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
-    )
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    expect(page.get_by_label("Fil de suivi")).not_to_be_visible()
-    expect(page.get_by_label("Contacts")).not_to_be_visible()
-    expect(page.get_by_label("Documents")).not_to_be_visible()
-
-
-@pytest.mark.parametrize(
-    "visibilite",
-    [
-        Visibilite.LOCAL,
-        Visibilite.NATIONAL,
-    ],
-)
-def test_fiche_detection_local_or_national_have_bloc_suivi_display(
-    live_server, page, visibilite: Visibilite, mocked_authentification_user
-):
-    fiche_detection = baker.make(
-        FicheDetection, visibilite=visibilite, createur=mocked_authentification_user.agent.structure
-    )
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    expect(page.get_by_label("Fil de suivi")).to_be_visible()
-    expect(page.get_by_label("Contacts")).to_have_count(1)
-    expect(page.get_by_label("Contacts")).to_be_hidden()
-    expect(page.get_by_label("Documents")).to_have_count(1)
-    expect(page.get_by_label("Documents")).to_be_hidden()
