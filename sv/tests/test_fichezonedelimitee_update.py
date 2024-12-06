@@ -143,7 +143,7 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.select_detections_in_zone_infestee(0, (fiche_detection,))
-    form_page.submit_update_form()
+    form_page.save_brouillon()
     expect(
         page.get_by_text(
             f"La fiche détection {str(fiche_detection.numero)} ne peut pas être sélectionnée à la fois dans les zones infestées et dans hors zone infestée."
@@ -169,7 +169,7 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.add_new_zone_infestee(baker.prepare(ZoneInfestee, _fill_optional=True), (fiche_detection,))
-    form_page.submit_update_form()
+    form_page.save_brouillon()
     expect(
         page.get_by_text(
             f"Les fiches détection suivantes sont dupliquées dans les zones infestées : {str(fiche_detection.numero)}."
@@ -256,3 +256,20 @@ def test_cant_see_fiches_brouillon_in_liens_libres(
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)
     expect(select_options).to_have_text(f"Fiche Détection : {str(fiche_detection.numero)}")
+
+
+@pytest.mark.django_db
+def test_can_publish_fiche_zone_delimitee_from_update_form(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    fiche_zone_delimitee = FicheZoneDelimitee.objects.create(
+        visibilite=Visibilite.BROUILLON,
+        createur=fiche_detection.createur,
+        organisme_nuisible=fiche_detection.organisme_nuisible,
+        statut_reglementaire=fiche_detection.statut_reglementaire,
+    )
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    form_page.publish()
+    fiche_zone_delimitee.refresh_from_db()
+    assert fiche_zone_delimitee.visibilite == Visibilite.LOCAL

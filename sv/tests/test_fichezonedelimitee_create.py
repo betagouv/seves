@@ -121,7 +121,7 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche)
-    form_page.submit_form()
+    form_page.publish()
 
     form_page.check_message_succes()
     assert ZoneInfestee.objects.count() == 0
@@ -204,7 +204,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche, zone_infestee1, detections_hors_zone_infestee, detections_zone_infestee1)
     form_page.add_new_zone_infestee(zone_infestee2, detections_zone_infestee2)
-    form_page.submit_form()
+    form_page.publish()
 
     form_page.check_message_succes()
     # Vérification des attributs de FicheZoneDelimitee
@@ -251,7 +251,7 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche_zone_delimitee, zone_infestee, (), (fiche_detection,))
-    form_page.submit_form()
+    form_page.publish()
 
     expect(
         page.get_by_text(
@@ -276,7 +276,7 @@ def test_cant_have_same_detection_in_zone_infestee_forms(
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     form_page.fill_form(fiche_zone_delimitee, zone_infestee1, (), (fiche_detection,))
     form_page.add_new_zone_infestee(zone_infestee2, (fiche_detection,))
-    form_page.submit_form()
+    form_page.publish()
 
     expect(page.get_by_text("Erreurs dans le(s) formulaire(s) Zones infestées")).to_be_visible()
     expect(
@@ -362,7 +362,7 @@ def test_can_create_fiche_zone_with_free_links(
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     fiche_input = "Fiche zone délimitée : " + str(other_fiche.numero)
     choice_js_fill(page, "#liens-libre .choices", str(other_fiche.numero), fiche_input)
-    form_page.submit_form()
+    form_page.publish()
 
     form_page.check_message_succes()
     assert FicheZoneDelimitee.objects.count() == 2
@@ -458,3 +458,12 @@ def test_cant_see_fiches_brouillon_in_liens_libres(
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)
     expect(select_options).to_have_text(f"Fiche Détection : {str(fiche_detection.numero)}")
+
+
+@pytest.mark.django_db
+def test_can_publish_fiche_zone_delimitee(live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection):
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.publish()
+    fiche_zone = FicheZoneDelimitee.objects.get()
+    assert fiche_zone.visibilite == Visibilite.LOCAL
