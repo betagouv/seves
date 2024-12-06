@@ -90,7 +90,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""
 
-        if self.instance.pk:
+        if not self.instance.is_draft:
             self.fields.pop("visibilite")
 
         qs_detection = (
