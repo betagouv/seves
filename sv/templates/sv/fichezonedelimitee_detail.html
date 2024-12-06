@@ -22,8 +22,17 @@
                 <button class="fr-btn fr-btn--secondary fr-mr-2w">
                     <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
                 </button>
+                {% if publish_form %}
+                    <div>
+                        <form method="post" action="{{ fiche.get_visibilite_update_url }}">
+                            {% csrf_token %}
+                            {{ publish_form }}
+                            <button type="submit" name="action" value="publier" class="fr-btn fr-btn--secondary fr-mr-2w">Publier</button>
+                        </form>
+                    </div>
+                {% endif %}
                 {% include "sv/_zone_action_navigation.html" %}
-                {% if can_update_visibilite %}
+                {% if visibilite_form %}
                     {% include "sv/_update_visibilite_modal.html" %}
                 {% endif %}
                 {% include "sv/_cloturer_modal.html" %}

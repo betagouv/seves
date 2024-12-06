@@ -4,7 +4,7 @@
                 aria-expanded="false" title="Sélectionner une action">Actions</button>
         <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
             <ul class="fr-menu__list">
-                {% if can_update_visibilite %}
+                {% if visibilite_form %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
                 {% endif %}
                 {% if user.agent.structure.is_ac and not fiche.etat.is_cloture %}
