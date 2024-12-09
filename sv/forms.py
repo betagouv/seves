@@ -297,7 +297,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        if self.instance.pk:
+        if not self.instance.is_draft:
             self.fields.pop("visibilite")
 
         self._add_free_links(obj_type="zone")

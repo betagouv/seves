@@ -407,8 +407,9 @@ class FicheZoneDelimiteeFormPage:
 
         # Boutons
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
-        self.publier = page.get_by_role("button", name="Publier", exact=True)
-        self.enregistrer = page.get_by_role("button", name="Enregistrer", exact=True)
+        self.save_brouillon_btn = page.get_by_role("button", name="Enregistrer le brouillon", exact=True)
+        self.publish_btn = page.get_by_role("button", name="Publier", exact=True)
+        self.save_changes_btn = page.get_by_role("button", name="Enregistrer les modifications", exact=True)
 
     def _select_unite_rayon_zone_tampon(self, unite: FicheZoneDelimitee.UnitesRayon):
         match unite:
@@ -581,11 +582,14 @@ class FicheZoneDelimiteeFormPage:
         index = int(self.zone_infestee_total_forms.get_attribute("value")) - 1
         self.fill_zone_infestee_form(index, zoneinfestee, detections)
 
-    def submit_form(self):
-        self.publier.click()
+    def save_brouillon(self):
+        self.save_brouillon_btn.click()
+
+    def publish(self):
+        self.publish_btn.click()
 
     def submit_update_form(self):
-        self.enregistrer.click()
+        self.save_changes_btn.click()
 
     def check_message_succes(self):
         expect(self.page.get_by_text("La fiche zone délimitée a été créée avec succès.")).to_be_visible()
