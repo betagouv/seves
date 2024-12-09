@@ -164,6 +164,8 @@
         </div>
 
         {% include "sv/_list_free_links.html" with classes="fr-mt-8v" %}
-        {% include "core/_fiche_bloc_commun.html" %}
+        {% if not fiche.is_draft %}
+            {% include "core/_fiche_bloc_commun.html" %}
+        {% endif %}
     </div>
 {% endblock %}
