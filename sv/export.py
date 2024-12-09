@@ -32,7 +32,6 @@ class FicheDetectionExport:
         "numero_echantillon",
         "date_prelevement",
         "is_officiel",
-        "numero_phytopass",
         "resultat",
         "structure_preleveuse",
         "matrice_prelevee",
