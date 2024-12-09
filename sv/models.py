@@ -352,7 +352,6 @@ class Prelevement(models.Model):
         null=True,
     )
     is_officiel = models.BooleanField(verbose_name="Prélèvement officiel", default=False)
-    numero_phytopass = models.CharField(max_length=100, verbose_name="Numéro Phytopass", blank=True)
     laboratoire_agree = models.ForeignKey(
         "LaboratoireAgree",
         on_delete=models.PROTECT,
@@ -370,7 +369,7 @@ class Prelevement(models.Model):
     resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat")
     numero_resytal = models.CharField(max_length=100, verbose_name="Numéro RESYTAL", blank=True)
 
-    OFFICIEL_FIELDS = ["numero_phytopass", "numero_resytal", "laboratoire_agree", "laboratoire_confirmation_officielle"]
+    OFFICIEL_FIELDS = ["numero_resytal", "laboratoire_agree", "laboratoire_confirmation_officielle"]
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"
