@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
         this.elements['etat'].value = '';
         choices.setChoiceByValue('');
     });
-
+    document.getElementById("id_type_fiche_0").addEventListener("click", event =>{
+        document.getElementById('id_lieux__departement__region').disabled = false
+    })
+    document.getElementById("id_type_fiche_1").addEventListener("click", event =>{
+        document.getElementById('id_lieux__departement__region').disabled = true
+        document.getElementById('id_lieux__departement__region').selectedIndex = 0
+    })
 
 });

@@ -349,7 +349,7 @@ def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fich
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-liste')}?numero=&type_fiche=zone&lieux__departement__region=&organisme_nuisible=&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('fiche-liste')}?numero=&type_fiche=zone&organisme_nuisible=&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
@@ -420,3 +420,18 @@ def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(fiche_detection.numero))).to_have_count(1)
+
+
+def test_cant_search_region_for_zone(live_server, page: Page):
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    expect(page.locator("#id_lieux__departement__region")).to_be_enabled()
+
+    page.get_by_text("Zone", exact=True).click()
+    expect(page.locator("#id_lieux__departement__region")).to_be_disabled()
+
+    page.get_by_role("button", name="Rechercher").click()
+
+    page.wait_for_url(f"**{reverse('fiche-liste')}**")
+    response = page.goto(page.url)
+    assert response.status == 200
