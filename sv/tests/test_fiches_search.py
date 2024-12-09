@@ -401,3 +401,18 @@ def test_link_fiche_zone(live_server, page, fiche_zone_bakery, fiche_detection_b
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
     assert page.locator(cell_selector).inner_text().strip() == "3"
+
+
+def test_cant_search_region_for_zone(live_server, page: Page):
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    expect(page.locator("#id_lieux__departement__region")).to_be_enabled()
+
+    page.get_by_text("Zone", exact=True).click()
+    expect(page.locator("#id_lieux__departement__region")).to_be_disabled()
+
+    page.get_by_role("button", name="Rechercher").click()
+
+    page.wait_for_url(f"**{reverse('fiche-liste')}**")
+    response = page.goto(page.url)
+    assert response.status == 200
