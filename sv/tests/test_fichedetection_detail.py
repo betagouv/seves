@@ -84,8 +84,8 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Espèce de l'échantillon")).to_be_visible()
     expect(page.locator("#fr-modal-prelevement-1").get_by_text("Code OEPP")).to_be_visible()
     expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement non officiel")
-    expect(page.get_by_test_id("prelevement-1-structure-preleveur")).to_contain_text(
-        prelevement.structure_preleveur.nom
+    expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
+        prelevement.structure_preleveuse.nom
     )
     expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text(prelevement.numero_echantillon)
     expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text(
@@ -106,8 +106,8 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement non officiel")
-    expect(page.get_by_test_id("prelevement-1-structure-preleveur")).to_contain_text(
-        prelevement.structure_preleveur.nom
+    expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
+        prelevement.structure_preleveuse.nom
     )
     expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text("nc.")
@@ -125,8 +125,8 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
     expect(page.get_by_role("heading", name=f"Échantillon {prelevement2.numero_echantillon}")).to_be_visible()
     expect(page.get_by_test_id("prelevement-2-type")).to_contain_text("Prélèvement non officiel")
-    expect(page.get_by_test_id("prelevement-2-structure-preleveur")).to_contain_text(
-        prelevement2.structure_preleveur.nom
+    expect(page.get_by_test_id("prelevement-2-structure-preleveuse")).to_contain_text(
+        prelevement2.structure_preleveuse.nom
     )
     expect(page.get_by_test_id("prelevement-2-numero-echantillon")).to_contain_text(prelevement2.numero_echantillon)
     expect(page.get_by_test_id("prelevement-2-date-prelevement")).to_contain_text(

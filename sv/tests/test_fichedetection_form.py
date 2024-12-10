@@ -8,14 +8,14 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from ..models import (
     Departement,
     Region,
-    StructurePreleveur,
+    StructurePreleveuse,
     FicheDetection,
     FicheZoneDelimitee,
     StatutReglementaire,
     OrganismeNuisible,
 )
 
-from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUR
+from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUSES
 
 
 @pytest.fixture(autouse=True)
@@ -25,8 +25,8 @@ def create_fixtures_if_needed(db):
     for numero, nom, region_nom in DEPARTEMENTS:
         region = Region.objects.get(nom=region_nom)
         Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
-    for nom in STRUCTURES_PRELEVEUR:
-        StructurePreleveur.objects.get_or_create(nom=nom)
+    for nom in STRUCTURES_PRELEVEUSES:
+        StructurePreleveuse.objects.get_or_create(nom=nom)
 
 
 @pytest.fixture(autouse=True)
@@ -545,8 +545,8 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements = PrelevementFormDomElements(page)
     prelevement_form_elements.date_prelevement_input.click()
-    assert StructurePreleveur.objects.count() > 0
-    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveur.objects.first().id))
+    assert StructurePreleveuse.objects.count() > 0
+    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.resultat_input("detecte").click()
     prelevement_form_elements.save_btn.click()

@@ -18,7 +18,7 @@ from ..models import (
     Departement,
     PositionChaineDistribution,
     Region,
-    StructurePreleveur,
+    StructurePreleveuse,
     SiteInspection,
     FicheZoneDelimitee,
 )
@@ -389,7 +389,7 @@ def test_prelevements_are_always_linked_to_lieu(
     lieu_form_elements: LieuFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
 ):
-    structures = baker.make(StructurePreleveur, _quantity=2)
+    structures = baker.make(StructurePreleveuse, _quantity=2)
     page.wait_for_timeout(600)
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.add_lieu_btn.click()
