@@ -289,6 +289,8 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             "createur": forms.HiddenInput,
             "vegetaux_infestes": forms.Textarea(attrs={"rows": 1}),
             "commentaire": forms.Textarea(attrs={"rows": 5}),
+            "rayon_zone_tampon": forms.NumberInput(attrs={"min": "0"}),
+            "surface_tampon_totale": forms.NumberInput(attrs={"min": "0"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -383,6 +385,10 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         exclude = ["fiche_zone_delimitee"]
         labels = {
             "caracteristique_principale": "Caractéristique",
+        }
+        widgets = {
+            "rayon": forms.NumberInput(attrs={"min": "0"}),
+            "surface_infestee_totale": forms.NumberInput(attrs={"min": "0"}),
         }
 
     def __init__(self, *args, **kwargs):
