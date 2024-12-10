@@ -515,6 +515,9 @@ class FicheDetection(
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
 
+    def get_update_url(self):
+        return reverse("fiche-detection-modification", kwargs={"pk": self.pk})
+
     def get_visibilite_update_url(self):
         return reverse("fiche-detection-visibilite-update", kwargs={"pk": self.pk})
 
