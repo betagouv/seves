@@ -123,7 +123,7 @@ DEPARTEMENTS = [
     ("976", "Mayotte", "Mayotte"),
 ]
 
-STRUCTURES_PRELEVEUR = [
+STRUCTURES_PRELEVEUSES = [
     "SRAL",
     "OVS",
     "DSF",

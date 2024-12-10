@@ -1,4 +1,4 @@
-from .models import FicheDetection
+from .models import FicheDetection, Prelevement, Lieu, StructurePreleveuse
 import csv
 
 
@@ -34,15 +34,15 @@ class FicheDetectionExport:
         "is_officiel",
         "numero_phytopass",
         "resultat",
-        "structure_preleveur",
+        "structure_preleveuse",
         "matrice_prelevee",
         "espece_echantillon",
         "laboratoire_agree",
         "laboratoire_confirmation_officielle",
     ]
 
-    def _clean_field_name(self, field):
-        return field.replace("_", " ").title()
+    def _clean_field_name(self, field, instance):
+        return instance._meta.get_field(field).verbose_name
 
     def get_queryset(self, user):
         queryset = FicheDetection.objects.all().get_fiches_user_can_view(user).optimized_for_details()
@@ -50,7 +50,7 @@ class FicheDetectionExport:
             "lieux",
             "lieux__prelevements",
             "lieux__departement",
-            "lieux__prelevements__structure_preleveur",
+            "lieux__prelevements__structure_preleveuse",
             "lieux__prelevements__espece_echantillon",
             "lieux__prelevements__matrice_prelevee",
             "lieux__prelevements__laboratoire_agree",
@@ -59,24 +59,25 @@ class FicheDetectionExport:
         return queryset
 
     def get_fieldnames(self):
-        return [self._clean_field_name(field) for field in self.fields + self.lieux_fields + self.prelevement_fields]
+        empty_prelevement = Prelevement(lieu=Lieu(), structure_preleveuse=StructurePreleveuse())
+        return self.get_fiche_data_with_prelevement(FicheDetection(), empty_prelevement).keys()
 
     def get_fiche_data(self, fiche):
         result = {}
         for field in self.fields:
-            result[self._clean_field_name(field)] = getattr(fiche, field)
+            result[self._clean_field_name(field, fiche)] = getattr(fiche, field)
         return result
 
     def get_fiche_data_with_lieu(self, fiche, lieu):
         result = self.get_fiche_data(fiche)
         for field in self.lieux_fields:
-            result[self._clean_field_name(field)] = getattr(lieu, field)
+            result[self._clean_field_name(field, lieu)] = getattr(lieu, field)
         return result
 
     def get_fiche_data_with_prelevement(self, fiche, prelevement):
         result = self.get_fiche_data_with_lieu(fiche, prelevement.lieu)
         for field in self.prelevement_fields:
-            result[self._clean_field_name(field)] = getattr(prelevement, field)
+            result[self._clean_field_name(field, prelevement)] = getattr(prelevement, field)
         return result
 
     def get_lines_from_instance(self, fiche_detection):
