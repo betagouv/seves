@@ -357,7 +357,7 @@ def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fich
 
 
 def test_link_fiche_detection(live_server, page, fiche_detection_bakery, fiche_zone_bakery):
-    fiche_detection_bakery()
+    fiche = fiche_detection_bakery()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
@@ -368,7 +368,6 @@ def test_link_fiche_detection(live_server, page, fiche_detection_bakery, fiche_z
     numero.annee = 2024
     numero.numero = 1
     numero.save()
-    fiche = fiche_detection_bakery()
     fiche.hors_zone_infestee = fiche_zone
     fiche.save()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
