@@ -52,7 +52,11 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
 ):
     fiche_zone_delimitee = fiche_zone_bakery()
     new_fiche_zone_delimitee = baker.prepare(
-        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
+        FicheZoneDelimitee,
+        _fill_optional=True,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        rayon_zone_tampon=10,
+        surface_tampon_totale=15,
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
@@ -75,10 +79,10 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
     )
 
 
-def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js_fill):
+def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js_fill, zone_infestee_bakery):
     fiche_zone_delimitee = fiche_zone_bakery()
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
-    new_zone_infestee = baker.prepare(ZoneInfestee, _fill_optional=True)
+    zone_infestee = zone_infestee_bakery(fiche_zone_delimitee)
+    new_zone_infestee = baker.prepare(ZoneInfestee, surface_infestee_totale=10, rayon=15, _fill_optional=True)
     fiche_detection = baker.make(
         FicheDetection,
         organisme_nuisible=fiche_zone_delimitee.organisme_nuisible,
@@ -100,23 +104,20 @@ def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice
     assert fiche_detection_updated.zone_infestee == zone_infestee_updated
 
 
-def test_add_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js_fill):
-    fiche_zone_delimitee = fiche_zone_bakery()
-    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
-    new_zone_infestee = baker.prepare(ZoneInfestee, _fill_optional=True)
+def test_add_zone_infestee(live_server, page: Page, fiche_zone, choice_js_fill, zone_infestee_bakery):
+    zone_infestee_bakery(fiche_zone)
+    new_zone_infestee = baker.prepare(ZoneInfestee, surface_infestee_totale=10, rayon=15, _fill_optional=True)
     fiche_detection = baker.make(
         FicheDetection,
-        organisme_nuisible=fiche_zone_delimitee.organisme_nuisible,
-        statut_reglementaire=fiche_zone_delimitee.statut_reglementaire,
+        organisme_nuisible=fiche_zone.organisme_nuisible,
+        statut_reglementaire=fiche_zone.statut_reglementaire,
         visibilite=Visibilite.LOCAL,
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
     form_page.add_new_zone_infestee(new_zone_infestee, (fiche_detection,))
     form_page.submit_update_form()
-    zone_infestee_created = ZoneInfestee.objects.get(
-        fiche_zone_delimitee=fiche_zone_delimitee, nom=new_zone_infestee.nom
-    )
+    zone_infestee_created = ZoneInfestee.objects.get(fiche_zone_delimitee=fiche_zone, nom=new_zone_infestee.nom)
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
     assert zone_infestee_created.nom == new_zone_infestee.nom
     assert zone_infestee_created.caracteristique_principale == new_zone_infestee.caracteristique_principale
@@ -137,7 +138,7 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
         statut_reglementaire=fiche_detection.statut_reglementaire,
         visibilite=Visibilite.BROUILLON,
     )
-    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
+    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection.hors_zone_infestee = fiche_zone_delimitee
     fiche_detection.save()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
@@ -163,12 +164,12 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
         statut_reglementaire=fiche_detection.statut_reglementaire,
         visibilite=Visibilite.BROUILLON,
     )
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
+    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection.zone_infestee = zone_infestee
     fiche_detection.save()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
-    form_page.add_new_zone_infestee(baker.prepare(ZoneInfestee, _fill_optional=True), (fiche_detection,))
+    form_page.add_new_zone_infestee(baker.prepare(ZoneInfestee), (fiche_detection,))
     form_page.save_brouillon()
     expect(
         page.get_by_text(
@@ -192,7 +193,6 @@ def test_update_fiche_can_add_and_delete_free_links(
         organisme_nuisible=fiche_detection.organisme_nuisible,
         statut_reglementaire=fiche_detection.statut_reglementaire,
         visibilite=Visibilite.LOCAL,
-        _fill_optional=True,
     )
     LienLibre.objects.create(related_object_1=fiche_zone_delimitee, related_object_2=other_fiche)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)

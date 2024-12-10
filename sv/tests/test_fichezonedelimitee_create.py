@@ -116,7 +116,13 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(
     fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
     fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
     fiche_detection.save()
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    fiche = baker.prepare(
+        FicheZoneDelimitee,
+        _fill_optional=True,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        rayon_zone_tampon=10,
+        surface_tampon_totale=15,
+    )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -148,7 +154,7 @@ def test_can_create_fiche_zone_delimitee_in_draft(
     fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
     fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
     fiche_detection.save()
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    fiche = baker.prepare(FicheZoneDelimitee, etat=Etat.objects.get(id=Etat.get_etat_initial()))
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -168,7 +174,7 @@ def test_fiche_zone_delimitee_numero_is_null_when_save_with_visibilite_brouillon
     fiche_detection.organisme_nuisible = baker.make("OrganismeNuisible")
     fiche_detection.statut_reglementaire = baker.make("StatutReglementaire")
     fiche_detection.save()
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    fiche = baker.prepare(FicheZoneDelimitee, etat=Etat.objects.get(id=Etat.get_etat_initial()))
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -195,9 +201,15 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         )
         for _ in range(3)
     )
-    fiche = baker.prepare(FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    fiche = baker.prepare(
+        FicheZoneDelimitee,
+        _fill_optional=True,
+        etat=Etat.objects.get(id=Etat.get_etat_initial()),
+        rayon_zone_tampon=10,
+        surface_tampon_totale=15,
+    )
     zone_infestee1, zone_infestee2 = baker.prepare(
-        ZoneInfestee, fiche_zone_delimitee=fiche, _fill_optional=True, _quantity=2
+        ZoneInfestee, fiche_zone_delimitee=fiche, _fill_optional=True, _quantity=2, surface_infestee_totale=10, rayon=15
     )
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
@@ -243,10 +255,8 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
 def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ) -> None:
-    fiche_zone_delimitee = baker.prepare(
-        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
-    )
-    zone_infestee = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)
+    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    zone_infestee = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -265,12 +275,8 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
 def test_cant_have_same_detection_in_zone_infestee_forms(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
-    fiche_zone_delimitee = baker.prepare(
-        FicheZoneDelimitee, _fill_optional=True, etat=Etat.objects.get(id=Etat.get_etat_initial())
-    )
-    zone_infestee1, zone_infestee2 = baker.prepare(
-        ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True, _quantity=2
-    )
+    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee, etat=Etat.objects.get(id=Etat.get_etat_initial()))
+    zone_infestee1, zone_infestee2 = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _quantity=2)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
@@ -467,6 +473,27 @@ def test_can_publish_fiche_zone_delimitee(live_server, page: Page, choice_js_fil
     form_page.publish()
     fiche_zone = FicheZoneDelimitee.objects.get()
     assert fiche_zone.visibilite == Visibilite.LOCAL
+
+
+def test_cant_fill_negative_value_for_surface_and_rayon(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.ZONE_INFESTEE)
+    assert form_page.rayon_zone_tampon.get_attribute("min") == "0"
+    assert form_page.surface_tampon_totale.get_attribute("min") == "0"
+    assert (
+        form_page.page.locator(form_page.zone_infestee_surface_infestee_totale_base_locator.format(0)).get_attribute(
+            "min"
+        )
+        == "0"
+    )
+    assert (
+        form_page.page.locator(form_page.zone_infestee_surface_infestee_totale_base_locator.format(0)).get_attribute(
+            "min"
+        )
+        == "0"
+    )
 
 
 def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(

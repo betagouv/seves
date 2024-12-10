@@ -541,17 +541,49 @@ class FicheZoneDelimiteeFormPage:
         self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
     ):
         detections_zone_infestee = detections_zone_infestee or ()
-        self.page.locator(self.zone_infestee_nom_base_locator.format(index)).fill(zoneinfestee.nom)
-        self.page.locator(self.zone_infestee_caracteristique_principale_base_locator.format(index)).select_option(
-            zoneinfestee.caracteristique_principale
-        )
-        self.page.locator(self.zone_infestee_rayon_base_locator.format(index)).fill(str(zoneinfestee.rayon))
-        self._select_unite_rayon_zone_infestee(zoneinfestee.unite_rayon, index)
-        self.page.locator(self.zone_infestee_surface_infestee_totale_base_locator.format(index)).fill(
-            str(zoneinfestee.surface_infestee_totale)
-        )
-        self._select_unite_surface_infestee_totale(zoneinfestee.unite_surface_infestee_totale, index)
-        self.select_detections_in_zone_infestee(index, detections_zone_infestee)
+        field_actions = [
+            {
+                "value": zoneinfestee.nom,
+                "action": lambda: self.page.locator(self.zone_infestee_nom_base_locator.format(index)).fill(
+                    zoneinfestee.nom
+                ),
+            },
+            {
+                "value": zoneinfestee.caracteristique_principale,
+                "action": lambda: self.page.locator(
+                    self.zone_infestee_caracteristique_principale_base_locator.format(index)
+                ).select_option(zoneinfestee.caracteristique_principale),
+            },
+            {
+                "value": zoneinfestee.rayon,
+                "action": lambda: self.page.locator(self.zone_infestee_rayon_base_locator.format(index)).fill(
+                    str(zoneinfestee.rayon)
+                ),
+            },
+            {
+                "value": zoneinfestee.rayon and zoneinfestee.unite_rayon,
+                "action": lambda: self._select_unite_rayon_zone_infestee(zoneinfestee.unite_rayon, index),
+            },
+            {
+                "value": zoneinfestee.surface_infestee_totale,
+                "action": lambda: self.page.locator(
+                    self.zone_infestee_surface_infestee_totale_base_locator.format(index)
+                ).fill(str(zoneinfestee.surface_infestee_totale)),
+            },
+            {
+                "value": zoneinfestee.surface_infestee_totale and zoneinfestee.unite_surface_infestee_totale,
+                "action": lambda: self._select_unite_surface_infestee_totale(
+                    zoneinfestee.unite_surface_infestee_totale, index
+                ),
+            },
+            {
+                "value": detections_zone_infestee,
+                "action": lambda: self.select_detections_in_zone_infestee(index, detections_zone_infestee),
+            },
+        ]
+        for field in field_actions:
+            if field["value"] is not None:
+                field["action"]()
 
     def fill_form(
         self,
@@ -561,14 +593,41 @@ class FicheZoneDelimiteeFormPage:
         detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None,
     ):
         detections_zone_infestee = detections_zone_infestee or ()
-        self.commentaire.fill(fiche_zone_delimitee.commentaire)
-        self.rayon_zone_tampon.fill(str(fiche_zone_delimitee.rayon_zone_tampon))
-        self._select_unite_rayon_zone_tampon(fiche_zone_delimitee.unite_rayon_zone_tampon)
-        self.surface_tampon_totale.fill(str(fiche_zone_delimitee.surface_tampon_totale))
-        self._select_unite_surface_tampon_totale(fiche_zone_delimitee.unite_surface_tampon_totale)
-        self._select_detections_in_hors_zone_infestee(detections_hors_zone_infestee)
-        if zone_infestee is not None:
-            self.fill_zone_infestee_form(0, zone_infestee, detections_zone_infestee)
+        field_actions = [
+            {
+                "value": fiche_zone_delimitee.commentaire,
+                "action": lambda: self.commentaire.fill(fiche_zone_delimitee.commentaire),
+            },
+            {
+                "value": fiche_zone_delimitee.rayon_zone_tampon,
+                "action": lambda: self.rayon_zone_tampon.fill(str(fiche_zone_delimitee.rayon_zone_tampon)),
+            },
+            {
+                "value": fiche_zone_delimitee.unite_rayon_zone_tampon,
+                "action": lambda: self._select_unite_rayon_zone_tampon(fiche_zone_delimitee.unite_rayon_zone_tampon),
+            },
+            {
+                "value": fiche_zone_delimitee.surface_tampon_totale,
+                "action": lambda: self.surface_tampon_totale.fill(str(fiche_zone_delimitee.surface_tampon_totale)),
+            },
+            {
+                "value": fiche_zone_delimitee.unite_surface_tampon_totale,
+                "action": lambda: self._select_unite_surface_tampon_totale(
+                    fiche_zone_delimitee.unite_surface_tampon_totale
+                ),
+            },
+            {
+                "value": detections_hors_zone_infestee,
+                "action": lambda: self._select_detections_in_hors_zone_infestee(detections_hors_zone_infestee),
+            },
+            {
+                "value": zone_infestee,
+                "action": lambda: self.fill_zone_infestee_form(0, zone_infestee, detections_zone_infestee),
+            },
+        ]
+        for field in field_actions:
+            if field["value"] is not None:
+                field["action"]()
 
     def add_new_zone_infestee(
         self, zoneinfestee: ZoneInfestee, detections: Optional[Tuple[FicheDetection, ...]] = None
