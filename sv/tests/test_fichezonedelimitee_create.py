@@ -458,3 +458,24 @@ def test_cant_see_fiches_brouillon_in_liens_libres(
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)
     expect(select_options).to_have_text(f"Fiche Détection : {str(fiche_detection.numero)}")
+
+
+def test_cant_fill_negative_value_for_surface_and_rayon(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.ZONE_INFESTEE)
+    assert form_page.rayon_zone_tampon.get_attribute("min") == "0"
+    assert form_page.surface_tampon_totale.get_attribute("min") == "0"
+    assert (
+        form_page.page.locator(form_page.zone_infestee_surface_infestee_totale_base_locator.format(0)).get_attribute(
+            "min"
+        )
+        == "0"
+    )
+    assert (
+        form_page.page.locator(form_page.zone_infestee_surface_infestee_totale_base_locator.format(0)).get_attribute(
+            "min"
+        )
+        == "0"
+    )
