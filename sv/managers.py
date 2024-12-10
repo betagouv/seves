@@ -13,7 +13,7 @@ class LaboratoireConfirmationOfficielleManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
-class StructurePreleveurManager(models.Manager):
+class StructurePreleveuseManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_active=True)
 

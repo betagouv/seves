@@ -21,7 +21,7 @@ from sv.managers import (
     LaboratoireConfirmationOfficielleManager,
     FicheDetectionManager,
     FicheZoneManager,
-    StructurePreleveurManager,
+    StructurePreleveuseManager,
 )
 from sv.mixins import WithEtatMixin
 
@@ -239,16 +239,16 @@ class PositionChaineDistribution(models.Model):
         return self.libelle
 
 
-class StructurePreleveur(IsActiveMixin, models.Model):
+class StructurePreleveuse(IsActiveMixin, models.Model):
     class Meta:
-        verbose_name = "Structure préleveur"
-        verbose_name_plural = "Structures préleveur"
+        verbose_name = "Structure préleveuse"
+        verbose_name_plural = "Structures préleveuses"
         db_table = "sv_structure_preleveur"
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
 
-    objects = StructurePreleveurManager()
+    objects = StructurePreleveuseManager()
 
     def __str__(self):
         return self.nom
@@ -332,8 +332,8 @@ class Prelevement(models.Model):
         db_table = "sv_prelevement"
 
     lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu", related_name="prelevements")
-    structure_preleveur = models.ForeignKey(
-        StructurePreleveur, on_delete=models.PROTECT, verbose_name="Structure préleveur"
+    structure_preleveuse = models.ForeignKey(
+        StructurePreleveuse, on_delete=models.PROTECT, verbose_name="Structure préleveuse"
     )
     numero_echantillon = models.CharField(max_length=100, verbose_name="Numéro d'échantillon", blank=True)
     date_prelevement = models.DateField(verbose_name="Date de prélèvement", blank=True, null=True)

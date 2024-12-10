@@ -310,7 +310,7 @@ class PrelevementFormDomElements:
 
     @property
     def structure_input(self) -> Locator:
-        return self.page.locator('[id^="id_prelevements-"][id$="structure_preleveur"]').locator("visible=true")
+        return self.page.locator('[id^="id_prelevements-"][id$="structure_preleveuse"]').locator("visible=true")
 
     @property
     def numero_echantillon_input(self) -> Locator:

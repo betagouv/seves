@@ -8,7 +8,7 @@ from .models import (
     Lieu,
     StatutEtablissement,
     PositionChaineDistribution,
-    StructurePreleveur,
+    StructurePreleveuse,
     SiteInspection,
     MatricePrelevee,
     EspeceEchantillon,
@@ -33,7 +33,7 @@ admin.site.register(Region)
 admin.site.register(Lieu)
 admin.site.register(StatutEtablissement)
 admin.site.register(PositionChaineDistribution)
-admin.site.register(StructurePreleveur)
+admin.site.register(StructurePreleveuse)
 admin.site.register(SiteInspection)
 admin.site.register(MatricePrelevee)
 admin.site.register(EspeceEchantillon)

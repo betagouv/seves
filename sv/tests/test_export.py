@@ -5,7 +5,7 @@ from unittest import mock
 
 from core.models import Visibilite
 from sv.export import FicheDetectionExport
-from sv.models import Etat, FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveur
+from sv.models import Etat, FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveuse
 import datetime
 
 
@@ -42,7 +42,7 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
         code_insee="12345",
         _fill_optional=fill_optional,
     )
-    structure = StructurePreleveur.objects.create(nom="My structure")
+    structure = StructurePreleveuse.objects.create(nom="My structure")
     baker.make(
         Prelevement,
         lieu=lieu,
@@ -51,7 +51,7 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
         is_officiel=True,
         numero_phytopass="Phyto123",
         resultat="detecte",
-        structure_preleveur=structure,
+        structure_preleveuse=structure,
         _fill_optional=fill_optional,
     )
 
@@ -67,37 +67,37 @@ def test_export_fiche_detection_content(mocked_authentification_user):
     assert len(lines) == 2
 
     headers = [
-        "Numero",
-        "Numero Europhyt",
-        "Numero Rasff",
-        "Statut Evenement",
-        "Organisme Nuisible",
-        "Statut Reglementaire",
-        "Date Premier Signalement",
+        "Numéro de fiche",
+        "Numéro Europhyt",
+        "Numéro RASFF",
+        "Statut de l'événement",
+        "OEPP",
+        "Statut règlementaire de l'organisme",
+        "Date premier signalement",
         "Commentaire",
-        "Mesures Conservatoires Immediates",
-        "Mesures Consignation",
-        "Mesures Phytosanitaires",
-        "Mesures Surveillance Specifique",
-        "Etat",
-        "Date Creation",
+        "Mesures conservatoires immédiates",
+        "Mesures de consignation",
+        "Mesures phytosanitaires",
+        "Mesures de surveillance spécifique",
+        "État de la fiche",
+        "Date de création",
         "Nom",
-        "Wgs84 Longitude",
-        "Wgs84 Latitude",
-        "Adresse Lieu Dit",
+        "Longitude WGS84",
+        "Latitude WGS84",
+        "Adresse ou lieu-dit",
         "Commune",
-        "Code Insee",
-        "Departement",
-        "Numero Echantillon",
-        "Date Prelevement",
-        "Is Officiel",
-        "Numero Phytopass",
-        "Resultat",
-        "Structure Preleveur",
-        "Matrice Prelevee",
-        "Espece Echantillon",
-        "Laboratoire Agree",
-        "Laboratoire Confirmation Officielle",
+        "Code INSEE de la commune",
+        "Département",
+        "Numéro d'échantillon",
+        "Date de prélèvement",
+        "Prélèvement officiel",
+        "Numéro Phytopass",
+        "Résultat",
+        "Structure préleveuse",
+        "Matrice prélevée",
+        "Espèce de l'échantillon",
+        "Laboratoire agréé",
+        "Laboratoire de confirmation officielle",
     ]
     assert lines[0] == ",".join(headers) + "\r\n"
     assert (
@@ -111,7 +111,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     stream = StringIO()
     _create_fiche_with_lieu_and_prelevement(fill_optional=True)
 
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(11):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
@@ -122,7 +122,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(11):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)

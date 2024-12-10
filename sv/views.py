@@ -51,7 +51,7 @@ from .models import (
     ZoneInfestee,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
-    StructurePreleveur,
+    StructurePreleveuse,
 )
 from .view_mixins import FicheDetectionContextMixin, WithPrelevementHandlingMixin
 
@@ -113,7 +113,7 @@ class FicheDetectionDetailView(
         )
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related(
-            "structure_preleveur",
+            "structure_preleveuse",
             "lieu",
             "matrice_prelevee",
             "espece_echantillon",
@@ -221,7 +221,7 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
             labo_confirmation = self._handle_inactive_values(
                 LaboratoireConfirmationOfficielle, "laboratoire_confirmation_officielle", self.object.pk
             )
-            structure = self._handle_inactive_values(StructurePreleveur, "structure_preleveur", self.object.pk)
+            structure = self._handle_inactive_values(StructurePreleveuse, "structure_preleveuse", self.object.pk)
             form = PrelevementForm(
                 instance=existing_prelevement,
                 convert_required_to_data_required=True,

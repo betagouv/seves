@@ -123,15 +123,16 @@ DEPARTEMENTS = [
     ("976", "Mayotte", "Mayotte"),
 ]
 
-STRUCTURES_PRELEVEUR = [
+STRUCTURES_PRELEVEUSES = [
     "SRAL",
-    "OVS",
+    "Délégataire",
     "DSF",
     "SIVEP",
     "SEMAE",
     "FAM",
     "CTIFL",
     "Exploitant",
+    "Salim",
 ]
 
 STATUTS_EVENEMENT = ["Foyer", "Interception", "Incursion", "Suspicion"]

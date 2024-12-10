@@ -87,7 +87,7 @@ function populateLieuSelect(element){
 function getNextAvailablePrelevementModal() {
     const elements = document.querySelectorAll("[id^=modal-add-edit-prelevement-]")
     for (const element of elements) {
-        const input = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveur"]`)
+        const input = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveuse"]`)
         if (input && input.value === "") {
             return element
         }
@@ -105,7 +105,7 @@ function showAddPrelevementmodal(event) {
 }
 
 function buildPrelevementCardFromModal(element){
-    const structureElement = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveur"]`)
+    const structureElement = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveuse"]`)
     const lieuElement = element.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`)
     const officielElement = element.querySelector(`[id^="id_prelevements-"][id$="-is_officiel"]`)
     const resultatElement = element.querySelector(`input[name*="-resultat"]:checked`)
