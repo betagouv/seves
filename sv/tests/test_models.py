@@ -162,3 +162,61 @@ def test_prelevement_officiel_cant_be_from_exploitant():
             resultat=Prelevement.Resultat.DETECTE,
             structure_preleveuse=exploitant,
         )
+
+
+@pytest.mark.django_db
+def test_cant_add_rayon_zone_tampon_negative_in_fiche_zone_delimitee(fiche_zone):
+    fiche_zone.rayon_zone_tampon = -1.0
+    with pytest.raises(ValidationError) as exc_info:
+        fiche_zone.full_clean()
+    assert "rayon_zone_tampon" in exc_info.value.error_dict
+
+
+@pytest.mark.django_db
+def test_can_add_rayon_zone_tampon_zero_in_fiche_zone_delimitee(fiche_zone):
+    fiche_zone.surface_tampon_totale = None
+    fiche_zone.rayon_zone_tampon = 0
+    fiche_zone.full_clean()
+
+
+@pytest.mark.django_db
+def test_cant_add_surface_tampon_totale_negative_in_fiche_zone_delimitee(fiche_zone):
+    fiche_zone.surface_tampon_totale = -1.0
+    with pytest.raises(ValidationError) as exc_info:
+        fiche_zone.full_clean()
+    assert "surface_tampon_totale" in exc_info.value.error_dict
+
+
+@pytest.mark.django_db
+def test_can_add_surface_tampon_totale_zero_in_fiche_zone_delimitee(fiche_zone):
+    fiche_zone.rayon_zone_tampon = None
+    fiche_zone.surface_tampon_totale = 0
+    fiche_zone.full_clean()
+
+
+@pytest.mark.django_db
+def test_cant_add_rayon_negative_in_zone_infestee(fiche_zone):
+    zone = ZoneInfestee(rayon=-1.0, fiche_zone_delimitee=fiche_zone)
+    with pytest.raises(ValidationError) as exc_info:
+        zone.full_clean()
+    assert "rayon" in exc_info.value.error_dict
+
+
+@pytest.mark.django_db
+def test_can_add_rayon_zero_in_zone_infestee(fiche_zone):
+    zone = ZoneInfestee(rayon=0, fiche_zone_delimitee=fiche_zone)
+    zone.full_clean()
+
+
+@pytest.mark.django_db
+def test_cant_add_surface_infestee_totale_negative_in_zone_infestee(fiche_zone):
+    zone = ZoneInfestee(surface_infestee_totale=-1.0, fiche_zone_delimitee=fiche_zone)
+    with pytest.raises(ValidationError) as exc_info:
+        zone.full_clean()
+    assert "surface_infestee_totale" in exc_info.value.error_dict
+
+
+@pytest.mark.django_db
+def test_can_add_surface_infestee_totale_zero_in_zone_infestee(fiche_zone):
+    zone = ZoneInfestee(surface_infestee_totale=0, fiche_zone_delimitee=fiche_zone)
+    zone.full_clean()

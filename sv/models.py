@@ -2,7 +2,7 @@ import re
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db.models import TextChoices, Q
 from django.contrib.contenttypes.fields import GenericRelation
 import datetime
@@ -629,14 +629,18 @@ class ZoneInfestee(models.Model):
 
     fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
     nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
-    surface_infestee_totale = models.FloatField(verbose_name="Surface infestée totale", blank=True, null=True)
+    surface_infestee_totale = models.FloatField(
+        verbose_name="Surface infestée totale", blank=True, null=True, validators=[MinValueValidator(0)]
+    )
     unite_surface_infestee_totale = models.CharField(
         max_length=3,
         choices=UnitesSurfaceInfesteeTotale,
         default=UnitesSurfaceInfesteeTotale.METRE_CARRE,
         verbose_name="Unité de la surface infestée totale",
     )
-    rayon = models.FloatField(verbose_name="Rayon de la zone infestée", blank=True, null=True)
+    rayon = models.FloatField(
+        verbose_name="Rayon de la zone infestée", blank=True, null=True, validators=[MinValueValidator(0)]
+    )
     unite_rayon = models.CharField(
         max_length=2,
         choices=UnitesRayon,
@@ -687,14 +691,18 @@ class FicheZoneDelimitee(AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMix
         verbose_name="Statut règlementaire de l'organisme nuisible",
     )
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
-    rayon_zone_tampon = models.FloatField(verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True)
+    rayon_zone_tampon = models.FloatField(
+        verbose_name="Rayon tampon réglementaire ou arbitré", null=True, blank=True, validators=[MinValueValidator(0)]
+    )
     unite_rayon_zone_tampon = models.CharField(
         max_length=2,
         choices=UnitesRayon,
         default=UnitesRayon.KILOMETRE,
         verbose_name="Unité du rayon tampon réglementaire ou arbitré",
     )
-    surface_tampon_totale = models.FloatField(verbose_name="Surface tampon totale", null=True, blank=True)
+    surface_tampon_totale = models.FloatField(
+        verbose_name="Surface tampon totale", null=True, blank=True, validators=[MinValueValidator(0)]
+    )
     unite_surface_tampon_totale = models.CharField(
         max_length=3,
         choices=UnitesSurfaceTamponTolale,
