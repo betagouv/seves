@@ -156,7 +156,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         if labo_confirmation_values:
             self.fields["laboratoire_confirmation_officielle"].queryset = labo_confirmation_values
         if structure_values:
-            self.fields["structure_preleveur"].queryset = structure_values
+            self.fields["structure_preleveuse"].queryset = structure_values
 
         if convert_required_to_data_required:
             self._convert_required_to_data_required()

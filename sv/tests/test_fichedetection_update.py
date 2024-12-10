@@ -16,7 +16,7 @@ from ..models import (
     OrganismeNuisible,
     LaboratoireAgree,
     LaboratoireConfirmationOfficielle,
-    StructurePreleveur,
+    StructurePreleveuse,
     Etat,
     SiteInspection,
     FicheZoneDelimitee,
@@ -538,7 +538,7 @@ def test_add_new_prelevement_non_officiel(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
-    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
@@ -555,7 +555,7 @@ def test_add_new_prelevement_non_officiel(
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
-    assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+    assert prelevement_from_db.structure_preleveuse.id == prelevement.structure_preleveuse.id
     assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
@@ -578,7 +578,7 @@ def test_add_new_prelevement_with_empty_date(
     choice_js_fill,
     lieu_form_elements,
 ):
-    StructurePreleveur.objects.create(nom="DSF")
+    StructurePreleveuse.objects.create(nom="DSF")
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection)}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("Test")
@@ -615,7 +615,7 @@ def test_add_new_prelevement_officiel(
     page.goto(f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu)}")
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
-    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
     prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
@@ -639,7 +639,7 @@ def test_add_new_prelevement_officiel(
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
-    assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+    assert prelevement_from_db.structure_preleveuse.id == prelevement.structure_preleveuse.id
     assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
     assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
@@ -671,7 +671,7 @@ def test_add_multiple_prelevements(
     for prelevement in prelevements:
         form_elements.add_prelevement_btn.click()
         prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
-        prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveur.id))
+        prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
         prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.matrice_prelevee_input.select_option(str(prelevement.matrice_prelevee.id))
@@ -691,7 +691,7 @@ def test_add_multiple_prelevements(
     prelevements_from_db = Prelevement.objects.filter(lieu=lieu)
     for prelevement, prelevement_from_db in zip(prelevements, prelevements_from_db):
         assert prelevement_from_db.lieu.id == prelevement.lieu.id
-        assert prelevement_from_db.structure_preleveur.id == prelevement.structure_preleveur.id
+        assert prelevement_from_db.structure_preleveuse.id == prelevement.structure_preleveuse.id
         assert prelevement_from_db.numero_echantillon == prelevement.numero_echantillon
         assert prelevement_from_db.date_prelevement == prelevement.date_prelevement
         assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
@@ -722,7 +722,7 @@ def test_update_prelevement(
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     page.wait_for_timeout(10_000)
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
-    prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveur.id))
+    prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveuse.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
     prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
     prelevement_form_elements.matrice_prelevee_input.select_option(str(new_prelevement.matrice_prelevee.id))
@@ -739,7 +739,7 @@ def test_update_prelevement(
 
     prelevement_from_db = Prelevement.objects.get(lieu=new_lieu)
     assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
-    assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
+    assert prelevement_from_db.structure_preleveuse.id == new_prelevement.structure_preleveuse.id
     assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
     assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
     assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
@@ -776,7 +776,7 @@ def test_update_multiple_prelevements(
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
         page.locator(".prelevement-edit-btn").nth(index).click()
         prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
-        prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveur.id))
+        prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveuse.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
         prelevement_form_elements.date_prelevement_input.fill(new_prelevement.date_prelevement.strftime("%Y-%m-%d"))
         prelevement_form_elements.matrice_prelevee_input.select_option(value=str(new_prelevement.matrice_prelevee.id))
@@ -800,7 +800,7 @@ def test_update_multiple_prelevements(
         [prelevement_from_db_1, prelevement_from_db_2], [new_prelevement_1, new_prelevement_2]
     ):
         assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
-        assert prelevement_from_db.structure_preleveur.id == new_prelevement.structure_preleveur.id
+        assert prelevement_from_db.structure_preleveuse.id == new_prelevement.structure_preleveuse.id
         assert prelevement_from_db.numero_echantillon == new_prelevement.numero_echantillon
         assert prelevement_from_db.date_prelevement == new_prelevement.date_prelevement
         assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
@@ -973,7 +973,7 @@ def test_cant_pick_inactive_structure_in_prelevement(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    structure = StructurePreleveur.objects.create(nom="My Structure", is_active=False)
+    structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
     page.goto(
         f"{live_server.url}{get_fiche_detection_update_form_url(fiche_detection_with_one_lieu_and_one_prelevement)}"
     )
@@ -991,9 +991,9 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    structure = StructurePreleveur.objects.create(nom="My Structure", is_active=False)
+    structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
-    prelevement.structure_preleveur = structure
+    prelevement.structure_preleveuse = structure
     prelevement.save()
 
     page.goto(
