@@ -174,7 +174,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 
 class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     vegetaux_infestes = forms.CharField(
-        label="Végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
+        label="Quantité de végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
     )
     commentaire = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
