@@ -7,7 +7,7 @@ from core.models import Structure
 
 class Command(BaseCommand):
     help = """
-        Exporte tous les contacts reliés à une structure.
+        Exporte tous les contacts reliés à une structure sans adresse email complètée.
         Usage: python manage.py export_contacts_structures > contacts_structures.csv
     """
 
