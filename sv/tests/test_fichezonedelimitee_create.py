@@ -467,3 +467,19 @@ def test_can_publish_fiche_zone_delimitee(live_server, page: Page, choice_js_fil
     form_page.publish()
     fiche_zone = FicheZoneDelimitee.objects.get()
     assert fiche_zone.visibilite == Visibilite.LOCAL
+
+
+def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    assert form_page.has_same_surface_units_order_for_zone_tampon_and_zone_infestee() is True
+
+
+def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True

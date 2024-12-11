@@ -622,3 +622,21 @@ class FicheZoneDelimiteeFormPage:
                 str(detection.numero),
                 str(detection.numero),
             )
+
+    def has_same_surface_units_order_for_zone_tampon_and_zone_infestee(self) -> bool:
+        locator = 'input[name="unite_surface_tampon_totale"]'
+        unites_surface_tampon_totale = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
+
+        locator = 'input[name="zoneinfestee_set-0-unite_surface_infestee_totale"]'
+        unites_surface_infestee_totale = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
+
+        return unites_surface_tampon_totale == unites_surface_infestee_totale
+
+    def has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(self) -> bool:
+        locator = 'input[name="unite_rayon_zone_tampon"]'
+        unites_rayon_zone_tampon = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
+
+        locator = 'input[name="zoneinfestee_set-0-unite_rayon"]'
+        unites_unite_rayon_zoneinfestee = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
+
+        return unites_rayon_zone_tampon == unites_unite_rayon_zoneinfestee
