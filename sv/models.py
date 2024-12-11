@@ -536,9 +536,9 @@ class FicheDetection(
 
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
-        HECTARE = UnitesMesure.HECTARE
         METRE_CARRE = UnitesMesure.METRE_CARRE
         KILOMETRE_CARRE = UnitesMesure.KILOMETRE_CARRE
+        HECTARE = UnitesMesure.HECTARE
 
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE

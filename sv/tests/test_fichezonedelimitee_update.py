@@ -273,3 +273,21 @@ def test_can_publish_fiche_zone_delimitee_from_update_form(
     form_page.publish()
     fiche_zone_delimitee.refresh_from_db()
     assert fiche_zone_delimitee.visibilite == Visibilite.LOCAL
+
+
+def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(
+    live_server, page: Page, fiche_zone, choice_js_fill
+):
+    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    assert form_page.has_same_surface_units_order_for_zone_tampon_and_zone_infestee() is True
+
+
+def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(
+    live_server, page: Page, fiche_zone, choice_js_fill
+):
+    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True
