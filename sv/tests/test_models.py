@@ -1,10 +1,22 @@
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from model_bakery import baker
 from django.db.utils import IntegrityError
 
 from core.models import Visibilite
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat, Lieu, Prelevement, StructurePreleveuse
+from sv.constants import STRUCTURE_EXPLOITANT
+from sv.models import (
+    FicheZoneDelimitee,
+    ZoneInfestee,
+    FicheDetection,
+    Etat,
+    Lieu,
+    StructurePreleveuse,
+    Prelevement,
+    LaboratoireAgree,
+    LaboratoireConfirmationOfficielle,
+)
 
 
 @pytest.mark.django_db
@@ -95,6 +107,7 @@ def test_numero_rapport_inspection_format_valide():
     rapport = Prelevement(
         lieu=baker.make(Lieu),
         structure_preleveuse=baker.make(StructurePreleveuse),
+        is_officiel=True,
         resultat=Prelevement.Resultat.DETECTE,
         numero_rapport_inspection="24-123456",
     )
@@ -113,3 +126,39 @@ def test_numero_rapport_inspection_format_invalide():
     rapport = Prelevement(numero_rapport_inspection="24-12345")
     with pytest.raises(ValidationError):
         rapport.full_clean()
+
+
+@pytest.mark.django_db
+def test_prelevement_not_officiel_cant_have_officiel_related_values():
+    base_data = {
+        "is_officiel": False,
+        "lieu": baker.make(Lieu),
+        "resultat": Prelevement.Resultat.DETECTE,
+        "structure_preleveuse": baker.make(StructurePreleveuse),
+    }
+
+    with pytest.raises(IntegrityError):
+        with transaction.atomic():
+            Prelevement.objects.create(**base_data, numero_rapport_inspection="Foo")
+
+    labo = baker.make(LaboratoireAgree)
+    with pytest.raises(IntegrityError):
+        with transaction.atomic():
+            Prelevement.objects.create(**base_data, laboratoire_agree=labo)
+
+    labo = baker.make(LaboratoireConfirmationOfficielle)
+    with pytest.raises(IntegrityError):
+        Prelevement.objects.create(**base_data, laboratoire_confirmation_officielle=labo)
+
+
+@pytest.mark.django_db
+def test_prelevement_officiel_cant_be_from_exploitant():
+    exploitant, _ = StructurePreleveuse.objects.get_or_create(nom=STRUCTURE_EXPLOITANT)
+
+    with pytest.raises(ValidationError):
+        Prelevement.objects.create(
+            is_officiel=True,
+            lieu=baker.make(Lieu),
+            resultat=Prelevement.Resultat.DETECTE,
+            structure_preleveuse=exploitant,
+        )

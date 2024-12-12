@@ -152,12 +152,25 @@ function resetModalWhenClosing(event){
     }
 }
 
+function setIsOfficiel(event){
+    const modal = event.target.closest("dialog")
+    const isOfficielCheckbox = modal.querySelector("[id$=is_officiel]")
+    if (event.target.options[event.target.selectedIndex].text == "Exploitant"){
+        isOfficielCheckbox.checked = false
+        isOfficielCheckbox.disabled = true
+        resetForm(modal.querySelector(".officiel-fields"))
+    } else {
+        isOfficielCheckbox.disabled = false
+    }
+}
+
 (function() {
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
+    document.querySelectorAll("select[id$=structure_preleveuse]").forEach(element => element.addEventListener("change", setIsOfficiel))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))

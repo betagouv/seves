@@ -51,7 +51,7 @@ class PrelevementFactory(DjangoModelFactory):
     date_prelevement = factory.Faker("date_this_decade")
     is_officiel = factory.Faker("boolean")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
-    numero_resytal = factory.Faker("numerify", text="#####")
+    numero_rapport_inspection = factory.Faker("numerify", text="#####")
 
 
 class LieuFactory(DjangoModelFactory):

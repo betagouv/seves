@@ -71,7 +71,9 @@ def test_lieu_details_with_no_data(live_server, page, fiche_detection):
 
 def test_prelevement_card(live_server, page, fiche_detection):
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    prelevement = baker.make(Prelevement, lieu=lieu, is_officiel=False, _fill_optional=True)
+    prelevement = baker.make(
+        Prelevement, lieu=lieu, is_officiel=False, numero_echantillon="12345", resultat=Prelevement.Resultat.DETECTE
+    )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
     expect(page.locator(".prelevement").get_by_text(prelevement.numero_echantillon)).to_be_visible()
@@ -83,7 +85,15 @@ def test_prelevement_card(live_server, page, fiche_detection):
 def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    prelevement = baker.make(Prelevement, lieu=lieu, is_officiel=False, _fill_optional=True)
+    prelevement = baker.make(
+        Prelevement,
+        lieu=lieu,
+        is_officiel=False,
+        numero_rapport_inspection="",
+        laboratoire_agree=None,
+        laboratoire_confirmation_officielle=None,
+        _fill_optional=True,
+    )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_role("heading", name=f"Échantillon {prelevement.numero_echantillon}")).to_be_visible()
@@ -130,8 +140,24 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page, fiche_detection):
     "Test que si je clique sur le bouton 'Consulter le détail du prélèvement' d'un deuxième prélèvement, les détails de ce prélèvement s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    baker.make(Prelevement, lieu=lieu, is_officiel=False, _fill_optional=True)
-    prelevement2 = baker.make(Prelevement, lieu=lieu, is_officiel=False, _fill_optional=True)
+    baker.make(
+        Prelevement,
+        lieu=lieu,
+        is_officiel=False,
+        _fill_optional=True,
+        numero_rapport_inspection="",
+        laboratoire_agree=None,
+        laboratoire_confirmation_officielle=None,
+    )
+    prelevement2 = baker.make(
+        Prelevement,
+        lieu=lieu,
+        is_officiel=False,
+        _fill_optional=True,
+        numero_rapport_inspection="",
+        laboratoire_agree=None,
+        laboratoire_confirmation_officielle=None,
+    )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
     expect(page.get_by_role("heading", name=f"Échantillon {prelevement2.numero_echantillon}")).to_be_visible()
