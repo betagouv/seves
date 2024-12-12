@@ -4,7 +4,7 @@ from model_bakery import baker
 from django.db.utils import IntegrityError
 
 from core.models import Visibilite
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat, Lieu
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Etat, Lieu, Prelevement, StructurePreleveuse
 
 
 @pytest.mark.django_db
@@ -89,3 +89,27 @@ def test_invalid_wgs84_latitude(fiche_detection):
     )
     with pytest.raises(ValidationError):
         lieu.full_clean()
+
+
+def test_numero_rapport_inspection_format_valide():
+    rapport = Prelevement(
+        lieu=baker.make(Lieu),
+        structure_preleveuse=baker.make(StructurePreleveuse),
+        resultat=Prelevement.Resultat.DETECTE,
+        numero_rapport_inspection="24-123456",
+    )
+    rapport.full_clean()
+
+
+def test_numero_rapport_inspection_format_invalide():
+    rapport = Prelevement(numero_rapport_inspection="24123456")
+    with pytest.raises(ValidationError):
+        rapport.full_clean()
+
+    rapport = Prelevement(numero_rapport_inspection="2-123456")
+    with pytest.raises(ValidationError):
+        rapport.full_clean()
+
+    rapport = Prelevement(numero_rapport_inspection="24-12345")
+    with pytest.raises(ValidationError):
+        rapport.full_clean()

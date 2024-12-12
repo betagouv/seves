@@ -600,3 +600,8 @@ def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(page, mocked_auth
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
     expect(select_options).to_have_count(1)
     expect(select_options).to_have_text("Aucune fiche à sélectionner")
+
+
+def test_numero_rapport_inspection_format(page):
+    inputs_rapport_inspection = page.locator("input[name^='prelevements-'][name$='-numero_rapport_inspection']").all()
+    assert all(input.get_attribute("pattern") == "^\\d{2}-\\d{6}$" for input in inputs_rapport_inspection)

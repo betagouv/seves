@@ -55,7 +55,12 @@ def fiche_detection_with_two_lieux(fiche_detection, db):
 
 @pytest.fixture
 def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection_with_one_lieu, db):
-    baker.make(Prelevement, lieu=fiche_detection_with_one_lieu.lieux.get(), _fill_optional=True)
+    baker.make(
+        Prelevement,
+        lieu=fiche_detection_with_one_lieu.lieux.get(),
+        _fill_optional=True,
+        numero_rapport_inspection="24-123456",
+    )
     return fiche_detection_with_one_lieu
 
 
@@ -557,7 +562,7 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is False
-    assert prelevement_from_db.numero_resytal == ""
+    assert prelevement_from_db.numero_rapport_inspection == ""
     assert prelevement_from_db.laboratoire_agree is None
     assert prelevement_from_db.laboratoire_confirmation_officielle is None
 
@@ -604,7 +609,14 @@ def test_add_new_prelevement_officiel(
     lieu = lieu_bakery()
     lieu.fiche_detection = fiche_detection_with_one_lieu
     lieu.save()
-    prelevement = baker.prepare(Prelevement, lieu=lieu, _fill_optional=True, resultat="detecte", _save_related=True)
+    prelevement = baker.prepare(
+        Prelevement,
+        lieu=lieu,
+        _fill_optional=True,
+        resultat="detecte",
+        _save_related=True,
+        numero_rapport_inspection="24-123456",
+    )
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -621,7 +633,7 @@ def test_add_new_prelevement_officiel(
     )
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
-    prelevement_form_elements.numero_resytal_input.fill(prelevement.numero_resytal)
+    prelevement_form_elements.numero_rapport_inspection_input.fill(prelevement.numero_rapport_inspection)
     prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
     prelevement_form_elements.laboratoire_confirmation_input.select_option(
         str(prelevement.laboratoire_confirmation_officielle.id)
@@ -639,7 +651,7 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is True
-    assert prelevement_from_db.numero_resytal == prelevement.numero_resytal
+    assert prelevement_from_db.numero_rapport_inspection == prelevement.numero_rapport_inspection
     assert prelevement_from_db.laboratoire_agree.id == prelevement.laboratoire_agree.id
     assert (
         prelevement_from_db.laboratoire_confirmation_officielle.id == prelevement.laboratoire_confirmation_officielle.id
@@ -707,7 +719,12 @@ def test_update_prelevement(
     new_lieu.fiche_detection = fiche
     new_lieu.save()
     new_prelevement = baker.prepare(
-        Prelevement, lieu=new_lieu, resultat="detecte", _fill_optional=True, _save_related=True
+        Prelevement,
+        lieu=new_lieu,
+        resultat="detecte",
+        _fill_optional=True,
+        _save_related=True,
+        numero_rapport_inspection="24-123456",
     )
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
@@ -755,13 +772,23 @@ def test_update_multiple_prelevements(
     lieu1.save()
     lieu2.fiche_detection = fiche_detection
     lieu2.save()
-    baker.make(Prelevement, lieu=lieu1, _fill_optional=True)
-    baker.make(Prelevement, lieu=lieu2, _fill_optional=True)
+    baker.make(Prelevement, lieu=lieu1, _fill_optional=True, numero_rapport_inspection="24-123456")
+    baker.make(Prelevement, lieu=lieu2, _fill_optional=True, numero_rapport_inspection="24-123456")
     new_prelevement_1 = baker.prepare(
-        Prelevement, lieu=lieu1, resultat="detecte", _fill_optional=True, _save_related=True
+        Prelevement,
+        lieu=lieu1,
+        resultat="detecte",
+        _fill_optional=True,
+        _save_related=True,
+        numero_rapport_inspection="24-123456",
     )
     new_prelevement_2 = baker.prepare(
-        Prelevement, lieu=lieu2, resultat="detecte", _fill_optional=True, _save_related=True
+        Prelevement,
+        lieu=lieu2,
+        resultat="detecte",
+        _fill_optional=True,
+        _save_related=True,
+        numero_rapport_inspection="24-123456",
     )
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")

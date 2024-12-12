@@ -138,6 +138,14 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         model = Prelevement
         exclude = []
         labels = {"date_prelevement": "Date prélèvement"}
+        widgets = {
+            "numero_rapport_inspection": forms.TextInput(
+                attrs={
+                    "pattern": r"^\d{2}-\d{6}$",
+                    "title": "Format attendu : AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres",
+                }
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)

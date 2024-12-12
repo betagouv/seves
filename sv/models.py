@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.core.validators import RegexValidator
@@ -321,6 +323,14 @@ class LaboratoireConfirmationOfficielle(IsActiveMixin, models.Model):
     objects = LaboratoireConfirmationOfficielleManager()
 
 
+def validate_numero_rapport_inspection(value):
+    pattern = r"^\d{2}-\d{6}$"
+    if not re.match(pattern, value):
+        raise ValidationError(
+            "Le format doit être AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres"
+        )
+
+
 class Prelevement(models.Model):
     class Resultat(models.TextChoices):
         DETECTE = "detecte", "Détecté"
@@ -367,9 +377,14 @@ class Prelevement(models.Model):
         null=True,
     )
     resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat")
-    numero_resytal = models.CharField(max_length=100, verbose_name="Numéro RESYTAL", blank=True)
+    numero_rapport_inspection = models.CharField(
+        max_length=9,
+        verbose_name="Numéro du rapport d'inspection",
+        blank=True,
+        validators=[validate_numero_rapport_inspection],
+    )
 
-    OFFICIEL_FIELDS = ["numero_resytal", "laboratoire_agree", "laboratoire_confirmation_officielle"]
+    OFFICIEL_FIELDS = ["numero_rapport_inspection", "laboratoire_agree", "laboratoire_confirmation_officielle"]
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"
