@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -186,7 +186,12 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             allowed_lieux = Lieu.objects.filter(pk__in=[lieu.id for lieu in allowed_lieux])
-            self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+            try:
+                self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+            except ValidationError as e:
+                for message in e.messages:
+                    messages.error(self.request, message)
+                return self.form_invalid(form)
             self.object.contacts.add(self.request.user.agent.contact_set.get())
             self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
 
@@ -281,7 +286,12 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
                 self.object.save()
             lieu_formset.save()
             allowed_lieux = self.object.lieux.all()
-            self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+            try:
+                self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+            except ValidationError as e:
+                for message in e.messages:
+                    messages.error(self.request, message)
+                return self.form_invalid(form)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 

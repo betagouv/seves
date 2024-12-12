@@ -123,6 +123,7 @@ DEPARTEMENTS = [
     ("976", "Mayotte", "Mayotte"),
 ]
 
+STRUCTURE_EXPLOITANT = "Exploitant"
 STRUCTURES_PRELEVEUSES = [
     "SRAL",
     "Délégataire",
@@ -131,7 +132,7 @@ STRUCTURES_PRELEVEUSES = [
     "SEMAE",
     "FAM",
     "CTIFL",
-    "Exploitant",
+    STRUCTURE_EXPLOITANT,
     "Salim",
 ]
 

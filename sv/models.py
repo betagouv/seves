@@ -18,6 +18,7 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
 )
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
+from sv.constants import STRUCTURE_EXPLOITANT
 from sv.managers import (
     LaboratoireAgreeManager,
     LaboratoireConfirmationOfficielleManager,
@@ -340,6 +341,17 @@ class Prelevement(models.Model):
         verbose_name = "Prélèvement"
         verbose_name_plural = "Prélèvements"
         db_table = "sv_prelevement"
+        constraints = [
+            models.CheckConstraint(
+                check=Q(is_officiel=True)
+                | (
+                    Q(laboratoire_agree__isnull=True)
+                    & Q(laboratoire_confirmation_officielle__isnull=True)
+                    & Q(numero_rapport_inspection="")
+                ),
+                name="check_officiel_fields_empty_or_null",
+            )
+        ]
 
     lieu = models.ForeignKey(Lieu, on_delete=models.CASCADE, verbose_name="Lieu", related_name="prelevements")
     structure_preleveuse = models.ForeignKey(
@@ -392,6 +404,15 @@ class Prelevement(models.Model):
     @property
     def is_result_positive(self):
         return self.resultat in Prelevement.Resultat.DETECTE
+
+    def clean(self):
+        super().clean()
+        if self.is_officiel and self.structure_preleveuse.nom == STRUCTURE_EXPLOITANT:
+            raise ValidationError("Le prélèvement ne peut pas être officiel pour une structure 'Exploitant'")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class StatutEvenement(models.Model):

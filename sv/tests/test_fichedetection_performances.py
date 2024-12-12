@@ -71,7 +71,15 @@ def test_fiche_detection_performances_with_prelevement(client, django_assert_num
 
     for _ in range(0, 3):
         lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-        baker.make(Prelevement, lieu=lieu, _fill_optional=True)
+        baker.make(
+            Prelevement,
+            lieu=lieu,
+            is_officiel=False,
+            numero_rapport_inspection="",
+            laboratoire_agree=None,
+            laboratoire_confirmation_officielle=None,
+            _fill_optional=True,
+        )
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche_detection.get_absolute_url())

@@ -25,7 +25,7 @@ from ..models import (
     Region,
 )
 
-from sv.constants import REGIONS, DEPARTEMENTS
+from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -58,6 +58,7 @@ def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection_with_one_l
     baker.make(
         Prelevement,
         lieu=fiche_detection_with_one_lieu.lieux.get(),
+        is_officiel=True,
         _fill_optional=True,
         numero_rapport_inspection="24-123456",
     )
@@ -659,6 +660,60 @@ def test_add_new_prelevement_officiel(
 
 
 @pytest.mark.django_db
+def test_add_new_prelevement_exploitant_cant_be_officiel(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    lieu_bakery,
+    choice_js_fill,
+):
+    """
+    Test qu'un prélèvement :
+    - non officiel ne oeyt pas avoir les champs liés au côté officiel du prélèvement (numéro et laboratoires)
+    - qui a pour structure préleveuse l'exploitant ne peut pas être officiel.
+    """
+    structure_exploitant, _ = StructurePreleveuse.objects.get_or_create(nom=STRUCTURE_EXPLOITANT)
+    structure_sral, _ = StructurePreleveuse.objects.get_or_create(nom="SRAL")
+    lieu = lieu_bakery()
+    lieu.fiche_detection = fiche_detection_with_one_lieu
+    lieu.save()
+    prelevement = baker.prepare(
+        Prelevement, lieu=lieu, _fill_optional=True, resultat=Prelevement.Resultat.DETECTE, _save_related=True
+    )
+
+    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    form_elements.add_prelevement_btn.click()
+
+    # Fill the form as if it was made by a Structure that can be official
+    prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
+    prelevement_form_elements.structure_input.select_option(str(structure_sral.id))
+    prelevement_form_elements.resultat_input(prelevement.resultat).click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+    prelevement_form_elements.numero_rapport_inspection_input.fill(prelevement.numero_rapport_inspection)
+    prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
+    prelevement_form_elements.laboratoire_confirmation_input.select_option(
+        str(prelevement.laboratoire_confirmation_officielle.id)
+    )
+
+    # Change the structure to exploitant
+    prelevement_form_elements.structure_input.select_option(str(structure_exploitant.id))
+    expect(prelevement_form_elements.prelevement_officiel_checkbox).to_be_disabled()
+
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    prelevement_from_db = Prelevement.objects.get(lieu=lieu)
+    assert prelevement_from_db.structure_preleveuse == structure_exploitant
+    assert prelevement_from_db.is_officiel is False
+    assert prelevement_from_db.numero_rapport_inspection == ""
+    assert prelevement_from_db.laboratoire_agree is None
+    assert prelevement_from_db.laboratoire_confirmation_officielle is None
+
+
+@pytest.mark.django_db
 def test_add_multiple_prelevements(
     live_server,
     page: Page,
@@ -772,12 +827,13 @@ def test_update_multiple_prelevements(
     lieu1.save()
     lieu2.fiche_detection = fiche_detection
     lieu2.save()
-    baker.make(Prelevement, lieu=lieu1, _fill_optional=True, numero_rapport_inspection="24-123456")
-    baker.make(Prelevement, lieu=lieu2, _fill_optional=True, numero_rapport_inspection="24-123456")
+    baker.make(Prelevement, lieu=lieu1, _fill_optional=True, is_officiel=True, numero_rapport_inspection="24-123456")
+    baker.make(Prelevement, lieu=lieu2, _fill_optional=True, is_officiel=True, numero_rapport_inspection="24-123456")
     new_prelevement_1 = baker.prepare(
         Prelevement,
         lieu=lieu1,
         resultat="detecte",
+        is_officiel=True,
         _fill_optional=True,
         _save_related=True,
         numero_rapport_inspection="24-123456",
@@ -786,6 +842,7 @@ def test_update_multiple_prelevements(
         Prelevement,
         lieu=lieu2,
         resultat="detecte",
+        is_officiel=True,
         _fill_optional=True,
         _save_related=True,
         numero_rapport_inspection="24-123456",
@@ -858,7 +915,9 @@ def test_delete_multiple_prelevements(
 ):
     """Test que la suppression de plusieurs prelevements existants est bien enregistrée en base de données."""
     lieu = fiche_detection_with_one_lieu.lieux.first()
-    prelevement_1, prelevement_2 = baker.make(Prelevement, lieu=lieu, _quantity=2, _fill_optional=True)
+    prelevement_1, prelevement_2 = baker.make(
+        Prelevement, lieu=lieu, _quantity=2, is_officiel=True, _fill_optional=True
+    )
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
     # Supprime le premier prélèvement
@@ -930,7 +989,6 @@ def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
     prelevement.save()
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
 
     assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
@@ -948,7 +1006,6 @@ def test_cant_pick_inactive_labo_confirmation_in_prelevement(
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
     assert prelevement_form_elements.laboratoire_confirmation_label.locator(f'option[value="{labo.pk}"]').count() == 0
 
 
@@ -968,7 +1025,6 @@ def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
 
     assert prelevement_form_elements.laboratoire_confirmation_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
@@ -985,7 +1041,6 @@ def test_cant_pick_inactive_structure_in_prelevement(
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 0
 
 
@@ -1005,7 +1060,6 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
 
 
