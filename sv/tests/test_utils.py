@@ -343,8 +343,8 @@ class PrelevementFormDomElements:
         return self.page.locator('[for^="id_prelevements-"][for$="is_officiel"]').locator("visible=true")
 
     @property
-    def numero_resytal_input(self) -> Locator:
-        return self.page.locator("#numero-resytal").get_by_role("textbox")
+    def numero_rapport_inspection_input(self) -> Locator:
+        return self.page.locator("#numero-rapport-inspection").get_by_role("textbox")
 
     @property
     def laboratoire_agree_input(self) -> Locator:
