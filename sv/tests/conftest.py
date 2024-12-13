@@ -10,7 +10,8 @@ from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, Prel
 from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
-from sv.models import Etat, FicheDetection, FicheZoneDelimitee, StatutReglementaire, Lieu
+from sv.models import Etat, FicheDetection, FicheZoneDelimitee, StatutReglementaire, Lieu, Region, Departement
+from ..constants import DEPARTEMENTS, REGIONS
 
 User = get_user_model()
 
@@ -150,3 +151,12 @@ def fiche_variable(request, fiche_detection_bakery, fiche_zone_bakery):
     if request.param == "fiche_detection_bakery":
         return fiche_detection_bakery
     return fiche_zone_bakery
+
+
+@pytest.fixture(autouse=True)
+def create_departement_if_needed(db):
+    for nom in REGIONS:
+        Region.objects.get_or_create(nom=nom)
+    for numero, nom, region_nom in DEPARTEMENTS:
+        region = Region.objects.get(nom=region_nom)
+        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)

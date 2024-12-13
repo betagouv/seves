@@ -57,8 +57,12 @@ djhtml==3.0.7
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
-faker==33.0.0
+factory-boy==3.3.1
     # via -r requirements.in
+faker==33.0.0
+    # via
+    #   -r requirements.in
+    #   factory-boy
 filelock==3.13.4
     # via virtualenv
 greenlet==3.0.3
