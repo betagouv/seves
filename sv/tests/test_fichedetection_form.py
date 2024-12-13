@@ -6,8 +6,6 @@ from django.urls import reverse
 from core.models import Visibilite
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
-    Departement,
-    Region,
     StructurePreleveuse,
     FicheDetection,
     FicheZoneDelimitee,
@@ -15,16 +13,11 @@ from ..models import (
     OrganismeNuisible,
 )
 
-from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURES_PRELEVEUSES
+from sv.constants import STRUCTURES_PRELEVEUSES
 
 
 @pytest.fixture(autouse=True)
 def create_fixtures_if_needed(db):
-    for nom in REGIONS:
-        Region.objects.get_or_create(nom=nom)
-    for numero, nom, region_nom in DEPARTEMENTS:
-        region = Region.objects.get(nom=region_nom)
-        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
     for nom in STRUCTURES_PRELEVEUSES:
         StructurePreleveuse.objects.get_or_create(nom=nom)
 

@@ -19,3 +19,4 @@ django-filter
 faker
 django-debug-toolbar
 django-post_office
+factory-boy
