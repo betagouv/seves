@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 
 from core.models import Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
+from sv.factories import PrelevementFactory
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -23,10 +24,9 @@ from sv.models import (
     SiteInspection,
     MatricePrelevee,
     EspeceEchantillon,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
     StatutEvenement,
     Prelevement,
+    Laboratoire,
 )
 
 
@@ -171,25 +171,18 @@ def test_numero_rapport_inspection_format_invalide():
 
 @pytest.mark.django_db
 def test_prelevement_not_officiel_cant_have_officiel_related_values():
-    base_data = {
-        "is_officiel": False,
-        "lieu": baker.make(Lieu),
-        "resultat": Prelevement.Resultat.DETECTE,
-        "structure_preleveuse": baker.make(StructurePreleveuse),
-    }
-
     with pytest.raises(IntegrityError):
         with transaction.atomic():
-            Prelevement.objects.create(**base_data, numero_rapport_inspection="Foo")
+            PrelevementFactory(is_officiel=False, numero_rapport_inspection="24-123456")
 
-    labo = baker.make(LaboratoireAgree)
-    with pytest.raises(IntegrityError):
+
+@pytest.mark.django_db
+def test_prelevement_confirmation_cant_have_labo_agree_only():
+    labo = Laboratoire.objects.create(nom="Test", confirmation_officielle=False)
+
+    with pytest.raises(ValidationError):
         with transaction.atomic():
-            Prelevement.objects.create(**base_data, laboratoire_agree=labo)
-
-    labo = baker.make(LaboratoireConfirmationOfficielle)
-    with pytest.raises(IntegrityError):
-        Prelevement.objects.create(**base_data, laboratoire_confirmation_officielle=labo)
+            PrelevementFactory(type_analyse=Prelevement.TypeAnalyse.CONFIRMATION, laboratoire=labo)
 
 
 @pytest.mark.django_db
@@ -405,8 +398,7 @@ def test_departement_unique_constraints(test_data, region_fixture, should_raise,
         (StructurePreleveuse, "nom", "Structure preleveuse"),
         (SiteInspection, "nom", "Site d'inspection"),
         (MatricePrelevee, "libelle", "Matrice prelevee"),
-        (LaboratoireAgree, "nom", "Laboratoire agréé"),
-        (LaboratoireConfirmationOfficielle, "nom", "Laboratoire de confirmation officielle"),
+        (Laboratoire, "nom", "Laboratoire"),
         (StatutEvenement, "libelle", "Statut de l'événement"),
         (Etat, "libelle", "État"),
     ],

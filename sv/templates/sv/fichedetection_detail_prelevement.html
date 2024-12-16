@@ -50,21 +50,21 @@
                             <div class="fr-col-5 detail-prelevement__label">Résultat</div>
                             <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|default:"nc."}}</div>
                         </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label">Type d'analyse</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-type-analyse">{{prelevement.get_type_analyse_display|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 detail-prelevement__label">Laboratoire</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire">{{prelevement.laboratoire|default:"nc."}}</div>
+                        </div>
                         {% if prelevement.is_officiel %}
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-1"></div>
                                 <div class="fr-col-5 detail-prelevement__label">Numéro Rapport d'inspection</div>
                                 <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-rapport-inspection">{{prelevement.numero_rapport_inspection|default:"nc."}}</div>
-                            </div>
-                            <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-1"></div>
-                                <div class="fr-col-5 detail-prelevement__label">Labo. agréé</div>
-                                <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire-agree">{{prelevement.laboratoire_agree|default:"nc."}}</div>
-                            </div>
-                            <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-1"></div>
-                                <div class="fr-col-5 detail-prelevement__label">Labo. de confirmation</div>
-                                <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire-confirmation-officielle">{{prelevement.laboratoire_confirmation_officielle|default:"nc."}}</div>
                             </div>
                         {% endif %}
                     </div>

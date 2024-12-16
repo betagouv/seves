@@ -201,33 +201,18 @@ main {
     margin-bottom: 0;
 }
 .site-inspection,
-.date-prelevement,
 .prelevement-lieu {
     margin-bottom: 0.5rem;
 }
 
-.prelevement-form--fieldset
-{
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-[id^=modal-add-edit-prelevement] label {
-    flex: 0.75;
-}
-[id^=modal-add-edit-prelevement] select {
-    flex: 1.15;
-}
-[id^=modal-add-edit-prelevement] input, [id^=modal-add-edit-prelevement] .choices {
-    flex: 1.25;
-}
-.officiel-fields {
-    display: none;
-}
-.fr-modal__content:has(input[type="checkbox"][id^="id_prelevements-"][id$="-is_officiel"]:checked) .officiel-fields {
-    display: block;
+
+[id^=modal-add-edit-prelevement] .fr-input:not(textarea) {
+    max-height: 2rem !important;
 }
 
+[id^=modal-add-edit-prelevement] .fr-select {
+    line-height: 1rem !important;
+}
 
 
 

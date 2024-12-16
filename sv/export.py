@@ -36,8 +36,7 @@ class FicheDetectionExport:
         "structure_preleveuse",
         "matrice_prelevee",
         "espece_echantillon",
-        "laboratoire_agree",
-        "laboratoire_confirmation_officielle",
+        "laboratoire",
     ]
 
     def _clean_field_name(self, field, instance):
@@ -52,8 +51,7 @@ class FicheDetectionExport:
             "lieux__prelevements__structure_preleveuse",
             "lieux__prelevements__espece_echantillon",
             "lieux__prelevements__matrice_prelevee",
-            "lieux__prelevements__laboratoire_agree",
-            "lieux__prelevements__laboratoire_confirmation_officielle",
+            "lieux__prelevements__laboratoire",
         )
         return queryset
 

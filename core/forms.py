@@ -20,6 +20,7 @@ class DSFRForm(forms.Form):
     input_to_class["ClearableFileInput"] = "fr-upload"
     input_to_class["Select"] = "fr-select"
     input_to_class["SelectMultiple"] = "fr-select"
+    input_to_class["SelectWithAttributeField"] = "fr-select"
     input_to_class["DSFRRadioButton"] = ""
 
     def as_dsfr_div(self):

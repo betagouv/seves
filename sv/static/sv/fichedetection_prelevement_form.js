@@ -155,13 +155,28 @@ function resetModalWhenClosing(event){
 function setIsOfficiel(event){
     const modal = event.target.closest("dialog")
     const isOfficielCheckbox = modal.querySelector("[id$=is_officiel]")
-    if (event.target.options[event.target.selectedIndex].text == "Exploitant"){
+    const structureElement = modal.querySelector("[id$=structure_preleveuse]")
+
+    if(structureElement.options[structureElement.selectedIndex].text === "Exploitant"){
         isOfficielCheckbox.checked = false
         isOfficielCheckbox.disabled = true
-        resetForm(modal.querySelector(".officiel-fields"))
-    } else {
+        return
+    }
+
+    if (modal.querySelector("input[name$=type_analyse]:checked").value === "confirmation"){
+        isOfficielCheckbox.checked = true
         isOfficielCheckbox.disabled = false
     }
+}
+
+function handleChangeTypeAnalyse(event){
+    setIsOfficiel(event)
+    const laboElement =  event.target.closest("dialog").querySelector("[id$=laboratoire]")
+    const isConfirmation = event.target.value === "confirmation"
+
+    laboElement.querySelectorAll('option').forEach(option => {
+        option.disabled = isConfirmation && option.getAttribute('data-confirmation-officielle') === 'false'
+    });
 }
 
 (function() {
@@ -171,6 +186,7 @@ function setIsOfficiel(event){
     document.querySelectorAll(".prelevement-save-btn").forEach(button => button.addEventListener("click", savePrelevement))
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document.querySelectorAll("select[id$=structure_preleveuse]").forEach(element => element.addEventListener("change", setIsOfficiel))
+    document.querySelectorAll("input[name$=type_analyse]").forEach(element => element.addEventListener("change", handleChangeTypeAnalyse))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))

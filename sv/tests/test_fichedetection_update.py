@@ -13,13 +13,12 @@ from ..models import (
     Departement,
     PositionChaineDistribution,
     OrganismeNuisible,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
     StructurePreleveuse,
     Etat,
     SiteInspection,
     FicheZoneDelimitee,
     StatutReglementaire,
+    Laboratoire,
 )
 from ..models import (
     Region,
@@ -556,6 +555,7 @@ def test_add_new_prelevement_non_officiel(
         prelevement.espece_echantillon.libelle,
         prelevement.espece_echantillon.libelle,
     )
+    prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
@@ -571,8 +571,7 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is False
     assert prelevement_from_db.numero_rapport_inspection == ""
-    assert prelevement_from_db.laboratoire_agree is None
-    assert prelevement_from_db.laboratoire_confirmation_officielle is None
+    assert prelevement_from_db.laboratoire is None
 
 
 @pytest.mark.django_db
@@ -594,6 +593,7 @@ def test_add_new_prelevement_with_empty_date(
     prelevement_form_elements.lieu_input.select_option("Test")
     prelevement_form_elements.structure_input.select_option("DSF")
     prelevement_form_elements.resultat_input("detecte").click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -639,13 +639,11 @@ def test_add_new_prelevement_officiel(
         prelevement.espece_echantillon.libelle,
         prelevement.espece_echantillon.libelle,
     )
+    prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     prelevement_form_elements.numero_rapport_inspection_input.fill(prelevement.numero_rapport_inspection)
-    prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
-    prelevement_form_elements.laboratoire_confirmation_input.select_option(
-        str(prelevement.laboratoire_confirmation_officielle.id)
-    )
+    prelevement_form_elements.laboratoire_input.select_option(str(prelevement.laboratoire.id))
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -660,10 +658,7 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.resultat == prelevement.resultat
     assert prelevement_from_db.is_officiel is True
     assert prelevement_from_db.numero_rapport_inspection == prelevement.numero_rapport_inspection
-    assert prelevement_from_db.laboratoire_agree.id == prelevement.laboratoire_agree.id
-    assert (
-        prelevement_from_db.laboratoire_confirmation_officielle.id == prelevement.laboratoire_confirmation_officielle.id
-    )
+    assert prelevement_from_db.laboratoire.id == prelevement.laboratoire.id
 
 
 @pytest.mark.django_db
@@ -678,7 +673,7 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
 ):
     """
     Test qu'un prélèvement :
-    - non officiel ne oeyt pas avoir les champs liés au côté officiel du prélèvement (numéro et laboratoires)
+    - non officiel ne peut pas avoir les champs liés au côté officiel du prélèvement (numéro et laboratoires)
     - qui a pour structure préleveuse l'exploitant ne peut pas être officiel.
     """
     structure_exploitant, _ = StructurePreleveuse.objects.get_or_create(nom=STRUCTURE_EXPLOITANT)
@@ -698,11 +693,8 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     prelevement_form_elements.structure_input.select_option(str(structure_sral.id))
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
-    prelevement_form_elements.numero_rapport_inspection_input.fill(prelevement.numero_rapport_inspection)
-    prelevement_form_elements.laboratoire_agree_input.select_option(str(prelevement.laboratoire_agree.id))
-    prelevement_form_elements.laboratoire_confirmation_input.select_option(
-        str(prelevement.laboratoire_confirmation_officielle.id)
-    )
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.laboratoire_input.select_option(str(prelevement.laboratoire.id))
 
     # Change the structure to exploitant
     prelevement_form_elements.structure_input.select_option(str(structure_exploitant.id))
@@ -716,8 +708,7 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     assert prelevement_from_db.structure_preleveuse == structure_exploitant
     assert prelevement_from_db.is_officiel is False
     assert prelevement_from_db.numero_rapport_inspection == ""
-    assert prelevement_from_db.laboratoire_agree is None
-    assert prelevement_from_db.laboratoire_confirmation_officielle is None
+    assert prelevement_from_db.laboratoire is None
 
 
 @pytest.mark.django_db
@@ -748,6 +739,7 @@ def test_add_multiple_prelevements(
             prelevement.espece_echantillon.libelle,
             prelevement.espece_echantillon.libelle,
         )
+        prelevement_form_elements.type_analyse_input("première intention").click()
         prelevement_form_elements.resultat_input(prelevement.resultat).click()
         prelevement_form_elements.save_btn.click()
 
@@ -965,7 +957,7 @@ def test_can_edit_and_save_lieu_with_name_only(
     assert lieu.nom == "Chez moi mis à jour"
 
 
-def test_cant_pick_inactive_labo_agree_in_prelevement(
+def test_cant_pick_inactive_labo_in_prelevement(
     live_server,
     page: Page,
     fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
@@ -973,16 +965,16 @@ def test_cant_pick_inactive_labo_agree_in_prelevement(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    prelevement_form_elements.prelevement_officiel_checkbox.click()
-    assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 0
+    assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 0
 
 
 @pytest.mark.django_db
-def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
+def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
     live_server,
     page: Page,
     fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
@@ -990,50 +982,14 @@ def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
-    prelevement.laboratoire_agree = labo
+    prelevement.laboratoire = labo
     prelevement.save()
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
 
-    assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 1
-
-
-@pytest.mark.django_db
-def test_cant_pick_inactive_labo_confirmation_in_prelevement(
-    live_server,
-    page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
-    form_elements: FicheDetectionFormDomElements,
-    prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
-):
-    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
-
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    assert prelevement_form_elements.laboratoire_confirmation_label.locator(f'option[value="{labo.pk}"]').count() == 0
-
-
-@pytest.mark.django_db
-def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
-    live_server,
-    page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
-    form_elements: FicheDetectionFormDomElements,
-    prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
-):
-    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
-    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
-    prelevement.laboratoire_confirmation_officielle = labo
-    prelevement.save()
-
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-
-    assert prelevement_form_elements.laboratoire_confirmation_input.locator(f'option[value="{labo.pk}"]').count() == 1
+    assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 1
 
 
 @pytest.mark.django_db

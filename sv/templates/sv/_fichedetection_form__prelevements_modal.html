@@ -1,66 +1,88 @@
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
-<button type="button" style="display: none;" data-fr-opened="false" aria-controls="modal-add-edit-prelevement-{{ id }}"></button>
-<dialog aria-labelledby="title-modal-add-edit-prelevement-{{ id }}" id="modal-add-edit-prelevement-{{ id }}" data-id={{ id }} data-already-existing="{{ existing }}" class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
+<button type="button" style="display: none;" data-fr-opened="false"
+        aria-controls="modal-add-edit-prelevement-{{ id }}"></button>
+<dialog aria-labelledby="title-modal-add-edit-prelevement-{{ id }}" id="modal-add-edit-prelevement-{{ id }}"
+        data-id={{ id }} data-already-existing="{{ existing }}" class="fr-modal" role="dialog"
+        data-fr-concealing-backdrop="false">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
-                        <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-prelevement-{{ id }}">Fermer</button>
+                        <button class="fr-btn--close fr-btn" type="button"
+                                aria-controls="modal-add-edit-prelevement-{{ id }}">Fermer
+                        </button>
                     </div>
                     <div class="fr-modal__content">
                         <h1 id="title-modal-add-edit-prelevement-{{ id }}"
                             class="fr-modal__title">Ajouter un prélèvement</h1>
-                        <div id="lieu" class="fr-select-group prelevement-form--fieldset">
-                            <label class="fr-label">Lieu</label>
-                            {{ form.lieu }}
-                        </div>
-                        <div id="structure" class="fr-select-group prelevement-form--fieldset">
-                            {{ form.structure_preleveuse.label_tag }}{{ form.structure_preleveuse }}
-                        </div>
-                        <p id="numero-echantillon" class="prelevement-form--fieldset">
-                            {{ form.numero_echantillon.label_tag }}{{ form.numero_echantillon }}
-                        </p>
-                        <p id="date-prelevement" class="prelevement-form--fieldset">
-                            {{ form.date_prelevement.label_tag }}{{ form.date_prelevement }}
-                        </p>
-                        <p id="matrice-prelevee" class="prelevement-form--fieldset">
-                            {{ form.matrice_prelevee.label_tag }}{{ form.matrice_prelevee }}
-                        </p>
-                        <p id="espece-echantillon" class="espece-echantillon prelevement-form--fieldset">
-                            <label class="fr-label" for="id_prelevements-{{ id }}-espece-echantillon">Espèce de l'échantillon</label>
-                            <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input" name="prelevements-{{ id }}-espece_echantillon"></select>
-                        </p>
-                        <div id="resultat" class="prelevement-form--fieldset">
-                            <label class="fr-label" style="flex:0.65">Résultat</label>
-                            <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
-                                {{ form.resultat }}
-                            </fieldset>
-                        </div>
-                        <p>
-                            <div class="fr-checkbox-group">
-                                {{ form.is_officiel }}
-                                <label class="fr-label" for="id_prelevements-{{ id }}-is_officiel">Prélèvement officiel</label>
+
+
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-4">Type</div>
+                                <div class="fr-col-8">
+                                    <fieldset class="fr-fieldset fr-mb-0" id="radio-inline"
+                                              aria-labelledby="radio-inline-legend radio-inline-messages">
+                                        {{ form.type_analyse }}
+                                    </fieldset>
+                                </div>
                             </div>
-                        </p>
-                        <div class="officiel-fields">
-                            <p id="numero-rapport-inspection" class="prelevement-form--fieldset">
-                                <label class="fr-label">N° Rapport d'inspection</label>
-                                {{ form.numero_rapport_inspection }}
-                            </p>
-                            <p id="laboratoire-agree" class="prelevement-form--fieldset">
-                                <label class="fr-label">Laboratoire agréé</label>
-                                {{ form.laboratoire_agree }}
-                            </p>
-                            <p id="laboratoire-confirmation" class="prelevement-form--fieldset">
-                                <label class="fr-label">Laboratoire de confirmation</label>
-                                {{ form.laboratoire_confirmation_officielle }}
-                            </p>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-12">
+                                    <div class="fr-checkbox-group fr-checkbox-group--sm">
+                                        {{ form.is_officiel }}
+                                        <label class="fr-label" for="id_prelevements-{{ id }}-is_officiel">Prélèvement
+                                            officiel</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="numero-rapport-inspection">
+                                <div class="fr-col-4"><label class="fr-label">N° RI</label></div>
+                                <div class="fr-col-8">{{ form.numero_rapport_inspection }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="laboratoire">
+                                <div class="fr-col-4"><label class="fr-label">Laboratoire</label></div>
+                                <div class="fr-col-8">{{ form.laboratoire }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="numero-echantillon">
+                                <div class="fr-col-4">{{ form.numero_echantillon.label_tag }}</div>
+                                <div class="fr-col-8">{{ form.numero_echantillon }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="lieu">
+                                <div class="fr-col-4"><label class="fr-label">Lieu</label></div>
+                                <div class="fr-col-8"> {{ form.lieu }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="structure">
+                                <div class="fr-col-4">{{ form.structure_preleveuse.label_tag }}</div>
+                                <div class="fr-col-8">{{ form.structure_preleveuse }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
+                                <div class="fr-col-4">{{ form.date_prelevement.label_tag }}</div>
+                                <div class="fr-col-8">{{ form.date_prelevement }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="matrice-prelevee" >
+                                <div class="fr-col-4">{{ form.matrice_prelevee.label_tag }}</div>
+                                <div class="fr-col-8">{{ form.matrice_prelevee }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="espece-echantillon">
+                                <div class="fr-col-4"><label class="fr-label" for="id_prelevements-{{ id }}-espece-echantillon">Espèce échantillon</label></div>
+                                <div class="fr-col-8">        <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input"
+                                                                      name="prelevements-{{ id }}-espece_echantillon"></select></div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="resultat">
+                                <div class="fr-col-4"><label class="fr-label">Conclusion</label></div>
+                                <div class="fr-col-8"><fieldset class="fr-fieldset" id="radio-inline"
+                                                                aria-labelledby="radio-inline-legend radio-inline-messages">
+                                    {{ form.resultat }}
+                                </fieldset></div>
+                            </div>
                         </div>
                     </div>
                     <div class="fr-modal__footer">
                         <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
-                            <a href="#" class="fr-btn fr-btn--secondary prelevement-cancel-btn" aria-controls="modal-add-edit-prelevement-{{ id }}">Annuler</a>
+                            <a href="#" class="fr-btn fr-btn--secondary prelevement-cancel-btn"
+                               aria-controls="modal-add-edit-prelevement-{{ id }}">Annuler</a>
                             <a class="fr-btn prelevement-save-btn" data-id="{{ id }}" href="#">Enregistrer</a>
                         </div>
                     </div>
