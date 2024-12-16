@@ -59,7 +59,7 @@ execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.1
     # via -r requirements.in
-faker==33.0.0
+faker==33.1.0
     # via
     #   -r requirements.in
     #   factory-boy
