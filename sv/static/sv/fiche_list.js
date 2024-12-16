@@ -23,5 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('id_lieux__departement__region').disabled = true
         document.getElementById('id_lieux__departement__region').selectedIndex = 0
     })
-
+    if (new URLSearchParams(window.location.search).get('type_fiche') === "zone"){
+        document.getElementById('id_lieux__departement__region').disabled = true
+        document.getElementById('id_lieux__departement__region').selectedIndex = 0
+    }
 });
