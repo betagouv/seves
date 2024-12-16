@@ -1,8 +1,20 @@
+import random
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from core.models import Visibilite, Structure
-from .models import Prelevement, Lieu, NumeroFiche, FicheDetection, Etat, Departement, OrganismeNuisible
+from .constants import STATUTS_REGLEMENTAIRES
+from .models import (
+    Prelevement,
+    Lieu,
+    NumeroFiche,
+    FicheDetection,
+    Etat,
+    Departement,
+    OrganismeNuisible,
+    FicheZoneDelimitee,
+    StatutReglementaire,
+)
 
 
 class NumeroFicheFactory(DjangoModelFactory):
@@ -40,6 +52,15 @@ class DepartementFactory(DjangoModelFactory):
     nom = factory.LazyAttribute(lambda o: o._departement.nom)
     numero = factory.LazyAttribute(lambda o: o._departement.numero)
     region = factory.LazyAttribute(lambda o: o._departement.region)
+
+
+class StatutReglementaireFactory(DjangoModelFactory):
+    class Meta:
+        model = StatutReglementaire
+        django_get_or_create = ("libelle",)
+
+    code = factory.LazyAttribute(lambda _: random.choice(list(STATUTS_REGLEMENTAIRES.keys())))
+    libelle = factory.LazyAttribute(lambda obj: STATUTS_REGLEMENTAIRES[obj.code])
 
 
 class PrelevementFactory(DjangoModelFactory):
@@ -109,3 +130,30 @@ class FicheDetectionFactory(DjangoModelFactory):
         if extracted and create:
             self.date_creation = extracted
             self.save()
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if kwargs["visibilite"] == Visibilite.BROUILLON:
+            kwargs["numero"] = None
+        return super()._create(model_class, *args, **kwargs)
+
+
+class FicheZoneFactory(DjangoModelFactory):
+    organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
+    date_creation = factory.Faker("date_this_decade")
+    numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
+    statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
+    visibilite = Visibilite.LOCAL
+
+    class Meta:
+        model = FicheZoneDelimitee
+
+    @factory.lazy_attribute
+    def createur(self):
+        return Structure.objects.get(libelle="Structure Test")
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if kwargs["visibilite"] == Visibilite.BROUILLON:
+            kwargs["numero"] = None
+        return super()._create(model_class, *args, **kwargs)
