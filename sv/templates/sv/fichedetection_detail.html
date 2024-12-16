@@ -182,8 +182,8 @@
                                         {% if prelevement.espece_echantillon %}
                                             Espèce : {{ prelevement.espece_echantillon }}<br>
                                         {% endif %}
-                                        {% if prelevement.laboratoire_agree %}
-                                            Laboratoire agrée : {{ prelevement.laboratoire_agree }} |
+                                        {% if prelevement.laboratoire %}
+                                            Laboratoire : {{ prelevement.laboratoire }} |
                                         {% endif %}
                                         {% if prelevement.date_prelevement %}
                                             Date de prélèvement : {{ prelevement.date_prelevement|date:"d/m/Y" }}

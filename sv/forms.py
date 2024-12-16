@@ -128,12 +128,27 @@ LieuFormSet = inlineformset_factory(
 )
 
 
+class SelectWithAttributeField(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value:
+            option["attrs"]["data-confirmation-officielle"] = (
+                "true" if value.instance.confirmation_officielle else "false"
+            )
+        return option
+
+
 class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     id = forms.IntegerField(widget=forms.HiddenInput, required=False)
     resultat = forms.ChoiceField(
         required=True,
         choices=Prelevement.Resultat.choices,
-        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mt-4v fr-mb-0-5v"}),
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline"}),
+    )
+    type_analyse = forms.ChoiceField(
+        required=True,
+        choices=Prelevement.TypeAnalyse.choices,
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mb-0"}),
     )
     lieu = forms.ModelChoiceField(
         queryset=Lieu.objects.none(),
@@ -153,14 +168,14 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                     "pattern": r"^\d{2}-\d{6}$",
                     "title": "Format attendu : AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres",
                 }
-            )
+            ),
+            "laboratoire": SelectWithAttributeField,
         }
 
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         cached_choices = kwargs.pop("cached_choices", {})
-        labo_agree_values = kwargs.pop("labo_agree_values", None)
-        labo_confirmation_values = kwargs.pop("labo_confirmation_values", None)
+        labo_values = kwargs.pop("labo_values", None)
         structure_values = kwargs.pop("structure_values", None)
         super().__init__(*args, **kwargs)
 
@@ -168,10 +183,8 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             if choices is not None and field_name in self.fields:
                 self.fields[field_name].choices = choices
 
-        if labo_agree_values:
-            self.fields["laboratoire_agree"].queryset = labo_agree_values
-        if labo_confirmation_values:
-            self.fields["laboratoire_confirmation_officielle"].queryset = labo_confirmation_values
+        if labo_values:
+            self.fields["laboratoire"].queryset = labo_values
         if structure_values:
             self.fields["structure_preleveuse"].queryset = structure_values
 

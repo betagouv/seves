@@ -87,20 +87,19 @@ def test_export_fiche_detection_content(mocked_authentification_user):
         "Commune",
         "Code INSEE de la commune",
         "Département",
-        "Numéro d'échantillon",
+        "N° d'échantillon",
         "Date de prélèvement",
         "Prélèvement officiel",
         "Résultat",
         "Structure préleveuse",
-        "Matrice prélevée",
+        "Nature de l'objet",
         "Espèce de l'échantillon",
-        "Laboratoire agréé",
-        "Laboratoire de confirmation officielle",
+        "Laboratoire",
     ]
     assert lines[0] == ",".join(headers) + "\r\n"
     assert (
         lines[1]
-        == "2024.123,EUROPHYT,RASFF,,,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,nouveau,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,detecte,My structure,,,,\r\n"
+        == "2024.123,EUROPHYT,RASFF,,,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,nouveau,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,detecte,My structure,,,\r\n"
     )
 
 
@@ -109,7 +108,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     stream = StringIO()
     _create_fiche_with_lieu_and_prelevement(fill_optional=True)
 
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
@@ -120,7 +119,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)

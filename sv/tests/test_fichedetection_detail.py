@@ -91,8 +91,7 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
         lieu=lieu,
         is_officiel=False,
         numero_rapport_inspection="",
-        laboratoire_agree=None,
-        laboratoire_confirmation_officielle=None,
+        laboratoire=None,
         _fill_optional=True,
     )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -119,6 +118,7 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     )
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text(prelevement.espece_echantillon.code_oepp)
     expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text(prelevement.get_resultat_display())
+    expect(page.get_by_test_id("prelevement-1-type-analyse")).to_contain_text(prelevement.get_type_analyse_display())
 
 
 def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
@@ -147,8 +147,7 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
         is_officiel=False,
         _fill_optional=True,
         numero_rapport_inspection="",
-        laboratoire_agree=None,
-        laboratoire_confirmation_officielle=None,
+        laboratoire=None,
     )
     prelevement2 = baker.make(
         Prelevement,
@@ -156,8 +155,7 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
         is_officiel=False,
         _fill_optional=True,
         numero_rapport_inspection="",
-        laboratoire_agree=None,
-        laboratoire_confirmation_officielle=None,
+        laboratoire=None,
     )
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
@@ -185,10 +183,7 @@ def test_prelevement_officiel_details(live_server, page, fiche_detection):
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement officiel")
-    expect(page.get_by_test_id("prelevement-1-laboratoire-agree")).to_contain_text(prelevement.laboratoire_agree.nom)
-    expect(page.get_by_test_id("prelevement-1-laboratoire-confirmation-officielle")).to_contain_text(
-        prelevement.laboratoire_confirmation_officielle.nom
-    )
+    expect(page.get_by_test_id("prelevement-1-laboratoire")).to_contain_text(prelevement.laboratoire.nom)
 
 
 def test_have_link_to_fiche_zone_delimitee_if_hors_zone_infestee(live_server, page, fiche_detection):

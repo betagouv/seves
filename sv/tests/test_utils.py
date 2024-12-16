@@ -338,6 +338,12 @@ class PrelevementFormDomElements:
             return modal.get_by_text("Non détecté", exact=True)
         return modal.get_by_text("Détecté", exact=True)
 
+    def type_analyse_input(self, resultat_value) -> Locator:
+        modal = self.page.locator(".fr-modal__content").locator("visible=true")
+        if resultat_value == "confirmation":
+            return modal.get_by_text("Confirmation", exact=True)
+        return modal.get_by_text("1ère intention", exact=True)
+
     @property
     def prelevement_officiel_checkbox(self) -> Locator:
         return self.page.locator('[for^="id_prelevements-"][for$="is_officiel"]').locator("visible=true")
@@ -347,18 +353,12 @@ class PrelevementFormDomElements:
         return self.page.locator("#numero-rapport-inspection").get_by_role("textbox")
 
     @property
-    def laboratoire_agree_input(self) -> Locator:
-        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_agree"]').locator("visible=true")
+    def laboratoire_input(self) -> Locator:
+        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire"]').locator("visible=true")
 
     @property
-    def laboratoire_confirmation_label(self) -> Locator:
-        return self.page.get_by_text("Laboratoire de confirmation")
-
-    @property
-    def laboratoire_confirmation_input(self) -> Locator:
-        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_confirmation_officielle"]').locator(
-            "visible=true"
-        )
+    def laboratoire_label(self) -> Locator:
+        return self.page.get_by_text("Laboratoire")
 
 
 class FicheZoneDelimiteeFormPage:

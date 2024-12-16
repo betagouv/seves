@@ -3,7 +3,7 @@ import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from core.models import Visibilite, Structure
-from .constants import STATUTS_REGLEMENTAIRES
+from .constants import STATUTS_REGLEMENTAIRES, STRUCTURES_PRELEVEUSES
 from .models import (
     Prelevement,
     Lieu,
@@ -14,6 +14,7 @@ from .models import (
     OrganismeNuisible,
     FicheZoneDelimitee,
     StatutReglementaire,
+    StructurePreleveuse,
 )
 
 
@@ -63,11 +64,21 @@ class StatutReglementaireFactory(DjangoModelFactory):
     libelle = factory.LazyAttribute(lambda obj: STATUTS_REGLEMENTAIRES[obj.code])
 
 
+class StructurePreleveuseFactory(DjangoModelFactory):
+    class Meta:
+        model = StructurePreleveuse
+        django_get_or_create = ("nom",)
+
+    nom = FuzzyChoice(STRUCTURES_PRELEVEUSES)
+
+
 class PrelevementFactory(DjangoModelFactory):
     class Meta:
         model = Prelevement
 
+    type_analyse = FuzzyChoice([choice[0] for choice in Prelevement.TypeAnalyse.choices])
     lieu = factory.SubFactory("sv.factories.LieuFactory")
+    structure_preleveuse = factory.SubFactory("sv.factories.StructurePreleveuseFactory")
     numero_echantillon = factory.Faker("numerify", text="#####")
     date_prelevement = factory.Faker("date_this_decade")
     is_officiel = factory.Faker("boolean")

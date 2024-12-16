@@ -3,12 +3,7 @@ from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
 from core.models import Visibilite
 
 
-class LaboratoireAgreeManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(is_active=True)
-
-
-class LaboratoireConfirmationOfficielleManager(models.Manager):
+class LaboratoireManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_active=True)
 
