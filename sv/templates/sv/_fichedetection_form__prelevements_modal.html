@@ -11,11 +11,11 @@
                     <div class="fr-modal__content">
                         <h1 id="title-modal-add-edit-prelevement-{{ id }}"
                             class="fr-modal__title">Ajouter un prélèvement</h1>
-                        <div id="lieu" class="fr-select-group prelevement-form--fieldset">
+                        <div id="lieu" class="prelevement-form--fieldset">
                             <label class="fr-label">Lieu</label>
                             {{ form.lieu }}
                         </div>
-                        <div id="structure" class="fr-select-group prelevement-form--fieldset">
+                        <div id="structure" class="prelevement-form--fieldset">
                             {{ form.structure_preleveuse.label_tag }}{{ form.structure_preleveuse }}
                         </div>
                         <p id="numero-echantillon" class="prelevement-form--fieldset">
@@ -31,6 +31,16 @@
                             <label class="fr-label" for="id_prelevements-{{ id }}-espece-echantillon">Espèce de l'échantillon</label>
                             <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input" name="prelevements-{{ id }}-espece_echantillon"></select>
                         </p>
+                        <div id="type-analyse" class="prelevement-form--fieldset">
+                            <label class="fr-label" style="flex:0.60">Type d'analyse</label>
+                            <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
+                                {{ form.type_analyse }}
+                            </fieldset>
+                        </div>
+                        <div id="laboratoire" class="prelevement-form--fieldset">
+                            <label class="fr-label">Laboratoire</label>
+                            {{ form.laboratoire }}
+                        </div>
                         <div id="resultat" class="prelevement-form--fieldset">
                             <label class="fr-label" style="flex:0.65">Résultat</label>
                             <fieldset class="fr-fieldset" id="radio-inline" aria-labelledby="radio-inline-legend radio-inline-messages">
@@ -47,14 +57,6 @@
                             <p id="numero-rapport-inspection" class="prelevement-form--fieldset">
                                 <label class="fr-label">N° Rapport d'inspection</label>
                                 {{ form.numero_rapport_inspection }}
-                            </p>
-                            <p id="laboratoire-agree" class="prelevement-form--fieldset">
-                                <label class="fr-label">Laboratoire agréé</label>
-                                {{ form.laboratoire_agree }}
-                            </p>
-                            <p id="laboratoire-confirmation" class="prelevement-form--fieldset">
-                                <label class="fr-label">Laboratoire de confirmation</label>
-                                {{ form.laboratoire_confirmation_officielle }}
                             </p>
                         </div>
                     </div>

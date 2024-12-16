@@ -116,7 +116,7 @@ class FicheDetectionDetailView(
             "lieu",
             "matrice_prelevee",
             "espece_echantillon",
-            "laboratoire_agree",
+            "laboratoire",
         )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(

@@ -119,12 +119,27 @@ LieuFormSet = inlineformset_factory(
 )
 
 
+class SelectWithAttributeField(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value:
+            option["attrs"]["data-confirmation-officielle"] = (
+                "true" if value.instance.confirmation_officielle else "false"
+            )
+        return option
+
+
 class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     id = forms.IntegerField(widget=forms.HiddenInput, required=False)
     resultat = forms.ChoiceField(
         required=True,
         choices=Prelevement.Resultat.choices,
         widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mt-4v fr-mb-0-5v"}),
+    )
+    type_analyse = forms.ChoiceField(
+        required=True,
+        choices=Prelevement.TypeAnalyse.choices,
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-mt-4v fr-mb-0-5v"}),
     )
     lieu = forms.ModelChoiceField(
         queryset=Lieu.objects.none(),
@@ -144,7 +159,8 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                     "pattern": r"^\d{2}-\d{6}$",
                     "title": "Format attendu : AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres",
                 }
-            )
+            ),
+            "laboratoire": SelectWithAttributeField,
         }
 
     def __init__(self, *args, **kwargs):

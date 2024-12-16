@@ -76,8 +76,7 @@ def test_fiche_detection_performances_with_prelevement(client, django_assert_num
             lieu=lieu,
             is_officiel=False,
             numero_rapport_inspection="",
-            laboratoire_agree=None,
-            laboratoire_confirmation_officielle=None,
+            laboratoire=None,
             _fill_optional=True,
         )
 

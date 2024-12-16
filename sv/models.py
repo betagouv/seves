@@ -324,8 +324,8 @@ class Prelevement(models.Model):
         NON_DETECTE = "non_detecte", "Non détecté"
 
     class TypeAnalyse(models.TextChoices):
-        PREMIERE_INTENTION = "premiere_intention", "Analyse de première intention"
-        CONFIRMATION = "confirmation", "Analyse de confirmation"
+        PREMIERE_INTENTION = "premiere_intention", "De première intention"
+        CONFIRMATION = "confirmation", "De confirmation"
 
     class Meta:
         verbose_name = "Prélèvement"
@@ -367,6 +367,12 @@ class Prelevement(models.Model):
         null=True,
     )
     resultat = models.CharField(max_length=50, choices=Resultat.choices, verbose_name="Résultat")
+    type_analyse = models.CharField(
+        max_length=50,
+        choices=TypeAnalyse.choices,
+        verbose_name="Type d'analyse",
+        default=TypeAnalyse.PREMIERE_INTENTION,
+    )
     numero_rapport_inspection = models.CharField(
         max_length=9,
         verbose_name="Numéro du rapport d'inspection",
