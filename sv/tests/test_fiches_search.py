@@ -5,13 +5,12 @@ from django.urls import reverse
 
 from core.models import Visibilite
 from seves import settings
-from ..factories import FicheDetectionFactory, LieuFactory
+from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory
 from ..models import (
     Region,
     OrganismeNuisible,
     Etat,
     FicheDetection,
-    Departement,
     Lieu,
     ZoneInfestee,
 )
@@ -251,9 +250,9 @@ def test_list_is_ordered(live_server, page):
     assert page.text_content(cell_selector).strip() == "2023.7"
 
 
-def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fiche_zone_bakery):
-    fiche_1 = fiche_detection_bakery()
-    fiche_2 = fiche_zone_bakery()
+def test_search_fiche_zone(live_server, page: Page):
+    fiche_1 = FicheDetectionFactory()
+    fiche_2 = FicheZoneFactory()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).to_be_visible()
@@ -271,46 +270,37 @@ def test_search_fiche_zone(live_server, page: Page, fiche_detection_bakery, fich
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()
 
 
-def test_link_fiche_detection(live_server, page, fiche_detection_bakery, fiche_zone_bakery):
-    fiche = fiche_detection_bakery()
+def test_link_fiche_detection(live_server, page):
+    fiche = FicheDetectionFactory()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
     assert page.locator(cell_selector).inner_text().strip() == "Pas de zone"
 
-    fiche_zone = fiche_zone_bakery()
-    numero = fiche_zone.numero
-    numero.annee = 2024
-    numero.numero = 1
-    numero.save()
+    fiche_zone = FicheZoneFactory(numero__annee=2024, numero__numero=10)
     fiche.hors_zone_infestee = fiche_zone
     fiche.save()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
-    assert page.locator(cell_selector).inner_text().strip() == "2024.1"
+    assert page.locator(cell_selector).inner_text().strip() == "2024.10"
 
 
-def test_link_fiche_zone(live_server, page, fiche_zone_bakery, fiche_detection_bakery):
-    fiche_zone = fiche_zone_bakery()
+def test_link_fiche_zone(live_server, page):
+    fiche_zone = FicheZoneFactory()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
     assert page.locator(cell_selector).inner_text().strip() == "0"
 
-    fiche = fiche_detection_bakery()
-    fiche.hors_zone_infestee = fiche_zone
-    fiche.save()
+    FicheDetectionFactory(hors_zone_infestee=fiche_zone)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
     assert page.locator(cell_selector).inner_text().strip() == "1"
 
     zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
-    for _ in range(2):
-        detection = fiche_detection_bakery()
-        detection.zone_infestee = zone_infestee
-        detection.save()
+    FicheDetectionFactory.create_batch(2, zone_infestee=zone_infestee)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
@@ -318,23 +308,17 @@ def test_link_fiche_zone(live_server, page, fiche_zone_bakery, fiche_detection_b
 
 
 @pytest.mark.django_db
-def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
-    live_server, page: Page, fiche_detection
-):
+def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(live_server, page: Page):
     """Test que lorsqu'une fiche de détection a plusieurs lieux dans la même région, elle n'apparaît qu'une seule fois dans la liste
     lors d'une recherche par région"""
-    region_na, _ = Region.objects.get_or_create(nom="Nouvelle-Aquitaine")
-    dpt_cm, _ = Departement.objects.get_or_create(nom="Charente-Maritime", region=region_na)
-    lieu1 = Lieu.objects.create(fiche_detection=fiche_detection, nom="lieu 1", departement=dpt_cm)
-    lieu2 = Lieu.objects.create(fiche_detection=fiche_detection, nom="lieu 2", departement=dpt_cm)
-    fiche_detection.lieux.add(lieu1)
-    fiche_detection.lieux.add(lieu2)
+    lieu = LieuFactory(departement__nom="Charente-Maritime")
+    _other_lieu = LieuFactory(departement__nom="Charente-Maritime", fiche_detection=lieu.fiche_detection)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option(str(region_na.id))
+    page.get_by_label("Région").select_option(str(lieu.departement.region.id))
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(fiche_detection.numero))).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(lieu.fiche_detection.numero))).to_have_count(1)
 
 
 def test_cant_search_region_for_zone(live_server, page: Page):

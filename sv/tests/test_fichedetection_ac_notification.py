@@ -4,10 +4,12 @@ from playwright.sync_api import Page, expect
 
 from core.models import Structure, Contact, Visibilite, Message
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
+from ..factories import FicheDetectionFactory
 from ..models import FicheDetection
 
 
-def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection, mailoutbox):
+def test_can_notify_ac(live_server, page: Page, mailoutbox):
+    fiche_detection = FicheDetectionFactory()
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
@@ -39,17 +41,13 @@ def test_can_notify_ac(live_server, page: Page, fiche_detection: FicheDetection,
 
 
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):
-    fiche_detection = FicheDetection.objects.create(
-        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
-    )
+    fiche_detection = FicheDetectionFactory(visibilite=Visibilite.BROUILLON)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
 
 
 def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, client):
-    fiche_detection = FicheDetection.objects.create(
-        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
-    )
+    fiche_detection = FicheDetectionFactory(visibilite=Visibilite.BROUILLON)
 
     response = client.post(
         reverse("notify-ac"),
@@ -67,9 +65,8 @@ def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, clie
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_if_email_notification_fails_does_not_create_message_or_update_status(
-    live_server, page: Page, fiche_detection: FicheDetection, mailoutbox
-):
+def test_if_email_notification_fails_does_not_create_message_or_update_status(live_server, page: Page, mailoutbox):
+    fiche_detection = FicheDetectionFactory()
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE))
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
 
@@ -84,7 +81,8 @@ def test_if_email_notification_fails_does_not_create_message_or_update_status(
     assert fiche_detection.is_ac_notified is False
 
 
-def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page, fiche_detection: FicheDetection):
+def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page):
+    fiche_detection = FicheDetectionFactory()
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
 
