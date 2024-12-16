@@ -14,8 +14,7 @@ from sv.models import (
     Lieu,
     StructurePreleveuse,
     Prelevement,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
+    Laboratoire,
 )
 
 
@@ -141,14 +140,12 @@ def test_prelevement_not_officiel_cant_have_officiel_related_values():
         with transaction.atomic():
             Prelevement.objects.create(**base_data, numero_rapport_inspection="Foo")
 
-    labo = baker.make(LaboratoireAgree)
+    labo = baker.make(Laboratoire)
     with pytest.raises(IntegrityError):
         with transaction.atomic():
-            Prelevement.objects.create(**base_data, laboratoire_agree=labo)
+            Prelevement.objects.create(**base_data, laboratoire=labo)
 
-    labo = baker.make(LaboratoireConfirmationOfficielle)
-    with pytest.raises(IntegrityError):
-        Prelevement.objects.create(**base_data, laboratoire_confirmation_officielle=labo)
+    # TODO adapt this test with new modelisation
 
 
 @pytest.mark.django_db

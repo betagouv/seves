@@ -150,8 +150,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         cached_choices = kwargs.pop("cached_choices", {})
-        labo_agree_values = kwargs.pop("labo_agree_values", None)
-        labo_confirmation_values = kwargs.pop("labo_confirmation_values", None)
+        labo_values = kwargs.pop("labo_values", None)
         structure_values = kwargs.pop("structure_values", None)
         super().__init__(*args, **kwargs)
 
@@ -159,10 +158,8 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             if choices is not None and field_name in self.fields:
                 self.fields[field_name].choices = choices
 
-        if labo_agree_values:
-            self.fields["laboratoire_agree"].queryset = labo_agree_values
-        if labo_confirmation_values:
-            self.fields["laboratoire_confirmation_officielle"].queryset = labo_confirmation_values
+        if labo_values:
+            self.fields["laboratoire"].queryset = labo_values
         if structure_values:
             self.fields["structure_preleveuse"].queryset = structure_values
 

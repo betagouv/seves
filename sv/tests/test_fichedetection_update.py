@@ -13,13 +13,12 @@ from ..models import (
     Departement,
     PositionChaineDistribution,
     OrganismeNuisible,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
     StructurePreleveuse,
     Etat,
     SiteInspection,
     FicheZoneDelimitee,
     StatutReglementaire,
+    Laboratoire,
 )
 from ..models import (
     Region,
@@ -966,9 +965,11 @@ def test_cant_pick_inactive_labo_agree_in_prelevement(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+    # TODO check this test is still coherent
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     assert prelevement_form_elements.laboratoire_agree_input.locator(f'option[value="{labo.pk}"]').count() == 0
@@ -983,7 +984,8 @@ def test_can_pick_inactive_labo_agree_in_prelevement_is_old_fiche(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireAgree.objects.create(nom="Haunted lab", is_active=False)
+    # TODO check this test is still coherent
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
     prelevement.laboratoire_agree = labo
     prelevement.save()
@@ -1002,7 +1004,8 @@ def test_cant_pick_inactive_labo_confirmation_in_prelevement(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
+    # TODO check this test is still coherent
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
 
     page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
@@ -1018,7 +1021,8 @@ def test_can_pick_inactive_labo_confirmation_in_prelevement_is_old_fiche(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    labo = LaboratoireConfirmationOfficielle.objects.create(nom="Haunted lab", is_active=False)
+    # TODO check this test is still coherent
+    labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
     prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
     prelevement.laboratoire_confirmation_officielle = labo
     prelevement.save()

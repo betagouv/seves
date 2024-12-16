@@ -20,11 +20,10 @@ from core.mixins import (
 from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.managers import (
-    LaboratoireAgreeManager,
-    LaboratoireConfirmationOfficielleManager,
     FicheDetectionManager,
     FicheZoneManager,
     StructurePreleveuseManager,
+    LaboratoireManager,
 )
 from sv.mixins import WithEtatMixin
 
@@ -294,34 +293,21 @@ class EspeceEchantillon(models.Model):
         return self.libelle
 
 
-class LaboratoireAgree(IsActiveMixin, models.Model):
+class Laboratoire(IsActiveMixin, models.Model):
     class Meta:
-        verbose_name = "Laboratoire agréé"
-        verbose_name_plural = "Laboratoires agréés"
-        db_table = "sv_laboratoire_agree"
+        verbose_name = "Laboratoire"
+        verbose_name_plural = "Laboratoires"
         ordering = ["nom"]
 
     nom = models.CharField(max_length=100, verbose_name="Nom")
+    confirmation_officielle = models.BooleanField(
+        default=False, verbose_name="Peut fournir une confirmation officielle"
+    )
 
     def __str__(self):
         return self.nom
 
-    objects = LaboratoireAgreeManager()
-
-
-class LaboratoireConfirmationOfficielle(IsActiveMixin, models.Model):
-    class Meta:
-        verbose_name = "Laboratoire de confirmation officielle"
-        verbose_name_plural = "Laboratoires de confirmation officielle"
-        db_table = "sv_laboratoire_confirmation_officielle"
-        ordering = ["nom"]
-
-    nom = models.CharField(max_length=100, verbose_name="Nom")
-
-    def __str__(self):
-        return self.nom
-
-    objects = LaboratoireConfirmationOfficielleManager()
+    objects = LaboratoireManager()
 
 
 def validate_numero_rapport_inspection(value):
@@ -337,18 +323,17 @@ class Prelevement(models.Model):
         DETECTE = "detecte", "Détecté"
         NON_DETECTE = "non_detecte", "Non détecté"
 
+    class TypeAnalyse(models.TextChoices):
+        PREMIERE_INTENTION = "premiere_intention", "Analyse de première intention"
+        CONFIRMATION = "confirmation", "Analyse de confirmation"
+
     class Meta:
         verbose_name = "Prélèvement"
         verbose_name_plural = "Prélèvements"
         db_table = "sv_prelevement"
         constraints = [
             models.CheckConstraint(
-                check=Q(is_officiel=True)
-                | (
-                    Q(laboratoire_agree__isnull=True)
-                    & Q(laboratoire_confirmation_officielle__isnull=True)
-                    & Q(numero_rapport_inspection="")
-                ),
+                check=Q(is_officiel=True) | (Q(laboratoire__isnull=True) & Q(numero_rapport_inspection="")),
                 name="check_officiel_fields_empty_or_null",
             )
         ]
@@ -374,17 +359,10 @@ class Prelevement(models.Model):
         null=True,
     )
     is_officiel = models.BooleanField(verbose_name="Prélèvement officiel", default=False)
-    laboratoire_agree = models.ForeignKey(
-        "LaboratoireAgree",
+    laboratoire = models.ForeignKey(
+        "Laboratoire",
         on_delete=models.PROTECT,
-        verbose_name="Laboratoire agréé",
-        blank=True,
-        null=True,
-    )
-    laboratoire_confirmation_officielle = models.ForeignKey(
-        "LaboratoireConfirmationOfficielle",
-        on_delete=models.PROTECT,
-        verbose_name="Laboratoire de confirmation officielle",
+        verbose_name="Laboratoire",
         blank=True,
         null=True,
     )
@@ -396,7 +374,7 @@ class Prelevement(models.Model):
         validators=[validate_numero_rapport_inspection],
     )
 
-    OFFICIEL_FIELDS = ["numero_rapport_inspection", "laboratoire_agree", "laboratoire_confirmation_officielle"]
+    OFFICIEL_FIELDS = ["numero_rapport_inspection", "laboratoire"]
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"

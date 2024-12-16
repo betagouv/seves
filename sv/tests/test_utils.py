@@ -346,19 +346,19 @@ class PrelevementFormDomElements:
     def numero_rapport_inspection_input(self) -> Locator:
         return self.page.locator("#numero-rapport-inspection").get_by_role("textbox")
 
-    @property
-    def laboratoire_agree_input(self) -> Locator:
-        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_agree"]').locator("visible=true")
+    # @property
+    # def laboratoire_agree_input(self) -> Locator:
+    #     return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_agree"]').locator("visible=true")
+    #
+    # @property
+    # def laboratoire_confirmation_label(self) -> Locator:
+    #     return self.page.get_by_text("Laboratoire de confirmation")
 
-    @property
-    def laboratoire_confirmation_label(self) -> Locator:
-        return self.page.get_by_text("Laboratoire de confirmation")
-
-    @property
-    def laboratoire_confirmation_input(self) -> Locator:
-        return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_confirmation_officielle"]').locator(
-            "visible=true"
-        )
+    # @property
+    # def laboratoire_confirmation_input(self) -> Locator:
+    #     return self.page.locator('[id^="id_prelevements-"][id$="laboratoire_confirmation_officielle"]').locator(
+    #         "visible=true"
+    #     )
 
 
 class FicheZoneDelimiteeFormPage:

@@ -49,9 +49,8 @@ from .models import (
     Prelevement,
     FicheZoneDelimitee,
     ZoneInfestee,
-    LaboratoireAgree,
-    LaboratoireConfirmationOfficielle,
     StructurePreleveuse,
+    Laboratoire,
 )
 from .view_mixins import FicheDetectionContextMixin, WithPrelevementHandlingMixin
 
@@ -222,17 +221,13 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
         lieux = self.object.lieux.all()
         existing_prelevements_forms = []
         for existing_prelevement in existing_prelevements:
-            labo_agree = self._handle_inactive_values(LaboratoireAgree, "laboratoire_agree", self.object.pk)
-            labo_confirmation = self._handle_inactive_values(
-                LaboratoireConfirmationOfficielle, "laboratoire_confirmation_officielle", self.object.pk
-            )
+            labos = self._handle_inactive_values(Laboratoire, "laboratoire", self.object.pk)
             structure = self._handle_inactive_values(StructurePreleveuse, "structure_preleveuse", self.object.pk)
             form = PrelevementForm(
                 instance=existing_prelevement,
                 convert_required_to_data_required=True,
                 prefix=f"prelevements-{existing_prelevement.pk}",
-                labo_agree_values=labo_agree,
-                labo_confirmation_values=labo_confirmation,
+                labo_values=labos,
                 structure_values=structure,
             )
             form.fields["lieu"].queryset = lieux
