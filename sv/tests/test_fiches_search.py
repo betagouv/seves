@@ -334,3 +334,8 @@ def test_cant_search_region_for_zone(live_server, page: Page):
     page.wait_for_url(f"**{reverse('fiche-liste')}**")
     response = page.goto(page.url)
     assert response.status == 200
+
+
+def test_cant_search_region_for_zone_on_page_load(live_server, page: Page):
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
+    expect(page.locator("#id_lieux__departement__region")).to_be_disabled()
