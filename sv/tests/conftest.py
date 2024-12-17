@@ -16,7 +16,6 @@ from sv.models import (
     FicheZoneDelimitee,
     StatutReglementaire,
     Lieu,
-    ZoneInfestee,
     Region,
     Departement,
 )
@@ -92,19 +91,6 @@ def fiche_zone_bakery(db, mocked_authentification_user):
 @pytest.fixture
 def fiche_zone(fiche_zone_bakery):
     return fiche_zone_bakery()
-
-
-@pytest.fixture
-def zone_infestee_bakery():
-    def _create_zone_infestee(fiche_zone_delimitee: FicheZoneDelimitee) -> ZoneInfestee:
-        return baker.make(
-            ZoneInfestee,
-            fiche_zone_delimitee=fiche_zone_delimitee,
-            surface_infestee_totale=random.uniform(1, 100),
-            rayon=random.uniform(1, 100),
-        )
-
-    return _create_zone_infestee
 
 
 @pytest.fixture

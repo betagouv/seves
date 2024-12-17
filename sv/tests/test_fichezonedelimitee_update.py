@@ -1,36 +1,21 @@
 import pytest
 from playwright.sync_api import Page, expect
-from model_bakery import baker
 
 from core.models import LienLibre, Visibilite
+from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory
 from sv.forms import RattachementChoices
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
-from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Etat, OrganismeNuisible, StatutReglementaire
+from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection
 
 
-def test_fichezonedelimitee_update_form_content(
-    live_server, page: Page, choice_js_fill, fiche_detection_bakery, fiche_zone_bakery
-):
-    fiche_zone_delimitee = fiche_zone_bakery()
-
+def test_fichezonedelimitee_update_form_content(live_server, page: Page, choice_js_fill):
+    fiche_zone_delimitee = FicheZoneFactory()
     for _ in range(3):
-        fiche_detection = fiche_detection_bakery()
-        fiche_detection.organisme_nuisible = fiche_zone_delimitee.organisme_nuisible
-        fiche_detection.statut_reglementaire = fiche_zone_delimitee.statut_reglementaire
-        fiche_detection.hors_zone_infestee = fiche_zone_delimitee
-        fiche_detection.save()
+        FicheDetectionFactory.to_hors_zone_infestee(fiche_zone_delimitee)
 
-    zones_infestees = baker.make(
-        ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True, _quantity=2
-    )
-
-    for zone_infestee in zones_infestees:
+    for zone_infestee in ZoneInfesteeFactory.create_batch(2, fiche_zone_delimitee=fiche_zone_delimitee):
         for _ in range(2):
-            fiche_detection = fiche_detection_bakery()
-            fiche_detection.organisme_nuisible = fiche_zone_delimitee.organisme_nuisible
-            fiche_detection.statut_reglementaire = fiche_zone_delimitee.statut_reglementaire
-            fiche_detection.zone_infestee = zone_infestee
-            fiche_detection.save()
+            FicheDetectionFactory.to_zone_infestee(zone_infestee, fiche_zone_delimitee)
 
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
@@ -38,26 +23,18 @@ def test_fichezonedelimitee_update_form_content(
 
 
 def test_organisme_nuisible_and_statut_reglementaire_are_readonly_on_fiche_zone_delimitee_update_form(
-    live_server, page: Page, fiche_zone_bakery, choice_js_fill
+    live_server, page: Page, choice_js_fill
 ):
-    fiche_zone_delimitee = fiche_zone_bakery()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.goto(f"{live_server.url}{FicheZoneFactory().get_update_url()}")
     form_page.organisme_nuisible_is_readonly()
     form_page.statut_reglementaire_is_readonly()
 
 
-def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
-    live_server, page: Page, fiche_zone_bakery, choice_js_fill
-):
-    fiche_zone_delimitee = fiche_zone_bakery()
-    new_fiche_zone_delimitee = baker.prepare(
-        FicheZoneDelimitee,
-        _fill_optional=True,
-        etat=Etat.objects.get(id=Etat.get_etat_initial()),
-        rayon_zone_tampon=10,
-        surface_tampon_totale=15,
-    )
+def test_fichezonedelimitee_update_without_zone_infestee_form_submit(live_server, page: Page, choice_js_fill):
+    fiche_zone_delimitee = FicheZoneFactory()
+    new_fiche_zone_delimitee = FicheZoneFactory.build()
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.fill_form(new_fiche_zone_delimitee)
@@ -79,18 +56,13 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(
     )
 
 
-def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice_js_fill, zone_infestee_bakery):
-    fiche_zone_delimitee = fiche_zone_bakery()
-    zone_infestee = zone_infestee_bakery(fiche_zone_delimitee)
-    new_zone_infestee = baker.prepare(ZoneInfestee, surface_infestee_totale=10, rayon=15, _fill_optional=True)
-    fiche_detection = baker.make(
-        FicheDetection,
-        organisme_nuisible=fiche_zone_delimitee.organisme_nuisible,
-        statut_reglementaire=fiche_zone_delimitee.statut_reglementaire,
-        visibilite=Visibilite.LOCAL,
-    )
+def test_update_zone_infestee(live_server, page: Page, choice_js_fill):
+    zone_infestee = ZoneInfesteeFactory()
+    fiche_detection = FicheDetectionFactory.from_zone(zone_infestee.fiche_zone_delimitee)
+    new_zone_infestee = ZoneInfesteeFactory.build()
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.goto(f"{live_server.url}{zone_infestee.fiche_zone_delimitee.get_update_url()}")
     form_page.fill_zone_infestee_form(0, new_zone_infestee, (fiche_detection,))
     form_page.submit_update_form()
     zone_infestee_updated = ZoneInfestee.objects.get(id=zone_infestee.id)
@@ -104,15 +76,12 @@ def test_update_zone_infestee(live_server, page: Page, fiche_zone_bakery, choice
     assert fiche_detection_updated.zone_infestee == zone_infestee_updated
 
 
-def test_add_zone_infestee(live_server, page: Page, fiche_zone, choice_js_fill, zone_infestee_bakery):
-    zone_infestee_bakery(fiche_zone)
-    new_zone_infestee = baker.prepare(ZoneInfestee, surface_infestee_totale=10, rayon=15, _fill_optional=True)
-    fiche_detection = baker.make(
-        FicheDetection,
-        organisme_nuisible=fiche_zone.organisme_nuisible,
-        statut_reglementaire=fiche_zone.statut_reglementaire,
-        visibilite=Visibilite.LOCAL,
-    )
+def test_add_zone_infestee(live_server, page: Page, choice_js_fill):
+    zone_infestee = ZoneInfesteeFactory()
+    fiche_zone = zone_infestee.fiche_zone_delimitee
+    new_zone_infestee = ZoneInfesteeFactory.build()
+    fiche_detection = FicheDetectionFactory.from_zone(fiche_zone)
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
     form_page.add_new_zone_infestee(new_zone_infestee, (fiche_detection,))
@@ -129,18 +98,16 @@ def test_add_zone_infestee(live_server, page: Page, fiche_zone, choice_js_fill, 
 
 
 def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+    live_server,
+    page: Page,
+    choice_js_fill,
 ) -> None:
-    fiche_zone_delimitee = baker.make(
-        FicheZoneDelimitee,
-        etat=Etat.objects.get(id=Etat.get_etat_initial()),
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
-        visibilite=Visibilite.BROUILLON,
-    )
-    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory.from_detection(fiche_detection, visibilite=Visibilite.BROUILLON)
+    ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection.hors_zone_infestee = fiche_zone_delimitee
     fiche_detection.save()
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.select_detections_in_zone_infestee(0, (fiche_detection,))
@@ -154,22 +121,14 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
     assert fiche_detection.zone_infestee is None
 
 
-def test_update_form_cant_have_same_detection_in_two_zone_infestee(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-) -> None:
-    fiche_zone_delimitee = baker.make(
-        FicheZoneDelimitee,
-        etat=Etat.objects.get(id=Etat.get_etat_initial()),
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
-        visibilite=Visibilite.BROUILLON,
-    )
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
-    fiche_detection.zone_infestee = zone_infestee
+def test_update_form_cant_have_same_detection_in_two_zone_infestee(live_server, page: Page, choice_js_fill) -> None:
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory.from_detection(fiche_detection, visibilite=Visibilite.BROUILLON)
+    fiche_detection.zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection.save()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
-    form_page.add_new_zone_infestee(baker.prepare(ZoneInfestee), (fiche_detection,))
+    form_page.add_new_zone_infestee(ZoneInfesteeFactory(), (fiche_detection,))
     form_page.save_brouillon()
     expect(
         page.get_by_text(
@@ -181,19 +140,12 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(
 def test_update_fiche_can_add_and_delete_free_links(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
-    fiche_detection_bakery,
     choice_js_fill,
 ):
-    other_fiche = fiche_detection_bakery()
-    other_fiche_2 = fiche_detection_bakery()
-    fiche_zone_delimitee = baker.make(
-        FicheZoneDelimitee,
-        etat=Etat.objects.get(id=Etat.get_etat_initial()),
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
-        visibilite=Visibilite.LOCAL,
-    )
+    fiche_detection = FicheDetectionFactory()
+    other_fiche = FicheDetectionFactory()
+    other_fiche_2 = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory.from_detection(fiche_detection)
     LienLibre.objects.create(related_object_1=fiche_zone_delimitee, related_object_2=other_fiche)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
@@ -220,17 +172,11 @@ def test_update_fiche_can_add_and_delete_free_links(
 def test_update_fiche_zone_cant_add_self_links(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
     choice_js_fill,
 ):
-    fiche_zone_delimitee = baker.make(
-        FicheZoneDelimitee,
-        etat=Etat.objects.get(id=Etat.get_etat_initial()),
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
-        _fill_optional=True,
-        visibilite=Visibilite.NATIONAL,
-    )
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory.from_detection(fiche_detection, visibilite=Visibilite.NATIONAL)
+
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
 
     fiche_input = "Fiche zone délimitée : " + str(fiche_zone_delimitee.numero)
@@ -241,16 +187,11 @@ def test_update_fiche_zone_cant_add_self_links(
 
 
 @pytest.mark.django_db
-def test_cant_see_fiches_brouillon_in_liens_libres(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
-    FicheDetection.objects.create(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
-    FicheZoneDelimitee.objects.create(
-        visibilite=Visibilite.BROUILLON,
-        createur=fiche_detection.createur,
-        organisme_nuisible=baker.make(OrganismeNuisible),
-        statut_reglementaire=baker.make(StatutReglementaire),
-    )
+def test_cant_see_fiches_brouillon_in_liens_libres(live_server, page: Page, choice_js_fill):
+    fiche_detection = FicheDetectionFactory()
+    FicheDetectionFactory(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
+    FicheZoneFactory(visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur)
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
     select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
@@ -262,12 +203,11 @@ def test_cant_see_fiches_brouillon_in_liens_libres(
 def test_can_publish_fiche_zone_delimitee_from_update_form(
     live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
 ):
-    fiche_zone_delimitee = FicheZoneDelimitee.objects.create(
-        visibilite=Visibilite.BROUILLON,
-        createur=fiche_detection.createur,
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory.from_detection(
+        fiche_detection, visibilite=Visibilite.BROUILLON, createur=fiche_detection.createur
     )
+
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page.publish()
@@ -275,19 +215,15 @@ def test_can_publish_fiche_zone_delimitee_from_update_form(
     assert fiche_zone_delimitee.visibilite == Visibilite.LOCAL
 
 
-def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(
-    live_server, page: Page, fiche_zone, choice_js_fill
-):
-    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(live_server, page: Page, choice_js_fill):
+    zone_infestee = ZoneInfesteeFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    page.goto(f"{live_server.url}{zone_infestee.fiche_zone_delimitee.get_update_url()}")
     assert form_page.has_same_surface_units_order_for_zone_tampon_and_zone_infestee() is True
 
 
-def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(
-    live_server, page: Page, fiche_zone, choice_js_fill
-):
-    baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(live_server, page: Page, choice_js_fill):
+    zone_infestee = ZoneInfesteeFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    page.goto(f"{live_server.url}{zone_infestee.fiche_zone_delimitee.get_update_url()}")
     assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True
