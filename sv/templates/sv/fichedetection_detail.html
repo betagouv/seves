@@ -27,6 +27,14 @@
                 {% if fiche_zone_delimitee %}
                     <a href="{{ fiche_zone_delimitee.get_absolute_url }}" class="fr-badge fr-badge--info fr-badge--no-icon">zone {{ fiche_zone_delimitee.numero }}</a>
                 {% endif %}
+                {% if latest_version %}
+                    <div class="fr-mt-2v">
+                        Dernière mise à jour le {{ latest_version.revision.date_created }}
+                        {% if latest_version.revision.user %}
+                            par {{ latest_version.revision.user.agent.agent_with_structure }}
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
 
             <p>

@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 
 from core.models import Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
-from sv.factories import PrelevementFactory
+from sv.factories import FicheDetectionFactory, LieuFactory, PrelevementFactory
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -173,7 +173,7 @@ def test_numero_rapport_inspection_format_invalide():
 def test_prelevement_not_officiel_cant_have_officiel_related_values():
     with pytest.raises(IntegrityError):
         with transaction.atomic():
-            PrelevementFactory(is_officiel=False, numero_rapport_inspection="24-123456")
+            Prelevement.objects.create(is_officiel=False, numero_rapport_inspection="24-123456")
 
 
 @pytest.mark.django_db
@@ -411,3 +411,78 @@ def test_unique_constraint(model_class, field_name, value_prefix):
             model_class.objects.create(**{field_name: f"{value_prefix} 1"})
 
     model_class.objects.create(**{field_name: f"{value_prefix} 2"})
+
+
+@pytest.mark.django_db
+def test_fiche_detection_latest_revision():
+    fiche_detection = FicheDetectionFactory()
+    assert fiche_detection.latest_version is not None
+    latest_version = fiche_detection.latest_version
+
+    fiche_detection.commentaire = "Lorem"
+    fiche_detection.save()
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+
+    latest_version = fiche_detection.latest_version
+    lieu = LieuFactory(fiche_detection=fiche_detection, nom="Maison")
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+    assert fiche_detection.latest_version.revision.comment == "Le lieu 'Maison' a été ajouté à la fiche"
+
+    latest_version = fiche_detection.latest_version
+    lieu.nom = "Nouvelle maison"
+    lieu.save()
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+
+    latest_version = fiche_detection.latest_version
+    prelevement = PrelevementFactory(lieu=lieu, structure_preleveuse__nom="SIVEP")
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+    assert (
+        fiche_detection.latest_version.revision.comment
+        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SIVEP' a été ajouté à la fiche"
+    )
+
+    latest_version = fiche_detection.latest_version
+    new_structure, _ = StructurePreleveuse.objects.get_or_create(nom="SEMAE")
+    prelevement.structure_preleveuse = new_structure
+    prelevement.save()
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+
+    latest_version = fiche_detection.latest_version
+    prelevement.delete()
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+    assert (
+        fiche_detection.latest_version.revision.comment
+        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SEMAE' a été supprimé de la fiche"
+    )
+
+    latest_version = fiche_detection.latest_version
+    lieu.delete()
+    assert latest_version.pk != fiche_detection.latest_version.pk
+    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
+    assert fiche_detection.latest_version.revision.comment == "Le lieu 'Nouvelle maison' a été supprimé de la fiche"
+
+
+@pytest.mark.django_db
+def test_fiche_detection_latest_revision_performances(django_assert_num_queries):
+    prelevement = PrelevementFactory()
+    fiche_detection = prelevement.lieu.fiche_detection
+    lieu_2 = LieuFactory(fiche_detection=fiche_detection)
+    lieu_1 = LieuFactory(fiche_detection=fiche_detection)
+    PrelevementFactory(lieu=lieu_1)
+    PrelevementFactory(lieu=lieu_2)
+    PrelevementFactory(lieu=lieu_2)
+
+    with django_assert_num_queries(5):
+        assert fiche_detection.latest_version is not None
+
+    LieuFactory(fiche_detection=fiche_detection)
+    PrelevementFactory(lieu__fiche_detection=fiche_detection)
+
+    with django_assert_num_queries(5):
+        assert fiche_detection.latest_version is not None

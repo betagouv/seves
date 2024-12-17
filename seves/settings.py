@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "account.apps.AccountConfig",
     "django_filters",
     "post_office",
+    "reversion",
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "seves.middlewares.LoginRequiredMiddleware",
+    "reversion.middleware.RevisionMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"

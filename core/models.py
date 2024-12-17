@@ -40,6 +40,10 @@ class Agent(models.Model):
     def is_in_structure(self, structure):
         return self.structure == structure
 
+    @property
+    def agent_with_structure(self):
+        return f"{self.nom} {self.prenom} ({self.structure})"
+
 
 class Structure(models.Model):
     class Meta:

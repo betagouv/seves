@@ -1,13 +1,16 @@
 import re
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db.models import TextChoices, Q
 from django.contrib.contenttypes.fields import GenericRelation
 import datetime
+import reversion
 
 from django.urls import reverse
+from reversion.models import Version
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
@@ -146,6 +149,7 @@ def validate_wgs84_latitude(value):
         raise ValidationError("La latitude doit être comprise entre -90° et +90°")
 
 
+@reversion.register()
 class Lieu(models.Model):
     class Meta:
         verbose_name = "Lieu"
@@ -224,6 +228,10 @@ class Lieu(models.Model):
 
     def __str__(self):
         return str(self.nom)
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
 
 
 class StatutEtablissement(models.Model):
@@ -330,6 +338,7 @@ def validate_numero_rapport_inspection(value):
         )
 
 
+@reversion.register()
 class Prelevement(models.Model):
     class Resultat(models.TextChoices):
         DETECTE = "detecte", "Détecté"
@@ -417,7 +426,8 @@ class Prelevement(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()
-        super().save(*args, **kwargs)
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
 
 
 class StatutEvenement(models.Model):
@@ -459,6 +469,7 @@ class Etat(models.Model):
         return self.libelle
 
 
+@reversion.register()
 class FicheDetection(
     AllowsSoftDeleteMixin,
     AllowACNotificationMixin,
@@ -548,9 +559,10 @@ class FicheDetection(
     objects = FicheDetectionManager()
 
     def save(self, *args, **kwargs):
-        if not self.numero and self.visibilite == Visibilite.LOCAL:
-            self.numero = NumeroFiche.get_next_numero()
-        super().save(*args, **kwargs)
+        with reversion.create_revision():
+            if not self.numero and self.visibilite == Visibilite.LOCAL:
+                self.numero = NumeroFiche.get_next_numero()
+            super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
@@ -576,6 +588,28 @@ class FicheDetection(
             return self.hors_zone_infestee
         if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:
             return self.zone_infestee.fiche_zone_delimitee
+
+    @property
+    def latest_version(self):
+        lieux_ids = list(self.lieux.all().values_list("id", flat=True))
+        content_type = ContentType.objects.get_for_model(Lieu)
+        lieu_versions = Version.objects.select_related("revision").filter(
+            content_type=content_type, object_id__in=lieux_ids
+        )
+
+        prelevements = Prelevement.objects.filter(lieu__fiche_detection__pk=self.pk).values_list("id", flat=True)
+        content_type = ContentType.objects.get_for_model(Prelevement)
+        prelevement_versions = Version.objects.select_related("revision").filter(
+            content_type=content_type, object_id__in=list(prelevements)
+        )
+
+        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+
+        versions = list(lieu_versions) + list(prelevement_versions) + [instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)
 
 
 class ZoneInfestee(models.Model):

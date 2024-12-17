@@ -17,6 +17,7 @@ admin.site.register(Structure, StructureAdmin)
 class ContactAdmin(admin.ModelAdmin):
     list_display = ("id", "email", "structure", "agent")
     list_filter = ("structure", "agent")
+    search_fields = ("email", "agent__nom", "agent__prenom")
 
 
 admin.site.register(Contact, ContactAdmin)

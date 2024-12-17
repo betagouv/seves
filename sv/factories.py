@@ -3,7 +3,7 @@ import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from core.models import Visibilite, Structure
-from .constants import STATUTS_REGLEMENTAIRES, STRUCTURES_PRELEVEUSES
+from .constants import STATUTS_REGLEMENTAIRES, STRUCTURES_PRELEVEUSES, STRUCTURE_EXPLOITANT
 from .models import (
     Prelevement,
     Lieu,
@@ -17,6 +17,7 @@ from .models import (
     StructurePreleveuse,
     ZoneInfestee,
 )
+from datetime import datetime
 
 
 class NumeroFicheFactory(DjangoModelFactory):
@@ -70,7 +71,9 @@ class StructurePreleveuseFactory(DjangoModelFactory):
         model = StructurePreleveuse
         django_get_or_create = ("nom",)
 
-    nom = FuzzyChoice(STRUCTURES_PRELEVEUSES)
+    nom = factory.LazyAttribute(
+        lambda _: random.choice([s for s in STRUCTURES_PRELEVEUSES if s != STRUCTURE_EXPLOITANT])
+    )
 
 
 class PrelevementFactory(DjangoModelFactory):
@@ -85,6 +88,12 @@ class PrelevementFactory(DjangoModelFactory):
     is_officiel = factory.Faker("boolean")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
     numero_rapport_inspection = factory.Faker("numerify", text="#####")
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if kwargs["is_officiel"] is False:
+            kwargs["numero_rapport_inspection"] = ""
+        return super()._create(model_class, *args, **kwargs)
 
 
 class LieuFactory(DjangoModelFactory):
@@ -141,7 +150,10 @@ class FicheDetectionFactory(DjangoModelFactory):
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
         if extracted and create:
-            self.date_creation = extracted
+            if isinstance(extracted, str):
+                self.date_creation = datetime.strptime(extracted, "%Y-%m-%d").date()
+            else:
+                self.date_creation = extracted
             self.save()
 
     @classmethod

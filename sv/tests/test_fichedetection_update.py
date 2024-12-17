@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from core.constants import AC_STRUCTURE
 from core.models import Visibilite, LienLibre
+from ..factories import FicheDetectionFactory
 from ..models import (
     FicheDetection,
     Lieu,
@@ -26,7 +27,6 @@ from ..models import (
 
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from sv.factories import FicheDetectionFactory
 
 
 @pytest.fixture(autouse=True)
@@ -229,6 +229,27 @@ def test_saving_without_changing_organisme_works(
 
     new_fiche_detection.refresh_from_db()
     assert new_fiche_detection.organisme_nuisible == organisme
+
+
+@pytest.mark.django_db
+def test_saving_without_changes_does_create_revision(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    fiche_detection_bakery,
+    mocked_authentification_user,
+):
+    fiche = FicheDetectionFactory()
+    assert fiche.latest_version is not None
+    latest_version = fiche.latest_version
+
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche.refresh_from_db()
+    assert latest_version.pk != fiche.latest_version.pk
+    assert latest_version.revision.date_created <= fiche.latest_version.revision.date_created
 
 
 @pytest.mark.django_db

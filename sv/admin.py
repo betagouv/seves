@@ -1,4 +1,6 @@
 from django.contrib import admin
+from reversion.admin import VersionAdmin
+
 from .models import (
     OrganismeNuisible,
     StatutReglementaire,
@@ -24,6 +26,12 @@ from .models import (
 
 admin.site.site_header = "Administration de Sèves"
 
+
+@admin.register(FicheDetection)
+class FicheDetectionAdmin(VersionAdmin):
+    autocomplete_fields = ["contacts"]
+
+
 admin.site.register(OrganismeNuisible)
 admin.site.register(StatutReglementaire)
 admin.site.register(Contexte)
@@ -39,7 +47,6 @@ admin.site.register(EspeceEchantillon)
 admin.site.register(Laboratoire)
 admin.site.register(Prelevement)
 admin.site.register(StatutEvenement)
-admin.site.register(FicheDetection)
 admin.site.register(NumeroFiche)
 admin.site.register(Etat)
 admin.site.register(ZoneInfestee)
