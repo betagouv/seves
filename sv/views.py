@@ -134,6 +134,7 @@ class FicheDetectionDetailView(
         )
         context["rattachement_detection_form"] = RattachementDetectionForm()
         context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
+        context["latest_version"] = self.get_object().latest_version
         return context
 
     def test_func(self) -> bool | None:
