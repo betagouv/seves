@@ -15,6 +15,7 @@ from .models import (
     FicheZoneDelimitee,
     StatutReglementaire,
     StructurePreleveuse,
+    ZoneInfestee,
 )
 
 
@@ -114,6 +115,7 @@ class FicheDetectionFactory(DjangoModelFactory):
     numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
     numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
+    statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     date_premier_signalement = factory.Faker("date_this_decade")
     commentaire = factory.Faker("paragraph")
     mesures_conservatoires_immediates = factory.Faker("paragraph")
@@ -148,6 +150,26 @@ class FicheDetectionFactory(DjangoModelFactory):
             kwargs["numero"] = None
         return super()._create(model_class, *args, **kwargs)
 
+    @classmethod
+    def from_zone(cls, zone: FicheZoneDelimitee, **kwargs):
+        return cls(organisme_nuisible=zone.organisme_nuisible, statut_reglementaire=zone.statut_reglementaire, **kwargs)
+
+    @classmethod
+    def to_hors_zone_infestee(cls, zone: FicheZoneDelimitee):
+        return cls(
+            organisme_nuisible=zone.organisme_nuisible,
+            statut_reglementaire=zone.statut_reglementaire,
+            hors_zone_infestee=zone,
+        )
+
+    @classmethod
+    def to_zone_infestee(cls, zone_infestee: ZoneInfestee, fiche_zone: FicheZoneDelimitee):
+        return cls(
+            organisme_nuisible=fiche_zone.organisme_nuisible,
+            statut_reglementaire=fiche_zone.statut_reglementaire,
+            zone_infestee=zone_infestee,
+        )
+
 
 class FicheZoneFactory(DjangoModelFactory):
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
@@ -155,6 +177,11 @@ class FicheZoneFactory(DjangoModelFactory):
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     visibilite = Visibilite.LOCAL
+
+    rayon_zone_tampon = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
+    unite_rayon_zone_tampon = factory.fuzzy.FuzzyChoice(FicheZoneDelimitee.UnitesRayon)
+    surface_tampon_totale = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
+    unite_surface_tampon_totale = factory.fuzzy.FuzzyChoice(FicheZoneDelimitee.UnitesSurfaceTamponTolale)
 
     class Meta:
         model = FicheZoneDelimitee
@@ -168,3 +195,25 @@ class FicheZoneFactory(DjangoModelFactory):
         if kwargs["visibilite"] == Visibilite.BROUILLON:
             kwargs["numero"] = None
         return super()._create(model_class, *args, **kwargs)
+
+    @classmethod
+    def from_detection(cls, detection: FicheDetection, **kwargs):
+        return cls(
+            organisme_nuisible=detection.organisme_nuisible,
+            statut_reglementaire=detection.statut_reglementaire,
+            **kwargs,
+        )
+
+
+class ZoneInfesteeFactory(DjangoModelFactory):
+    class Meta:
+        model = ZoneInfestee
+
+    nom = factory.Sequence(lambda n: "Ma zone infestée {}".format(n))
+    fiche_zone_delimitee = factory.SubFactory("sv.factories.FicheZoneFactory")
+
+    surface_infestee_totale = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
+    unite_surface_infestee_totale = factory.fuzzy.FuzzyChoice(ZoneInfestee.UnitesSurfaceInfesteeTotale)
+    rayon = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
+    unite_rayon = factory.fuzzy.FuzzyChoice(ZoneInfestee.UnitesRayon)
+    caracteristique_principale = factory.fuzzy.FuzzyChoice(ZoneInfestee.CaracteristiquePrincipale)

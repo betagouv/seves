@@ -1,32 +1,27 @@
 import pytest
-from model_bakery import baker
 
-from sv.models import FicheZoneDelimitee, ZoneInfestee
+from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory
+from sv.models import FicheZoneDelimitee
 
 
 @pytest.mark.django_db
-def test_with_nb_fiches_detection(fiche_detection_bakery, fiche_zone):
+def test_with_nb_fiches_detection():
+    fiche_zone = FicheZoneFactory()
+    assert FicheZoneDelimitee
     assert FicheZoneDelimitee.objects.all().with_nb_fiches_detection().get().nb_fiches_detection == 0
 
-    fiche_detection_bakery()
+    FicheDetectionFactory()
     assert FicheZoneDelimitee.objects.all().with_nb_fiches_detection().get().nb_fiches_detection == 0
 
-    detection = fiche_detection_bakery()
-    detection.hors_zone_infestee = fiche_zone
-    detection.save()
+    FicheDetectionFactory(hors_zone_infestee=fiche_zone)
     assert FicheZoneDelimitee.objects.all().with_nb_fiches_detection().get().nb_fiches_detection == 1
 
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
-    for _ in range(2):
-        detection = fiche_detection_bakery()
-        detection.zone_infestee = zone_infestee
-        detection.save()
+    zone_infesteee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone)
+    FicheDetectionFactory.create_batch(2, zone_infestee=zone_infesteee)
 
     assert FicheZoneDelimitee.objects.all().with_nb_fiches_detection().get().nb_fiches_detection == 3
 
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
-    detection = fiche_detection_bakery()
-    detection.zone_infestee = zone_infestee
-    detection.save()
+    zone_infesteee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone)
+    FicheDetectionFactory(zone_infestee=zone_infesteee)
 
     assert FicheZoneDelimitee.objects.all().with_nb_fiches_detection().get().nb_fiches_detection == 4

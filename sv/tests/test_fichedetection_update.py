@@ -783,7 +783,6 @@ def test_update_prelevement(
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
-    page.wait_for_timeout(10_000)
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveuse.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
