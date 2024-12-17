@@ -1,4 +1,5 @@
 from post_office.mail import send
+from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
 from core.models import Message, Contact
@@ -6,51 +7,58 @@ from django.conf import settings
 
 
 def _send_message(recipients: list[str], copy: list[str], subject, message, instance):
-    message += (
-        f"\n\n Pour voir la fiche concernée par cette notification, consultez SEVES : "
-        f'<a href="{settings.ROOT_URL}{instance.content_object.get_absolute_url()}" target="_blank">{settings.ROOT_URL}{instance.content_object.get_absolute_url()}</a>'
+    template, _ = EmailTemplate.objects.update_or_create(
+        name="seves_email_template",
+        defaults={
+            "subject": f"Sèves - {instance.content_object.numero} - {instance.message_type} - {subject}",
+            "html_content": """
+                <!DOCTYPE html>
+                <html>
+                <div style="font-family: Arial, sans-serif;">
+                    <p style="white-space: pre-wrap; line-height: 1.5;">{{ message }}</p>
+                    <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ instance.sender.agent.prenom }} {{ instance.sender.agent.nom }}</p>
+                    <p style="margin-top: 0px;">{{ instance.sender.agent.structure }}</p>
+                    <p style="margin-top: 20px;">Consulter la fiche dans Sèves : <a href="{{ fiche_url }}">{{ fiche_url }}</a></p>
+                </div>
+                </html>
+            """,
+        },
     )
     send(
         recipients=recipients,
         cc=copy,
         sender="no-reply@beta.gouv.fr",
-        subject=f"SEVES - {subject}",
-        html_message=message,
+        template=template,
+        context={
+            "subject": subject,
+            "instance": instance,
+            "message": message,
+            "fiche_url": f"{settings.ROOT_URL}{instance.content_object.get_absolute_url()}",
+        },
     )
 
 
 def notify_message(instance: Message):
     recipients, copy = [], []
-    message, subject = None, None
-    if instance.message_type == Message.MESSAGE:
-        subject = instance.title
-        message = f"Bonjour,\n Vous avez reçu un message sur SEVES dont voici le contenu : \n {instance.content}"
-        recipients = [r.email for r in instance.recipients.all()]
-        copy = [r.email for r in instance.recipients_copy.all()]
-    elif instance.message_type == Message.COMPTE_RENDU:
-        subject = instance.title
-        message = f"Bonjour,\n Vous avez reçu un compte rendu sur demande d'intervention sur SEVES dont voici le contenu : \n {instance.content}"
-        recipients = [r.email for r in instance.recipients.all()]
-    elif instance.message_type == Message.DEMANDE_INTERVENTION:
-        subject = instance.title
-        message = "Bonjour,\n Vous avez reçu un message sur SEVES."
-        recipients = [r.email for r in instance.recipients.structures_only()]
-        copy = [r.email for r in instance.recipients_copy.structures_only()]
-    elif instance.message_type == Message.POINT_DE_SITUATION:
-        subject = instance.title
-        message = "Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES."
-        recipients = [c.email for c in instance.content_object.contacts.agents_only()]
-    elif instance.message_type == Message.FIN_SUIVI:
-        subject = instance.title
-        message = "Bonjour,\n Vous avez reçu un nouveau point de suivi sur SEVES."
-        recipients = instance.content_object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)
-        recipients = [r.email for r in recipients]
-    elif instance.message_type == Message.NOTIFICATION_AC:
-        subject = instance.title
-        message = (
-            f"Bonjour,\n une personne a déclarée la fiche {instance.content_object.numero} à l'administration centrale."
-        )
-        recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
+    message = instance.content
+
+    match instance.message_type:
+        case Message.MESSAGE:
+            recipients = [r.email for r in instance.recipients.all()]
+            copy = [r.email for r in instance.recipients_copy.all()]
+        case Message.COMPTE_RENDU:
+            recipients = [r.email for r in instance.recipients.all()]
+        case Message.DEMANDE_INTERVENTION:
+            recipients = [r.email for r in instance.recipients.structures_only()]
+            copy = [r.email for r in instance.recipients_copy.structures_only()]
+        case Message.POINT_DE_SITUATION:
+            recipients = [c.email for c in instance.content_object.contacts.agents_only()]
+        case Message.FIN_SUIVI:
+            recipients = instance.content_object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)
+            recipients = [r.email for r in recipients]
+        case Message.NOTIFICATION_AC:
+            message = f"Bonjour,\nLa fiche {instance.content_object.numero} vient d'être déclarée à l'administration centrale."
+            recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
 
     if recipients and message:
-        _send_message(recipients, copy, subject=subject, message=message, instance=instance)
+        _send_message(recipients, copy, subject=instance.title, message=message, instance=instance)
