@@ -137,7 +137,21 @@
                     {% endfor %}
 
                     <div id="prelevements-list"></div>
-                    <p id="no-lieux-text">Aucun prélèvement. Pour ajouter une prélèvement vous devez avoir renseigné au moins un lieu.</p>
+
+                    <div id="no-lieux-text">
+                        <p>Aucun prélèvement.</p>
+                        <div class="fr-notice fr-notice--info">
+                            <div class="fr-container">
+                                <div class="fr-notice__body">
+                                    <p>
+                                        <span class="fr-notice__title">Pour ajouter une prélèvement vous devez avoir renseigné au moins un lieu.</span>
+                                    </p>
+                                    <button title="Masquer le message" onclick="const notice = this.parentNode.parentNode.parentNode; notice.parentNode.removeChild(notice)" id="button-1290" class="fr-btn--close fr-btn">Masquer le message</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div id="mesures-gestion">
