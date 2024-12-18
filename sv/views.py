@@ -72,7 +72,7 @@ class FicheListView(ListView):
             queryset = queryset.optimized_for_list().order_by_numero_fiche().with_nb_fiches_detection()
         else:
             queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
-            queryset = queryset.with_list_of_lieux().with_first_region_name()
+            queryset = queryset.with_list_of_lieux_with_commune().with_first_region_name()
             queryset = queryset.optimized_for_list().order_by_numero_fiche()
         self.filter = FicheFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
@@ -110,6 +110,9 @@ class FicheDetectionDetailView(
             Lieu.objects.filter(fiche_detection=self.get_object())
             .order_by("id")
             .select_related("departement__region", "site_inspection")
+        )
+        context["lieux_with_commune"] = (
+            Lieu.objects.filter(fiche_detection=self.get_object()).exclude(commune="").order_by("id")
         )
         prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
         context["prelevements"] = prelevement.select_related(

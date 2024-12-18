@@ -70,7 +70,7 @@ class DisplayedFiche:
             createur=str(fiche.createur),
             etat=fiche.etat,
             visibilite=str(fiche.visibilite),
-            communes_list=fiche.lieux_list,
+            communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url(),
             link=DisplayedLink.from_fiche_detection(fiche),
         )

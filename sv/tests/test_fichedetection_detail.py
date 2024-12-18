@@ -1,8 +1,9 @@
 from django.urls import reverse
 from core.models import Visibilite
+from sv.factories import FicheDetectionFactory, LieuFactory
 from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from model_bakery import baker
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 
 
 def test_lieu_details(live_server, page, fiche_detection):
@@ -224,3 +225,50 @@ def test_fiche_detection_brouillon_cannot_add_zone(live_server, page, mocked_aut
     # simule le fait d'effectuer la requete GET directement pour ajouter une zone
     page.goto(f"{live_server.url}{reverse('rattachement-fiche-zone-delimitee', args=[fiche_detection.id])}")
     expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()
+
+
+def test_synthese_shows_multiple_communes_with_tooltip(live_server, page: Page):
+    """Test l'affichage du descripteur Commune avec tooltip dans la vue synthèse de la fiche détection
+    lorsqu'il y a plusieurs communes renseignées dans les lieux"""
+    fiche = FicheDetectionFactory()
+    LieuFactory(fiche_detection=fiche, commune="Paris")
+    LieuFactory(fiche_detection=fiche, commune="Lyon")
+    LieuFactory(fiche_detection=fiche, commune="Marseille")
+
+    page.goto(f"{live_server}{fiche.get_absolute_url()}")
+    page.get_by_text("Synthèse").click()
+
+    expect(page.locator("#synthese-communes-list")).to_contain_text("Paris +2")
+    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
+    counter.hover()
+    tooltip = page.locator("#tooltip-additional-communes")
+    expect(tooltip).to_be_visible()
+    expect(tooltip).to_contain_text("Lyon, Marseille")
+
+
+def test_synthese_single_commune(live_server, page: Page):
+    """Test l'affichage du descripteur Commune dans la vue synthèse de la fiche détection
+    lorsqu'il y a qu'une commune renseignée dans les lieux"""
+    fiche = FicheDetectionFactory()
+    LieuFactory(fiche_detection=fiche, commune="Paris")
+    LieuFactory(fiche_detection=fiche, commune="")
+
+    page.goto(f"{live_server}{fiche.get_absolute_url()}")
+    page.get_by_text("Synthèse").click()
+
+    expect(page.locator("#synthese-communes-list")).to_contain_text("Paris")
+    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
+    expect(counter).to_have_count(0)
+
+
+def test_synthese_no_commune(live_server, page: Page):
+    """Test l'affichage du descripteur Commune dans la vue synthèse de la fiche détection lorsqu'il y a aucun lieu"""
+    fiche = FicheDetectionFactory()
+    LieuFactory(fiche_detection=fiche, commune="")
+
+    page.goto(f"{live_server}{fiche.get_absolute_url()}")
+    page.get_by_text("Synthèse").click()
+
+    expect(page.locator("#synthese-communes-list")).to_contain_text("nc.")
+    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
+    expect(counter).to_have_count(0)
