@@ -18,19 +18,20 @@
         <div class="fr-col-3">
             <div class="fr-grid-row">
                 <div class="fr-col-5 fiche-synthese__label fr-pb-1w">Commune</div>
-                <div class="fr-col-7">
-                    {% with lieux|length as lieux_count %}
-                        {% if lieux_count == 0 %}
-                            nc.
-                        {% else %}
-                            {{ lieux.0.commune|default:"nc." }} <span aria-describedby="tooltip-2989">+{{ lieux_count|add:"-1" }}</span>
-                            <span class="fr-tooltip fr-placement" id="tooltip-2989" role="tooltip" aria-hidden="true">
-                                {% for lieu in lieux|slice:"1:" %}
-                                    {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
+                <div id="synthese-communes-list" class="fr-col-7">
+                    {% if not lieux_with_commune %}
+                        nc.
+                    {% else %}
+                        {{ lieux_with_commune.0.commune }}
+                        {% if lieux_with_commune|length > 1 %}
+                            <span aria-describedby="tooltip-additional-communes">+{{ lieux_with_commune|length|add:"-1" }}</span>
+                            <span class="fr-tooltip fr-placement" id="tooltip-additional-communes" role="tooltip" aria-hidden="true">
+                                {% for lieu in lieux_with_commune|slice:"1:" %}
+                                    {{ lieu.commune }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </span>
                         {% endif %}
-                    {% endwith %}
+                    {% endif %}
                 </div>
             </div>
 
