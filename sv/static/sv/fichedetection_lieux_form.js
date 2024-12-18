@@ -38,7 +38,6 @@ function displayLieuxCards() {
     lieuListElement.innerHTML = ""
     if (document.lieuxCards.length === 0) {
         lieuListElement.innerHTML = "Aucun lieu."
-        return
     }
 
     document.lieuxCards.forEach(card =>{
