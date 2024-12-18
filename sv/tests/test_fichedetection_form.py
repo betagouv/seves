@@ -598,3 +598,17 @@ def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(page, mocked_auth
 def test_numero_rapport_inspection_format(page):
     inputs_rapport_inspection = page.locator("input[name^='prelevements-'][name$='-numero_rapport_inspection']").all()
     assert all(input.get_attribute("pattern") == "^\\d{2}-\\d{6}$" for input in inputs_rapport_inspection)
+
+
+def test_info_message_in_prelevement_bloc_should_be_visible_without_locations(
+    page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    expect(page.locator("#no-lieux-text")).to_be_visible()
+
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.save_btn.click()
+    page.get_by_role("button", name="Supprimer le lieu").click()
+    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+
+    expect(page.locator("#no-lieux-text")).to_be_visible()
