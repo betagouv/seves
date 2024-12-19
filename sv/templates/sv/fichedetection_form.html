@@ -28,8 +28,7 @@
                         {% if is_creation %}
                             Création d'une fiche détection
                         {% else %}
-                            Modification de la fiche détection {% if form.instance.numero %}n°{{ form.instance.numero }}{% endif %}
-                            Modification de la fiche détection n°{{ fichedetection.numero }}
+                            Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
                         {% endif %}
                     </h1>
                     {% if not is_creation %}
