@@ -27,6 +27,7 @@ from ..models import (
 
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+from sv.factories import FicheDetectionFactory
 
 
 @pytest.fixture(autouse=True)
@@ -65,12 +66,18 @@ def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection_with_one_l
     return fiche_detection_with_one_lieu
 
 
-def test_page_title(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
-):
-    """Test que le titre de la page est bien "Modification de la fiche détection n°2024.1"""
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    expect(form_elements.title).to_contain_text(f"Modification de la fiche détection n°{fiche_detection.numero}")
+def test_page_title(live_server, page: Page):
+    fiche = FicheDetectionFactory()
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    expect(
+        page.get_by_role("heading", name=f"Modification de la fiche détection n° {fiche.numero}", exact=True)
+    ).to_be_visible()
+
+
+def test_page_title_for_fiche_brouillon(live_server, page):
+    fiche = FicheDetectionFactory(visibilite=Visibilite.BROUILLON)
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    expect(page.get_by_role("heading", name="Modification de la fiche détection", exact=True)).to_be_visible()
 
 
 def test_fiche_detection_update_page_content(
