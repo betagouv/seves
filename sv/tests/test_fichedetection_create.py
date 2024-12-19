@@ -53,9 +53,8 @@ def create_fixtures_if_needed(db):
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    """Test que le titre de la page est bien "Modification de la fiche détection n°2024.1"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    expect(form_elements.title).to_contain_text("Création d'une fiche détection")
+    expect(page.get_by_role("heading", name="Création d'une fiche détection", exact=True)).to_be_visible()
 
 
 def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
