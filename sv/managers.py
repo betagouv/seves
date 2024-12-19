@@ -50,10 +50,12 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
         return contacts_not_in_fin_suivi
 
-    def with_list_of_lieux(self):
+    def with_list_of_lieux_with_commune(self):
         from sv.models import Lieu
 
-        lieux_prefetch = Prefetch("lieux", queryset=Lieu.objects.order_by("id"), to_attr="lieux_list")
+        lieux_prefetch = Prefetch(
+            "lieux", queryset=Lieu.objects.exclude(commune="").order_by("id"), to_attr="lieux_list_with_commune"
+        )
         return self.prefetch_related(lieux_prefetch)
 
     def with_first_region_name(self):
