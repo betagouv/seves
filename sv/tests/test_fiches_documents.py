@@ -22,7 +22,7 @@ def test_can_add_document_to_fiche_detection(
     expect(page.locator("#fr-modal-add-doc")).to_be_visible()
 
     page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option("autre")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description")
     page.locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
@@ -30,7 +30,7 @@ def test_can_add_document_to_fiche_detection(
     assert fiche.documents.count() == 1
     document = fiche.documents.get()
 
-    assert document.document_type == "autre"
+    assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
     assert document.nom == "Name of the document"
     assert document.description == "Description"
     assert document.created_by == mocked_authentification_user.agent
@@ -40,6 +40,7 @@ def test_can_add_document_to_fiche_detection(
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
+    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
 
 
 def test_can_see_and_delete_document_on_fiche_detection(
