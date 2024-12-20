@@ -3,13 +3,16 @@
         <div class="fr-card__content fr-pb-0-5v">
             {% if contact.agent %}
                 <p class="fr-h6 fr-mb-1w">{{ contact.agent }}</p>
+                {% if is_in_fin_suivi %}
+                    <p class="fr-mt-0-5w fr-badge fr-badge--new fr-badge--no-icon">Fin de suivi</p>
+                {% endif %}
                 <p class="fr-mb-1w">{{ contact.agent.fonction_hierarchique }}</p>
                 <p class="fr-tag">{{contact.agent.structure}}</p>
                 <p class="fr-mt-2w fr-mb-1w"><a href="mailto:{{ contact.email }}" class="fr-link">{{ contact.email }}</a></p>
                 <p class="fr-mt-1w fr-mb-0-5v">{{ contact.agent.telephone }}</p>
             {% elif contact.structure %}
                 <p class="fr-h6 fr-mb-1w">{{ contact.structure.libelle }}</p>
-                {% if contact in contacts_fin_suivi %}
+                {% if is_in_fin_suivi %}
                     <p class="fr-mt-0-5w fr-badge fr-badge--new fr-badge--no-icon">Fin de suivi</p>
                 {% endif %}
                 <p class="fr-mt-3w fr-mb-0-5v"><a href="mailto:{{ contact.email }}" class="fr-link">{{ contact.email }}</a></p>
