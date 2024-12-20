@@ -52,7 +52,7 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page,
     page.get_by_label("Message").fill("test")
     page.get_by_test_id("fildesuivi-add-submit").click()
     page.get_by_test_id("contacts").click()
-    expect(page.get_by_label("Contacts").get_by_text("Fin de suivi")).to_be_visible()
+    expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
 
 
 def test_element_suivi_fin_suivi_already_exists(live_server, page: Page, mocked_authentification_user):

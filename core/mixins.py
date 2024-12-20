@@ -7,7 +7,7 @@ from django.urls import reverse
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact, Message, Visibilite
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure
 from .notifications import notify_message
 from .redirect import safe_redirect
 
@@ -53,22 +53,37 @@ class WithMessagesListInContextMixin:
 class WithContactListInContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["contacts_agents"] = (
-            self.get_object()
-            .contacts.agents_only()
+        obj = self.get_object()
+
+        structures_fin_suivi_ids = (
+            Structure.objects.filter(contact__finsuivicontact__in=obj.fin_suivi.all())
+            .values_list("id", flat=True)
+            .distinct()
+        )
+
+        context["contacts_agents"] = [
+            {
+                "contact": contact,
+                "is_in_fin_suivi": contact.agent.structure_id in structures_fin_suivi_ids,
+            }
+            for contact in obj.contacts.agents_only()
             .prefetch_related("agent__structure")
             .services_deconcentres_first()
             .order_by_structure_and_name()
-        )
-        context["contacts_structures"] = (
-            self.get_object()
-            .contacts.structures_only()
+        ]
+
+        context["contacts_structures"] = [
+            {
+                "contact": contact,
+                "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
+            }
+            for contact in obj.contacts.structures_only()
             .services_deconcentres_first()
             .order_by_structure_and_niveau2()
             .select_related("structure")
-        )
-        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
+        ]
+
+        context["content_type"] = ContentType.objects.get_for_model(obj)
         return context
 
 
