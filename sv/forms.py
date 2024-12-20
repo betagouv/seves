@@ -81,6 +81,15 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
+    activite_etablissement = forms.CharField(
+        required=False,
+        label="Description de l’activité",
+        widget=forms.Textarea(
+            attrs={
+                "rows": 2,
+            }
+        ),
+    )
 
     class Meta:
         model = Lieu
