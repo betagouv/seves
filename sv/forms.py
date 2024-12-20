@@ -400,9 +400,6 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = ZoneInfestee
         exclude = ["fiche_zone_delimitee"]
-        labels = {
-            "caracteristique_principale": "Caractéristique",
-        }
         widgets = {
             "rayon": forms.NumberInput(attrs={"min": "0"}),
             "surface_infestee_totale": forms.NumberInput(attrs={"min": "0"}),
