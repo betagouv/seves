@@ -23,7 +23,7 @@ from .notifications import notify_message
 from .models import Document, Message, Contact, FinSuiviContact
 
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 from .redirect import safe_redirect
 
@@ -384,10 +384,12 @@ class SoftDeleteView(View):
         obj = content_type.objects.get(pk=content_id)
 
         try:
-            obj.soft_delete()
+            obj.soft_delete(request.user)
             messages.success(request, "Objet supprimé avec succès")
         except AttributeError:
             messages.error(request, "Ce type d'objet ne peut pas être supprimé")
+        except PermissionDenied:
+            messages.error(request, "Vous n'avez pas les droits pour supprimer cet objet")
 
         return safe_redirect(request.POST.get("next"))
 

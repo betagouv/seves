@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
 
@@ -82,7 +82,12 @@ class WithFreeLinksListInContextMixin:
 class AllowsSoftDeleteMixin(models.Model):
     is_deleted = models.BooleanField(default=False)
 
-    def soft_delete(self):
+    def can_user_delete(self, user):
+        raise NotImplementedError
+
+    def soft_delete(self, user):
+        if not self.can_user_delete(user):
+            raise PermissionDenied
         self.is_deleted = True
         self.save()
 
