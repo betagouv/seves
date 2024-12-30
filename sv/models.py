@@ -561,6 +561,9 @@ class FicheDetection(
     def get_visibilite_update_url(self):
         return reverse("fiche-detection-visibilite-update", kwargs={"pk": self.pk})
 
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
     def __str__(self):
         return str(self.numero)
 
