@@ -89,3 +89,7 @@ body{
 .ri-1x:has(+ a){
     color: var(--text-action-high-blue-france);
 }
+.ac-notified {
+    background-color: var(--background-contrast-warning);
+    padding: 5px;
+}

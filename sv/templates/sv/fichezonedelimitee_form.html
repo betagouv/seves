@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'fiche-zone-delimitee-creation' %}{% endif %}" id="fiche-zone-delimitee-form" method="post" class="fr-container--fluid fr-m-4w">
+    <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'fiche-zone-delimitee-creation' %}?evenement={{ request.GET.evenement }}{% endif %}" id="fiche-zone-delimitee-form" method="post" class="fr-container--fluid fr-m-4w">
 
         <div class="fr-grid-row">
             <div class="fr-col-8">
@@ -26,13 +26,9 @@
                 <p class="fr-badge fr-badge--no-icon fr-mb-4w">{{ fiche.visibilite }}</p>
             </div>
             <div class="fr-col fichezone_form__save-btn">
-                {% if form.instance.is_draft %}
-                    <button type="submit" name="visibilite" value="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
-                    <button type="submit" name="visibilite" value="local" class="fr-btn">Publier</button>
-                {% else %}
-                    <a href="{{ fiche.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
-                    <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer les modifications" class="fr-btn" >
-                {% endif %}
+                <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
+                <a href="{{ fiche.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer les modifications" class="fr-btn" >
             </div>
         </div>
 

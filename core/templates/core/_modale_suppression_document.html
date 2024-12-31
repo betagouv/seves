@@ -17,7 +17,7 @@
                             <form action="{% url 'document-delete' document.pk %}" method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" value="{{ document.pk }}" name="pk">
-                                <input type="hidden" value="{{ fiche.get_absolute_url }}" name="next">
+                                <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">
                                 <button type="submit" class="fr-btn" data-testid="documents-delete-{{ document.pk }}">Supprimer le document</button>
                             </form>
                         </div>

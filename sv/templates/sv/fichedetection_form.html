@@ -38,11 +38,16 @@
                 </div>
 
                 <p>
-                    {% if form.instance.is_draft %}
-                        <input type="submit" name="action" value="Enregistrer le brouillon" data-action="brouillon" class="fr-btn fr-btn--secondary fr-mr-2w">
-                        <input type="submit" name="action" value="Publier" data-action="publier" class="fr-btn">
+                    {% if request.GET.evenement %}
+                        <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
+                    {% elif form.instance.evenement %}
+                        <input type="hidden" name="evenement" value="{{ form.instance.evenement.pk }}">
+                    {% endif %}
+
+                    {% if is_creation %}
+                        <input type="submit" value="Enregistrer" class="fr-btn">
                     {% else %}
-                        <a href="{% url 'fiche-detection-vue-detaillee' fichedetection.pk %}" class="fr-link fr-mr-3w">Annuler</a>
+                        <a href="{% url 'evenement-details' fichedetection.evenement.pk %}" class="fr-link fr-mr-3w">Annuler</a>
                         <input type="submit" name="action" value="Enregistrer les modifications" data-action="enregistrer-modifications" class="fr-btn" data-testid="fiche-detection-save-btn">
                     {% endif %}
                 </p>
@@ -74,6 +79,7 @@
 
                 <div id="objet-evenement">
                     <h2>Objet de l'évènement</h2>
+
                     <p id="organisme-nuisible">
                         {{ form.organisme_nuisible.label_tag }} {{ form.organisme_nuisible }}
                     </p>

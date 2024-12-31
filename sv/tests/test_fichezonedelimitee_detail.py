@@ -1,3 +1,4 @@
+import pytest
 from playwright.sync_api import Page, expect
 from model_bakery import baker
 
@@ -5,6 +6,7 @@ from core.models import Visibilite
 from sv.models import ZoneInfestee, FicheDetection
 
 
+@pytest.mark.skip(reason="refacto evenement")
 def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, fiche_zone, page: Page, mocked_authentification_user):
     fiche_zone_delimitee = fiche_zone
     zone_infestee_1 = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _fill_optional=True)

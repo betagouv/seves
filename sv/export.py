@@ -8,15 +8,12 @@ class FicheDetectionExport:
         "numero_europhyt",
         "numero_rasff",
         "statut_evenement",
-        "organisme_nuisible",
-        "statut_reglementaire",
         "date_premier_signalement",
         "commentaire",
         "mesures_conservatoires_immediates",
         "mesures_consignation",
         "mesures_phytosanitaires",
         "mesures_surveillance_specifique",
-        "etat",
         "date_creation",
     ]
     lieux_fields = [

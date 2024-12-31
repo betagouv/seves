@@ -1,16 +1,10 @@
 import pytest
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
-from core.models import Visibilite
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
     StructurePreleveuse,
-    FicheDetection,
-    FicheZoneDelimitee,
-    StatutReglementaire,
-    OrganismeNuisible,
 )
 
 from sv.constants import STRUCTURES_PRELEVEUSES
@@ -577,23 +571,6 @@ def test_add_prelevement_btn_is_visible_if_lieu_exists(
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
     expect(form_elements.add_prelevement_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_enabled()
-
-
-@pytest.mark.django_db
-def test_cant_see_fiches_brouillon_in_liens_libres_in_add_form(page, mocked_authentification_user):
-    FicheDetection.objects.create(
-        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
-    )
-    FicheZoneDelimitee.objects.create(
-        visibilite=Visibilite.BROUILLON,
-        createur=mocked_authentification_user.agent.structure,
-        organisme_nuisible=baker.make(OrganismeNuisible),
-        statut_reglementaire=baker.make(StatutReglementaire),
-    )
-    page.reload()
-    select_options = page.locator("#liens-libre .choices__list--dropdown .choices__item")
-    expect(select_options).to_have_count(1)
-    expect(select_options).to_have_text("Aucune fiche à sélectionner")
 
 
 def test_numero_rapport_inspection_format(page):

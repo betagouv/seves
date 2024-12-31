@@ -22,6 +22,7 @@ from .models import (
     Etat,
     ZoneInfestee,
     FicheZoneDelimitee,
+    Evenement,
 )
 
 admin.site.site_header = "Administration de Sèves"
@@ -29,6 +30,11 @@ admin.site.site_header = "Administration de Sèves"
 
 @admin.register(FicheDetection)
 class FicheDetectionAdmin(VersionAdmin):
+    pass
+
+
+@admin.register(Evenement)
+class EvenementnAdmin(VersionAdmin):
     autocomplete_fields = ["contacts"]
 
 

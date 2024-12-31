@@ -1,10 +1,10 @@
 from typing import Optional, Tuple
 
+from django.urls import reverse
 from playwright.sync_api import Page, Locator
 from playwright.sync_api import expect
-from django.urls import reverse
+
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
-from sv.forms import RattachementChoices
 
 
 class FicheDetectionFormDomElements:
@@ -44,11 +44,7 @@ class FicheDetectionFormDomElements:
 
     @property
     def publish_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Publier")
-
-    @property
-    def save_brouillon_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Enregistrer le brouillon")
+        return self.page.get_by_role("button", name="Enregistrer")
 
     @property
     def add_lieu_btn(self) -> Locator:
@@ -369,8 +365,8 @@ class FicheZoneDelimiteeFormPage:
         self.choice_js_fill = choice_js_fill
 
         # Risques
-        self.organisme_nuisible = page.get_by_label("organisme nuisible")
-        self.statut_reglementaire = page.get_by_label("statut réglementaire")
+        self.organisme_nuisible = page.get_by_label("Organisme nuisible")
+        self.statut_reglementaire = page.get_by_label("Statut réglementaire")
 
         # Détails
         self.commentaire = page.get_by_label("Commentaire")
@@ -403,7 +399,6 @@ class FicheZoneDelimiteeFormPage:
 
         # Boutons
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
-        self.save_brouillon_btn = page.get_by_role("button", name="Enregistrer le brouillon", exact=True)
         self.publish_btn = page.get_by_role("button", name="Publier", exact=True)
         self.save_changes_btn = page.get_by_role("button", name="Enregistrer les modifications", exact=True)
 
@@ -532,10 +527,8 @@ class FicheZoneDelimiteeFormPage:
         for detection in detections:
             expect(self.detections_hors_zone_infestee.get_by_text(str(detection.numero))).to_be_visible()
 
-    def goto_create_form_page(self, live_server, fiche_detection_id: int, rattachement: RattachementChoices):
-        self.page.goto(
-            f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={fiche_detection_id}&rattachement={rattachement}"
-        )
+    def goto_create_form_page(self, live_server, evenement):
+        self.page.goto(f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
 
     def fill_zone_infestee_form(
         self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None
@@ -637,11 +630,8 @@ class FicheZoneDelimiteeFormPage:
         index = int(self.zone_infestee_total_forms.get_attribute("value")) - 1
         self.fill_zone_infestee_form(index, zoneinfestee, detections)
 
-    def save_brouillon(self):
-        self.save_brouillon_btn.click()
-
-    def publish(self):
-        self.publish_btn.click()
+    def save(self):
+        self.save_changes_btn.click()
 
     def submit_update_form(self):
         self.save_changes_btn.click()

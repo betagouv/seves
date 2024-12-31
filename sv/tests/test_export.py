@@ -1,22 +1,21 @@
+import datetime
 from io import StringIO
+from unittest import mock
+
 import pytest
 from model_bakery import baker
-from unittest import mock
 
 from core.models import Visibilite
 from sv.export import FicheDetectionExport
-from sv.models import Etat, FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveuse
-import datetime
+from sv.models import FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveuse
 
 
 def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
-    etat = Etat.objects.get(id=Etat.get_etat_initial())
     numero = NumeroFiche.objects.create(annee=2024, numero=numero)
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
         fiche = baker.make(
             FicheDetection,
-            etat=etat,
             numero=numero,
             numero_europhyt="EUROPHYT",
             numero_rasff="RASFF",
@@ -26,11 +25,13 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
             mesures_consignation="MC",
             mesures_phytosanitaires="MP",
             mesures_surveillance_specifique="MSP",
-            visibilite=Visibilite.NATIONAL,
             hors_zone_infestee=None,
             zone_infestee=None,
             _fill_optional=fill_optional,
         )
+    evenement = fiche.evenement
+    evenement.visibilite = Visibilite.NATIONAL
+    evenement.save()
     lieu = baker.make(
         Lieu,
         fiche_detection=fiche,
@@ -70,15 +71,12 @@ def test_export_fiche_detection_content(mocked_authentification_user):
         "Numéro Europhyt",
         "Numéro RASFF",
         "Statut de l'événement",
-        "OEPP",
-        "Statut règlementaire de l'organisme",
         "Date premier signalement",
         "Commentaire",
         "Mesures conservatoires immédiates",
         "Mesures de consignation",
         "Mesures phytosanitaires",
         "Mesures de surveillance spécifique",
-        "État de la fiche",
         "Date de création",
         "Nom",
         "Longitude WGS84",
@@ -99,7 +97,7 @@ def test_export_fiche_detection_content(mocked_authentification_user):
     assert lines[0] == ",".join(headers) + "\r\n"
     assert (
         lines[1]
-        == "2024.123,EUROPHYT,RASFF,,,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,nouveau,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,detecte,My structure,,,\r\n"
+        == "2024.123,EUROPHYT,RASFF,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,detecte,My structure,,,\r\n"
     )
 
 
@@ -108,7 +106,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     stream = StringIO()
     _create_fiche_with_lieu_and_prelevement(fill_optional=True)
 
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(9):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
@@ -119,7 +117,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(12):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
@@ -130,11 +128,13 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
 @pytest.mark.django_db
 def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries, mocked_authentification_user):
     stream = StringIO()
-    etat = Etat.objects.get(id=Etat.get_etat_initial())
     numero = NumeroFiche.objects.create(annee=2024, numero=123)
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
-        fiche = baker.make(FicheDetection, etat=etat, numero=numero, visibilite=Visibilite.NATIONAL)
+        fiche = baker.make(FicheDetection, numero=numero)
+        evenement = fiche.evenement
+        evenement.visibilite = Visibilite.NATIONAL
+        evenement.save()
     _lieu_without_prelevement = baker.make(Lieu, fiche_detection=fiche)
     _lieu_without_prelevement_2 = baker.make(Lieu, fiche_detection=fiche)
     lieu = baker.make(

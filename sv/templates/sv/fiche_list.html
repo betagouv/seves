@@ -41,26 +41,30 @@
                         <tr class="fiches__table-header">
                             <th scope="col" class="fr-col-1">Type</th>
                             <th scope="col" class="fr-col-1">N°</th>
+                            <th scope="col" class="fr-col-1">Évènement</th>
                             <th scope="col" class="fr-col-3">Organisme nuisible</th>
                             <th scope="col" class="fr-col-1">Création</th>
                             <th scope="col">Créateur</th>
                             <th scope="col">Commune</th>
                             <th scope="col">État</th>
                             <th scope="col">Visibilité</th>
-                            <th scope="col">Lien(s)</th>
+                            <th scope="col">{{ last_column }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for fiche in fiches %}
                             <tr class="fiches__list-row">
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
-                                        {{ fiche.type }}
-                                    </a>
+                                    <span class="fr-ml-2v fr-badge fr-badge--no-icon">{{ fiche.type }}</span>
+                                    <span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>
+
+                                </td>
+                                <td>
+                                    {{ fiche.numero|default:"nc." }}
                                 </td>
                                 <td>
                                     <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
-                                        {{ fiche.numero|default:"nc." }}
+                                        {{ fiche.numero_evenement|default:"nc." }}
                                     </a>
                                 </td>
                                 <td class="fiche__list-organisme">
@@ -104,17 +108,10 @@
                                 </td>
                                 <td>
                                     <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        <span class="fr-badge">{{ fiche.visibilite }}{% if fiche.is_ac_notified %}<span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>{% endif %}</span>
+                                        <span class="fr-badge">{{ fiche.visibilite }}</span>
                                     </a>
                                     <td>
-                                        {% if fiche.link.url %}
-                                            <i class="{{ fiche.link.icon }} fr-mr-2v ri-1x" aria-hidden="true"></i>
-                                            <a class="fr-link" href="{{ fiche.link.url }}">{{ fiche.link.text }}</a>
-                                        {% else %}
-                                            <button {% if not fiche.link.enabled %}disabled {% endif %}>
-                                                <i class="{{ fiche.link.icon }} fr-mr-2v ri-1x" aria-hidden="true"></i>{{ fiche.link.text }}
-                                            </button>
-                                        {% endif %}
+                                        {{ fiche.nb_related_objects }}
                                     </td>
                                 </tr>
                         {% endfor %}

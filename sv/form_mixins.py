@@ -35,14 +35,12 @@ class WithFreeLinksMixin:
             .order_by_numero_fiche()
             .get_fiches_user_can_view(self.user)
             .select_related("numero")
-            .exclude_brouillon()
         )
         qs_zone = (
             FicheZoneDelimitee.objects.all()
             .order_by_numero_fiche()
             .get_fiches_user_can_view(self.user)
             .select_related("numero")
-            .exclude_brouillon()
         )
         if self.instance:
             if obj_type == "zone":

@@ -27,7 +27,7 @@
                                 <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cloturer-fiche">
                                     Annuler
                                 </button>
-                                <form method="post" action="{% url 'fiche-cloturer' fiche.pk %}">
+                                <form method="post" action="{% url 'fiche-cloturer' evenement.pk %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="content_type_id" value="{{ content_type.pk }}">
                                     <button type="submit" class="fr-btn">Confirmer la clôture</button>

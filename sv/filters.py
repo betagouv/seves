@@ -23,7 +23,7 @@ class FicheFilter(django_filters.FilterSet):
     lieux__departement__region = django_filters.ModelChoiceFilter(
         label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_region"
     )
-    organisme_nuisible = django_filters.ModelChoiceFilter(
+    evenement__organisme_nuisible = django_filters.ModelChoiceFilter(
         label="Organisme", queryset=OrganismeNuisible.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
     )
     start_date = django_filters.DateFilter(
@@ -35,7 +35,7 @@ class FicheFilter(django_filters.FilterSet):
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
-    etat = django_filters.ModelChoiceFilter(
+    evenement__etat = django_filters.ModelChoiceFilter(
         label="État", queryset=Etat.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
     )
 
@@ -45,10 +45,10 @@ class FicheFilter(django_filters.FilterSet):
             "numero",
             "type_fiche",
             "lieux__departement__region",
-            "organisme_nuisible",
+            "evenement__organisme_nuisible",
             "start_date",
             "end_date",
-            "etat",
+            "evenement__etat",
         ]
         form = DSFRForm
 

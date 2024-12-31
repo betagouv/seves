@@ -16,6 +16,7 @@ from .models import (
     StatutReglementaire,
     StructurePreleveuse,
     ZoneInfestee,
+    Evenement,
 )
 from datetime import datetime
 
@@ -100,6 +101,7 @@ class LieuFactory(DjangoModelFactory):
     class Meta:
         model = Lieu
 
+    nom = factory.Faker("sentence", nb_words=2)
     fiche_detection = factory.SubFactory("sv.factories.FicheDetectionFactory")
     wgs84_longitude = factory.Faker("longitude")
     wgs84_latitude = factory.Faker("latitude")
@@ -123,8 +125,6 @@ class FicheDetectionFactory(DjangoModelFactory):
 
     numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
     numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
-    organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
-    statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     date_premier_signalement = factory.Faker("date_this_decade")
     commentaire = factory.Faker("paragraph")
     mesures_conservatoires_immediates = factory.Faker("paragraph")
@@ -134,18 +134,11 @@ class FicheDetectionFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
     vegetaux_infestes = factory.Faker("sentence")
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
-    visibilite = Visibilite.LOCAL
+    evenement = factory.SubFactory("sv.factories.EvenementFactory")
 
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
-
-    @factory.post_generation
-    def etat(self, create, extracted, **kwargs):
-        if "libelle" in kwargs:
-            self.etat = Etat.objects.create(**kwargs) if create else Etat(**kwargs)
-        else:
-            self.etat = Etat.objects.get(id=Etat.get_etat_initial())
 
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
@@ -156,39 +149,10 @@ class FicheDetectionFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["visibilite"] == Visibilite.BROUILLON:
-            kwargs["numero"] = None
-        return super()._create(model_class, *args, **kwargs)
-
-    @classmethod
-    def from_zone(cls, zone: FicheZoneDelimitee, **kwargs):
-        return cls(organisme_nuisible=zone.organisme_nuisible, statut_reglementaire=zone.statut_reglementaire, **kwargs)
-
-    @classmethod
-    def to_hors_zone_infestee(cls, zone: FicheZoneDelimitee):
-        return cls(
-            organisme_nuisible=zone.organisme_nuisible,
-            statut_reglementaire=zone.statut_reglementaire,
-            hors_zone_infestee=zone,
-        )
-
-    @classmethod
-    def to_zone_infestee(cls, zone_infestee: ZoneInfestee, fiche_zone: FicheZoneDelimitee):
-        return cls(
-            organisme_nuisible=fiche_zone.organisme_nuisible,
-            statut_reglementaire=fiche_zone.statut_reglementaire,
-            zone_infestee=zone_infestee,
-        )
-
 
 class FicheZoneFactory(DjangoModelFactory):
-    organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
     date_creation = factory.Faker("date_this_decade")
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
-    statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
-    visibilite = Visibilite.LOCAL
 
     rayon_zone_tampon = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
     unite_rayon_zone_tampon = factory.fuzzy.FuzzyChoice(FicheZoneDelimitee.UnitesRayon)
@@ -203,18 +167,8 @@ class FicheZoneFactory(DjangoModelFactory):
         return Structure.objects.get(libelle="Structure Test")
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["visibilite"] == Visibilite.BROUILLON:
-            kwargs["numero"] = None
-        return super()._create(model_class, *args, **kwargs)
-
-    @classmethod
     def from_detection(cls, detection: FicheDetection, **kwargs):
-        return cls(
-            organisme_nuisible=detection.organisme_nuisible,
-            statut_reglementaire=detection.statut_reglementaire,
-            **kwargs,
-        )
+        return cls(evenement=detection.evenement, **kwargs)
 
 
 class ZoneInfesteeFactory(DjangoModelFactory):
@@ -229,3 +183,33 @@ class ZoneInfesteeFactory(DjangoModelFactory):
     rayon = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
     unite_rayon = factory.fuzzy.FuzzyChoice(ZoneInfestee.UnitesRayon)
     caracteristique_principale = factory.fuzzy.FuzzyChoice(ZoneInfestee.CaracteristiquePrincipale)
+
+
+class EvenementFactory(DjangoModelFactory):
+    class Meta:
+        model = Evenement
+
+    date_creation = factory.Faker("date_this_decade")
+    numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
+    organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
+    statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
+    visibilite = Visibilite.LOCAL
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if kwargs["visibilite"] == Visibilite.BROUILLON:
+            kwargs["numero"] = None
+        return super()._create(model_class, *args, **kwargs)
+
+    @factory.lazy_attribute
+    def createur(self):
+        return Structure.objects.get(libelle="Structure Test")
+
+    @factory.post_generation
+    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
+        if extracted and create:
+            if isinstance(extracted, str):
+                self.date_creation = datetime.strptime(extracted, "%Y-%m-%d").date()
+            else:
+                self.date_creation = extracted
+            self.save()

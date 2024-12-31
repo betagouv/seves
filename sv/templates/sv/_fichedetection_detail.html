@@ -1,0 +1,153 @@
+{% load static %}
+{% load etat_tags %}
+
+
+
+
+
+<div class="fiche-detail">
+    <div class="fiche-detail__container">
+        <!-- Informations -->
+        <div class="fiche-detail__informations">
+            <h2>Informations</h2>
+            <div class="informations__fields">
+                <div class="informations__first-column">
+                    <p><span class="informations__field-label">Créateur</span>{{ fichedetection.createur }}</p>
+                    <p><span class="informations__field-label">Date de création</span>{{ fichedetection.date_creation|date:"d/m/Y" }}</p>
+                </div>
+                <div class="informations__second-column">
+                    <p><span class="informations__field-label">N° Europhyt </span>{{ fichedetection.numero_europhyt|default:"nc." }}</p>
+                    <p><span class="informations__field-label">N° RASFF </span>{{ fichedetection.numero_rasff|default:"nc." }}</p>
+                </div>
+                <div class="informations__third-column">
+                    <p><span class="informations__field-label">Statut</span>{{ fichedetection.statut_evenement|default:"nc." }}</p>
+                    <p><span class="informations__field-label">N° de fiche</span>{{ fichedetection.numero|default:"nc." }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Objet de l'évènement -->
+        <div class="fiche-detail__objet-evenement">
+            <h2>Objet de l'évènement</h2>
+            <div class="objet-evenement__field">
+                <p class="objet-evenement__field-label">Contexte</p>
+                <p class="objet-evenement__field-value">{{ fichedetection.contexte|default:"nc." }}</p>
+            </div>
+            <div class="objet-evenement__field">
+                <p class="objet-evenement__field-label">Date 1er signalement</p>
+                <p class="objet-evenement__field-value">{{ fichedetection.date_premier_signalement|default:"nc." }}</p>
+            </div>
+            <div class="objet-evenement__field">
+                <p class="objet-evenement__field-label">Quantité de végétaux infestés</p>
+                <p class="objet-evenement__field-value">{{ fichedetection.vegetaux_infestes|default:"nc." }}</p>
+            </div>
+            <div class="objet-evenement__field">
+                <p class="objet-evenement__field-label">Commentaire</p>
+                <p class="objet-evenement__field-value">{{ fichedetection.commentaire|default:"nc." }}</p>
+            </div>
+        </div>
+
+        <!-- Lieux -->
+        <div class="fiche-detail__lieux">
+            <h2>Lieux</h2>
+            {% for lieu_initial in fichedetection.lieux.all %}
+                {% include "sv/fichedetection_detail_lieu.html" with lieu=lieu_initial lieu_index=forloop.counter %}
+                <div class="lieu-initial fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border">
+                    <div class="fr-card__body">
+                        <div class="fr-card__content">
+                            <div class="fr-grid-row">
+                                <div class="fr-col-11">
+                                    <p class="fr-card__title">Nom du lieu : {{lieu_initial.nom}}</p>
+                                </div>
+                                <div class="fr-col-1">
+                                    <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
+                                            data-fr-opened="false"
+                                            aria-controls="fr-modal-lieu-{{forloop.counter}}"
+                                            title="Consulter le détail du lieu {{lieu_initial.nom}}"></button>
+                                </div>
+                            </div>
+                            <p class="fr-card__desc">
+                                Commune : {{ lieu_initial.commune|default:"nc." }} <br/>
+                                {% if lieu_initial.departement %}
+                                    Département : {{ lieu_initial.departement.nom }} ({{ lieu_initial.departement.numero }})
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Prélèvements et analyses -->
+        <div class="fiche-detail__prelevements">
+            <h2>Prélèvements</h2>
+            {% for lieu in fichedetection.lieux.all %}
+                {% for prelevement in lieu.prelevements.all %}
+                    {% include "sv/fichedetection_detail_prelevement.html" with prelevement=prelevement prelevement_index=forloop.counter %}
+                    <div class="prelevement fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border" style="margin-bottom: 1rem;">
+                        <div class="fr-card__body">
+                            <div class="fr-card__content">
+                                <div class="fr-grid-row">
+                                    <div class="fr-col-11">
+                                        <p class="fr-card__title">Structure préleveuse : {{ prelevement.structure_preleveuse }}</p>
+                                    </div>
+                                    <div class="fr-col-1">
+                                        <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
+                                                data-fr-opened="false"
+                                                aria-controls="fr-modal-prelevement-{{forloop.counter}}"
+                                                title="Consulter le détail du prélèvement {{prelevement.numero_echantillon}}">
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="fr-card__desc">
+                                    {% if prelevement.numero_echantillon %}
+                                        Numéro de l'échantillon: {{ prelevement.numero_echantillon }}<br>
+                                    {% endif %}
+                                    {% if prelevement.espece_echantillon %}
+                                        Espèce : {{ prelevement.espece_echantillon }}<br>
+                                    {% endif %}
+                                    {% if prelevement.laboratoire %}
+                                        Laboratoire : {{ prelevement.laboratoire }} |
+                                    {% endif %}
+                                    {% if prelevement.date_prelevement %}
+                                        Date de prélèvement : {{ prelevement.date_prelevement|date:"d/m/Y" }}
+                                    {% endif %}
+                                </p>
+                                <p class="fr-card__desc prelevement__type {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}">
+                                    Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}
+                                    | {% if prelevement.is_result_positive %}DÉTECTÉ{% else %}NON DÉTECTÉ{% endif %}
+                                </p>
+                                <div class="fr-card__start">
+                                    <p class="fr-card__detail fr-icon-road-map-line">{{ lieu.nom }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <!-- Mesures de gestion -->
+        <div class="fiche-detail__mesures-gestion">
+            <h2>Mesures de gestion</h2>
+            <div class="mesures-gestion__container">
+                <div class="mesures-gestion__mesures-conservatoires-immediates">
+                    <p class="mesures-gestion__label">Mesures conservatoires immédiates</p>
+                    <p>{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
+                </div>
+                <div class="mesures-gestion__mesures-consignation">
+                    <p class="mesures-gestion__label">Mesures de consignation</p>
+                    <p>{{ fichedetection.mesures_consignation|default:"nc." }}</p>
+                </div>
+                <div class="mesures-gestion__mesures_phytosanitaires">
+                    <p class="mesures-gestion__label">Mesures phytosanitaires</p>
+                    <p>{{ fichedetection.mesures_phytosanitaires|default:"nc." }}</p>
+                </div>
+                <div class="mesures-gestion__mesures-surveillance-specifique">
+                    <p class="mesures-gestion__label">Mesures de surveillance spécifique</p>
+                    <p>{{ fichedetection.mesures_surveillance_specifique|default:"nc." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

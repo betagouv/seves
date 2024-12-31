@@ -25,28 +25,7 @@ function setUpOrganismeNuisible(){
     })
 }
 
-function setUpFreeLinks(){
-    const freeLinksChoices = new Choices(document.getElementById("id_free_link"), {
-        searchResultLimit: 500,
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        removeItemButton: true,
-        shouldSort: false,
-        itemSelectText: '',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucune fiche à sélectionner',
-        searchFields: ['label'],
-    });
-    const freeLinksIds = JSON.parse(document.getElementById('free-links-id').textContent);
-    if (!!freeLinksIds) {
-        freeLinksIds.forEach(value => {
-            freeLinksChoices.setChoiceByValue(value);
-        });
-    }
-}
 
 document.addEventListener('DOMContentLoaded', function() {
     setUpOrganismeNuisible()
-    setUpFreeLinks()
 });

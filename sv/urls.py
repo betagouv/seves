@@ -3,17 +3,14 @@ from django.urls import path
 from .api_views import search_espece_echantillon
 from .views import (
     FicheListView,
-    FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
     FicheDetectionExportView,
     FicheCloturerView,
-    FicheDetectionVisibiliteUpdateView,
+    EvenementVisibiliteUpdateView,
     FicheZoneDelimiteeCreateView,
-    RattachementDetectionView,
-    FicheZoneDelimiteeDetailView,
     FicheZoneDelimiteeUpdateView,
-    FicheZoneDelimiteeVisibiliteUpdateView,
+    EvenementDetailView,
 )
 
 urlpatterns = [
@@ -23,9 +20,9 @@ urlpatterns = [
         name="fiche-liste",
     ),
     path(
-        "fiches-detection/<int:pk>/",
-        FicheDetectionDetailView.as_view(),
-        name="fiche-detection-vue-detaillee",
+        "evenement/<int:pk>/",
+        EvenementDetailView.as_view(),
+        name="evenement-details",
     ),
     path(
         "fiches-detection/creation/",
@@ -48,19 +45,9 @@ urlpatterns = [
         name="fiche-cloturer",
     ),
     path(
-        "fiches-detection/<int:pk>/visibilite/",
-        FicheDetectionVisibiliteUpdateView.as_view(),
-        name="fiche-detection-visibilite-update",
-    ),
-    path(
-        "fiches-zone/<int:pk>/visibilite/",
-        FicheZoneDelimiteeVisibiliteUpdateView.as_view(),
-        name="fiche-zone-visibilite-update",
-    ),
-    path(
-        "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",
-        RattachementDetectionView.as_view(),
-        name="rattachement-fiche-zone-delimitee",
+        "evenement/<int:pk>/visibilite/",
+        EvenementVisibiliteUpdateView.as_view(),
+        name="evenement-visibilite-update",
     ),
     path(
         "api/espece/recherche/",
@@ -71,11 +58,6 @@ urlpatterns = [
         "fiche-zone-delimitee/creation/",
         FicheZoneDelimiteeCreateView.as_view(),
         name="fiche-zone-delimitee-creation",
-    ),
-    path(
-        "fiche-zone-delimitee/<int:pk>/",
-        FicheZoneDelimiteeDetailView.as_view(),
-        name="fiche-zone-delimitee-detail",
     ),
     path(
         "fiche-zone-delimitee/<int:pk>/modification/",
