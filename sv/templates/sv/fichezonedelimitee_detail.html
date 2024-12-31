@@ -1,180 +1,141 @@
-{% extends 'sv/base.html' %}
-
 {% load static %}
 {% load remove_trailing_zero %}
-{% load etat_tags %}
-
-{% block extrahead %}
-    <link rel="stylesheet" href="{% static 'sv/common.css' %}">
-    <link rel="stylesheet" href="{% static 'sv/fichezonedelimitee_detail.css' %}">
-{% endblock %}
+<div class="fiche-header">
+    <div>
+        <h2 class="fr-mb-0-5v">Zone délimitée n° {{ fiche.numero }}</h2>
+    </div>
 
 
-{% block content %}
-    <div class="fr-container--fluid fr-m-4w ">
-        <div class="fiche-header">
-            <div>
-                <h1 class="fr-mb-0-5v">Fiche zone délimitée{% if fiche.numero %} n° {{ fiche.numero }}{% endif %}</h1>
-                <p class="fr-badge fr-badge--no-icon">{{ fiche.visibilite }}</p>
-                <p class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</p>
+
+    <div class="fiche-action">
+        <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
+            Supprimer la zone
+        </button>
+        {% include "sv/_delete_fiche_modal.html" with prefix="zone" content_type=fiche_zone_content_type object_pk=fiche.pk %}
+        <button class="fr-btn fr-btn--secondary fr-mr-2w">
+            <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
+        </button>
+    </div>
+</div>
+<div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col">
+        <div class="fichezonedelimitee__details white-container fr-pb-6w">
+            <h2>Informations</h2>
+            <div class="fr-grid-row fr-mb-2w">
+                <div class="fr-col fichezonedelimitee__field">Créateur</div>
+                <div class="fr-col">{{ fiche.createur }}</div>
             </div>
-            <div class="fiche-action">
-                <button class="fr-btn fr-btn--secondary fr-mr-2w">
-                    <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
-                </button>
-                {% if publish_form %}
-                    <div>
-                        <form method="post" action="{{ fiche.get_visibilite_update_url }}">
-                            {% csrf_token %}
-                            {{ publish_form }}
-                            <button type="submit" name="action" value="publier" class="fr-btn fr-btn--secondary fr-mr-2w">Publier</button>
-                        </form>
-                    </div>
-                {% endif %}
-                {% include "sv/_zone_action_navigation.html" %}
-                {% if visibilite_form %}
-                    {% include "sv/_update_visibilite_modal.html" %}
-                {% endif %}
-                {% include "sv/_cloturer_modal.html" %}
+            <div class="fr-grid-row">
+                <div class="fr-col fichezonedelimitee__field">Date de création</div>
+                <div class="fr-col">{{ fiche.date_creation|date:"d/m/Y" }}</div>
             </div>
         </div>
+    </div>
+    <div class="fr-col">
+        <div class="fichezonedelimitee__details white-container">
+            <h2>Détails</h2>
+            <div class="fr-mt-4w">
+                <div class="fichezonedelimitee__field fr-mb-1w">Commentaire</div>
+                <div>{{ fiche.commentaire|default:"nc." }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="fr-col">
+        <div class="fichezonedelimitee__zone-tampon white-container">
+            <h2>Zone tampon</h2>
+            <div class="fr-grid-row fr-mt-3w">
+                <div class="fr-col-8 fichezonedelimitee__field">Rayon tampon réglementaire ou arbitré</div>
+                <div class="fr-col">
+                    {% if fiche.rayon_zone_tampon %}
+                        {{ fiche.rayon_zone_tampon|remove_trailing_zero }} {{ fiche.unite_rayon_zone_tampon }}
+                    {% else %}
+                        nc.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="fr-grid-row fr-mt-3w">
+                <div class="fichezonedelimitee__field fr-col-8">Surface tampon totale</div>
+                <div class="fr-col">
+                    {% if fiche.surface_tampon_totale %}
+                        {{ fiche.surface_tampon_totale|remove_trailing_zero }} {{ fiche.unite_surface_tampon_totale }}
+                    {% else %}
+                        nc.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="white-container fr-pb-5w fr-mt-4w">
+    <h2>Détections hors zone infestée</h2>
+    {% if detections_hors_zone_infestee %}
+        <ul class="fr-tags-group">
+            {% for fichedetection in detections_hors_zone_infestee %}
+                <li>
+                    <a href="{{ fichedetection.get_absolute_url }}" class="fr-tag">{{ fichedetection.numero }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucune détection</p>
+    {% endif %}
+</div>
+
+<div class="white-container fr-mt-4w">
+    <h2>Zones infestées {% if zones_infestees|length %}({{ zones_infestees|length }}){% endif %}</h2>
+    {% if zones_infestees|length %}
         <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col">
-                <div class="white-container fr-mb-3w">
-                    <h2>Risques</h2>
-                    <div class="fr-grid-row fr-mb-2w">
-                        <div class="fr-col fichezonedelimitee__field">Organisme nuisible</div>
-                        <div class="fr-col">{{ fiche.organisme_nuisible }}</div>
-                    </div>
-                    <div class="fr-grid-row">
-                        <div class="fr-col fichezonedelimitee__field">Statut réglementaire</div>
-                        <div class="fr-col">{{ fiche.statut_reglementaire }}</div>
-                    </div>
-                </div>
-                <div class="white-container fr-pb-6w">
-                    <h2>Informations</h2>
-                    <div class="fr-grid-row fr-mb-2w">
-                        <div class="fr-col fichezonedelimitee__field">Créateur</div>
-                        <div class="fr-col">{{ fiche.createur }}</div>
-                    </div>
-                    <div class="fr-grid-row">
-                        <div class="fr-col fichezonedelimitee__field">Date de création</div>
-                        <div class="fr-col">{{ fiche.date_creation|date:"d/m/Y" }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="fr-col">
-                <div class="fichezonedelimitee__details white-container">
-                    <h2>Détails</h2>
-                    <div class="fr-mt-4w">
-                        <div class="fichezonedelimitee__field fr-mb-1w">Commentaire</div>
-                        <div>{{ fiche.commentaire|default:"nc." }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="fr-col">
-                <div class="fichezonedelimitee__zone-tampon white-container">
-                    <h2>Zone tampon</h2>
-                    <div class="fr-grid-row fr-mt-3w">
-                        <div class="fr-col-8 fichezonedelimitee__field">Rayon tampon réglementaire ou arbitré</div>
-                        <div class="fr-col">
-                            {% if fiche.rayon_zone_tampon %}
-                                {{ fiche.rayon_zone_tampon|remove_trailing_zero }} {{ fiche.unite_rayon_zone_tampon }}
-                            {% else %}
-                                nc.
-                            {% endif %}
+            {% for zone_infestee, detections in zones_infestees %}
+                <div class="fr-col-4">
+                    <div class="fichezonedelimitee__zone-infestee fr-p-3w">
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Nom de la zone</div>
+                            <div class="fr-col">{{ zone_infestee.nom|default:"nc." }}</div>
                         </div>
-                    </div>
-                    <div class="fr-grid-row fr-mt-3w">
-                        <div class="fichezonedelimitee__field fr-col-8">Surface tampon totale</div>
-                        <div class="fr-col">
-                            {% if fiche.surface_tampon_totale %}
-                                {{ fiche.surface_tampon_totale|remove_trailing_zero }} {{ fiche.unite_surface_tampon_totale }}
-                            {% else %}
-                                nc.
-                            {% endif %}
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Caractéristique principale</div>
+                            <div class="fr-col">{{ zone_infestee.get_caracteristique_principale_display|default:"nc." }}</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="white-container fr-pb-5w fr-mt-4w">
-            <h2>Détections hors zone infestée</h2>
-            {% if detections_hors_zone_infestee %}
-                <ul class="fr-tags-group">
-                    {% for fichedetection in detections_hors_zone_infestee %}
-                        <li>
-                            <a href="{{ fichedetection.get_absolute_url }}" class="fr-tag">{{ fichedetection.numero }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Aucune détection</p>
-            {% endif %}
-        </div>
-
-        <div class="white-container fr-mt-4w">
-            <h2>Zones infestées {% if zones_infestees|length %}({{ zones_infestees|length }}){% endif %}</h2>
-            {% if zones_infestees|length %}
-                <div class="fr-grid-row fr-grid-row--gutters">
-                    {% for zone_infestee, detections in zones_infestees %}
-                        <div class="fr-col-4">
-                            <div class="fichezonedelimitee__zone-infestee fr-p-3w">
-                                <div class="fr-grid-row fr-mb-1w">
-                                    <div class="fr-col-7 fichezonedelimitee__field">Nom de la zone</div>
-                                    <div class="fr-col">{{ zone_infestee.nom|default:"nc." }}</div>
-                                </div>
-                                <div class="fr-grid-row fr-mb-1w">
-                                    <div class="fr-col-7 fichezonedelimitee__field">Caractéristique principale</div>
-                                    <div class="fr-col">{{ zone_infestee.get_caracteristique_principale_display|default:"nc." }}</div>
-                                </div>
-                                <div class="fr-grid-row fr-mb-1w">
-                                    <div class="fr-col-7 fichezonedelimitee__field">Rayon de la zone infestée</div>
-                                    <div class="fr-col">
-                                        {% if zone_infestee.rayon %}
-                                            {{ zone_infestee.rayon|remove_trailing_zero }} {{ zone_infestee.unite_rayon }}
-                                        {% else %}
-                                            nc.
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="fr-grid-row fr-mb-1w">
-                                    <div class="fr-col-7 fichezonedelimitee__field">Surface infestée totale</div>
-                                    <div class="fr-col">
-                                        {% if zone_infestee.surface_infestee_totale %}
-                                            {{ zone_infestee.surface_infestee_totale|remove_trailing_zero }} {{ zone_infestee.unite_surface_infestee_totale }}
-                                        {% else %}
-                                            nc.
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% with detections_count=detections.count %}
-                                    <span class="fichezonedelimitee__field">Détections rattachées {% if detections_count %}({{ detections_count }}){% endif %}</span>
-                                    {% if detections_count %}
-                                        <ul class="fr-tags-group fr-mt-3v">
-                                            {% for detection in detections %}
-                                                <li>
-                                                    <a href="{{ detection.get_absolute_url }}" class="fr-tag">{{ detection.numero }}</a>
-                                                </li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% else %}
-                                        <span class="fr-ml-22v">nc.</span>
-                                    {% endif %}
-                                {% endwith %}
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Rayon de la zone infestée</div>
+                            <div class="fr-col">
+                                {% if zone_infestee.rayon %}
+                                    {{ zone_infestee.rayon|remove_trailing_zero }} {{ zone_infestee.unite_rayon }}
+                                {% else %}
+                                    nc.
+                                {% endif %}
                             </div>
                         </div>
-                    {% endfor %}
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Surface infestée totale</div>
+                            <div class="fr-col">
+                                {% if zone_infestee.surface_infestee_totale %}
+                                    {{ zone_infestee.surface_infestee_totale|remove_trailing_zero }} {{ zone_infestee.unite_surface_infestee_totale }}
+                                {% else %}
+                                    nc.
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% with detections_count=detections.count %}
+                            <span class="fichezonedelimitee__field">Détections rattachées {% if detections_count %}({{ detections_count }}){% endif %}</span>
+                            {% if detections_count %}
+                                <ul class="fr-tags-group fr-mt-3v">
+                                    {% for detection in detections %}
+                                        <li>
+                                            <a href="{{ detection.get_absolute_url }}" class="fr-tag">{{ detection.numero }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="fr-ml-22v">nc.</span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
                 </div>
-            {% else %}
-                <p>Aucune zone infestée</p>
-            {% endif %}
+            {% endfor %}
         </div>
-
-        {% include "sv/_list_free_links.html" with classes="fr-mt-8v" %}
-        {% if not fiche.is_draft %}
-            {% include "core/_fiche_bloc_commun.html" %}
-        {% endif %}
-    </div>
-{% endblock %}
+    {% else %}
+        <p>Aucune zone infestée</p>
+    {% endif %}
+</div>

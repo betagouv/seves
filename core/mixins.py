@@ -232,13 +232,13 @@ class WithFreeLinkIdsMixin:
 
 class CanUpdateVisibiliteRequiredMixin:
     """
-    Mixin pour vérifier que l'utilisateur connecté a le droit de modifier la visibilité de la fiche.
+    Mixin pour vérifier que l'utilisateur connecté a le droit de modifier la visibilité.
     """
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.object.can_update_visibilite(request.user):
-            messages.error(request, "Vous n'avez pas les droits pour modifier la visibilité de cette fiche.")
+            messages.error(request, "Vous n'avez pas les droits pour modifier la visibilité de cet objet.")
             return safe_redirect(self.object.get_absolute_url())
         return super().dispatch(request, *args, **kwargs)
 

@@ -13,7 +13,7 @@ from django.forms import BaseInlineFormSet
 from django.db.models import TextChoices
 
 from core.fields import DSFRRadioButton
-from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
+from sv.form_mixins import WithDataRequiredConversionMixin
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -24,18 +24,13 @@ from sv.models import (
     Prelevement,
     Departement,
     EspeceEchantillon,
+    Evenement,
 )
 
 
-class FicheDetectionVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
+class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
     class Meta:
-        model = FicheDetection
-        fields = ["visibilite"]
-
-
-class FicheZoneDelimiteeVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
-    class Meta:
-        model = FicheZoneDelimitee
+        model = Evenement
         fields = ["visibilite"]
 
 
@@ -202,7 +197,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                 self.cleaned_data.pop(field)
 
 
-class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+class FicheDetectionForm(DSFRForm, forms.ModelForm):
     vegetaux_infestes = forms.CharField(
         label="Quantité de végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
     )
@@ -230,6 +225,12 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
         required=False,
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
     )
+    statut_reglementaire = forms.ModelChoiceField(
+        label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=False
+    )
+    organisme_nuisible = forms.ModelChoiceField(
+        label="Organisme nuisible", queryset=OrganismeNuisible.objects.all(), required=False
+    )
 
     class Meta:
         model = FicheDetection
@@ -248,44 +249,40 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             "mesures_phytosanitaires",
             "mesures_surveillance_specifique",
         ]
-        labels = {
-            "statut_evenement": "Statut évènement",
-            "organisme_nuisible": "Organisme nuisible",
-            "statut_reglementaire": "Statut réglementaire",
-        }
+        labels = {"statut_evenement": "Statut évènement"}
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-
         super().__init__(*args, **kwargs)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_europhyt")
             self.fields.pop("numero_rasff")
 
+        if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (
+            self.instance.pk and self.instance.evenement
+        ):
+            self.fields.pop("organisme_nuisible")
+            self.fields.pop("statut_reglementaire")
+
         for field_name, field in self.fields.items():
             if isinstance(field, forms.ModelChoiceField):
                 field.empty_label = settings.SELECT_EMPTY_CHOICE
-
-        self._add_free_links(obj_type="detection")
 
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.createur = self.user.agent.structure
         if commit:
             instance.save()
-            self.save_free_links(instance)
         return instance
 
 
-class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     organisme_nuisible = forms.CharField(
-        widget=forms.TextInput(attrs={"readonly": ""}),
-        label="Organisme nuisible",
+        widget=forms.TextInput(attrs={"readonly": ""}), label="Organisme nuisible", required=False
     )
     statut_reglementaire = forms.CharField(
-        widget=forms.TextInput(attrs={"readonly": ""}),
-        label="Statut réglementaire",
+        widget=forms.TextInput(attrs={"readonly": ""}), label="Statut réglementaire", required=False
     )
     date_creation = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"disabled": "", "value": now().strftime("%d/%m/%Y")}),
@@ -311,7 +308,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
 
     class Meta:
         model = FicheZoneDelimitee
-        exclude = ["date_creation", "numero", "createur", "etat"]
+        exclude = ["date_creation", "numero", "createur"]
         labels = {
             "statut_reglementaire": "Statut réglementaire",
         }
@@ -329,26 +326,12 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        if not self.instance.is_draft:
-            self.fields.pop("visibilite")
+        if self.initial.get("evenement"):
+            queryset = FicheDetection.objects.filter(evenement=self.initial.get("evenement"))
+        elif self.instance.pk:
+            queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
 
-        self._add_free_links(obj_type="zone")
-
-        organisme_nuisible_libelle = self.data.get("organisme_nuisible") or self.initial.get("organisme_nuisible")
-        self.fields["detections_hors_zone"].queryset = (
-            FicheDetection.objects.all()
-            .get_all_not_in_fiche_zone_delimitee(
-                organisme_nuisible_libelle, self.instance if self.instance.pk else None
-            )
-            .exclude_brouillon()
-            .order_by_numero_fiche()
-        )
-
-    def clean_organisme_nuisible(self):
-        return OrganismeNuisible.objects.get(libelle_court=self.cleaned_data["organisme_nuisible"])
-
-    def clean_statut_reglementaire(self):
-        return StatutReglementaire.objects.get(libelle=self.cleaned_data["statut_reglementaire"])
+        self.fields["detections_hors_zone"].queryset = queryset.order_by_numero_fiche()
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():
@@ -370,10 +353,11 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.createur = self.user.agent.structure
+        if not instance.numero:
+            instance.numero = self.initial.get("evenement").numero
         if commit:
             instance.save()
             self.save_detections_hors_zone(instance)
-            self.save_free_links(instance)
         return instance
 
     def save_detections_hors_zone(self, instance):
@@ -419,7 +403,7 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        organisme_nuisible_libelle = kwargs.pop("organisme_nuisible_libelle", None)
+        evenement = kwargs.pop("evenement")
         fiche_zone_delimitee = kwargs.pop("fiche_zone_delimitee", None)
 
         super().__init__(*args, **kwargs)
@@ -430,12 +414,7 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
             else fiche_zone_delimitee
         )
 
-        self.fields["detections"].queryset = (
-            FicheDetection.objects.all()
-            .get_all_not_in_fiche_zone_delimitee(organisme_nuisible_libelle, fiche_zone_delimitee)
-            .exclude_brouillon()
-            .order_by_numero_fiche()
-        )
+        self.fields["detections"].queryset = FicheDetection.objects.filter(evenement=evenement).order_by_numero_fiche()
 
         if self.instance.pk:
             self.fields["detections"].initial = self.instance.fichedetection_set.all()
@@ -492,3 +471,20 @@ ZoneInfesteeFormSet = inlineformset_factory(
 ZoneInfesteeFormSetUpdate = inlineformset_factory(
     FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=0, can_delete=False
 )
+
+
+class EvenementForm(DSFRForm, forms.ModelForm):
+    class Meta:
+        model = Evenement
+        fields = ["organisme_nuisible", "statut_reglementaire"]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.createur = self.user.agent.structure
+        if commit:
+            instance.save()
+        return instance

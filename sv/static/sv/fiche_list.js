@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const choices = new Choices(document.getElementById('id_organisme_nuisible'), {
+    const choices = new Choices(document.getElementById('id_evenement__organisme_nuisible'), {
         classNames: {
             containerInner: 'fr-select',
         },

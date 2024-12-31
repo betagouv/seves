@@ -1,14 +1,15 @@
-from django.urls import reverse
-from core.models import Visibilite
-from sv.factories import FicheDetectionFactory, LieuFactory
-from sv.models import Lieu, Prelevement, FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from model_bakery import baker
-from playwright.sync_api import expect, Page
+from playwright.sync_api import expect
+
+from sv.models import Lieu, Prelevement
 
 
 def test_lieu_details(live_server, page, fiche_detection):
     "Test que les détails d'un lieu s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, is_etablissement=True)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
@@ -43,6 +44,9 @@ def test_lieu_details(live_server, page, fiche_detection):
 def test_lieu_details_second_lieu(live_server, page, fiche_detection):
     "Test que si je clique sur le bouton 'Consulter le détail du lieu' d'un deuxième lieu, les détails de ce lieu s'affichent correctement dans la modale"
     baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu2.nom}").click()
@@ -59,6 +63,9 @@ def test_lieu_details_second_lieu(live_server, page, fiche_detection):
 def test_lieu_details_with_no_data(live_server, page, fiche_detection):
     "Test que les détails d'un lieu s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_test_id("lieu-1-adresse")).to_contain_text("nc.")
@@ -72,6 +79,9 @@ def test_lieu_details_with_no_data(live_server, page, fiche_detection):
 
 def test_prelevement_card(live_server, page, fiche_detection):
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     prelevement = baker.make(
         Prelevement, lieu=lieu, is_officiel=False, numero_echantillon="12345", resultat=Prelevement.Resultat.DETECTE
     )
@@ -86,6 +96,9 @@ def test_prelevement_card(live_server, page, fiche_detection):
 def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
     "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     prelevement = baker.make(
         Prelevement,
         lieu=lieu,
@@ -124,6 +137,9 @@ def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
 def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
     "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     prelevement = baker.make(Prelevement, lieu=lieu)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
@@ -141,6 +157,9 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page, fiche_detection):
     "Test que si je clique sur le bouton 'Consulter le détail du prélèvement' d'un deuxième prélèvement, les détails de ce prélèvement s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     baker.make(
         Prelevement,
         lieu=lieu,
@@ -179,91 +198,11 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
 def test_prelevement_officiel_details(live_server, page, fiche_detection):
     "Test que les détails d'un prélèvement officiel s'affichent correctement dans la modale"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    evenement = fiche_detection.evenement
+    evenement.createur = fiche_detection.createur
+    evenement.save()
     prelevement = baker.make(Prelevement, lieu=lieu, is_officiel=True, _fill_optional=True)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement officiel")
     expect(page.get_by_test_id("prelevement-1-laboratoire")).to_contain_text(prelevement.laboratoire.nom)
-
-
-def test_have_link_to_fiche_zone_delimitee_if_hors_zone_infestee(live_server, page, fiche_detection):
-    "Si une fiche détection est liée à une hors zone infestée d'une fiche zone délimitée, un lien vers cette fiche zone délimitée doit être présent"
-    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
-    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
-    fiche_detection.save()
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
-    expect(link).to_be_visible()
-    expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())
-
-
-def test_have_link_to_fiche_zone_delimitee_if_zone_infestee(live_server, page, fiche_detection):
-    "Si une fiche détection est liée à une zone infestée d'une fiche zone délimitée, un lien vers cette fiche zone délimitée doit être présent"
-    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
-    fiche_detection.zone_infestee = zone_infestee
-    fiche_detection.save()
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    link = page.get_by_role("link", name=f"zone {fiche_zone_delimitee.numero}")
-    expect(link).to_be_visible()
-    expect(link).to_have_attribute("href", fiche_zone_delimitee.get_absolute_url())
-
-
-def test_fiche_detection_brouillon_cannot_add_zone(live_server, page, mocked_authentification_user):
-    fiche_detection = FicheDetection.objects.create(
-        visibilite=Visibilite.BROUILLON, createur=mocked_authentification_user.agent.structure
-    )
-
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Ajouter une zone")).not_to_be_visible()
-
-    # simule le fait d'effectuer la requete GET directement pour ajouter une zone
-    page.goto(f"{live_server.url}{reverse('rattachement-fiche-zone-delimitee', args=[fiche_detection.id])}")
-    expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()
-
-
-def test_synthese_shows_multiple_communes_with_tooltip(live_server, page: Page):
-    """Test l'affichage du descripteur Commune avec tooltip dans la vue synthèse de la fiche détection
-    lorsqu'il y a plusieurs communes renseignées dans les lieux"""
-    fiche = FicheDetectionFactory()
-    LieuFactory(fiche_detection=fiche, commune="Paris")
-    LieuFactory(fiche_detection=fiche, commune="Lyon")
-    LieuFactory(fiche_detection=fiche, commune="Marseille")
-
-    page.goto(f"{live_server}{fiche.get_absolute_url()}")
-    page.get_by_text("Synthèse").click()
-
-    expect(page.locator("#synthese-communes-list")).to_contain_text("Paris +2")
-    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
-    counter.hover()
-    tooltip = page.locator("#tooltip-additional-communes")
-    expect(tooltip).to_be_visible()
-    expect(tooltip).to_contain_text("Lyon, Marseille")
-
-
-def test_synthese_single_commune(live_server, page: Page):
-    """Test l'affichage du descripteur Commune dans la vue synthèse de la fiche détection
-    lorsqu'il y a qu'une commune renseignée dans les lieux"""
-    fiche = FicheDetectionFactory()
-    LieuFactory(fiche_detection=fiche, commune="Paris")
-    LieuFactory(fiche_detection=fiche, commune="")
-
-    page.goto(f"{live_server}{fiche.get_absolute_url()}")
-    page.get_by_text("Synthèse").click()
-
-    expect(page.locator("#synthese-communes-list")).to_contain_text("Paris")
-    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
-    expect(counter).to_have_count(0)
-
-
-def test_synthese_no_commune(live_server, page: Page):
-    """Test l'affichage du descripteur Commune dans la vue synthèse de la fiche détection lorsqu'il y a aucun lieu"""
-    fiche = FicheDetectionFactory()
-    LieuFactory(fiche_detection=fiche, commune="")
-
-    page.goto(f"{live_server}{fiche.get_absolute_url()}")
-    page.get_by_text("Synthèse").click()
-
-    expect(page.locator("#synthese-communes-list")).to_contain_text("nc.")
-    counter = page.locator('[aria-describedby="tooltip-additional-communes"]')
-    expect(counter).to_have_count(0)

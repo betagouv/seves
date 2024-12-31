@@ -1,10 +1,9 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from model_bakery import baker
 from django.db.utils import IntegrityError
+from model_bakery import baker
 
-from core.models import Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import FicheDetectionFactory, LieuFactory, PrelevementFactory
 from sv.models import (
@@ -93,28 +92,6 @@ def test_fiche_detection_with_hors_zone_infestee_and_zone_infestee():
             FicheDetection,
             hors_zone_infestee=baker.make(FicheZoneDelimitee),
             zone_infestee=baker.make(ZoneInfestee, fiche_zone_delimitee=baker.make(FicheZoneDelimitee)),
-        )
-
-
-@pytest.mark.django_db
-def test_fiche_detection_numero_fiche_is_null_when_visibilite_is_brouillon():
-    with pytest.raises(IntegrityError):
-        baker.make(
-            FicheDetection,
-            etat=Etat.objects.get(id=Etat.get_etat_initial()),
-            visibilite=Visibilite.BROUILLON,
-            _fill_optional=True,
-        )
-
-
-@pytest.mark.django_db
-def test_constraint_check_fiche_zone_delimitee_numero_fiche_is_null_when_visibilite_is_brouillon():
-    with pytest.raises(IntegrityError):
-        baker.make(
-            FicheZoneDelimitee,
-            etat=Etat.objects.get(id=Etat.get_etat_initial()),
-            visibilite=Visibilite.BROUILLON,
-            _fill_optional=True,
         )
 
 

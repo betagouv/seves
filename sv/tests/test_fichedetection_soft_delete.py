@@ -10,11 +10,11 @@ from sv.models import FicheDetection
 
 
 @pytest.mark.django_db
-def test_can_delete_fiche_detection(live_server, page, fiche_detection):
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+def test_can_delete_fiche_detection(live_server, page):
+    fiche_detection = FicheDetectionFactory()
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
 
-    page.get_by_role("button", name="Actions").click()
-    page.get_by_role("link", name="Supprimer la fiche").click()
+    page.get_by_text("Supprimer la détection", exact=True).click()
     page.get_by_test_id("submit-delete").click()
 
     expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
@@ -25,7 +25,7 @@ def test_can_delete_fiche_detection(live_server, page, fiche_detection):
 
 @pytest.mark.django_db
 def test_cant_forge_deletion_of_fiche_we_cant_see(client, mocked_authentification_user):
-    fiche_detection = FicheDetectionFactory(createur=Structure.objects.create(libelle="A new structure"))
+    fiche_detection = FicheDetectionFactory(evenement__createur=Structure.objects.create(libelle="A new structure"))
     response = client.get(fiche_detection.get_absolute_url())
 
     assert response.status_code == 403

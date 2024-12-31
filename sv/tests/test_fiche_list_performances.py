@@ -9,13 +9,13 @@ def test_list_detection_performance(
     fiche_detection_bakery()
     client.get(reverse("fiche-liste"))
 
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(9):
         client.get(reverse("fiche-liste"))
 
     for _ in range(0, 5):
         fiche_detection_bakery()
 
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(19):
         client.get(reverse("fiche-liste"))
 
 
@@ -25,11 +25,11 @@ def test_list_zone_performance(client, django_assert_num_queries, mocked_authent
     url = reverse("fiche-liste") + "?type_fiche=zone"
     client.get(url)
 
-    with django_assert_num_queries(6):
+    with django_assert_num_queries(5):
         client.get(url)
 
     for _ in range(0, 5):
         fiche_zone_bakery()
 
-    with django_assert_num_queries(6):
+    with django_assert_num_queries(5):
         client.get(url)

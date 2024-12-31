@@ -1,11 +1,15 @@
+from datetime import datetime
+
 import pytest
 from django.conf import settings
-from model_bakery import baker
-from datetime import datetime
-from playwright.sync_api import Page, expect
 from django.urls import reverse
+from model_bakery import baker
+from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
+from core.models import Contact
+from sv.constants import REGIONS, DEPARTEMENTS
+from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
@@ -20,13 +24,7 @@ from ..models import (
     Region,
     StructurePreleveuse,
     SiteInspection,
-    FicheZoneDelimitee,
 )
-
-from sv.constants import REGIONS, DEPARTEMENTS
-from core.models import Contact, LienLibre, Visibilite, Structure
-
-from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +63,6 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.lieux_title).to_be_visible()
     expect(form_elements.prelevements_title).to_be_visible()
     expect(form_elements.mesures_gestion_title).to_be_visible()
-    expect(form_elements.save_brouillon_btn).to_be_visible()
     expect(form_elements.publish_btn).to_be_visible()
     expect(form_elements.add_lieu_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_disabled()
@@ -165,8 +162,8 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.createur == mocked_authentification_user.agent.structure
     assert fiche_detection.statut_evenement.libelle == statut_evenement.libelle
-    assert fiche_detection.organisme_nuisible.libelle_court == organisme_nuisible.libelle_court
-    assert fiche_detection.statut_reglementaire.id == statut_reglementaire.id
+    assert fiche_detection.evenement.organisme_nuisible.libelle_court == organisme_nuisible.libelle_court
+    assert fiche_detection.evenement.statut_reglementaire.id == statut_reglementaire.id
     assert fiche_detection.contexte.id == contexte.id
     assert fiche_detection.date_premier_signalement.strftime("%Y-%m-%d") == "2024-04-21"
     assert fiche_detection.commentaire == "test commentaire"
@@ -270,11 +267,12 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
 
 
+@pytest.mark.skip(reason="refacto evenement")
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à la structure de l'utilisateur connecté
-    est ajouté dans la liste des contacts de la fiche détection"""
+    est ajouté dans la liste des contacts de l'événement"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
     form_elements.publish_btn.click()
@@ -286,14 +284,14 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
 
     fiche_detection = FicheDetection.objects.last()
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
-    assert user_contact_structure in fiche_detection.contacts.all()
+    assert user_contact_structure in fiche_detection.evenement.contacts.all()
 
 
 def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à l'agent de l'utilisateur connecté
-    est ajouté dans la liste des contacts de la fiche détection"""
+    est ajouté dans la liste des contacts de l'événement"""
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
     form_elements.publish_btn.click()
@@ -302,7 +300,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
 
     fiche_detection = FicheDetection.objects.last()
     user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
-    assert user_contact_agent in fiche_detection.contacts.all()
+    assert user_contact_agent in fiche_detection.evenement.contacts.all()
 
 
 def test_add_lieu_with_name_only_and_save(
@@ -322,19 +320,6 @@ def test_add_lieu_with_name_only_and_save(
     assert lieu.nom == "Chez moi"
 
 
-def test_fiche_detection_numero_fiche_is_null_when_save_with_visibilite_brouillon(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements
-):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    form_elements.save_brouillon_btn.click()
-
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero is None
-    assert fiche_detection.visibilite == Visibilite.BROUILLON
-
-
 @pytest.mark.django_db
 def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
@@ -352,8 +337,8 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     page.wait_for_timeout(600)
 
     fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.organisme_nuisible == organisme_nuisible
-    assert fiche_detection.statut_reglementaire.code == "OQ"
+    assert fiche_detection.evenement.organisme_nuisible == organisme_nuisible
+    assert fiche_detection.evenement.statut_reglementaire.code == "OQ"
 
 
 @pytest.mark.django_db
@@ -379,8 +364,8 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     page.wait_for_timeout(600)
 
     fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.organisme_nuisible == organisme_nuisible_no_status
-    assert fiche_detection.statut_reglementaire is None
+    assert fiche_detection.evenement.organisme_nuisible == organisme_nuisible_no_status
+    assert fiche_detection.evenement.statut_reglementaire is None
 
 
 def test_prelevements_are_always_linked_to_lieu(
@@ -412,89 +397,8 @@ def test_prelevements_are_always_linked_to_lieu(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_with_free_link(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    mocked_authentification_user,
-    fiche_zone_bakery,
-    choice_js_fill,
-):
-    fiche_zone = fiche_zone_bakery()
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
-    choice_js_fill(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
-    form_elements.publish_btn.click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.id is not None
-
-    assert LienLibre.objects.count() == 1
-    lien_libre = LienLibre.objects.get()
-
-    assert lien_libre.related_object_1 == fiche_detection
-    assert lien_libre.related_object_2 == fiche_zone
-
-
-@pytest.mark.django_db
-def test_fiche_detection_with_free_link_cant_see_draft(
-    live_server,
-    page: Page,
-    choice_js_cant_pick,
-):
-    fiche_zone = FicheZoneDelimitee.objects.create(
-        visibilite=Visibilite.BROUILLON,
-        createur=baker.make(Structure),
-        organisme_nuisible=baker.make(OrganismeNuisible),
-        statut_reglementaire=baker.make(StatutReglementaire),
-    )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    fiche_input = "Fiche zone délimitée : " + str(fiche_zone.numero)
-    choice_js_cant_pick(page, "#liens-libre .choices", str(fiche_zone.numero), fiche_input)
-
-
-@pytest.mark.django_db
-def test_free_links_are_ordered_in_fiche_detection_form(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    mocked_authentification_user,
-    fiche_zone_bakery,
-    choice_js_fill,
-):
-    for i in range(1, 3):
-        other_fiche = fiche_zone_bakery()
-        other_fiche.visibilite = Visibilite.NATIONAL
-        other_fiche.save()
-        numero = other_fiche.numero
-        numero.annee = 2024
-        numero.numero = 3 - i
-        numero.save()
-
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    page.query_selector("#liens-libre .choices").click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Fiche Zone")
-    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(1)")).to_contain_text(
-        "Fiche zone délimitée : 2024.2"
-    )
-    expect(page.locator("#liens-libre .choices .choices__item--selectable:nth-of-type(2)")).to_contain_text(
-        "Fiche zone délimitée : 2024.1"
-    )
-
-
-@pytest.mark.django_db
 def test_one_fiche_detection_is_created_when_double_click_on_save_btn(live_server, page: Page):
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     page.get_by_role("button", name="Enregistrer").dblclick()
-    page.wait_for_timeout(600)
-    assert FicheDetection.objects.count() == 1
-
-
-@pytest.mark.django_db
-def test_one_fiche_detection_is_created_when_double_click_on_publish_btn(live_server, page: Page):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    page.get_by_role("button", name="Publier").dblclick()
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1

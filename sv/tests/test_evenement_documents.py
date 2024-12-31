@@ -7,14 +7,14 @@ from playwright.sync_api import Page, expect
 from core.models import Structure, Document, Visibilite
 from django.contrib.auth import get_user_model
 
+from sv.factories import EvenementFactory
+
 User = get_user_model()
 
 
-def test_can_add_document_to_fiche_detection(
-    live_server, page: Page, fiche_variable, mocked_authentification_user: User
-):
-    fiche = fiche_variable()
-    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentification_user: User):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
     expect(page.get_by_test_id("documents-add")).to_be_visible()
     page.get_by_test_id("documents-add").click()
@@ -27,8 +27,8 @@ def test_can_add_document_to_fiche_detection(
     page.locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
 
-    assert fiche.documents.count() == 1
-    document = fiche.documents.get()
+    assert evenement.documents.count() == 1
+    document = evenement.documents.get()
 
     assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
     assert document.nom == "Name of the document"
@@ -43,15 +43,15 @@ def test_can_add_document_to_fiche_detection(
     expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
 
 
-def test_can_see_and_delete_document_on_fiche_detection(
-    live_server, page: Page, fiche_variable, mocked_authentification_user: User, document_recipe
+def test_can_see_and_delete_document_on_evenement(
+    live_server, page: Page, mocked_authentification_user: User, document_recipe
 ):
-    fiche = fiche_variable()
+    evenement = EvenementFactory()
     document = document_recipe().make(nom="Test document", description="")
-    fiche.documents.set([document])
-    assert fiche.documents.count() == 1
+    evenement.documents.set([document])
+    assert evenement.documents.count() == 1
 
-    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
 
@@ -60,7 +60,7 @@ def test_can_see_and_delete_document_on_fiche_detection(
     page.get_by_test_id(f"documents-delete-{document.id}").click()
 
     page.wait_for_timeout(600)
-    document = fiche.documents.get()
+    document = evenement.documents.get()
     assert document.is_deleted is True
     assert document.deleted_by == mocked_authentification_user.agent
 
@@ -70,13 +70,13 @@ def test_can_see_and_delete_document_on_fiche_detection(
     expect(page.get_by_text("Document supprimé")).to_be_visible()
 
 
-def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_variable, document_recipe):
-    fiche = fiche_variable()
+def test_can_edit_document_on_evenement(live_server, page: Page, document_recipe):
+    evenement = EvenementFactory()
     document = document_recipe().make(nom="Test document", description="My description")
-    fiche.documents.set([document])
-    assert fiche.documents.count() == 1
+    evenement.documents.set([document])
+    assert evenement.documents.count() == 1
 
-    page.goto(f"{live_server.url}{fiche.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
 
     expect(page.get_by_text("Test document Information")).to_be_visible()
@@ -88,9 +88,9 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_var
     page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("")
     page.get_by_test_id(f"documents-edit-{document.pk}").click()
 
-    page.wait_for_url(f"**{fiche.get_absolute_url()}#tabpanel-documents-panel")
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
 
-    document = fiche.documents.get()
+    document = evenement.documents.get()
     assert document.nom == "New name"
     assert document.description == ""
 
@@ -98,13 +98,13 @@ def test_can_edit_document_on_fiche_detection(live_server, page: Page, fiche_var
     expect(page.get_by_text("New name", exact=True)).to_be_visible()
 
 
-def test_can_filter_documents_by_type_on_fiche_detection(live_server, page: Page, fiche_variable, document_recipe):
-    fiche = fiche_variable()
+def test_can_filter_documents_by_type_on_evenement(live_server, page: Page, document_recipe):
+    evenement = EvenementFactory()
     document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
     document_2 = document_recipe().make(nom="Ma carto", document_type="cartographie", description="")
-    fiche.documents.set([document_1, document_2])
+    evenement.documents.set([document_1, document_2])
 
-    page.goto(f"{live_server.url}{fiche.get_absolute_url()}#tabpanel-documents-panel")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
@@ -114,24 +114,24 @@ def test_can_filter_documents_by_type_on_fiche_detection(live_server, page: Page
 
     assert (
         page.url
-        == f"{live_server.url}{fiche.get_absolute_url()}?document_type=autre&created_by_structure=#tabpanel-documents-panel"
+        == f"{live_server.url}{evenement.get_absolute_url()}?document_type=autre&created_by_structure=#tabpanel-documents-panel"
     )
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-def test_can_filter_documents_by_unit_on_fiche_detection(live_server, page: Page, fiche_variable, document_recipe):
-    fiche = fiche_variable()
+def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, document_recipe):
+    evenement = EvenementFactory()
     document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
     other_structure = baker.make(Structure)
     document_2 = document_recipe().make(
         nom="Ma carto", document_type="cartographie", description="", created_by_structure=other_structure
     )
     _structure_with_no_document = baker.make(Structure, libelle="Should not be in the list")
-    fiche.documents.set([document_1, document_2])
+    evenement.documents.set([document_1, document_2])
 
-    page.goto(f"{live_server.url}{fiche.get_absolute_url()}#tabpanel-documents-panel")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
@@ -144,27 +144,24 @@ def test_can_filter_documents_by_unit_on_fiche_detection(live_server, page: Page
 
     assert (
         page.url
-        == f"{live_server.url}{fiche.get_absolute_url()}?document_type=&created_by_structure={document_1.created_by_structure.id}#tabpanel-documents-panel"
+        == f"{live_server.url}{evenement.get_absolute_url()}?document_type=&created_by_structure={document_1.created_by_structure.id}#tabpanel-documents-panel"
     )
 
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-def test_cant_add_document_if_brouillon(client, fiche_variable):
-    fiche = fiche_variable()
-    fiche.visibilite = Visibilite.BROUILLON
-    fiche.numero = None
-    fiche.save()
+def test_cant_add_document_if_brouillon(client):
+    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
     test_file = SimpleUploadedFile(name="test.pdf", content=b"contenu du fichier test", content_type="application/pdf")
     data = {
         "nom": "Un fichier test",
         "document_type": Document.TypeDocument.AUTRE,
         "description": "Description du fichier test",
         "file": test_file,
-        "content_type": ContentType.objects.get_for_model(fiche).pk,
-        "object_id": fiche.id,
-        "next": fiche.get_absolute_url(),
+        "content_type": ContentType.objects.get_for_model(evenement).pk,
+        "object_id": evenement.id,
+        "next": evenement.get_absolute_url(),
     }
 
     response = client.post(
@@ -181,17 +178,14 @@ def test_cant_add_document_if_brouillon(client, fiche_variable):
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_cant_delete_document_if_brouillon(client, fiche_variable, document_recipe):
-    fiche = fiche_variable()
-    fiche.visibilite = Visibilite.BROUILLON
-    fiche.numero = None
-    fiche.save()
+def test_cant_delete_document_if_brouillon(client, document_recipe):
+    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
     document = document_recipe().make(nom="Test document", description="un document")
-    fiche.documents.set([document])
+    evenement.documents.set([document])
 
     response = client.post(
         reverse("document-delete", kwargs={"pk": document.pk}),
-        data={"next": fiche.get_absolute_url()},
+        data={"next": evenement.get_absolute_url()},
         follow=True,
     )
     document.refresh_from_db()
@@ -203,17 +197,14 @@ def test_cant_delete_document_if_brouillon(client, fiche_variable, document_reci
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_cant_edit_document_if_brouillon(client, fiche_variable, document_recipe):
-    fiche = fiche_variable()
-    fiche.visibilite = Visibilite.BROUILLON
-    fiche.numero = None
-    fiche.save()
+def test_cant_edit_document_if_brouillon(client, document_recipe):
+    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
     document = document_recipe().make(nom="Test document", description="un document")
-    fiche.documents.set([document])
+    evenement.documents.set([document])
 
     response = client.post(
         reverse("document-update", kwargs={"pk": document.pk}),
-        data={"next": fiche.get_absolute_url(), "nom": "Nouveau nom", "description": "Nouvelle description"},
+        data={"next": evenement.get_absolute_url(), "nom": "Nouveau nom", "description": "Nouvelle description"},
         follow=True,
     )
     document.refresh_from_db()

@@ -4,9 +4,6 @@
     --fiche-detail-bloc-padding: 1.5rem;
     --fiche-detail-bloc-background-color: white;
 }
-main{
-    margin: 2rem 1.5rem;
-}
 .hidden {
     display: none;
 }
