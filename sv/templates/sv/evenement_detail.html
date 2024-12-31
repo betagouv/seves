@@ -59,12 +59,20 @@
             </ul>
             <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
                 <div>
-                    {% for fichedetection in evenement.detections.all %}
-                        {{ fichedetection }}
-                        <div id="fiche-detection-container-{{ fichedetection.pk }}">
-                            {% include "sv/_fichedetection_detail.html" %}
-                        </div>
-                    {% endfor %}
+                    <div class="fr-tabs no-tab-look">
+                        <ul class="fr-tabs__list" role="tablist" aria-label="Liste des détection">
+                            {% for fichedetection in evenement.detections.all %}
+                                <li role="presentation">
+                                    <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% for fichedetection in evenement.detections.all %}
+                            <div id="tabpanel-{{ fichedetection.pk }}-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-{{ fichedetection.pk }}" tabindex="0">
+                                {% include "sv/_fichedetection_detail.html" %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">

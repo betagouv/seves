@@ -10,3 +10,8 @@ main{
     display: flex;
     justify-content: space-between;
 }
+
+.no-tab-look .fr-tabs__panel{
+    padding: 0px !important;
+    border: none !important;
+}
