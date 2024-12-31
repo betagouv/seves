@@ -29,7 +29,7 @@ admin.site.site_header = "Administration de Sèves"
 
 @admin.register(FicheDetection)
 class FicheDetectionAdmin(VersionAdmin):
-    autocomplete_fields = ["contacts"]
+    pass
 
 
 admin.site.register(OrganismeNuisible)

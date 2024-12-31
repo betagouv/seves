@@ -1,0 +1,81 @@
+{% extends 'sv/base.html' %}
+
+{% load static %}
+{% load etat_tags %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sv/common.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/evenement_details.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'sv/evenement_details.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <main>
+        <div>
+            <div class="evenement-top-row">
+                <h1 class="fr-mb-0-5v">Événement {%  if evenement.numero %}{{ evenement.numero }} {%  endif %}</h1>
+
+                <div>
+                    <fieldset class="fr-segmented">
+                        <div class="fr-segmented__elements">
+                            <div class="fr-segmented__element">
+                                <input value="1" checked type="radio" id="detail-btn" name="segmented-2215">
+                                <label class="fr-label" for="detail-btn"><i class="ri-expand-vertical-fill fr-mr-1w"></i>Détail</label>
+                            </div>
+                            <div class="fr-segmented__element">
+                                <input value="2" type="radio" id="synthese-btn" name="segmented-2215">
+                                <label class="fr-label" for="synthese-btn"><i class="ri-collapse-vertical-fill fr-mr-1w"></i>Synthèse</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="evenement-top-row--actions">
+                    <div>Ajouter une détection</div>
+                    <div>Ajouter une zone</div>
+                    <div>Actions</div>
+                </div>
+            </div>
+            <div>
+                {% if evenement.is_ac_notified %}
+                    <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
+                {% endif %}
+                <p class="fr-badge fr-badge--no-icon">{{ evenement.visibilite }}</p>
+            </div>
+        </div>
+
+        <div class="fr-tabs fr-mt-3w">
+            <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
+                <li role="presentation">
+                    <button id="tabpanel-404" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
+                </li>
+                <li role="presentation">
+                    <button id="tabpanel-405" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
+                </li>
+            </ul>
+            <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
+                <div>
+                    {% for fichedetection in evenement.detections.all %}
+                        {{ fichedetection }}
+                        <div id="fiche-detection-container-{{ fichedetection.pk }}">
+                            {% include "sv/_fichedetection_detail.html" %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
+                <p>Contenu 2</p>
+            </div>
+        </div>
+
+{#        TODO Lien libre#}
+
+{#        TODO  Bloc commun#}
+
+    </main>
+
+{% endblock %}

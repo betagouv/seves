@@ -39,6 +39,7 @@ from sv.forms import (
     FicheDetectionForm,
     LieuFormSet,
     PrelevementForm,
+    EvenementForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -51,6 +52,7 @@ from .models import (
     ZoneInfestee,
     StructurePreleveuse,
     Laboratoire,
+    Evenement,
 )
 from .view_mixins import FicheDetectionContextMixin, WithPrelevementHandlingMixin
 
@@ -84,66 +86,68 @@ class FicheListView(ListView):
         return context
 
 
-class FicheDetectionDetailView(
+# TODO add free links ?
+class EvenementDetailView(
     WithDocumentListInContextMixin,
     WithDocumentUploadFormMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
-    WithFreeLinksListInContextMixin,
     UserPassesTestMixin,
     DetailView,
 ):
-    model = FicheDetection
-    queryset = FicheDetection.objects.all().optimized_for_details().with_fiche_zone_delimitee_numero()
+    model = Evenement
+    # TODO     queryset = FicheDetection.objects.all().optimized_for_details().with_fiche_zone_delimitee_numero()
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
             return self.object
-
         self.object = super().get_object(queryset)
         return self.object
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["lieux"] = (
-            Lieu.objects.filter(fiche_detection=self.get_object())
-            .order_by("id")
-            .select_related("departement__region", "site_inspection")
-        )
-        context["lieux_with_commune"] = (
-            Lieu.objects.filter(fiche_detection=self.get_object()).exclude(commune="").order_by("id")
-        )
-        prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
-        context["prelevements"] = prelevement.select_related(
-            "structure_preleveuse",
-            "lieu",
-            "matrice_prelevee",
-            "espece_echantillon",
-            "laboratoire",
-        )
-        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
-            self.get_object()
-        )
-        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
-        context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
-        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
-        context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
-        context["publier_form"] = FicheDetectionVisibiliteUpdateForm(
-            obj=self.get_object(), action="publier" if self.get_object().is_draft else None
-        )
-        context["rattachement_detection_form"] = RattachementDetectionForm()
-        context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
-        context["latest_version"] = self.get_object().latest_version
-        return context
 
     def test_func(self) -> bool | None:
         """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
         return self.get_object().can_user_access(self.request.user)
 
     def handle_no_permission(self):
-        """Affiche une erreur 403 Forbidden si l'utilisateur n'a pas la permission d'accéder à la vue. (cf. UserPassesTestMixin)."""
         raise PermissionDenied()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # context["lieux"] = (
+        #     Lieu.objects.filter(fiche_detection=self.get_object())
+        #     .order_by("id")
+        #     .select_related("departement__region", "site_inspection")
+        # )
+        # context["lieux_with_commune"] = (
+        #     Lieu.objects.filter(fiche_detection=self.get_object()).exclude(commune="").order_by("id")
+        # )
+        # prelevement = Prelevement.objects.filter(lieu__fiche_detection=self.get_object())
+        # context["prelevements"] = prelevement.select_related(
+        #     "structure_preleveuse",
+        #     "lieu",
+        #     "matrice_prelevee",
+        #     "espece_echantillon",
+        #     "laboratoire",
+        # )
+        # context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        # contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
+        #     self.get_object()
+        # )
+        # context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
+        # context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
+        # context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        # context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
+        # context["publier_form"] = FicheDetectionVisibiliteUpdateForm(
+        #     obj=self.get_object(), action="publier" if self.get_object().is_draft else None
+        # )
+        # context["rattachement_detection_form"] = RattachementDetectionForm()
+        # context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
+        # context["latest_version"] = self.get_object().latest_version
+        return context
+
+
+class FicheDetectionDetailView(DetailView):
+    model = FicheDetection
 
 
 class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
@@ -172,8 +176,10 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
         return context
 
     def post(self, request, *args, **kwargs):
+        # TODO add createur on the evenement model ?????????????????
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
+        evenement_form = EvenementForm(request.POST)
 
         if not form.is_valid():
             return self.form_invalid(form)
@@ -181,11 +187,19 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
         if not lieu_formset.is_valid():
             return self.form_invalid(form)
 
+        if not evenement_form.is_valid():
+            return self.form_invalid(form)
+
         with transaction.atomic():
-            self.object = form.save()
+            evenement = evenement_form.save(commit=False)
             if request.POST["action"] == "Publier":
-                self.object.visibilite = Visibilite.LOCAL
-                self.object.save()
+                evenement.visibilite = Visibilite.LOCAL
+            evenement.save()
+
+            self.object = form.save(commit=False)
+            self.object.evenement = evenement
+            self.object.save()
+
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             allowed_lieux = Lieu.objects.filter(pk__in=[lieu.id for lieu in allowed_lieux])
@@ -195,8 +209,10 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
                 for message in e.messages:
                     messages.error(self.request, message)
                 return self.form_invalid(form)
-            self.object.contacts.add(self.request.user.agent.contact_set.get())
-            self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
+
+            # TODO do this on evenement instead
+            evenement.contacts.add(self.request.user.agent.contact_set.get())
+            evenement.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         return HttpResponseRedirect(self.get_success_url())
 

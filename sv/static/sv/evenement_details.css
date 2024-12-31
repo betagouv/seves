@@ -1,0 +1,12 @@
+main{
+    margin: 2rem 1.5rem;
+}
+
+.evenement-top-row {
+    display: flex;
+    justify-content: space-between;
+}
+.evenement-top-row--actions {
+    display: flex;
+    justify-content: space-between;
+}

@@ -24,6 +24,7 @@ from sv.models import (
     Prelevement,
     Departement,
     EspeceEchantillon,
+    Evenement,
 )
 
 
@@ -230,6 +231,10 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
         required=False,
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
     )
+    statut_reglementaire = forms.ModelChoiceField(
+        label="Statut réglementaire", queryset=StatutReglementaire.objects.all()
+    )
+    organisme_nuisible = forms.ModelChoiceField(label="Organisme nuisible", queryset=OrganismeNuisible.objects.all())
 
     class Meta:
         model = FicheDetection
@@ -248,11 +253,7 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             "mesures_phytosanitaires",
             "mesures_surveillance_specifique",
         ]
-        labels = {
-            "statut_evenement": "Statut évènement",
-            "organisme_nuisible": "Organisme nuisible",
-            "statut_reglementaire": "Statut réglementaire",
-        }
+        labels = {"statut_evenement": "Statut évènement"}
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -492,3 +493,9 @@ ZoneInfesteeFormSet = inlineformset_factory(
 ZoneInfesteeFormSetUpdate = inlineformset_factory(
     FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=0, can_delete=False
 )
+
+
+class EvenementForm(DSFRForm, forms.ModelForm):
+    class Meta:
+        model = Evenement
+        fields = ["organisme_nuisible", "statut_reglementaire"]

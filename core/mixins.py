@@ -68,7 +68,8 @@ class WithContactListInContextMixin:
             .select_related("structure")
         )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
+        # TODO waiting for response from thomas
+        # context["contacts_fin_suivi"] = Contact.objects.filter(finsuivicontact__in=self.get_object().fin_suivi.all())
         return context
 
 

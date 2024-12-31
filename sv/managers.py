@@ -20,21 +20,21 @@ class FicheDetectionManager(models.Manager):
 
 class BaseVisibilityQuerySet(models.QuerySet):
     def get_fiches_user_can_view(self, user):
-        """Renvoi les fiches que l'utilisateur peut voir en fonction de sa structure et de la visibilité de la fiche"""
         if user.agent.structure.is_mus_or_bsv:
             return self.filter(
-                Q(visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
-                | Q(visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
+                Q(evenement__visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
+                | Q(evenement__visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
             )
         return self.filter(
-            Q(visibilite=Visibilite.NATIONAL)
+            Q(evenement__visibilite=Visibilite.NATIONAL)
             | Q(
-                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
+                evenement__visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
                 createur=user.agent.structure,
             )
         )
 
     def exclude_brouillon(self):
+        return self  # TODO ask Thomas about this
         return self.exclude(visibilite=Visibilite.BROUILLON)
 
 
@@ -60,15 +60,13 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
 
     def optimized_for_list(self):
-        return self.select_related("etat", "numero", "organisme_nuisible", "createur")
+        return self.select_related("etat", "numero", "createur")
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
 
     def optimized_for_details(self):
-        return self.select_related(
-            "statut_reglementaire", "etat", "numero", "contexte", "createur", "statut_evenement", "organisme_nuisible"
-        )
+        return self.select_related("etat", "numero", "contexte", "createur")
 
     def get_all_not_in_fiche_zone_delimitee(self, organisme_nuisible_libelle, instance=None):
         query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)

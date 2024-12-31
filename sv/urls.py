@@ -14,6 +14,7 @@ from .views import (
     FicheZoneDelimiteeDetailView,
     FicheZoneDelimiteeUpdateView,
     FicheZoneDelimiteeVisibiliteUpdateView,
+    EvenementDetailView,
 )
 
 urlpatterns = [
@@ -26,6 +27,11 @@ urlpatterns = [
         "fiches-detection/<int:pk>/",
         FicheDetectionDetailView.as_view(),
         name="fiche-detection-vue-detaillee",
+    ),
+    path(
+        "evenement/<int:pk>/",
+        EvenementDetailView.as_view(),
+        name="evenement-details",
     ),
     path(
         "fiches-detection/creation/",

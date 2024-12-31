@@ -9,19 +9,16 @@ from reversion.models import Version
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
-    AllowACNotificationMixin,
-    AllowVisibiliteMixin,
-    WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
 )
-from core.models import Document, Message, Contact, Structure, FinSuiviContact, UnitesMesure, Visibilite
+from core.models import Structure, FinSuiviContact, UnitesMesure
 from sv.managers import (
     FicheDetectionManager,
 )
 from sv.mixins import WithEtatMixin
-from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire, Etat
-from .prelevements import Prelevement
+from .common import NumeroFiche, Etat
 from .lieux import Lieu
+from .prelevements import Prelevement
 
 
 class Contexte(models.Model):
@@ -135,10 +132,7 @@ class StatutEvenement(models.Model):
 @reversion.register()
 class FicheDetection(
     AllowsSoftDeleteMixin,
-    AllowACNotificationMixin,
-    AllowVisibiliteMixin,
     WithEtatMixin,
-    WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
     models.Model,
 ):
@@ -154,11 +148,7 @@ class FicheDetection(
                     | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
                 ),
                 name="check_hors_zone_infestee_or_zone_infestee_or_none",
-            ),
-            models.CheckConstraint(
-                check=~(Q(visibilite="brouillon") & Q(numero__isnull=False)),
-                name="check_numero_fiche_is_null_when_visibilite_is_brouillon",
-            ),
+            )
         ]
 
     # Informations générales
@@ -172,22 +162,6 @@ class FicheDetection(
         StatutEvenement,
         on_delete=models.PROTECT,
         verbose_name="Statut de l'événement",
-        blank=True,
-        null=True,
-    )
-
-    # Objet de l'événement
-    organisme_nuisible = models.ForeignKey(
-        OrganismeNuisible,
-        on_delete=models.PROTECT,
-        verbose_name="OEPP",
-        blank=True,
-        null=True,
-    )
-    statut_reglementaire = models.ForeignKey(
-        StatutReglementaire,
-        on_delete=models.PROTECT,
-        verbose_name="Statut règlementaire de l'organisme",
         blank=True,
         null=True,
     )
@@ -211,28 +185,27 @@ class FicheDetection(
         Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    documents = GenericRelation(Document)
-    messages = GenericRelation(Message)
-    contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
     fin_suivi = GenericRelation(FinSuiviContact)
     hors_zone_infestee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True)
     zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
+    evenement = models.ForeignKey("Evenement", on_delete=models.PROTECT, null=False, related_name="detections")
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
 
     objects = FicheDetectionManager()
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():
-            if not self.numero and self.visibilite == Visibilite.LOCAL:
+            if not self.numero:
                 self.numero = NumeroFiche.get_next_numero()
             super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("fiche-detection-vue-detaillee", kwargs={"pk": self.pk})
+        return self.evenement.get_absolute_url()
 
     def get_update_url(self):
         return reverse("fiche-detection-modification", kwargs={"pk": self.pk})
 
+    # TODO should be removed
     def get_visibilite_update_url(self):
         return reverse("fiche-detection-visibilite-update", kwargs={"pk": self.pk})
 
@@ -273,3 +246,7 @@ class FicheDetection(
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
+
+    # TODO temporary should not be needed
+    def can_user_access(self, user):
+        return self.evenement.can_user_access(user)
