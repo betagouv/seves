@@ -315,7 +315,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
 
     class Meta:
         model = FicheZoneDelimitee
-        exclude = ["date_creation", "numero", "createur", "etat"]
+        exclude = ["date_creation", "numero", "createur"]
         labels = {
             "statut_reglementaire": "Statut réglementaire",
         }
@@ -332,9 +332,6 @@ class FicheZoneDelimiteeForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
         self.detections_zones_infestees_formset = kwargs.pop("detections_zones_infestees_formset", None)
 
         super().__init__(*args, **kwargs)
-
-        if not self.instance.is_draft:
-            self.fields.pop("visibilite")
 
         self._add_free_links(obj_type="zone")
 

@@ -6,7 +6,7 @@ from django.urls import reverse
 from core.mixins import (
     WithFreeLinkIdsMixin,
 )
-from core.models import Structure, UnitesMesure, Visibilite
+from core.models import Structure, UnitesMesure
 from sv.managers import (
     FicheZoneManager,
 )
@@ -29,7 +29,7 @@ class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
         verbose_name_plural = "Fiches zones délimitées"
 
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    numero = models.OneToOneField(
+    numero = models.ForeignKey(
         NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
@@ -55,20 +55,11 @@ class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
 
     objects = FicheZoneManager()
 
-    def save(self, *args, **kwargs):
-        # TODO ici donner le numéro de l'evenement lié
-        if not self.numero and self.visibilite == Visibilite.LOCAL:
-            self.numero = NumeroFiche.get_next_numero()
-        super().save(*args, **kwargs)
-
     def get_absolute_url(self):
-        return reverse("fiche-zone-delimitee-detail", kwargs={"pk": self.pk})
+        return self.evenement.get_absolute_url()
 
     def get_update_url(self):
         return reverse("fiche-zone-delimitee-update", kwargs={"pk": self.pk})
-
-    def get_visibilite_update_url(self):
-        return reverse("fiche-zone-visibilite-update", kwargs={"pk": self.pk})
 
     def __str__(self):
         return str(self.numero)

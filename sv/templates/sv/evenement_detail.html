@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/evenement_details.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/fichezonedelimitee_detail.css' %}">
 {% endblock %}
 
 {% block scripts %}
@@ -36,7 +37,7 @@
 
                 <div class="evenement-top-row--actions">
                     <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une détection</a>
-                    <a href="#" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une zone</a>
+                    <a href="{% url 'fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une zone</a>
                     {% include "sv/_evenement_action_navigation.html" %}
                 </div>
             </div>
@@ -77,7 +78,16 @@
                 </div>
             </div>
             <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
-                <p>Contenu 2</p>
+                {% if evenement.fiche_zone_delimitee %}
+                    {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
+                {% else %}
+                    <div class="fr-notice__body">
+                        <p>
+                            <span class="fr-notice__title">Il n'y a pas de zone délimitée pour cet événement</span>
+                        </p>
+                        <button title="Masquer le message" onclick="const notice = this.parentNode.parentNode.parentNode; notice.parentNode.removeChild(notice)" id="button-1290" class="fr-btn--close fr-btn">Masquer le message</button>
+                    </div>
+                {% endif %}
             </div>
         </div>
 

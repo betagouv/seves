@@ -74,7 +74,7 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
             query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
         return (
             self.filter(query)
-            .filter(organisme_nuisible__libelle_court=organisme_nuisible_libelle)
+            .filter(evenement__organisme_nuisible__libelle_court=organisme_nuisible_libelle)
             .select_related("numero")
         )
 

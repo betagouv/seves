@@ -4,7 +4,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -22,7 +21,6 @@ from core.mixins import (
     WithDocumentListInContextMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
-    WithFreeLinksListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
     PreventActionIfVisibiliteBrouillonMixin,
 )
@@ -34,7 +32,6 @@ from sv.forms import (
     ZoneInfesteeFormSet,
     ZoneInfesteeFormSetUpdate,
     RattachementDetectionForm,
-    RattachementChoices,
     FicheZoneDelimiteeVisibiliteUpdateForm,
     FicheDetectionForm,
     LieuFormSet,
@@ -49,7 +46,6 @@ from .models import (
     Lieu,
     Prelevement,
     FicheZoneDelimitee,
-    ZoneInfestee,
     StructurePreleveuse,
     Laboratoire,
     Evenement,
@@ -397,27 +393,28 @@ class FicheZoneDelimiteeCreateView(CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("fiche-zone-delimitee-detail", args=[self.object.pk])
+        return reverse("evenement-details", args=[self.object.evenement.pk])
 
     def get(self, request, *args, **kwargs):
         self.object = None
 
         try:
-            fiche_detection = FicheDetection.objects.get(pk=self.request.GET.get("fiche_detection_id"))
-        except FicheDetection.DoesNotExist:
-            return HttpResponseBadRequest("La fiche de détection n'existe pas.")
+            evenement = Evenement.objects.get(pk=self.request.GET.get("evenement"))
+        except Evenement.DoesNotExist:
+            return HttpResponseBadRequest("L'événement n'existe pas.")
 
-        if fiche_detection.is_linked_to_fiche_zone_delimitee:
-            return HttpResponseBadRequest("La fiche de détection est déjà rattachée à une fiche zone délimitée.")
+        if evenement.fiche_zone_delimitee:
+            return HttpResponseBadRequest("L'événement est déjà rattaché à une fiche zone délimitée.")
 
-        self.organisme_nuisible_libelle = fiche_detection.organisme_nuisible.libelle_court
-        self.statut_reglementaire_libelle = fiche_detection.statut_reglementaire.libelle
+        self.organisme_nuisible_libelle = evenement.organisme_nuisible.libelle_court
+        self.statut_reglementaire_libelle = evenement.statut_reglementaire.libelle
 
-        match self.request.GET.get("rattachement"):
-            case RattachementChoices.HORS_ZONE_INFESTEE:
-                self.hors_zone_infestee_detection = [fiche_detection]
-            case RattachementChoices.ZONE_INFESTEE:
-                self.zone_infestee_detection = fiche_detection
+        # TODO what should I do with this ?
+        # match self.request.GET.get("rattachement"):
+        #     case RattachementChoices.HORS_ZONE_INFESTEE:
+        #         self.hors_zone_infestee_detection = [fiche_detection]
+        #     case RattachementChoices.ZONE_INFESTEE:
+        #         self.zone_infestee_detection = fiche_detection
 
         return super().get(request, *args, **kwargs)
 
@@ -480,7 +477,18 @@ class FicheZoneDelimiteeCreateView(CreateView):
         }
 
     def form_valid(self, form):
-        self.object = form.save()
+        try:
+            evenement = Evenement.objects.get(pk=self.request.POST.get("evenement"))
+        except Evenement.DoesNotExist:
+            return HttpResponseBadRequest("L'événement n'existe pas.")
+
+        self.object = form.save(commit=False)
+        self.object.numero = evenement.numero
+        self.object.save()
+
+        evenement.fiche_zone_delimitee = self.object
+        evenement.save()
+
         self.formset.instance = self.object
         self.formset.save()
         messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
@@ -500,67 +508,61 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeDetailView(
-    WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
-    WithMessagesListInContextMixin,
-    WithContactListInContextMixin,
-    WithFreeLinksListInContextMixin,
-    UserPassesTestMixin,
-    DetailView,
-):
-    model = FicheZoneDelimitee
-    context_object_name = "fiche"
-
-    def get_object(self, queryset=None):
-        if hasattr(self, "object"):
-            return self.object
-
-        self.object = super().get_object(queryset)
-        return self.object
-
-    def get_queryset(self):
-        zone_infestee_detections_prefetch = Prefetch(
-            "fichedetection_set", queryset=FicheDetection.objects.select_related("numero")
-        )
-        zone_infestee_prefetch = Prefetch(
-            "zoneinfestee_set",
-            queryset=ZoneInfestee.objects.prefetch_related(zone_infestee_detections_prefetch),
-        )
-        return FicheZoneDelimitee.objects.select_related(
-            "numero", "createur", "organisme_nuisible", "statut_reglementaire"
-        ).prefetch_related(zone_infestee_prefetch)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        fichezonedelimitee = self.get_object()
-        self._add_visibilite_update_form_to_context(context)
-        context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
-        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
-        contacts_not_in_fin_suivi = FicheZoneDelimitee.objects.all().get_contacts_structures_not_in_fin_suivi(
-            self.get_object()
-        )
-        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
-        context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
-        context["zones_infestees"] = [
-            (zone_infestee, zone_infestee.fichedetection_set.all())
-            for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
-        ]
-        return context
-
-    def _add_visibilite_update_form_to_context(self, context):
-        if not self.get_object().can_update_visibilite(self.request.user):
-            return
-
-        if self.get_object().is_draft:
-            context["publish_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object(), action="publier")
-            return
-
-        context["visibilite_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object())
-
-    def test_func(self) -> bool | None:
-        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
-        return self.get_object().can_user_access(self.request.user)
+# class FicheZoneDelimiteeDetailView(
+#     WithDocumentListInContextMixin,
+#     WithDocumentUploadFormMixin,
+#     WithMessagesListInContextMixin,
+#     WithContactListInContextMixin,
+#     WithFreeLinksListInContextMixin,
+#     UserPassesTestMixin,
+#     DetailView,
+# ):
+#     model = FicheZoneDelimitee
+#     context_object_name = "fiche"
+#
+#     def get_object(self, queryset=None):
+#         if hasattr(self, "object"):
+#             return self.object
+#
+#         self.object = super().get_object(queryset)
+#         return self.object
+#
+#     def get_queryset(self):
+#         zone_infestee_detections_prefetch = Prefetch(
+#             "fichedetection_set", queryset=FicheDetection.objects.select_related("numero")
+#         )
+#         zone_infestee_prefetch = Prefetch(
+#             "zoneinfestee_set",
+#             queryset=ZoneInfestee.objects.prefetch_related(zone_infestee_detections_prefetch),
+#         )
+#         return FicheZoneDelimitee.objects.select_related("numero", "createur",).prefetch_related(zone_infestee_prefetch)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         fichezonedelimitee = self.get_object()
+#         self._add_visibilite_update_form_to_context(context)
+#         context["detections_hors_zone_infestee"] = fichezonedelimitee.fichedetection_set.select_related("numero").all()
+#         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+#         contacts_not_in_fin_suivi = FicheZoneDelimitee.objects.all().get_contacts_structures_not_in_fin_suivi(
+#             self.get_object()
+#         )
+#         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
+#         context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
+#         context["zones_infestees"] = [
+#             (zone_infestee, zone_infestee.fichedetection_set.all())
+#             for zone_infestee in fichezonedelimitee.zoneinfestee_set.all()
+#         ]
+#         return context
+#
+#     def _add_visibilite_update_form_to_context(self, context):
+#         if not self.get_object().can_update_visibilite(self.request.user):
+#             return
+#
+#         if self.get_object().is_draft:
+#             context["publish_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object(), action="publier")
+#             return
+#
+#         context["visibilite_form"] = FicheZoneDelimiteeVisibiliteUpdateForm(obj=self.get_object())
 
 
 class FicheZoneDelimiteeUpdateView(UpdateView):
@@ -587,7 +589,7 @@ class FicheZoneDelimiteeUpdateView(UpdateView):
                 instance=self.object,
                 form_kwargs={
                     "fiche_zone_delimitee": self.object,
-                    "organisme_nuisible_libelle": self.object.organisme_nuisible.libelle_court,
+                    "organisme_nuisible_libelle": self.object.evenement.organisme_nuisible.libelle_court,
                 },
             )
         context["empty_form"] = context["zone_infestee_formset"].empty_form
@@ -595,8 +597,8 @@ class FicheZoneDelimiteeUpdateView(UpdateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        initial["organisme_nuisible"] = self.object.organisme_nuisible
-        initial["statut_reglementaire"] = self.object.statut_reglementaire
+        initial["organisme_nuisible"] = self.object.evenement.organisme_nuisible
+        initial["statut_reglementaire"] = self.object.evenement.statut_reglementaire
         initial["detections_hors_zone"] = list(
             FicheDetection.objects.filter(hors_zone_infestee=self.object, zone_infestee__isnull=True).values_list(
                 "id", flat=True
