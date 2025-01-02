@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
@@ -13,7 +12,6 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
-    FormView,
 )
 
 from core.mixins import (
@@ -21,18 +19,12 @@ from core.mixins import (
     WithDocumentListInContextMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
-    CanUpdateVisibiliteRequiredMixin,
-    PreventActionIfVisibiliteBrouillonMixin,
 )
 from core.models import Visibilite
-from core.redirect import safe_redirect
 from sv.forms import (
-    FicheDetectionVisibiliteUpdateForm,
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
     ZoneInfesteeFormSetUpdate,
-    RattachementDetectionForm,
-    FicheZoneDelimiteeVisibiliteUpdateForm,
     FicheDetectionForm,
     LieuFormSet,
     PrelevementForm,
@@ -292,9 +284,6 @@ class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandli
 
         with transaction.atomic():
             self.object = form.save()
-            if request.POST["action"] == "Publier":
-                self.object.visibilite = Visibilite.LOCAL
-                self.object.save()
             lieu_formset.save()
             allowed_lieux = self.object.lieux.all()
             try:
@@ -345,46 +334,46 @@ class FicheCloturerView(View):
         return redirect(redirect_url)
 
 
-class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = FicheDetection
-    form_class = FicheDetectionVisibiliteUpdateForm
-    http_method_names = ["post"]
-    success_message = "La visibilité de la fiche détection a bien été modifiée."
+# class FicheDetectionVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
+#     model = FicheDetection
+#     form_class = FicheDetectionVisibiliteUpdateForm
+#     http_method_names = ["post"]
+#     success_message = "La visibilité de la fiche détection a bien été modifiée."
+#
+#     def get_success_url(self):
+#         return self.object.get_absolute_url()
+#
+#     def form_invalid(self, form):
+#         messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
+#         return super().form_invalid(form)
+#
+#
+# class FicheZoneDelimiteeVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
+#     model = FicheZoneDelimitee
+#     form_class = FicheZoneDelimiteeVisibiliteUpdateForm
+#     http_method_names = ["post"]
+#     success_message = "La visibilité de la fiche zone délimitée a bien été modifiée."
+#
+#     def get_success_url(self):
+#         return self.object.get_absolute_url()
+#
+#     def form_invalid(self, form):
+#         messages.error(self.request, "La visibilité de la fiche zone délimitée n'a pas pu être modifiée.")
+#         return super().form_invalid(form)
 
-    def get_success_url(self):
-        return self.object.get_absolute_url()
 
-    def form_invalid(self, form):
-        messages.error(self.request, "La visibilité de la fiche détection n'a pas pu être modifiée.")
-        return super().form_invalid(form)
-
-
-class FicheZoneDelimiteeVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = FicheZoneDelimitee
-    form_class = FicheZoneDelimiteeVisibiliteUpdateForm
-    http_method_names = ["post"]
-    success_message = "La visibilité de la fiche zone délimitée a bien été modifiée."
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
-
-    def form_invalid(self, form):
-        messages.error(self.request, "La visibilité de la fiche zone délimitée n'a pas pu être modifiée.")
-        return super().form_invalid(form)
-
-
-class RattachementDetectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
-    form_class = RattachementDetectionForm
-
-    def get_fiche_object(self):
-        self.fiche_detection = FicheDetection.objects.get(pk=self.kwargs.get("pk"))
-        return self.fiche_detection
-
-    def form_valid(self, form):
-        rattachement = form.cleaned_data["rattachement"]
-        return safe_redirect(
-            f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={self.fiche_detection.id}&rattachement={rattachement}"
-        )
+# class RattachementDetectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+#     form_class = RattachementDetectionForm
+#
+#     def get_fiche_object(self):
+#         self.fiche_detection = FicheDetection.objects.get(pk=self.kwargs.get("pk"))
+#         return self.fiche_detection
+#
+#     def form_valid(self, form):
+#         rattachement = form.cleaned_data["rattachement"]
+#         return safe_redirect(
+#             f"{reverse('fiche-zone-delimitee-creation')}?fiche_detection_id={self.fiche_detection.id}&rattachement={rattachement}"
+#         )
 
 
 class FicheZoneDelimiteeCreateView(CreateView):

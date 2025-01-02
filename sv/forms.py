@@ -203,7 +203,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                 self.cleaned_data.pop(field)
 
 
-class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+class FicheDetectionForm(DSFRForm, forms.ModelForm):
     vegetaux_infestes = forms.CharField(
         label="Quantité de végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
     )
@@ -263,7 +263,7 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("numero_europhyt")
             self.fields.pop("numero_rasff")
 
-        if kwargs.get("data") and kwargs.get("data").get("evenement"):
+        if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (self.instance and self.instance.evenement):
             self.fields.pop("organisme_nuisible")
             self.fields.pop("statut_reglementaire")
 
@@ -271,14 +271,11 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
             if isinstance(field, forms.ModelChoiceField):
                 field.empty_label = settings.SELECT_EMPTY_CHOICE
 
-        self._add_free_links(obj_type="detection")
-
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.createur = self.user.agent.structure
         if commit:
             instance.save()
-            self.save_free_links(instance)
         return instance
 
 

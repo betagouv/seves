@@ -7,11 +7,11 @@ from .views import (
     FicheDetectionUpdateView,
     FicheDetectionExportView,
     FicheCloturerView,
-    FicheDetectionVisibiliteUpdateView,
+    # FicheDetectionVisibiliteUpdateView,
     FicheZoneDelimiteeCreateView,
-    RattachementDetectionView,
+    # RattachementDetectionView,
     FicheZoneDelimiteeUpdateView,
-    FicheZoneDelimiteeVisibiliteUpdateView,
+    # FicheZoneDelimiteeVisibiliteUpdateView,
     EvenementDetailView,
 )
 
@@ -46,21 +46,21 @@ urlpatterns = [
         FicheCloturerView.as_view(),
         name="fiche-cloturer",
     ),
-    path(
-        "fiches-detection/<int:pk>/visibilite/",
-        FicheDetectionVisibiliteUpdateView.as_view(),
-        name="fiche-detection-visibilite-update",
-    ),
-    path(
-        "fiches-zone/<int:pk>/visibilite/",
-        FicheZoneDelimiteeVisibiliteUpdateView.as_view(),
-        name="fiche-zone-visibilite-update",
-    ),
-    path(
-        "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",
-        RattachementDetectionView.as_view(),
-        name="rattachement-fiche-zone-delimitee",
-    ),
+    # path(
+    #     "fiches-detection/<int:pk>/visibilite/",
+    #     FicheDetectionVisibiliteUpdateView.as_view(),
+    #     name="fiche-detection-visibilite-update",
+    # ),
+    # path(
+    #     "fiches-zone/<int:pk>/visibilite/",
+    #     FicheZoneDelimiteeVisibiliteUpdateView.as_view(),
+    #     name="fiche-zone-visibilite-update",
+    # ),
+    # path(
+    #     "fiches-detection/<int:pk>/rattachement-fiche-zone-delimitee/",
+    #     RattachementDetectionView.as_view(),
+    #     name="rattachement-fiche-zone-delimitee",
+    # ),
     path(
         "api/espece/recherche/",
         search_espece_echantillon,

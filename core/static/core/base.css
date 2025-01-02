@@ -50,11 +50,18 @@ header{
     background-color: white;
     padding: 2rem !important;
 }
+.white-container--lite {
+    background-color: white;
+    padding: 1rem !important;
+}
 .fr-tabs__panel{
     transition: none !important;
 }
 @media (min-width: 640px) {
-  .choices__list--dropdown .choices__item--selectable {
-    padding-right: 0 !important;
-  }
+    .choices__list--dropdown .choices__item--selectable {
+        padding-right: 0 !important;
+    }
+}
+.bold {
+    font-weight: bold;
 }
