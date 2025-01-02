@@ -87,6 +87,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.PROTECT,
                 to="sv.organismenuisible",
+                default=1,
                 verbose_name="Organisme nuisible",
             ),
         ),
@@ -95,6 +96,7 @@ class Migration(migrations.Migration):
             name="statut_reglementaire",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.PROTECT,
+                default=1,
                 to="sv.statutreglementaire",
                 verbose_name="Statut règlementaire de l'organisme nuisible",
             ),

@@ -3,7 +3,6 @@ from django.urls import path
 from .api_views import search_espece_echantillon
 from .views import (
     FicheListView,
-    FicheDetectionDetailView,
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
     FicheDetectionExportView,
@@ -22,11 +21,6 @@ urlpatterns = [
         "fiches/",
         FicheListView.as_view(),
         name="fiche-liste",
-    ),
-    path(
-        "fiches-detection/<int:pk>/",
-        FicheDetectionDetailView.as_view(),
-        name="fiche-detection-vue-detaillee",
     ),
     path(
         "evenement/<int:pk>/",

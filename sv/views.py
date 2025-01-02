@@ -129,13 +129,13 @@ class EvenementDetailView(
         #     "espece_echantillon",
         #     "laboratoire",
         # )
-        # context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         # contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
         #     self.get_object()
         # )
         # context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         # context["can_cloturer_fiche"] = len(contacts_not_in_fin_suivi) == 0
-        # context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         # context["visibilite_form"] = FicheDetectionVisibiliteUpdateForm(obj=self.get_object())
         # context["publier_form"] = FicheDetectionVisibiliteUpdateForm(
         #     obj=self.get_object(), action="publier" if self.get_object().is_draft else None
@@ -144,10 +144,6 @@ class EvenementDetailView(
         # context["fiche_zone_delimitee"] = self.get_object().get_fiche_zone_delimitee()
         # context["latest_version"] = self.get_object().latest_version
         return context
-
-
-class FicheDetectionDetailView(DetailView):
-    model = FicheDetection
 
 
 class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
@@ -175,12 +171,20 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
         context["prelevement_forms"] = forms
         return context
 
+    def _get_or_create_evenement(self, request, evenement_form):
+        if request.POST.get("evenement"):
+            return Evenement.objects.get(pk=request.POST.get("evenement"))
+
+        evenement = evenement_form.save(commit=False)
+        if request.POST["action"] == "Publier":
+            evenement.visibilite = Visibilite.LOCAL
+        evenement.save()
+        return evenement
+
     def post(self, request, *args, **kwargs):
-        # TODO add createur on the evenement model ?????????????????
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
-        evenement_form = EvenementForm(request.POST)
-
+        evenement_form = EvenementForm(request.POST, user=self.request.user)
         if not form.is_valid():
             return self.form_invalid(form)
 
@@ -191,10 +195,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
             return self.form_invalid(form)
 
         with transaction.atomic():
-            evenement = evenement_form.save(commit=False)
-            if request.POST["action"] == "Publier":
-                evenement.visibilite = Visibilite.LOCAL
-            evenement.save()
+            evenement = self._get_or_create_evenement(request, evenement_form)
 
             self.object = form.save(commit=False)
             self.object.evenement = evenement
@@ -210,7 +211,6 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
                     messages.error(self.request, message)
                 return self.form_invalid(form)
 
-            # TODO do this on evenement instead
             evenement.contacts.add(self.request.user.agent.contact_set.get())
             evenement.contacts.add(self.request.user.agent.structure.contact_set.get())
 

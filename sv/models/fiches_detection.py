@@ -1,5 +1,4 @@
 import reversion
-from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,12 +10,12 @@ from core.mixins import (
     AllowsSoftDeleteMixin,
     WithFreeLinkIdsMixin,
 )
-from core.models import Structure, FinSuiviContact, UnitesMesure
+from core.models import Structure, UnitesMesure
 from sv.managers import (
     FicheDetectionManager,
 )
 from sv.mixins import WithEtatMixin
-from .common import NumeroFiche, Etat
+from .common import NumeroFiche
 from .lieux import Lieu
 from .prelevements import Prelevement
 
@@ -181,14 +180,10 @@ class FicheDetection(
     mesures_phytosanitaires = models.TextField(verbose_name="Mesures phytosanitaires", blank=True)
     mesures_surveillance_specifique = models.TextField(verbose_name="Mesures de surveillance spécifique", blank=True)
 
-    etat = models.ForeignKey(
-        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
-    )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    fin_suivi = GenericRelation(FinSuiviContact)
     hors_zone_infestee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True)
     zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
-    evenement = models.ForeignKey("Evenement", on_delete=models.PROTECT, null=False, related_name="detections")
+    evenement = models.ForeignKey("Evenement", on_delete=models.PROTECT, null=True, related_name="detections")
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
 
     objects = FicheDetectionManager()

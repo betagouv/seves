@@ -257,12 +257,15 @@ class FicheDetectionForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-
         super().__init__(*args, **kwargs)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_europhyt")
             self.fields.pop("numero_rasff")
+
+        if kwargs.get("data") and kwargs.get("data").get("evenement"):
+            self.fields.pop("organisme_nuisible")
+            self.fields.pop("statut_reglementaire")
 
         for field_name, field in self.fields.items():
             if isinstance(field, forms.ModelChoiceField):
@@ -499,3 +502,15 @@ class EvenementForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Evenement
         fields = ["organisme_nuisible", "statut_reglementaire"]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.createur = self.user.agent.structure
+        if commit:
+            instance.save()
+            # self.save_free_links(instance) TODO
+        return instance

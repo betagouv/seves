@@ -35,9 +35,9 @@
                 </div>
 
                 <div class="evenement-top-row--actions">
-                    <div>Ajouter une détection</div>
-                    <div>Ajouter une zone</div>
-                    <div>Actions</div>
+                    <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une détection</a>
+                    <a href="#" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une zone</a>
+                    {% include "sv/_evenement_action_navigation.html" %}
                 </div>
             </div>
             <div>
@@ -45,16 +45,17 @@
                     <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
                 {% endif %}
                 <p class="fr-badge fr-badge--no-icon">{{ evenement.visibilite }}</p>
+                <p class="fr-badge fr-badge--{{evenement.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ evenement.etat }}</p>
             </div>
         </div>
 
         <div class="fr-tabs fr-mt-3w">
             <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
                 <li role="presentation">
-                    <button id="tabpanel-404" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
+                    <button id="tabpanel-404" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
                 </li>
                 <li role="presentation">
-                    <button id="tabpanel-405" class="fr-tabs__tab fr-icon-checkbox-line fr-tabs__tab--icon-left" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
+                    <button id="tabpanel-405" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
                 </li>
             </ul>
             <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
@@ -80,9 +81,10 @@
             </div>
         </div>
 
-{#        TODO Lien libre#}
-
-{#        TODO  Bloc commun#}
+        {% include "sv/_list_free_links.html" with classes="fr-mt-8v" %}
+        {% if not evenement.is_draft %}
+            {% include "core/_fiche_bloc_commun.html" %}
+        {% endif %}
 
     </main>
 

@@ -71,7 +71,7 @@ class DisplayedFiche:
             is_ac_notified=fiche.evenement.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
-            etat=fiche.etat,
+            etat=fiche.evenement.etat,
             visibilite=str(fiche.evenement.visibilite),
             communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url(),

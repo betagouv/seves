@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import TextChoices
@@ -7,12 +6,12 @@ from django.urls import reverse
 from core.mixins import (
     WithFreeLinkIdsMixin,
 )
-from core.models import Structure, FinSuiviContact, UnitesMesure, Visibilite
+from core.models import Structure, UnitesMesure, Visibilite
 from sv.managers import (
     FicheZoneManager,
 )
 from sv.mixins import WithEtatMixin
-from .common import NumeroFiche, Etat
+from .common import NumeroFiche
 
 
 class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
@@ -53,11 +52,6 @@ class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
         default=UnitesSurfaceTamponTolale.METRE_CARRE,
         verbose_name="Unité de la surface tampon totale",
     )
-    etat = models.ForeignKey(
-        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
-    )
-
-    fin_suivi = GenericRelation(FinSuiviContact)
 
     objects = FicheZoneManager()
 

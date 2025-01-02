@@ -230,6 +230,8 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
-# TODO add and optimize admin for evenement
 # TODO add factory for eveneemtn
 # TODO check performances of pages
+# TODO déplacer les liens libres sur l'event
+# TODO ticket : je ne peut pas manipuler l'url de création de détection pour rattacher a un evenement que je n'aurais pas le droit de voir
+# Pour toutes les fiches détection sauf la première le bouton brouillon ou publier n'a pas de sens

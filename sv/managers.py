@@ -60,7 +60,7 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
 
     def optimized_for_list(self):
-        return self.select_related("etat", "numero", "createur")
+        return self.select_related("numero", "createur")
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
@@ -89,7 +89,7 @@ class FicheZoneManager(models.Manager):
 
 class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
-        return self.select_related("numero", "createur", "organisme_nuisible", "etat")
+        return self.select_related("numero", "createur")
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
