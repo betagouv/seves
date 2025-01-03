@@ -230,13 +230,9 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
-# TODO finir bloc bouton fiche détection
-# TODO bouton supprimer détection
-# TODO bouton modifier zone
 # TODO bouton supprimer zone
 # TODO finaliser les actions de l'enevement
 # TODO finalise la liste des détection / zone
-# TODO add factory for eveneemtn
 # TODO check performances of pages
 # TODO déplacer les liens libres sur l'event
 # TODO ticket : je ne peut pas manipuler l'url de création de détection pour rattacher a un evenement que je n'aurais pas le droit de voir

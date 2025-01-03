@@ -118,6 +118,7 @@ class EvenementDetailView(
         #     "laboratoire",
         # )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         # contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
         #     self.get_object()
         # )
