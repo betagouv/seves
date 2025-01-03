@@ -230,13 +230,20 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
-# TODO bouton supprimer zone
 # TODO finaliser les actions de l'enevement
+# Pour toutes les fiches détection sauf la première le bouton brouillon ou publier n'a pas de sens TODO
 # TODO finalise la liste des détection / zone
 # TODO check performances of pages
-# TODO déplacer les liens libres sur l'event
 # TODO ticket : je ne peut pas manipuler l'url de création de détection pour rattacher a un evenement que je n'aurais pas le droit de voir
-# Pour toutes les fiches détection sauf la première le bouton brouillon ou publier n'a pas de sens TODO
 # TODO pour créer la première fiche détection est ce que l'ON et le status sont obligatoires ?
 # TODO quand on ajoute une détection dans une evenement, ça nous demande l'on et le status
+
+# TODO déplacer les liens libres sur l'event
 # TODO faire de etat un enum  ???
+# TODO pour plutard : la suppression de la zone n'a pas de sens dans l'état actuel des choses
+
+# TODO test
+# test_fiche_detection_with_free_link
+# test_fiche_detection_with_free_link_cant_see_draft
+# test_free_links_are_ordered_in_fiche_detection_form
+#   """Test qu'une fiche détection existante qui passe d'une visibilité brouillon (sans numéro de fiche) à une visibilité locale a un numéro de fiche""" a faire sur l'event

@@ -183,7 +183,7 @@ class FicheDetection(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     hors_zone_infestee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.SET_NULL, null=True, blank=True)
     zone_infestee = models.ForeignKey("ZoneInfestee", on_delete=models.SET_NULL, null=True, blank=True)
-    evenement = models.ForeignKey("Evenement", on_delete=models.PROTECT, null=True, related_name="detections")
+    evenement = models.ForeignKey("Evenement", on_delete=models.PROTECT, null=False, related_name="detections")
     vegetaux_infestes = models.TextField(verbose_name="Nombre ou volume de végétaux infestés", blank=True)
 
     objects = FicheDetectionManager()
@@ -205,7 +205,7 @@ class FicheDetection(
         return reverse("fiche-detection-visibilite-update", kwargs={"pk": self.pk})
 
     def can_user_delete(self, user):
-        return self.can_user_access(user)
+        return self.evenement.can_user_access(user)
 
     def __str__(self):
         return str(self.numero)

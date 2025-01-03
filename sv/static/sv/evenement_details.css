@@ -24,12 +24,12 @@ main{
     justify-content: flex-end;
     width: 40%;
 }
-.no-tab-look .fr-btn--delete{
+.fr-btn--delete{
     color: var(--text-default-error);
     background-color: transparent;
     box-shadow: inset 0 0 0 1px var(--text-default-error);
 }
-.no-tab-look .fr-btn--delete:hover{
+.fr-btn--delete:hover{
     color: white;
-    background-color: var(--text-default-error);
+    background-color: var(--text-default-error) !important;
 }

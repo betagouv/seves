@@ -119,6 +119,7 @@ class EvenementDetailView(
         # )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
+        context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         # contacts_not_in_fin_suivi = FicheDetection.objects.all().get_contacts_structures_not_in_fin_suivi(
         #     self.get_object()
         # )
@@ -142,6 +143,8 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        if self.request.GET.get("evenement"):
+            kwargs["data"] = {"evenement": Evenement.objects.get(pk=self.request.GET.get("evenement"))}
         return kwargs
 
     def get_context_data(self, **kwargs):

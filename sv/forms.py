@@ -232,9 +232,11 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
     )
     statut_reglementaire = forms.ModelChoiceField(
-        label="Statut réglementaire", queryset=StatutReglementaire.objects.all()
+        label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=False
     )
-    organisme_nuisible = forms.ModelChoiceField(label="Organisme nuisible", queryset=OrganismeNuisible.objects.all())
+    organisme_nuisible = forms.ModelChoiceField(
+        label="Organisme nuisible", queryset=OrganismeNuisible.objects.all(), required=False
+    )
 
     class Meta:
         model = FicheDetection
@@ -263,7 +265,9 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
             self.fields.pop("numero_europhyt")
             self.fields.pop("numero_rasff")
 
-        if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (self.instance and self.instance.evenement):
+        if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (
+            self.instance.pk and self.instance.evenement
+        ):
             self.fields.pop("organisme_nuisible")
             self.fields.pop("statut_reglementaire")
 

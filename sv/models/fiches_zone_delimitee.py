@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from core.mixins import (
     WithFreeLinkIdsMixin,
+    AllowsSoftDeleteMixin,
 )
 from core.models import Structure, UnitesMesure
 from sv.managers import (
@@ -14,7 +15,7 @@ from sv.mixins import WithEtatMixin
 from .common import NumeroFiche
 
 
-class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
+class FicheZoneDelimitee(WithEtatMixin, AllowsSoftDeleteMixin, WithFreeLinkIdsMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -63,3 +64,6 @@ class FicheZoneDelimitee(WithEtatMixin, WithFreeLinkIdsMixin, models.Model):
 
     def __str__(self):
         return str(self.numero)
+
+    def can_user_delete(self, user):
+        return self.evenement.can_user_access(user)

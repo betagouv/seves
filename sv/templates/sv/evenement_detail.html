@@ -82,15 +82,13 @@
 
                         {% for fichedetection in evenement.detections.all %}
                             <div id="detection-actions-{{ fichedetection.pk }}" {% if not forloop.first %}class="fr-hidden"{% endif %}>
-
-                                <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-{{ fichedetection.pk }}">
+                                <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
                                     Supprimer la détection
                                 </button>
-                                {% include "sv/_delete_fiche_modal.html" %}
+                                {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
                                 <button class="fr-btn fr-btn--secondary fr-mr-2w">
                                     <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
                                 </button>
-
                             </div>
                         {% endfor %}
 
@@ -107,12 +105,8 @@
                 {% if evenement.fiche_zone_delimitee %}
                     {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
                 {% else %}
-                    <div class="fr-notice__body">
-                        <p>
-                            <span class="fr-notice__title">Il n'y a pas de zone délimitée pour cet événement</span>
-                        </p>
-                        <button title="Masquer le message" onclick="const notice = this.parentNode.parentNode.parentNode; notice.parentNode.removeChild(notice)" id="button-1290" class="fr-btn--close fr-btn">Masquer le message</button>
-                    </div>
+                    Il n'y a pas de zone délimitée pour cet événement
+
                 {% endif %}
             </div>
         </div>
