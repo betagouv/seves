@@ -247,3 +247,6 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 # test_fiche_detection_with_free_link_cant_see_draft
 # test_free_links_are_ordered_in_fiche_detection_form
 #   """Test qu'une fiche détection existante qui passe d'une visibilité brouillon (sans numéro de fiche) à une visibilité locale a un numéro de fiche""" a faire sur l'event
+# Vérifier la liste en fonction de la visibilité et de l'agent connecté
+# Idem pour la page details
+# TODO refaire /home/antonin/betagouv/seves/sv/tests/test_fichedetection_visibilite_update.py  pour les evenemnts
