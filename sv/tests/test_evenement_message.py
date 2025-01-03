@@ -159,7 +159,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
-    # Check that all the recipients / copies were added as contact of the fiche
+    # Check that all the recipients / copies were added as contact
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("contacts").click()
     for agent in agents:
@@ -263,7 +263,7 @@ def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
 
 
-def test_can_click_on_shortcut_when_fiche_has_structure(live_server, page: Page):
+def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: Page):
     evenement = EvenementFactory()
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
     contact = Contact.objects.create(email="foo@example.com", structure=structure)
@@ -334,7 +334,7 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_access_add_message_form_if_fiche_brouillon(client, message_type, message_label):
+def test_cant_access_add_message_form_if_evenement_brouillon(client, message_type, message_label):
     evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
 
     response = client.get(evenement.get_add_message_url(message_type), follow=True)
@@ -346,7 +346,7 @@ def test_cant_access_add_message_form_if_fiche_brouillon(client, message_type, m
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_add_message_if_fiche_brouillon(
+def test_cant_add_message_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
     evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
@@ -369,7 +369,7 @@ def test_cant_add_message_if_fiche_brouillon(
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_access_message_details_if_fiche_brouillon(
+def test_cant_access_message_details_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
     evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
