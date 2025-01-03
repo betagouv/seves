@@ -15,3 +15,8 @@ main{
     padding: 0px !important;
     border: none !important;
 }
+.no-tab-look .fr-tabs__list {
+    width: 70% !important;
+    background: lightblue;
+    order: 0 !important;
+}

@@ -79,6 +79,20 @@
                                 </li>
                             {% endfor %}
                         </ul>
+
+                        {% for fichedetection in evenement.detections.all %}
+                            <div id="detection-actions-{{ fichedetection.pk }}">
+                                Supprimer la détection
+                            {#TODO add button supprimer la detection#}
+                                {% include "sv/_delete_fiche_modal.html" %}
+                                <button class="fr-btn fr-btn--secondary fr-mr-2w">
+                                    <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
+                                </button>
+
+                            </div>
+                        {% endfor %}
+
+
                         {% for fichedetection in evenement.detections.all %}
                             <div id="tabpanel-{{ fichedetection.pk }}-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-{{ fichedetection.pk }}" tabindex="0">
                                 {% include "sv/_fichedetection_detail.html" %}

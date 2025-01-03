@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from core.models import Agent, Structure, Document, Visibilite
+from core.models import Agent, Structure, Document
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from playwright.sync_api import Page
 from model_bakery import baker
@@ -72,15 +72,11 @@ def add_status_reglementaire_objects():
 
 @pytest.fixture
 def fiche_zone_bakery(db, mocked_authentification_user):
-    etat = Etat.objects.get(id=Etat.get_etat_initial())
-
     def _fiche_zone_bakery():
         return baker.make(
             FicheZoneDelimitee,
             _fill_optional=True,
             createur=mocked_authentification_user.agent.structure,
-            etat=etat,
-            visibilite=Visibilite.LOCAL,
             rayon_zone_tampon=random.uniform(1, 100),
             surface_tampon_totale=random.uniform(1, 100),
         )
@@ -96,15 +92,12 @@ def fiche_zone(fiche_zone_bakery):
 @pytest.fixture
 def fiche_detection_bakery(db, mocked_authentification_user):
     def _fiche_detection_bakery():
-        etat = Etat.objects.get(id=Etat.get_etat_initial())
         return baker.make(
             FicheDetection,
             _fill_optional=True,
-            etat=etat,
             createur=mocked_authentification_user.agent.structure,
             hors_zone_infestee=None,
             zone_infestee=None,
-            visibilite=Visibilite.LOCAL,
         )
 
     return _fiche_detection_bakery
