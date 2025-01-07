@@ -1,18 +1,15 @@
 import datetime
 
-from django.conf import settings
-
-from core.forms import DSFRForm, VisibiliteUpdateBaseForm
-
 from django import forms
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
-from django.core.exceptions import ValidationError
 from django.utils.translation import ngettext
-from django.forms import BaseInlineFormSet
-from django.db.models import TextChoices
 
 from core.fields import DSFRRadioButton
+from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 from sv.form_mixins import WithDataRequiredConversionMixin
 from sv.models import (
     FicheZoneDelimitee,
@@ -32,20 +29,6 @@ class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
     class Meta:
         model = Evenement
         fields = ["visibilite"]
-
-
-class RattachementChoices(TextChoices):
-    HORS_ZONE_INFESTEE = "hors_zone_infestee", "Hors zone infestée"
-    ZONE_INFESTEE = "zone_infestee", "Zone infestée"
-
-
-class RattachementDetectionForm(DSFRForm, forms.Form):
-    rattachement = forms.ChoiceField(
-        choices=RattachementChoices.choices,
-        widget=DSFRRadioButton,
-        label="Où souhaitez-vous rattacher la détection ?",
-        initial=RattachementChoices.HORS_ZONE_INFESTEE,
-    )
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
