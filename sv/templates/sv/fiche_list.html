@@ -56,64 +56,65 @@
                             <tr class="fiches__list-row">
                                 <td>
                                     <span class="fr-ml-2v fr-badge fr-badge--no-icon">{{ fiche.type }}</span>
-                                    <span class="fr-icon-notification-3-line fr-ml-2v fr-icon--sm" aria-hidden="true"></span>
+                                    <span class="fr-ml-2v fr-icon--sm {% if fiche.is_ac_notified %}ac-notified fr-icon-notification-3-fill {% else %}ac-not-notified fr-icon-notification-3-line{% endif %}" aria-hidden="true"></span>
 
                                 </td>
                                 <td>
                                     {{ fiche.numero|default:"nc." }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fr-link">
                                         {{ fiche.numero_evenement|default:"nc." }}
                                     </a>
                                 </td>
                                 <td class="fiche__list-organisme">
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        {{ fiche.organisme_nuisible|default:"nc." }}
-                                    </a>
+                                    {{ fiche.organisme_nuisible|default:"nc." }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link fiches__list-link-no-wrap">
-                                        {{ fiche.date_creation }}
-                                    </a>
+                                    {{ fiche.date_creation }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        {{ fiche.createur|truncatechars:30 }}
-                                    </a>
+                                    {{ fiche.createur|truncatechars:30 }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        {% with fiche.communes_list|length as num_lieux %}
-                                            {% if num_lieux == 0 %}
-                                                nc.
-                                            {% endif %}
-                                            {% if num_lieux <= 3 %}
-                                                {% for lieu in fiche.communes_list %}
-                                                    {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
+                                    {% with fiche.communes_list|length as num_lieux %}
+                                        {% if num_lieux == 0 %}
+                                            nc.
+                                        {% endif %}
+                                        {% if num_lieux <= 3 %}
+                                            {% for lieu in fiche.communes_list %}
+                                                {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for lieu in fiche.communes_list|slice:":3" %}
+                                                {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            ... +{{ num_lieux|add:"-3" }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
+                                </td>
+                                <td>
+                                    <span class="fr-badge">{{ fiche.visibilite }}</span>
+                                </td>
+                                <td>
+                                    {% if fiche.type == "D" %}
+                                        <div class="fr-checkbox-group">
+                                            {% if fiche.nb_related_objects %}
+                                                <input type="checkbox" checked>
                                             {% else %}
-                                                {% for lieu in fiche.communes_list|slice:":3" %}
-                                                    {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
-                                                ... +{{ num_lieux|add:"-3" }}
+                                                <input type="checkbox" checked disabled>
                                             {% endif %}
-                                        {% endwith %}
-                                    </a>
+                                            <label class="fr-label" ></label>
+                                        </div>
+                                    {% else %}
+                                        <i class="ri-node-tree fr-mr-1w"></i>
+                                        {{  fiche.nb_related_objects }}
+                                    {% endif%}
                                 </td>
-                                <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fiches__list-link">
-                                        <span class="fr-badge">{{ fiche.visibilite }}</span>
-                                    </a>
-                                    <td>
-                                        {{ fiche.nb_related_objects }}
-                                    </td>
-                                </tr>
+                            </tr>
                         {% endfor %}
                         <tbody>
                         </table>

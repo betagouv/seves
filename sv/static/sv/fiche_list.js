@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         this.elements['numero'].value = '';
         this.elements['lieux__departement__region'].value = '';
-        this.elements['organisme_nuisible'].value = '';
+        this.elements['evenement__organisme_nuisible'].value = '';
         this.elements['start_date'].value = '';
         this.elements['end_date'].value = '';
-        this.elements['etat'].value = '';
+        this.elements['evenement__etat'].value = '';
         choices.setChoiceByValue('');
     });
     document.getElementById("id_type_fiche_0").addEventListener("click", event =>{

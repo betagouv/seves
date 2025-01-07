@@ -65,7 +65,10 @@ body{
     background-color: var(--background-contrast-grey) !important;
 }
 .fiches__list-row td {
-    padding: 0 !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    padding-top: 0.50rem !important;
+    padding-bottom: 0.50rem !important;
 }
 .fiche__list-organisme {
     display: -webkit-box !important;
@@ -75,21 +78,22 @@ body{
     text-overflow: ellipsis;
     margin-bottom: 0.5rem !important;
 }
-.fiches__list-link {
-    display: block !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-    padding-top: 0.50rem !important;
-    padding-bottom: 0.50rem !important;
-    background-image: none !important;
-}
-.fiches__list-link-no-wrap {
-    text-wrap: nowrap;
-}
-.ri-1x:has(+ a){
-    color: var(--text-action-high-blue-france);
-}
 .ac-notified {
-    background-color: var(--background-contrast-warning);
-    padding: 5px;
+    background-color: #faa18d;
+    min-height: 1.5rem;
+    padding: 0 .5rem;
+    border-radius: .25rem;
+    color: white;
+}
+.ac-not-notified {
+    background-color: var(--background-contrast-grey);
+    min-height: 1.5rem;
+    padding: 0 .5rem;
+    border-radius: .25rem;
+}
+.fiches__list-row .fr-checkbox-group input[type="checkbox"] + label::before{
+    top: -10px !important;
+}
+.ri-node-tree {
+    font-size: 1.5rem;
 }

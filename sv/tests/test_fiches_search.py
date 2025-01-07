@@ -1,16 +1,14 @@
 import pytest
+from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-from django.urls import reverse
 
-from core.models import Visibilite
 from seves import settings
-from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory
+from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory, EtatFactory
 from ..models import (
     Region,
     OrganismeNuisible,
     Etat,
-    FicheDetection,
     Lieu,
     ZoneInfestee,
 )
@@ -47,7 +45,6 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
 
-@pytest.mark.skip(reason="refacto evenement")
 @pytest.mark.django_db
 def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
@@ -73,7 +70,6 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     expect(page.get_by_label("État")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
 
 
-@pytest.mark.skip(reason="refacto evenement")
 @pytest.mark.django_db
 def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
@@ -128,13 +124,12 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     expect(page.get_by_role("cell", name=str(other_lieu.fiche_detection.numero))).not_to_be_visible()
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
     """Test la recherche d'une fiche détection en utilisant un organisme nuisible.
     Effectue une recherche en sélectionnant un organisme nuisible spécifique et
     vérifier que les fiches détectées retournées sont associées à cet organisme."""
-    organisme_1 = FicheDetectionFactory().organisme_nuisible
-    organisme_2 = FicheDetectionFactory().organisme_nuisible
+    organisme_1 = FicheDetectionFactory().evenement.organisme_nuisible
+    organisme_2 = FicheDetectionFactory().evenement.organisme_nuisible
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     choice_js_fill(page, ".choices__list--single", organisme_1.libelle_court, organisme_1.libelle_court)
@@ -178,13 +173,21 @@ def test_search_with_crossed_dates(live_server, page: Page, mocked_authentificat
     expect(page.locator("body")).to_contain_text("0 fiches au total")
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_search_with_state(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un état.
     Effectue une recherche en sélectionnant un état spécifique et
     vérifier que les fiches détectées retournées sont celles ayant cet état."""
-    fiche_1 = FicheDetectionFactory(evenement__etat__libelle="FOO")
-    fiche_2 = FicheDetectionFactory(evenement__etat__libelle="BAR")
+    etat_1 = EtatFactory(libelle="FOO")
+    fiche_1 = FicheDetectionFactory()
+    evenement = fiche_1.evenement
+    evenement.etat = etat_1
+    evenement.save()
+
+    etat_2 = EtatFactory(libelle="BAR")
+    fiche_2 = FicheDetectionFactory()
+    evenement = fiche_2.evenement
+    evenement.etat = etat_2
+    evenement.save()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("État").select_option("FOO")
@@ -194,30 +197,20 @@ def test_search_with_state(live_server, page: Page, mocked_authentification_user
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_search_with_multiple_filters(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
     """Test la recherche d'une fiche détection en utilisant plusieurs filtres.
     Effectue une recherche en sélectionnant plusieurs filtres et
     vérifier que les fiches détectées retournées satisfont toutes les conditions spécifiées."""
-    fiche1, fiche2 = baker.make(
-        FicheDetection,
-        etat=baker.make(Etat),
-        _quantity=2,
-        _fill_optional=True,
-        createur=mocked_authentification_user.agent.structure,
-        hors_zone_infestee=None,
-        zone_infestee=None,
-        visibilite=Visibilite.LOCAL,
-    )
+    fiche1, fiche2 = FicheDetectionFactory.create_batch(2)
     lieu = baker.make(Lieu, fiche_detection=fiche1, _fill_optional=True)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Région").select_option(str(lieu.departement.region.id))
-    organisme = fiche1.organisme_nuisible.libelle_court
+    organisme = fiche1.evenement.organisme_nuisible.libelle_court
     choice_js_fill(page, ".choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("Au").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
-    page.get_by_label("État").select_option(str(fiche1.etat.id))
+    page.get_by_label("État").select_option(str(fiche1.evenement.etat.id))
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
@@ -255,16 +248,16 @@ def test_list_is_ordered(live_server, page):
     assert page.text_content(cell_selector).strip() == "2023.7"
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_search_fiche_zone(live_server, page: Page):
     fiche_1 = FicheDetectionFactory()
     fiche_2 = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_2)
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
 
-    page.get_by_text("Zone", exact=True).click()
+    page.locator("label:has-text('Zone')").click()
     page.get_by_role("button", name="Rechercher").click()
 
     assert (
@@ -276,12 +269,13 @@ def test_search_fiche_zone(live_server, page: Page):
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()
 
 
-def test_link_fiche_detection(live_server, page):
+def test_link_fiche_detection(live_server, page: Page):
     fiche = FicheDetectionFactory()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
-    assert page.locator(cell_selector).inner_text().strip() == "0"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10) input"
+    page.wait_for_timeout(10000)
+    expect(page.locator(cell_selector)).to_be_disabled()
 
     fiche_zone = FicheZoneFactory(numero__annee=2024, numero__numero=10)
     evenement = fiche.evenement
@@ -289,29 +283,29 @@ def test_link_fiche_detection(live_server, page):
     evenement.save()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
-    assert page.locator(cell_selector).inner_text().strip() == "1"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10) input"
+    expect(page.locator(cell_selector)).to_be_enabled()
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_link_fiche_zone(live_server, page):
     fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
     assert page.locator(cell_selector).inner_text().strip() == "0"
 
     FicheDetectionFactory(hors_zone_infestee=fiche_zone)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
     assert page.locator(cell_selector).inner_text().strip() == "1"
 
     zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
     FicheDetectionFactory.create_batch(2, zone_infestee=zone_infestee)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
-    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(9)"
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
     assert page.locator(cell_selector).inner_text().strip() == "3"
 
 
@@ -329,13 +323,12 @@ def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.numero))).to_have_count(1)
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_cant_search_region_for_zone(live_server, page: Page):
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     expect(page.locator("#id_lieux__departement__region")).to_be_enabled()
 
-    page.get_by_label("Zone").click()
+    page.locator("label:has-text('Zone')").click()
     expect(page.locator("#id_lieux__departement__region")).to_be_disabled()
 
     page.get_by_role("button", name="Rechercher").click()

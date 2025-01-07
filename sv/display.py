@@ -23,14 +23,14 @@ class DisplayedFiche:
             type="Z",
             numero=str(fiche.numero) if fiche.numero else "non attribué",
             organisme_nuisible=fiche.evenement.organisme_nuisible,
-            is_ac_notified=False,
+            is_ac_notified=fiche.evenement.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
             visibilite=str(fiche.evenement.visibilite),
             etat=fiche.evenement.etat,
             communes_list=[],
             get_absolute_url=fiche.get_absolute_url(),
-            numero_evenement=str(fiche.evenement.numero) if fiche.evenement else "non attribué",
+            numero_evenement=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",
             nb_related_objects=fiche.nb_fiches_detection,
         )
 
@@ -47,6 +47,6 @@ class DisplayedFiche:
             visibilite=str(fiche.evenement.visibilite),
             communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url(),
-            numero_evenement=str(fiche.evenement.numero) if fiche.evenement else "non attribué",
+            numero_evenement=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",
             nb_related_objects=1 if fiche.evenement.fiche_zone_delimitee else 0,
         )
