@@ -9,6 +9,7 @@ main{
 .evenement-top-row--actions {
     display: flex;
     justify-content: space-between;
+    max-height: 2.5rem;
 }
 
 .no-tab-look .fr-tabs__panel{
@@ -32,4 +33,20 @@ main{
 .fr-btn--delete:hover{
     color: white;
     background-color: var(--text-default-error) !important;
+}
+.zone-button {
+    background-image: none;
+}
+.zone-button .fr-btn {
+    height: 100%;
+}
+.evenement-top-row--actions .fr-translate__btn::before {
+    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
+    mask-image: url(../../../static/icons/system/add-line.svg);
+}
+.evenement-top-row--actions .fr-translate__btn{
+    height: 100%;
+}
+.evenement-top-row--actions .fr-nav__item{
+    height: 100%;
 }
