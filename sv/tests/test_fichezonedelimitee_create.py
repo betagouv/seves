@@ -10,6 +10,16 @@ from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
 
 @pytest.mark.django_db
+def test_can_go_back_to_event_from_fiche_zone_form(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, evenement)
+    form_page.page.get_by_role("link", name="Annuler").click()
+
+    assert form_page.page.url == f"{live_server.url}{evenement.get_absolute_url()}"
+
+
+@pytest.mark.django_db
 def test_fiche_detection_are_filtered_by_evenement_of_fiche_detection(client):
     """Test que les fiches détection proposées dans la page de création de la fiche zone délimitée viennent du même événement"""
     fiche = FicheDetectionFactory()
