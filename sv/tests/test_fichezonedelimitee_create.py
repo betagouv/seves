@@ -4,9 +4,7 @@ from django.utils import timezone
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.models import Visibilite
 from sv.factories import FicheDetectionFactory, EvenementFactory
-from sv.forms import RattachementChoices
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
@@ -174,46 +172,10 @@ def test_cant_access_create_fiche_zone_delimitee_form_when_evenement_is_already_
     expect(page.get_by_text("L'événement est déjà rattaché à une fiche zone délimitée")).to_be_visible()
 
 
-@pytest.mark.skip(reason="refacto evenement")
-def test_cant_link_fiche_detection_to_fiche_zone_delimitee_if_fiche_detection_is_already_linked(
-    live_server, page: Page, fiche_detection: FicheDetection, choice_js_fill
-):
-    """Test qu'une fiche détection déjà rattachée à une fiche zone délimitée ne permet pas d'être liée à une autre fiche zone délimitée.
-    Je ne dois pas voir la fiche détection dans la liste des détections hors zone infestée ou zone infestée dans le formulaire de création d'une fiche zone délimitée"""
-    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
-    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
-    fiche_detection.save()
-    fiche_detection2 = baker.make(
-        FicheDetection,
-        organisme_nuisible=fiche_detection.organisme_nuisible,
-        statut_reglementaire=fiche_detection.statut_reglementaire,
-        visibilite=Visibilite.LOCAL,
-    )
-    zone_infestee = baker.make(ZoneInfestee, _fill_optional=True)
+def test_cant_fill_negative_value_for_surface_and_rayon(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-
-    form_page.goto_create_form_page(live_server, fiche_detection2.pk, RattachementChoices.HORS_ZONE_INFESTEE)
-    form_page.fill_form(
-        baker.prepare(FicheZoneDelimitee, _fill_optional=True),
-        zone_infestee,
-        (),
-        (fiche_detection2,),
-    )
-    form_page.add_new_zone_infestee(zone_infestee, (fiche_detection2,))
-    page.locator(".choices > div").first.click()
-    expect(page.get_by_role("listbox").get_by_text("Aucune fiche détection à sélectionner")).to_be_visible()
-    page.get_by_text("Rattacher des détections").nth(1).click()
-    expect(page.get_by_text("Aucune fiche détection à sélectionner").nth(1)).to_be_visible()
-    page.get_by_text("Rattacher des détections").nth(2).click()
-    expect(page.get_by_text("Aucune fiche détection à sélectionner").nth(2)).to_be_visible()
-
-
-@pytest.mark.skip(reason="refacto evenement")
-def test_cant_fill_negative_value_for_surface_and_rayon(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
-    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, evenement)
     assert form_page.rayon_zone_tampon.get_attribute("min") == "0"
     assert form_page.surface_tampon_totale.get_attribute("min") == "0"
     assert (
@@ -230,19 +192,15 @@ def test_cant_fill_negative_value_for_surface_and_rayon(
     )
 
 
-@pytest.mark.skip(reason="refacto evenement")
-def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_has_same_surface_units_order_for_zone_tampon_and_zone_infestee(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, evenement)
     assert form_page.has_same_surface_units_order_for_zone_tampon_and_zone_infestee() is True
 
 
-@pytest.mark.skip(reason="refacto evenement")
-def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    form_page.goto_create_form_page(live_server, fiche_detection.pk, RattachementChoices.HORS_ZONE_INFESTEE)
+    form_page.goto_create_form_page(live_server, evenement)
     assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True
