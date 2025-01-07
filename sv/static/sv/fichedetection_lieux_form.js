@@ -155,6 +155,20 @@ function getNextAvailableModal() {
     }
 }
 
+function setupCharacterCounter(element) {
+    const input = element.querySelector(`[id^="id_lieux-"][id$="-activite_etablissement"]`);
+    let counterDiv = element.querySelector('.character-counter');
+    const maxLength = input.getAttribute('maxlength');
+
+    counterDiv.textContent = `${maxLength - input.value.length} caractères restants`;
+
+    input.addEventListener('input', function(e) {
+        const remaining = maxLength - e.target.value.length;
+        counterDiv.textContent = `${remaining} caractères restants`;
+    });
+}
+
+
 (function() {
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
@@ -166,11 +180,11 @@ function getNextAvailableModal() {
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
 
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(element =>{
+        setupCharacterCounter(element);
         const data = buildLieuCardFromModal(element)
         if (!!data.nom){
             document.lieuxCards.push(data)
         }
     })
     displayLieuxCards()
-
 })();

@@ -152,6 +152,33 @@ def test_coordonnees_gps_are_numeric_in_add_lieu_form(
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_attribute("type", "number")
 
 
+def test_description_activite_have_max_length(
+    page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    expect(lieu_form_elements.activite_etablissement_input).to_have_attribute("maxlength", "100")
+    lieu_form_elements.activite_etablissement_input.fill("a" * 101)
+    expect(lieu_form_elements.activite_etablissement_input).to_have_value("a" * 100)
+
+
+def test_description_activite_counter_behavior(
+    page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    counter = page.locator(".character-counter").first
+
+    expect(counter).to_be_visible()
+    expect(counter).to_have_text("100 caractères restants")
+
+    lieu_form_elements.activite_etablissement_input.fill("a" * 50)
+    expect(counter).to_have_text("50 caractères restants")
+
+    lieu_form_elements.activite_etablissement_input.fill("a" * 101)
+    expect(counter).to_have_text("0 caractères restants")
+
+
 def test_add_lieu_to_list(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
 ):
