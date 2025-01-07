@@ -161,6 +161,10 @@ main {
 [id^=lieu-form] p select {
     flex: 1.15;
 }
+[id^=lieu-form] .character-counter {
+    text-align: right;
+}
+
 .lieu-initial,
 .prelevement {
     background-color: #E3E3FD;

@@ -65,6 +65,8 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         widget=forms.Textarea(
             attrs={
                 "rows": 2,
+                "maxlength": 100,
+                "title": "Ce champ est limité à 100 caractères.",
             }
         ),
     )
