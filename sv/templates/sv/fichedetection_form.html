@@ -31,10 +31,6 @@
                             Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
                         {% endif %}
                     </h1>
-                    {% if not is_creation %}
-                        <p class="fr-badge fr-badge--{{fichedetection.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fichedetection.etat }}</p>
-                        <p class="fr-badge fr-badge--no-icon">{{ fichedetection.visibilite }}</p>
-                    {% endif %}
                 </div>
 
                 <p>
