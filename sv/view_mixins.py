@@ -55,6 +55,9 @@ class WithPrelevementHandlingMixin:
 
             prelevement_form.fields["lieu"].queryset = allowed_lieux
 
+            print(f"Allowed lieux: {list(allowed_lieux)}")
+            print(f"Form data lieu value: {form_data.get('prelevements-' + form_id + '-lieu')}")
+
             if prelevement_form.is_valid():
                 prelevement_form.save()
             else:

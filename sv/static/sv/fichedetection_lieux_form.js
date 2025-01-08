@@ -82,9 +82,34 @@ function buildLieuCardFromModal(element){
     }
 }
 
+function validateLieuName(modal, id) {
+    const nomInput = modal.querySelector(`[id^="id_lieux-"][id$="-nom"]`);
+    const nomValue = nomInput.value;
+
+    // Vérifier si le nom existe déjà dans un autre lieu
+    const nomExisteDeja = document.lieuxCards.some(lieu =>
+        lieu.id !== id && // Ignorer le lieu en cours d'édition
+        lieu.nom.toLowerCase() === nomValue.toLowerCase() // Comparaison insensible à la casse
+    );
+
+    if (nomExisteDeja) {
+        nomInput.setCustomValidity("Ce nom de lieu existe déjà");
+        nomInput.reportValidity();
+        return false;
+    }
+
+    nomInput.setCustomValidity("");
+    return true;
+}
+
 function saveLieu(event){
     const id = event.target.dataset.id
     const modal = document.getElementById(`modal-add-lieu-${id}`)
+
+    if (!validateLieuName(modal, id)) {
+        return;
+    }
+
     if (formIsValid(modal) === false){
         return
     }
