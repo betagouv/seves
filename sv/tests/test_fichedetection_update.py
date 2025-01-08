@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory
+from ..factories import FicheDetectionFactory, LieuFactory
 from ..models import (
     FicheDetection,
     Lieu,
@@ -556,6 +556,17 @@ def test_delete_multiple_lieux(
 
     fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
     assert fd.lieux.count() == 0
+
+
+def test_commune_display_in_card_and_edit_modal(live_server, page: Page):
+    fiche_detection = FicheDetectionFactory()
+    lieu = LieuFactory(fiche_detection=fiche_detection)
+
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    expect(page.get_by_text(lieu.commune, exact=True)).to_be_visible()
+
+    page.get_by_role("button", name="Modifier le lieu").click()
+    expect(page.get_by_text(f"{lieu.commune} ({lieu.departement.numero})Remove item"))
 
 
 @pytest.mark.django_db

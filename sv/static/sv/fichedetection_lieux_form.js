@@ -78,7 +78,7 @@ function buildLieuCardFromModal(element){
     return {
         "id": element.dataset.id,
         "nom": element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
-        "commune": element.querySelector(`[id^="commune-select-"]`).value,
+        "commune": element.querySelector(`[id^="id_lieux-"][id$="-commune"]`).value,
     }
 }
 
@@ -102,6 +102,21 @@ function saveLieu(event){
     modal.querySelector(".fr-modal__title").textContent = "Modifier le lieu"
 }
 
+function setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput) {
+    if (communeInput.value) {
+        choicesCommunes.setChoiceByValue(communeInput.value);
+        choicesCommunes.setChoices([{
+            value: communeInput.value,
+            label: `${communeInput.value} (${departementInput.value})`,
+            selected: true,
+            customProperties: {
+                departementCode: departementInput.value,
+                inseeCode: inseeInput.value
+            }
+        }], 'value', 'label', true);
+    }
+}
+
 function setUpCommune(element) {
     const choicesCommunes = new Choices(element, {
         removeItemButton: true,
@@ -114,6 +129,13 @@ function setUpCommune(element) {
         itemSelectText: '',
     });
 
+    const currentModal = element.closest("dialog");
+    const communeInput = currentModal.querySelector('[id$=commune]');
+    const inseeInput = currentModal.querySelector('[id$=code_insee]');
+    const departementInput = currentModal.querySelector('[id$=departement]');
+
+    setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput);
+
     choicesCommunes.input.element.addEventListener('input', function (event) {
         const query = choicesCommunes.input.element.value
         if (query.length > 2) {
@@ -125,10 +147,9 @@ function setUpCommune(element) {
     })
 
     choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
-        const currentModal = event.target.closest("dialog")
-        currentModal.querySelector('[id$=commune]').value = event.detail.choice.value
-        currentModal.querySelector('[id$=insee]').value = event.detail.choice.customProperties.inseeCode
-        currentModal.querySelector('[id$=departement]').value = event.detail.choice.customProperties.departementCode
+        communeInput.value = event.detail.choice.value
+        inseeInput.value = event.detail.choice.customProperties.inseeCode
+        departementInput.value = event.detail.choice.customProperties.departementCode
     })
 }
 

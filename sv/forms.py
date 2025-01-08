@@ -31,11 +31,21 @@ class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
         fields = ["visibilite"]
 
 
+class DepartementModelChoiceField(forms.ModelChoiceField):
+    def prepare_value(self, value):
+        try:
+            if str(value).isdigit():
+                return Departement.objects.get(id=value).numero
+        except Departement.DoesNotExist:
+            pass
+        return super().prepare_value(value)
+
+
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
-    departement = forms.ModelChoiceField(
+    departement = DepartementModelChoiceField(
         queryset=Departement.objects.all(),
         to_field_name="numero",
         required=False,
