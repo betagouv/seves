@@ -494,6 +494,36 @@ def test_delete_lieu(
 
 
 @pytest.mark.django_db
+def test_delete_lieu_with_prelevement(
+    live_server,
+    page: Page,
+    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    fiche = fiche_detection_with_one_lieu_and_one_prelevement
+    lieu = fiche.lieux.first()
+    lieu_id = lieu.id
+    prelevement_id = lieu.prelevements.first().id
+
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+
+    page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
+    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+
+    page.get_by_role("button", name="Supprimer le lieu").first.click()
+    page.get_by_role("button", name="Supprimer", exact=True).click()
+
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    with pytest.raises(ObjectDoesNotExist):
+        Lieu.objects.get(id=lieu_id)
+    with pytest.raises(ObjectDoesNotExist):
+        Prelevement.objects.get(id=prelevement_id)
+
+
+@pytest.mark.django_db
 def test_delete_one_lieu_from_set_of_lieux(
     live_server,
     page: Page,
