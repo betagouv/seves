@@ -27,7 +27,11 @@
             </div>
             <div class="fr-col fichezone_form__save-btn">
                 <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
-                <a href="{% url 'evenement-details' request.GET.evenement %}" class="fr-link fr-mr-3w">Annuler</a>
+                {% if request.GET.evenement %}
+                    <a href="{% url 'evenement-details' request.GET.evenement %}" class="fr-link fr-mr-3w">Annuler</a>
+                {% elif fiche.evenement %}
+                    <a href="{% url 'evenement-details' fiche.evenement.pk %}" class="fr-link fr-mr-3w">Annuler</a>
+                {% endif %}
                 <input type="submit" form="fiche-zone-delimitee-form" value="Enregistrer les modifications" class="fr-btn" >
             </div>
         </div>
