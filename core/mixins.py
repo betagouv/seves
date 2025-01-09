@@ -198,8 +198,6 @@ class AllowVisibiliteMixin(models.Model):
         match self.visibilite:
             case Visibilite.BROUILLON:
                 return user.agent.is_in_structure(self.createur)
-            case Visibilite.LOCAL | Visibilite.NATIONAL:
-                return user.agent.structure.is_mus_or_bsv
             case _:
                 return False
 
