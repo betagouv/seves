@@ -6,7 +6,7 @@ class WithEtatMixin:
         self.save()
 
     def can_be_cloturer_by(self, user):
-        return user.agent.structure.is_ac
+        return not self.is_draft and not self.etat.is_cloture() and user.agent.structure.is_ac
 
     def is_already_cloturer(self):
         return self.etat.is_cloture()

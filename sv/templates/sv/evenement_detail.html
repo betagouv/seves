@@ -15,12 +15,10 @@
 {% endblock %}
 
 {% block content %}
-
-
-    <main>
+    <main class="main-container">
         <div>
             <div class="evenement-top-row">
-                <h1 class="fr-mb-0-5v">Événement {%  if evenement.numero %}{{ evenement.numero }} {%  endif %}</h1>
+                <h1 class="fr-mb-0-5v">Événement {% if evenement.numero %}{{ evenement.numero }}{%  endif %}</h1>
 
                 <div>
                     <fieldset class="fr-segmented">
@@ -50,13 +48,7 @@
                     {% include "sv/_cloturer_modal.html" %}
                 </div>
             </div>
-            <div>
-                {% if evenement.is_ac_notified %}
-                    <p class="fr-badge fr-ml-2w"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
-                {% endif %}
-                <p class="fr-badge fr-badge--no-icon">{{ evenement.visibilite }}</p>
-                <p class="fr-badge fr-badge--{{evenement.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ evenement.etat }}</p>
-            </div>
+            {% include "sv/_evenement_badges.html" %}
         </div>
 
         <div class="fr-container--fluid">
@@ -118,7 +110,7 @@
             </div>
         </div>
 
-        {% include "sv/_list_free_links.html" with classes="fr-mt-8v" %}
+        {% include "sv/_list_free_links.html" with classes="fr-mt-8v" object=evenement %}
         {% if not evenement.is_draft %}
             {% include "core/_fiche_bloc_commun.html" %}
         {% endif %}

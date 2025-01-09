@@ -1,0 +1,15 @@
+.evenement-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.evenement-form-header h1 {
+    margin-bottom: 0.5rem;
+}
+.evenement-form--label {
+    align-self: center;
+}
+.choices__list--dropdown {
+    top: 100% !important;
+    bottom: auto !important;
+}

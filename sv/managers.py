@@ -88,3 +88,22 @@ class FicheZoneQuerySet(BaseVisibilityQuerySet):
             nb_fiches_detection=Count("fichedetection__id", distinct=True)
             + Count("zoneinfestee__fichedetection__id", distinct=True)
         )
+
+
+class EvenementQueryset(models.QuerySet):
+    def order_by_numero(self):
+        return self.order_by("-numero__annee", "-numero__numero")
+
+    def get_user_can_view(self, user):
+        if user.agent.structure.is_mus_or_bsv:
+            return self.filter(
+                Q(visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
+                | Q(visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
+            )
+        return self.filter(
+            Q(visibilite=Visibilite.NATIONAL)
+            | Q(
+                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
+                createur=user.agent.structure,
+            )
+        )

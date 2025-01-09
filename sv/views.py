@@ -21,6 +21,7 @@ from core.mixins import (
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
+    WithFreeLinksListInContextMixin,
 )
 from sv.forms import (
     FicheZoneDelimiteeForm,
@@ -31,6 +32,7 @@ from sv.forms import (
     PrelevementForm,
     EvenementForm,
     EvenementVisibiliteUpdateForm,
+    EvenementUpdateForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -44,7 +46,7 @@ from .models import (
     Laboratoire,
     Evenement,
 )
-from .view_mixins import FicheDetectionContextMixin, WithPrelevementHandlingMixin
+from .view_mixins import WithPrelevementHandlingMixin, WithStatusToOrganismeNuisibleMixin
 
 
 class FicheListView(ListView):
@@ -82,6 +84,7 @@ class EvenementDetailView(
     WithDocumentUploadFormMixin,
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
     UserPassesTestMixin,
     DetailView,
 ):
@@ -123,6 +126,7 @@ class EvenementDetailView(
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
             context["detections_hors_zone_infestee"] = fiche_zone.fichedetection_set.select_related("numero").all()
@@ -141,7 +145,22 @@ class EvenementDetailView(
         return context
 
 
-class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, CreateView):
+class EvenementUpdateView(WithStatusToOrganismeNuisibleMixin, UserPassesTestMixin, UpdateView):
+    form_class = EvenementUpdateForm
+
+    def get_queryset(self):
+        return Evenement.objects.all()
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def test_func(self) -> bool | None:
+        return self.get_object().can_user_access(self.request.user)
+
+
+class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
 
@@ -210,7 +229,7 @@ class FicheDetectionCreateView(FicheDetectionContextMixin, WithPrelevementHandli
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FicheDetectionUpdateView(FicheDetectionContextMixin, WithPrelevementHandlingMixin, UpdateView):
+class FicheDetectionUpdateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, UpdateView):
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
@@ -318,7 +337,7 @@ class EvenementCloturerView(View):
         evenement = content_type.objects.get(pk=pk)
         redirect_url = evenement.get_absolute_url()
         if not evenement.can_be_cloturer_by(request.user):
-            messages.error(request, "Vous n'avez pas les droits pour clôturer cet événement.")
+            messages.error(request, "Cet événement ne peut pas être clôturé.")
             return redirect(redirect_url)
         if evenement.is_already_cloturer():
             messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")

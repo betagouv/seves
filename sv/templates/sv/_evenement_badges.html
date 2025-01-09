@@ -1,0 +1,9 @@
+{% load etat_tags %}
+
+<div>
+    {% if evenement.is_ac_notified %}
+        <p class="fr-badge"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
+    {% endif %}
+    <p class="fr-badge fr-badge--no-icon">{{ evenement.visibilite }}</p>
+    <p class="fr-badge fr-badge--{{evenement.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ evenement.etat }}</p>
+</div>
