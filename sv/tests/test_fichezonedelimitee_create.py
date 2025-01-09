@@ -37,6 +37,19 @@ def test_fiche_detection_are_filtered_by_evenement_of_fiche_detection(client):
 
 
 @pytest.mark.django_db
+def test_organisme_nuisible_and_statut_are_filled_and_readonly(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory(
+        organisme_nuisible__libelle_court="ON dangereux", statut_reglementaire__libelle="organisme quarantaine"
+    )
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.goto_create_form_page(live_server, evenement)
+    form_page.organisme_nuisible_is_autoselect("ON dangereux")
+    form_page.statut_reglementaire_is_autoselect("organisme quarantaine")
+    form_page.organisme_nuisible_is_readonly()
+    form_page.statut_reglementaire_is_readonly()
+
+
+@pytest.mark.django_db
 def test_can_create_fiche_zone_delimitee_without_zone_infestee(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     fiche = baker.prepare(

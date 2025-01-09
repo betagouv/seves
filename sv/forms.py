@@ -312,7 +312,10 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.initial.get("evenement"):
-            queryset = FicheDetection.objects.filter(evenement=self.initial.get("evenement"))
+            evenement = self.initial.get("evenement")
+            queryset = FicheDetection.objects.filter(evenement=evenement)
+            self.fields["organisme_nuisible"].initial = evenement.organisme_nuisible.libelle_court
+            self.fields["statut_reglementaire"].initial = evenement.statut_reglementaire.libelle
         elif self.instance.pk:
             queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
 
