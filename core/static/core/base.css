@@ -9,6 +9,9 @@ header{
 .alert-container{
     margin: 2rem 1.5rem;
 }
+.main-container {
+    margin: 2rem 1.5rem;
+}
 #en-tete{
     display: flex;
     align-items: center;

@@ -1,0 +1,66 @@
+{% extends 'sv/base.html' %}
+
+{% load static %}
+{% load etat_tags %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sv/evenement_form.css' %}">
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'sv/evenement_form.js' %}"></script>
+
+{% endblock %}
+
+{% block content %}
+    <main class="main-container">
+        {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
+        <form action="{% url 'evenement-update' evenement.id  %}" method="post">
+            {% csrf_token %}
+
+            <div class="evenement-form-header">
+                <div>
+                    <h1>
+                        Événement n°{{ evenement.numero }}
+                    </h1>
+                </div>
+                <p>
+                    <a href="{{ form.instance.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                    <input type="submit" name="action" value="Enregistrer" class="fr-btn">
+                </p>
+            </div>
+            {% include "sv/_evenement_badges.html" %}
+
+            <div class="fr-mt-1w">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-6">
+                        <div class="white-container--lite">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 evenement-form--label"><label class="fr-label" for="id_organisme_nuisible">Organisme Nuisible</label></div>
+                                <div class="fr-col-9">{{ form.organisme_nuisible}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fr-col-6">
+                        <div class="white-container--lite">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 evenement-form--label"><label class="fr-label" for="id_statut_reglementaire">Statut réglementaire</label></div>
+                                <div class="fr-col-9">{{ form.statut_reglementaire}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="liens-libre" class="white-container fr-mt-2w">
+                {{ form.instance.free_link_ids|json_script:"free-links-id" }}
+                <h2>Liens libres</h2>
+                <div>
+                    {{ form.free_link }}
+                </div>
+            </div>
+
+
+        </form>
+    </main>
+{% endblock %}

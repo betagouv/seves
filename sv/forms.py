@@ -10,7 +10,7 @@ from django.utils.translation import ngettext
 
 from core.fields import DSFRRadioButton
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
-from sv.form_mixins import WithDataRequiredConversionMixin
+from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -476,4 +476,20 @@ class EvenementForm(DSFRForm, forms.ModelForm):
         instance.createur = self.user.agent.structure
         if commit:
             instance.save()
+        return instance
+
+
+class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+    class Meta:
+        model = Evenement
+        fields = ["organisme_nuisible", "statut_reglementaire"]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+        self._add_free_links(model=Evenement)
+
+    def save(self, commit=True):
+        instance = super().save(commit)
+        self.save_free_links(instance)
         return instance

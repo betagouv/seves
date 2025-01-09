@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 
 from core.fields import MultiModelChoiceField
 from core.models import LienLibre
-from sv.models import FicheDetection, FicheZoneDelimitee
 
 
 class WithDataRequiredConversionMixin:
@@ -29,34 +28,23 @@ class WithFreeLinksMixin:
         links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
         links_to_delete.delete()
 
-    def _add_free_links(self, obj_type):
-        qs_detection = (
-            FicheDetection.objects.all()
-            .order_by_numero_fiche()
-            .get_fiches_user_can_view(self.user)
+    def _add_free_links(self, model):
+        queryset = (
+            model.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
             .select_related("numero")
+            .exclude(id=self.instance.id)
         )
-        qs_zone = (
-            FicheZoneDelimitee.objects.all()
-            .order_by_numero_fiche()
-            .get_fiches_user_can_view(self.user)
-            .select_related("numero")
-        )
-        if self.instance:
-            if obj_type == "zone":
-                qs_zone = qs_zone.exclude(id=self.instance.id)
-            elif obj_type == "detection":
-                qs_detection = qs_detection.exclude(id=self.instance.id)
         self.fields["free_link"] = MultiModelChoiceField(
             required=False,
             label="Sélectionner un objet",
             model_choices=[
-                ("Fiche Détection", qs_detection),
-                ("Fiche zone délimitée", qs_zone),
+                ("Événement", queryset),
             ],
         )
 
     def clean_free_link(self):
         if self.instance and self.instance in self.cleaned_data["free_link"]:
-            raise ValidationError("Vous ne pouvez pas lier une fiche a elle-même.")
+            raise ValidationError("Vous ne pouvez pas lier un objet a lui-même.")
         return self.cleaned_data["free_link"]

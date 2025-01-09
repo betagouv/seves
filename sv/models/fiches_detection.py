@@ -8,7 +8,6 @@ from reversion.models import Version
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
-    WithFreeLinkIdsMixin,
 )
 from core.models import Structure, UnitesMesure
 from sv.managers import (
@@ -130,7 +129,6 @@ class StatutEvenement(models.Model):
 @reversion.register()
 class FicheDetection(
     AllowsSoftDeleteMixin,
-    WithFreeLinkIdsMixin,
     models.Model,
 ):
     class Meta:

@@ -11,7 +11,7 @@ from .models import (
 )
 
 
-class FicheDetectionContextMixin:
+class WithStatusToOrganismeNuisibleMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         status_code_to_id = {s.code: s.id for s in StatutReglementaire.objects.all()}

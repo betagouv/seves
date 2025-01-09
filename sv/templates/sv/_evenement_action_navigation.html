@@ -19,11 +19,6 @@
                             <button class="fr-translate__language fr-nav__link" href="#" type="submit" disabled><span class="fr-icon-notification-3-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Déclarer à l'AC</button>
                         {% endif %}
                     </li>
-
-                    {% if user.agent.structure.is_ac and not evenement.etat.is_cloture %}
-                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
-                    {% endif %}
-
                 {% endif %}
                 {% if can_update_visibilite %}
                     <form action="{{ evenement.get_visibilite_update_url }}" method="post">
@@ -35,6 +30,10 @@
                             <input type="hidden" value="local" name="visibilite">
                         </span>Publier l'événement</button>
                     </form>
+                {% endif %}
+                <li><a class="fr-translate__language fr-nav__link" href="{{ evenement.get_update_url}}" ><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
+                {%  if can_be_cloturer %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                 {% endif %}
                 <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
             </ul>

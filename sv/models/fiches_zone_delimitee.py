@@ -4,7 +4,6 @@ from django.db.models import TextChoices
 from django.urls import reverse
 
 from core.mixins import (
-    WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
 )
 from core.models import Structure, UnitesMesure
@@ -14,7 +13,7 @@ from sv.managers import (
 from .common import NumeroFiche
 
 
-class FicheZoneDelimitee(AllowsSoftDeleteMixin, WithFreeLinkIdsMixin, models.Model):
+class FicheZoneDelimitee(AllowsSoftDeleteMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE

@@ -8,15 +8,24 @@ from core.mixins import (
     AllowACNotificationMixin,
     AllowVisibiliteMixin,
     WithMessageUrlsMixin,
+    WithFreeLinkIdsMixin,
 )
 from core.models import Document, Message, Contact, Visibilite, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire, Etat
+from ..managers import EvenementQueryset
 from ..mixins import WithEtatMixin
 
 
 @reversion.register()
-class Evenement(AllowACNotificationMixin, AllowVisibiliteMixin, WithEtatMixin, WithMessageUrlsMixin, models.Model):
+class Evenement(
+    AllowACNotificationMixin,
+    AllowVisibiliteMixin,
+    WithEtatMixin,
+    WithMessageUrlsMixin,
+    WithFreeLinkIdsMixin,
+    models.Model,
+):
     numero = models.OneToOneField(
         NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
     )
@@ -48,6 +57,8 @@ class Evenement(AllowACNotificationMixin, AllowVisibiliteMixin, WithEtatMixin, W
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
+    objects = EvenementQueryset.as_manager()
+
     class Meta:
         verbose_name = "Évènement"
         verbose_name_plural = "Évènements"
@@ -66,5 +77,11 @@ class Evenement(AllowACNotificationMixin, AllowVisibiliteMixin, WithEtatMixin, W
     def get_absolute_url(self):
         return reverse("evenement-details", kwargs={"pk": self.pk})
 
+    def get_update_url(self):
+        return reverse("evenement-update", kwargs={"pk": self.pk})
+
     def get_visibilite_update_url(self):
         return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
+
+    def __str__(self):
+        return str(self.numero)
