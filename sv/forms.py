@@ -316,7 +316,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         elif self.instance.pk:
             queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
 
-        self.fields["detections_hors_zone"].queryset = queryset.order_by_numero_fiche()
+        self.fields["detections_hors_zone"].queryset = queryset.select_related("numero").order_by_numero_fiche()
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():

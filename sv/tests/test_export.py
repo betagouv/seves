@@ -106,7 +106,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     stream = StringIO()
     _create_fiche_with_lieu_and_prelevement(fill_optional=True)
 
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(8):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
@@ -117,7 +117,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
     _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
-    with django_assert_num_queries(12):
+    with django_assert_num_queries(8):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)

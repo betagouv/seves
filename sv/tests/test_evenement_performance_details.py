@@ -5,7 +5,7 @@ from core.models import Message, Document, Structure, Contact
 from sv.factories import EvenementFactory, FicheDetectionFactory, PrelevementFactory, FicheZoneFactory
 from sv.models import Lieu, ZoneInfestee
 
-BASE_NUM_QUERIES = 17  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 15  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -47,11 +47,11 @@ def test_evenement_performances_with_lieux(client, django_assert_num_queries):
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 5):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
     baker.make(Lieu, fiche_detection=fiche_detection, _quantity=3, _fill_optional=True)
-    with django_assert_num_queries(BASE_NUM_QUERIES + 17):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 8):
         client.get(evenement.get_absolute_url())
 
 
@@ -75,12 +75,12 @@ def test_evenement_performances_with_prelevement(client, django_assert_num_queri
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 5):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
     PrelevementFactory.create_batch(3, lieu__fiche_detection=fiche_detection, is_officiel=False)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 17):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
         client.get(evenement.get_absolute_url())
 
 
@@ -123,5 +123,5 @@ def test_fiche_zone_delimitee_with_multiple_zone_infestee(
 
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 28):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 16):
         client.get(evenement.get_absolute_url())

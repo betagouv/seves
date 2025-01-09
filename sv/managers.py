@@ -50,13 +50,15 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
 
     def optimized_for_list(self):
-        return self.select_related("numero", "createur")
+        return self.select_related(
+            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+        )
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
 
     def optimized_for_details(self):
-        return self.select_related("numero", "contexte", "createur")
+        return self.select_related("numero", "contexte", "createur", "evenement", "statut_evenement")
 
     def get_all_not_in_fiche_zone_delimitee(self, instance):
         query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
@@ -74,7 +76,9 @@ class FicheZoneManager(models.Manager):
 
 class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
-        return self.select_related("numero", "createur")
+        return self.select_related(
+            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+        )
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
