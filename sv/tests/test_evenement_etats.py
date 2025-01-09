@@ -107,12 +107,12 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
     page.get_by_role("link", name="Clôturer l'événement").click()
     page.get_by_role("button", name="Confirmer la clôture").click()
 
-    expect(page.get_by_text(f"La fiche n° {evenement.numero} a bien été clôturée.")).to_be_visible()
+    expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
     expect(page.get_by_text("clôturé", exact=True)).to_be_visible()
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
-    evenement.etat == Etat.objects.get(libelle=Etat.CLOTURE)
+    assert evenement.etat.libelle == Etat.CLOTURE
 
 
 def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
@@ -143,7 +143,6 @@ def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
     assert evenement.etat == Etat.objects.get(libelle=Etat.CLOTURE)
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     live_server, page: Page, mocked_authentification_user, contact_ac: Contact
 ):
@@ -156,14 +155,13 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
 
-    expect(page.get_by_label("Clôturer une fiche").get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer la fiche n° {evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
+    cloturer_element = page.get_by_label("Clôturer un événement")
+    expect(cloturer_element.get_by_role("paragraph")).to_contain_text(
+        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
     )
-    expect(page.get_by_label("Clôturer une fiche").get_by_role("listitem")).to_contain_text(
-        contact_ac.structure.libelle
-    )
+    expect(cloturer_element.get_by_role("listitem")).to_contain_text(contact_ac.structure.libelle)
     evenement.refresh_from_db()
-    assert evenement.etat == Etat.objects.get(libelle=Etat.NOUVEAU)
+    assert evenement.etat.libelle == Etat.NOUVEAU
 
 
 @pytest.mark.skip(reason="refacto evenement")
@@ -189,10 +187,12 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
 
-    expect(page.get_by_label("Clôturer une fiche").get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer la fiche n° {evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
+    expect(page.get_by_label("Clôturer un événement").get_by_role("paragraph")).to_contain_text(
+        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
     )
-    expect(page.get_by_label("Clôturer une fiche").get_by_role("listitem")).to_contain_text(contact2.structure.libelle)
+    expect(page.get_by_label("Clôturer un événement").get_by_role("listitem")).to_contain_text(
+        contact2.structure.libelle
+    )
     evenement.refresh_from_db()
     assert evenement.etat == Etat.objects.get(libelle=Etat.NOUVEAU)
 
