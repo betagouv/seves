@@ -48,5 +48,5 @@ class DisplayedFiche:
             communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url(),
             numero_evenement=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",
-            nb_related_objects=1 if fiche.evenement.fiche_zone_delimitee else 0,
+            nb_related_objects=1 if fiche.evenement.fiche_zone_delimitee_id else 0,
         )

@@ -87,6 +87,23 @@ class EvenementDetailView(
 ):
     model = Evenement
 
+    def get_queryset(self):
+        return Evenement.objects.all().prefetch_related(
+            "detections",
+            "detections__createur",
+            "detections__numero",
+            "detections__lieux",
+            "detections__lieux__departement",
+            "detections__lieux__departement__region",
+            "detections__lieux__position_chaine_distribution_etablissement",
+            "detections__lieux__site_inspection",
+            "detections__lieux__prelevements",
+            "detections__lieux__prelevements__structure_preleveuse",
+            "detections__lieux__prelevements__matrice_prelevee",
+            "detections__lieux__prelevements__espece_echantillon",
+            "detections__lieux__prelevements__laboratoire",
+        )
+
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
             return self.object
