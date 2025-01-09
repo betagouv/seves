@@ -6,7 +6,7 @@ from .views import (
     FicheDetectionCreateView,
     FicheDetectionUpdateView,
     FicheDetectionExportView,
-    FicheCloturerView,
+    EvenementCloturerView,
     EvenementVisibiliteUpdateView,
     FicheZoneDelimiteeCreateView,
     FicheZoneDelimiteeUpdateView,
@@ -40,9 +40,9 @@ urlpatterns = [
         name="fiche-detection-modification",
     ),
     path(
-        "fiches/<int:pk>/cloturer/",
-        FicheCloturerView.as_view(),
-        name="fiche-cloturer",
+        "evenement/<int:pk>/cloturer/",
+        EvenementCloturerView.as_view(),
+        name="evenement-cloturer",
     ),
     path(
         "evenement/<int:pk>/visibilite/",
