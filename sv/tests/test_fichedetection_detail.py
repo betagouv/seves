@@ -1,6 +1,7 @@
 from model_bakery import baker
 from playwright.sync_api import expect
 
+from sv.factories import LieuFactory, EvenementFactory, FicheDetectionFactory, PrelevementFactory
 from sv.models import Lieu, Prelevement
 
 
@@ -93,47 +94,6 @@ def test_prelevement_card(live_server, page, fiche_detection):
     expect(page.locator(".prelevement").get_by_text("Prélèvement non officiel")).to_be_visible()
 
 
-def test_prelevement_non_officiel_details(live_server, page, fiche_detection):
-    "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    prelevement = baker.make(
-        Prelevement,
-        lieu=lieu,
-        is_officiel=False,
-        numero_rapport_inspection="",
-        laboratoire=None,
-        _fill_optional=True,
-    )
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
-    expect(page.get_by_role("heading", name=f"Échantillon {prelevement.numero_echantillon}")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Type de prélèvement")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Structure")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Numéro d'échantillon")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Date de prélèvement")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Matrice prélevée")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Espèce de l'échantillon")).to_be_visible()
-    expect(page.locator("#fr-modal-prelevement-1").get_by_text("Code OEPP")).to_be_visible()
-    expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement non officiel")
-    expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
-        prelevement.structure_preleveuse.nom
-    )
-    expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text(prelevement.numero_echantillon)
-    expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text(
-        prelevement.date_prelevement.strftime("%d/%m/%Y")
-    )
-    expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text(prelevement.matrice_prelevee.libelle)
-    expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text(
-        prelevement.espece_echantillon.libelle
-    )
-    expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text(prelevement.espece_echantillon.code_oepp)
-    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text(prelevement.get_resultat_display())
-    expect(page.get_by_test_id("prelevement-1-type-analyse")).to_contain_text(prelevement.get_type_analyse_display())
-
-
 def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
     "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
     lieu = baker.make(Lieu, fiche_detection=fiche_detection)
@@ -143,7 +103,9 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     prelevement = baker.make(Prelevement, lieu=lieu)
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
-    expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement non officiel")
+    expect(page.get_by_test_id("prelevement-1-is-officiel")).to_contain_text(
+        "oui" if prelevement.is_officiel else "non"
+    )
     expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
         prelevement.structure_preleveuse.nom
     )
@@ -154,36 +116,31 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_
     expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text("nc.")
 
 
-def test_prelevement_non_officiel_details_second_prelevement(live_server, page, fiche_detection):
+def test_prelevement_non_officiel_details_second_prelevement(live_server, page):
     "Test que si je clique sur le bouton 'Consulter le détail du prélèvement' d'un deuxième prélèvement, les détails de ce prélèvement s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
+    fiche_detection = FicheDetectionFactory()
+    lieu = LieuFactory(fiche_detection=fiche_detection)
     evenement = fiche_detection.evenement
     evenement.createur = fiche_detection.createur
     evenement.save()
-    baker.make(
-        Prelevement,
-        lieu=lieu,
-        is_officiel=False,
-        _fill_optional=True,
-        numero_rapport_inspection="",
-        laboratoire=None,
-    )
-    prelevement2 = baker.make(
-        Prelevement,
-        lieu=lieu,
-        is_officiel=False,
-        _fill_optional=True,
-        numero_rapport_inspection="",
-        laboratoire=None,
-    )
+    PrelevementFactory(lieu=lieu, is_officiel=False)
+    prelevement2 = PrelevementFactory(lieu=lieu, is_officiel=False)
+
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
+
     expect(page.get_by_role("heading", name=f"Échantillon {prelevement2.numero_echantillon}")).to_be_visible()
-    expect(page.get_by_test_id("prelevement-2-type")).to_contain_text("Prélèvement non officiel")
+    expect(page.get_by_test_id("prelevement-2-type-analyse")).to_contain_text(prelevement2.get_type_analyse_display())
+    expect(page.get_by_test_id("prelevement-2-is-officiel")).to_contain_text("non")
+    expect(page.get_by_test_id("prelevement-2-numero-rapport-inspection")).to_contain_text(
+        prelevement2.numero_rapport_inspection
+    )
+    expect(page.get_by_test_id("prelevement-2-laboratoire")).to_contain_text(prelevement2.laboratoire.nom)
+    expect(page.get_by_test_id("prelevement-2-numero-echantillon")).to_contain_text(prelevement2.numero_echantillon)
+    expect(page.get_by_test_id("prelevement-2-lieu")).to_contain_text(prelevement2.lieu.nom)
     expect(page.get_by_test_id("prelevement-2-structure-preleveuse")).to_contain_text(
         prelevement2.structure_preleveuse.nom
     )
-    expect(page.get_by_test_id("prelevement-2-numero-echantillon")).to_contain_text(prelevement2.numero_echantillon)
     expect(page.get_by_test_id("prelevement-2-date-prelevement")).to_contain_text(
         prelevement2.date_prelevement.strftime("%d/%m/%Y")
     )
@@ -195,14 +152,34 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
     expect(page.get_by_test_id("prelevement-2-resultat")).to_contain_text(prelevement2.get_resultat_display())
 
 
-def test_prelevement_officiel_details(live_server, page, fiche_detection):
-    "Test que les détails d'un prélèvement officiel s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    prelevement = baker.make(Prelevement, lieu=lieu, is_officiel=True, _fill_optional=True)
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+def test_prelevement_details(live_server, page):
+    "Test que les détails d'un prélèvement s'affichent correctement dans la modale"
+    evenement = EvenementFactory()
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    lieu = LieuFactory(fiche_detection=fiche_detection)
+    prelevement = PrelevementFactory(lieu=lieu)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
-    expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement officiel")
+    expect(page.get_by_test_id("prelevement-1-type-analyse")).to_contain_text(prelevement.get_type_analyse_display())
+    expect(page.get_by_test_id("prelevement-1-is-officiel")).to_contain_text(
+        "oui" if prelevement.is_officiel else "non"
+    )
+    expect(page.get_by_test_id("prelevement-1-numero-rapport-inspection")).to_contain_text(
+        prelevement.numero_rapport_inspection
+    )
     expect(page.get_by_test_id("prelevement-1-laboratoire")).to_contain_text(prelevement.laboratoire.nom)
+    expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text(prelevement.numero_echantillon)
+    expect(page.get_by_test_id("prelevement-1-lieu")).to_contain_text(prelevement.lieu.nom)
+    expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
+        prelevement.structure_preleveuse.nom
+    )
+    expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text(
+        prelevement.date_prelevement.strftime("%d/%m/%Y")
+    )
+    expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text(prelevement.matrice_prelevee.libelle)
+    expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text(
+        prelevement.espece_echantillon.libelle
+    )
+    expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text(prelevement.espece_echantillon.code_oepp)
+    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text(prelevement.get_resultat_display())
