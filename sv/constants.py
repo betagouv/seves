@@ -210,13 +210,6 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
 KNOWN_OEPPS = [oepp for oepp_list in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.values() for oepp in oepp_list]
 
 LABORATOIRES_AGREES = [
-    "ANSES 49",
-    "ANSES 63",
-    "ANSES 34",
-    "ANSES 54b",
-    "ANSES 35b",
-    "ANSES 974",
-    "SNES 49",
     "LDA 02",
     "LDA 13",
     "SEDIA 21",
@@ -237,11 +230,11 @@ LABORATOIRES_AGREES = [
     "FDGDON 974 (Réunion)",
 ]
 LABORATOIRES_CONFIRMATION_OFFICIELLE = [
-    "ANSES 34 - Unité d'Entomologie et Plantes invasives",
-    "ANSES 49 - Unité de Bactériologie Virologie et OGM",
-    "ANSES 54b - Unité de Mycologie",
-    "ANSES 35b - Unité de Nématologie",
-    "ANSES 63 - Unité de Quarantaine et de virologie",
-    "ANSES 974 - Unité des Ravageurs et agents pathogènes tropicaux",
-    "SNES 49 - Laboratoire de l'unité technique détection de bioagresseurs",
+    "ANSES 34",
+    "ANSES 49",
+    "ANSES 54b",
+    "ANSES 35b",
+    "ANSES 63",
+    "ANSES 974",
+    "SNES 49",
 ]
