@@ -43,8 +43,13 @@ class WithPrelevementHandlingMixin:
             form_is_empty = not any(form_data.values())
 
             if form_is_empty and prelevement_id:
-                prelevement = Prelevement.objects.get(id=prelevement_id)
-                prelevement.delete()
+                try:
+                    # Cas 1 : Suppression d'un prélèvement uniquement (le lieu n'est pas supprimé)
+                    prelevement = Prelevement.objects.get(id=prelevement_id)
+                    prelevement.delete()
+                except Prelevement.DoesNotExist:
+                    # Cas 2 : Le prélèvement a déjà été supprimé car son lieu a été supprimé (cascade)
+                    pass
                 continue
 
             if prelevement_id:
