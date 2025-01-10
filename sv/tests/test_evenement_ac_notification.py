@@ -1,17 +1,16 @@
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.models import Structure, Contact, Visibilite, Message
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
-from ..factories import EvenementFactory
+from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import Evenement
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_can_notify_ac(live_server, page: Page, mailoutbox):
     evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -37,9 +36,7 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
     assert len(mailoutbox) == 1
 
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
-    cell_selector = ".fiches__list-row td:nth-child(8) a"
-    assert page.text_content(cell_selector).strip() == "local"
-    expect(page.locator(".fiches__list-row td:nth-child(8) a .fr-icon-notification-3-line")).to_be_visible()
+    expect(page.locator(".fiches__list-row td:nth-child(1) .ac-notified")).to_be_visible()
 
 
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):

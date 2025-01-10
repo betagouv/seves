@@ -7,7 +7,7 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import Contact
+from core.models import Contact, Visibilite
 from sv.constants import REGIONS, DEPARTEMENTS
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
@@ -267,7 +267,6 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
@@ -276,6 +275,11 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     form_elements.statut_evenement_input.select_option(label="Foyer")
     form_elements.publish_btn.click()
+
+    fiche_detection = FicheDetection.objects.get()
+    fiche_detection.evenement.visibilite = Visibilite.LOCAL
+    fiche_detection.evenement.save()
+    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
     page.get_by_test_id("contacts").click()
     expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
