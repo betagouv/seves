@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'sv/evenement_details.js' %}"></script>
+    <script type="module" src="{% static 'sv/evenement_details.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,7 +20,7 @@
             <div class="evenement-top-row">
                 <h1 class="fr-mb-0-5v">Événement {% if evenement.numero %}{{ evenement.numero }}{%  endif %}</h1>
 
-                <div>
+                <div data-fiche-id="{{ evenement.pk }}">
                     <fieldset class="fr-segmented">
                         <div class="fr-segmented__elements">
                             <div class="fr-segmented__element">
