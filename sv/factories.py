@@ -1,4 +1,6 @@
 import random
+import string
+
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
@@ -17,6 +19,9 @@ from .models import (
     StructurePreleveuse,
     ZoneInfestee,
     Evenement,
+    MatricePrelevee,
+    EspeceEchantillon,
+    Laboratoire,
 )
 from datetime import datetime
 
@@ -72,29 +77,73 @@ class StructurePreleveuseFactory(DjangoModelFactory):
         model = StructurePreleveuse
         django_get_or_create = ("nom",)
 
-    nom = factory.LazyAttribute(
-        lambda _: random.choice([s for s in STRUCTURES_PRELEVEUSES if s != STRUCTURE_EXPLOITANT])
-    )
+    nom = factory.LazyAttribute(lambda _: random.choice(STRUCTURES_PRELEVEUSES))
+
+    class Params:
+        not_exploitant = factory.Trait(
+            nom=factory.LazyAttribute(
+                lambda _: random.choice([s for s in STRUCTURES_PRELEVEUSES if s != STRUCTURE_EXPLOITANT])
+            )
+        )
+
+
+class MatricePreleveeFactory(DjangoModelFactory):
+    class Meta:
+        model = MatricePrelevee
+        django_get_or_create = ("libelle",)
+
+    libelle = factory.Sequence(lambda n: f"Matrice {n}")
+
+
+class EspeceEchantillonFactory(DjangoModelFactory):
+    class Meta:
+        model = EspeceEchantillon
+        django_get_or_create = ("code_oepp", "libelle")
+
+    code_oepp = factory.Sequence(lambda n: f"OEPP{n:04d}")
+    libelle = factory.Sequence(lambda n: f"Espèce échantillon {n}")
+
+
+class LaboratoireFactory(DjangoModelFactory):
+    class Meta:
+        model = Laboratoire
+        django_get_or_create = ("nom",)
+
+    is_active = True
+    nom = factory.Sequence(lambda n: f"Laboratoire {n}")
+    confirmation_officielle = False
 
 
 class PrelevementFactory(DjangoModelFactory):
     class Meta:
         model = Prelevement
 
-    type_analyse = FuzzyChoice([choice[0] for choice in Prelevement.TypeAnalyse.choices])
     lieu = factory.SubFactory("sv.factories.LieuFactory")
-    structure_preleveuse = factory.SubFactory("sv.factories.StructurePreleveuseFactory")
     numero_echantillon = factory.Faker("numerify", text="#####")
     date_prelevement = factory.Faker("date_this_decade")
+    matrice_prelevee = factory.SubFactory("sv.factories.MatricePreleveeFactory")
+    espece_echantillon = factory.SubFactory("sv.factories.EspeceEchantillonFactory")
     is_officiel = factory.Faker("boolean")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
-    numero_rapport_inspection = factory.Faker("numerify", text="#####")
+    type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
 
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["is_officiel"] is False:
-            kwargs["numero_rapport_inspection"] = ""
-        return super()._create(model_class, *args, **kwargs)
+    @factory.lazy_attribute
+    def structure_preleveuse(self):
+        if self.is_officiel:
+            return StructurePreleveuseFactory(not_exploitant=True)
+        return StructurePreleveuseFactory()
+
+    @factory.lazy_attribute
+    def laboratoire(self):
+        if self.type_analyse == Prelevement.TypeAnalyse.CONFIRMATION:
+            return LaboratoireFactory(confirmation_officielle=True)
+        return LaboratoireFactory()
+
+    @factory.lazy_attribute
+    def numero_rapport_inspection(self):
+        if self.is_officiel:
+            return "".join(random.choices(string.digits, k=5))
+        return ""
 
 
 class LieuFactory(DjangoModelFactory):

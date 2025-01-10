@@ -78,9 +78,9 @@ def test_evenement_performances_with_prelevement(client, django_assert_num_queri
     with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
-    PrelevementFactory.create_batch(3, lieu__fiche_detection=fiche_detection, is_officiel=False)
+    PrelevementFactory.create_batch(3, lieu__fiche_detection=fiche_detection)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
         client.get(evenement.get_absolute_url())
 
 
