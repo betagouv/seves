@@ -90,6 +90,11 @@ class FicheZoneQuerySet(BaseVisibilityQuerySet):
         )
 
 
+class EvenementManager(models.Manager):
+    def get_queryset(self):
+        return EvenementQueryset(self.model, using=self._db).filter(is_deleted=False)
+
+
 class EvenementQueryset(models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero__annee", "-numero__numero")

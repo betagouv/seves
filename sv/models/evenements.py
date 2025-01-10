@@ -1,6 +1,7 @@
-from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
 import reversion
+from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import PermissionDenied
+from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
 
@@ -9,11 +10,12 @@ from core.mixins import (
     AllowVisibiliteMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
+    AllowsSoftDeleteMixin,
 )
 from core.models import Document, Message, Contact, Visibilite, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire, Etat
-from ..managers import EvenementQueryset
+from ..managers import EvenementManager
 from ..mixins import WithEtatMixin
 
 
@@ -24,6 +26,7 @@ class Evenement(
     WithEtatMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
+    AllowsSoftDeleteMixin,
     models.Model,
 ):
     numero = models.OneToOneField(
@@ -57,7 +60,7 @@ class Evenement(
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
-    objects = EvenementQueryset.as_manager()
+    objects = EvenementManager()
 
     class Meta:
         verbose_name = "Évènement"
@@ -90,3 +93,16 @@ class Evenement(
         contacts_structure = self.contacts.exclude(structure__isnull=True).select_related("structure")
         fin_suivi_contacts_ids = self.fin_suivi.values_list("contact", flat=True)
         return contacts_structure.exclude(id__in=fin_suivi_contacts_ids)
+
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def soft_delete(self, user):
+        if not self.can_user_delete(user):
+            raise PermissionDenied
+
+        with transaction.atomic():
+            for detection in self.detections.all():
+                detection.soft_delete(user)
+            self.is_deleted = True
+            self.save()
