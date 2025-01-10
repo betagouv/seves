@@ -24,11 +24,11 @@
                     <fieldset class="fr-segmented">
                         <div class="fr-segmented__elements">
                             <div class="fr-segmented__element">
-                                <input value="1" checked type="radio" id="detail-btn" name="segmented-2215">
+                                <input value="detail" checked type="radio" id="detail-btn" name="segmented-2215">
                                 <label class="fr-label" for="detail-btn"><i class="ri-expand-vertical-fill fr-mr-1w"></i>Détail</label>
                             </div>
                             <div class="fr-segmented__element">
-                                <input value="2" type="radio" id="synthese-btn" name="segmented-2215">
+                                <input value="synthese" type="radio" id="synthese-btn" name="segmented-2215">
                                 <label class="fr-label" for="synthese-btn"><i class="ri-collapse-vertical-fill fr-mr-1w"></i>Synthèse</label>
                             </div>
                         </div>
@@ -59,58 +59,61 @@
             </div>
         </div>
 
-        <div class="fr-tabs">
-            <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
-                <li role="presentation">
-                    <button id="tabpanel-404" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
-                </li>
-                <li role="presentation">
-                    <button id="tabpanel-405" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
-                </li>
-            </ul>
-            <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
-                <div>
-                    <div class="fr-tabs no-tab-look">
-                        <ul class="fr-tabs__list fr-mb-2v" role="tablist" aria-label="Liste des détection">
+        <div id="detail-content">
+            <div class="fr-tabs">
+                <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
+                    <li role="presentation">
+                        <button id="tabpanel-404" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
+                    </li>
+                    <li role="presentation">
+                        <button id="tabpanel-405" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
+                    </li>
+                </ul>
+                <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
+                    <div>
+                        <div class="fr-tabs no-tab-look">
+                            <ul class="fr-tabs__list fr-mb-2v" role="tablist" aria-label="Liste des détection">
+                                {% for fichedetection in evenement.detections.all %}
+                                    <li role="presentation">
+                                        <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
                             {% for fichedetection in evenement.detections.all %}
-                                <li role="presentation">
-                                    <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
-                                </li>
+                                <div id="detection-actions-{{ fichedetection.pk }}" {% if not forloop.first %}class="fr-hidden"{% endif %}>
+                                    <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
+                                        Supprimer la détection
+                                    </button>
+                                    {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
+                                    <button class="fr-btn fr-btn--secondary fr-mr-2w">
+                                        <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
+                                    </button>
+                                </div>
                             {% endfor %}
-                        </ul>
-
-                        {% for fichedetection in evenement.detections.all %}
-                            <div id="detection-actions-{{ fichedetection.pk }}" {% if not forloop.first %}class="fr-hidden"{% endif %}>
-                                <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
-                                    Supprimer la détection
-                                </button>
-                                {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
-                                <button class="fr-btn fr-btn--secondary fr-mr-2w">
-                                    <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
-                                </button>
-                            </div>
-                        {% endfor %}
 
 
-                        {% for fichedetection in evenement.detections.all %}
-                            <div id="tabpanel-{{ fichedetection.pk }}-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-{{ fichedetection.pk }}" tabindex="0">
-                                {% include "sv/_fichedetection_detail.html" %}
-                            </div>
-                        {% endfor %}
+                            {% for fichedetection in evenement.detections.all %}
+                                <div id="tabpanel-{{ fichedetection.pk }}-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-{{ fichedetection.pk }}" tabindex="0">
+                                    {% include "sv/_fichedetection_detail.html" %}
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
-                {% if evenement.fiche_zone_delimitee %}
-                    {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
-                {% else %}
-                    Il n'y a pas de zone délimitée pour cet événement
+                <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
+                    {% if evenement.fiche_zone_delimitee %}
+                        {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
+                    {% else %}
+                        Il n'y a pas de zone délimitée pour cet événement
 
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
+
+            {% include "sv/_list_free_links.html" with classes="fr-mt-8v" object=evenement %}
         </div>
 
-        {% include "sv/_list_free_links.html" with classes="fr-mt-8v" object=evenement %}
         {% if not evenement.is_draft %}
             {% include "core/_fiche_bloc_commun.html" %}
         {% endif %}
