@@ -378,6 +378,7 @@ class FicheZoneDelimiteeFormPage:
         self.surface_tampon_totale = page.get_by_label("Surface tampon totale")
         self.surface_tampon_totale_unite_m2 = page.get_by_label("m2", exact=True).first
         self.surface_tampon_totale_unite_km2 = page.get_by_label("km2", exact=True).first
+        self.surface_tampon_totale_unite_ha = page.get_by_label("ha", exact=True).first
 
         # Détections hors zone infestée
         self.detections_hors_zone_infestee = page.locator(
@@ -415,6 +416,8 @@ class FicheZoneDelimiteeFormPage:
                 self.surface_tampon_totale_unite_m2.click(force=True)
             case FicheZoneDelimitee.UnitesSurfaceTamponTolale.KILOMETRE_CARRE:
                 self.surface_tampon_totale_unite_km2.click(force=True)
+            case FicheZoneDelimitee.UnitesSurfaceTamponTolale.HECTARE:
+                self.surface_tampon_totale_unite_ha.click(force=True)
 
     def _select_unite_surface_infestee_totale(self, unite: ZoneInfestee.UnitesSurfaceInfesteeTotale, index: int):
         match unite:
