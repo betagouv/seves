@@ -35,8 +35,10 @@
                 {%  if can_be_cloturer %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                 {% endif %}
-                <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
+                <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
             </ul>
+
         </div>
     </div>
 </nav>
+{% include "sv/_delete_evenement_modal.html" %}
