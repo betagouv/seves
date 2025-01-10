@@ -17,6 +17,9 @@ from .models import (
     StructurePreleveuse,
     ZoneInfestee,
     Evenement,
+    MatricePrelevee,
+    EspeceEchantillon,
+    Laboratoire,
 )
 from datetime import datetime
 
@@ -77,18 +80,64 @@ class StructurePreleveuseFactory(DjangoModelFactory):
     )
 
 
+class MatricePreleveeFactory(DjangoModelFactory):
+    class Meta:
+        model = MatricePrelevee
+        django_get_or_create = ("libelle",)
+
+    libelle = factory.Sequence(lambda n: f"Matrice {n}")
+
+
+class EspeceEchantillonFactory(DjangoModelFactory):
+    class Meta:
+        model = EspeceEchantillon
+        django_get_or_create = ("code_oepp", "libelle")
+
+    code_oepp = factory.Sequence(lambda n: f"OEPP{n:04d}")
+    libelle = factory.Sequence(lambda n: f"Espèce échantillon {n}")
+
+
+class LaboratoireFactory(DjangoModelFactory):
+    class Meta:
+        model = Laboratoire
+        django_get_or_create = ("nom",)
+
+    is_active = True
+    nom = factory.Sequence(lambda n: f"Laboratoire {n}")
+    confirmation_officielle = False
+
+
 class PrelevementFactory(DjangoModelFactory):
     class Meta:
         model = Prelevement
 
-    type_analyse = FuzzyChoice([choice[0] for choice in Prelevement.TypeAnalyse.choices])
     lieu = factory.SubFactory("sv.factories.LieuFactory")
     structure_preleveuse = factory.SubFactory("sv.factories.StructurePreleveuseFactory")
     numero_echantillon = factory.Faker("numerify", text="#####")
     date_prelevement = factory.Faker("date_this_decade")
-    is_officiel = factory.Faker("boolean")
+    matrice_prelevee = factory.SubFactory("sv.factories.MatricePreleveeFactory")
+    espece_echantillon = factory.SubFactory("sv.factories.EspeceEchantillonFactory")
+    is_officiel = False
+    laboratoire = factory.SubFactory("sv.factories.LaboratoireFactory")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
+    type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
     numero_rapport_inspection = factory.Faker("numerify", text="#####")
+
+    class Params:
+        # Trait pour les prélèvements officiels valides
+        est_officiel = factory.Trait(
+            is_officiel=True,
+            structure_preleveuse=factory.SubFactory(
+                "your_app.factories.StructureFactory",
+                nom="Structure lorem",  # Un nom différent de STRUCTURE_EXPLOITANT
+            ),
+        )
+
+        # Trait pour les prélèvements de confirmation valides
+        est_confirmation = factory.Trait(
+            type_analyse=Prelevement.TypeAnalyse.CONFIRMATION,
+            laboratoire=factory.SubFactory("your_app.factories.LaboratoireFactory", confirmation_officielle=True),
+        )
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
