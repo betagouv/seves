@@ -414,7 +414,8 @@ def test_fiche_detection_latest_revision():
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
 
     latest_version = fiche_detection.latest_version
-    prelevement = PrelevementFactory(lieu=lieu, structure_preleveuse__nom="SIVEP")
+    structure_sivep, _ = StructurePreleveuse.objects.get_or_create(nom="SIVEP")
+    prelevement = PrelevementFactory(lieu=lieu, structure_preleveuse=structure_sivep)
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert (
