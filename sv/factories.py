@@ -1,4 +1,6 @@
 import random
+import string
+
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
@@ -75,9 +77,7 @@ class StructurePreleveuseFactory(DjangoModelFactory):
         model = StructurePreleveuse
         django_get_or_create = ("nom",)
 
-    nom = factory.LazyAttribute(
-        lambda _: random.choice([s for s in STRUCTURES_PRELEVEUSES if s != STRUCTURE_EXPLOITANT])
-    )
+    nom = factory.LazyAttribute(lambda _: random.choice(STRUCTURES_PRELEVEUSES))
 
 
 class MatricePreleveeFactory(DjangoModelFactory):
@@ -112,38 +112,32 @@ class PrelevementFactory(DjangoModelFactory):
         model = Prelevement
 
     lieu = factory.SubFactory("sv.factories.LieuFactory")
-    structure_preleveuse = factory.SubFactory("sv.factories.StructurePreleveuseFactory")
     numero_echantillon = factory.Faker("numerify", text="#####")
     date_prelevement = factory.Faker("date_this_decade")
     matrice_prelevee = factory.SubFactory("sv.factories.MatricePreleveeFactory")
     espece_echantillon = factory.SubFactory("sv.factories.EspeceEchantillonFactory")
-    is_officiel = False
-    laboratoire = factory.SubFactory("sv.factories.LaboratoireFactory")
+    is_officiel = factory.Faker("boolean")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
     type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
-    numero_rapport_inspection = factory.Faker("numerify", text="#####")
 
-    class Params:
-        # Trait pour les prélèvements officiels valides
-        est_officiel = factory.Trait(
-            is_officiel=True,
-            structure_preleveuse=factory.SubFactory(
-                "your_app.factories.StructureFactory",
-                nom="Structure lorem",  # Un nom différent de STRUCTURE_EXPLOITANT
-            ),
-        )
+    @factory.lazy_attribute
+    def structure_preleveuse(self):
+        if self.is_officiel:
+            structures_preleveuses_without_exploitant = [s for s in STRUCTURES_PRELEVEUSES if s != STRUCTURE_EXPLOITANT]
+            return StructurePreleveuseFactory(nom=random.choice(structures_preleveuses_without_exploitant))
+        return StructurePreleveuseFactory()
 
-        # Trait pour les prélèvements de confirmation valides
-        est_confirmation = factory.Trait(
-            type_analyse=Prelevement.TypeAnalyse.CONFIRMATION,
-            laboratoire=factory.SubFactory("your_app.factories.LaboratoireFactory", confirmation_officielle=True),
-        )
+    @factory.lazy_attribute
+    def laboratoire(self):
+        if self.type_analyse == Prelevement.TypeAnalyse.CONFIRMATION:
+            return LaboratoireFactory(confirmation_officielle=True)
+        return LaboratoireFactory()
 
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["is_officiel"] is False:
-            kwargs["numero_rapport_inspection"] = ""
-        return super()._create(model_class, *args, **kwargs)
+    @factory.lazy_attribute
+    def numero_rapport_inspection(self):
+        if self.is_officiel:
+            return "".join(random.choices(string.digits, k=5))
+        return ""
 
 
 class LieuFactory(DjangoModelFactory):
