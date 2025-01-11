@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -95,16 +96,16 @@ class EvenementDetailView(
             "detections",
             "detections__createur",
             "detections__numero",
-            "detections__lieux",
+            Prefetch(
+                "detections__lieux__prelevements",
+                queryset=Prelevement.objects.select_related(
+                    "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
+                ),
+            ),
             "detections__lieux__departement",
             "detections__lieux__departement__region",
             "detections__lieux__position_chaine_distribution_etablissement",
             "detections__lieux__site_inspection",
-            "detections__lieux__prelevements",
-            "detections__lieux__prelevements__structure_preleveuse",
-            "detections__lieux__prelevements__matrice_prelevee",
-            "detections__lieux__prelevements__espece_echantillon",
-            "detections__lieux__prelevements__laboratoire",
         )
 
     def get_object(self, queryset=None):
