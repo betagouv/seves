@@ -1,6 +1,7 @@
 from model_bakery import baker
 from playwright.sync_api import expect
 
+from sv.factories import LieuFactory, EvenementFactory, FicheDetectionFactory, PrelevementFactory
 from sv.models import Lieu, Prelevement
 
 
@@ -195,14 +196,34 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page, 
     expect(page.get_by_test_id("prelevement-2-resultat")).to_contain_text(prelevement2.get_resultat_display())
 
 
-def test_prelevement_officiel_details(live_server, page, fiche_detection):
+def test_prelevement_officiel_details(live_server, page):
     "Test que les détails d'un prélèvement officiel s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    prelevement = baker.make(Prelevement, lieu=lieu, is_officiel=True, _fill_optional=True)
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    evenement = EvenementFactory()
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    lieu = LieuFactory(fiche_detection=fiche_detection)
+    prelevement = PrelevementFactory(lieu=lieu)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
-    expect(page.get_by_test_id("prelevement-1-type")).to_contain_text("Prélèvement officiel")
+    expect(page.get_by_test_id("prelevement-1-type-analyse")).to_contain_text(prelevement.get_type_analyse_display())
+    expect(page.get_by_test_id("prelevement-1-is-officiel")).to_contain_text(
+        "oui" if prelevement.is_officiel else "non"
+    )
+    expect(page.get_by_test_id("prelevement-1-numero-rapport-inspection")).to_contain_text(
+        prelevement.numero_rapport_inspection
+    )
     expect(page.get_by_test_id("prelevement-1-laboratoire")).to_contain_text(prelevement.laboratoire.nom)
+    expect(page.get_by_test_id("prelevement-1-numero-echantillon")).to_contain_text(prelevement.numero_echantillon)
+    expect(page.get_by_test_id("prelevement-1-lieu")).to_contain_text(prelevement.lieu.nom)
+    expect(page.get_by_test_id("prelevement-1-structure-preleveuse")).to_contain_text(
+        prelevement.structure_preleveuse.nom
+    )
+    expect(page.get_by_test_id("prelevement-1-date-prelevement")).to_contain_text(
+        prelevement.date_prelevement.strftime("%d/%m/%Y")
+    )
+    expect(page.get_by_test_id("prelevement-1-matrice-prelevee")).to_contain_text(prelevement.matrice_prelevee.libelle)
+    expect(page.get_by_test_id("prelevement-1-espece-echantillon")).to_contain_text(
+        prelevement.espece_echantillon.libelle
+    )
+    expect(page.get_by_test_id("prelevement-1-code-oepp")).to_contain_text(prelevement.espece_echantillon.code_oepp)
+    expect(page.get_by_test_id("prelevement-1-resultat")).to_contain_text(prelevement.get_resultat_display())
