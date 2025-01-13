@@ -128,6 +128,7 @@ class EvenementDetailView(
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
+        context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
             context["detections_hors_zone_infestee"] = fiche_zone.fichedetection_set.select_related("numero").all()

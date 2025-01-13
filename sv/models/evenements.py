@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+from reversion.models import Version
 
 from core.mixins import (
     AllowACNotificationMixin,
@@ -73,9 +74,10 @@ class Evenement(
         ]
 
     def save(self, *args, **kwargs):
-        if not self.numero and self.visibilite == Visibilite.LOCAL:
-            self.numero = NumeroFiche.get_next_numero()
-        super().save(*args, **kwargs)
+        with reversion.create_revision():
+            if not self.numero and self.visibilite == Visibilite.LOCAL:
+                self.numero = NumeroFiche.get_next_numero()
+            super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("evenement-details", kwargs={"pk": self.pk})
@@ -106,3 +108,15 @@ class Evenement(
                 detection.soft_delete(user)
             self.is_deleted = True
             self.save()
+
+    @property
+    def latest_version(self):
+        detections_latest_versions = [f.latest_version for f in self.detections.all()]
+        zone_latest_version = self.fiche_zone_delimitee.latest_version if self.fiche_zone_delimitee else None
+        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+
+        versions = list(detections_latest_versions) + [zone_latest_version, instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)

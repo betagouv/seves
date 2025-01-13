@@ -3,9 +3,17 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 from model_bakery import baker
+from reversion.models import Version
 
 from sv.constants import STRUCTURE_EXPLOITANT
-from sv.factories import FicheDetectionFactory, LieuFactory, PrelevementFactory
+from sv.factories import (
+    FicheDetectionFactory,
+    LieuFactory,
+    PrelevementFactory,
+    FicheZoneFactory,
+    ZoneInfesteeFactory,
+    EvenementFactory,
+)
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -464,3 +472,110 @@ def test_fiche_detection_latest_revision_performances(django_assert_num_queries)
 
     with django_assert_num_queries(5):
         assert fiche_detection.latest_version is not None
+
+
+@pytest.mark.django_db
+def test_fiche_zone_delimitee_latest_revision():
+    fiche_zone_delimitee = FicheZoneFactory()
+    assert fiche_zone_delimitee.latest_version is not None
+    latest_version = fiche_zone_delimitee.latest_version
+
+    fiche_zone_delimitee.commentaire = "Lorem"
+    fiche_zone_delimitee.save()
+    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
+    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
+
+    latest_version = fiche_zone_delimitee.latest_version
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee, nom="Zone 3")
+    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
+    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
+    assert fiche_zone_delimitee.latest_version.revision.comment == "La zone infestée 'Zone 3' a été ajoutée à la fiche"
+
+    latest_version = fiche_zone_delimitee.latest_version
+    zone_infestee.nom = "Zone 4"
+    zone_infestee.save()
+    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
+    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
+
+    latest_version = fiche_zone_delimitee.latest_version
+    zone_infestee.delete()
+    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
+    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
+    assert (
+        fiche_zone_delimitee.latest_version.revision.comment == "La zone infestée 'Zone 4' a été supprimée de la fiche"
+    )
+
+
+@pytest.mark.django_db
+def test_evenement_latest_revision():
+    evenement = EvenementFactory()
+    assert evenement.latest_version is not None
+    latest_version = evenement.latest_version
+
+    evenement.is_deleted = True
+    evenement.save()
+    assert latest_version.pk != evenement.latest_version.pk
+    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+
+
+@pytest.mark.django_db
+def test_evenement_latest_revision_performances(django_assert_num_queries):
+    evenement = EvenementFactory()
+
+    with django_assert_num_queries(2):
+        assert evenement.latest_version is not None
+
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    with django_assert_num_queries(5):
+        assert evenement.latest_version is not None
+
+    lieu_2 = LieuFactory(fiche_detection=fiche_detection)
+    lieu_1 = LieuFactory(fiche_detection=fiche_detection)
+    PrelevementFactory(lieu=lieu_1)
+    PrelevementFactory(lieu=lieu_2)
+    PrelevementFactory(lieu=lieu_2)
+
+    with django_assert_num_queries(7):
+        assert evenement.latest_version is not None
+
+
+@pytest.mark.django_db
+def test_change_zone_infestee_creates_revision_on_zone_infestee():
+    fiche_detection = FicheDetectionFactory(zone_infestee=None)
+    zone_infestee = ZoneInfesteeFactory()
+    latest_version = fiche_detection.latest_version
+
+    fiche_detection.zone_infestee = zone_infestee
+    fiche_detection.save()
+
+    assert latest_version.pk == fiche_detection.latest_version.pk
+    version = Version.objects.get_for_object(zone_infestee).first()
+    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été ajoutée en zone infestée"
+
+    fiche_detection.zone_infestee = None
+    fiche_detection.save()
+
+    assert latest_version.pk == fiche_detection.latest_version.pk
+    version = Version.objects.get_for_object(zone_infestee).first()
+    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été retirée de la zone infestée"
+
+
+@pytest.mark.django_db
+def test_change_hors_zone_infestee_creates_revision_on_zone_infestee():
+    fiche_detection = FicheDetectionFactory(zone_infestee=None)
+    fiche_zone_delimitee = FicheZoneFactory()
+    latest_version = fiche_detection.latest_version
+
+    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
+    fiche_detection.save()
+
+    assert latest_version.pk == fiche_detection.latest_version.pk
+    version = Version.objects.get_for_object(fiche_zone_delimitee).first()
+    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été ajoutée en hors zone infestée"
+
+    fiche_detection.hors_zone_infestee = None
+    fiche_detection.save()
+
+    assert latest_version.pk == fiche_detection.latest_version.pk
+    version = Version.objects.get_for_object(fiche_zone_delimitee).first()
+    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été retirée en hors zone infestée"

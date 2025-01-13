@@ -49,6 +49,14 @@
                 </div>
             </div>
             {% include "sv/_evenement_badges.html" %}
+            {% if latest_version %}
+                <div class="fr-pl-1v fr-mt-2v">
+                    Dernière mise à jour le {{ latest_version.revision.date_created }}
+                    {% if latest_version.revision.user %}
+                        par {{ latest_version.revision.user.agent.agent_with_structure }}
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
 
         <div class="fr-container--fluid">

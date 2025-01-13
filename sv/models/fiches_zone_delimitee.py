@@ -1,18 +1,23 @@
+import reversion
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import TextChoices
 from django.urls import reverse
+from reversion.models import Version
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
 )
 from core.models import Structure, UnitesMesure
+from core.versions import get_versions_from_ids
 from sv.managers import (
     FicheZoneManager,
 )
+from . import ZoneInfestee
 from .common import NumeroFiche
 
 
+@reversion.register()
 class FicheZoneDelimitee(AllowsSoftDeleteMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
@@ -65,3 +70,20 @@ class FicheZoneDelimitee(AllowsSoftDeleteMixin, models.Model):
 
     def can_user_delete(self, user):
         return self.evenement.can_user_access(user)
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
+    @property
+    def latest_version(self):
+        zone_infestees = ZoneInfestee.objects.filter(fiche_zone_delimitee_id=self.pk).values_list("id", flat=True)
+        zone_infestees_versions = get_versions_from_ids(zone_infestees, ZoneInfestee)
+
+        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+
+        versions = list(zone_infestees_versions) + [instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)
