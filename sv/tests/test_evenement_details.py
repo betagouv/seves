@@ -99,3 +99,14 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
     fiche_not_deleted = FicheDetection.objects.get()
     assert fiche_not_deleted == fiche_detection
     assert FicheDetection._base_manager.filter(evenement=evenement).count() == 3
+
+
+def test_evenement_can_view_basic_data(live_server, page: Page):
+    evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.get_by_text(evenement.organisme_nuisible.libelle_court)).to_be_visible()
+    expect(page.get_by_text(evenement.organisme_nuisible.code_oepp)).to_be_visible()
+    expect(page.get_by_text(evenement.statut_reglementaire.libelle)).to_be_visible()
+    expect(page.get_by_text("Dernière mise à jour le ")).to_be_visible()

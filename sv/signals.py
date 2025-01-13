@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.db import transaction
 import reversion
 
-from sv.models import Lieu, Prelevement
+from sv.models import Lieu, Prelevement, ZoneInfestee
 
 
 @receiver(pre_delete, sender=Lieu)
@@ -51,4 +51,26 @@ def create_fiche_detection_version_on_prelevement_delete(sender, instance: Prele
             reversion.set_comment(
                 f"Le prélèvement pour le lieu '{instance.lieu.nom}' et la structure '{instance.structure_preleveuse}' a été supprimé de la fiche"
             )
+            reversion.add_to_revision(fiche)
+
+
+@receiver(post_save, sender=ZoneInfestee)
+def create_fiche_zone_delimitee_version_on_zone_infestee_add(sender, instance: ZoneInfestee, created, **kwargs):
+    if not created:
+        return
+    fiche = instance.fiche_zone_delimitee
+
+    with transaction.atomic():
+        with reversion.create_revision():
+            reversion.set_comment(f"La zone infestée '{instance.nom}' a été ajoutée à la fiche")
+            reversion.add_to_revision(fiche)
+
+
+@receiver(pre_delete, sender=ZoneInfestee)
+def create_fiche_zone_delimitee_version_on_zone_infestee_delete(sender, instance: ZoneInfestee, **kwargs):
+    fiche = instance.fiche_zone_delimitee
+
+    with transaction.atomic():
+        with reversion.create_revision():
+            reversion.set_comment(f"La zone infestée '{instance.nom}' a été supprimée de la fiche")
             reversion.add_to_revision(fiche)

@@ -1,5 +1,4 @@
 import reversion
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import TextChoices, Q
@@ -10,6 +9,7 @@ from core.mixins import (
     AllowsSoftDeleteMixin,
 )
 from core.models import Structure, UnitesMesure
+from core.versions import get_versions_from_ids
 from sv.managers import (
     FicheDetectionManager,
 )
@@ -29,6 +29,7 @@ class Contexte(models.Model):
         return self.nom
 
 
+@reversion.register()
 class ZoneInfestee(models.Model):
     class UnitesSurfaceInfesteeTotale(TextChoices):
         METRE_CARRE = UnitesMesure.METRE_CARRE
@@ -113,6 +114,10 @@ class ZoneInfestee(models.Model):
         blank=True,
     )
 
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
 
 class StatutEvenement(models.Model):
     class Meta:
@@ -184,11 +189,55 @@ class FicheDetection(
 
     objects = FicheDetectionManager()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_state = {}
+        self._original_state["hors_zone_infestee"] = self.hors_zone_infestee_id
+        self._original_state["zone_infestee"] = self.zone_infestee_id
+
+    def _save(self, *args, **kwargs):
+        self._original_state["hors_zone_infestee"] = self.hors_zone_infestee_id
+        self._original_state["zone_infestee"] = self.zone_infestee_id
+        if not self.numero:
+            self.numero = NumeroFiche.get_next_numero()
+        super().save(*args, **kwargs)
+
+    def _handle_hors_zone_infestee_change(self):
+        if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
+            with reversion.create_revision():
+                reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en hors zone infestée")
+                reversion.add_to_revision(self.hors_zone_infestee)
+        elif self._original_state["hors_zone_infestee"] and self.hors_zone_infestee_id is None:
+            from . import FicheZoneDelimitee
+
+            with reversion.create_revision():
+                reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée en hors zone infestée")
+                reversion.add_to_revision(FicheZoneDelimitee.objects.get(pk=self._original_state["hors_zone_infestee"]))
+
+    def _handle_zone_infestee_change(self):
+        if self.zone_infestee_id and self._original_state["zone_infestee"] is None:
+            with reversion.create_revision():
+                reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en zone infestée")
+                reversion.add_to_revision(self.zone_infestee)
+        elif self._original_state["zone_infestee"] and self.zone_infestee_id is None:
+            with reversion.create_revision():
+                reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée de la zone infestée")
+                reversion.add_to_revision(ZoneInfestee.objects.get(pk=self._original_state["zone_infestee"]))
+
     def save(self, *args, **kwargs):
-        with reversion.create_revision():
-            if not self.numero:
-                self.numero = NumeroFiche.get_next_numero()
-            super().save(*args, **kwargs)
+        need_revision = True
+        if self.hors_zone_infestee_id != self._original_state["hors_zone_infestee"]:
+            self._handle_hors_zone_infestee_change()
+            self._save(*args, **kwargs)
+            need_revision = False
+        if self.zone_infestee_id != self._original_state["zone_infestee"]:
+            self._handle_zone_infestee_change()
+            self._save(*args, **kwargs)
+            need_revision = False
+
+        if need_revision:
+            with reversion.create_revision():
+                self._save(*args, **kwargs)
 
     def get_absolute_url(self):
         return self.evenement.get_absolute_url()
@@ -215,16 +264,10 @@ class FicheDetection(
     @property
     def latest_version(self):
         lieux_ids = list(self.lieux.all().values_list("id", flat=True))
-        content_type = ContentType.objects.get_for_model(Lieu)
-        lieu_versions = Version.objects.select_related("revision").filter(
-            content_type=content_type, object_id__in=lieux_ids
-        )
+        lieu_versions = get_versions_from_ids(lieux_ids, Lieu)
 
         prelevements = Prelevement.objects.filter(lieu__fiche_detection__pk=self.pk).values_list("id", flat=True)
-        content_type = ContentType.objects.get_for_model(Prelevement)
-        prelevement_versions = Version.objects.select_related("revision").filter(
-            content_type=content_type, object_id__in=list(prelevements)
-        )
+        prelevement_versions = get_versions_from_ids(prelevements, Prelevement)
 
         instance_version = Version.objects.get_for_object(self).select_related("revision").first()
 
