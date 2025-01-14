@@ -136,11 +136,7 @@ class EvenementDetailView(
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
             ]
 
-        contacts_structure_fiche = (
-            self.get_object().contacts.exclude(structure__isnull=True).select_related("structure")
-        )
-        fin_suivi_contacts_ids = self.get_object().fin_suivi.values_list("contact", flat=True)
-        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
+        contacts_not_in_fin_suivi = self.get_object().get_contacts_structures_not_in_fin_suivi()
         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         context["can_cloturer_evenement"] = len(contacts_not_in_fin_suivi) == 0
         return context
@@ -344,9 +340,7 @@ class EvenementCloturerView(View):
             messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")
             return redirect(redirect_url)
 
-        contacts_structure_fiche = evenement.contacts.exclude(structure__isnull=True).select_related("structure")
-        fin_suivi_contacts_ids = evenement.fin_suivi.values_list("contact", flat=True)
-        contacts_not_in_fin_suivi = contacts_structure_fiche.exclude(id__in=fin_suivi_contacts_ids)
+        contacts_not_in_fin_suivi = evenement.get_contacts_structures_not_in_fin_suivi()
         if contacts_not_in_fin_suivi:
             messages.error(
                 request,
