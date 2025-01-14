@@ -1,4 +1,3 @@
-import pytest
 from playwright.sync_api import Page, expect
 
 from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory, EvenementFactory
@@ -6,15 +5,16 @@ from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_fichezonedelimitee_update_form_content(live_server, page: Page, choice_js_fill):
     fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+
     for _ in range(3):
-        FicheDetectionFactory(hors_zone_infestee=fiche_zone_delimitee)
+        FicheDetectionFactory(hors_zone_infestee=fiche_zone_delimitee, evenement=evenement)
 
     for zone_infestee in ZoneInfesteeFactory.create_batch(2, fiche_zone_delimitee=fiche_zone_delimitee):
         for _ in range(2):
-            FicheDetectionFactory(zone_infestee=zone_infestee)
+            FicheDetectionFactory(zone_infestee=zone_infestee, evenement=evenement)
 
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)

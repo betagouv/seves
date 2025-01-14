@@ -137,10 +137,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         )
 
 
-@pytest.mark.skip(reason="refacto evenement")
-def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
-    live_server, page: Page, choice_js_fill
-) -> None:
+def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee)
@@ -148,7 +145,7 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
-    form_page.fill_form(fiche_zone_delimitee, zone_infestee, (), (fiche_detection,))
+    form_page.fill_form(fiche_zone_delimitee, zone_infestee, (fiche_detection,), (fiche_detection,))
     form_page.save()
 
     expect(
