@@ -215,3 +215,84 @@ def test_cant_edit_document_if_brouillon(client, document_recipe):
     assert len(messages) == 1
     assert messages[0].level_tag == "error"
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Page, mocked_authentification_user: User):
+    """Test que l'ajout d'un document ajoute l'agent et sa structure comme contacts"""
+    evenement = EvenementFactory()
+
+    # Ajout du document
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    page.locator("#id_nom").fill("Test Document")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description test")
+    page.locator("#id_file").set_input_files("README.md")
+    page.get_by_test_id("documents-send").click()
+
+    # Vérification que le document a été créé
+    assert evenement.documents.count() == 1
+    document = evenement.documents.get()
+    assert document.created_by == mocked_authentification_user.agent
+    assert document.created_by_structure == mocked_authentification_user.agent.structure
+
+    # Vérification des contacts dans l'interface
+    page.get_by_test_id("contacts").click()
+
+    agents_section = page.locator("[data-testid='contacts-agents']")
+    expect(agents_section.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+
+    structures_section = page.locator("[data-testid='contacts-structures']")
+    expect(
+        structures_section.get_by_text(str(mocked_authentification_user.agent.structure), exact=True)
+    ).to_be_visible()
+
+    # Vérification en base de données
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
+
+
+def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, mocked_authentification_user: User):
+    """Test que l'ajout de plusieurs documents n'ajoute qu'une fois les contacts"""
+    evenement = EvenementFactory()
+
+    # Ajout du premier document
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    page.locator("#fr-modal-add-doc #id_nom").fill("Document 1")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#fr-modal-add-doc #id_description").fill("Description 1")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("README.md")
+    page.get_by_test_id("documents-send").click()
+
+    # Ajout du second document
+    page.get_by_test_id("documents-add").click()
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    page.locator("#fr-modal-add-doc #id_nom").fill("Document 2")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#fr-modal-add-doc #id_description").fill("Description 2")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("README.md")
+    page.get_by_test_id("documents-send").click()
+
+    # Vérification que les deux documents ont été créés
+    assert evenement.documents.count() == 2
+
+    # Vérification des contacts dans l'interface
+    page.get_by_test_id("contacts").click()
+
+    # Vérification qu'il n'y a qu'une occurrence de chaque contact
+    agents_section = page.locator("[data-testid='contacts-agents']")
+    expect(agents_section.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+
+    structures_section = page.locator("[data-testid='contacts-structures']")
+    expect(
+        structures_section.get_by_text(str(mocked_authentification_user.agent.structure), exact=True)
+    ).to_be_visible()
+
+    # Vérification en base de données
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1

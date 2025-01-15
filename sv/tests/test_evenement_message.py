@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from model_bakery import baker
 from playwright.sync_api import Page, expect
+
+from core.factories import ContactAgentFactory
 from core.models import Message, Contact, Agent, Structure, Visibilite
 from sv.factories import EvenementFactory
 
@@ -418,3 +420,100 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
         expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
+
+
+def test_create_message_adds_agent_and_structure_contacts(
+    live_server, page: Page, mocked_authentification_user: User, choice_js_fill
+):
+    """Test que l'ajout d'un message ajoute l'agent et sa structure comme contacts"""
+    evenement = EvenementFactory()
+
+    # Création du contact destinataire
+    contact = ContactAgentFactory()
+    contact.agent.user.is_active = True
+    contact.agent.user.save()
+
+    # Ajout d'un message
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{evenement.add_message_url}")
+
+    # Ajout du destinataire
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("Message de test")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Vérification que le message a été créé
+    assert evenement.messages.count() == 1
+    message = evenement.messages.get()
+    assert message.content == "Message de test"
+    assert message.message_type == Message.MESSAGE
+
+    # Vérification des contacts dans l'interface
+    page.get_by_test_id("contacts").click()
+
+    agents_section = page.locator("[data-testid='contacts-agents']")
+    expect(agents_section.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+    expect(agents_section.get_by_text(str(contact.agent), exact=True)).to_be_visible()
+
+    structures_section = page.locator("[data-testid='contacts-structures']")
+    expect(
+        structures_section.get_by_text(str(mocked_authentification_user.agent.structure), exact=True)
+    ).to_be_visible()
+
+    # Vérification en base de données
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
+
+
+def test_create_multiple_messages_adds_contacts_once(
+    live_server, page: Page, mocked_authentification_user: User, choice_js_fill
+):
+    """Test que l'ajout de plusieurs messages n'ajoute qu'une fois les contacts"""
+    evenement = EvenementFactory()
+
+    # Création du contact destinataire
+    contact = ContactAgentFactory()
+    contact.agent.user.is_active = True
+    contact.agent.user.save()
+
+    # Ajout du premier message
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{evenement.add_message_url}")
+
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    page.locator("#id_title").fill("Message 1")
+    page.locator("#id_content").fill("Message de test 1")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Ajout du second message
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{evenement.add_message_url}")
+
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    page.locator("#id_title").fill("Message 2")
+    page.locator("#id_content").fill("Message de test 2")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Vérification que les deux messages ont été créés
+    assert evenement.messages.count() == 2
+    for message in evenement.messages.all():
+        assert message.message_type == Message.MESSAGE
+
+    # Vérification des contacts dans l'interface
+    page.get_by_test_id("contacts").click()
+
+    agents_section = page.locator("[data-testid='contacts-agents']")
+    expect(agents_section.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+    expect(agents_section.get_by_text(str(contact.agent), exact=True)).to_be_visible()
+
+    structures_section = page.locator("[data-testid='contacts-structures']")
+    expect(
+        structures_section.get_by_text(str(mocked_authentification_user.agent.structure), exact=True)
+    ).to_be_visible()
+
+    # Vérification en base de données
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1

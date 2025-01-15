@@ -1157,3 +1157,42 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
         expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_have_attribute(
             "disabled", ""
         )
+
+
+def test_update_fichedetection_adds_agent_and_structure_contacts(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+):
+    """Test que la modification d'une fiche détection ajoute l'agent et sa structure comme contacts"""
+    fiche = FicheDetectionFactory()
+
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    form_elements.commentaire_input.fill("Nouveau commentaire")
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche.refresh_from_db()
+    assert fiche.commentaire == "Nouveau commentaire"
+    assert fiche.evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
+    assert fiche.evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
+
+
+def test_update_fichedetection_multiple_times_adds_contacts_once(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+):
+    """Test que plusieurs modifications d'une fiche détection n'ajoutent qu'une fois les contacts"""
+    fiche = FicheDetectionFactory()
+
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    form_elements.commentaire_input.fill("Première modification")
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    form_elements.commentaire_input.fill("Seconde modification")
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche.refresh_from_db()
+    assert fiche.commentaire == "Seconde modification"
+    assert fiche.evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
+    assert fiche.evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1

@@ -4,6 +4,7 @@ from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView
 
+from sv.view_mixins import WithAddUserContactsMixin
 from .forms import (
     DocumentUploadForm,
     MessageForm,
@@ -28,7 +29,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from .redirect import safe_redirect
 
 
-class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, FormView):
     form_class = DocumentUploadForm
 
     def get_fiche_object(self):
@@ -44,6 +45,10 @@ class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, FormView):
             document.created_by = agent
             document.created_by_structure = agent.structure
             document.save()
+
+            fiche = self.get_fiche_object()
+            self.add_user_contacts(fiche)
+
             messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
             return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
@@ -189,7 +194,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
-class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, CreateView):
+class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, CreateView):
     model = Message
     form_class = MessageForm
 
@@ -270,6 +275,7 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, CreateView):
             return HttpResponseRedirect(self.obj.get_absolute_url())
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
+        self.add_user_contacts(self.obj)
         self._create_documents(form)
         notify_message(form.instance)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")

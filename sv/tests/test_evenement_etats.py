@@ -1,6 +1,7 @@
 import pytest
 from model_bakery import baker
 
+from core.factories import ContactStructureFactory
 from sv.factories import EvenementFactory
 from sv.models import Etat, Structure, Evenement
 from django.utils.timezone import now, timedelta
@@ -95,8 +96,12 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
 ):
     """Test qu'un agent de l'AC connecté peut cloturer un événement si la structure du créateur (seule présente dans la liste des contacts) de la événement est en fin de suivi."""
     evenement = EvenementFactory()
+    contact_structure = ContactStructureFactory()
+    evenement.contacts.add(contact_structure)
+    FinSuiviContact(
+        content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact_structure
+    ).save()
     mocked_authentification_user.agent.structure = contact_ac.structure
-    evenement.contacts.add(contact_ac)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
