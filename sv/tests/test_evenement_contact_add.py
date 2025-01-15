@@ -5,6 +5,7 @@ from playwright.sync_api import expect
 from model_bakery import baker
 from django.urls import reverse
 
+from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import Contact, Structure, Agent, Visibilite
 from sv.factories import EvenementFactory
 
@@ -264,3 +265,55 @@ def test_cant_delete_contact_if_evenement_brouillon(client, contact):
     assert len(messages) == 1
     assert messages[0].level_tag == "error"
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+def test_add_agent_contact_adds_structure_contact(live_server, page, choice_js_fill):
+    """Test que l'ajout d'un contact agent ajoute automatiquement le contact de sa structure"""
+    structure_contact = ContactStructureFactory()
+    agent_contact = ContactAgentFactory(agent__structure=structure_contact.structure)
+    agent_contact.agent.user.is_active = True
+    agent_contact.agent.user.save()
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter un agent").click()
+    choice_js_fill(
+        page, ".choices__list--single", structure_contact.structure.libelle, structure_contact.structure.libelle
+    )
+    page.get_by_role("button", name="Rechercher").click()
+    page.get_by_text(f"{agent_contact.agent.nom} {agent_contact.agent.prenom}").click()
+    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
+
+    expect(page.locator("[data-testid='contacts-agents']").get_by_text(str(agent_contact), exact=True)).to_be_visible()
+    expect(
+        page.locator("[data-testid='contacts-structures']").get_by_text(str(structure_contact), exact=True)
+    ).to_be_visible()
+
+
+def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, page, choice_js_fill):
+    """Test que l'ajout de plusieurs contacts agents de la même structure n'ajoute qu'une seule fois le contact structure"""
+    structure_contact = ContactStructureFactory()
+    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(2, agent__structure=structure_contact.structure)
+    for contact_agent in (contact_agent_1, contact_agent_2):
+        contact_agent.agent.user.is_active = True
+        contact_agent.agent.user.save()
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter un agent").click()
+    choice_js_fill(page, ".choices__list--single", str(structure_contact.structure), str(structure_contact.structure))
+    page.get_by_role("button", name="Rechercher").click()
+    page.get_by_text(f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}").click()
+    page.get_by_text(f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}").click()
+    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
+    page.get_by_role("tab", name="Contacts").click()
+
+    agents_section = page.locator("[data-testid='contacts-agents']")
+    expect(agents_section.get_by_text(str(contact_agent_1.agent), exact=True)).to_be_visible()
+    expect(agents_section.get_by_text(str(contact_agent_2.agent), exact=True)).to_be_visible()
+
+    structures_section = page.locator("[data-testid='contacts-structures']")
+    expect(structures_section).to_have_count(1)
+    expect(structures_section.get_by_text(str(structure_contact.structure), exact=True)).to_be_visible()

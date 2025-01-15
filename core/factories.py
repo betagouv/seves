@@ -56,8 +56,8 @@ class AgentFactory(DjangoModelFactory):
             "",
         ]
     )
-    telephone = factory.Faker("phone_number")
-    mobile = factory.Faker("phone_number")
+    telephone = factory.Faker("phone_number", locale="fr_FR")
+    mobile = factory.Faker("phone_number", locale="fr_FR")
 
 
 class ContactAgentFactory(DjangoModelFactory):

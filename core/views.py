@@ -146,6 +146,8 @@ class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         contacts = form.cleaned_data["contacts"]
         for contact in contacts:
             fiche.contacts.add(contact)
+            if structure_contact := contact.get_structure_contact():
+                fiche.contacts.add(structure_contact)
 
         message = ngettext(
             "Le contact a été ajouté avec succès.", "Les %(count)d contacts ont été ajoutés avec succès.", len(contacts)
