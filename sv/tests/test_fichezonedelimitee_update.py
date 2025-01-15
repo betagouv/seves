@@ -153,3 +153,79 @@ def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(live_serve
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{zone_infestee.fiche_zone_delimitee.get_update_url()}")
     assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True
+
+
+def test_fichezonedelimitee_update_adds_agent_and_structure_contacts(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    """Test que la modification d'une fiche zone délimitée ajoute l'agent et sa structure comme contacts"""
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    new_fiche_zone_delimitee = FicheZoneFactory.build()
+
+    # Modification de la fiche
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    form_page.fill_form(new_fiche_zone_delimitee)
+    form_page.submit_update_form()
+
+    # Vérification que la modification a bien eu lieu
+    fiche_zone_delimitee_updated = FicheZoneDelimitee.objects.get(id=fiche_zone_delimitee.id)
+    assert fiche_zone_delimitee_updated.commentaire == new_fiche_zone_delimitee.commentaire
+
+    # Vérification des contacts
+    evenement.refresh_from_db()
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
+
+    # Vérification de l'interface
+    page.get_by_test_id("contacts").click()
+    expect(
+        page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
+    ).to_be_visible()
+    expect(
+        page.locator("[data-testid='contacts-structures']").get_by_text(
+            str(mocked_authentification_user.agent.structure), exact=True
+        )
+    ).to_be_visible()
+
+
+def test_fichezonedelimitee_update_multiple_times_adds_contacts_once(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    """Test que plusieurs modifications d'une fiche zone délimitée n'ajoutent qu'une fois les contacts"""
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    new_fiche_zone1 = FicheZoneFactory.build()
+    new_fiche_zone2 = FicheZoneFactory.build()
+
+    # Première modification
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    form_page.fill_form(new_fiche_zone1)
+    form_page.submit_update_form()
+
+    # Seconde modification
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    form_page.fill_form(new_fiche_zone2)
+    form_page.submit_update_form()
+
+    # Vérification que la dernière modification a bien eu lieu
+    fiche_zone_delimitee_updated = FicheZoneDelimitee.objects.get(id=fiche_zone_delimitee.id)
+    assert fiche_zone_delimitee_updated.commentaire == new_fiche_zone2.commentaire
+
+    # Vérification des contacts
+    evenement.refresh_from_db()
+    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
+    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
+
+    # Vérification de l'interface
+    page.get_by_test_id("contacts").click()
+    expect(
+        page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
+    ).to_be_visible()
+    expect(
+        page.locator("[data-testid='contacts-structures']").get_by_text(
+            str(mocked_authentification_user.agent.structure), exact=True
+        )
+    ).to_be_visible()

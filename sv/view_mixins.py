@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
 from collections import defaultdict
+
+from core.models import Contact
 from sv.forms import (
     PrelevementForm,
 )
@@ -64,3 +66,17 @@ class WithPrelevementHandlingMixin:
                 prelevement_form.save()
             else:
                 raise ValidationError(prelevement_form.errors)
+
+
+class WithAddUserContactsMixin:
+    """Mixin pour ajouter automatiquement l'utilisateur courant et sa structure comme contacts."""
+
+    def add_user_contacts(self, obj):
+        """Ajoute l'utilisateur courant et sa structure comme contacts de l'objet."""
+        agent = self.request.user.agent
+
+        agent_contact = Contact.objects.get(agent=agent)
+        obj.contacts.add(agent_contact)
+
+        if structure_contact := agent_contact.get_structure_contact():
+            obj.contacts.add(structure_contact)

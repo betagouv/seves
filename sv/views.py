@@ -47,7 +47,7 @@ from .models import (
     Laboratoire,
     Evenement,
 )
-from .view_mixins import WithPrelevementHandlingMixin, WithStatusToOrganismeNuisibleMixin
+from .view_mixins import WithPrelevementHandlingMixin, WithStatusToOrganismeNuisibleMixin, WithAddUserContactsMixin
 
 
 class FicheListView(ListView):
@@ -143,7 +143,9 @@ class EvenementDetailView(
         return context
 
 
-class EvenementUpdateView(WithStatusToOrganismeNuisibleMixin, UserPassesTestMixin, UpdateView):
+class EvenementUpdateView(
+    WithStatusToOrganismeNuisibleMixin, UserPassesTestMixin, WithAddUserContactsMixin, UpdateView
+):
     form_class = EvenementUpdateForm
 
     def get_queryset(self):
@@ -156,6 +158,11 @@ class EvenementUpdateView(WithStatusToOrganismeNuisibleMixin, UserPassesTestMixi
 
     def test_func(self) -> bool | None:
         return self.get_object().can_user_access(self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.add_user_contacts(self.object)
+        return response
 
 
 class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):
@@ -237,7 +244,9 @@ class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPreleveme
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FicheDetectionUpdateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, UpdateView):
+class FicheDetectionUpdateView(
+    WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, WithAddUserContactsMixin, UpdateView
+):
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
@@ -324,6 +333,7 @@ class FicheDetectionUpdateView(WithStatusToOrganismeNuisibleMixin, WithPreleveme
                 for message in e.messages:
                     messages.error(self.request, message)
                 return self.form_invalid(form)
+            self.add_user_contacts(self.object.evenement)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 
@@ -485,7 +495,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeUpdateView(UpdateView):
+class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
@@ -564,6 +574,7 @@ class FicheZoneDelimiteeUpdateView(UpdateView):
             self.object = form.save()
             formset.instance = self.object
             formset.save()
+            self.add_user_contacts(self.object.evenement)
 
         messages.success(self.request, "La fiche zone délimitée a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
