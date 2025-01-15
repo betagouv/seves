@@ -103,6 +103,11 @@ class Contact(models.Model):
             str(self.structure) if self.structure else f"{self.agent.nom} {self.agent.prenom} ({self.agent.structure})"
         )
 
+    def get_structure_contact(self):
+        """Retourne le contact de la structure associée si ce contact est lié à un agent."""
+        if self.agent:
+            return self.agent.structure.contact_set.first()
+
 
 class FinSuiviContact(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
