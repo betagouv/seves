@@ -176,13 +176,18 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
 
 @pytest.mark.django_db
 def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill, mocked_authentification_user
 ):
     structure = mocked_authentification_user.agent.structure
     structure.niveau1 = AC_STRUCTURE
     structure.save()
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_label("Numéro Europhyt").fill("1" * 8)
     page.get_by_label("Numéro Rasff").fill("2" * 9)
     page.get_by_role("button", name="Enregistrer").click()
@@ -201,7 +206,11 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
     fill_commune,
+    choice_js_fill,
 ):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     dept = baker.make(Departement)
     site_inspection = baker.make(SiteInspection)
     position = baker.make(PositionChaineDistribution)
@@ -220,7 +229,8 @@ def test_create_fiche_detection_with_lieu(
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    form_elements.statut_evenement_input.select_option(label="Foyer")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
@@ -268,12 +278,16 @@ def test_create_fiche_detection_with_lieu(
 
 
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, choice_js_fill
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à la structure de l'utilisateur connecté
     est ajouté dans la liste des contacts de l'événement"""
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    form_elements.statut_evenement_input.select_option(label="Foyer")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
 
     fiche_detection = FicheDetection.objects.get()
@@ -292,12 +306,16 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
 
 
 def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, choice_js_fill, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à l'agent de l'utilisateur connecté
     est ajouté dans la liste des contacts de l'événement"""
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    form_elements.statut_evenement_input.select_option(label="Foyer")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
 
     page.wait_for_timeout(600)
@@ -308,9 +326,18 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
 
 
 def test_add_lieu_with_name_only_and_save(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    choice_js_fill,
+    lieu_form_elements: LieuFormDomElements,
 ):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
@@ -363,13 +390,6 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Pas mon ON", "Pas mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value("")
-    page.get_by_role("button", name="Enregistrer").click()
-
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.evenement.organisme_nuisible == organisme_nuisible_no_status
-    assert fiche_detection.evenement.statut_reglementaire is None
 
 
 def test_prelevements_are_always_linked_to_lieu(
@@ -378,10 +398,16 @@ def test_prelevements_are_always_linked_to_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
 ):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     structures = baker.make(StructurePreleveuse, _quantity=2)
     page.wait_for_timeout(600)
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.save_btn.click()
@@ -401,8 +427,15 @@ def test_prelevements_are_always_linked_to_lieu(
 
 
 @pytest.mark.django_db
-def test_one_fiche_detection_is_created_when_double_click_on_save_btn(live_server, page: Page):
+def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
+    live_server, form_elements, choice_js_fill, page: Page
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+    )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_role("button", name="Enregistrer").dblclick()
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1

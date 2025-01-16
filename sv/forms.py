@@ -222,10 +222,10 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
     )
     statut_reglementaire = forms.ModelChoiceField(
-        label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=False
+        label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=True
     )
     organisme_nuisible = forms.ModelChoiceField(
-        label="Organisme nuisible", queryset=OrganismeNuisible.objects.all(), required=False
+        label="Organisme nuisible", queryset=OrganismeNuisible.objects.all(), required=True
     )
 
     class Meta:
