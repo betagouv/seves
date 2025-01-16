@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
@@ -171,3 +173,66 @@ def test_view_mode_persistence_per_fiche(live_server, page):
     synthese_radio1 = page.locator("#synthese-btn")
     expect(synthese_radio1).to_be_checked()
     expect(detail_content1).to_be_hidden()
+
+
+def test_fiche_detection_is_visible_and_selected_after_creation(live_server, page):
+    evenement = EvenementFactory()
+    detection_existante = FicheDetectionFactory(evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("link", name="Ajouter une détection").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    new_detection = FicheDetection.objects.filter(evenement=evenement).exclude(pk=detection_existante.pk).get()
+    expect(page.get_by_role("tab", name=f"{new_detection.numero}")).to_be_visible()
+    expect(page.get_by_role("tab", name=f"{new_detection.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
+    expect(page.get_by_text(f"N° de fiche{new_detection.numero}")).to_be_visible()
+
+
+def test_fiche_detection_is_visible_and_selected_after_update(live_server, page):
+    evenement = EvenementFactory()
+    _, detection_2, _ = FicheDetectionFactory.create_batch(3, evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name=f"{detection_2.numero}").click()
+
+    # Simuler l'événement pour déclencher showOnlyActionsForDetection car le click sur le tab ne déclenche pas automatiquement
+    # l'événement DSFR dsfr.conceal dans l'environnement de test, ce qui empêche la mise à jour du lien du bouton "Modifier"
+    page.evaluate(f"""
+       const panel = document.querySelector('#tabpanel-{detection_2.pk}-panel');
+       panel.dispatchEvent(new CustomEvent('dsfr.conceal'));
+    """)
+
+    page.get_by_role("button", name="Modifier").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
+    expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
+    expect(page.get_by_text(f"N° de fiche{detection_2.numero}")).to_be_visible()
+
+
+def test_fiche_zone_is_visible_after_creation(live_server, page):
+    evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+    page.get_by_role("button", name="Ajouter une zone").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    expect(page.get_by_role("tab", name="Zone")).to_be_visible()
+    expect(page.get_by_role("heading", name="Zone tampon")).to_be_visible()
+
+
+def test_fiche_zone_is_visible_after_update(live_server, page):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone)
+    FicheDetectionFactory(evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+    page.get_by_role("button", name="Modifier").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    expect(page.get_by_role("tab", name="Zone")).to_be_visible()
+    expect(page.get_by_role("heading", name="Zone tampon")).to_be_visible()

@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Min
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -96,20 +96,24 @@ class EvenementDetailView(
     model = Evenement
 
     def get_queryset(self):
-        return Evenement.objects.all().prefetch_related(
-            "detections",
-            "detections__createur",
-            "detections__numero",
-            Prefetch(
-                "detections__lieux__prelevements",
-                queryset=Prelevement.objects.select_related(
-                    "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
+        return (
+            Evenement.objects.all()
+            .annotate(first_detection_id=Min("detections__id"))
+            .prefetch_related(
+                "detections",
+                "detections__createur",
+                "detections__numero",
+                Prefetch(
+                    "detections__lieux__prelevements",
+                    queryset=Prelevement.objects.select_related(
+                        "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
+                    ),
                 ),
-            ),
-            "detections__lieux__departement",
-            "detections__lieux__departement__region",
-            "detections__lieux__position_chaine_distribution_etablissement",
-            "detections__lieux__site_inspection",
+                "detections__lieux__departement",
+                "detections__lieux__departement__region",
+                "detections__lieux__position_chaine_distribution_etablissement",
+                "detections__lieux__site_inspection",
+            )
         )
 
     def get_object(self, queryset=None):
@@ -147,6 +151,11 @@ class EvenementDetailView(
         contacts_not_in_fin_suivi = self.get_object().get_contacts_structures_not_in_fin_suivi()
         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         context["can_cloturer_evenement"] = len(contacts_not_in_fin_suivi) == 0
+        context["active_detection"] = (
+            int(self.request.GET.get("detection"))
+            if self.request.GET.get("detection")
+            else self.object.first_detection_id  # first_detection_id sera None s'il n'y a pas de détection
+        )
         return context
 
 
@@ -175,6 +184,9 @@ class EvenementUpdateView(
 class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
+
+    def get_success_url(self):
+        return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -257,6 +269,9 @@ class FicheDetectionUpdateView(
     model = FicheDetection
     form_class = FicheDetectionForm
     context_object_name = "fichedetection"
+
+    def get_success_url(self):
+        return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -411,7 +426,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("evenement-details", args=[self.object.evenement.pk])
+        return reverse("evenement-details", args=[self.object.evenement.pk]) + "#tabpanel-zone-panel"
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -518,7 +533,7 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return self.get_object().get_absolute_url()
+        return self.get_object().get_absolute_url() + "#tabpanel-zone-panel"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

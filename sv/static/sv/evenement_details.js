@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll(".no-tab-look .fr-tabs__panel").forEach(element =>{
         element.addEventListener('dsfr.conceal', event=>{
-            const tabId = event.explicitOriginalTarget.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
+            const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
         })
     })

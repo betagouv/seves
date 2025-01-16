@@ -92,19 +92,24 @@
             <div class="fr-tabs">
                 <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
                     <li role="presentation">
-                        <button id="tabpanel-404" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-404-panel">Détections</button>
+                        <button id="tabpanel-detection" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="false"  aria-controls="tabpanel-detection-panel">Détections</button>
                     </li>
                     <li role="presentation">
-                        <button id="tabpanel-405" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-405-panel">Zone</button>
+                        <button id="tabpanel-zone" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tabpanel-zone-panel">Zone</button>
                     </li>
                 </ul>
-                <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
+                <div id="tabpanel-detection-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-detection" tabindex="0">
                     <div>
                         <div class="fr-tabs no-tab-look">
                             <ul class="fr-tabs__list" role="tablist" aria-label="Liste des détection">
                                 {% for fichedetection in evenement.detections.all %}
                                     <li role="presentation">
-                                        <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w {% if forloop.first %}selected{% endif %}" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
+                                        <button id="tabpanel-{{ fichedetection.pk }}"
+                                                class="fr-tag fr-mx-1w {% if fichedetection.pk == active_detection %}selected{% endif %}"
+                                                tabindex="{% if fichedetection.pk == active_detection %}0{% else %}-1{% endif %}"
+                                                role="tab"
+                                                aria-selected="{% if fichedetection.pk == active_detection %}true{% else %}false{% endif %}"
+                                                aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }} ({{ fichedetection.pk }}</button>
                                     </li>
                                 {% endfor %}
                                 <li>
@@ -114,7 +119,7 @@
                             </ul>
 
                             {% for fichedetection in evenement.detections.all %}
-                                <div id="detection-actions-{{ fichedetection.pk }}" {% if not forloop.first %}class="fr-hidden"{% endif %}>
+                                <div id="detection-actions-{{ fichedetection.pk }}" {% if not fichedetection.pk == active_detection %}class="fr-hidden"{% endif %}>
                                     <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
                                         Supprimer la détection
                                     </button>
@@ -127,14 +132,18 @@
 
 
                             {% for fichedetection in evenement.detections.all %}
-                                <div id="tabpanel-{{ fichedetection.pk }}-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-{{ fichedetection.pk }}" tabindex="0">
+                                <div id="tabpanel-{{ fichedetection.pk }}-panel"
+                                     class="fr-tabs__panel {% if fichedetection.pk == active_detection %}fr-tabs__panel--selected{% endif %}"
+                                     role="tabpanel"
+                                     aria-labelledby="tabpanel-{{ fichedetection.pk }}"
+                                     tabindex="{% if fichedetection.pk == active_detection %}0{% else %}-1{% endif %}">
                                     {% include "sv/_fichedetection_detail.html" %}
                                 </div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-                <div id="tabpanel-405-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-405" tabindex="0">
+                <div id="tabpanel-zone-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tabpanel-zone" tabindex="0">
                     {% if evenement.fiche_zone_delimitee %}
                         {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
                     {% else %}
