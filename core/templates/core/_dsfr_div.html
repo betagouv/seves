@@ -4,17 +4,19 @@
     <div>{% for field in hidden_fields %}{{ field }}{% endfor %}</div>
   {% endif %}
   {% for field, errors in fields %}
-    {{ errors }}
-    <div {% with classes=field.css_classes %}class="{{ classes }} fr-fieldset__element"{% endwith %}>
-      {% if field.label %}{{ field.label_tag }}{% endif %}
-      {{ field }}
-      {% if field.help_text %}
-        <span class="helptext fr-hint-text"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>
-      {% endif %}
-      {% if forloop.last %}
-        {% for field in hidden_fields %}{{ field }}{% endfor %}
-      {% endif %}
-    </div>
+    {% if field.name not in manual_render_fields %}
+      {{ errors }}
+      <div {% with classes=field.css_classes %}class="{{ classes }} fr-fieldset__element"{% endwith %}>
+        {% if field.label %}{{ field.label_tag }}{% endif %}
+        {{ field }}
+        {% if field.help_text %}
+          <span class="helptext fr-hint-text"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>
+        {% endif %}
+        {% if forloop.last %}
+          {% for field in hidden_fields %}{{ field }}{% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
   {% endfor %}
   {% if not fields and not errors %}
     {% for field in hidden_fields %}{{ field }}{% endfor %}
