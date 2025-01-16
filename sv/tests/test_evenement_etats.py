@@ -164,7 +164,6 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     assert evenement.etat.libelle == Etat.NOUVEAU
 
 
-@pytest.mark.skip(reason="refacto evenement")
 def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suivi(
     live_server, page: Page, mocked_authentification_user, contact_ac: Contact
 ):

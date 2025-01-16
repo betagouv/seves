@@ -133,7 +133,6 @@ def test_fiche_detection_update_page_content_with_no_data(
     expect(form_elements.mesures_surveillance_specifique_input).to_have_value("")
 
 
-@pytest.mark.skip(reason="refacto evenement")
 @pytest.mark.django_db
 def test_fiche_detection_update_without_lieux_and_prelevement(
     live_server,
@@ -145,7 +144,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     choice_js_fill,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
-    organisme = baker.make(OrganismeNuisible)
     new_fiche_detection = fiche_detection_bakery()
     new_fiche_detection.organisme_nuisible = baker.make(OrganismeNuisible)
     new_fiche_detection.save()
@@ -153,9 +151,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
 
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", organisme.libelle_court, organisme.libelle_court)
-
-    form_elements.statut_reglementaire_input.select_option(str(new_fiche_detection.statut_reglementaire.id))
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
     form_elements.commentaire_input.fill(new_fiche_detection.commentaire)
@@ -172,8 +167,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
         fiche_detection_updated.createur == fiche_detection.createur
     )  # le createur ne doit pas changer lors d'une modification
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
-    assert fiche_detection_updated.organisme_nuisible == organisme
-    assert fiche_detection_updated.statut_reglementaire == new_fiche_detection.statut_reglementaire
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte
     assert fiche_detection_updated.commentaire == new_fiche_detection.commentaire
     assert fiche_detection_updated.vegetaux_infestes == new_fiche_detection.vegetaux_infestes
