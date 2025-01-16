@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q
 
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE, SERVICE_ACCOUNT_NAME
 
 
 class DocumentQueryset(QuerySet):
@@ -97,3 +97,6 @@ class LienLibreQueryset(QuerySet):
 class StructureQueryset(QuerySet):
     def has_at_least_one_active_contact(self):
         return self.filter(agent__user__is_active=True).distinct()
+
+    def can_be_contacted(self):
+        return self.has_at_least_one_active_contact().exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
