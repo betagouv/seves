@@ -3,15 +3,22 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 from model_bakery import baker
+
+from core.factories import StructureFactory, AgentFactory
 from core.models import Structure, Contact, Visibilite
 from sv.factories import EvenementFactory
 
 
 @pytest.fixture
 def contacts_structure():
-    structure1, structure2 = baker.make(Structure, _quantity=2, _fill_optional=True)
+    structure1, structure2 = StructureFactory.create_batch(2)
     contact1 = baker.make(Contact, structure=structure1)
     contact2 = baker.make(Contact, structure=structure2)
+
+    for structure in (structure1, structure2):
+        active_agent = AgentFactory(structure=structure)
+        active_agent.user.is_active = True
+        active_agent.user.save()
     return [contact1, contact2]
 
 
@@ -32,10 +39,16 @@ def test_add_structure_form(live_server, page, contacts_structure):
 
 @pytest.mark.django_db
 def test_add_structure_form_hides_empty_emails(live_server, page, contacts_structure):
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1"), email="")
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1"), email="foo@example.com")
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 2"), email="")
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 3"), email="bar@example.com")
+    structure_1 = StructureFactory(niveau1="Level 1")
+    structure_2 = StructureFactory(niveau1="Level 2")
+    structure_3 = StructureFactory(niveau1="Level 3")
+    for structure in (structure_1, structure_2, structure_3):
+        active_agent = AgentFactory(structure=structure)
+        active_agent.user.is_active = True
+        active_agent.user.save()
+    baker.make(Contact, structure=structure_1, email="foo@example.com")
+    baker.make(Contact, structure=structure_2, email="")
+    baker.make(Contact, structure=structure_3, email="bar@example.com")
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
@@ -43,6 +56,26 @@ def test_add_structure_form_hides_empty_emails(live_server, page, contacts_struc
     expect(page.get_by_text("Level 1")).to_be_visible()
     expect(page.get_by_text("Level 2")).not_to_be_visible()
     expect(page.get_by_text("Level 3")).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_add_structure_form_hides_structure_without_active_user(live_server, page, contacts_structure):
+    visible_structure = StructureFactory()
+    _inactive_agent = AgentFactory(structure=visible_structure, user__is_active=False)
+    active_agent = AgentFactory(structure=visible_structure)
+    active_agent.user.is_active = True
+    active_agent.user.save()
+
+    unvisible_structure = StructureFactory()
+    AgentFactory(structure=unvisible_structure, user__is_active=False)
+    AgentFactory(structure=unvisible_structure, user__is_active=False)
+
+    page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_role("link", name="Ajouter une structure").click()
+
+    expect(page.get_by_text(visible_structure.niveau1)).to_be_visible()
+    expect(page.get_by_text(unvisible_structure.niveau1)).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -78,9 +111,15 @@ def test_structure_niveau2_are_visible_after_select_structure_niveau1(live_serve
 
 
 @pytest.mark.django_db
-def test_structure_niveau2_without_emails_are_not_visible_aftert_select_structure_niveau1(live_server, page):
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1", libelle="Foo"), email="foo@example.com")
-    baker.make(Contact, structure=baker.make(Structure, niveau1="Level 1", libelle="Bar"), email="")
+def test_structure_niveau2_without_emails_are_not_visible_after_select_structure_niveau1(live_server, page):
+    structure_1 = baker.make(Structure, niveau1="Level 1", libelle="Foo")
+    structure_2 = baker.make(Structure, niveau1="Level 1", libelle="Bar")
+    for structure in (structure_1, structure_2):
+        active_agent = AgentFactory(structure=structure)
+        active_agent.user.is_active = True
+        active_agent.user.save()
+    baker.make(Contact, structure=structure_1, email="foo@example.com")
+    baker.make(Contact, structure=structure_2, email="")
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
@@ -106,7 +145,11 @@ def test_add_structure_to_an_evenement(live_server, page, contacts_structure):
 
 @pytest.mark.django_db
 def test_add_multiple_structures_to_an_evenement(live_server, page):
-    structure1, structure2 = baker.make(Structure, niveau1="AC", _quantity=2, _fill_optional=True)
+    structure1, structure2 = StructureFactory.create_batch(2, niveau1="AC")
+    for structure in (structure1, structure2):
+        active_agent = AgentFactory(structure=structure)
+        active_agent.user.is_active = True
+        active_agent.user.save()
     contact1 = baker.make(Contact, structure=structure1)
     contact2 = baker.make(Contact, structure=structure2)
 

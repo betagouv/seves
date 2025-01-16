@@ -1,6 +1,8 @@
 import math
+from collections import defaultdict
 from copy import copy
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -8,9 +10,6 @@ from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton
 from core.models import Document, Contact, Message, Structure, Visibilite
-from core.constants import SERVICE_ACCOUNT_NAME
-from django import forms
-from collections import defaultdict
 
 User = get_user_model()
 
@@ -105,7 +104,7 @@ class ContactAddForm(DSFRForm, forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["structure"].queryset = Structure.objects.has_at_least_one_active_contact()
+        self.fields["structure"].queryset = Structure.objects.can_be_contacted()
 
 
 class ContactSelectionForm(forms.Form):
@@ -280,7 +279,7 @@ class StructureAddForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        niveau1_choices = Structure.objects.exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
+        niveau1_choices = Structure.objects.can_be_contacted()
         niveau1_choices = niveau1_choices.values_list("niveau1", flat=True).distinct().order_by("niveau1")
         self.fields["structure_niveau1"].choices = [(niveau1, niveau1) for niveau1 in niveau1_choices]
         self.fields["structure_niveau1"].initial = niveau1_choices.first()
