@@ -5,14 +5,30 @@ body{
 .fiches__header {
     background-color: var(--background-open-blue-france);
 }
+.fiche__header--title h2{
+    display: inline-block;
+}
+.fiche__header--type {
+    background-color: var(--background-contrast-grey) !important;
+    display: inline-block;
+}
+.fiche__header--type .fr-fieldset__element{
+    margin-bottom: 0px !important;
+}
+.fiche__header--actions {
+    display: flex;
+    justify-content: flex-end;
+}
 
 .fiches__search-form {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 0.5rem;
 }
 .fiches__search-form .fr-fieldset__element{
-    flex: 1 !important;
+    flex: 1 1 200px;
+    max-width: 300px;
 }
 .fiches__search-form input, .fiches__search-form select, .fiches__search-form .fr-radio-group {
     margin-top: .5rem;

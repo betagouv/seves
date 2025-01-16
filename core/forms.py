@@ -22,6 +22,12 @@ class DSFRForm(forms.Form):
     input_to_class["SelectMultiple"] = "fr-select"
     input_to_class["SelectWithAttributeField"] = "fr-select"
     input_to_class["DSFRRadioButton"] = ""
+    manual_render_fields = []
+
+    def get_context(self):
+        context = super().get_context()
+        context["manual_render_fields"] = self.manual_render_fields
+        return context
 
     def as_dsfr_div(self):
         return self.render("core/_dsfr_div.html")

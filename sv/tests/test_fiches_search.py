@@ -101,7 +101,7 @@ def test_search_with_fiche_number(live_server, page: Page, mocked_authentificati
 
 def test_search_with_invalid_fiche_number(client):
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche invalide (format année.numéro)"""
-    response = client.get(reverse("fiche-liste"), {"numero": "az.erty"})
+    response = client.get(reverse("fiche-liste") + "?numero=az.erty")
     assert response.status_code == 200
     assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
     assert (
@@ -137,7 +137,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-liste')}?numero=&lieux__departement__region=&evenement__organisme_nuisible={organisme_1.id}&start_date=&end_date=&evenement__etat="
+        == f"{live_server.url}{reverse('fiche-liste')}?type_fiche=detection&numero=&lieux__departement__region=&evenement__organisme_nuisible={organisme_1.id}&start_date=&end_date=&evenement__etat="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
@@ -258,11 +258,9 @@ def test_search_fiche_zone(live_server, page: Page):
     expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
 
     page.locator("label:has-text('Zone')").click()
-    page.get_by_role("button", name="Rechercher").click()
-
     assert (
         page.url
-        == f"{live_server.url}{reverse('fiche-liste')}?numero=&type_fiche=zone&evenement__organisme_nuisible=&start_date=&end_date=&evenement__etat="
+        == f"{live_server.url}{reverse('fiche-liste')}?type_fiche=zone&numero=&evenement__organisme_nuisible=&start_date=&end_date=&evenement__etat="
     )
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
@@ -341,3 +339,14 @@ def test_cant_search_region_for_zone(live_server, page: Page):
 def test_cant_search_region_for_zone_on_page_load(live_server, page: Page):
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
     expect(page.locator("#id_lieux__departement__region")).to_be_disabled()
+
+
+def test_form_is_auto_submitted_when_type_fiche_is_changed(live_server, page: Page):
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
+    page.locator("label:has-text('Zone')").click()
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
+    page.locator("label:has-text('Détection')").click()
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")

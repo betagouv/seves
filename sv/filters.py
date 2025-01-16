@@ -1,10 +1,15 @@
 import django_filters
+from django.forms import forms
 
 from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
 from seves import settings
 from .models import FicheDetection, Region, OrganismeNuisible, Etat
 from django.forms.widgets import DateInput, TextInput
+
+
+class FicheFilterForm(DSFRForm, forms.Form):
+    manual_render_fields = ["type_fiche"]
 
 
 class FicheFilter(django_filters.FilterSet):
@@ -18,7 +23,6 @@ class FicheFilter(django_filters.FilterSet):
         label="Type",
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
         empty_label=None,
-        initial="Détection",
     )
     lieux__departement__region = django_filters.ModelChoiceFilter(
         label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_region"
@@ -50,10 +54,15 @@ class FicheFilter(django_filters.FilterSet):
             "end_date",
             "evenement__etat",
         ]
-        form = DSFRForm
+        form = FicheFilterForm
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.data.get("type_fiche"):
+            data = self.data.copy()
+            data["type_fiche"] = "detection"
+            self.data = data
+
         if self.data.get("numero"):
             try:
                 _annee, _numero = map(int, self.data.get("numero").split("."))

@@ -15,17 +15,27 @@
 
 {% block content %}
     {% include "sv/_extract_modal.html" %}
+    <form id="search-form" method="get" >
+        <div class="fiches__header fr-p-4v">
+            <div class="fiche__header--title">
+                <h2 class="fr-h3">Rechercher une fiche</h2>
+                <span class="fiche__header--type fr-py-1w">
+                    <div class=" fr-fieldset__element">
+                        {{ filter.form.type_fiche }}
+                    </div>
+                </span>
+            </div>
 
-    <div class="fiches__header fr-p-4v">
-        <h2 class="fr-h3">Rechercher une fiche</h2>
-        <form id="search-form" method="get" class="fiches__search-form">
-            {{ filter.form.as_dsfr_div }}
-            <div class="fr-fieldset__element">
-                <button type="reset" class="fr-btn fr-btn--secondary">Effacer</button>
+            <div class="fiches__search-form">
+                {{ filter.form.as_dsfr_div }}
+            </div>
+            <div class="fr-fieldset__element fiche__header--actions">
+                <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>
                 <button type="submit" class="fr-btn">Rechercher</button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+
 
     <div class="fiches__list-container">
         <div class="fiches__list-header">

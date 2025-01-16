@@ -18,10 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById("id_type_fiche_0").addEventListener("click", event =>{
         document.getElementById('id_lieux__departement__region').disabled = false
+        event.target.closest("form").submit()
     })
     document.getElementById("id_type_fiche_1").addEventListener("click", event =>{
         document.getElementById('id_lieux__departement__region').disabled = true
         document.getElementById('id_lieux__departement__region').selectedIndex = 0
+        event.target.closest("form").submit()
     })
     if (new URLSearchParams(window.location.search).get('type_fiche') === "zone"){
         document.getElementById('id_lieux__departement__region').disabled = true
