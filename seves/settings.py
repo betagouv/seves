@@ -232,4 +232,5 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
 # TODO ajouter un test sur le fait que l'on peut publier
 # TODO ajouter un test pour vérifier qu'on ne peut pas fausser la publication
+# TODO ajouter des tests sur les flow de modification de visibilité
 # TODO faire un ticket a part pour supprimer etat ?
