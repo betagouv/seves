@@ -537,6 +537,7 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
 
     def get_initial(self):
         initial = super().get_initial()
+        initial["evenement"] = self.object.evenement
         initial["organisme_nuisible"] = self.object.evenement.organisme_nuisible
         initial["statut_reglementaire"] = self.object.evenement.statut_reglementaire
         initial["detections_hors_zone"] = list(

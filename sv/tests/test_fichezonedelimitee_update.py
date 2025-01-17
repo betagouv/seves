@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 
 from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory, EvenementFactory
-from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection
+from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Evenement
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
 
@@ -229,3 +229,21 @@ def test_fichezonedelimitee_update_multiple_times_adds_contacts_once(
             str(mocked_authentification_user.agent.structure), exact=True
         )
     ).to_be_visible()
+
+
+def test_can_update_fiche_zone_if_evenement_brouillon(live_server, page: Page, choice_js_fill):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.BROUILLON)
+    new_fiche_zone = FicheZoneFactory.build()
+
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    form_page.fill_form(new_fiche_zone)
+    form_page.submit_update_form()
+
+    fiche_zone_updated = FicheZoneDelimitee.objects.get(id=fiche_zone.id)
+    assert fiche_zone_updated.commentaire == new_fiche_zone.commentaire
+    assert fiche_zone_updated.rayon_zone_tampon == new_fiche_zone.rayon_zone_tampon
+    assert fiche_zone_updated.unite_rayon_zone_tampon == new_fiche_zone.unite_rayon_zone_tampon
+    assert fiche_zone_updated.surface_tampon_totale == new_fiche_zone.surface_tampon_totale
+    assert fiche_zone_updated.unite_surface_tampon_totale == new_fiche_zone.unite_surface_tampon_totale
