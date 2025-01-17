@@ -12,7 +12,7 @@ from sv.constants import REGIONS, DEPARTEMENTS
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import LaboratoireFactory
+from ..factories import LaboratoireFactory, EvenementFactory
 from ..models import (
     FicheDetection,
     StatutEvenement,
@@ -506,3 +506,15 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     laboratoires = Laboratoire.objects.all()
     for labo in laboratoires:
         expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_be_disabled()
+
+
+@pytest.mark.django_db
+def test_can_add_fiche_detection_from_existing_evenement(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("link", name="Ajouter une détection").click()
+    page.get_by_role("button", name="Enregistrer").click()
+
+    page.wait_for_timeout(600)
+    assert FicheDetection.objects.count() == 1
