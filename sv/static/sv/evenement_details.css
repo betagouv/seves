@@ -46,3 +46,7 @@
 .evenement-top-row--actions .fr-nav__item{
     height: 100%;
 }
+.fr-tag.selected {
+    background-color: var(--background-action-high-blue-france);
+    color: var(--text-inverted-blue-france);
+}

@@ -83,7 +83,7 @@
                             <ul class="fr-tabs__list fr-mb-2v" role="tablist" aria-label="Liste des détection">
                                 {% for fichedetection in evenement.detections.all %}
                                     <li role="presentation">
-                                        <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
+                                        <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w {% if forloop.first %}selected{% endif %}" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
                                     </li>
                                 {% endfor %}
                             </ul>
