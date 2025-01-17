@@ -1,5 +1,9 @@
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError, PermissionDenied
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView
@@ -15,17 +19,9 @@ from .forms import (
     StructureSelectionForm,
     StructureSelectionForVisibiliteForm,
 )
-from django.http import HttpResponseRedirect
-from django.utils.translation import ngettext
-
 from .mixins import PreventActionIfVisibiliteBrouillonMixin
-from .notifications import notify_message
-
 from .models import Document, Message, Contact, FinSuiviContact
-
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, PermissionDenied
-
+from .notifications import notify_message
 from .redirect import safe_redirect
 
 
@@ -449,24 +445,21 @@ class VisibiliteStructureView(FormView):
         # TODO lien retour en arrière qui ne marche pas
         return kwargs
 
-    def form_invalid(self, form):
-        print(form.errors)
-
     def form_valid(self, form):
-        # TODO cant hack this to change structure of a fiche I cant access
-        # content_type = ContentType.objects.get(pk=self.request.POST["content_type_id"]).model_class()
-        # object = content_type.objects.get(pk=self.request.POST["object_id"])
-        structures = form.cleaned_data["structures"]
-        print(structures)
-        # for contact in contacts:
-        #     fiche.contacts.add(contact)
-        #     if structure_contact := contact.get_structure_contact():
-        #         fiche.contacts.add(structure_contact)
+        content_type = ContentType.objects.get(pk=self.request.POST["content_type_id"]).model_class()
+        object = content_type.objects.get(pk=self.request.POST["object_id"])
 
-        message = ngettext(
-            "La structure a été ajoutée avec succès.",
-            "Les %(count)d structures ont été ajoutées avec succès.",
-            len(structures),
-        ) % {"count": len(structures)}
-        messages.success(self.request, message)
-        return safe_redirect(self.request.POST.get("next"))
+        if not object.is_visibilite_limitee:
+            messages.error(
+                self.request,
+                "Vous ne pouvez pas modifier les droits pour une fiche qui n'est pas en visibilité limitée",
+            )
+            return safe_redirect(object.get_absolute_url())
+        if not object.can_update_visibilite(self.request.user):
+            messages.error(self.request, "Vous n'avez pas les droits pour modifier les droits'")
+            return safe_redirect(object.get_absolute_url())
+
+        structures = form.cleaned_data["structures"]
+        object.allowed_structures.set(structures)
+        messages.success(self.request, "Les droits d'accès ont été modifiés")
+        return safe_redirect(object.get_absolute_url())

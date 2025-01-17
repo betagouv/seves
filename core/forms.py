@@ -317,7 +317,6 @@ class StructureSelectionForm(forms.Form):
 class StructureSelectionForVisibiliteForm(forms.Form):
     # content_type_id = forms.IntegerField(widget=forms.HiddenInput())
     # object_id = forms.IntegerField(widget=forms.HiddenInput())
-    next = forms.CharField(widget=forms.HiddenInput(), required=False)
     structures = forms.ModelMultipleChoiceField(queryset=Structure.objects.none())
     structure_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 

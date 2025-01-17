@@ -193,7 +193,9 @@ class WithVisibiliteMixin(models.Model):
         choices=Visibilite,
         default=Visibilite.LOCALE,
     )
+    allowed_structures = models.ManyToManyField(Structure, related_name="allowed_structures")
 
+    # TODO s'assurer que allowed_structures est vide quand pas limitée
     class Meta:
         abstract = True
 
@@ -210,12 +212,7 @@ class WithVisibiliteMixin(models.Model):
         return self.visibilite == Visibilite.LOCALE
 
     def can_update_visibilite(self, user):
-        # TODO update rules
-        if user.agent.structure.is_mus_or_bsv:
-            return True
-        if self.is_visibilite_locale and user.agent.is_in_structure(self.createur):
-            return True
-        # TODO faire la gestion du cas limitée ici
+        self.can_user_access(user)
 
     def can_user_access(self, user):
         """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
@@ -226,8 +223,8 @@ class WithVisibiliteMixin(models.Model):
             return True
         if not self.is_draft and user.agent.structure.is_mus_or_bsv:
             return True
-        if self.is_visibilite_limitee and not self.is_draft and False:
-            pass  # TODO missing list of structures here
+        if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures:
+            return True
         return False
 
     @classmethod

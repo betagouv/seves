@@ -8,7 +8,6 @@ from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, Ev
 from ..models import (
     Region,
     OrganismeNuisible,
-    Etat,
     Lieu,
     ZoneInfestee,
 )
@@ -50,7 +49,6 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=5)
     baker.make(OrganismeNuisible, _quantity=5)
-    baker.make(Etat, _quantity=5)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
@@ -75,7 +73,6 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=2)
     baker.make(OrganismeNuisible, _quantity=2)
-    baker.make(Etat, _quantity=2)
     on = OrganismeNuisible.objects.first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?evenement__organisme_nuisible={on.pk}")
