@@ -232,4 +232,4 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
 # TODO ajouter un test sur le fait que l'on peut publier
 # TODO ajouter un test pour vérifier qu'on ne peut pas fausser la publication
-# TODO interface de sélection en mode limitee
+# TODO faire un ticket a part pour supprimer etat ?

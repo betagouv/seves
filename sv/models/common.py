@@ -73,6 +73,23 @@ class StatutReglementaire(models.Model):
         return self.libelle
 
 
+class Etat(models.Model):
+    NOUVEAU = "nouveau"
+    EN_COURS = "en cours"
+    CLOTURE = "clôturé"
+
+    class Meta:
+        verbose_name = "Etat"
+        verbose_name_plural = "Etats"
+        db_table = "sv_etat"
+
+    libelle = models.CharField(max_length=30, unique=True)
+
+    @classmethod
+    def get_etat_initial(cls):
+        return cls.objects.get(libelle=cls.NOUVEAU).id
+
+
 class StatutEtablissement(models.Model):
     class Meta:
         verbose_name = "Statut de l'établissement"

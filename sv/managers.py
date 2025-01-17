@@ -29,8 +29,11 @@ class BaseVisibilityQuerySet(models.QuerySet):
         return self.filter(
             Q(evenement__visibilite=Visibilite.NATIONALE)
             | Q(createur=user.agent.structure)
-            | Q(~Q(evenement__etat=Evenement.Etat.BROUILLON) & Q(evenement__visibilite=Visibilite.LIMITEE))
-            # TODO ici ajouter la notion de sa structure est dans liste des structures autorisée
+            | Q(
+                ~Q(evenement__etat=Evenement.Etat.BROUILLON)
+                & Q(evenement__visibilite=Visibilite.LIMITEE)
+                & Q(evenement__allowed_structures=user.agent.structure)
+            )
         )
 
 

@@ -235,12 +235,7 @@ class EvenementFactory(DjangoModelFactory):
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     visibilite = Visibilite.LOCALE
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["visibilite"] == Visibilite.BROUILLON:
-            kwargs["numero"] = None
-        return super()._create(model_class, *args, **kwargs)
+    etat = Evenement.Etat.EN_COURS
 
     @factory.lazy_attribute
     def createur(self):

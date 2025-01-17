@@ -68,8 +68,7 @@ class Evenement(
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():
-            if not self.numero and self.visibilite == Visibilite.LOCALE:
-                self.numero = NumeroFiche.get_next_numero()
+            self.numero = NumeroFiche.get_next_numero()
             super().save(*args, **kwargs)
 
     def get_absolute_url(self):
