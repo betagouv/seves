@@ -122,9 +122,13 @@ class SelectWithAttributeField(forms.Select):
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         option = super().create_option(name, value, label, selected, index, subindex, attrs)
         if value:
-            option["attrs"]["data-confirmation-officielle"] = (
-                "true" if value.instance.confirmation_officielle else "false"
-            )
+            confirmation_officielle = value.instance.confirmation_officielle
+            option["attrs"]["data-confirmation-officielle"] = "true" if confirmation_officielle else "false"
+            if (
+                self.form_instance.instance.type_analyse == Prelevement.TypeAnalyse.CONFIRMATION
+                and not confirmation_officielle
+            ):
+                option["attrs"]["disabled"] = "disabled"
         return option
 
 
@@ -169,6 +173,8 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         labo_values = kwargs.pop("labo_values", None)
         structure_values = kwargs.pop("structure_values", None)
         super().__init__(*args, **kwargs)
+
+        self.fields["laboratoire"].widget.form_instance = self
 
         for field_name, choices in cached_choices.items():
             if choices is not None and field_name in self.fields:
