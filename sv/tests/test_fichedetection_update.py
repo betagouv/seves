@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory
+from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory
 from ..models import (
     FicheDetection,
     Lieu,
@@ -1102,3 +1102,58 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
     fiche_detection = FicheDetection.objects.get()
     assert fiche_detection.numero_europhyt != "11111111"
     assert fiche_detection.numero_rasff != "222222222"
+
+
+@pytest.mark.django_db
+def test_laboratoire_disable_in_prelevement_confirmation(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que les laboratoires non officiels sont désactivés quand le type d'analyse est confirmation"""
+    LaboratoireFactory.create_batch(3)
+    LaboratoireFactory.create_batch(3, confirmation_officielle=True)
+    fiche_detection = FicheDetectionFactory()
+    LieuFactory(fiche_detection=fiche_detection)
+
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    form_elements.add_prelevement_btn.click()
+
+    prelevement_form_elements.type_analyse_input("confirmation").click()
+
+    # Vérifier le statut disabled/enabled pour tous les laboratoires
+    labos_officiels = Laboratoire.objects.filter(confirmation_officielle=True)
+    labos_non_officiels = Laboratoire.objects.filter(confirmation_officielle=False)
+
+    for labo in labos_non_officiels:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).to_be_disabled()
+
+    for labo in labos_officiels:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_be_disabled()
+
+
+@pytest.mark.django_db
+def test_laboratoire_enable_for_analyse_premiere_intention(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    """Test que tous les laboratoires sont actifs quand le type d'analyse est première intention"""
+    LaboratoireFactory.create_batch(3)
+    LaboratoireFactory.create_batch(3, confirmation_officielle=True)
+    fiche_detection = FicheDetectionFactory()
+    LieuFactory(fiche_detection=fiche_detection)
+
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    form_elements.add_prelevement_btn.click()
+
+    prelevement_form_elements.type_analyse_input("première intention").click()
+
+    # Vérifier qu'aucun labo n'est désactivé
+    laboratoires = Laboratoire.objects.all()
+    for labo in laboratoires:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_have_attribute(
+            "disabled", ""
+        )

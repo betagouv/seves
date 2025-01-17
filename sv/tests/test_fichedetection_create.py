@@ -12,6 +12,7 @@ from sv.constants import REGIONS, DEPARTEMENTS
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+from ..factories import LaboratoireFactory
 from ..models import (
     FicheDetection,
     StatutEvenement,
@@ -24,6 +25,7 @@ from ..models import (
     Region,
     StructurePreleveuse,
     SiteInspection,
+    Laboratoire,
 )
 
 
@@ -439,3 +441,68 @@ def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
     page.get_by_role("button", name="Enregistrer").dblclick()
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_laboratoire_disable_in_prelevement_confirmation(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    """Test que les laboratoires non officiels sont désactivés quand le type d'analyse est confirmation"""
+    LaboratoireFactory.create_batch(3)
+    LaboratoireFactory.create_batch(3, confirmation_officielle=True)
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+
+    # Ajouter un lieu
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.save_btn.click()
+
+    # Ajouter un prélèvement
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.type_analyse_input("confirmation").click()
+
+    # Vérifier le statut disabled/enabled pour tous les laboratoires
+    labos_officiels = Laboratoire.objects.filter(confirmation_officielle=True)
+    labos_non_officiels = Laboratoire.objects.filter(confirmation_officielle=False)
+
+    for labo in labos_non_officiels:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).to_be_disabled()
+
+    for labo in labos_officiels:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_be_disabled()
+
+
+@pytest.mark.django_db
+def test_laboratoire_enable_for_analyse_premiere_intention(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    """Test que tous les laboratoires sont actifs quand le type d'analyse est première intention"""
+    LaboratoireFactory.create_batch(3)
+    LaboratoireFactory.create_batch(3, confirmation_officielle=True)
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+
+    # Ajouter un lieu
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.save_btn.click()
+
+    # Ajouter un prélèvement
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+
+    # Vérifier qu'aucun labo n'est désactivé
+    laboratoires = Laboratoire.objects.all()
+    for labo in laboratoires:
+        expect(prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]')).not_to_be_disabled()
