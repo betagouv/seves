@@ -24,7 +24,6 @@ class BaseVisibilityQuerySet(models.QuerySet):
         from sv.models import Evenement
 
         if user.agent.structure.is_mus_or_bsv:
-            # TODO add test on this ??
             return self.exclude(Q(evenement__etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
             Q(evenement__visibilite=Visibilite.NATIONALE)
@@ -103,15 +102,16 @@ class EvenementQueryset(models.QuerySet):
         return self.order_by("-numero__annee", "-numero__numero")
 
     def get_user_can_view(self, user):
+        from sv.models import Evenement
+
         if user.agent.structure.is_mus_or_bsv:
-            return self.filter(
-                Q(visibilite__in=[Visibilite.LOCALE, Visibilite.NATIONALE])
-                | Q(visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
-            )
+            return self.exclude(Q(etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
             Q(visibilite=Visibilite.NATIONALE)
+            | Q(createur=user.agent.structure)
             | Q(
-                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCALE],
-                createur=user.agent.structure,
+                ~Q(etat=Evenement.Etat.BROUILLON)
+                & Q(visibilite=Visibilite.LIMITEE)
+                & Q(allowed_structures=user.agent.structure)
             )
         )

@@ -2,8 +2,9 @@ import pytest
 from django.contrib.auth import get_user_model
 from model_bakery import baker
 from playwright.sync_api import Page, expect
-from core.models import Message, Contact, Agent, Structure, Visibilite
+from core.models import Message, Contact, Agent, Structure
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 User = get_user_model()
 
@@ -335,7 +336,7 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
 def test_cant_access_add_message_form_if_evenement_brouillon(client, message_type, message_label):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.get(evenement.get_add_message_url(message_type), follow=True)
 
@@ -349,7 +350,7 @@ def test_cant_access_add_message_form_if_evenement_brouillon(client, message_typ
 def test_cant_add_message_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         evenement.get_add_message_url(message_type),
@@ -372,7 +373,7 @@ def test_cant_add_message_if_evenement_brouillon(
 def test_cant_access_message_details_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     message = Message.objects.create(
         message_type=message_type,
         title="un titre",

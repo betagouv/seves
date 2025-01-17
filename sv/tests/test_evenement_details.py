@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
 
-from core.models import Visibilite, Structure
+from core.models import Structure
 from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
 from sv.models import Evenement, FicheDetection
 
@@ -15,7 +15,7 @@ def test_cant_add_zone_if_already_one(live_server, page: Page):
 
 
 def test_can_publish_evenement(live_server, page: Page):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     page.get_by_role("button", name="Actions").click()

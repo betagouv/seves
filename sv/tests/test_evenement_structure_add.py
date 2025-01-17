@@ -3,8 +3,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 from model_bakery import baker
-from core.models import Structure, Contact, Visibilite
+from core.models import Structure, Contact
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 
 @pytest.fixture
@@ -152,7 +153,7 @@ def test_add_structure_form_back_to_evenement_after_select_structure_niveau1(liv
 
 @pytest.mark.django_db
 def test_cant_access_structure_selection_add_form_if_evenement_brouillon(live_server, page):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     content_type = ContentType.objects.get_for_model(evenement)
     page.goto(
         f"{live_server.url}/{reverse('structure-selection-add-form')}?fiche_id={evenement.id}&content_type_id={content_type.id}&next={evenement.get_absolute_url()}"
@@ -162,7 +163,7 @@ def test_cant_access_structure_selection_add_form_if_evenement_brouillon(live_se
 
 @pytest.mark.django_db
 def test_cant_post_structure_selection_add_form_if_evenement_brouillon(client, mocked_authentification_user):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     response = client.post(
         reverse("structure-selection-add-form"),
         data={
@@ -182,7 +183,7 @@ def test_cant_post_structure_selection_add_form_if_evenement_brouillon(client, m
 
 @pytest.mark.django_db
 def test_cant_post_structure_add_form_if_evenement_brouillon(client, mocked_authentification_user):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     structure = Structure.objects.create(
         niveau1=evenement.createur, niveau2="une autre structure", libelle="une autre structure"
     )

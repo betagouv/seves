@@ -13,7 +13,7 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
 )
-from core.models import Document, Message, Contact, Visibilite, Structure, FinSuiviContact
+from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire
 from ..managers import EvenementManager

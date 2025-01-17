@@ -9,13 +9,13 @@ def test_list_detection_performance(
     fiche_detection_bakery()
     client.get(reverse("fiche-liste"))
 
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(6):
         client.get(reverse("fiche-liste"))
 
     for _ in range(0, 5):
         fiche_detection_bakery()
 
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(6):
         client.get(reverse("fiche-liste"))
 
 

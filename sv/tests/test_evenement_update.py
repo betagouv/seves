@@ -1,8 +1,8 @@
 from playwright.sync_api import Page, expect
 
-from core.models import LienLibre, Visibilite, Structure
+from core.models import LienLibre, Structure
 from ..factories import EvenementFactory, OrganismeNuisibleFactory
-from ..models import StatutReglementaire
+from ..models import StatutReglementaire, Evenement
 
 
 def test_update_evenement(live_server, page: Page, choice_js_fill):
@@ -68,7 +68,7 @@ def test_update_evenement_cant_add_self_links(
 
 
 def test_cant_access_update_evenement_if_no_rights(live_server, page: Page, choice_js_fill):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     evenement.createur = Structure.objects.create(niveau1="Other structure")
     evenement.save()
 

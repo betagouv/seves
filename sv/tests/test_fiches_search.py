@@ -208,7 +208,7 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
     choice_js_fill(page, ".choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("Au").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
-    page.get_by_label("État").select_option(str(fiche1.evenement.etat.id))
+    page.get_by_label("État").select_option(str(fiche1.evenement.etat))
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()
