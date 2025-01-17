@@ -194,7 +194,17 @@ class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPreleveme
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
-        evenement_form = EvenementForm(request.POST, user=self.request.user)
+
+        if request.POST.get("evenement"):
+            evenement = Evenement.objects.get(pk=request.POST.get("evenement"))
+            evenement_data = {
+                "organisme_nuisible": evenement.organisme_nuisible.pk,
+                "statut_reglementaire": evenement.statut_reglementaire.pk,
+            }
+            evenement_form = EvenementForm(evenement_data, user=self.request.user)
+        else:
+            evenement_form = EvenementForm(request.POST, user=self.request.user)
+
         if not form.is_valid():
             return self.form_invalid(form)
 
