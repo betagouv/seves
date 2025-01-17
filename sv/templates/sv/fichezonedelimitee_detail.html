@@ -11,7 +11,7 @@
         <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
             Supprimer la zone
         </button>
-        {% include "sv/_delete_fiche_modal.html" with prefix="zone" content_type=fiche_zone_content_type object_pk=fiche.pk %}
+        {% include "sv/_delete_fichezonedelimitee_modal.html" %}
         <button class="fr-btn fr-btn--secondary fr-mr-2w">
             <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
         </button>

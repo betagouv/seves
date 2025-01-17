@@ -35,6 +35,7 @@ from sv.models import (
     StatutEvenement,
     Prelevement,
     Laboratoire,
+    VersionFicheZoneDelimitee,
 )
 
 
@@ -614,3 +615,55 @@ def test_evenement_cant_be_national_with_structures():
 
     with pytest.raises(ValidationError):
         evenement.save()
+
+
+@pytest.mark.django_db
+def test_delete_fiche_zone_creates_revision_on_evenement():
+    fiche_zone = FicheZoneFactory()
+    ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone)
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone)
+    latest_version = evenement.latest_version
+    fiche_zone_id = fiche_zone.id
+    zones_infestees = list(fiche_zone.zoneinfestee_set.all())
+
+    fiche_zone.refresh_from_db()
+    fiche_zone.delete()
+
+    assert latest_version.pk != evenement.latest_version.pk
+    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+    comment = evenement.latest_version.revision.comment
+
+    assert comment.startswith(f"La fiche zone délimitée '{fiche_zone.numero}' a été supprimée.")
+    version_fzd = VersionFicheZoneDelimitee.objects.filter(revision=evenement.latest_version.revision).first()
+    data = version_fzd.fiche_zone_delimitee_data
+
+    expected_data = {
+        "id": fiche_zone_id,
+        "numero": {"id": fiche_zone.numero.id, "annee": fiche_zone.numero.annee, "numero": fiche_zone.numero.numero},
+        "createur": {
+            "id": fiche_zone.createur.id,
+            "libelle": fiche_zone.createur.libelle,
+            "niveau1": fiche_zone.createur.niveau1,
+            "niveau2": fiche_zone.createur.niveau2,
+        },
+        "commentaire": fiche_zone.commentaire,
+        "zones_infestees": [
+            {
+                "id": zone.id,
+                "nom": zone.nom,
+                "surface_infestee_totale": zone.surface_infestee_totale,
+                "unite_surface_infestee_totale": zone.unite_surface_infestee_totale,
+                "rayon": zone.rayon,
+                "unite_rayon": zone.unite_rayon,
+                "caracteristique_principale": zone.caracteristique_principale,
+                "fiche_zone_delimitee": fiche_zone_id,
+            }
+            for zone in zones_infestees
+        ],
+        "rayon_zone_tampon": fiche_zone.rayon_zone_tampon,
+        "surface_tampon_totale": fiche_zone.surface_tampon_totale,
+        "unite_rayon_zone_tampon": fiche_zone.unite_rayon_zone_tampon,
+        "unite_surface_tampon_totale": fiche_zone.unite_surface_tampon_totale,
+    }
+
+    assert data == expected_data

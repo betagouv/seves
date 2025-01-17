@@ -43,7 +43,7 @@ class Evenement(
         verbose_name="Statut règlementaire de l'organisme",
     )
     fiche_zone_delimitee = models.OneToOneField(
-        FicheZoneDelimitee, on_delete=models.PROTECT, verbose_name="Fiche zone delimitée", null=True, blank=True
+        FicheZoneDelimitee, on_delete=models.SET_NULL, verbose_name="Fiche zone delimitée", null=True, blank=True
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")

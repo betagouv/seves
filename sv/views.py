@@ -14,6 +14,7 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
+    DeleteView,
 )
 
 from core.mixins import (
@@ -628,3 +629,17 @@ class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         return self.get_object().can_update_visibilite(self.request.user)
+
+
+class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
+    model = FicheZoneDelimitee
+
+    def test_func(self):
+        return self.get_object().can_user_delete(self.request.user)
+
+    def handle_no_permission(self):
+        raise PermissionDenied()
+
+    def get_success_url(self):
+        messages.success(self.request, "La fiche zone délimitée a été supprimée avec succès")
+        return self.request.POST.get("next")
