@@ -51,7 +51,7 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
 
     def optimized_for_list(self):
         return self.select_related(
-            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+            "numero", "createur", "evenement", "evenement__organisme_nuisible", "evenement__numero"
         )
 
     def order_by_numero_fiche(self):
@@ -77,7 +77,7 @@ class FicheZoneManager(models.Manager):
 class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
         return self.select_related(
-            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+            "numero", "createur", "evenement", "evenement__organisme_nuisible", "evenement__numero"
         )
 
     def order_by_numero_fiche(self):

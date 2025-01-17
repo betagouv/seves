@@ -15,7 +15,7 @@ from core.mixins import (
 )
 from core.models import Document, Message, Contact, Visibilite, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
-from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire, Etat
+from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire
 from ..managers import EvenementManager
 from ..mixins import WithEtatMixin
 
@@ -47,9 +47,6 @@ class Evenement(
         FicheZoneDelimitee, on_delete=models.PROTECT, verbose_name="Fiche zone delimitée", null=True, blank=True
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    etat = models.ForeignKey(
-        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
-    )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     fin_suivi = GenericRelation(FinSuiviContact)
 

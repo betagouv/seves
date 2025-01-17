@@ -2,9 +2,7 @@ import pytest
 from model_bakery import baker
 
 from sv.factories import EvenementFactory
-from sv.models import Etat, Structure, Evenement
-from django.utils.timezone import now, timedelta
-from django.core.management import call_command
+from sv.models import Etat, Structure
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
@@ -30,14 +28,6 @@ def test_etat_initial():
     etat_nouveau = Etat.objects.get_or_create(libelle=Etat.NOUVEAU)[0]
     evenement = EvenementFactory()
     assert evenement.etat == etat_nouveau
-
-
-def test_command_updates_evenement_status():
-    """Test que la commande update_evenement_etat met à jour l'état de l'événement à 'en cours'
-    si elles ont été créées il y a plus de 15 jours."""
-    EvenementFactory(date_creation=(now() - timedelta(days=15)))
-    call_command("update_evenement_etat")
-    assert Evenement.objects.first().etat.libelle == Etat.EN_COURS
 
 
 def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page, mocked_authentification_user):

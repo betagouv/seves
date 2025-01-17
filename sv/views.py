@@ -126,6 +126,7 @@ class EvenementDetailView(
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
         context["latest_version"] = self.object.latest_version

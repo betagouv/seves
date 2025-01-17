@@ -93,9 +93,6 @@ class Etat(models.Model):
     def get_etat_cloture(cls):
         return cls.objects.get(libelle=cls.CLOTURE)
 
-    def is_cloture(self):
-        return self.libelle == self.CLOTURE
-
     def __str__(self):
         return self.libelle
 

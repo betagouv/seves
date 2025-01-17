@@ -396,6 +396,22 @@ class SoftDeleteView(View):
         return safe_redirect(request.POST.get("next"))
 
 
+class PublishView(View):
+    def post(self, request):
+        content_type_id = request.POST.get("content_type_id")
+        content_id = request.POST.get("content_id")
+
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        obj = content_type.objects.get(pk=content_id)
+
+        if obj.can_publish(request.user):
+            obj.publish()
+            messages.success(request, "Objet publié avec succès")
+        else:
+            messages.error(request, "Cet objet ne peut pas être publié.")
+        return safe_redirect(request.POST.get("next"))
+
+
 class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
     def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")

@@ -11,7 +11,6 @@ from .models import (
     Lieu,
     NumeroFiche,
     FicheDetection,
-    Etat,
     Departement,
     OrganismeNuisible,
     FicheZoneDelimitee,
@@ -32,13 +31,6 @@ class NumeroFicheFactory(DjangoModelFactory):
 
     annee = factory.Faker("year")
     numero = factory.Faker("pyint", min_value=0, max_value=1000)
-
-
-class EtatFactory(DjangoModelFactory):
-    class Meta:
-        model = Etat
-
-    libelle = factory.Faker("word")
 
 
 class OrganismeNuisibleFactory(DjangoModelFactory):

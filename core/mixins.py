@@ -204,10 +204,6 @@ class AllowVisibiliteMixin(models.Model):
     class Meta:
         abstract = True
 
-    @property
-    def is_draft(self):
-        return self.visibilite == Visibilite.BROUILLON
-
     def can_update_visibilite(self, user):
         """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
         match self.visibilite:

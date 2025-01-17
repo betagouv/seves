@@ -229,3 +229,6 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
+
+# TODO ajouter un test sur le fait que l'on peut publier
+# TODO ajouter un test pour vérifier qu'on ne peut pas fausser la publication

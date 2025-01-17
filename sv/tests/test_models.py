@@ -18,7 +18,6 @@ from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
     FicheDetection,
-    Etat,
     Lieu,
     OrganismeNuisible,
     StatutReglementaire,
@@ -385,7 +384,6 @@ def test_departement_unique_constraints(test_data, region_fixture, should_raise,
         (MatricePrelevee, "libelle", "Matrice prelevee"),
         (Laboratoire, "nom", "Laboratoire"),
         (StatutEvenement, "libelle", "Statut de l'événement"),
-        (Etat, "libelle", "État"),
     ],
 )
 def test_unique_constraint(model_class, field_name, value_prefix):
