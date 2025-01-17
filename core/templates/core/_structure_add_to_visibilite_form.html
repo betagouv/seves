@@ -1,0 +1,62 @@
+{% extends 'sv/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/structure_add_form.css' %}">
+{% endblock %}
+
+
+{% block content %}
+    <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-9">
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <p class="fr-my-2w"><a href="{{form.next.value}}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à l'évenement</a></p>
+                    </div>
+                </div>
+
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <h1>Passer en visibilité limitée</h1>
+                    </div>
+                </div>
+
+                <div class="structure-add-form__container fr-p-5w fr-mb-6w ">
+                    <div class="fr-grid-row">
+                        <div class="fr-col">
+                            <form method="post" action="{% url 'structure-add-visibilite' %}" class="fr-mt-4w">
+                                {% csrf_token %}
+
+                                {% with half_value=form.structure_count_half.value|stringformat:"s" %}
+                                    {% with first_half=":"|add:half_value last_half=half_value|add:":" %}
+                                        <div class="fr-grid-row">
+                                            <div class="fr-col-6">
+                                                {% for structure in form.structures.field.queryset|slice:first_half %}
+                                                    {% include "core/_structure_checkbox.html" with checkbox_id=forloop.counter %}
+                                                {% endfor %}
+                                            </div>
+                                            <div class="fr-col-6">
+                                                {% for structure in form.structures.field.queryset|slice:last_half %}
+                                                    {% include "core/_structure_checkbox.html" with checkbox_id=forloop.counter|add:half_value %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endwith %}
+                                {% endwith %}
+
+                                <input type="hidden" value="{{ request.GET.content_type_id }}" name="content_type_id">
+                                <input type="hidden" value="{{ request.GET.object_id }}" name="object_id">
+                                {{ form.next }}
+
+                                <button type="submit" class="fr-btn fr-mt-2w">Valider</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

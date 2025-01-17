@@ -1,0 +1,4 @@
+.structure-add-form__container {
+    background-color: var(--background-default-grey);
+    min-height: 600px
+}

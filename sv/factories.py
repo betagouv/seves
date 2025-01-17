@@ -234,7 +234,7 @@ class EvenementFactory(DjangoModelFactory):
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
-    visibilite = Visibilite.LOCAL
+    visibilite = Visibilite.LOCALE
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):

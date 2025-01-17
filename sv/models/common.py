@@ -73,6 +73,7 @@ class StatutReglementaire(models.Model):
         return self.libelle
 
 
+# TODO RM ME
 class Etat(models.Model):
     NOUVEAU = "nouveau"
     EN_COURS = "en cours"

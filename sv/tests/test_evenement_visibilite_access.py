@@ -9,7 +9,7 @@ from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, AC_STRUCTURE
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCAL, Visibilite.NATIONAL])
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCALE, Visibilite.NATIONALE])
 def test_agent_in_structure_createur_can_view_evenement(
     live_server, page: Page, mocked_authentification_user, visibilite_libelle: str
 ):
@@ -26,7 +26,7 @@ def test_agent_in_structure_createur_can_view_evenement(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCAL])
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.BROUILLON, Visibilite.LOCALE])
 def test_agent_not_in_structure_createur_cannot_view_evenement_brouillon_or_local(
     live_server, page: Page, mocked_authentification_user, visibilite_libelle: str
 ):
@@ -44,7 +44,7 @@ def test_agent_not_in_structure_createur_cannot_view_evenement_brouillon_or_loca
 def test_agent_not_in_structure_createur_can_view_evenement_national(
     live_server, page: Page, mocked_authentification_user
 ):
-    evenement = EvenementFactory(visibilite=Visibilite.NATIONAL)
+    evenement = EvenementFactory(visibilite=Visibilite.NATIONALE)
     FicheDetectionFactory(evenement=evenement)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Événement {str(evenement.numero)}")).to_be_visible()
@@ -67,7 +67,7 @@ def test_agent_ac_cannot_view_evenement_brouillon(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("visibilite_libelle", [Visibilite.LOCAL, Visibilite.NATIONAL])
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.LOCALE, Visibilite.NATIONALE])
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
 def test_agent_ac_can_view_evenement(
     live_server,

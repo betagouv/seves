@@ -14,6 +14,7 @@ from .views import (
     StructureSelectionView,
     ACNotificationView,
     PublishView,
+    VisibiliteStructureView,
 )
 
 urlpatterns = [
@@ -76,4 +77,5 @@ urlpatterns = [
     ),
     path("structures/ajout/selection", StructureAddFormView.as_view(), name="structure-selection-add-form"),
     path("structures/ajout", StructureSelectionView.as_view(), name="structure-add"),
+    path("structures/ajout/visibilite", VisibiliteStructureView.as_view(), name="structure-add-visibilite"),
 ]

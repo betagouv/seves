@@ -8,7 +8,7 @@ from reversion.models import Version
 
 from core.mixins import (
     AllowACNotificationMixin,
-    AllowVisibiliteMixin,
+    WithVisibiliteMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
@@ -23,7 +23,7 @@ from ..mixins import WithEtatMixin
 @reversion.register()
 class Evenement(
     AllowACNotificationMixin,
-    AllowVisibiliteMixin,
+    WithVisibiliteMixin,
     WithEtatMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
@@ -68,7 +68,7 @@ class Evenement(
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():
-            if not self.numero and self.visibilite == Visibilite.LOCAL:
+            if not self.numero and self.visibilite == Visibilite.LOCALE:
                 self.numero = NumeroFiche.get_next_numero()
             super().save(*args, **kwargs)
 

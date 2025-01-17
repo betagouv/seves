@@ -13,6 +13,7 @@ from .forms import (
     ContactSelectionForm,
     StructureAddForm,
     StructureSelectionForm,
+    StructureSelectionForVisibiliteForm,
 )
 from django.http import HttpResponseRedirect
 from django.utils.translation import ngettext
@@ -332,7 +333,7 @@ class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(StructureSelectionView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update(
             {
                 "fiche_id": self.request.POST.get("fiche_id", ""),
@@ -430,3 +431,42 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
             messages.error(request, e.message)
 
         return safe_redirect(request.POST.get("next"))
+
+
+class VisibiliteStructureView(FormView):
+    template_name = "core/_structure_add_to_visibilite_form.html"
+    form_class = StructureSelectionForVisibiliteForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        # kwargs.update(
+        #     {
+        #         "object_id": self.request.GET.get("object_id", self.request.POST.get("object_id")),
+        #         "content_type_id": self.request.GET.get("content_type_id", self.request.POST.get("content_type_id")),
+        #     }
+        # )
+        # TODO lien retour en arrière qui ne marche pas
+        return kwargs
+
+    def form_invalid(self, form):
+        print(form.errors)
+
+    def form_valid(self, form):
+        # TODO cant hack this to change structure of a fiche I cant access
+        # content_type = ContentType.objects.get(pk=self.request.POST["content_type_id"]).model_class()
+        # object = content_type.objects.get(pk=self.request.POST["object_id"])
+        structures = form.cleaned_data["structures"]
+        print(structures)
+        # for contact in contacts:
+        #     fiche.contacts.add(contact)
+        #     if structure_contact := contact.get_structure_contact():
+        #         fiche.contacts.add(structure_contact)
+
+        message = ngettext(
+            "La structure a été ajoutée avec succès.",
+            "Les %(count)d structures ont été ajoutées avec succès.",
+            len(structures),
+        ) % {"count": len(structures)}
+        messages.success(self.request, message)
+        return safe_redirect(self.request.POST.get("next"))

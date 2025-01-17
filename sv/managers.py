@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+
 from core.models import Visibilite
 
 
@@ -20,17 +21,16 @@ class FicheDetectionManager(models.Manager):
 
 class BaseVisibilityQuerySet(models.QuerySet):
     def get_fiches_user_can_view(self, user):
+        from sv.models import Evenement
+
         if user.agent.structure.is_mus_or_bsv:
-            return self.filter(
-                Q(evenement__visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
-                | Q(evenement__visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
-            )
+            # TODO add test on this ??
+            return self.exclude(Q(evenement__etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
-            Q(evenement__visibilite=Visibilite.NATIONAL)
-            | Q(
-                evenement__visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
-                createur=user.agent.structure,
-            )
+            Q(evenement__visibilite=Visibilite.NATIONALE)
+            | Q(createur=user.agent.structure)
+            | Q(~Q(evenement__etat=Evenement.Etat.BROUILLON) & Q(evenement__visibilite=Visibilite.LIMITEE))
+            # TODO ici ajouter la notion de sa structure est dans liste des structures autorisée
         )
 
 
@@ -102,13 +102,13 @@ class EvenementQueryset(models.QuerySet):
     def get_user_can_view(self, user):
         if user.agent.structure.is_mus_or_bsv:
             return self.filter(
-                Q(visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
+                Q(visibilite__in=[Visibilite.LOCALE, Visibilite.NATIONALE])
                 | Q(visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
             )
         return self.filter(
-            Q(visibilite=Visibilite.NATIONAL)
+            Q(visibilite=Visibilite.NATIONALE)
             | Q(
-                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
+                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCALE],
                 createur=user.agent.structure,
             )
         )

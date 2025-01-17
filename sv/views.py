@@ -24,6 +24,7 @@ from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
 )
+from core.models import Visibilite
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -128,6 +129,7 @@ class EvenementDetailView(
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
         context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
@@ -363,6 +365,15 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        if form.cleaned_data["visibilite"] == Visibilite.LIMITEE:
+            content_type = ContentType.objects.get_for_model(self.object).id
+            return redirect(
+                reverse("structure-add-visibilite") + f"?object_id={self.object.pk}&content_type_id={content_type}"
+            )
+        self.object = form.save()
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.error(self.request, "La visibilité de l'événement n'a pas pu être modifiée.")

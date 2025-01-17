@@ -1,3 +1,4 @@
+{% include "sv/_update_visibilite_modale.html" %}
 <nav role="navigation" class="fr-translate fr-nav">
     <div class="fr-nav__item">
         <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
@@ -32,18 +33,9 @@
                     </form>
                 {% endif %}
 
-{#                TODO changer ça pour la visibilité#}
-{#                {% if can_update_visibilite %}#}
-{#                    <form action="{{ evenement.get_visibilite_update_url }}" method="post">#}
-{#                        <button class="fr-translate__language fr-nav__link" href="#" type="submit"><span class="fr-icon-eye-fill  fr-mr-2v fr-icon--sm" aria-hidden="true">#}
-{#                            {% csrf_token %}#}
-{#                            <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">#}
-{#                            <input type="hidden" value="{{ content_type.id }}" name="content_type_id">#}
-{#                            <input type="hidden" value="{{ evenement.pk }}" name="content_id">#}
-{#                            <input type="hidden" value="local" name="visibilite">#}
-{#                        </span>Publier l'événement</button>#}
-{#                    </form>#}
-{#                {% endif %}#}
+                {% if can_update_visibilite %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
+                {% endif %}
                 <li><a class="fr-translate__language fr-nav__link" href="{{ evenement.get_update_url}}" ><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
                 {%  if can_be_cloturer %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
