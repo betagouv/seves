@@ -4,7 +4,7 @@ from django.forms import forms
 from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
 from seves import settings
-from .models import FicheDetection, Region, OrganismeNuisible, Etat
+from .models import FicheDetection, Region, OrganismeNuisible, Evenement
 from django.forms.widgets import DateInput, TextInput
 
 
@@ -39,8 +39,8 @@ class FicheFilter(django_filters.FilterSet):
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
-    evenement__etat = django_filters.ModelChoiceFilter(
-        label="État", queryset=Etat.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+    evenement__etat = django_filters.ChoiceFilter(
+        choices=Evenement.Etat, label="État", empty_label=settings.SELECT_EMPTY_CHOICE
     )
 
     class Meta:

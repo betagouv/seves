@@ -6,8 +6,9 @@ from model_bakery import baker
 from django.urls import reverse
 
 from core.factories import ContactAgentFactory, ContactStructureFactory
-from core.models import Contact, Structure, Agent, Visibilite
+from core.models import Contact, Structure, Agent
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 
 @pytest.fixture
@@ -52,7 +53,7 @@ def test_add_contact_form(live_server, page, mocked_authentification_user):
 
 
 def test_cant_access_add_contact_form_if_evenement_brouillon(live_server, page):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     content_type = ContentType.objects.get_for_model(evenement)
     page.goto(
         f"{live_server.url}/{reverse('contact-add-form')}?fiche_id={evenement.id}&content_type_id={content_type.id}&next={evenement.get_absolute_url()}"
@@ -114,7 +115,7 @@ def test_add_contact_form_select_structure(live_server, page, contacts, choice_j
 
 def test_cant_add_contact_form_select_structure_if_evenement_brouillon(client):
     """Test que si un événement est en visibilité brouillon, on ne peut pas afficher des contacts dans le formulaire de sélection suite à la selection d'une structure"""
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         reverse("contact-add-form"),
@@ -226,7 +227,7 @@ def test_add_contact_form_back_to_fiche_after_error_message(live_server, page, c
 
 
 def test_cant_add_contact_if_evenement_brouillon(client, contact):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         reverse("contact-add-form-select-agents"),
@@ -247,7 +248,7 @@ def test_cant_add_contact_if_evenement_brouillon(client, contact):
 
 
 def test_cant_delete_contact_if_evenement_brouillon(client, contact):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     evenement.contacts.set([contact])
 
     response = client.post(

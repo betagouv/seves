@@ -104,7 +104,7 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    <span class="fr-badge fr-badge--{{fiche.etat.libelle|etat_fiche_color}} fr-badge--no-icon">{{ fiche.etat }}</span>
+                                    <span class="fr-badge fr-badge--{{fiche.etat|etat_fiche_color}} fr-badge--no-icon">{{ fiche.readable_etat }}</span>
                                 </td>
                                 <td>
                                     <span class="fr-badge">{{ fiche.visibilite }}</span>

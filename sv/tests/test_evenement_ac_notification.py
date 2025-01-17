@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.models import Structure, Contact, Visibilite, Message
+from core.models import Structure, Contact, Message
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
 from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import Evenement
@@ -40,13 +40,13 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
 
 
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
 
 
 def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, client):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         reverse("notify-ac"),

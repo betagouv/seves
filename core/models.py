@@ -284,6 +284,6 @@ class UnitesMesure(models.TextChoices):
 
 
 class Visibilite(models.TextChoices):
-    BROUILLON = "brouillon", "Vous seul pourrez voir la fiche et la modifier"
-    LOCAL = "local", "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche"
-    NATIONAL = "national", "La fiche sera et modifiable par toutes les structures"
+    LOCALE = "locale", "Votre structure et l'administration centrale pourront consulter et modifier la fiche"
+    LIMITEE = "limitee", "Les structures de votre choix pourront consulter et modifier la fiche"
+    NATIONALE = "nationale", "La fiche sera visible et modifiable par toutes les structures"

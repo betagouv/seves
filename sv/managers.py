@@ -20,16 +20,17 @@ class FicheDetectionManager(models.Manager):
 
 class BaseVisibilityQuerySet(models.QuerySet):
     def get_fiches_user_can_view(self, user):
+        from sv.models import Evenement
+
         if user.agent.structure.is_mus_or_bsv:
-            return self.filter(
-                Q(evenement__visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
-                | Q(evenement__visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
-            )
+            return self.exclude(Q(evenement__etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
-            Q(evenement__visibilite=Visibilite.NATIONAL)
+            Q(evenement__visibilite=Visibilite.NATIONALE)
+            | Q(createur=user.agent.structure)
             | Q(
-                evenement__visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
-                createur=user.agent.structure,
+                ~Q(evenement__etat=Evenement.Etat.BROUILLON)
+                & Q(evenement__visibilite=Visibilite.LIMITEE)
+                & Q(evenement__allowed_structures=user.agent.structure)
             )
         )
 
@@ -51,7 +52,7 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
 
     def optimized_for_list(self):
         return self.select_related(
-            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+            "numero", "createur", "evenement", "evenement__organisme_nuisible", "evenement__numero"
         )
 
     def order_by_numero_fiche(self):
@@ -77,7 +78,7 @@ class FicheZoneManager(models.Manager):
 class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
         return self.select_related(
-            "numero", "createur", "evenement", "evenement__etat", "evenement__organisme_nuisible", "evenement__numero"
+            "numero", "createur", "evenement", "evenement__organisme_nuisible", "evenement__numero"
         )
 
     def order_by_numero_fiche(self):
@@ -100,15 +101,16 @@ class EvenementQueryset(models.QuerySet):
         return self.order_by("-numero__annee", "-numero__numero")
 
     def get_user_can_view(self, user):
+        from sv.models import Evenement
+
         if user.agent.structure.is_mus_or_bsv:
-            return self.filter(
-                Q(visibilite__in=[Visibilite.LOCAL, Visibilite.NATIONAL])
-                | Q(visibilite=Visibilite.BROUILLON, createur=user.agent.structure)
-            )
+            return self.exclude(Q(etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
-            Q(visibilite=Visibilite.NATIONAL)
+            Q(visibilite=Visibilite.NATIONALE)
+            | Q(createur=user.agent.structure)
             | Q(
-                visibilite__in=[Visibilite.BROUILLON, Visibilite.LOCAL],
-                createur=user.agent.structure,
+                ~Q(etat=Evenement.Etat.BROUILLON)
+                & Q(visibilite=Visibilite.LIMITEE)
+                & Q(allowed_structures=user.agent.structure)
             )
         )

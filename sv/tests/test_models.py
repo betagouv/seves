@@ -5,6 +5,8 @@ from django.db.utils import IntegrityError
 from model_bakery import baker
 from reversion.models import Version
 
+from core.factories import StructureFactory
+from core.models import Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import (
     FicheDetectionFactory,
@@ -18,7 +20,6 @@ from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
     FicheDetection,
-    Etat,
     Lieu,
     OrganismeNuisible,
     StatutReglementaire,
@@ -385,7 +386,6 @@ def test_departement_unique_constraints(test_data, region_fixture, should_raise,
         (MatricePrelevee, "libelle", "Matrice prelevee"),
         (Laboratoire, "nom", "Laboratoire"),
         (StatutEvenement, "libelle", "Statut de l'événement"),
-        (Etat, "libelle", "État"),
     ],
 )
 def test_unique_constraint(model_class, field_name, value_prefix):
@@ -579,3 +579,38 @@ def test_change_hors_zone_infestee_creates_revision_on_zone_infestee():
     assert latest_version.pk == fiche_detection.latest_version.pk
     version = Version.objects.get_for_object(fiche_zone_delimitee).first()
     assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été retirée en hors zone infestée"
+
+
+@pytest.mark.django_db
+def test_evenement_cant_be_limitee_without_structures():
+    evenement = EvenementFactory()
+    evenement.visibilite = Visibilite.LIMITEE
+
+    with pytest.raises(ValidationError):
+        evenement.save()
+
+
+@pytest.mark.django_db
+def test_evenement_can_be_limitee_with_structures():
+    evenement = EvenementFactory()
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.allowed_structures.set(
+        [
+            StructureFactory(),
+        ]
+    )
+    evenement.save()
+
+
+@pytest.mark.django_db
+def test_evenement_cant_be_national_with_structures():
+    evenement = EvenementFactory()
+    evenement.visibilite = Visibilite.NATIONALE
+    evenement.allowed_structures.set(
+        [
+            StructureFactory(),
+        ]
+    )
+
+    with pytest.raises(ValidationError):
+        evenement.save()

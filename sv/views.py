@@ -24,6 +24,8 @@ from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
 )
+from core.models import Visibilite
+from core.redirect import safe_redirect
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -34,6 +36,7 @@ from sv.forms import (
     EvenementForm,
     EvenementVisibiliteUpdateForm,
     EvenementUpdateForm,
+    StructureSelectionForVisibiliteForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -126,7 +129,9 @@ class EvenementDetailView(
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
+        context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
         context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
@@ -383,6 +388,16 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
     def get_success_url(self):
         return self.object.get_absolute_url()
 
+    def form_valid(self, form):
+        if form.cleaned_data["visibilite"] == Visibilite.LIMITEE:
+            return redirect(reverse("structure-add-visibilite", kwargs={"pk": self.object.pk}))
+        else:
+            with transaction.atomic():
+                self.object = form.save(commit=False)
+                self.object.allowed_structures.set([])
+                self.object.save()
+        return super().form_valid(form)
+
     def form_invalid(self, form):
         messages.error(self.request, "La visibilité de l'événement n'a pas pu être modifiée.")
         return super().form_invalid(form)
@@ -591,3 +606,24 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
             "Erreurs dans le(s) formulaire(s) Zones infestées",
         )
         return self.render_to_response(self.get_context_data())
+
+
+class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
+    template_name = "sv/structure_add_to_visibilite_form.html"
+    model = Evenement
+    form_class = StructureSelectionForVisibiliteForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["evenement"] = self.object
+        return context
+
+    def form_valid(self, form):
+        evenement = form.save()
+        evenement.visibilite = Visibilite.LIMITEE
+        evenement.save()
+        messages.success(self.request, "Les droits d'accès ont été modifiés")
+        return safe_redirect(self.object.get_absolute_url())
+
+    def test_func(self):
+        return self.get_object().can_update_visibilite(self.request.user)

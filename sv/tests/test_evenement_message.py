@@ -3,9 +3,10 @@ from django.contrib.auth import get_user_model
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Message, Contact, Agent, Structure, Visibilite
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 User = get_user_model()
 
@@ -337,7 +338,7 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
 def test_cant_access_add_message_form_if_evenement_brouillon(client, message_type, message_label):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.get(evenement.get_add_message_url(message_type), follow=True)
 
@@ -351,7 +352,7 @@ def test_cant_access_add_message_form_if_evenement_brouillon(client, message_typ
 def test_cant_add_message_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         evenement.get_add_message_url(message_type),
@@ -374,7 +375,7 @@ def test_cant_add_message_if_evenement_brouillon(
 def test_cant_access_message_details_if_evenement_brouillon(
     client, mocked_authentification_user, with_active_contact, message_type, message_label
 ):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     message = Message.objects.create(
         message_type=message_type,
         title="un titre",
@@ -534,3 +535,67 @@ def test_create_multiple_messages_adds_contacts_once(
     # Vérification en base de données
     assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
+
+
+def test_create_message_from_local_changes_to_limitee_and_add_structures_in_allowed_structures(
+    live_server, page: Page, mocked_authentification_user: User, choice_js_fill
+):
+    evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
+
+    # Création du contact destinataire
+    contact = ContactAgentFactory()
+    contact.agent.user.is_active = True
+    contact.agent.user.save()
+    ContactStructureFactory(structure=contact.agent.structure)
+
+    # Ajout d'un message
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{evenement.add_message_url}")
+
+    # Envoi du message
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("Message de test")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Vérification que le message a été créé
+    evenement.refresh_from_db()
+    assert evenement.is_visibilite_limitee is True
+    assert len(evenement.allowed_structures.all()) == 2
+    assert contact.agent.structure in evenement.allowed_structures.all()
+    assert mocked_authentification_user.agent.structure in evenement.allowed_structures.all()
+
+
+def test_create_message_from_visibilite_limitee_add_structures_in_allowed_structures(
+    live_server, page: Page, mocked_authentification_user: User, choice_js_fill
+):
+    structure = StructureFactory()
+    evenement = EvenementFactory()
+    evenement.allowed_structures.set([structure])
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
+
+    # Création du contact destinataire
+    contact = ContactAgentFactory()
+    contact.agent.user.is_active = True
+    contact.agent.user.save()
+    ContactStructureFactory(structure=contact.agent.structure)
+
+    # Ajout d'un message
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("fildesuivi-add").click()
+    page.wait_for_url(f"**{evenement.add_message_url}")
+
+    # Envoi du message
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("Message de test")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    # Vérification que le message a été créé
+    evenement.refresh_from_db()
+    assert evenement.is_visibilite_limitee is True
+    assert len(evenement.allowed_structures.all()) == 2
+    assert contact.agent.structure in evenement.allowed_structures.all()
+    assert mocked_authentification_user.agent.structure in evenement.allowed_structures.all()

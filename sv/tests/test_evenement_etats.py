@@ -3,9 +3,7 @@ from model_bakery import baker
 
 from core.factories import ContactStructureFactory
 from sv.factories import EvenementFactory
-from sv.models import Etat, Structure, Evenement
-from django.utils.timezone import now, timedelta
-from django.core.management import call_command
+from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
@@ -24,21 +22,6 @@ def _add_contacts(evenement, mocked_authentification_user):
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     evenement.contacts.add(user_contact_agent)
     evenement.contacts.add(user_contact_structure)
-
-
-def test_etat_initial():
-    """Test que l'état initial d'un evenement est bien 'nouveau' lors de sa création."""
-    etat_nouveau = Etat.objects.get_or_create(libelle=Etat.NOUVEAU)[0]
-    evenement = EvenementFactory()
-    assert evenement.etat == etat_nouveau
-
-
-def test_command_updates_evenement_status():
-    """Test que la commande update_evenement_etat met à jour l'état de l'événement à 'en cours'
-    si elles ont été créées il y a plus de 15 jours."""
-    EvenementFactory(date_creation=(now() - timedelta(days=15)))
-    call_command("update_evenement_etat")
-    assert Evenement.objects.first().etat.libelle == Etat.EN_COURS
 
 
 def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page, mocked_authentification_user):
@@ -113,11 +96,11 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
     page.get_by_role("button", name="Confirmer la clôture").click()
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
-    expect(page.get_by_text("clôturé", exact=True)).to_be_visible()
+    expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
-    assert evenement.etat.libelle == Etat.CLOTURE
+    assert evenement.etat == Evenement.Etat.CLOTURE
 
 
 def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
@@ -145,7 +128,7 @@ def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
     page.get_by_role("button", name="Confirmer la clôture").click()
 
     evenement.refresh_from_db()
-    assert evenement.etat == Etat.objects.get(libelle=Etat.CLOTURE)
+    assert evenement.etat == Evenement.Etat.CLOTURE
 
 
 def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
@@ -166,7 +149,7 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     )
     expect(cloturer_element.get_by_role("listitem")).to_contain_text(contact_ac.structure.libelle)
     evenement.refresh_from_db()
-    assert evenement.etat.libelle == Etat.NOUVEAU
+    assert evenement.etat == Evenement.Etat.EN_COURS
 
 
 def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suivi(
@@ -198,7 +181,7 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
         contact2.structure.libelle
     )
     evenement.refresh_from_db()
-    assert evenement.etat == Etat.objects.get(libelle=Etat.NOUVEAU)
+    assert evenement.etat == Evenement.Etat.EN_COURS
 
 
 def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mocked_authentification_user):
@@ -215,4 +198,4 @@ def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mo
 
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
-    assert evenement.etat == Etat.objects.get(libelle=Etat.NOUVEAU)
+    assert evenement.etat == Evenement.Etat.EN_COURS

@@ -4,13 +4,13 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from seves import settings
-from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory, EtatFactory
+from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory
 from ..models import (
     Region,
     OrganismeNuisible,
-    Etat,
     Lieu,
     ZoneInfestee,
+    Evenement,
 )
 
 
@@ -50,7 +50,6 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=5)
     baker.make(OrganismeNuisible, _quantity=5)
-    baker.make(Etat, _quantity=5)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
@@ -75,7 +74,6 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     baker.make(Region, _quantity=2)
     baker.make(OrganismeNuisible, _quantity=2)
-    baker.make(Etat, _quantity=2)
     on = OrganismeNuisible.objects.first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?evenement__organisme_nuisible={on.pk}")
@@ -177,24 +175,15 @@ def test_search_with_state(live_server, page: Page, mocked_authentification_user
     """Test la recherche d'une fiche détection en utilisant un état.
     Effectue une recherche en sélectionnant un état spécifique et
     vérifier que les fiches détectées retournées sont celles ayant cet état."""
-    etat_1 = EtatFactory(libelle="FOO")
-    fiche_1 = FicheDetectionFactory()
-    evenement = fiche_1.evenement
-    evenement.etat = etat_1
-    evenement.save()
-
-    etat_2 = EtatFactory(libelle="BAR")
-    fiche_2 = FicheDetectionFactory()
-    evenement = fiche_2.evenement
-    evenement.etat = etat_2
-    evenement.save()
+    fiche_1 = FicheDetectionFactory(evenement__etat=Evenement.Etat.BROUILLON)
+    fiche_2 = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("État").select_option("FOO")
+    page.get_by_label("État").select_option("Clôturé")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(fiche_1.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()
 
 
 def test_search_with_multiple_filters(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
@@ -210,7 +199,7 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
     choice_js_fill(page, ".choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
     page.get_by_label("Au").fill(fiche1.date_creation.strftime("%Y-%m-%d"))
-    page.get_by_label("État").select_option(str(fiche1.evenement.etat.id))
+    page.get_by_label("État").select_option(str(fiche1.evenement.etat))
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(fiche1.numero))).to_be_visible()

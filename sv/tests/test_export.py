@@ -30,7 +30,7 @@ def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
             _fill_optional=fill_optional,
         )
     evenement = fiche.evenement
-    evenement.visibilite = Visibilite.NATIONAL
+    evenement.visibilite = Visibilite.NATIONALE
     evenement.save()
     lieu = baker.make(
         Lieu,
@@ -133,7 +133,7 @@ def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries, mock
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
         fiche = baker.make(FicheDetection, numero=numero)
         evenement = fiche.evenement
-        evenement.visibilite = Visibilite.NATIONAL
+        evenement.visibilite = Visibilite.NATIONALE
         evenement.save()
     _lieu_without_prelevement = baker.make(Lieu, fiche_detection=fiche)
     _lieu_without_prelevement_2 = baker.make(Lieu, fiche_detection=fiche)

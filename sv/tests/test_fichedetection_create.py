@@ -26,6 +26,7 @@ from ..models import (
     StructurePreleveuse,
     SiteInspection,
     Laboratoire,
+    Evenement,
 )
 
 
@@ -293,7 +294,8 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     form_elements.publish_btn.click()
 
     fiche_detection = FicheDetection.objects.get()
-    fiche_detection.evenement.visibilite = Visibilite.LOCAL
+    fiche_detection.evenement.visibilite = Visibilite.LOCALE
+    fiche_detection.evenement.etat = Evenement.Etat.EN_COURS
     fiche_detection.evenement.save()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
