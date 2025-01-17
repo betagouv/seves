@@ -227,12 +227,14 @@ class WithVisibiliteMixin(models.Model):
             return True
         return False
 
-    @classmethod
-    def get_possibles_visibilite(cls, current_visibilite):
-        if current_visibilite == Visibilite.LOCALE:
-            return [Visibilite.LIMITEE, Visibilite.NATIONALE]
-        if current_visibilite == Visibilite.LIMITEE:
-            return [Visibilite.LIMITEE, Visibilite.NATIONALE]
+    #
+    # @classmethod
+    # def get_possibles_visibilite(cls, current_visibilite):
+    #     if current_visibilite == Visibilite.LOCALE:
+    #         return [Visibilite.LIMITEE, Visibilite.NATIONALE]
+    #     if current_visibilite == Visibilite.LIMITEE:
+    #         return [Visibilite.LIMITEE, Visibilite.NATIONALE]
+    #
 
 
 class WithFreeLinkIdsMixin:
