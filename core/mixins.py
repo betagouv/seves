@@ -187,46 +187,86 @@ class WithMessageUrlsMixin:
         return self.get_add_message_url(Message.FIN_SUIVI)
 
 
-class AllowVisibiliteMixin(models.Model):
+class WithVisibiliteMixin(models.Model):
     visibilite = models.CharField(
         max_length=100,
-        choices=[
-            ("brouillon", "Vous seul pourrez voir la fiche et la modifier"),
-            (
-                "local",
-                "Seul votre structure et l'administration centrale pourront consulter et modifier la fiche",
-            ),
-            ("national", "La fiche sera et modifiable par toutes les structures"),
-        ],
-        default=Visibilite.BROUILLON,
+        choices=Visibilite,
+        default=Visibilite.LOCALE,
     )
+    allowed_structures = models.ManyToManyField(Structure, related_name="allowed_structures")
 
     class Meta:
         abstract = True
 
     @property
-    def is_draft(self):
-        return self.visibilite == Visibilite.BROUILLON
+    def is_visibilite_nationale(self):
+        return self.visibilite == Visibilite.NATIONALE
+
+    @property
+    def is_visibilite_limitee(self):
+        return self.visibilite == Visibilite.LIMITEE
+
+    @property
+    def is_visibilite_locale(self):
+        return self.visibilite == Visibilite.LOCALE
 
     def can_update_visibilite(self, user):
-        """Vérifie si l'utilisateur peut modifier la visibilité de la fiche de détection."""
-        match self.visibilite:
-            case Visibilite.BROUILLON:
-                return user.agent.is_in_structure(self.createur)
-            case _:
-                return False
+        raise NotImplementedError
 
     def can_user_access(self, user):
         """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
-        match self.visibilite:
-            case Visibilite.BROUILLON:
-                return user.agent.is_in_structure(self.createur)
-            case Visibilite.LOCAL:
-                return user.agent.structure.is_mus_or_bsv or user.agent.is_in_structure(self.createur)
-            case Visibilite.NATIONAL:
-                return True
-            case _:
-                return False
+        if self.is_visibilite_nationale:
+            return True
+        if user.agent.is_in_structure(self.createur):
+            return True
+        if not self.is_draft and user.agent.structure.is_mus_or_bsv:
+            return True
+        if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures.all():
+            return True
+        return False
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            if self.is_visibilite_limitee and self.allowed_structures.count() == 0:
+                raise ValidationError("Vous ne pouvez pas avoir une visibilitée limitée sans structure sélectionnée.")
+            if not self.is_visibilite_limitee and self.allowed_structures.count() != 0:
+                raise ValidationError(
+                    "Vous ne pouvez pas avoir des structures autorisée dans un autre cas que la visibilitée limitée."
+                )
+        super().save(*args, **kwargs)
+
+
+class WithEtatMixin(models.Model):
+    class Etat(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        EN_COURS = "en_cours", "En cours"
+        CLOTURE = "cloture", "Clôturé"
+
+    etat = models.CharField(max_length=100, choices=Etat, verbose_name="État de l'événement", default=Etat.BROUILLON)
+
+    class Meta:
+        abstract = True
+
+    def cloturer(self):
+        self.etat = self.Etat.CLOTURE
+        self.save()
+
+    def publish(self):
+        self.etat = self.Etat.EN_COURS
+        self.save()
+
+    @property
+    def is_draft(self):
+        return self.etat == self.Etat.BROUILLON
+
+    def can_publish(self, user):
+        return user.agent.is_in_structure(self.createur) if self.is_draft else False
+
+    def can_be_cloturer_by(self, user):
+        return not self.is_draft and not self.is_already_cloturer() and user.agent.structure.is_ac
+
+    def is_already_cloturer(self):
+        return self.etat == self.Etat.CLOTURE
 
 
 class WithFreeLinkIdsMixin:
@@ -266,7 +306,7 @@ class PreventActionIfVisibiliteBrouillonMixin:
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_fiche_object()
-        if obj.visibilite == Visibilite.BROUILLON:
+        if obj.is_draft:
             messages.error(request, "Action impossible car la fiche est en brouillon")
             return safe_redirect(request.POST.get("next") or obj.get_absolute_url() or "/")
 

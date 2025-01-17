@@ -21,6 +21,7 @@ class DSFRForm(forms.Form):
     input_to_class["SelectMultiple"] = "fr-select"
     input_to_class["SelectWithAttributeField"] = "fr-select"
     input_to_class["DSFRRadioButton"] = ""
+    input_to_class["DSFRCheckboxSelectMultiple"] = ""
     manual_render_fields = []
 
     def get_context(self):
@@ -327,16 +328,12 @@ class VisibiliteUpdateBaseForm(DSFRForm):
 
     def __init__(self, *args, **kwargs):
         obj = kwargs.pop("obj", None)
-        action = kwargs.pop("action", None)
         super().__init__(*args, **kwargs)
-        fiche_detection = obj or self.instance
+        object = obj or self.instance
 
-        local = (Visibilite.LOCAL, Visibilite.LOCAL.capitalize())
-        national = (Visibilite.NATIONAL, Visibilite.NATIONAL.capitalize())
-        if action == "publier":
-            self.fields["visibilite"].choices = [local]
-            self.fields["visibilite"].initial = Visibilite.LOCAL
-            self.fields["visibilite"].widget = forms.HiddenInput()
-        else:
-            self.fields["visibilite"].choices = [local] if fiche_detection.is_draft else [local, national]
-            self.fields["visibilite"].initial = fiche_detection.visibilite
+        local = (Visibilite.LOCALE, Visibilite.LOCALE.capitalize())
+        limitee = (Visibilite.LIMITEE, Visibilite.LIMITEE.capitalize())
+        national = (Visibilite.NATIONALE, Visibilite.NATIONALE.capitalize())
+
+        self.fields["visibilite"].choices = [local, limitee, national]
+        self.fields["visibilite"].initial = object.visibilite

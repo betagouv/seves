@@ -1,0 +1,33 @@
+<dialog aria-labelledby="fr-modal-2-title" id="fr-modal-edit-visibilite" class="fr-modal visibilite-modal"
+        role="dialog">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" aria-controls="fr-modal-edit-visibilite">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-2-title" class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
+                            Modifier la visibilité
+                        </h1>
+                        <form action="{{ evenement.get_visibilite_update_url }}" method="post">
+                            {% csrf_token %}
+                            {{ visibilite_form.as_dsfr_div }}
+                            <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline fr-mt-2w">
+                                <button type="button" class="fr-btn fr-btn--secondary"
+                                        aria-controls="fr-modal-edit-visibilite">
+                                    Annuler
+                                </button>
+                                <button class="fr-btn">
+                                    Valider
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

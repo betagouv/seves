@@ -5,10 +5,8 @@ register = template.Library()
 # Selection des classes CSS du composant badge du DSFR pour les états d'une fiche
 # https://www.systeme-de-design.gouv.fr/elements-d-interface/composants/badge
 ETATS_FICHE_COLORS = {
-    "nouveau": "success",  # Vert
-    "en cours": "info",  # Bleu
-    "fin de suivi": "new",  # Orange
-    "clôturé": "error",  # Rouge
+    "en_cours": "success",  # Vert
+    "cloture": "error",  # Rouge
 }
 
 

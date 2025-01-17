@@ -11,7 +11,6 @@ from .models import (
     Lieu,
     NumeroFiche,
     FicheDetection,
-    Etat,
     Departement,
     OrganismeNuisible,
     FicheZoneDelimitee,
@@ -32,13 +31,6 @@ class NumeroFicheFactory(DjangoModelFactory):
 
     annee = factory.Faker("year")
     numero = factory.Faker("pyint", min_value=0, max_value=1000)
-
-
-class EtatFactory(DjangoModelFactory):
-    class Meta:
-        model = Etat
-
-    libelle = factory.Faker("word")
 
 
 class OrganismeNuisibleFactory(DjangoModelFactory):
@@ -242,13 +234,8 @@ class EvenementFactory(DjangoModelFactory):
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
-    visibilite = Visibilite.LOCAL
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        if kwargs["visibilite"] == Visibilite.BROUILLON:
-            kwargs["numero"] = None
-        return super()._create(model_class, *args, **kwargs)
+    visibilite = Visibilite.LOCALE
+    etat = Evenement.Etat.EN_COURS
 
     @factory.lazy_attribute
     def createur(self):

@@ -4,10 +4,11 @@ from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.models import Structure, Document, Visibilite
+from core.models import Structure, Document
 from django.contrib.auth import get_user_model
 
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 User = get_user_model()
 
@@ -152,7 +153,7 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, docu
 
 
 def test_cant_add_document_if_brouillon(client):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     test_file = SimpleUploadedFile(name="test.pdf", content=b"contenu du fichier test", content_type="application/pdf")
     data = {
         "nom": "Un fichier test",
@@ -179,7 +180,7 @@ def test_cant_add_document_if_brouillon(client):
 
 
 def test_cant_delete_document_if_brouillon(client, document_recipe):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     document = document_recipe().make(nom="Test document", description="un document")
     evenement.documents.set([document])
 
@@ -198,7 +199,7 @@ def test_cant_delete_document_if_brouillon(client, document_recipe):
 
 
 def test_cant_edit_document_if_brouillon(client, document_recipe):
-    evenement = EvenementFactory(visibilite=Visibilite.BROUILLON)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     document = document_recipe().make(nom="Test document", description="un document")
     evenement.documents.set([document])
 

@@ -11,7 +11,6 @@ from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
 from sv.models import (
-    Etat,
     FicheDetection,
     FicheZoneDelimitee,
     StatutReglementaire,
@@ -45,15 +44,6 @@ def check_select_options(page, label, expected_options):
     assert (
         option_texts == [settings.SELECT_EMPTY_CHOICE] + expected_options
     ), f"Les options pour {label} ne correspondent pas aux options attendues"
-
-
-@pytest.fixture(autouse=True)
-def add_basic_etat_objects():
-    # Normalement fait dans la migration 0007 mais ne sera toujours présent dans les tests à cause de la mécanique
-    # de rollback de pytest
-    Etat.objects.get_or_create(libelle="nouveau")
-    Etat.objects.get_or_create(libelle="en cours")
-    Etat.objects.get_or_create(libelle="clôturé")
 
 
 @pytest.fixture(autouse=True)

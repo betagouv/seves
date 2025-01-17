@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sv.models import FicheDetection, OrganismeNuisible, FicheZoneDelimitee, Etat
+from sv.models import FicheDetection, OrganismeNuisible, FicheZoneDelimitee
 
 
 @dataclass
@@ -11,7 +11,8 @@ class DisplayedFiche:
     date_creation: str
     createur: str
     communes_list: list[str]
-    etat: Etat
+    etat: str
+    readable_etat: str
     is_ac_notified: bool
     visibilite: str
     get_absolute_url: str
@@ -28,6 +29,7 @@ class DisplayedFiche:
             createur=str(fiche.createur),
             visibilite=str(fiche.evenement.visibilite),
             etat=fiche.evenement.etat,
+            readable_etat=fiche.evenement.get_etat_display(),
             communes_list=[],
             get_absolute_url=fiche.get_absolute_url(),
             numero_evenement=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",
@@ -44,6 +46,7 @@ class DisplayedFiche:
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
             etat=fiche.evenement.etat,
+            readable_etat=fiche.evenement.get_etat_display(),
             visibilite=str(fiche.evenement.visibilite),
             communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url(),

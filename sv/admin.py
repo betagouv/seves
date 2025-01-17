@@ -19,7 +19,6 @@ from .models import (
     StatutEvenement,
     FicheDetection,
     NumeroFiche,
-    Etat,
     ZoneInfestee,
     FicheZoneDelimitee,
     Evenement,
@@ -54,6 +53,5 @@ admin.site.register(Laboratoire)
 admin.site.register(Prelevement)
 admin.site.register(StatutEvenement)
 admin.site.register(NumeroFiche)
-admin.site.register(Etat)
 admin.site.register(ZoneInfestee)
 admin.site.register(FicheZoneDelimitee)

@@ -1,5 +1,10 @@
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError, PermissionDenied
+from django.db import transaction
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView
@@ -15,17 +20,9 @@ from .forms import (
     StructureAddForm,
     StructureSelectionForm,
 )
-from django.http import HttpResponseRedirect
-from django.utils.translation import ngettext
-
 from .mixins import PreventActionIfVisibiliteBrouillonMixin
+from .models import Document, Message, Contact, FinSuiviContact, Visibilite
 from .notifications import notify_message
-
-from .models import Document, Message, Contact, FinSuiviContact
-
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, PermissionDenied
-
 from .redirect import safe_redirect
 
 
@@ -237,6 +234,19 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
             if structure := contact.get_structure_contact():
                 self.obj.contacts.add(structure)
 
+    def _handle_visibilite_if_needed(self, message):
+        if not hasattr(self.obj, "visibilite"):
+            return
+
+        structures = [c.structure for c in self.obj.contacts.structures_only()]
+        if self.obj.visibilite == Visibilite.LOCALE:
+            with transaction.atomic():
+                self.obj.allowed_structures.set(structures)
+                self.obj.visibilite = Visibilite.LIMITEE
+                self.obj.save()
+        if self.obj.visibilite == Visibilite.LIMITEE:
+            self.obj.allowed_structures.set(structures)
+
     def _create_documents(self, form):
         message = form.instance
         content_type = ContentType.objects.get_for_model(message)
@@ -278,6 +288,7 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.obj)
+        self._handle_visibilite_if_needed(form.instance)
         self._create_documents(form)
         notify_message(form.instance)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
@@ -340,7 +351,7 @@ class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(StructureSelectionView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update(
             {
                 "fiche_id": self.request.POST.get("fiche_id", ""),
@@ -401,6 +412,22 @@ class SoftDeleteView(View):
         except PermissionDenied:
             messages.error(request, "Vous n'avez pas les droits pour supprimer cet objet")
 
+        return safe_redirect(request.POST.get("next"))
+
+
+class PublishView(View):
+    def post(self, request):
+        content_type_id = request.POST.get("content_type_id")
+        content_id = request.POST.get("content_id")
+
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        obj = content_type.objects.get(pk=content_id)
+
+        if obj.can_publish(request.user):
+            obj.publish()
+            messages.success(request, "Objet publié avec succès")
+        else:
+            messages.error(request, "Cet objet ne peut pas être publié.")
         return safe_redirect(request.POST.get("next"))
 
 

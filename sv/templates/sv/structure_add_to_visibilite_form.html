@@ -1,0 +1,47 @@
+{% extends 'sv/base.html' %}
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/structure_add_form.css' %}">
+    <script type="text/javascript" src="{% static 'core/structure_add_form.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+    <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-9">
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <p class="fr-my-2w"><a href="{{ evenement.get_absolute_url }}" class="fr-link fr-icon-arrow-left-line fr-link--icon-left">Retour à l'évenement</a></p>
+                    </div>
+                </div>
+
+                <div class="fr-grid-row">
+                    <div class="fr-col-12">
+                        <h1>Passer en visibilité limitée</h1>
+                    </div>
+                </div>
+
+                <div class="structure-add-form__container fr-p-5w fr-mb-6w ">
+                    <div class="fr-grid-row">
+                        <div class="fr-col">
+                            <form method="post" action="" id="structures-form">
+                                {{ form.errors }}
+                                {% csrf_token %}
+
+                                {{ form.as_dsfr_div }}
+
+                                <input type="hidden" value="{{ request.GET.content_type_id }}" name="content_type_id">
+                                <input type="hidden" value="{{ request.GET.object_id }}" name="object_id">
+
+                                <button type="submit" class="fr-btn fr-mt-2w">Valider</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

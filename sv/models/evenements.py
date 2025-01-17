@@ -2,28 +2,27 @@ import reversion
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
-from django.db.models import Q
 from django.urls import reverse
 from reversion.models import Version
 
 from core.mixins import (
     AllowACNotificationMixin,
-    AllowVisibiliteMixin,
+    WithVisibiliteMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
 )
-from core.models import Document, Message, Contact, Visibilite, Structure, FinSuiviContact
+from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
-from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire, Etat
+from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire
 from ..managers import EvenementManager
-from ..mixins import WithEtatMixin
+from core.mixins import WithEtatMixin
 
 
 @reversion.register()
 class Evenement(
     AllowACNotificationMixin,
-    AllowVisibiliteMixin,
+    WithVisibiliteMixin,
     WithEtatMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
@@ -47,9 +46,6 @@ class Evenement(
         FicheZoneDelimitee, on_delete=models.PROTECT, verbose_name="Fiche zone delimitée", null=True, blank=True
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    etat = models.ForeignKey(
-        Etat, on_delete=models.PROTECT, verbose_name="État de la fiche", default=Etat.get_etat_initial
-    )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     fin_suivi = GenericRelation(FinSuiviContact)
 
@@ -62,16 +58,11 @@ class Evenement(
     class Meta:
         verbose_name = "Évènement"
         verbose_name_plural = "Évènements"
-        constraints = [
-            models.CheckConstraint(
-                check=~(Q(visibilite="brouillon") & Q(numero__isnull=False)),
-                name="check_evenement_numero_fiche_is_null_when_visibilite_is_brouillon",
-            ),
-        ]
+        constraints = []
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():
-            if not self.numero and self.visibilite == Visibilite.LOCAL:
+            if not self.numero:
                 self.numero = NumeroFiche.get_next_numero()
             super().save(*args, **kwargs)
 
@@ -83,6 +74,9 @@ class Evenement(
 
     def get_visibilite_update_url(self):
         return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
+
+    def can_update_visibilite(self, user):
+        return user.agent.structure.is_mus_or_bsv
 
     def __str__(self):
         return str(self.numero)
