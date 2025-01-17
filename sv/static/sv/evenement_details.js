@@ -14,6 +14,20 @@ function showOnlyActionsForDetection(detectionId){
     )
 }
 
+function initializeDetectionTags() {
+    const tags = document.querySelectorAll('.fr-tag');
+
+    tags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            // Retirer la classe selected de tous les tags
+            tags.forEach(t => t.classList.remove('selected'));
+
+            // Ajouter la classe selected au tag cliqué
+            tag.classList.add('selected');
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const viewManager = new ViewManager(evenementViewModeConfig);
     viewManager.initialize();
@@ -25,4 +39,5 @@ document.addEventListener('DOMContentLoaded', function() {
         })
     })
 
+    initializeDetectionTags();
 });
