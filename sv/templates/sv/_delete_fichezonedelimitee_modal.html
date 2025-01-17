@@ -1,0 +1,22 @@
+<dialog aria-labelledby="fr-modal-title-modal-zone-{{ fiche.pk }}" role="dialog" id="fr-modal-delete-zone-{{ fiche.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-zone-{{ fiche.pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer une fiche</h1>
+                        <p>Si vous supprimez la fiche, toutes les données présentes dans la fiche sont supprimées. Confirmez-vous la suppression ?</p>
+                        <form method="post" action="{% url 'fiche-zone-delimitee-delete' fiche.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">
+                            <button type="submit" class="fr-btn" data-testid="submit-delete">Supprimer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

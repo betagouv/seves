@@ -13,6 +13,7 @@ from .views import (
     EvenementDetailView,
     EvenementUpdateView,
     VisibiliteStructureView,
+    FicheZoneDelimiteeDeleteView,
 )
 
 urlpatterns = [
@@ -75,5 +76,10 @@ urlpatterns = [
         "evenement/<int:pk>/structures/ajout/visibilite",
         VisibiliteStructureView.as_view(),
         name="structure-add-visibilite",
+    ),
+    path(
+        "fiche-zone-delimitee/<int:pk>/delete/",
+        FicheZoneDelimiteeDeleteView.as_view(),
+        name="fiche-zone-delimitee-delete",
     ),
 ]

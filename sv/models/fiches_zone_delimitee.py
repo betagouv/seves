@@ -3,11 +3,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import TextChoices
 from django.urls import reverse
-from reversion.models import Version
+from reversion.models import Version, Revision
 
-from core.mixins import (
-    AllowsSoftDeleteMixin,
-)
 from core.models import Structure, UnitesMesure
 from core.versions import get_versions_from_ids
 from sv.managers import (
@@ -18,7 +15,7 @@ from .common import NumeroFiche
 
 
 @reversion.register()
-class FicheZoneDelimitee(AllowsSoftDeleteMixin, models.Model):
+class FicheZoneDelimitee(models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -87,3 +84,8 @@ class FicheZoneDelimitee(AllowsSoftDeleteMixin, models.Model):
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
+
+
+class VersionFicheZoneDelimitee(models.Model):
+    revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
+    fiche_zone_delimitee_data = models.JSONField()
