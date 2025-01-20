@@ -223,7 +223,7 @@ class WithVisibiliteMixin(models.Model):
             return True
         if not self.is_draft and user.agent.structure.is_mus_or_bsv:
             return True
-        if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures:
+        if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures.all():
             return True
         return False
 
