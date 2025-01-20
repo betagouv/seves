@@ -25,6 +25,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
 )
 from core.models import Visibilite
+from core.redirect import safe_redirect
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -35,6 +36,7 @@ from sv.forms import (
     EvenementForm,
     EvenementVisibiliteUpdateForm,
     EvenementUpdateForm,
+    StructureSelectionForVisibiliteForm,
 )
 from .display import DisplayedFiche
 from .export import FicheDetectionExport
@@ -368,11 +370,12 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
 
     def form_valid(self, form):
         if form.cleaned_data["visibilite"] == Visibilite.LIMITEE:
-            content_type = ContentType.objects.get_for_model(self.object).id
-            return redirect(
-                reverse("structure-add-visibilite") + f"?object_id={self.object.pk}&content_type_id={content_type}"
-            )
-        self.object = form.save()
+            return redirect(reverse("structure-add-visibilite", kwargs={"pk": self.object.pk}))
+        else:
+            with transaction.atomic():
+                self.object = form.save(commit=False)
+                self.object.allowed_structures.set([])
+                self.object.save()
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -582,3 +585,29 @@ class FicheZoneDelimiteeUpdateView(UpdateView):
             "Erreurs dans le(s) formulaire(s) Zones infestées",
         )
         return self.render_to_response(self.get_context_data())
+
+
+class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
+    template_name = "sv/structure_add_to_visibilite_form.html"
+    model = Evenement
+    form_class = StructureSelectionForVisibiliteForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["evenement"] = self.object
+        return context
+
+    def form_valid(self, form):
+        evenement = self.get_object()
+        if not evenement.can_update_visibilite(self.request.user):
+            messages.error(self.request, "Vous n'avez pas les droits pour modifier les droits'")
+            return safe_redirect(evenement.get_absolute_url())
+
+        evenement = form.save()
+        evenement.visibilite = Visibilite.LIMITEE
+        evenement.save()
+        messages.success(self.request, "Les droits d'accès ont été modifiés")
+        return safe_redirect(self.object.get_absolute_url())
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)

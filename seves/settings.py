@@ -231,7 +231,10 @@ ROOT_URL = env("ROOT_URL", default=None)
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
 # TODO ajouter des tests sur les flow de modification de visibilité
+# TODO ajouter un test sur : test we have the right to see the fiche to see this form and to post on this form
+# TODO add test structures are pre selectionned
 
 # TODO faire un ticket a part pour supprimer etat ?
 # TODO Ticket a part : Ajouter les infos dans l'événement nottament les structures qui ont la visibiltié
 # TODO ticket à part empecher le combo nationale + draft ?
+# TODO ticket virer le CSS de calc de truc pour les colonnes

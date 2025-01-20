@@ -195,7 +195,6 @@ class WithVisibiliteMixin(models.Model):
     )
     allowed_structures = models.ManyToManyField(Structure, related_name="allowed_structures")
 
-    # TODO s'assurer que allowed_structures est vide quand pas limitée
     class Meta:
         abstract = True
 
@@ -225,6 +224,16 @@ class WithVisibiliteMixin(models.Model):
         if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures.all():
             return True
         return False
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            if self.is_visibilite_limitee and self.allowed_structures.count() == 0:
+                raise ValidationError("Vous ne pouvez pas avoir une visibilitée limitée sans structure sélectionnée.")
+            if not self.is_visibilite_limitee and self.allowed_structures.count() != 0:
+                raise ValidationError(
+                    "Vous ne pouvez pas avoir des structures autorisée dans un autre cas que la visibilitée limitée."
+                )
+        super().save(*args, **kwargs)
 
     #
     # @classmethod

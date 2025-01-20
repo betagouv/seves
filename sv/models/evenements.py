@@ -2,7 +2,6 @@ import reversion
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
-from django.db.models import Q
 from django.urls import reverse
 from reversion.models import Version
 
@@ -59,12 +58,7 @@ class Evenement(
     class Meta:
         verbose_name = "Évènement"
         verbose_name_plural = "Évènements"
-        constraints = [
-            models.CheckConstraint(
-                check=~(Q(visibilite="brouillon") & Q(numero__isnull=False)),
-                name="check_evenement_numero_fiche_is_null_when_visibilite_is_brouillon",
-            ),
-        ]
+        constraints = []
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():

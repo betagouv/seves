@@ -1,16 +1,16 @@
 import math
+from collections import defaultdict
 from copy import copy
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
+from core.constants import SERVICE_ACCOUNT_NAME
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton
 from core.models import Document, Contact, Message, Structure, Visibilite
-from core.constants import SERVICE_ACCOUNT_NAME
-from django import forms
-from collections import defaultdict
 
 User = get_user_model()
 
@@ -22,6 +22,7 @@ class DSFRForm(forms.Form):
     input_to_class["SelectMultiple"] = "fr-select"
     input_to_class["SelectWithAttributeField"] = "fr-select"
     input_to_class["DSFRRadioButton"] = ""
+    input_to_class["DSFRCheckboxSelectMultiple"] = ""
 
     def as_dsfr_div(self):
         return self.render("core/_dsfr_div.html")
@@ -312,32 +313,6 @@ class StructureSelectionForm(forms.Form):
         )
         # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
         self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
-
-
-class StructureSelectionForVisibiliteForm(forms.Form):
-    # content_type_id = forms.IntegerField(widget=forms.HiddenInput())
-    # object_id = forms.IntegerField(widget=forms.HiddenInput())
-    structures = forms.ModelMultipleChoiceField(queryset=Structure.objects.none())
-    structure_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-
-    def __init__(self, *args, **kwargs):
-        # object_id = kwargs.pop("object_id")
-        # content_type_id = kwargs.pop("content_type_id")
-        super().__init__(*args, **kwargs)
-        # self.fields["object_id"].initial = object_id
-        self.fields["structures"].queryset = Structure.objects.has_at_least_one_active_contact()
-        # self.fields["content_type_id"].initial = content_type_id
-        # content_type = ContentType.objects.get(pk=content_type_id).model_class()
-        # object = content_type.objects.get(pk=object_id)
-        # TODO pré-sélectionner les structures déjà activer en cas "d'édition"
-        # self.fields["contacts"].queryset = (
-        #     Contact.objects.filter(structure__niveau1=structure_selected)
-        #     .can_be_emailed()
-        #     .exclude(pk__in=existing_contact)
-        #     .order_by("structure", "agent__nom")
-        # )
-        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
-        self.fields["structure_count_half"].initial = math.ceil(self.fields["structures"].queryset.count() / 2)
 
 
 class VisibiliteUpdateBaseForm(DSFRForm):

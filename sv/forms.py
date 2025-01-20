@@ -8,8 +8,9 @@ from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
 from django.utils.translation import ngettext
 
-from core.fields import DSFRRadioButton
+from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
+from core.models import Structure
 from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
 from sv.models import (
     FicheZoneDelimitee,
@@ -503,3 +504,20 @@ class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
         instance = super().save(commit)
         self.save_free_links(instance)
         return instance
+
+
+class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
+    allowed_structures = forms.ModelMultipleChoiceField(
+        queryset=Structure.objects.none(),
+        required=True,
+        label="",
+        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+    )
+
+    class Meta:
+        model = Evenement
+        fields = ["allowed_structures"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["allowed_structures"].queryset = Structure.objects.has_at_least_one_active_contact().distinct()

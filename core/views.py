@@ -17,7 +17,6 @@ from .forms import (
     ContactSelectionForm,
     StructureAddForm,
     StructureSelectionForm,
-    StructureSelectionForVisibiliteForm,
 )
 from .mixins import PreventActionIfVisibiliteBrouillonMixin
 from .models import Document, Message, Contact, FinSuiviContact
@@ -427,39 +426,3 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
             messages.error(request, e.message)
 
         return safe_redirect(request.POST.get("next"))
-
-
-class VisibiliteStructureView(FormView):
-    template_name = "core/_structure_add_to_visibilite_form.html"
-    form_class = StructureSelectionForVisibiliteForm
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        # kwargs.update(
-        #     {
-        #         "object_id": self.request.GET.get("object_id", self.request.POST.get("object_id")),
-        #         "content_type_id": self.request.GET.get("content_type_id", self.request.POST.get("content_type_id")),
-        #     }
-        # )
-        # TODO lien retour en arrière qui ne marche pas
-        return kwargs
-
-    def form_valid(self, form):
-        content_type = ContentType.objects.get(pk=self.request.POST["content_type_id"]).model_class()
-        object = content_type.objects.get(pk=self.request.POST["object_id"])
-
-        if not object.is_visibilite_limitee:
-            messages.error(
-                self.request,
-                "Vous ne pouvez pas modifier les droits pour une fiche qui n'est pas en visibilité limitée",
-            )
-            return safe_redirect(object.get_absolute_url())
-        if not object.can_update_visibilite(self.request.user):
-            messages.error(self.request, "Vous n'avez pas les droits pour modifier les droits'")
-            return safe_redirect(object.get_absolute_url())
-
-        structures = form.cleaned_data["structures"]
-        object.allowed_structures.set(structures)
-        messages.success(self.request, "Les droits d'accès ont été modifiés")
-        return safe_redirect(object.get_absolute_url())
