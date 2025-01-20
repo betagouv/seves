@@ -230,8 +230,8 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
-# TODO ajouter un test sur le fait que l'on peut publier
-# TODO ajouter un test pour vérifier qu'on ne peut pas fausser la publication
 # TODO ajouter des tests sur les flow de modification de visibilité
+
 # TODO faire un ticket a part pour supprimer etat ?
-# Antonin Morel [Beta]: quand on est en brouillon, la modification de la visibilité n'est pas accessible
+# TODO Ticket a part : Ajouter les infos dans l'événement nottament les structures qui ont la visibiltié
+# TODO ticket à part empecher le combo nationale + draft ?

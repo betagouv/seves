@@ -17,7 +17,7 @@ from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire
 from ..managers import EvenementManager
-from ..mixins import WithEtatMixin
+from core.mixins import WithEtatMixin
 
 
 @reversion.register()
