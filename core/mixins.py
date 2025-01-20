@@ -211,7 +211,7 @@ class WithVisibiliteMixin(models.Model):
         return self.visibilite == Visibilite.LOCALE
 
     def can_update_visibilite(self, user):
-        return self.can_user_access(user)
+        raise NotImplementedError
 
     def can_user_access(self, user):
         """Vérifie si l'utilisateur peut accéder à la fiche de détection."""

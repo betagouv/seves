@@ -10,7 +10,7 @@ from sv.models import Evenement
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("visibilite_libelle", [Visibilite.LOCALE, Visibilite.LIMITEE, Visibilite.NATIONALE])
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.LOCALE, Visibilite.NATIONALE])
 @pytest.mark.parametrize("etat_libelle", [Evenement.Etat.BROUILLON, Evenement.Etat.EN_COURS, Evenement.Etat.CLOTURE])
 def test_agent_in_structure_createur_can_view_evenement(
     live_server, page: Page, mocked_authentification_user, visibilite_libelle: str, etat_libelle
@@ -20,6 +20,23 @@ def test_agent_in_structure_createur_can_view_evenement(
     assert response.status == 200
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_text(str(fiche_detection.evenement.numero), exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("etat_libelle", [Evenement.Etat.BROUILLON, Evenement.Etat.EN_COURS, Evenement.Etat.CLOTURE])
+def test_agent_in_structure_createur_can_view_evenement_limitee(
+    live_server, page: Page, mocked_authentification_user, etat_libelle
+):
+    fiche_detection = FicheDetectionFactory(evenement__etat=etat_libelle)
+    evenement = fiche_detection.evenement
+    evenement.allowed_structures.set([StructureFactory()])
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
+
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 200
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    expect(page.get_by_text(str(evenement.numero), exact=True)).to_be_visible()
 
 
 @pytest.mark.django_db
@@ -86,6 +103,8 @@ def test_agent_ac_can_view_evenement(
     structure_ac: str,
 ):
     evenement = EvenementFactory(visibilite=visibilite_libelle)
+    if visibilite_libelle == Visibilite.LIMITEE:
+        evenement.allowed_structures.set([StructureFactory()])
     FicheDetectionFactory(evenement=evenement)
     mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
         niveau1=AC_STRUCTURE, niveau2=structure_ac
@@ -101,8 +120,10 @@ def test_agent_ac_can_view_evenement(
 @pytest.mark.django_db
 def test_agent_can_see_visibilite_limitee_if_in_list(live_server, page: Page, mocked_authentification_user):
     structure = StructureFactory()
-    evenement = EvenementFactory(visibilite=Visibilite.LIMITEE)
+    evenement = EvenementFactory()
     evenement.allowed_structures.set([structure])
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
     mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -113,8 +134,12 @@ def test_agent_can_see_visibilite_limitee_if_in_list(live_server, page: Page, mo
 def test_agent_cant_see_visibilite_limitee_if_not_in_list(live_server, page: Page, mocked_authentification_user):
     structure = StructureFactory()
     other_structure = StructureFactory()
-    evenement = EvenementFactory(visibilite=Visibilite.LIMITEE)
+
+    evenement = EvenementFactory()
     evenement.allowed_structures.set([other_structure])
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
+
     mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")

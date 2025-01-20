@@ -74,6 +74,9 @@ class Evenement(
     def get_visibilite_update_url(self):
         return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
 
+    def can_update_visibilite(self, user):
+        return user.agent.structure.is_mus_or_bsv
+
     def __str__(self):
         return str(self.numero)
 

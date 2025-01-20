@@ -330,6 +330,5 @@ class VisibiliteUpdateBaseForm(DSFRForm):
         limitee = (Visibilite.LIMITEE, Visibilite.LIMITEE.capitalize())
         national = (Visibilite.NATIONALE, Visibilite.NATIONALE.capitalize())
 
-        # TODO qui peut modifier la visibilité dans quel sens ?
         self.fields["visibilite"].choices = [local, limitee, national]
         self.fields["visibilite"].initial = object.visibilite

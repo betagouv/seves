@@ -598,11 +598,6 @@ class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        evenement = self.get_object()
-        if not evenement.can_update_visibilite(self.request.user):
-            messages.error(self.request, "Vous n'avez pas les droits pour modifier les droits'")
-            return safe_redirect(evenement.get_absolute_url())
-
         evenement = form.save()
         evenement.visibilite = Visibilite.LIMITEE
         evenement.save()
@@ -610,4 +605,4 @@ class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
         return safe_redirect(self.object.get_absolute_url())
 
     def test_func(self):
-        return self.get_object().can_user_access(self.request.user)
+        return self.get_object().can_update_visibilite(self.request.user)
