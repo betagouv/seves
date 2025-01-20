@@ -235,15 +235,6 @@ class WithVisibiliteMixin(models.Model):
                 )
         super().save(*args, **kwargs)
 
-    #
-    # @classmethod
-    # def get_possibles_visibilite(cls, current_visibilite):
-    #     if current_visibilite == Visibilite.LOCALE:
-    #         return [Visibilite.LIMITEE, Visibilite.NATIONALE]
-    #     if current_visibilite == Visibilite.LIMITEE:
-    #         return [Visibilite.LIMITEE, Visibilite.NATIONALE]
-    #
-
 
 class WithEtatMixin(models.Model):
     class Etat(models.TextChoices):

@@ -1,6 +1,5 @@
 from django.db import models
 from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
-
 from core.models import Visibilite
 
 

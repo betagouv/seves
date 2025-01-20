@@ -229,9 +229,3 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
-
-# TODO faire un ticket a part pour supprimer etat ?
-# TODO Ticket a part : Ajouter les infos dans l'événement nottament les structures qui ont la visibiltié
-# TODO ticket à part empecher le combo nationale + draft ?
-# TODO ticket virer le CSS de calc de truc pour les colonnes
-# TODO introduire une factory pour les structures pour avoir au moins un contact actifs (rechercher : .agent.user.is_active = True)
