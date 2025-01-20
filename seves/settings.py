@@ -230,9 +230,6 @@ ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
-# TODO Implémenter règle numéro 1 + test
-
-
 # TODO faire un ticket a part pour supprimer etat ?
 # TODO Ticket a part : Ajouter les infos dans l'événement nottament les structures qui ont la visibiltié
 # TODO ticket à part empecher le combo nationale + draft ?

@@ -116,3 +116,7 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     evenement.refresh_from_db()
     assert evenement.allowed_structures.get() == structure_1
     assert evenement.visibilite == Visibilite.LIMITEE
+
+
+# TODO test send message from local add structure and changer to limitee
+# TODO test send message from limitee does not change etat and adds structure

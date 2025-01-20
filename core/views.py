@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import ngettext
@@ -19,7 +20,7 @@ from .forms import (
     StructureSelectionForm,
 )
 from .mixins import PreventActionIfVisibiliteBrouillonMixin
-from .models import Document, Message, Contact, FinSuiviContact
+from .models import Document, Message, Contact, FinSuiviContact, Visibilite
 from .notifications import notify_message
 from .redirect import safe_redirect
 
@@ -226,6 +227,21 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, CreateView):
             if contact not in self.obj.contacts.all():
                 self.obj.contacts.add(contact)
 
+    def _handle_visibilite_if_needed(self, message):
+        if not hasattr(self.obj, "visibilite"):
+            return
+
+        # TODO waiting for alan to add structures here ?
+        contacts = self.obj.contacts.structures_only()
+        structures = [c.structure for c in contacts]
+        if self.obj.visibilite == Visibilite.LOCALE:
+            with transaction.atomic():
+                self.obj.allowed_structures.set([structures])
+                self.obj.visibilite = Visibilite.LIMITEE
+                self.obj.save()
+        if self.obj.visibilite == Visibilite.LIMITEE:
+            self.obj.allowed_structures.set([structures])
+
     def _create_documents(self, form):
         message = form.instance
         content_type = ContentType.objects.get_for_model(message)
@@ -266,6 +282,7 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, CreateView):
             return HttpResponseRedirect(self.obj.get_absolute_url())
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
+        self._handle_visibilite_if_needed(form.instance)
         self._create_documents(form)
         notify_message(form.instance)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
