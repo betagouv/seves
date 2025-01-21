@@ -55,10 +55,36 @@
         </div>
 
         <div class="fr-container--fluid fr-mb-2w">
-            <div class="fr-grid-row fr-grid-row--gutters ">
-                <div class="fr-col-5"><div class="white-container--lite"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div></div>
-                <div class="fr-col-5"><div class="white-container--lite"><span class="bold fr-mr-2v">Status réglementaire</span> {{ evenement.statut_reglementaire }}</div></div>
-                <div class="fr-col-2"><div class="white-container--lite"><span class="bold fr-mr-2v">Code OEPP</span> {{ evenement.organisme_nuisible.code_oepp }}</div></div>
+            <div class="fr-grid-row fr-grid-row--gutters fr-my-1w white-container--lite">
+                <div class="fr-col-4">
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div>
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">Status réglementaire</span> {{ evenement.statut_reglementaire }}</div>
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">Code OEPP</span> {{ evenement.organisme_nuisible.code_oepp }}</div>
+                </div>
+
+                <div class="fr-col-3">
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">Date de création</span> {{ evenement.date_creation|date }}</div>
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">Créateur</span> {{ evenement.createur }}</div>
+                </div>
+                <div class="fr-col-5">
+                    <span class="bold fr-mr-2v">Visibilité</span>
+                    {% if evenement.is_visibilite_locale %}
+                        Locale
+                    {% elif evenement.is_visibilite_nationale %}
+                        Toutes les structures
+                    {% else %}
+                        {% with  evenement.allowed_structures.all|join:', ' as structures_str %}
+                            {% if structures_str|length > 150 %}
+                                {{ structures_str|truncatechars:150 }}
+                                <button class="fr-btn--tooltip fr-btn" aria-describedby="tooltip-2989" type="button" id="button-2995"></button>
+                                <span class="fr-tooltip fr-placement" id="tooltip-2989" role="tooltip" aria-hidden="true">{{ evenement.allowed_structures.all|join:', ' }}</span>
+                            {% else %}
+                                {{ structures_str }}
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </div>
+
             </div>
         </div>
 
