@@ -232,8 +232,10 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
 
     def _add_contacts_to_object(self, message):
         for contact in message.recipients.all().union(message.recipients_copy.all()):
-            if contact not in self.obj.contacts.all():
-                self.obj.contacts.add(contact)
+            self.obj.contacts.add(contact)
+
+            if structure := contact.get_structure_contact():
+                self.obj.contacts.add(structure)
 
     def _create_documents(self, form):
         message = form.instance
