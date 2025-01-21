@@ -272,7 +272,6 @@ def test_link_fiche_detection(live_server, page: Page):
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10) input"
-    page.wait_for_timeout(10000)
     expect(page.locator(cell_selector)).to_be_disabled()
 
     fiche_zone = FicheZoneFactory(numero__annee=2024, numero__numero=10)
