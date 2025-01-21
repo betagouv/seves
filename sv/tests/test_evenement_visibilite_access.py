@@ -86,5 +86,4 @@ def test_agent_ac_can_view_evenement(
     assert response.status == 200
     expect(page.get_by_role("heading", name=f"Événement {str(evenement.numero)}")).to_be_visible()
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
-    page.wait_for_timeout(4000)
     expect(page.get_by_role("link", name=str(evenement.numero))).to_be_visible()
