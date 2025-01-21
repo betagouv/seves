@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
 
-from core.models import Structure
+from core.models import Structure, Visibilite
 from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
 from sv.models import Evenement, FicheDetection
 
@@ -129,13 +129,15 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
 
 
 def test_evenement_can_view_basic_data(live_server, page: Page):
-    evenement = EvenementFactory()
+    evenement = EvenementFactory(visibilite=Visibilite.NATIONALE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     expect(page.get_by_text(evenement.organisme_nuisible.libelle_court)).to_be_visible()
     expect(page.get_by_text(evenement.organisme_nuisible.code_oepp)).to_be_visible()
     expect(page.get_by_text(evenement.statut_reglementaire.libelle)).to_be_visible()
     expect(page.get_by_text("Dernière mise à jour le ")).to_be_visible()
+    expect(page.get_by_text("Visibilité Toutes les structures")).to_be_visible()
+    expect(page.get_by_text("Créateur Structure Test")).to_be_visible()
 
 
 def test_view_mode_default_is_detail(live_server, page):
