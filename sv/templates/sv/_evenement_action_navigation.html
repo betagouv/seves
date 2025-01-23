@@ -5,9 +5,9 @@
                 aria-expanded="false" title="Sélectionner une action">Actions</button>
         <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
             <ul class="fr-menu__list">
-                {% if not evenement.is_draft %}
+                {% if not evenement.is_draft and not user.agent.structure.is_ac %}
                     <li>
-                        {% if evenement.can_notifiy %}
+                        {% if can_be_ac_notified %}
                             <form action="{% url 'notify-ac' %}" method="post">
                                 <button class="fr-translate__language fr-nav__link" href="#" type="submit"><span class="fr-icon-notification-3-fill fr-mr-2v fr-icon--sm" aria-hidden="true">
                                     {% csrf_token %}

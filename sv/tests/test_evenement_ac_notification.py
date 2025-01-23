@@ -3,7 +3,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.models import Structure, Contact, Message
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
 from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import Evenement
 
@@ -43,6 +43,36 @@ def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentificatio
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+
+
+def test_cant_notify_ac_if_user_is_from_ac(live_server, page, mocked_authentification_user):
+    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
+    )
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+
+
+def test_cant_notify_ac_if_user_is_from_ac_with_request(mocked_authentification_user, client):
+    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
+    )
+    evenement = EvenementFactory()
+    response = client.post(
+        reverse("notify-ac"),
+        {
+            "next": evenement.get_absolute_url(),
+            "content_id": evenement.id,
+            "content_type_id": ContentType.objects.get_for_model(Evenement).id,
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Vous ne pouvez pas notifier cet objet à l'AC"
 
 
 def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, client):

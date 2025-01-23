@@ -441,7 +441,7 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
 
     def post(self, request):
         try:
-            self.obj.notify_ac(sender=self.request.user.agent.contact_set.get())
+            self.obj.notify_ac(user=self.request.user)
             messages.success(request, "L'administration centrale a été notifiée avec succès")
         except AttributeError:
             messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
