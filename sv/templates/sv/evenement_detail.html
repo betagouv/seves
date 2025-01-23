@@ -36,8 +36,6 @@
                 </div>
 
                 <div class="evenement-top-row--actions">
-                    <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une détection</a>
-
                     {% if can_publish %}
                         <form action="{% url 'publish' %}" method="post">
                             {% csrf_token %}
@@ -83,6 +81,10 @@
                                         <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w {% if forloop.first %}selected{% endif %}" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
                                     </li>
                                 {% endfor %}
+                                <li>
+                                    <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
+                                        <span class="fr-icon-add-line" aria-hidden="true"></span> Ajouter une détection</a>
+                                </li>
                             </ul>
 
                             {% for fichedetection in evenement.detections.all %}

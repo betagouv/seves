@@ -57,3 +57,12 @@
     color: var(--text-mention-grey);
     margin-bottom: 0.5rem;
 }
+.fr-tag--tertiary{
+    background-color: transparent !important;
+    border: 1px solid var(--background-action-high-blue-france);
+    color: var(--background-action-high-blue-france);
+}
+.fr-tag--tertiary:hover {
+    background-color: var(--hover-tint) !important;
+    border: 1px solid transparent;
+}
