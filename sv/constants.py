@@ -186,6 +186,7 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "1BEGOG",
         "ALECCT",
         "LIBEAM",
+        "DRAERO",
     ],
     "OQZP": ["BNYVV0", "RHYCFE"],
     "OQP": [
@@ -199,12 +200,7 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "TOBRFV",
         "1POMAG",
     ],
-    "OE": [
-        "TOUMPA",
-        "XYLBAF",
-        "XYLBFE",
-        "SCITGI",
-    ],
+    "OE": ["TOUMPA", "XYLBAF", "XYLBFE", "SCITGI", "TOFBV0", "ALECCA", "STEHHA"],
 }
 
 KNOWN_OEPPS = [oepp for oepp_list in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.values() for oepp in oepp_list]
