@@ -38,7 +38,9 @@ def create_fixtures_if_needed(db):
     OrganismeNuisible.objects.get_or_create(
         libelle_court="Xylella fastidiosa (maladie de Pierce)", defaults={"code_oepp": "OE_XYLEFA"}
     )
-    OrganismeNuisible.objects.get_or_create(libelle_court="lorem ipsum", defaults={"code_oepp": "LOREM"})
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="lorem ipsum", libelle_long="lorem ipsum (texte lorem)", defaults={"code_oepp": "LOREM"}
+    )
 
     for code, libelle in STATUTS_REGLEMENTAIRES.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
@@ -184,9 +186,7 @@ def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
     structure = mocked_authentification_user.agent.structure
     structure.niveau1 = AC_STRUCTURE
     structure.save()
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
-        libelle_court="Mon ON",
-    )
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(libelle_court="Mon ON", libelle_long="Mon ON")
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
@@ -213,6 +213,7 @@ def test_create_fiche_detection_with_lieu(
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     dept = baker.make(Departement)
     site_inspection = baker.make(SiteInspection)
@@ -287,6 +288,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     est ajouté dans la liste des contacts de l'événement"""
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
@@ -316,6 +318,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
     est ajouté dans la liste des contacts de l'événement"""
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
@@ -338,6 +341,7 @@ def test_add_lieu_with_name_only_and_save(
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
@@ -360,8 +364,13 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        code_oepp="XYLEFM",
+        libelle_court="Xylella fastidiosa subsp. multiplex",
+        libelle_long="Xylella fastidiosa subsp. multiplex",
+    )
     organisme_nuisible.libelle_court = "Mon ON"
+    organisme_nuisible.libelle_long = "Mon ON"
     organisme_nuisible.save()
 
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
@@ -381,11 +390,18 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(code_oepp="XYLEFM")
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        code_oepp="XYLEFM",
+        libelle_court="Xylella fastidiosa subsp. multiplex",
+        libelle_long="Xylella fastidiosa subsp. multiplex",
+    )
     organisme_nuisible.libelle_court = "Mon ON"
+    organisme_nuisible.libelle_long = "Mon ON"
     organisme_nuisible.save()
 
-    organisme_nuisible_no_status, _ = OrganismeNuisible.objects.get_or_create(code_oepp="FOO")
+    organisme_nuisible_no_status, _ = OrganismeNuisible.objects.get_or_create(
+        code_oepp="FOO", libelle_court="FOO", libelle_long="FOO"
+    )
     organisme_nuisible_no_status.libelle_court = "Pas mon ON"
     organisme_nuisible_no_status.save()
 
@@ -406,6 +422,7 @@ def test_prelevements_are_always_linked_to_lieu(
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     structures = baker.make(StructurePreleveuse, _quantity=2)
     page.wait_for_timeout(600)
@@ -436,6 +453,7 @@ def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
+        libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")

@@ -39,6 +39,7 @@ class OrganismeNuisibleFactory(DjangoModelFactory):
 
     code_oepp = factory.Faker("lexify", text="??????")
     libelle_court = factory.Faker("lexify", text="??????")
+    libelle_long = factory.Faker("sentence", nb_words=5)
 
 
 class DepartementFactory(DjangoModelFactory):
