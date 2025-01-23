@@ -130,7 +130,6 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
 
 def test_evenement_can_view_basic_data(live_server, page: Page):
     evenement = EvenementFactory()
-    FicheDetectionFactory(evenement=evenement)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     expect(page.get_by_text(evenement.organisme_nuisible.libelle_court)).to_be_visible()

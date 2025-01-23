@@ -16,6 +16,9 @@
     width: 60% !important;
     order: 0 !important;
 }
+.no-tab-look::before{
+    box-shadow: none !important;
+}
 [id^="detection-actions-"] {
     display: flex;
     justify-content: flex-end;
@@ -49,4 +52,8 @@
 .fr-tag.selected {
     background-color: var(--background-action-high-blue-france);
     color: var(--text-inverted-blue-france);
+}
+.last-modification {
+    color: var(--text-mention-grey);
+    margin-bottom: 0.5rem;
 }
