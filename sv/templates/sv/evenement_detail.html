@@ -49,18 +49,11 @@
                 </div>
             </div>
             {% include "sv/_evenement_badges.html" %}
-            {% if latest_version %}
-                <div class="fr-pl-1v fr-mt-2v">
-                    Dernière mise à jour le {{ latest_version.revision.date_created }}
-                    {% if latest_version.revision.user %}
-                        par {{ latest_version.revision.user.agent.agent_with_structure }}
-                    {% endif %}
-                </div>
-            {% endif %}
+            {% include "sv/_latest_revision.html" %}
         </div>
 
-        <div class="fr-container--fluid">
-            <div class="fr-grid-row fr-grid-row--gutters fr-my-2w">
+        <div class="fr-container--fluid fr-mb-2w">
+            <div class="fr-grid-row fr-grid-row--gutters ">
                 <div class="fr-col-5"><div class="white-container--lite"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div></div>
                 <div class="fr-col-5"><div class="white-container--lite"><span class="bold fr-mr-2v">Status réglementaire</span> {{ evenement.statut_reglementaire }}</div></div>
                 <div class="fr-col-2"><div class="white-container--lite"><span class="bold fr-mr-2v">Code OEPP</span> {{ evenement.organisme_nuisible.code_oepp }}</div></div>
@@ -80,7 +73,7 @@
                 <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
                     <div>
                         <div class="fr-tabs no-tab-look">
-                            <ul class="fr-tabs__list fr-mb-2v" role="tablist" aria-label="Liste des détection">
+                            <ul class="fr-tabs__list" role="tablist" aria-label="Liste des détection">
                                 {% for fichedetection in evenement.detections.all %}
                                     <li role="presentation">
                                         <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w {% if forloop.first %}selected{% endif %}" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>

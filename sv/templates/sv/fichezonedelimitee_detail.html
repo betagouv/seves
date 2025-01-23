@@ -1,12 +1,10 @@
 {% load static %}
 {% load remove_trailing_zero %}
+
 <div class="fiche-header">
     <div>
-        <h2 class="fr-mb-0-5v">Zone délimitée n° {{ fiche.numero }}</h2>
+        {% include "sv/_latest_revision.html" with latest_revision=fiche.latest_version %}
     </div>
-
-
-
     <div class="fiche-action">
         <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
             Supprimer la zone
