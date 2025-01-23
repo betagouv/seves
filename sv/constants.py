@@ -234,3 +234,20 @@ LABORATOIRES_CONFIRMATION_OFFICIELLE = [
     "ANSES 974",
     "SNES 49",
 ]
+
+POSITION_CHAINE_DISTRIBUTION = [
+    "Consommateur",
+    "Expéditeur",
+    "Agriculteur",
+    "Destinataire",
+    "Importateur",
+    "Détaillant",
+    "Emballeur",
+    "Fabricant",
+    "Entreprise de transport",
+    "Producteur",
+    "Point d'entrée",
+    "Grossiste/entrepôt",
+    "Stockage",
+    "Achat en ligne",
+]
