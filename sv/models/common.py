@@ -52,6 +52,7 @@ class OrganismeNuisible(models.Model):
 
     code_oepp = models.CharField(verbose_name="Code OEPP", unique=True)
     libelle_court = models.CharField(max_length=255, verbose_name="Nom", unique=True)
+    libelle_long = models.CharField(max_length=255, verbose_name="Nom", unique=True)
 
     def __str__(self):
         return self.libelle_court

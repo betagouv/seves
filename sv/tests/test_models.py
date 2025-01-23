@@ -41,7 +41,9 @@ from sv.models import (
 
 @pytest.fixture
 def organisme_base():
-    return OrganismeNuisible.objects.create(code_oepp="CODE1", libelle_court="Organisme nuisible 1")
+    return OrganismeNuisible.objects.create(
+        code_oepp="CODE1", libelle_court="Organisme nuisible 1", libelle_long="Organisme nuisible 1"
+    )
 
 
 @pytest.fixture
@@ -248,20 +250,25 @@ def test_can_add_surface_infestee_totale_zero_in_zone_infestee(fiche_zone):
     "test_data,should_raise",
     [
         # Tester le rejet du doublon exact
-        ({"code_oepp": "CODE1", "libelle_court": "Organisme nuisible 1"}, True),
+        ({"code_oepp": "CODE1", "libelle_court": "Organisme nuisible 1", "libelle_long": "Organisme nuisible 1"}, True),
         # Tester le rejet du même code avec libellé différent
         (
-            {"code_oepp": "CODE1", "libelle_court": "Organisme nuisible 2"},
+            {"code_oepp": "CODE1", "libelle_court": "Organisme nuisible 2", "libelle_long": "Organisme nuisible 2"},
             True,
         ),
         # Tester le rejet du même libellé avec code différent
         (
-            {"code_oepp": "CODE2", "libelle_court": "Organisme nuisible 1"},
+            {"code_oepp": "CODE2", "libelle_court": "Organisme nuisible 1", "libelle_long": "Organisme nuisible 1"},
+            True,
+        ),
+        # Tester le rejet du même libellé long avec code différent
+        (
+            {"code_oepp": "CODE2", "libelle_court": "Organisme nuisible 2", "libelle_long": "Organisme nuisible 1"},
             True,
         ),
         # Tester l'acceptation de valeurs différentes
         (
-            {"code_oepp": "CODE2", "libelle_court": "Organisme nuisible 2"},
+            {"code_oepp": "CODE2", "libelle_court": "Organisme nuisible 2", "libelle_long": "Organisme nuisible 2"},
             False,
         ),
     ],
