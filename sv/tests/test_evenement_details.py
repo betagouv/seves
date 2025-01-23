@@ -26,13 +26,11 @@ def test_can_publish_evenement(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
-    page.get_by_role("button", name="Actions").click()
     publish_btn = page.get_by_text("Publier l'événement", exact=True)
     expect(publish_btn).to_be_enabled()
     publish_btn.click()
     expect(page.get_by_text("Objet publié avec succès")).to_be_visible()
 
-    page.get_by_role("button", name="Actions").click()
     publish_btn = page.get_by_text("Publier l'événement", exact=True)
     expect(publish_btn).not_to_be_visible()
 
