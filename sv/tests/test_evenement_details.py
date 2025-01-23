@@ -7,11 +7,19 @@ from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFacto
 from sv.models import Evenement, FicheDetection
 
 
+def test_can_add_zone(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+    expect(page.get_by_text("Ajouter une zone", exact=True)).to_be_visible()
+
+
 def test_cant_add_zone_if_already_one(live_server, page: Page):
     fiche_zone = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("Ajouter une zone", exact=True)).to_be_disabled()
+    page.get_by_role("tab", name="Zone").click()
+    expect(page.get_by_text("Ajouter une zone", exact=True)).not_to_be_visible()
 
 
 def test_can_publish_evenement(live_server, page: Page):

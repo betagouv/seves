@@ -38,12 +38,6 @@
                 <div class="evenement-top-row--actions">
                     <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une détection</a>
 
-                    {% if evenement.fiche_zone_delimitee %}
-                        <button class="fr-btn fr-btn--secondary fr-mr-2w" disabled>Ajouter une zone</button>
-                    {% else %}
-                        <a href="{% url 'fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button"><button class="fr-btn fr-btn--secondary fr-mr-2w">Ajouter une zone</button></a>
-                    {% endif %}
-
                     {% include "sv/_evenement_action_navigation.html" %}
                     {% include "sv/_cloturer_modal.html" %}
                 </div>
@@ -113,8 +107,10 @@
                     {% if evenement.fiche_zone_delimitee %}
                         {% include "sv/fichezonedelimitee_detail.html" with fiche=evenement.fiche_zone_delimitee %}
                     {% else %}
-                        Il n'y a pas de zone délimitée pour cet événement
-
+                        <div class="white-container fr-pb-6w">
+                            <h3>Cet événement ne contient pas de zone</h3>
+                            <a href="{% url 'fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button "><button class="fr-btn fr-btn--secondary fr-mr-2w fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button></a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
