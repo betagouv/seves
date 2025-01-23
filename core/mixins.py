@@ -120,25 +120,24 @@ class IsActiveMixin(models.Model):
 class AllowACNotificationMixin(models.Model):
     is_ac_notified = models.BooleanField(default=False)
 
-    @property
-    def can_notifiy(self):
-        return not self.is_ac_notified and not self.is_draft
+    def can_notifiy(self, user):
+        return not self.is_ac_notified and not self.is_draft and not user.agent.structure.is_ac
 
     def _add_bsv_and_mus_to_contacts(self):
         bsv_contact = Contact.objects.get(structure__niveau2=BSV_STRUCTURE)
         mus_contact = Contact.objects.get(structure__niveau2=MUS_STRUCTURE)
         self.contacts.add(bsv_contact, mus_contact)
 
-    def notify_ac(self, sender):
-        if not self.can_notifiy:
-            raise ValidationError("Cet objet est déjà notifié à l'AC")
+    def notify_ac(self, user):
+        if not self.can_notifiy(user):
+            raise ValidationError("Vous ne pouvez pas notifier cet objet à l'AC")
 
         self.is_ac_notified = True
         message = Message(
             message_type=Message.NOTIFICATION_AC,
             title="Notification à l'AC",
             content="L'administration a été notifiée de cette fiche.",
-            sender=sender,
+            sender=user.agent.contact_set.get(),
             content_object=self,
         )
 

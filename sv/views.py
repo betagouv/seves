@@ -134,6 +134,7 @@ class EvenementDetailView(
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
         context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
+        context["can_be_ac_notified"] = self.object.can_notifiy(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
