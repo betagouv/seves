@@ -55,18 +55,17 @@
         </div>
 
         <div class="fr-container--fluid fr-mb-2w">
-            <div class="fr-grid-row fr-grid-row--gutters fr-my-1w white-container--lite">
-                <div class="fr-col-4">
+            <div class="fr-grid-row fr-my-1w white-container--lite">
+                <div class="fr-col-6 fr-col-lg-4">
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Status réglementaire</span> {{ evenement.statut_reglementaire }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Code OEPP</span> {{ evenement.organisme_nuisible.code_oepp }}</div>
                 </div>
-
-                <div class="fr-col-3">
+                <div class="fr-col-6 fr-col-lg-3">
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Date de création</span> {{ evenement.date_creation|date }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Créateur</span> {{ evenement.createur }}</div>
                 </div>
-                <div class="fr-col-5">
+                <div class="fr-col-6 fr-col-lg-5">
                     <span class="bold fr-mr-2v">Visibilité</span>
                     {% if evenement.is_visibilite_locale %}
                         Locale
@@ -101,7 +100,7 @@
                 <div id="tabpanel-404-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tabpanel-404" tabindex="0">
                     <div>
                         <div class="fr-tabs no-tab-look">
-                            <ul class="fr-tabs__list" role="tablist" aria-label="Liste des détection">
+                            <ul class="fr-tabs__list" role="tablist" aria-label="Liste des détections">
                                 {% for fichedetection in evenement.detections.all %}
                                     <li role="presentation">
                                         <button id="tabpanel-{{ fichedetection.pk }}" class="fr-tag fr-mx-1w {% if forloop.first %}selected{% endif %}" tabindex="0" role="tab" aria-selected="true" aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
@@ -119,8 +118,8 @@
                                         Supprimer la détection
                                     </button>
                                     {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
-                                    <button class="fr-btn fr-btn--secondary fr-mr-2w">
-                                        <a href="{% url 'fiche-detection-modification' fichedetection.pk %}"><span class="fr-icon-edit-fill">Modifier</span></a>
+                                    <button class="fr-btn fr-btn--secondary">
+                                        <a href="{% url 'fiche-detection-modification' fichedetection.pk %}">Modifier</a>
                                     </button>
                                 </div>
                             {% endfor %}
