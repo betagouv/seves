@@ -40,14 +40,7 @@
                 <nav class="fr-nav" id="navigation-773" role="navigation" aria-label="Menu principal">
                     <ul class="fr-nav__list">
                         <li class="fr-nav__item">
-                            <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-776"><span class="fr-icon-add-line" aria-hidden="true"></span>Créer une fiche</button>
-                            <div class="fr-collapse fr-menu" id="menu-776">
-                                <ul class="fr-menu__list">
-                                    <li>
-                                        <a class="fr-nav__link" href="{% url 'fiche-detection-creation' %}" target="_self">Détection</a>
-                                    </li>
-                                </ul>
-                            </div>
+                            <button class="fr-btn fr-my-auto"><span class="fr-icon-add-line" aria-hidden="true"></span>Créer une fiche</button>
                         </li>
                         <li class="fr-nav__item">
                             <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-liste' %}" target="_self" aria-current=”page”>Fiches</a>

@@ -12,37 +12,37 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--adresse">Adresse ou lieu-dit</div>
+                            <div class="fr-col-4 descripteur-label">Adresse ou lieu-dit</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse">{{lieu.adresse_lieu_dit|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--commune">Commune</div>
+                            <div class="fr-col-4 descripteur-label">Commune</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-commune">{{lieu.commune|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--site-inspection">Site d'inspection</div>
+                            <div class="fr-col-4 descripteur-label">Site d'inspection</div>
                             <div class="fr-col-6">{{lieu.site_inspection.nom|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--code-insee">Code INSEE</div>
+                            <div class="fr-col-4 descripteur-label">Code INSEE</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-insee">{{lieu.code_insee|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--departement">Département</div>
+                            <div class="fr-col-4 descripteur-label">Département</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-departement">{{lieu.departement.nom|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--region">Région</div>
+                            <div class="fr-col-4 descripteur-label">Région</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-region">{{lieu.departement.region.nom|default:"nc."}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-2"></div>
-                            <div class="fr-col-4 detail-lieu__label--gps-wgs84">Coord. WGS84</div>
+                            <div class="fr-col-4 descripteur-label">Coord. WGS84</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-wgs84">
                                 {% if lieu.wgs84_latitude and lieu.wgs84_longitude %}
                                     <div class="fr-grid-row">
@@ -63,42 +63,42 @@
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--nom-etablissement">Nom</div>
+                                <div class="fr-col-4 descripteur-label">Nom</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-nom-etablissement">{{lieu.nom_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--activite-etablissement">Description de l’activité</div>
+                                <div class="fr-col-4 descripteur-label">Description de l’activité</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-activite-etablissement">{{lieu.activite_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--pays-etablissement">Pays</div>
+                                <div class="fr-col-4 descripteur-label">Pays</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-pays-etablissement">{{lieu.pays_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--raison-sociale-etablissement">Raison sociale</div>
+                                <div class="fr-col-4 descripteur-label">Raison sociale</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-raison-sociale-etablissement">{{lieu.raison_sociale_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--adresse-etablissement">Adresse</div>
+                                <div class="fr-col-4 descripteur-label">Adresse</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse-etablissement">{{lieu.adresse_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--siret-etablissement">N° SIRET</div>
+                                <div class="fr-col-4 descripteur-label">N° SIRET</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-siret-etablissement">{{lieu.siret_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--code-inupp-etablissement">Code INUPP</div>
+                                <div class="fr-col-4 descripteur-label">Code INUPP</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-inupp-etablissement">{{lieu.code_inupp_etablissement|default:"nc."}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-offset-2"></div>
-                                <div class="fr-col-4 detail-lieu__label--position-etablissement">Position</div>
+                                <div class="fr-col-4 descripteur-label">Position</div>
                                 <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">{{lieu.position_chaine_distribution_etablissement.libelle|default:"nc."}}</div>
                             </div>
                         {% endif %}

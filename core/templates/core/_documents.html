@@ -1,13 +1,13 @@
 <div class="fr-container--fluid fr-mb-4w" id="documents">
     <div class="fr-grid-row">
-        <div class="fr-col-4">
+        <div class="fr-col-8 fr-col-xl-4">
             <form method="get" action="#tabpanel-documents-panel" class="documents__filters">
                 {{ document_filter.form.as_dsfr_div }}
                 <p class="fr-my-2w fr-ml-2w"> <button type="submit" class="fr-btn" data-testid="documents-filter">Filtrer</button></p>
             </form>
 
         </div>
-        <div class="fr-col-5"></div>
+        <div class="fr-col-1 fr-col-xl-5"></div>
         <div class="fr-col-3">
             <div class="fr-btns-group--right fr-mt-3w">
                 <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-circle-line" data-testid="documents-add" data-fr-opened="false" aria-controls="fr-modal-add-doc">
