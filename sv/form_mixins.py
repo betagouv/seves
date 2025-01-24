@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 
 from core.fields import MultiModelChoiceField
 from core.models import LienLibre
+from sv.models import Evenement
 
 
 class WithDataRequiredConversionMixin:
@@ -35,6 +36,7 @@ class WithFreeLinksMixin:
             .get_user_can_view(self.user)
             .select_related("numero")
             .exclude(id=self.instance.id)
+            .exclude(etat=Evenement.Etat.BROUILLON)
         )
         self.fields["free_link"] = MultiModelChoiceField(
             required=False,
