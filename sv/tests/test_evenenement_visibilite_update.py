@@ -6,6 +6,7 @@ from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
 from core.factories import StructureFactory, ContactAgentFactory
 from core.models import Structure, Visibilite
 from sv.factories import EvenementFactory
+from sv.models import Evenement
 
 
 def test_users_cant_update_visibilite(live_server, page: Page, mocked_authentification_user):
@@ -33,6 +34,20 @@ def test_users_from_ac_can_update_visibilite(live_server, page: Page, mocked_aut
     expect(page.get_by_text("La visibilité de l'évenement a bien été modifiée.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.visibilite == Visibilite.NATIONALE
+
+
+@pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
+def test_cant_update_visibilite_when_draft(live_server, page: Page, mocked_authentification_user, structure_ac):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=structure_ac
+    )
+    mocked_authentification_user.agent.save()
+    evenement.createur = mocked_authentification_user.agent.structure
+    evenement.save()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    expect(page.locator("#action-1").get_by_text("Modifier la visibilité")).not_to_be_visible()
 
 
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
