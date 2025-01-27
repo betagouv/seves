@@ -23,7 +23,7 @@ body{
 .fiches__search-form {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: baseline;
     gap: 0.5rem;
 }
 .fiches__search-form .fr-fieldset__element{

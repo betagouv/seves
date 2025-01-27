@@ -29,4 +29,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('id_lieux__departement__region').disabled = true
         document.getElementById('id_lieux__departement__region').selectedIndex = 0
     }
+
+    const form = document.getElementById('search-form');
+    form.addEventListener('invalid', (event) => {
+        event.preventDefault();
+        const input = event.target;
+        input.classList.add("fr-input--error")
+        input.parentNode.classList.add("fr-input-group--error")
+        input.parentNode.querySelector("span").textContent = input.validationMessage
+        input.parentNode.querySelector("span").classList.remove("fr-hidden")
+    }, true);
+
 });
