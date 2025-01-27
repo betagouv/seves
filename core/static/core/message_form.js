@@ -52,6 +52,17 @@ function addStructuresToRecipients(event, choiceElement){
     choiceElement.setChoiceByValue(event.target.getAttribute("data-structures").split(","))
 }
 
+function addShortcuts(choicesRecipients, choicesCopy){
+    const destinatairesShortcutElement = document.querySelector(".destinataires-shortcut")
+    if (!! destinatairesShortcutElement){
+        destinatairesShortcutElement.addEventListener("click", event => addStructuresToRecipients(event, choicesRecipients))
+    }
+    const copieShortcutElement = document.querySelector(".copie-shortcut")
+    if (!! destinatairesShortcutElement){
+        copieShortcutElement.addEventListener("click", event => addStructuresToRecipients(event, choicesCopy))
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     let currentID = 0
     const messageAddDocumentButton = document.getElementById("message-add-document")
@@ -94,6 +105,43 @@ document.addEventListener('DOMContentLoaded', function () {
         searchResultLimit: 500,
     });
 
-    document.querySelector(".destinataires-shortcut").addEventListener("click", event => addStructuresToRecipients(event, choicesRecipients))
-    document.querySelector(".copie-shortcut").addEventListener("click", event => addStructuresToRecipients(event, choicesCopy))
+    addShortcuts(choicesRecipients, choicesCopy);
+    document.querySelectorAll(".message-panel").forEach(element =>{
+        element.addEventListener("click", event =>{
+            document.getElementById('sidebar').classList.toggle('open');
+            document.querySelector('.main-container').classList.toggle('open')
+            document.getElementById("id_message_type").value=event.target.dataset.messageType
+
+            const messageType = event.target.dataset.messageType
+            const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
+            const destinatairesInput = document.getElementById("id_recipients")
+            const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
+
+            if (messageType === "note" || messageType === "point de situation" || messageType === "fin de suivi") {
+                destinatairesElement.classList.add("fr-hidden")
+                destinatairesInput.required = false
+                copieElement.classList.add("fr-hidden")
+            } else if (messageType === "compte rendu sur demande d'intervention") {
+                destinatairesElement.classList.add("fr-hidden")
+                destinatairesInput.required = false
+                copieElement.classList.add("fr-hidden")
+                document.getElementById("id_recipients_limited_recipients").parentNode.classList.remove("fr-hidden")
+            } else {
+                destinatairesElement.classList.remove("fr-hidden")
+                destinatairesInput.required = true
+                copieElement.classList.remove("fr-hidden")
+            }
+            if (messageType === "fin de suivi") {
+                document.getElementById("id_title").value = "Fin de suivi"
+            } else {
+                document.getElementById("id_title").value = ""
+            }
+
+        })
+    })
+
+    document.querySelectorAll(".close-sidebar").forEach(element => {element.addEventListener("click", event =>{
+        document.getElementById('sidebar').classList.toggle('open');
+        document.querySelector('.main-container').classList.toggle('open')
+    })})
 });

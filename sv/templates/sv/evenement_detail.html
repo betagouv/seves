@@ -6,13 +6,50 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/evenement_details.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichezonedelimitee_detail.css' %}">
 {% endblock %}
 
 {% block scripts %}
     <script type="module" src="{% static 'sv/evenement_details.js' %}"></script>
+    <script type="text/javascript" src="{% static 'core/message_form.js' %}"></script>
 {% endblock %}
+
+{% block aside %}
+    <aside id="sidebar" class="sidebar white-container--lite">
+        <div class="close-sidebar-container">
+            <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{{ evenement.add_message_url }}">
+            {% csrf_token %}
+            <div class=" fr-fieldset__element fr-hidden">
+                <label>Destinataires</label>
+                {{ message_form.recipients_limited_recipients }}
+            </div>
+            {{ message_form.as_dsfr_div }}
+            <div class="fr-p-2w message-documents-container">
+                <h3 class="fr-h3">Documents</h3>
+                <p id="no-document">Aucun document ajouté.</p>
+                <div id="documents-to-upload"></div>
+                <div id="inputs-for-upload" class="fr-hidden"></div>
+                <hr>
+                <h4 class="fr-h4">Nouveau document</h4>
+                <div>
+                    {{ add_document_form.as_dsfr_div }}
+                    <div class="message-documents-actions">
+                        <button class="fr-btn" id="message-add-document" disabled>Ajouter</button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="message-send-btn fr-pr-1w fr-mb-8w">
+                <button type="submit" class="fr-btn " data-testid="fildesuivi-add-submit">Envoyer</button>
+            </div>
+
+        </form>
+    </aside>
+{% endblock aside %}
 
 {% block content %}
     <main class="main-container">

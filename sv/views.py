@@ -17,6 +17,7 @@ from django.views.generic import (
     DeleteView,
 )
 
+from core.forms import MessageForm, MessageDocumentForm
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -151,6 +152,12 @@ class EvenementDetailView(
         contacts_not_in_fin_suivi = self.get_object().get_contacts_structures_not_in_fin_suivi()
         context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
         context["can_cloturer_evenement"] = len(contacts_not_in_fin_suivi) == 0
+        context["message_form"] = MessageForm(
+            sender=self.request.user,
+            obj=self.get_object(),
+            next=self.get_object().get_absolute_url(),
+        )
+        context["add_document_form"] = MessageDocumentForm()
         context["active_detection"] = (
             int(self.request.GET.get("detection"))
             if self.request.GET.get("detection")

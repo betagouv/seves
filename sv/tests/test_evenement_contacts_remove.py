@@ -13,13 +13,17 @@ def test_can_remove_myself_from_an_evenement(live_server, page, mocked_authentif
     page.get_by_role("tab", name="Contacts").click()
 
     page.locator(f'a[aria-controls="fr-modal-contact-{contact.id}"]').click()
-    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(str(mocked_authentification_user.agent), exact=True)
+    ).to_be_visible()
     expect(page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
     page.get_by_test_id(f"contact-delete-{contact.id}").click()
 
     assert page.url == f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-contacts-panel"
     assert evenement.contacts.count() == 0
-    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).not_to_be_visible()
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(str(mocked_authentification_user.agent), exact=True)
+    ).not_to_be_visible()
 
 
 def test_can_remove_another_contact_from_a_fiche(live_server, page):

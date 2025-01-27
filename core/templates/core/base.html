@@ -27,68 +27,69 @@
     </head>
 
     <body>
-        <body>
-            <header role="banner" class="fr-header">
-                <div id="en-tete">
-                    <img src="{% static 'images/marianne.png' %}" alt="">
-                    <p id="seves-title"><a href="{% url 'fiche-liste' %}">Sèves</a></p>
-                    <a href="{% url 'fiche-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
-                        {% block product_title %}
-                        {% endblock product_title %}
-                    </a>
-                </div>
-                <nav class="fr-nav" id="navigation-773" role="navigation" aria-label="Menu principal">
-                    <ul class="fr-nav__list">
-                        <li class="fr-nav__item">
-                            <button class="fr-btn fr-my-auto"><span class="fr-icon-add-line" aria-hidden="true"></span>
-                                <a href="{% url 'fiche-detection-creation' %}" >Créer une fiche</a></button>
-                        </li>
-                        <li class="fr-nav__item">
-                            <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-liste' %}" target="_self" aria-current=”page”>Fiches</a>
-                        </li>
-                        <li class="fr-nav__item">
-                            {% if user.is_authenticated %}
-                                <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-777"><span class="fr-icon-account-circle-line"></span>{{ user.email }}</button>
-                                <div class="fr-collapse fr-menu" id="menu-777">
-                                    <ul class="fr-menu__list">
-                                        <li>
-                                            <form action="{% url 'oidc_logout' %}" method="post">
-                                                {% csrf_token %}
-                                                <input type="submit" value="Se déconnecter" class="fr-nav__link">
-                                            </form>
-                                        </li>
-                                        {% if request.user|has_group:"access_admin" %}
-                                            <li class="fr-nav__link"><a href="{% url 'handle-permissions' %}" >Gestion des droits d'accès</a></li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                            {% endif %}
-                        </li>
-                    </ul>
-                </nav>
-            </header>
-
-            {% if messages %}
-                <div class="alert-container">
-                    {% for message in messages %}
-                        {% if "core" not in message.extra_tags %}
-                            <div class="fr-alert fr-alert--{{ message.level_tag }}">
-                                <h3 class="fr-alert__title">{{message}}</h3>
-                                <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                    Masquer le message
-                                </button>
+        {% block aside %}
+        {% endblock aside %}
+        <header role="banner" class="fr-header">
+            <div id="en-tete">
+                <img src="{% static 'images/marianne.png' %}" alt="">
+                <p id="seves-title"><a href="{% url 'fiche-liste' %}">Sèves</a></p>
+                <a href="{% url 'fiche-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
+                    {% block product_title %}
+                    {% endblock product_title %}
+                </a>
+            </div>
+            <nav class="fr-nav" id="navigation-773" role="navigation" aria-label="Menu principal">
+                <ul class="fr-nav__list">
+                    <li class="fr-nav__item">
+                        <button class="fr-btn fr-my-auto"><span class="fr-icon-add-line" aria-hidden="true"></span>
+                            <a href="{% url 'fiche-detection-creation' %}" >Créer une fiche</a></button>
+                    </li>
+                    <li class="fr-nav__item">
+                        <a class="fr-nav__link fr-icon-profil-line fr-link--icon-left {% block highlight_menu_fiches %}{% endblock %}" href="{% url 'fiche-liste' %}" target="_self" aria-current=”page”>Fiches</a>
+                    </li>
+                    <li class="fr-nav__item">
+                        {% if user.is_authenticated %}
+                            <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-777"><span class="fr-icon-account-circle-line"></span>{{ user.email }}</button>
+                            <div class="fr-collapse fr-menu" id="menu-777">
+                                <ul class="fr-menu__list">
+                                    <li>
+                                        <form action="{% url 'oidc_logout' %}" method="post">
+                                            {% csrf_token %}
+                                            <input type="submit" value="Se déconnecter" class="fr-nav__link">
+                                        </form>
+                                    </li>
+                                    {% if request.user|has_group:"access_admin" %}
+                                        <li class="fr-nav__link"><a href="{% url 'handle-permissions' %}" >Gestion des droits d'accès</a></li>
+                                    {% endif %}
+                                </ul>
                             </div>
                         {% endif %}
-                    {% endfor %}
-                </div>
-            {% endif %}
+                    </li>
+                </ul>
+            </nav>
+        </header>
 
-            {% block content %}{% endblock %}
+        {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    {% if "core" not in message.extra_tags %}
+                        <div class="fr-alert fr-alert--{{ message.level_tag }}">
+                            <h3 class="fr-alert__title">{{message}}</h3>
+                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                                Masquer le message
+                            </button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
 
-            <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
-            <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
-            <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
-            {% block scripts %}{% endblock %}
-        </body>
+        {% block content %}{% endblock %}
 
-    </html>
+        <script type="module" src="{% static 'dsfr.module.min.js' %}"></script>
+        <script type="text/javascript" nomodule src="{% static 'dsfr.nomodule.min.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/choices.js@9.0.1/public/assets/scripts/choices.min.js"></script>
+        {% block scripts %}{% endblock %}
+    </body>
+
+</html>

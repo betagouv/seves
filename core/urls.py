@@ -50,7 +50,7 @@ urlpatterns = [
         name="contact-delete",
     ),
     path(
-        "message-add/<str:message_type>/<int:obj_type_pk>/<int:obj_pk>/",
+        "message-add/<int:obj_type_pk>/<int:obj_pk>/",
         MessageCreateView.as_view(),
         name="message-add",
     ),

@@ -155,35 +155,10 @@ class AllowACNotificationMixin(models.Model):
 
 
 class WithMessageUrlsMixin:
-    def get_add_message_url(self, message_type):
-        content_type = ContentType.objects.get_for_model(self)
-        return reverse(
-            "message-add", kwargs={"message_type": message_type, "obj_type_pk": content_type.pk, "obj_pk": self.pk}
-        )
-
     @property
     def add_message_url(self):
-        return self.get_add_message_url(Message.MESSAGE)
-
-    @property
-    def add_note_url(self):
-        return self.get_add_message_url(Message.NOTE)
-
-    @property
-    def add_point_de_suivi_url(self):
-        return self.get_add_message_url(Message.POINT_DE_SITUATION)
-
-    @property
-    def add_demande_intervention_url(self):
-        return self.get_add_message_url(Message.DEMANDE_INTERVENTION)
-
-    @property
-    def add_compte_rendu_url(self):
-        return self.get_add_message_url(Message.COMPTE_RENDU)
-
-    @property
-    def add_fin_suivi_url(self):
-        return self.get_add_message_url(Message.FIN_SUIVI)
+        content_type = ContentType.objects.get_for_model(self)
+        return reverse("message-add", kwargs={"obj_type_pk": content_type.pk, "obj_pk": self.pk})
 
 
 class WithVisibiliteMixin(models.Model):

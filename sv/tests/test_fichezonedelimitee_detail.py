@@ -26,7 +26,9 @@ def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, fiche_zone, pa
             f"{fiche_zone_delimitee.surface_tampon_totale} {fiche_zone_delimitee.unite_surface_tampon_totale}"
         )
     ).to_be_visible()
-    expect(page.get_by_text(f"{str(fiche_zone_delimitee.createur)}", exact=True)).to_be_visible()
+    expect(
+        page.get_by_label("Zone", exact=True).get_by_text(f"{str(fiche_zone_delimitee.createur)}", exact=True)
+    ).to_be_visible()
     expect(page.get_by_text(fiche_zone_delimitee.date_creation.strftime("%d/%m/%Y"))).to_be_visible()
     expect(page.get_by_role("link", name=f"{str(fiche_detection_fiche_zone_delimitee.numero)}")).to_be_visible()
     expect(page.get_by_text(f"{zone_infestee_1.nom}")).to_be_visible()

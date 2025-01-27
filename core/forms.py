@@ -142,8 +142,6 @@ class ContactSelectionForm(forms.Form):
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    # Duplicate the field in order to show one which is disabled (not send via POST request) and hide the real one
-    displayed_sender = forms.CharField(widget=forms.TextInput(attrs={"disabled": "True"}), label="De")
     sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
     recipients = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
@@ -151,16 +149,23 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     recipients_copy = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
     )
+    recipients_limited_recipients = forms.MultipleChoiceField(
+        choices=[("mus", "MUS"), ("bsv", "BSV")],
+        label="Destinataires",
+        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+    )
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 4}))
+
+    manual_render_fields = ["recipients_limited_recipients"]
 
     class Meta:
         model = Message
         fields = [
-            "displayed_sender",
             "sender",
             "recipients",
             "recipients_copy",
+            "recipients_limited_recipients",
             "message_type",
             "title",
             "content",
@@ -199,7 +204,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             f"Copie :<a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
         )
 
-    def __init__(self, *args, message_type, sender, **kwargs):
+    def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
@@ -213,33 +218,25 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
 
-        if self.is_bound:
-            self.fields.pop("displayed_sender")
-
         self.add_content_type_fields(obj)
         self.add_next_field(next_url)
-        self.initial["message_type"] = message_type
 
-        if message_type in Message.TYPES_WITHOUT_RECIPIENTS:
-            self.fields.pop("recipients")
-            self.fields.pop("recipients_copy")
-        elif message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self.fields.pop("recipients_copy")
-            self.fields["recipients"] = forms.MultipleChoiceField(
-                choices=[("mus", "MUS"), ("bsv", "BSV")],
-                label="Destinataires",
-                widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
-            )
+        if kwargs.get("data"):
+            message_type = kwargs.get("data")["message_type"]
+            if (
+                message_type in Message.TYPES_WITHOUT_RECIPIENTS
+                or message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS
+            ):
+                self.fields.pop("recipients")
+                self.fields.pop("recipients_copy")
+            if message_type not in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+                self.fields.pop("recipients_limited_recipients")
 
         self.initial["sender"] = sender.agent.contact_set.get()
-        self.initial["displayed_sender"] = sender.agent.contact_set.get().display_with_agent_unit
-
-        if message_type == Message.FIN_SUIVI:
-            self.initial["title"] = "Fin de suivi"
 
     def _convert_checkboxes_to_contacts(self):
         try:
-            checkboxes = copy(self.cleaned_data["recipients"])
+            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
         except KeyError:
             raise ValidationError("Au moins un destinataire doit être sélectionné.")
         self.cleaned_data["recipients"] = []
