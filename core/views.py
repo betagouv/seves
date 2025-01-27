@@ -194,9 +194,9 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
 class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, CreateView):
     model = Message
     form_class = MessageForm
+    http_method_names = ["post"]
 
     def dispatch(self, request, *args, **kwargs):
-        self.message_type = self.kwargs.get("message_type")
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
         self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
         return super().dispatch(request, *args, **kwargs)
@@ -210,7 +210,6 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
             {
                 "obj": self.obj,
                 "next": self.obj.get_absolute_url(),
-                "message_type": self.message_type,
                 "sender": self.request.user,
             }
         )
@@ -220,8 +219,6 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
         context["add_document_form"] = MessageDocumentForm()
-        context["message_type"] = self.message_type
-        context["feminize"] = self.message_type in Message.TYPES_TO_FEMINIZE
         return context
 
     def get_success_url(self):
@@ -293,6 +290,12 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
         notify_message(form.instance)
         messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return HttpResponseRedirect(self.obj.get_absolute_url())
 
 
 class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):

@@ -24,10 +24,8 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
-
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
     page.locator("#id_title").fill("Title of the message")
@@ -59,27 +57,25 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, with_active_contact, choice_js_fill):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
-
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
 
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("README.md")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("README.md", exact=True)).to_be_visible()
 
-    page.locator("#id_document_type").select_option("Cartographie")
-    page.locator("#id_file").set_input_files("requirements.in")
+    page.locator(".sidebar #id_document_type").select_option("Cartographie")
+    page.locator(".sidebar #id_file").set_input_files("requirements.in")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("requirements.in", exact=True)).to_be_visible()
 
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files("requirements.txt")
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("requirements.txt")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("requirements.txt", exact=True)).to_be_visible()
 
@@ -121,10 +117,8 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         agents.append(agent)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
-
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     # Add multiple recipients
     choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[0].nom, str(agents[0]))
@@ -166,7 +160,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("contacts").click()
     for agent in agents:
-        expect(page.get_by_text(str(agent), exact=True)).to_be_visible()
+        expect(page.get_by_label("Contacts").locator("p").filter(has_text=str(agent))).to_be_visible()
 
 
 def test_can_add_and_see_note_without_document(live_server, page: Page):
@@ -174,8 +168,6 @@ def test_can_add_and_see_note_without_document(live_server, page: Page):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Note").click()
-
-    assert page.url == f"{live_server.url}{evenement.add_note_url}"
 
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -214,7 +206,6 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page):
     page.get_by_test_id("element-actions").click()
     page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
 
-    page.wait_for_url(f"**{evenement.add_compte_rendu_url}")
     page.get_by_text("MUS").click()
     page.get_by_text("BSV").click()
     page.locator("#id_title").fill("Title of the message")
@@ -246,12 +237,10 @@ def test_cant_add_compte_rendu_without_recipient(live_server, page: Page):
     page.get_by_test_id("element-actions").click()
     page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
 
-    page.wait_for_url(f"**{evenement.add_compte_rendu_url}")
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
-    page.wait_for_url(f"**{evenement.add_compte_rendu_url}")
     expect(page.get_by_text("Au moins un destinataire doit être sélectionné.")).to_be_visible()
 
 
@@ -259,10 +248,9 @@ def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
-    page.wait_for_url(f"**{evenement.add_message_url}")
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
 
 
@@ -274,15 +262,16 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
-    page.wait_for_url(f"**{evenement.add_message_url}")
     page.locator(".destinataires-shortcut").click()
 
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
+
+    page.wait_for_timeout(10000)
 
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
 
@@ -310,11 +299,10 @@ def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_c
     user = baker.make(User, is_active=False)
     agent = baker.make(Agent, user=user)
     baker.make(Contact, agent=agent, structure=None)
-
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
 
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     choice_js_cant_pick(page, ".choices__input--cloned:first-of-type", agent.nom, str(agent))
 
@@ -326,26 +314,13 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 
     structure_without_email = baker.make(Structure, niveau1="BAR", niveau2="BAR", libelle="BAR")
     baker.make(Contact, agent=None, email="", structure=structure_without_email)
-
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
 
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", "FOO", "FOO")
     choice_js_cant_pick(page, ".choices__input--cloned:first-of-type", "BAR", "BAR")
-
-
-@pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_access_add_message_form_if_evenement_brouillon(client, message_type, message_label):
-    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-
-    response = client.get(evenement.get_add_message_url(message_type), follow=True)
-
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
@@ -355,7 +330,7 @@ def test_cant_add_message_if_evenement_brouillon(
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
-        evenement.get_add_message_url(message_type),
+        evenement.add_message_url,
         data={
             "sender": Contact.objects.get(agent=mocked_authentification_user.agent).pk,
             "recipients": [with_active_contact.pk],
@@ -402,9 +377,8 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
         Contact.objects.create(structure=structure, email=f"structure{i}@test.fr")
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("fildesuivi-add")).to_be_visible()
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     # Test le champ Destinataires
     page.locator(".choices__input--cloned:first-of-type").nth(0).click()
@@ -444,8 +418,8 @@ def test_create_message_adds_agent_and_structure_contacts(
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     # Ajout du destinataire
     choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
@@ -498,8 +472,8 @@ def test_create_multiple_messages_adds_contacts_once(
 
     # Ajout du premier message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
     page.locator("#id_title").fill("Message 1")
@@ -507,8 +481,8 @@ def test_create_multiple_messages_adds_contacts_once(
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Ajout du second message
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.locator(".message-actions").get_by_role("link", name="Message", exact=True).click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
     page.locator("#id_title").fill("Message 2")
@@ -550,8 +524,8 @@ def test_create_message_from_local_changes_to_limitee_and_add_structures_in_allo
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     # Envoi du message
     choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
@@ -584,8 +558,8 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("fildesuivi-add").click()
-    page.wait_for_url(f"**{evenement.add_message_url}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
 
     # Envoi du message
     choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))

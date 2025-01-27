@@ -302,7 +302,9 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
 
     page.get_by_test_id("contacts").click()
-    expect(page.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(str(mocked_authentification_user.agent), exact=True)
+    ).to_be_visible()
 
     page.wait_for_timeout(600)
 

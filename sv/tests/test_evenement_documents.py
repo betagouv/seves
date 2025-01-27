@@ -25,7 +25,7 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description")
-    page.locator("#id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
 
     assert evenement.documents.count() == 1
@@ -230,7 +230,7 @@ def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Pa
     page.locator("#id_nom").fill("Test Document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description test")
-    page.locator("#id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
     page.get_by_test_id("documents-send").click()
 
     # Vérification que le document a été créé
