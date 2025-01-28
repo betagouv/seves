@@ -1,0 +1,16 @@
+structure (niveau1),structure (niveau2),email
+AC/DAC/DGAL,MUS,mus.dgal@example.com
+AC/DAC/DGAL,SAS/SDSPV/BSV,bsv.sas.dgal@example.com
+SD/DRAAF,DRAAF-AUVERGNE-RHONE-ALPES,draaf-auvergne-rhone-alpes@example.com
+SD/DRAAF,DRAAF-BOURGOGNE-FRANCHE-COMTE,draaf-bourgogne-franche-comte@example.com
+SD/DRAAF,DRAAF-BRETAGNE,draaf-bretagne@example.com
+SD/DRAAF,DRAAF-CENTRE-VAL-DE-LOIRE,draaf-centre-val-de-loire@example.com
+SD/DRAAF,DRAAF-CORSE,draaf-corse@example.com
+SD/DRAAF,DRAAF-GRAND-EST,draaf-grand-est@example.com
+SD/DRAAF,DRAAF-HAUTS-DE-FRANCE,draaf-hauts-de-france@example.com
+SD/DRAAF,DRAAF-ILE-DE-FRANCE,draaf-ile-de-france@example.com
+SD/DRAAF,DRAAF-NORMANDIE,draaf-normandie@example.com
+SD/DRAAF,DRAAF-NOUVELLE-AQUITAINE,draaf-nouvelle-aquitaine@example.com
+SD/DRAAF,DRAAF-OCCITANIE,draaf-occitanie@example.com
+SD/DRAAF,DRAAF-PACA,draaf-paca@example.com
+SD/DRAAF,DRAAF-PAYS-DE-LA-LOIRE,draaf-pays-de-la-loire@example.com

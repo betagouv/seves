@@ -12,7 +12,7 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
-        writer = csv.writer(sys.stdout, delimiter=";")
+        writer = csv.writer(sys.stdout, delimiter=",")
         writer.writerow(["structure (niveau1)", "structure (niveau2)", "email"])
         for structure in Structure.objects.filter(contact__email=""):
             writer.writerow([structure.niveau1, structure.niveau2, ""])

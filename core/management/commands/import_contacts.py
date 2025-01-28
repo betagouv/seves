@@ -74,7 +74,7 @@ class Command(BaseCommand):
         csv_file_path = kwargs["csv_file"]
         ligne = 1
         with open(csv_file_path, mode="r", encoding="utf-8") as csv_file:
-            reader = csv.DictReader(csv_file, delimiter=";")
+            reader = csv.DictReader(csv_file, delimiter=",")
             with transaction.atomic():
                 for row in self.clean_contacts_data(reader):
                     ligne += 1
