@@ -1,7 +1,6 @@
 {% extends 'sv/base.html' %}
 
 {% load static %}
-{% load get_field_label %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/fichezone_form.css' %}">
@@ -16,14 +15,13 @@
 
         <div class="fr-grid-row">
             <div class="fr-col-8">
-                <h1 class="fr-mb-0-5v">
+                <h1>
                     {% if fiche.id %}
                         Modification de la fiche zone délimitée
                     {% else %}
                         Création d'une fiche zone délimitée
                     {% endif %}
                 </h1>
-                <p class="fr-badge fr-badge--no-icon fr-mb-4w">{{ fiche.visibilite }}</p>
             </div>
             <div class="fr-col fichezone_form__save-btn">
                 <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
@@ -37,69 +35,45 @@
         </div>
 
         {% csrf_token %}
-        <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col">
-                <div class="white-container fr-mb-4w">
-                    <h2>Risques</h2>
-                    <div>
-                        <div class="fr-mb-1w">{{ form.organisme_nuisible.label_tag }}</div>
-                        {{ form.organisme_nuisible }}
+        <div id="risques-infos-commentaire-row" class="fr-grid-row fr-grid-row--gutters">
+
+            <div id="risques" class="fr-col-12 fr-col-lg">
+                <div class="white-container">
+                    <p class="fr-h6">Risques</p>
+                    <div class="fr-grid-row fr-mb-2w">
+                        <div id="organisme-nuisible-label" class="fr-col-5">Organisme nuisible</div>
+                        <div class="fr-col">{{ fiche.evenement.organisme_nuisible }}</div>
                     </div>
-                    <div class="fr-mt-4w">
-                        <div class="fr-mb-1w">{{ form.statut_reglementaire.label_tag }}</div>
-                        {{ form.statut_reglementaire }}
+                    <div class="fr-grid-row">
+                        <div id="statut-reglementaire-label" class="fr-col-5">Statut réglementaire</div>
+                        <div class="fr-col">{{ fiche.evenement.statut_reglementaire }}</div>
                     </div>
                 </div>
+            </div>
+
+            <div id="infos" class="fr-col-12 fr-col-lg-3">
                 <div class="white-container fr-pb-6w">
-                    <h2>Informations</h2>
-                    <div>
-                        <div class="fr-mb-1w">{{ form.date_creation.label_tag }}</div>
-                        {{ form.date_creation }}
+                    <p class="fr-h6">Informations</p>
+                    <div class="fr-grid-row" style="align-items: center;">
+                        <div class="fr-col">{{ form.date_creation.label_tag }}</div>
+                        <div class="fr-col">{{ form.date_creation }}</div>
                     </div>
                 </div>
             </div>
-            <div class="fr-col">
-                <div class="fichezoneform__details white-container">
-                    <h2>Détails</h2>
-                    <div class="fr-mt-4w">
-                        <div class="fr-mb-1w">{{ form.commentaire.label_tag }}</div>
-                        {{ form.commentaire }}
-                    </div>
-                </div>
-            </div>
-            <div class="fr-col">
-                <div class="fichezoneform__zone-tampon white-container">
-                    <h2>Zone tampon</h2>
 
-                    {{ form.rayon_zone_tampon.label_tag }}
-                    <div class="fr-grid-row fr-mt-1w">
-                        <div class="fr-col">
-                            {{ form.rayon_zone_tampon }}
-                        </div>
-                        <div class="fr-col">
-                            <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                {{ form.unite_rayon_zone_tampon }}
-                            </fieldset>
-                        </div>
-                    </div>
-
-                    {{ form.surface_tampon_totale.label_tag }}
-                    <div class="fr-grid-row fr-mt-1w">
-                        <div class="fr-col">
-                            {{ form.surface_tampon_totale }}
-                        </div>
-                        <div class="fr-col">
-                            <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                {{ form.unite_surface_tampon_totale }}
-                            </fieldset>
-                        </div>
-                    </div>
+            <div id="commentaire" class="fr-col-12 fr-col-lg">
+                <div class="white-container">
+                    <p class="fr-h6">{{ form.commentaire.label_tag }}</p>
+                    {{ form.commentaire }}
                 </div>
             </div>
+
         </div>
 
         <div class="fichezoneform__detections-hors-zone-infestee white-container fr-mt-4w">
-            <h2>Détections hors zone infestée</h2>
+            <p class="fr-h6">Détections hors zone infestée</p>
+            <p class="fr-mb-1v info-text">Rattacher ici les détections ne nécessitant pas de zone infestée.</p>
+            <p class="info-text">Si le statut de la détection change, veuillez la supprimer afin de pouvoir l’affecter à une nouvelle ZI ou une ZI existante.</p>
             <div class="fr-mb-1w">{{ form.detections_hors_zone.label_tag }}</div>
             <div class="fr-grid-row">
                 <div class="fr-col-4">
@@ -108,135 +82,35 @@
             </div>
         </div>
 
-        <div class="white-container fr-mt-4w">
-            <div class="fr-grid-row">
+        {% include 'sv/_fichezonedelimitee_form_zones_infestees.html' %}
+
+        <div class="fichezoneform__zone-tampon white-container fr-mt-4w">
+            <p class="fr-h6">Zone tampon</p>
+
+            {{ form.rayon_zone_tampon.label_tag }}
+            <div class="fr-grid-row fr-mt-1w">
+                <div class="fr-col-2">
+                    {{ form.rayon_zone_tampon }}
+                </div>
                 <div class="fr-col">
-                    <h2>Zones infestées</h2>
-                </div>
-                <div class="fr-col zones-infestees__add-form-btn">
-                    <button type="button" id="add-zone-infestee" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w">Ajouter une zone infestée</button>
+                    <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
+                        {{ form.unite_rayon_zone_tampon }}
+                    </fieldset>
                 </div>
             </div>
-            {% if zone_infestee_formset.non_form_errors %}
-                <div class="fr-alert fr-alert--error fr-mb-4w">
-                    {% for error in zone_infestee_formset.non_form_errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                        Masquer le message
-                    </button>
+
+            {{ form.surface_tampon_totale.label_tag }}
+            <div class="fr-grid-row fr-mt-1w">
+                <div class="fr-col-2">
+                    {{ form.surface_tampon_totale }}
                 </div>
-            {% endif %}
-            <div class="fr-grid-row fr-grid-row--gutters" id="zones-infestees">
-                {{ zone_infestee_formset.management_form }}
-                {% for zone_infestee_form in zone_infestee_formset %}
-                    {% if zone_infestee_form.instance.pk %}
-                        {{ zone_infestee_form.id }}
-                    {% endif %}
-                    <div class="fr-col-4">
-                        <div class="zone-infestees__zone-infestee-form fr-p-3w">
-                            {% if zone_infestee_form.errors %}
-                                <div class="fr-alert fr-alert--error fr-mb-4w">
-                                    <ul>
-                                        {% for field, errors in zone_infestee_form.errors.items %}
-                                            {% for error in errors %}
-                                                <li>{{ zone_infestee_form|get_field_label:field }} : {{ error }}</li>
-                                            {% endfor %}
-                                        {% endfor %}
-                                    </ul>
-                                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                        Masquer le message
-                                    </button>
-                                </div>
-                            {% endif %}
-                            <div class="fr-mb-3w">
-                                <div>{{ zone_infestee_form.nom.label_tag }}</div>
-                                <div class="zone-infestee-form__numero-input">{{ zone_infestee_form.nom }}</div>
-                            </div>
-                            <div class="fr-mb-3w">
-                                <div>{{ zone_infestee_form.caracteristique_principale.label_tag }}</div>
-                                {{ zone_infestee_form.caracteristique_principale }}
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ zone_infestee_form.rayon.label_tag }}</div>
-                                <div class="fr-grid-row">
-                                    <div class="fr-col">
-                                        {{ zone_infestee_form.rayon }}
-                                    </div>
-                                    <div class="fr-col">
-                                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                            {{ zone_infestee_form.unite_rayon }}
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ zone_infestee_form.surface_infestee_totale.label_tag }}</div>
-                                <div class="fr-grid-row">
-                                    <div class="fr-col">
-                                        {{ zone_infestee_form.surface_infestee_totale }}
-                                    </div>
-                                    <div class="fr-col">
-                                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                            {{ zone_infestee_form.unite_surface_infestee_totale }}
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ zone_infestee_form.detections.label_tag }}</div>
-                                {{ zone_infestee_form.detections }}
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-
-                <template id="zone-form-template">
-                    <div class="fr-col-4">
-                        <div class="zone-infestees__zone-infestee-form fr-p-3w">
-                            <div class="fr-mb-3w">
-                                <div>{{ empty_form.nom.label_tag }}</div>
-                                <div class="zone-infestee-form__numero-input">{{ empty_form.nom }}</div>
-                            </div>
-                            <div class="fr-mb-3w">
-                                <div>{{ empty_form.caracteristique_principale.label_tag }}</div>
-                                {{ empty_form.caracteristique_principale }}
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ empty_form.rayon.label_tag }}</div>
-                                <div class="fr-grid-row">
-                                    <div class="fr-col">
-                                        {{ empty_form.rayon }}
-                                    </div>
-                                    <div class="fr-col">
-                                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                            {{ empty_form.unite_rayon }}
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ empty_form.surface_infestee_totale.label_tag }}</div>
-                                <div class="fr-grid-row">
-                                    <div class="fr-col">
-                                        {{ empty_form.surface_infestee_totale }}
-                                    </div>
-                                    <div class="fr-col">
-                                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
-                                            {{ empty_form.unite_surface_infestee_totale }}
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="fr-mb-1w">{{ empty_form.detections.label_tag }}</div>
-                                {{ empty_form.detections }}
-                            </div>
-                        </div>
-                    </div>
-                </template>
+                <div class="fr-col">
+                    <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
+                        {{ form.unite_surface_tampon_totale }}
+                    </fieldset>
+                </div>
             </div>
-
         </div>
+
     </form>
 {% endblock %}

@@ -1,0 +1,60 @@
+{% load remove_trailing_zero %}
+
+
+<div class="white-container fr-mt-4w">
+    <p class="fr-h6">Zones infestées {% if zones_infestees|length %}({{ zones_infestees|length }}){% endif %}</p>
+    {% if zones_infestees|length %}
+        <div class="fr-grid-row fr-grid-row--gutters">
+            {% for zone_infestee, detections in zones_infestees %}
+                <div class="fr-col-4">
+                    <div class="fichezonedelimitee__zone-infestee fr-p-3w">
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Nom de la zone</div>
+                            <div class="fr-col">{{ zone_infestee.nom|default:"nc." }}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Caractéristique principale</div>
+                            <div class="fr-col">{{ zone_infestee.get_caracteristique_principale_display|default:"nc." }}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Rayon de la zone infestée</div>
+                            <div class="fr-col">
+                                {% if zone_infestee.rayon %}
+                                    {{ zone_infestee.rayon|remove_trailing_zero }} {{ zone_infestee.unite_rayon }}
+                                {% else %}
+                                    nc.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-1w">
+                            <div class="fr-col-7 fichezonedelimitee__field">Surface infestée totale</div>
+                            <div class="fr-col">
+                                {% if zone_infestee.surface_infestee_totale %}
+                                    {{ zone_infestee.surface_infestee_totale|remove_trailing_zero }} {{ zone_infestee.unite_surface_infestee_totale }}
+                                {% else %}
+                                    nc.
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% with detections_count=detections.count %}
+                            <span class="fichezonedelimitee__field">Détections rattachées {% if detections_count %}({{ detections_count }}){% endif %}</span>
+                            {% if detections_count %}
+                                <ul class="fr-tags-group fr-mt-3v">
+                                    {% for detection in detections %}
+                                        <li>
+                                            <a href="{{ detection.get_absolute_url }}" class="fr-tag">{{ detection.numero }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="fr-ml-22v">nc.</span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Aucune zone infestée</p>
+    {% endif %}
+</div>

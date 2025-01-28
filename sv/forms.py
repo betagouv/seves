@@ -291,12 +291,6 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
 
 
 class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
-    organisme_nuisible = forms.CharField(
-        widget=forms.TextInput(attrs={"readonly": ""}), label="Organisme nuisible", required=False
-    )
-    statut_reglementaire = forms.CharField(
-        widget=forms.TextInput(attrs={"readonly": ""}), label="Statut réglementaire", required=False
-    )
     date_creation = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"disabled": "", "value": now().strftime("%d/%m/%Y")}),
         required=False,
@@ -328,7 +322,7 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
         widgets = {
             "createur": forms.HiddenInput,
             "vegetaux_infestes": forms.Textarea(attrs={"rows": 1}),
-            "commentaire": forms.Textarea(attrs={"rows": 5}),
+            "commentaire": forms.Textarea(attrs={"rows": 3}),
             "rayon_zone_tampon": forms.NumberInput(attrs={"min": "0"}),
             "surface_tampon_totale": forms.NumberInput(attrs={"min": "0"}),
         }
@@ -339,11 +333,8 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        if self.initial.get("evenement"):
-            evenement = self.initial.get("evenement")
+        if evenement := self.initial.get("evenement"):
             queryset = FicheDetection.objects.filter(evenement=evenement)
-            self.fields["organisme_nuisible"].initial = evenement.organisme_nuisible.libelle_court
-            self.fields["statut_reglementaire"].initial = evenement.statut_reglementaire.libelle
         elif self.instance.pk:
             queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
 
