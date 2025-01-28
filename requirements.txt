@@ -44,7 +44,7 @@ django==5.1.5
     #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
-django-debug-toolbar==4.4.6
+django-debug-toolbar==5.0.1
     # via -r requirements.in
 django-environ==0.11.2
     # via -r requirements.in
