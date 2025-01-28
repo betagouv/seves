@@ -1,0 +1,26 @@
+{% load remove_trailing_zero %}
+
+
+<div class="white-container fr-mt-4w">
+    <p class="fr-h6">Zone tampon</p>
+    <div class="fr-grid-row fr-mt-3w">
+        <div class="fr-col-3 fichezonedelimitee__field">Rayon tampon réglementaire ou arbitré</div>
+        <div class="fr-col">
+            {% if fiche.rayon_zone_tampon %}
+                {{ fiche.rayon_zone_tampon|remove_trailing_zero }} {{ fiche.unite_rayon_zone_tampon }}
+            {% else %}
+                nc.
+            {% endif %}
+        </div>
+    </div>
+    <div class="fr-grid-row fr-mt-3w">
+        <div class="fichezonedelimitee__field fr-col-3">Surface tampon totale</div>
+        <div class="fr-col">
+            {% if fiche.surface_tampon_totale %}
+                {{ fiche.surface_tampon_totale|remove_trailing_zero }} {{ fiche.unite_surface_tampon_totale }}
+            {% else %}
+                nc.
+            {% endif %}
+        </div>
+    </div>
+</div>

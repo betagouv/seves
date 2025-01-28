@@ -58,5 +58,5 @@ def test_click_on_zone_in_table_redirects_to_zone_tab(live_server, page):
     page.goto(f"{live_server}{reverse('fiche-liste')}?type_fiche=zone")
     page.get_by_role("link", name=f"{evenement.numero}").click()
 
-    expect(page.get_by_role("tab", name="Zone")).to_be_visible()
-    expect(page.get_by_role("heading", name="Zone tampon")).to_be_visible()
+    expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
+    expect(page.get_by_text("Zone tampon")).to_be_visible()

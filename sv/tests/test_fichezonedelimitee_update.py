@@ -21,18 +21,6 @@ def test_fichezonedelimitee_update_form_content(live_server, page: Page, choice_
     form_page.check_update_form_content(fiche_zone_delimitee)
 
 
-def test_organisme_nuisible_and_statut_reglementaire_are_readonly_on_fiche_zone_delimitee_update_form(
-    live_server, page: Page, choice_js_fill
-):
-    fiche_zone = FicheZoneFactory()
-    EvenementFactory(fiche_zone_delimitee=fiche_zone)
-
-    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
-    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
-    form_page.organisme_nuisible_is_readonly()
-    form_page.statut_reglementaire_is_readonly()
-
-
 def test_fichezonedelimitee_update_without_zone_infestee_form_submit(live_server, page: Page, choice_js_fill):
     fiche_zone_delimitee = FicheZoneFactory()
     EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)

@@ -1,16 +1,25 @@
-.fichezoneform__details,
-.fichezoneform__zone-tampon {
-    height: 535px;
-}
-
 .fichezone_form__save-btn,
 .zones-infestees__add-form-btn {
     text-align: right;
 }
-
 .zone-infestees__zone-infestee-form {
     background-color: var(--background-alt-grey);
 }
 .zone-infestee-form__numero-input {
     width: 50%;
+}
+.info-text {
+    color: var(--text-mention-grey);
+}
+#organisme-nuisible-label, #statut-reglementaire-label {
+    font-weight: bold;
+}
+
+@media (min-width: 992px) {
+    #risques-infos-commentaire-row {
+        display: flex;
+    }
+    #risques-infos-commentaire-row .white-container {
+        height: 100%;
+    }
 }

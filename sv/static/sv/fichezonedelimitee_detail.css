@@ -1,12 +1,17 @@
-.fichezonedelimitee__details,
-.fichezonedelimitee__zone-tampon {
-    height: 432px;
-}
 .fichezonedelimitee__field {
     font-weight: bold;
 }
 .fichezonedelimitee__zone-infestee {
-    background-color: var(--background-default-grey-hover);
+    background-color: var(--background-alt-grey-hover);
     border-radius: 3px;
     min-height: 230px;
+}
+
+@media (min-width: 992px) {
+    #commentaire-detections-hors-zone {
+        display: flex;
+    }
+    #commentaire-detections-hors-zone .white-container {
+        height: 100%;
+    }
 }
