@@ -17,5 +17,5 @@ def test_export_contacts_with_data():
 
     result = out.getvalue().splitlines()
     assert len(result) == 2
-    assert result[0] == "structure (niveau1);structure (niveau2);email"
-    assert result[1] == "Direction;Service A;"
+    assert result[0] == "structure (niveau1),structure (niveau2),email"
+    assert result[1] == "Direction,Service A,"

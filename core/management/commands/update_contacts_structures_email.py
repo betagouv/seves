@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = """
         Ajoute les emails des contacts liés à une structure qui n'ont pas d'email renseigné.
         Les adresses emails sont récupérées depuis le fichier CSV fourni en argument (fichier généré par la commande export_contacts_structures).
-        Usage: python manage.py update_contacts_emails contacts_structures.csv
+        Usage: python manage.py update_contacts_structures_email contacts_structures.csv
     """
 
     def add_arguments(self, parser):
@@ -17,7 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         updates = 0
         with open(options["csv_file"], newline="") as f:
-            reader = csv.DictReader(f, delimiter=";")
+            reader = csv.DictReader(f, delimiter=",")
             for row in reader:
                 niveau1 = row["structure (niveau1)"]
                 niveau2 = row["structure (niveau2)"]

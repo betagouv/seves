@@ -17,10 +17,10 @@ def _reset_contacts():
 @pytest.fixture
 def mock_csv_data(tmp_path):
     """Fixture pour les données CSV de test"""
-    data = """Structure;Prénom;Nom;Mail;Fonction_hiérarchique;Complément_fonction;Téléphone;Mobile
-DDI/DDPP/DDPP17/SSA;John;Doe;test@example.com;Manager;;+33 5 46 00 00 00;+33 6 00 00 00 00
-AC/DAC/DGAL/MUS;John2;Doe2;test2@example2.com;Super Manager;;+33 5 46 01 00 00;;
-SD/DAAF/DAAF973/SG;Prestataire;TEMPORAIRE;inconnu;;;;"""
+    data = """Structure,Prénom,Nom,Mail,Fonction_hiérarchique,Complément_fonction,Téléphone,Mobile
+DDI/DDPP/DDPP17/SSA,John,Doe,test@example.com,Manager,,+33 5 46 00 00 00,+33 6 00 00 00 00
+AC/DAC/DGAL/MUS,John2,Doe2,test2@example2.com,Super Manager,,+33 5 46 01 00 00,,
+SD/DAAF/DAAF973/SG,Prestataire,TEMPORAIRE,inconnu,,,,"""
     p = tmp_path / "test.csv"
     p.write_text(data, encoding="utf-8")
     return str(p)

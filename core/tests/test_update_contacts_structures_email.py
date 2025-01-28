@@ -8,10 +8,10 @@ from core.models import Structure, Contact
 @pytest.fixture
 def mock_csv_data(tmp_path):
     data = (
-        "structure (niveau1);structure (niveau2);email\n"
-        "Direction;Service A;new@example.com\n"
-        "Direction;Service B;another@example.com\n"
-        "Direction;Service C;"
+        "structure (niveau1),structure (niveau2),email\n"
+        "Direction,Service A,new@example.com\n"
+        "Direction,Service B,another@example.com\n"
+        "Direction,Service C,"
     )
     p = tmp_path / "test.csv"
     p.write_text(data, encoding="utf-8")
