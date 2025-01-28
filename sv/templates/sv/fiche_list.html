@@ -73,7 +73,7 @@
                                     {{ fiche.numero|default:"nc." }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fr-link">
+                                    <a href="{{ fiche.get_absolute_url }}" class="fr-link" {% if fiche.type == "D" %}data-testid="{{ fiche.numero }}"{% endif %}>
                                         {{ fiche.numero_evenement|default:"nc." }}
                                     </a>
                                 </td>
