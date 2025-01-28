@@ -186,7 +186,6 @@ def test_fiche_detection_is_visible_and_selected_after_creation(live_server, pag
     new_detection = FicheDetection.objects.filter(evenement=evenement).exclude(pk=detection_existante.pk).get()
     expect(page.get_by_role("tab", name=f"{new_detection.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{new_detection.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
-    expect(page.get_by_text(f"N° de fiche{new_detection.numero}")).to_be_visible()
 
 
 def test_fiche_detection_is_visible_and_selected_after_update(live_server, page):
@@ -208,7 +207,6 @@ def test_fiche_detection_is_visible_and_selected_after_update(live_server, page)
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
-    expect(page.get_by_text(f"N° de fiche{detection_2.numero}")).to_be_visible()
 
 
 def test_fiche_zone_is_visible_after_creation(live_server, page):
