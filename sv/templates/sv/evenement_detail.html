@@ -108,7 +108,7 @@
                                                 tabindex="{% if fichedetection.pk == active_detection %}0{% else %}-1{% endif %}"
                                                 role="tab"
                                                 aria-selected="{% if fichedetection.pk == active_detection %}true{% else %}false{% endif %}"
-                                                aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }} ({{ fichedetection.pk }}</button>
+                                                aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
                                     </li>
                                 {% endfor %}
                                 <li>
