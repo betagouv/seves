@@ -81,6 +81,16 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
+    siret_etablissement = forms.CharField(
+        required=False,
+        max_length=14,
+        widget=forms.TextInput(
+            attrs={
+                "pattern": "[0-9]{14}",
+                "title": "Le SIRET doit contenir exactement 14 chiffres",
+            }
+        ),
+    )
 
     class Meta:
         model = Lieu

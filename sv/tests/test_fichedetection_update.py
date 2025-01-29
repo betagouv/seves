@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory
+from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory
 from ..models import (
     FicheDetection,
     Lieu,
@@ -43,8 +43,7 @@ def fiche_detection_with_one_lieu(fiche_detection, lieu_bakery, db):
 
 @pytest.fixture
 def fiche_detection_with_two_lieux(fiche_detection, db):
-    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
-    baker.make(Lieu, fiche_detection=fiche_detection, code_insee="65455", _fill_optional=True)
+    LieuFactory.create_batch(2, fiche_detection=fiche_detection)
     return fiche_detection
 
 
@@ -566,16 +565,15 @@ def test_commune_display_in_card_and_edit_modal(live_server, page: Page):
 def test_add_new_prelevement_non_officiel(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = fiche_detection_with_one_lieu.lieux.first()
+    lieu = LieuFactory()
     prelevement = baker.prepare(Prelevement, lieu=lieu, resultat="detecte", _fill_optional=True, _save_related=True)
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
@@ -640,16 +638,12 @@ def test_add_new_prelevement_with_empty_date(
 def test_add_new_prelevement_officiel(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    lieu_bakery,
     choice_js_fill,
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
-    lieu = lieu_bakery()
-    lieu.fiche_detection = fiche_detection_with_one_lieu
-    lieu.save()
+    lieu = LieuFactory()
     prelevement = baker.prepare(
         Prelevement,
         lieu=lieu,
@@ -659,7 +653,7 @@ def test_add_new_prelevement_officiel(
         numero_rapport_inspection="24-123456",
     )
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
@@ -698,10 +692,8 @@ def test_add_new_prelevement_officiel(
 def test_add_new_prelevement_exploitant_cant_be_officiel(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    lieu_bakery,
     choice_js_fill,
 ):
     """
@@ -711,14 +703,12 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     """
     structure_exploitant, _ = StructurePreleveuse.objects.get_or_create(nom=STRUCTURE_EXPLOITANT)
     structure_sral, _ = StructurePreleveuse.objects.get_or_create(nom="SRAL")
-    lieu = lieu_bakery()
-    lieu.fiche_detection = fiche_detection_with_one_lieu
-    lieu.save()
+    lieu = LieuFactory()
     prelevement = baker.prepare(
         Prelevement, lieu=lieu, _fill_optional=True, resultat=Prelevement.Resultat.DETECTE, _save_related=True
     )
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
 
     # Fill the form as if it was made by a Structure that can be official
@@ -801,10 +791,8 @@ def test_update_prelevement(
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
-    fiche = fiche_detection_with_one_lieu_and_one_prelevement
-    new_lieu = lieu_bakery()
-    new_lieu.fiche_detection = fiche
-    new_lieu.save()
+    prelevement = PrelevementFactory()
+    new_lieu = LieuFactory(fiche_detection=prelevement.lieu.fiche_detection)
     new_prelevement = baker.prepare(
         Prelevement,
         lieu=new_lieu,
@@ -814,7 +802,7 @@ def test_update_prelevement(
         numero_rapport_inspection="24-123456",
     )
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveuse.id))
@@ -829,6 +817,7 @@ def test_update_prelevement(
     )
     prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
     prelevement_form_elements.save_btn.click()
+    page.wait_for_timeout(600)
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
@@ -853,13 +842,10 @@ def test_update_multiple_prelevements(
     choice_js_fill_from_element,
 ):
     """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
-    lieu1, lieu2 = lieu_bakery(), lieu_bakery()
-    lieu1.fiche_detection = fiche_detection
-    lieu1.save()
-    lieu2.fiche_detection = fiche_detection
-    lieu2.save()
-    baker.make(Prelevement, lieu=lieu1, _fill_optional=True, is_officiel=True, numero_rapport_inspection="24-123456")
-    baker.make(Prelevement, lieu=lieu2, _fill_optional=True, is_officiel=True, numero_rapport_inspection="24-123456")
+    fiche_detection = FicheDetectionFactory()
+    lieu1, lieu2 = LieuFactory.create_batch(2, fiche_detection=fiche_detection)
+    PrelevementFactory(lieu=lieu1, is_officiel=True)
+    PrelevementFactory(lieu=lieu2, is_officiel=True)
     new_prelevement_1 = baker.prepare(
         Prelevement,
         lieu=lieu1,
@@ -882,6 +868,7 @@ def test_update_multiple_prelevements(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
         page.locator(".prelevement-edit-btn").nth(index).click()
+        prelevement_form_elements.numero_rapport_inspection_input.fill(new_prelevement.numero_rapport_inspection)
         prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveuse.id))
         prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
@@ -916,41 +903,27 @@ def test_update_multiple_prelevements(
 
 
 @pytest.mark.django_db
-def test_delete_prelevement(
-    live_server,
-    page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
-    form_elements: FicheDetectionFormDomElements,
-    prelevement_form_elements: PrelevementFormDomElements,
-):
+def test_delete_prelevement(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la suppression d'un prelevement existant est bien enregistrée en base de données."""
-    prelevement_id = fiche_detection_with_one_lieu_and_one_prelevement.lieux.first().prelevements.first().id
+    prelevement = PrelevementFactory()
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
     with pytest.raises(ObjectDoesNotExist):
-        Prelevement.objects.get(id=prelevement_id)
+        Prelevement.objects.get(id=prelevement.id)
 
 
 @pytest.mark.django_db
-def test_delete_multiple_prelevements(
-    live_server,
-    page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
-    form_elements: FicheDetectionFormDomElements,
-    prelevement_form_elements: PrelevementFormDomElements,
-):
+def test_delete_multiple_prelevements(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la suppression de plusieurs prelevements existants est bien enregistrée en base de données."""
-    lieu = fiche_detection_with_one_lieu.lieux.first()
-    prelevement_1, prelevement_2 = baker.make(
-        Prelevement, lieu=lieu, _quantity=2, is_officiel=True, _fill_optional=True
-    )
+    lieu = LieuFactory()
+    PrelevementFactory.create_batch(2, lieu=lieu)
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     # Supprime le premier prélèvement
     page.locator(".prelevement-delete-btn").first.click()
     page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()

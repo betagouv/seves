@@ -113,7 +113,18 @@ class Lieu(models.Model):
         max_length=100, verbose_name="Raison sociale établissement", blank=True
     )
     adresse_etablissement = models.CharField(max_length=100, verbose_name="Adresse établissement", blank=True)
-    siret_etablissement = models.CharField(max_length=100, verbose_name="SIRET établissement", blank=True)
+    siret_etablissement = models.CharField(
+        max_length=14,
+        verbose_name="SIRET établissement",
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{14}$",
+                message="Le SIRET doit contenir exactement 14 chiffres",
+                code="invalid_siret",
+            ),
+        ],
+    )
     site_inspection = models.ForeignKey(
         "SiteInspection",
         on_delete=models.PROTECT,
