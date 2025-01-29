@@ -674,3 +674,24 @@ def test_delete_fiche_zone_creates_revision_on_evenement():
     }
 
     assert data == expected_data
+
+
+@pytest.mark.django_db
+def test_siret_valid_14_digits():
+    lieu = LieuFactory(siret_etablissement="12345678901234")
+    lieu.full_clean()
+    lieu.save()
+    assert Lieu.objects.get(id=lieu.id).siret_etablissement == "12345678901234"
+
+
+@pytest.mark.django_db
+def test_siret_invalid_length():
+    lieu = LieuFactory(siret_etablissement="123456789")
+    with pytest.raises(ValidationError):
+        lieu.full_clean()
+
+
+def test_siret_invalid_characters():
+    lieu = LieuFactory(siret_etablissement="123ABC45678901")
+    with pytest.raises(ValidationError):
+        lieu.full_clean()
