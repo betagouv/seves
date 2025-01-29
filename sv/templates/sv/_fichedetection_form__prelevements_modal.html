@@ -20,7 +20,7 @@
 
                         <div class="fr-container--fluid">
                             <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-4">Type</div>
+                                <div class="fr-col-4 required-field">Type</div>
                                 <div class="fr-col-8">
                                     <fieldset class="fr-fieldset fr-mb-0" id="radio-inline"
                                               aria-labelledby="radio-inline-legend radio-inline-messages">
@@ -53,8 +53,8 @@
                                 <div class="fr-col-4"><label class="fr-label">Lieu</label></div>
                                 <div class="fr-col-8"> {{ form.lieu }}</div>
                             </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="structure">
-                                <div class="fr-col-4">{{ form.structure_preleveuse.label_tag }}</div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-4 required-field">{{ form.structure_preleveuse.label_tag }}</div>
                                 <div class="fr-col-8">{{ form.structure_preleveuse }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
@@ -71,7 +71,7 @@
                                                                       name="prelevements-{{ id }}-espece_echantillon"></select></div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="resultat">
-                                <div class="fr-col-4"><label class="fr-label">Conclusion</label></div>
+                                <div class="fr-col-4"><label class="fr-label required-field">Conclusion</label></div>
                                 <div class="fr-col-8"><fieldset class="fr-fieldset" id="radio-inline"
                                                                 aria-labelledby="radio-inline-legend radio-inline-messages">
                                     {{ form.resultat }}
