@@ -11,7 +11,7 @@ from django.utils.translation import ngettext
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 from core.models import Structure
-from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin
+from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin, WithLatestVersionLocking
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -210,7 +210,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                 self.cleaned_data.pop(field)
 
 
-class FicheDetectionForm(DSFRForm, forms.ModelForm):
+class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     vegetaux_infestes = forms.CharField(
         label="Quantité de végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
     )
@@ -261,6 +261,7 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
             "mesures_consignation",
             "mesures_phytosanitaires",
             "mesures_surveillance_specifique",
+            "latest_version",
         ]
         labels = {"statut_evenement": "Statut évènement"}
 
@@ -290,7 +291,7 @@ class FicheDetectionForm(DSFRForm, forms.ModelForm):
         return instance
 
 
-class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
+class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     date_creation = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"disabled": "", "value": now().strftime("%d/%m/%Y")}),
         required=False,
@@ -497,10 +498,10 @@ class EvenementForm(DSFRForm, forms.ModelForm):
         return instance
 
 
-class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, forms.ModelForm):
+class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     class Meta:
         model = Evenement
-        fields = ["organisme_nuisible", "statut_reglementaire"]
+        fields = ["organisme_nuisible", "statut_reglementaire", "latest_version"]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")

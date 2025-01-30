@@ -17,6 +17,9 @@
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
         <form action="{% url 'evenement-update' evenement.id  %}" method="post">
             {% csrf_token %}
+            {{ form.latest_version }}
+
+            {{ form.errors }}
 
             <div class="evenement-form-header">
                 <div>
