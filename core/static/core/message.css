@@ -25,19 +25,13 @@
 .message-container .choices__button:hover{
     background-color: unset;
 }
-
-.message-documents-container {
-    background-color: var(--background-disabled-grey);
-}
-.message-documents-container hr {
-    border-top: 1px solid black;
-}
-.message-documents-container label {
+.btn-full{
+    width: 100%;
     display: block;
-    padding-bottom: 0.5rem;
+    text-align: center;
 }
 .document-to-add {
-    background-color: var(--background-contrast-grey);
+    background-color: var(--background-action-low-blue-france);
     display: flex;
     justify-content: space-between;
 }

@@ -65,19 +65,23 @@ function addShortcuts(choicesRecipients, choicesCopy){
 
 document.addEventListener('DOMContentLoaded', function () {
     let currentID = 0
+    const addDocumentFormButton = document.querySelector(".add-document-form-btn")
     const messageAddDocumentButton = document.getElementById("message-add-document")
     const fileInput = document.getElementById('id_file');
     const typeInput = document.getElementById('id_document_type');
     const inputDestination = document.getElementById("inputs-for-upload")
-    const noDocumentBlock = document.getElementById("no-document")
 
     allowToUploadWhenTypeIsSelected(typeInput, fileInput, messageAddDocumentButton)
     allowToValidateWhenDocumentIsSelected(typeInput, fileInput, messageAddDocumentButton)
 
+    addDocumentFormButton.addEventListener("click", event =>{
+        event.preventDefault();
+        document.querySelector(".document-form").classList.remove("fr-hidden")
+        addDocumentFormButton.classList.add("fr-hidden")
+    })
+
     messageAddDocumentButton.addEventListener("click", function (event) {
         event.preventDefault();
-
-        noDocumentBlock.classList.add("fr-hidden")
 
         cloneDocumentInput(fileInput, currentID, inputDestination)
         cloneDocumentTypeInput(typeInput, currentID, inputDestination)
@@ -89,6 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
         fileInput.setAttribute("disabled", "true")
         messageAddDocumentButton.setAttribute("disabled", "true")
         currentID += 1;
+        addDocumentFormButton.classList.remove("fr-hidden")
+        document.querySelector(".document-form").classList.add("fr-hidden")
 
     });
 

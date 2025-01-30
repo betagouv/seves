@@ -64,16 +64,19 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
 
+    page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
     page.locator(".sidebar #id_file").set_input_files("README.md")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("README.md", exact=True)).to_be_visible()
 
+    page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Cartographie")
     page.locator(".sidebar #id_file").set_input_files("requirements.in")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("requirements.in", exact=True)).to_be_visible()
 
+    page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
     page.locator(".sidebar #id_file").set_input_files("requirements.txt")
     page.locator("#message-add-document").click()
