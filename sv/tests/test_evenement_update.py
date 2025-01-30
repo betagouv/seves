@@ -178,3 +178,26 @@ def test_update_evenement_free_links_filtered_by_user_visibility(
     expect(page.get_by_text(str(visible_evenement.numero))).to_be_visible()
     expect(page.get_by_text(str(limited_visible_evenement.numero))).to_be_visible()
     expect(page.get_by_text(str(hidden_evenement.numero))).not_to_be_visible()
+
+
+def test_update_evenement_has_locking_protection(live_server, page: Page, choice_js_fill):
+    nuisible = OrganismeNuisibleFactory()
+    statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_update_url()}")
+
+    evenement.organisme_nuisible = OrganismeNuisibleFactory()
+    evenement.save()
+
+    choice_js_fill(page, ".choices__list--single", nuisible.libelle_court, nuisible.libelle_court)
+    page.get_by_label("Statut réglementaire").select_option("organisme émergent")
+    page.get_by_role("button", name="Enregistrer").click()
+
+    evenement.refresh_from_db()
+    assert evenement.organisme_nuisible.libelle_court != nuisible.libelle_court
+
+    expect(
+        page.get_by_text(
+            "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+        )
+    ).to_be_visible()

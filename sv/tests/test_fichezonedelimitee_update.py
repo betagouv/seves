@@ -235,3 +235,28 @@ def test_can_update_fiche_zone_if_evenement_brouillon(live_server, page: Page, c
     assert fiche_zone_updated.unite_rayon_zone_tampon == new_fiche_zone.unite_rayon_zone_tampon
     assert fiche_zone_updated.surface_tampon_totale == new_fiche_zone.surface_tampon_totale
     assert fiche_zone_updated.unite_surface_tampon_totale == new_fiche_zone.unite_surface_tampon_totale
+
+
+def test_fiche_zone_update_has_locking_protection(
+    live_server,
+    page: Page,
+    mocked_authentification_user,
+):
+    fiche_zone = FicheZoneFactory(commentaire="AAA")
+    EvenementFactory(fiche_zone_delimitee=fiche_zone)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    page.get_by_label("Commentaire").fill("BBB")
+
+    fiche_zone.commentaire = "CCC"
+    fiche_zone.save()
+
+    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+    page.wait_for_timeout(600)
+
+    fiche_zone.refresh_from_db()
+    assert fiche_zone.commentaire == "CCC"
+    expect(
+        page.get_by_text(
+            "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+        )
+    ).to_be_visible()

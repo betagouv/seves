@@ -16,6 +16,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+from reversion.models import Version
 
 from core.forms import MessageForm, MessageDocumentForm
 from core.mixins import (
@@ -177,6 +178,7 @@ class EvenementUpdateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
         return kwargs
 
     def test_func(self) -> bool | None:
@@ -186,6 +188,12 @@ class EvenementUpdateView(
         response = super().form_valid(form)
         self.add_user_contacts(self.object)
         return response
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return HttpResponseRedirect(self.get_object().get_absolute_url())
 
 
 class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):
@@ -198,6 +206,7 @@ class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPreleveme
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = 0
         if self.request.GET.get("evenement"):
             kwargs["data"] = {"evenement": Evenement.objects.get(pk=self.request.GET.get("evenement"))}
         return kwargs
@@ -335,6 +344,7 @@ class FicheDetectionUpdateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
         return kwargs
 
     def post(self, request, pk):
@@ -365,6 +375,12 @@ class FicheDetectionUpdateView(
             self.add_user_contacts(self.object.evenement)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
 
 
 class FicheDetectionExportView(View):
@@ -469,6 +485,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = 0
         kwargs["detections_zones_infestees_formset"] = getattr(self, "detections_zones_infestees_formset", set())
         return kwargs
 
@@ -574,6 +591,7 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
 
         # Lors d'un POST, on utilise detections_zones_infestees_formset déjà défini
         if hasattr(self, "detections_zones_infestees_formset"):

@@ -1169,3 +1169,30 @@ def test_update_fichedetection_multiple_times_adds_contacts_once(
     assert fiche.commentaire == "Seconde modification"
     assert fiche.evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
     assert fiche.evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
+
+
+@pytest.mark.django_db
+def test_fiche_detection_update_has_locking_protection(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    fiche_detection_bakery,
+    mocked_authentification_user,
+):
+    fiche = FicheDetectionFactory(commentaire="AAA")
+    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    page.get_by_label("Commentaire").fill("BBB")
+
+    fiche.commentaire = "CCC"
+    fiche.save()
+
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche.refresh_from_db()
+    assert fiche.commentaire == "CCC"
+    expect(
+        page.get_by_text(
+            "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+        )
+    ).to_be_visible()

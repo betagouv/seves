@@ -1,3 +1,4 @@
+
 {% extends 'sv/base.html' %}
 
 {% load static %}
@@ -21,6 +22,7 @@
 
         <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
             {% csrf_token %}
+            {{ form.latest_version }}
 
             <div id="fiche-detection-form-header">
                 <div>
