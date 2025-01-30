@@ -10,6 +10,8 @@ from .models import (
     Prelevement,
     OrganismeNuisible,
     StatutReglementaire,
+    Laboratoire,
+    StructurePreleveuse,
 )
 
 
@@ -29,7 +31,7 @@ class WithStatusToOrganismeNuisibleMixin:
 
 
 class WithPrelevementHandlingMixin:
-    def _save_prelevement_if_not_empty(self, data, allowed_lieux):
+    def _save_prelevement_if_not_empty(self, data, allowed_lieux, check_for_inactive_values=False, detection=None):
         sub_dicts = defaultdict(dict)
         for key, value in data.items():
             if key.startswith("prelevements-"):
@@ -56,7 +58,20 @@ class WithPrelevementHandlingMixin:
 
             if prelevement_id:
                 prelevement = Prelevement.objects.get(id=prelevement_id)
-                prelevement_form = PrelevementForm(form_data, instance=prelevement, prefix=f"prelevements-{form_id}")
+                if check_for_inactive_values:
+                    labos = self._handle_inactive_values(Laboratoire, "laboratoire", detection.pk)
+                    structure = self._handle_inactive_values(StructurePreleveuse, "structure_preleveuse", detection.pk)
+                    prelevement_form = PrelevementForm(
+                        form_data,
+                        instance=prelevement,
+                        prefix=f"prelevements-{form_id}",
+                        labo_values=labos,
+                        structure_values=structure,
+                    )
+                else:
+                    prelevement_form = PrelevementForm(
+                        form_data, instance=prelevement, prefix=f"prelevements-{form_id}"
+                    )
             else:
                 prelevement_form = PrelevementForm(form_data, prefix=f"prelevements-{form_id}")
 
@@ -65,7 +80,10 @@ class WithPrelevementHandlingMixin:
             if prelevement_form.is_valid():
                 prelevement_form.save()
             else:
-                raise ValidationError(prelevement_form.errors)
+                error_msg = ""
+                for field, error in prelevement_form.errors.items():
+                    error_msg += f"{field.title()}: {error.as_text()}\n"
+                raise ValidationError(error_msg)
 
 
 class WithAddUserContactsMixin:
