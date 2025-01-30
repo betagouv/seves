@@ -400,7 +400,9 @@ class FicheDetectionUpdateView(
             lieu_formset.save()
             allowed_lieux = self.object.lieux.all()
             try:
-                self._save_prelevement_if_not_empty(request.POST.copy(), allowed_lieux)
+                self._save_prelevement_if_not_empty(
+                    request.POST.copy(), allowed_lieux, check_for_inactive_values=True, detection=self.object
+                )
             except ValidationError as e:
                 for message in e.messages:
                     messages.error(self.request, message)
