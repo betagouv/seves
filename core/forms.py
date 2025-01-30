@@ -155,7 +155,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
     )
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 4}))
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
 
     manual_render_fields = ["recipients_limited_recipients"]
 

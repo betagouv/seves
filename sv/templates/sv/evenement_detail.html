@@ -28,17 +28,14 @@
                 {{ message_form.recipients_limited_recipients }}
             </div>
             {{ message_form.as_dsfr_div }}
-            <div class="fr-p-2w message-documents-container">
-                <h3 class="fr-h3">Documents</h3>
-                <p id="no-document">Aucun document ajouté.</p>
+            <div class="fr-p-2w">
                 <div id="documents-to-upload"></div>
                 <div id="inputs-for-upload" class="fr-hidden"></div>
-                <hr>
-                <h4 class="fr-h4">Nouveau document</h4>
-                <div>
+                <button class="fr-btn fr-btn--tertiary-no-outline btn-full add-document-form-btn"><span class="fr-icon-add-line" aria-hidden="true"></span>Ajouter un document</button>
+                <div class="fr-hidden document-form">
                     {{ add_document_form.as_dsfr_div }}
                     <div class="message-documents-actions">
-                        <button class="fr-btn" id="message-add-document" disabled>Ajouter</button>
+                        <button class="fr-btn fr-btn--tertiary btn-full" id="message-add-document" disabled>Valider l'ajout du document</button>
                     </div>
                 </div>
 
