@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory
+from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory, EvenementFactory
 from ..models import (
     FicheDetection,
     Lieu,
@@ -987,14 +987,20 @@ def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(evenement=EvenementFactory())
+    lieu = LieuFactory(fiche_detection=fiche_detection)
     labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
-    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
-    prelevement.laboratoire = labo
-    prelevement.save()
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    PrelevementFactory(lieu=lieu, laboratoire=labo)
 
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    form_elements.commentaire_input.fill("AAA")
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 1
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.commentaire == "AAA"
 
 
 @pytest.mark.django_db
@@ -1016,19 +1022,24 @@ def test_cant_pick_inactive_structure_in_prelevement(
 def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(evenement=EvenementFactory())
+    lieu = LieuFactory(fiche_detection=fiche_detection)
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
-    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
-    prelevement.structure_preleveuse = structure
-    prelevement.save()
+    PrelevementFactory(lieu=lieu, structure_preleveuse=structure)
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    form_elements.commentaire_input.fill("AAA")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.commentaire == "AAA"
 
 
 @pytest.mark.django_db
