@@ -11,6 +11,7 @@ from .constants import (
     STRUCTURE_EXPLOITANT,
     STATUTS_EVENEMENT,
     CONTEXTES,
+    SITES_INSPECTION,
 )
 from .models import (
     Prelevement,
@@ -29,6 +30,7 @@ from .models import (
     Laboratoire,
     StatutEvenement,
     Contexte,
+    SiteInspection,
 )
 from datetime import datetime
 
@@ -115,6 +117,30 @@ class LaboratoireFactory(DjangoModelFactory):
     confirmation_officielle = False
 
 
+class StatutEvenementFactory(DjangoModelFactory):
+    class Meta:
+        model = StatutEvenement
+        django_get_or_create = ("libelle",)
+
+    libelle = factory.lazy_attribute(lambda _: random.choice(STATUTS_EVENEMENT))
+
+
+class ContexteFactory(DjangoModelFactory):
+    class Meta:
+        model = Contexte
+        django_get_or_create = ("nom",)
+
+    nom = factory.lazy_attribute(lambda _: random.choice(CONTEXTES))
+
+
+class SiteInspectionFactory(DjangoModelFactory):
+    class Meta:
+        model = SiteInspection
+        django_get_or_create = ("nom",)
+
+    nom = factory.lazy_attribute(lambda _: random.choice(random.choices(SITES_INSPECTION)))
+
+
 class PrelevementFactory(DjangoModelFactory):
     class Meta:
         model = Prelevement
@@ -167,6 +193,7 @@ class LieuFactory(DjangoModelFactory):
     adresse_etablissement = factory.Faker("address")
     siret_etablissement = factory.Faker("numerify", text="##############")
     code_inupp_etablissement = factory.Faker("numerify", text="#######")
+    site_inspection = factory.SubFactory("sv.factories.SiteInspectionFactory")
 
 
 class FicheDetectionFactory(DjangoModelFactory):
@@ -189,6 +216,8 @@ class FicheDetectionFactory(DjangoModelFactory):
         lambda: StatutEvenement.objects.get_or_create(libelle=FuzzyChoice(STATUTS_EVENEMENT).fuzz())[0]
     )
     contexte = factory.LazyFunction(lambda: Contexte.objects.get_or_create(nom=FuzzyChoice(CONTEXTES).fuzz())[0])
+    statut_evenement = factory.SubFactory("sv.factories.StatutEvenementFactory")
+    contexte = factory.SubFactory("sv.factories.ContexteFactory")
 
     @factory.lazy_attribute
     def createur(self):

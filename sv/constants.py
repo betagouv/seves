@@ -251,3 +251,25 @@ POSITION_CHAINE_DISTRIBUTION = [
     "Stockage",
     "Achat en ligne",
 ]
+
+SITES_INSPECTION = [
+    "Verger à graine",
+    "Peuplement classé",
+    "Champ",
+    "Verger",
+    "Vignoble",
+    "Pépinière",
+    "Forêt",
+    "Jardin privé",
+    "Site public",
+    "Espace protégé",
+    "Friches",
+    "Jardinerie",
+    "Plateforme logistique",
+    "Site de stockage de bois",
+    "Serre",
+    "Batiment privé",
+    "Batiment public",
+    "Autre (à préciser dans le fil de suivi)",
+    "Sans objet",
+]

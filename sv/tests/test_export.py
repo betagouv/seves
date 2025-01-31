@@ -1,157 +1,251 @@
+import csv
 import datetime
 from io import StringIO
 from unittest import mock
 
 import pytest
-from model_bakery import baker
 
 from core.models import Visibilite
 from sv.export import FicheDetectionExport
-from sv.models import FicheDetection, NumeroFiche, Lieu, Prelevement, StructurePreleveuse
-
-
-def _create_fiche_with_lieu_and_prelevement(numero=123, fill_optional=False):
-    numero = NumeroFiche.objects.create(annee=2024, numero=numero)
-    mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
-        fiche = baker.make(
-            FicheDetection,
-            numero=numero,
-            numero_europhyt="EUROPHYT",
-            numero_rasff="RASFF",
-            date_premier_signalement=datetime.date(2024, 1, 1),
-            commentaire="Mon commentaire",
-            mesures_conservatoires_immediates="MCI",
-            mesures_consignation="MC",
-            mesures_phytosanitaires="MP",
-            mesures_surveillance_specifique="MSP",
-            hors_zone_infestee=None,
-            zone_infestee=None,
-            _fill_optional=fill_optional,
-        )
-    evenement = fiche.evenement
-    evenement.visibilite = Visibilite.NATIONALE
-    evenement.save()
-    lieu = baker.make(
-        Lieu,
-        fiche_detection=fiche,
-        nom="Mon lieu",
-        wgs84_longitude=10,
-        wgs84_latitude=20,
-        adresse_lieu_dit="L'angle",
-        commune="Saint-Pierre",
-        code_insee="12345",
-        _fill_optional=fill_optional,
-    )
-    structure, _ = StructurePreleveuse.objects.get_or_create(nom="My structure")
-    baker.make(
-        Prelevement,
-        lieu=lieu,
-        numero_echantillon="Echantillon 3",
-        date_prelevement=datetime.date(2023, 12, 12),
-        is_officiel=True,
-        resultat="detecte",
-        structure_preleveuse=structure,
-        _fill_optional=fill_optional,
-    )
+from sv.factories import PrelevementFactory, FicheZoneFactory, ZoneInfesteeFactory, FicheDetectionFactory, LieuFactory
+from sv.models import StructurePreleveuse
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_content(mocked_authentification_user):
-    stream = StringIO()
-    _create_fiche_with_lieu_and_prelevement()
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
-
-    stream.seek(0)
-    lines = stream.readlines()
-    assert len(lines) == 2
-
-    headers = [
+def test_export_headers_content(mocked_authentification_user):
+    expected_headers = [
         "Numéro de fiche",
+        "Num. événement",
+        "Organisme nuisible",
+        "Code OEPP",
+        "Statut réglementaire",
+        "Date de création",
+        "Structure créatrice",
         "Numéro Europhyt",
         "Numéro RASFF",
         "Statut de l'événement",
+        "Contexte",
+        "Nombre ou volume de végétaux infestés",
         "Date premier signalement",
         "Commentaire",
         "Mesures conservatoires immédiates",
         "Mesures de consignation",
         "Mesures phytosanitaires",
         "Mesures de surveillance spécifique",
-        "Date de création",
+        # == Lieu ==
         "Nom",
-        "Longitude WGS84",
-        "Latitude WGS84",
         "Adresse ou lieu-dit",
         "Commune",
-        "Code INSEE de la commune",
-        "Département",
-        "N° d'échantillon",
-        "Date de prélèvement",
+        "Site d'inspection",
+        "Longitude WGS84",
+        "Latitude WGS84",
+        "Nom établissement",
+        "Activité établissement",
+        "Pays établissement",
+        "Raison sociale établissement",
+        "Adresse établissement",
+        "SIRET établissement",
+        "Code INUPP",
+        # == Prelevement ==
+        "Type d'analyse",
         "Prélèvement officiel",
-        "Résultat",
+        "Numéro du rapport d'inspection",
+        "Laboratoire",
+        "N° d'échantillon",
         "Structure préleveuse",
+        "Date de prélèvement",
         "Nature de l'objet",
         "Espèce de l'échantillon",
-        "Laboratoire",
+        "Résultat",
+        # == FicheZoneDelimitee ==
+        "Commentaire zone délimitée",
+        "Rayon tampon réglementaire ou arbitré",
+        "Surface tampon totale",
+        # == Zone infestée ==
+        "Nom de la zone infestée",
+        "Caractéristique principale",
+        "Rayon de la zone infestée",
+        "Surface infestée totale",
     ]
-    assert lines[0] == ",".join(headers) + "\r\n"
-    assert (
-        lines[1]
-        == "2024.123,EUROPHYT,RASFF,,2024-01-01,Mon commentaire,MCI,MC,MP,MSP,2024-08-01 00:00:00+00:00,Mon lieu,10.0,20.0,L'angle,Saint-Pierre,12345,,Echantillon 3,2023-12-12,True,detecte,My structure,,,\r\n"
+    stream = StringIO()
+    PrelevementFactory(
+        lieu__fiche_detection__zone_infestee=ZoneInfesteeFactory(),
+        lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
+        lieu__fiche_detection__evenement__fiche_zone_delimitee=FicheZoneFactory(),
     )
+
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    stream.seek(0)
+    headers = next(csv.reader(stream))
+
+    assert headers == expected_headers
+
+
+@pytest.mark.django_db
+def test_export_data_values(mocked_authentification_user):
+    stream = StringIO()
+    mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+        prelevement = PrelevementFactory(
+            lieu__fiche_detection__zone_infestee=ZoneInfesteeFactory(),
+            lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
+            lieu__fiche_detection__evenement__fiche_zone_delimitee=FicheZoneFactory(),
+            lieu__wgs84_longitude=139.527867,
+            lieu__wgs84_latitude=-61.396441,
+        )
+    lieu = prelevement.lieu
+    fiche_detection = prelevement.lieu.fiche_detection
+    evenement = fiche_detection.evenement
+
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    stream.seek(0)
+    next(csv.reader(stream))  # Skip headers
+    data = next(csv.reader(stream))
+
+    expected_fields = [
+        str(fiche_detection.numero),
+        str(evenement.numero),
+        evenement.organisme_nuisible.libelle_court,
+        evenement.organisme_nuisible.code_oepp,
+        evenement.statut_reglementaire.libelle,
+        fiche_detection.date_creation.strftime("%Y-%m-%d %H:%M:%S+00:00"),
+        str(fiche_detection.createur),
+        fiche_detection.numero_europhyt,
+        fiche_detection.numero_rasff,
+        str(fiche_detection.statut_evenement),
+        str(fiche_detection.contexte),
+        fiche_detection.vegetaux_infestes,
+        fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"),
+        fiche_detection.commentaire,
+        fiche_detection.mesures_conservatoires_immediates,
+        fiche_detection.mesures_consignation,
+        fiche_detection.mesures_phytosanitaires,
+        fiche_detection.mesures_surveillance_specifique,
+        # == Lieu ==
+        str(lieu),
+        lieu.adresse_lieu_dit,
+        lieu.commune,
+        str(lieu.site_inspection),
+        "139.527867",
+        "-61.396441",
+        lieu.nom_etablissement,
+        lieu.activite_etablissement,
+        lieu.pays_etablissement,
+        lieu.raison_sociale_etablissement,
+        lieu.adresse_etablissement,
+        lieu.siret_etablissement,
+        lieu.code_inupp_etablissement,
+        # == Prelevement ==
+        prelevement.type_analyse,
+        str(prelevement.is_officiel),
+        prelevement.numero_rapport_inspection,
+        str(prelevement.laboratoire),
+        prelevement.numero_echantillon,
+        str(prelevement.structure_preleveuse),
+        prelevement.date_prelevement.strftime("%Y-%m-%d"),
+        str(prelevement.matrice_prelevee),
+        str(prelevement.espece_echantillon),
+        prelevement.resultat,
+        # == FicheZoneDelimitee ==
+        evenement.fiche_zone_delimitee.commentaire,
+        str(evenement.fiche_zone_delimitee.rayon_zone_tampon),
+        str(evenement.fiche_zone_delimitee.surface_tampon_totale),
+        # == Zone infestée ==
+        str(fiche_detection.zone_infestee.nom),
+        str(fiche_detection.zone_infestee.caracteristique_principale),
+        str(fiche_detection.zone_infestee.rayon),
+        str(fiche_detection.zone_infestee.surface_infestee_totale),
+    ]
+    assert data == expected_fields
 
 
 @pytest.mark.django_db
 def test_export_fiche_detection_performance(django_assert_num_queries, mocked_authentification_user):
-    stream = StringIO()
-    _create_fiche_with_lieu_and_prelevement(fill_optional=True)
+    structure, _ = StructurePreleveuse.objects.get_or_create(nom="My structure")
 
-    with django_assert_num_queries(8):
+    PrelevementFactory(
+        structure_preleveuse=structure,
+        lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
+    )
+    stream = StringIO()
+    with django_assert_num_queries(9):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
-    stream.seek(0)
-    lines = stream.readlines()
-    assert len(lines) == 2
-
+    PrelevementFactory.create_batch(
+        3,
+        structure_preleveuse=structure,
+        lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
+    )
     stream = StringIO()
-    _create_fiche_with_lieu_and_prelevement(numero=4, fill_optional=True)
-    _create_fiche_with_lieu_and_prelevement(numero=5, fill_optional=True)
-    _create_fiche_with_lieu_and_prelevement(numero=6, fill_optional=True)
-    with django_assert_num_queries(8):
+    with django_assert_num_queries(9):
         FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
-
-    stream.seek(0)
-    lines = stream.readlines()
-    assert len(lines) == 5
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_numbers_of_lines(django_assert_num_queries, mocked_authentification_user):
-    stream = StringIO()
-    numero = NumeroFiche.objects.create(annee=2024, numero=123)
-    mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
-        fiche = baker.make(FicheDetection, numero=numero)
-        evenement = fiche.evenement
-        evenement.visibilite = Visibilite.NATIONALE
-        evenement.save()
-    _lieu_without_prelevement = baker.make(Lieu, fiche_detection=fiche)
-    _lieu_without_prelevement_2 = baker.make(Lieu, fiche_detection=fiche)
-    lieu = baker.make(
-        Lieu,
-        fiche_detection=fiche,
-        nom="Mon lieu",
-        wgs84_longitude=10,
-        wgs84_latitude=20,
-        adresse_lieu_dit="L'angle",
-        commune="Saint-Pierre",
-        code_insee="12345",
-    )
-    baker.make(Prelevement, lieu=lieu)
-    baker.make(Prelevement, lieu=lieu)
+@pytest.mark.parametrize(
+    "factory,expected_data_lines",
+    [
+        (FicheDetectionFactory, 1),
+        (lambda: FicheDetectionFactory.create_batch(2), 2),
+    ],
+)
+def test_numbers_of_line_when_export_fiche_detection(mocked_authentification_user, factory, expected_data_lines):
+    factory()
 
+    stream = StringIO()
     FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
 
     stream.seek(0)
-    lines = stream.readlines()
-    assert len(lines) == 5
+    reader = csv.reader(stream)
+    next(reader)  # Skip headers
+    data_lines = list(reader)
+    assert len(data_lines) == expected_data_lines
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "factory,expected_data_lines",
+    [
+        (LieuFactory, 1),
+        (lambda: LieuFactory.create_batch(2), 2),
+    ],
+)
+def test_numbers_of_line_when_export_fiche_detection_with_lieu(
+    mocked_authentification_user, factory, expected_data_lines
+):
+    factory()
+
+    stream = StringIO()
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+
+    stream.seek(0)
+    reader = csv.reader(stream)
+    next(reader)  # Skip headers
+    data_lines = list(reader)
+    assert len(data_lines) == expected_data_lines
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "nb_lieu,nb_prelevement,expected_data_lines",
+    [
+        (1, 2, 2),  # 1 lieu avec 2 prélèvements = 2 lignes
+        (2, 3, 6),  # 2 lieux avec 3 prélèvements chacun = 6 lignes
+    ],
+)
+def test_numbers_of_line_when_export_fiche_detection_with_prelevements(
+    mocked_authentification_user, nb_lieu, nb_prelevement, expected_data_lines
+):
+    fiche = FicheDetectionFactory()
+    for _ in range(nb_lieu):
+        lieu = LieuFactory(fiche_detection=fiche)
+        PrelevementFactory.create_batch(nb_prelevement, lieu=lieu)
+
+    stream = StringIO()
+    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+
+    stream.seek(0)
+    reader = csv.reader(stream)
+    next(reader)  # Skip headers
+    data_lines = list(reader)
+    assert len(data_lines) == expected_data_lines
