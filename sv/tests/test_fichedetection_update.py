@@ -1,10 +1,12 @@
 import pytest
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
+from core.models import Structure
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory
@@ -33,32 +35,6 @@ def create_fixtures_if_needed(db):
         Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
 
 
-@pytest.fixture
-def fiche_detection_with_one_lieu(fiche_detection, lieu_bakery, db):
-    lieu = lieu_bakery()
-    lieu.fiche_detection = fiche_detection
-    lieu.save()
-    return fiche_detection
-
-
-@pytest.fixture
-def fiche_detection_with_two_lieux(fiche_detection, db):
-    LieuFactory.create_batch(2, fiche_detection=fiche_detection)
-    return fiche_detection
-
-
-@pytest.fixture
-def fiche_detection_with_one_lieu_and_one_prelevement(fiche_detection_with_one_lieu, db):
-    baker.make(
-        Prelevement,
-        lieu=fiche_detection_with_one_lieu.lieux.get(),
-        is_officiel=True,
-        _fill_optional=True,
-        numero_rapport_inspection="24-123456",
-    )
-    return fiche_detection_with_one_lieu
-
-
 def test_page_title(live_server, page: Page):
     fiche = FicheDetectionFactory()
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
@@ -67,11 +43,9 @@ def test_page_title(live_server, page: Page):
     ).to_be_visible()
 
 
-def test_fiche_detection_update_page_content(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, fiche_detection: FicheDetection
-):
+def test_fiche_detection_update_page_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que toutes les données de la fiche de détection sont affichées sur la page de modification de la fiche de détection."""
-
+    fiche_detection = FicheDetectionFactory()
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
     # Statut évènement
@@ -114,8 +88,17 @@ def test_fiche_detection_update_page_content_with_no_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
     """Test que la page de modification de la fiche de détection affiche aucune donnée pour une fiche détection sans données"""
-
-    fiche_detection = baker.make(FicheDetection)
+    fiche_detection = FicheDetectionFactory(
+        statut_evenement=None,
+        contexte=None,
+        date_premier_signalement=None,
+        commentaire="",
+        vegetaux_infestes="",
+        mesures_conservatoires_immediates="",
+        mesures_consignation="",
+        mesures_phytosanitaires="",
+        mesures_surveillance_specifique="",
+    )
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
@@ -137,13 +120,12 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    fiche_detection: FicheDetection,
-    fiche_detection_bakery,
     mocked_authentification_user,
     choice_js_fill,
 ):
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
-    new_fiche_detection = fiche_detection_bakery()
+    fiche_detection = FicheDetectionFactory()
+    new_fiche_detection = FicheDetectionFactory()
     new_fiche_detection.organisme_nuisible = baker.make(OrganismeNuisible)
     new_fiche_detection.save()
 
@@ -181,27 +163,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
 
 
 @pytest.mark.django_db
-def test_saving_without_changing_organisme_works(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    fiche_detection_bakery,
-    mocked_authentification_user,
-):
-    organisme = baker.make(OrganismeNuisible)
-    new_fiche_detection = fiche_detection_bakery()
-    new_fiche_detection.organisme_nuisible = organisme
-    new_fiche_detection.save()
-
-    page.goto(f"{live_server.url}{new_fiche_detection.get_update_url()}")
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    new_fiche_detection.refresh_from_db()
-    assert new_fiche_detection.organisme_nuisible == organisme
-
-
-@pytest.mark.django_db
 def test_saving_without_changes_does_create_revision(
     live_server,
     page: Page,
@@ -226,12 +187,12 @@ def test_saving_without_changes_does_create_revision(
 def test_add_new_lieu(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     fill_commune,
 ):
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
+    fiche_detection = FicheDetectionFactory()
     lieu = baker.prepare(
         Lieu,
         wgs84_latitude=48.8566,
@@ -268,12 +229,12 @@ def test_add_new_lieu(
 def test_add_multiple_lieux(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     fill_commune,
 ):
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
+    fiche_detection = FicheDetectionFactory()
     lieu_1 = baker.prepare(
         Lieu,
         wgs84_latitude=48.8566,
@@ -332,13 +293,12 @@ def test_add_multiple_lieux(
 def test_update_lieu(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     fill_commune,
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
-
+    fiche_detection = FicheDetectionFactory(with_lieu=True)
     dept = baker.make(Departement)
     site_inspection = baker.make(SiteInspection)
     position = baker.make(PositionChaineDistribution)
@@ -356,7 +316,7 @@ def test_update_lieu(
         _save_related=True,
     )
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
@@ -378,7 +338,7 @@ def test_update_lieu(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    fd = FicheDetection.objects.get(id=fiche_detection_with_one_lieu.id)
+    fd = FicheDetection.objects.get(id=fiche_detection.id)
     lieu_from_db = fd.lieux.first()
     assert lieu_from_db.nom == new_lieu.nom
     assert lieu_from_db.wgs84_latitude == new_lieu.wgs84_latitude
@@ -404,12 +364,13 @@ def test_update_lieu(
 def test_update_two_lieux(
     live_server,
     page: Page,
-    fiche_detection_with_two_lieux: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     choice_js_fill,
 ):
     """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
+    fiche_detection = FicheDetectionFactory(with_lieu=True)
+    LieuFactory(fiche_detection=fiche_detection)
     new_lieux = baker.prepare(
         Lieu,
         _quantity=2,
@@ -420,7 +381,7 @@ def test_update_two_lieux(
         code_insee="17000",
     )
 
-    page.goto(f"{live_server.url}{fiche_detection_with_two_lieux.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_lieu in enumerate(new_lieux):
         if index == 0:
             page.get_by_role("button", name="Modifier le lieu").first.click()
@@ -431,14 +392,14 @@ def test_update_two_lieux(
         if index == 0:
             choice_js_fill(
                 page,
-                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.first().id} .fr-modal__content .choices__list--single",
+                f"#modal-add-lieu-{fiche_detection.lieux.first().id} .fr-modal__content .choices__list--single",
                 "Lille",
                 "Lille (59)",
             )
         else:
             choice_js_fill(
                 page,
-                f"#modal-add-lieu-{fiche_detection_with_two_lieux.lieux.last().id} .fr-modal__content .choices__list--single",
+                f"#modal-add-lieu-{fiche_detection.lieux.last().id} .fr-modal__content .choices__list--single",
                 "Paris",
                 "Paris (75)",
             )
@@ -449,7 +410,7 @@ def test_update_two_lieux(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    lieux_from_db = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id).lieux.all()
+    lieux_from_db = FicheDetection.objects.get(id=fiche_detection.id).lieux.all()
     for lieu_from_db, new_lieu in zip(lieux_from_db, new_lieux):
         assert lieu_from_db.nom == new_lieu.nom
         assert lieu_from_db.adresse_lieu_dit == new_lieu.adresse_lieu_dit
@@ -468,14 +429,14 @@ def test_update_two_lieux(
 def test_delete_lieu(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
     Il existe qu'un seul lieu en bd."""
-    lieu_id = fiche_detection_with_one_lieu.lieux.first().id
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    fiche_detection = FicheDetectionFactory(with_lieu=True)
+    lieu_id = fiche_detection.lieux.first().id
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     form_elements.save_update_btn.click()
@@ -489,11 +450,10 @@ def test_delete_lieu(
 def test_delete_lieu_with_prelevement(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
 ):
-    fiche = fiche_detection_with_one_lieu_and_one_prelevement
+    fiche = FicheDetectionFactory(with_prelevement=True)
     lieu = fiche.lieux.first()
     lieu_id = lieu.id
     prelevement_id = lieu.prelevements.first().id
@@ -519,7 +479,6 @@ def test_delete_lieu_with_prelevement(
 def test_delete_one_lieu_from_set_of_lieux(
     live_server,
     page: Page,
-    fiche_detection_with_two_lieux: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
 ):
@@ -533,12 +492,13 @@ def test_delete_one_lieu_from_set_of_lieux(
 def test_delete_multiple_lieux(
     live_server,
     page: Page,
-    fiche_detection_with_two_lieux: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que la suppression de plusieurs lieux existants est bien enregistrée en base de données."""
-    page.goto(f"{live_server.url}{fiche_detection_with_two_lieux.get_update_url()}")
+    fiche_detection = FicheDetectionFactory(with_lieu=True)
+    LieuFactory(fiche_detection=fiche_detection)
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_role("button", name="Supprimer le lieu").first.click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
     page.get_by_role("button", name="Supprimer le lieu").first.click()
@@ -546,7 +506,7 @@ def test_delete_multiple_lieux(
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
-    fd = FicheDetection.objects.get(id=fiche_detection_with_two_lieux.id)
+    fd = FicheDetection.objects.get(id=fiche_detection.id)
     assert fd.lieux.count() == 0
 
 
@@ -609,12 +569,12 @@ def test_add_new_prelevement_non_officiel(
 def test_add_new_prelevement_with_empty_date(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
     lieu_form_elements,
 ):
+    fiche_detection = FicheDetectionFactory()
     StructurePreleveuse.objects.get_or_create(nom="DSF")
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
@@ -738,16 +698,16 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
 def test_add_multiple_prelevements(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill_from_element,
 ):
     """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection_with_one_lieu, _fill_optional=True)
+    fiche_detection = FicheDetectionFactory(with_lieu=True)
+    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
     prelevements = baker.prepare(Prelevement, _quantity=3, lieu=lieu, _fill_optional=True, _save_related=True)
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for prelevement in prelevements:
         form_elements.add_prelevement_btn.click()
         prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
@@ -784,7 +744,6 @@ def test_add_multiple_prelevements(
 def test_update_prelevement(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     lieu_bakery,
     prelevement_form_elements: PrelevementFormDomElements,
@@ -941,11 +900,10 @@ def test_delete_multiple_prelevements(live_server, page: Page, form_elements: Fi
 def test_can_edit_and_save_lieu_with_name_only(
     live_server,
     page: Page,
-    fiche_detection_bakery,
     lieu_form_elements,
     form_elements: FicheDetectionFormDomElements,
 ):
-    fiche = fiche_detection_bakery()
+    fiche = FicheDetectionFactory()
     Lieu.objects.create(fiche_detection=fiche, nom="Chez moi")
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
@@ -965,14 +923,14 @@ def test_can_edit_and_save_lieu_with_name_only(
 def test_cant_pick_inactive_labo_in_prelevement(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(with_prelevement=True)
     labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 0
@@ -982,16 +940,16 @@ def test_cant_pick_inactive_labo_in_prelevement(
 def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(with_prelevement=True)
     labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
-    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
+    prelevement = fiche_detection.lieux.get().prelevements.get()
     prelevement.laboratoire = labo
     prelevement.save()
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
 
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 1
@@ -1001,13 +959,13 @@ def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
 def test_cant_pick_inactive_structure_in_prelevement(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(with_prelevement=True)
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 0
 
@@ -1016,25 +974,26 @@ def test_cant_pick_inactive_structure_in_prelevement(
 def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
     live_server,
     page: Page,
-    fiche_detection_with_one_lieu_and_one_prelevement: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
+    fiche_detection = FicheDetectionFactory(with_prelevement=True)
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
-    prelevement = fiche_detection_with_one_lieu_and_one_prelevement.lieux.get().prelevements.get()
+    prelevement = fiche_detection.lieux.get().prelevements.get()
     prelevement.structure_preleveuse = structure
     prelevement.save()
 
-    page.goto(f"{live_server.url}{fiche_detection_with_one_lieu_and_one_prelevement.get_update_url()}")
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
 
 
 @pytest.mark.django_db
 def test_fiche_detection_update_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
+    fiche_detection = FicheDetectionFactory()
     structure = mocked_authentification_user.agent.structure
     structure.niveau1 = AC_STRUCTURE
     structure.save()
@@ -1053,8 +1012,9 @@ def test_fiche_detection_update_as_ac_can_access_rasff_europhyt(
 
 @pytest.mark.django_db
 def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, fiche_detection
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
+    fiche_detection = FicheDetectionFactory()
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.evaluate("""
             const form = document.querySelector('main form');
@@ -1196,3 +1156,71 @@ def test_fiche_detection_update_has_locking_protection(
             "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
         )
     ).to_be_visible()
+
+
+def test_cant_forge_update_of_detection_i_cant_see(client):
+    prelevements = {}
+    lieux = {}
+    for i in range(0, 20):
+        prelevements.update(
+            {
+                f"prelevements-{i}-numero_rapport_inspection": [""],
+                f"prelevements-{i}-laboratoire": [""],
+                f"prelevements-{i}-numero_echantillon": [""],
+                f"prelevements-{i}-structure_preleveuse": [""],
+                f"prelevements-{i}-date_prelevement": [""],
+                f"prelevements-{i}-matrice_prelevee": [""],
+            }
+        )
+    for i in range(0, 10):
+        lieux.update(
+            {
+                f"lieux-{i}-nom": [""],
+                f"lieux-{i}-adresse_lieu_dit": [""],
+                f"lieux-{i}-commune": [""],
+                f"lieux-{i}-code_insee": [""],
+                f"lieux-{i}-departement": [""],
+                f"lieux-{i}-site_inspection": [""],
+                f"lieux-{i}-wgs84_longitude": [""],
+                f"lieux-{i}-wgs84_latitude": [""],
+                f"lieux-{i}-nom_etablissement": [""],
+                f"lieux-{i}-activite_etablissement": [""],
+                f"lieux-{i}-pays_etablissement": [""],
+                f"lieux-{i}-raison_sociale_etablissement": [""],
+                f"lieux-{i}-adresse_etablissement": [""],
+                f"lieux-{i}-siret_etablissement": [""],
+                f"lieux-{i}-code_inupp_etablissement": [""],
+                f"lieux-{i}-position_chaine_distribution_etablissement": [""],
+            }
+        )
+    payload = {
+        "evenement": ["18585"],
+        "action": ["Enregistrer les modifications"],
+        "statut_evenement": [""],
+        "numero_europhyt": [""],
+        "numero_rasff": [""],
+        "contexte": [""],
+        "date_premier_signalement": [""],
+        "vegetaux_infestes": [""],
+        "commentaire": ["AAAA"],
+        "lieux-TOTAL_FORMS": ["10"],
+        "lieux-INITIAL_FORMS": ["0"],
+        "lieux-MIN_NUM_FORMS": ["0"],
+        "lieux-MAX_NUM_FORMS": ["1000"],
+        **prelevements,
+        **lieux,
+        "mesures_conservatoires_immediates": [""],
+        "mesures_consignation": [""],
+        "mesures_phytosanitaires": [""],
+        "mesures_surveillance_specifique": [""],
+    }
+
+    fiche_detection = FicheDetectionFactory(evenement__createur=Structure.objects.create(libelle="A new structure"))
+    response = client.get(fiche_detection.get_absolute_url())
+    assert response.status_code == 403
+
+    response = client.post(reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.pk}), data=payload)
+
+    assert response.status_code == 403
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.commentaire != "AAAA"

@@ -1,5 +1,7 @@
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.models import Structure
 from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory, EvenementFactory
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Evenement
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
@@ -260,3 +262,31 @@ def test_fiche_zone_update_has_locking_protection(
             "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
         )
     ).to_be_visible()
+
+
+def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, createur=Structure.objects.create(libelle="A new structure"))
+
+    response = client.get(fiche_zone.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "evenement": [""],
+        "organisme_nuisible": ["Abaca bunchy top virus"],
+        "statut_reglementaire": ["organisme quarantaine prioritaire"],
+        "commentaire": ["AAA"],
+        "rayon_zone_tampon": [""],
+        "unite_rayon_zone_tampon": ["km"],
+        "surface_tampon_totale": [""],
+        "unite_surface_tampon_totale": ["m2"],
+        "zoneinfestee_set-TOTAL_FORMS": ["0"],
+        "zoneinfestee_set-INITIAL_FORMS": ["0"],
+        "zoneinfestee_set-MIN_NUM_FORMS": ["0"],
+        "zoneinfestee_set-MAX_NUM_FORMS": ["1000"],
+    }
+    response = client.post(reverse("fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
+
+    assert response.status_code == 403
+    fiche_zone.refresh_from_db()
+    assert fiche_zone.commentaire != "AAAA"

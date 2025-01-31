@@ -27,13 +27,18 @@ from .notifications import notify_message
 from .redirect import safe_redirect
 
 
-class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, FormView):
+class DocumentUploadView(
+    PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView
+):
     form_class = DocumentUploadForm
 
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
         ModelClass = content_type.model_class()
         return get_object_or_404(ModelClass, pk=self.request.POST.get("object_id"))
+
+    def test_func(self):
+        return self.get_fiche_object().can_user_access(self.request.user)
 
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -54,10 +59,13 @@ class DocumentUploadView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCon
         return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
+class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
         return self.document.content_object
+
+    def test_func(self):
+        return self.get_fiche_object().can_user_access(self.request.user)
 
     def post(self, request, *args, **kwargs):
         self.document.is_deleted = True
@@ -67,10 +75,13 @@ class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
         return safe_redirect(request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UpdateView):
+class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, UpdateView):
     model = Document
     form_class = DocumentEditForm
     http_method_names = ["post"]
+
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
 
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
@@ -178,12 +189,15 @@ class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         )
 
 
-class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
+class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type_pk"))
         ModelClass = content_type.model_class()
         self.fiche = get_object_or_404(ModelClass, pk=self.request.POST.get("fiche_pk"))
         return self.fiche
+
+    def test_func(self):
+        return self.get_fiche_object().can_user_access(self.request.user)
 
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))

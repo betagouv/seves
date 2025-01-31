@@ -297,3 +297,66 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     # Vérification en base de données
     assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
+
+
+def test_cant_forge_document_edit_of_document_i_cant_see(client, document_recipe):
+    evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
+    document = document_recipe().make(nom="Test document", description="")
+    evenement.documents.set([document])
+
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "pk": document.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+    response = client.post(reverse("document-update", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    document.refresh_from_db()
+    assert document.nom != "This is mine"
+
+
+def test_cant_forge_document_updload_on_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
+    content_type = ContentType.objects.get_for_model(evenement)
+
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    file = SimpleUploadedFile("file.mp4", b"file_content", content_type="video/mp4")
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "file": file,
+        "content_type": content_type.pk,
+        "object_id": evenement.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+    response = client.post(reverse("document-upload"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_cant_delete_document_of_evenement_i_cant_see(client, document_recipe):
+    evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
+    document = document_recipe().make(nom="Test document", description="")
+    evenement.documents.set([document])
+
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {"pk": document.pk, "next": f"/sv/evenement/{evenement.pk}/"}
+    response = client.post(reverse("document-delete", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.filter(is_deleted=True).count() == 0
+    assert evenement.documents.filter(is_deleted=False).count() == 1
