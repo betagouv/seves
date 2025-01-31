@@ -135,7 +135,7 @@ class PrelevementFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def numero_rapport_inspection(self):
         if self.is_officiel:
-            return "".join(random.choices(string.digits, k=5))
+            return "".join(random.choices(string.digits, k=2)) + "-" + "".join(random.choices(string.digits, k=6))
         return ""
 
 
