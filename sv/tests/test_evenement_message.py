@@ -1,5 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
@@ -576,3 +578,32 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
     assert len(evenement.allowed_structures.all()) == 2
     assert contact.agent.structure in evenement.allowed_structures.all()
     assert mocked_authentification_user.agent.structure in evenement.allowed_structures.all()
+
+
+@pytest.mark.django_db
+def test_cant_forge_post_of_message_in_evenement_we_cant_see(client, mocked_authentification_user):
+    evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
+    response = client.get(evenement.get_absolute_url())
+    contact = ContactAgentFactory()
+    contact.agent.user.is_active = True
+    contact.agent.user.save()
+
+    assert response.status_code == 403
+    content_type = ContentType.objects.get_for_model(evenement).id
+
+    payload = {
+        "content_type": content_type,
+        "object_id": evenement.pk,
+        "recipients": contact.pk,
+        "title": "Test",
+        "content": "Test",
+        "message_type": "message",
+        "next": "/",
+    }
+    response = client.post(
+        reverse("message-add", kwargs={"obj_type_pk": content_type, "obj_pk": evenement.pk}), data=payload
+    )
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.messages.count() == 0
