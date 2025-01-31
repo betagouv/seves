@@ -142,7 +142,6 @@ class ContactSelectionForm(forms.Form):
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    sender = forms.ModelChoiceField(queryset=Contact.objects.all(), widget=forms.HiddenInput)
     recipients = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
     )
@@ -162,7 +161,6 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     class Meta:
         model = Message
         fields = [
-            "sender",
             "recipients",
             "recipients_copy",
             "recipients_limited_recipients",
@@ -206,6 +204,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
+        self.sender = sender
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
         self.fields["recipients"].queryset = Contact.objects.with_structure_and_agent().can_be_emailed()
@@ -232,8 +231,6 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             if message_type not in Message.TYPES_WITH_LIMITED_RECIPIENTS:
                 self.fields.pop("recipients_limited_recipients")
 
-        self.initial["sender"] = sender.agent.contact_set.get()
-
     def _convert_checkboxes_to_contacts(self):
         try:
             checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
@@ -249,6 +246,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self._convert_checkboxes_to_contacts()
+        self.instance.sender = self.sender
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):

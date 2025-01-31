@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
@@ -191,7 +192,9 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, View):
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
-class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, CreateView):
+class MessageCreateView(
+    PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, CreateView
+):
     model = Message
     form_class = MessageForm
     http_method_names = ["post"]
@@ -200,6 +203,9 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
         self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
         return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
 
     def get_fiche_object(self):
         return self.obj
@@ -210,7 +216,7 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, WithAddUserCont
             {
                 "obj": self.obj,
                 "next": self.obj.get_absolute_url(),
-                "sender": self.request.user,
+                "sender": self.request.user.agent.contact_set.get(),
             }
         )
         return kwargs

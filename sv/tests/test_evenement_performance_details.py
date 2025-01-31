@@ -5,7 +5,7 @@ from core.models import Message, Document, Structure, Contact
 from sv.factories import EvenementFactory, FicheDetectionFactory, PrelevementFactory, FicheZoneFactory
 from sv.models import Lieu, ZoneInfestee
 
-BASE_NUM_QUERIES = 20  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 19  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
