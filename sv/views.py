@@ -280,7 +280,11 @@ class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPreleveme
 
 
 class FicheDetectionUpdateView(
-    WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, WithAddUserContactsMixin, UpdateView
+    WithStatusToOrganismeNuisibleMixin,
+    WithPrelevementHandlingMixin,
+    WithAddUserContactsMixin,
+    UserPassesTestMixin,
+    UpdateView,
 ):
     model = FicheDetection
     form_class = FicheDetectionForm
@@ -288,6 +292,9 @@ class FicheDetectionUpdateView(
 
     def get_success_url(self):
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
+
+    def test_func(self):
+        return self.get_object().evenement.can_user_access(self.request.user)
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -551,13 +558,16 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UpdateView):
+class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin, UpdateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
 
     def get_success_url(self):
         return self.get_object().get_absolute_url() + "#tabpanel-zone-panel"
+
+    def test_func(self) -> bool | None:
+        return self.get_object().evenement.can_user_access(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

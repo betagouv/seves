@@ -5,7 +5,13 @@ import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from core.models import Visibilite, Structure
-from .constants import STATUTS_REGLEMENTAIRES, STRUCTURES_PRELEVEUSES, STRUCTURE_EXPLOITANT
+from .constants import (
+    STATUTS_REGLEMENTAIRES,
+    STRUCTURES_PRELEVEUSES,
+    STRUCTURE_EXPLOITANT,
+    STATUTS_EVENEMENT,
+    CONTEXTES,
+)
 from .models import (
     Prelevement,
     Lieu,
@@ -21,6 +27,8 @@ from .models import (
     MatricePrelevee,
     EspeceEchantillon,
     Laboratoire,
+    StatutEvenement,
+    Contexte,
 )
 from datetime import datetime
 
@@ -177,6 +185,10 @@ class FicheDetectionFactory(DjangoModelFactory):
     vegetaux_infestes = factory.Faker("sentence")
     numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
     evenement = factory.SubFactory("sv.factories.EvenementFactory")
+    statut_evenement = factory.LazyFunction(
+        lambda: StatutEvenement.objects.get_or_create(libelle=FuzzyChoice(STATUTS_EVENEMENT).fuzz())[0]
+    )
+    contexte = factory.LazyFunction(lambda: Contexte.objects.get_or_create(nom=FuzzyChoice(CONTEXTES).fuzz())[0])
 
     @factory.lazy_attribute
     def createur(self):
@@ -190,6 +202,19 @@ class FicheDetectionFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @factory.post_generation
+    def with_lieu(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        LieuFactory(fiche_detection=self)
+
+    @factory.post_generation
+    def with_prelevement(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        lieu = LieuFactory(fiche_detection=self)
+        PrelevementFactory(lieu=lieu)
 
 
 class FicheZoneFactory(DjangoModelFactory):
