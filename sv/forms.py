@@ -369,8 +369,6 @@ class FicheZoneDelimiteeForm(DSFRForm, forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.createur = self.user.agent.structure
-        if not instance.numero:
-            instance.numero = self.initial.get("evenement").numero
         if commit:
             instance.save()
             self.save_detections_hors_zone(instance)

@@ -46,7 +46,7 @@ def test_fichezonedelimitee_update_without_zone_infestee_form_submit(live_server
     assert fiche_zone_delimitee_updated.date_creation.replace(
         microsecond=0
     ) == fiche_zone_delimitee.date_creation.replace(microsecond=0)
-    assert fiche_zone_delimitee_updated.numero == fiche_zone_delimitee.numero
+    assert fiche_zone_delimitee_updated.evenement == fiche_zone_delimitee.evenement
     assert fiche_zone_delimitee_updated.createur == fiche_zone_delimitee.createur
     assert fiche_zone_delimitee_updated.commentaire == new_fiche_zone_delimitee.commentaire
     assert fiche_zone_delimitee_updated.rayon_zone_tampon == new_fiche_zone_delimitee.rayon_zone_tampon
