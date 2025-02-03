@@ -1,3 +1,5 @@
+import datetime
+
 import reversion
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import PermissionDenied
@@ -12,11 +14,11 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
 )
+from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
-from .common import NumeroFiche, OrganismeNuisible, StatutReglementaire
+from .common import OrganismeNuisible, StatutReglementaire
 from ..managers import EvenementManager
-from core.mixins import WithEtatMixin
 
 
 @reversion.register()
@@ -29,9 +31,8 @@ class Evenement(
     AllowsSoftDeleteMixin,
     models.Model,
 ):
-    numero = models.OneToOneField(
-        NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
-    )
+    numero_annee = models.IntegerField(verbose_name="Année")
+    numero_evenement = models.IntegerField(verbose_name="Numéro")
     organisme_nuisible = models.ForeignKey(
         OrganismeNuisible,
         on_delete=models.PROTECT,
@@ -58,13 +59,34 @@ class Evenement(
     class Meta:
         verbose_name = "Évènement"
         verbose_name_plural = "Évènements"
-        constraints = []
+        constraints = [
+            models.UniqueConstraint(fields=["numero_annee", "numero_evenement"], name="unique_evenement_numero")
+        ]
+
+    @classmethod
+    def _get_annee_and_numero(self):
+        annee_courante = datetime.datetime.now().year
+        last_fiche = (
+            Evenement.objects.filter(numero_annee=annee_courante)
+            .select_for_update()
+            .order_by("-numero_evenement")
+            .first()
+        )
+        numero_evenement = last_fiche.numero_evenement + 1 if last_fiche else 1
+        return annee_courante, numero_evenement
+
+    @property
+    def numero(self):
+        return f"{self.numero_annee}.{self.numero_evenement}"
 
     def save(self, *args, **kwargs):
-        with reversion.create_revision():
-            if not self.numero:
-                self.numero = NumeroFiche.get_next_numero()
-            super().save(*args, **kwargs)
+        with transaction.atomic():
+            with reversion.create_revision():
+                if not self.numero_annee and not self.numero_evenement:
+                    annee, numero = Evenement._get_annee_and_numero()
+                    self.numero_annee = annee
+                    self.numero_evenement = numero
+                super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("evenement-details", kwargs={"pk": self.pk})
@@ -79,7 +101,7 @@ class Evenement(
         return not self.is_draft and user.agent.structure.is_mus_or_bsv
 
     def __str__(self):
-        return str(self.numero)
+        return f"{self.numero_annee}.{self.numero_evenement}"
 
     def get_contacts_structures_not_in_fin_suivi(self):
         contacts_structure = self.contacts.exclude(structure__isnull=True).select_related("structure")

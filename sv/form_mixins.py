@@ -35,7 +35,6 @@ class WithFreeLinksMixin:
             model.objects.all()
             .order_by_numero()
             .get_user_can_view(self.user)
-            .select_related("numero")
             .exclude(id=self.instance.id)
             .exclude(etat=Evenement.Etat.BROUILLON)
         )

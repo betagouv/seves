@@ -51,9 +51,7 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
 
     def optimized_for_list(self):
-        return self.select_related(
-            "numero", "createur", "evenement", "evenement__organisme_nuisible", "evenement__numero"
-        )
+        return self.select_related("numero", "createur", "evenement", "evenement__organisme_nuisible")
 
     def order_by_numero_fiche(self):
         return self.order_by("-numero__annee", "-numero__numero")
@@ -77,10 +75,10 @@ class FicheZoneManager(models.Manager):
 
 class FicheZoneQuerySet(BaseVisibilityQuerySet):
     def optimized_for_list(self):
-        return self.select_related("createur", "evenement", "evenement__organisme_nuisible", "evenement__numero")
+        return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
 
     def order_by_numero_fiche(self):
-        return self.order_by("-evenement__numero__annee", "-evenement__numero__numero")
+        return self.order_by("-evenement__numero_annee", "-evenement__numero_evenement")
 
     def with_nb_fiches_detection(self):
         return self.annotate(
@@ -96,7 +94,7 @@ class EvenementManager(models.Manager):
 
 class EvenementQueryset(models.QuerySet):
     def order_by_numero(self):
-        return self.order_by("-numero__annee", "-numero__numero")
+        return self.order_by("-numero_annee", "-numero_evenement")
 
     def get_user_can_view(self, user):
         from sv.models import Evenement

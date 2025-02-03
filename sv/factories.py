@@ -257,11 +257,12 @@ class EvenementFactory(DjangoModelFactory):
         model = Evenement
 
     date_creation = factory.Faker("date_this_decade")
-    numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
     organisme_nuisible = factory.SubFactory("sv.factories.OrganismeNuisibleFactory")
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     visibilite = Visibilite.LOCALE
     etat = Evenement.Etat.EN_COURS
+    numero_annee = factory.Faker("year")
+    numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
 
     @factory.lazy_attribute
     def createur(self):
