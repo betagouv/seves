@@ -22,7 +22,7 @@ class DisplayedFiche:
     def from_fiche_zone(cls, fiche: FicheZoneDelimitee):
         return cls(
             type="Z",
-            numero=str(fiche.numero) if fiche.numero else "non attribué",
+            numero=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",
             organisme_nuisible=fiche.evenement.organisme_nuisible,
             is_ac_notified=fiche.evenement.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),

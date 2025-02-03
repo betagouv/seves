@@ -244,7 +244,7 @@ def test_search_fiche_zone(live_server, page: Page):
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(fiche_2.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero))).not_to_be_visible()
 
     page.locator("label:has-text('Zone')").click()
     assert (
@@ -253,7 +253,7 @@ def test_search_fiche_zone(live_server, page: Page):
     )
 
     expect(page.get_by_role("cell", name=str(fiche_1.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(fiche_2.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero))).to_have_count(2)
 
 
 def test_link_fiche_detection(live_server, page: Page):
@@ -263,7 +263,7 @@ def test_link_fiche_detection(live_server, page: Page):
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10) input"
     expect(page.locator(cell_selector)).to_be_disabled()
 
-    fiche_zone = FicheZoneFactory(numero__annee=2024, numero__numero=10)
+    fiche_zone = FicheZoneFactory()
     evenement = fiche.evenement
     evenement.fiche_zone_delimitee = fiche_zone
     evenement.save()

@@ -194,7 +194,6 @@ class FicheDetectionFactory(DjangoModelFactory):
 
 class FicheZoneFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
-    numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
 
     commentaire = factory.Faker("paragraph")
     rayon_zone_tampon = factory.fuzzy.FuzzyFloat(1, 100, precision=2)

@@ -640,13 +640,12 @@ def test_delete_fiche_zone_creates_revision_on_evenement():
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
     comment = evenement.latest_version.revision.comment
 
-    assert comment.startswith(f"La fiche zone délimitée '{fiche_zone.numero}' a été supprimée.")
+    assert comment.startswith(f"La fiche zone délimitée '{fiche_zone.evenement.numero}' a été supprimée.")
     version_fzd = VersionFicheZoneDelimitee.objects.filter(revision=evenement.latest_version.revision).first()
     data = version_fzd.fiche_zone_delimitee_data
 
     expected_data = {
         "id": fiche_zone_id,
-        "numero": {"id": fiche_zone.numero.id, "annee": fiche_zone.numero.annee, "numero": fiche_zone.numero.numero},
         "createur": {
             "id": fiche_zone.createur.id,
             "libelle": fiche_zone.createur.libelle,

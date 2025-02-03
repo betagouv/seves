@@ -11,7 +11,6 @@ from sv.managers import (
     FicheZoneManager,
 )
 from . import ZoneInfestee
-from .common import NumeroFiche
 
 
 @reversion.register()
@@ -30,9 +29,6 @@ class FicheZoneDelimitee(models.Model):
         verbose_name_plural = "Fiches zones délimitées"
 
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    numero = models.ForeignKey(
-        NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
-    )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Créateur")
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
     rayon_zone_tampon = models.FloatField(
@@ -63,7 +59,9 @@ class FicheZoneDelimitee(models.Model):
         return reverse("fiche-zone-delimitee-update", kwargs={"pk": self.pk})
 
     def __str__(self):
-        return str(self.numero)
+        if hasattr(self, "evenement"):
+            return str(self.evenement.numero)
+        return ""
 
     def can_user_delete(self, user):
         return self.evenement.can_user_access(user)
