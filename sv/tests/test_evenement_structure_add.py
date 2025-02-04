@@ -39,6 +39,21 @@ def test_add_structure_form(live_server, page, contacts_structure):
 
 
 @pytest.mark.django_db
+def test_cant_forge_url_to_create_open_redirect_add_structure_form(live_server, page, contacts_structure):
+    evenement = EvenementFactory()
+    content_type = ContentType.objects.get_for_model(evenement)
+    url = (
+        reverse("contact-add-form")
+        + f"?fiche_id={evenement.pk}&content_type_id={content_type.pk}&next=https://google.fr"
+    )
+    page.goto(f"{live_server.url}/{url}")
+
+    expect(page.get_by_role("link", name="Retour à l'évenement")).to_have_attribute(
+        "href", evenement.get_absolute_url()
+    )
+
+
+@pytest.mark.django_db
 def test_add_structure_form_hides_empty_emails(live_server, page, contacts_structure):
     structure_1 = StructureFactory(niveau1="Level 1")
     structure_2 = StructureFactory(niveau1="Level 2")

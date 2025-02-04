@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from core.forms import DocumentUploadForm, DocumentEditForm
@@ -285,3 +286,14 @@ class PreventActionIfVisibiliteBrouillonMixin:
             return safe_redirect(request.POST.get("next") or obj.get_absolute_url() or "/")
 
         return super().dispatch(request, *args, **kwargs)
+
+
+class WithObjectFromContentTypeMixin:
+    def _get_object_from_content_type(self, *, object_id, content_type_id):
+        if hasattr(self, "_object"):
+            return self._object
+
+        content_type = ContentType.objects.get(pk=content_type_id)
+        ModelClass = content_type.model_class()
+        self._object = get_object_or_404(ModelClass, pk=object_id)
+        return self._object

@@ -52,6 +52,21 @@ def test_add_contact_form(live_server, page, mocked_authentification_user):
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
 
+@pytest.mark.django_db
+def test_cant_forge_url_to_create_open_redirect_add_contact_form(live_server, page):
+    evenement = EvenementFactory()
+    content_type = ContentType.objects.get_for_model(evenement)
+    url = (
+        reverse("structure-selection-add-form")
+        + f"?fiche_id={evenement.pk}&content_type_id={content_type.pk}&next=https://google.fr"
+    )
+    page.goto(f"{live_server.url}/{url}")
+
+    expect(page.get_by_role("link", name="Retour à l'évenement")).to_have_attribute(
+        "href", evenement.get_absolute_url()
+    )
+
+
 def test_cant_access_add_contact_form_if_evenement_brouillon(live_server, page):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     content_type = ContentType.objects.get_for_model(evenement)
