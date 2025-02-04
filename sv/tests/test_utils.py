@@ -373,12 +373,12 @@ class FicheZoneDelimiteeFormPage:
 
         # Zone tampon
         self.rayon_zone_tampon = page.get_by_label("Rayon tampon réglementaire ou arbitré")
-        self.rayon_zone_tampon_unite_m = page.get_by_label("m", exact=True).first
-        self.rayon_zone_tampon_unite_km = page.get_by_label("km", exact=True).first
+        self.rayon_zone_tampon_unite_m = page.locator("input[name='unite_rayon_zone_tampon'][value='m']")
+        self.rayon_zone_tampon_unite_km = page.locator("input[name='unite_rayon_zone_tampon'][value='km']")
         self.surface_tampon_totale = page.get_by_label("Surface tampon totale")
-        self.surface_tampon_totale_unite_m2 = page.get_by_label("m2", exact=True).first
-        self.surface_tampon_totale_unite_km2 = page.get_by_label("km2", exact=True).first
-        self.surface_tampon_totale_unite_ha = page.get_by_label("ha", exact=True).first
+        self.surface_tampon_totale_unite_m2 = page.locator("input[name='unite_surface_tampon_totale'][value='m2']")
+        self.surface_tampon_totale_unite_km2 = page.locator("input[name='unite_surface_tampon_totale'][value='km2']")
+        self.surface_tampon_totale_unite_ha = page.locator("input[name='unite_surface_tampon_totale'][value='ha']")
 
         # Détections hors zone infestée
         self.detections_hors_zone_infestee = page.locator(
