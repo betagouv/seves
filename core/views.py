@@ -52,7 +52,11 @@ class DocumentUploadView(
             fiche = self.get_fiche_object()
             self.add_user_contacts(fiche)
 
-            messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
+            messages.success(
+                request,
+                "Le document a été ajouté avec succès, il sera disponible après l'analyse antivirus.",
+                extra_tags="core documents",
+            )
             return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
         messages.error(request, "Une erreur s'est produite lors de l'ajout du document", extra_tags="core documents")

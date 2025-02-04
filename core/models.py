@@ -8,7 +8,7 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth import get_user_model
-from .managers import DocumentQueryset, ContactQueryset, LienLibreQueryset, StructureQueryset
+from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
 from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from .storage import get_timestamped_filename
@@ -170,12 +170,13 @@ class Document(models.Model):
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")
     created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
     deleted_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True)
+    is_infected = models.BooleanField(default=None, null=True, verbose_name="Est ce que le fichier est infecté")
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
-    objects = DocumentQueryset.as_manager()
+    objects = DocumentManager.from_queryset(DocumentQueryset)()
 
     class Meta:
         indexes = [
