@@ -16,6 +16,7 @@ from pathlib import Path
 import environ
 import tempfile
 import sentry_sdk
+from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
 
@@ -41,6 +42,11 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
+
+# Django admin URL
+ADMIN_URL = os.environ.get("DJANGO_ADMIN_URL")
+if not ADMIN_URL:
+    raise ImproperlyConfigured("DJANGO_ADMIN_URL doit être défini dans les variables d'environnement")
 
 
 # Application definition
