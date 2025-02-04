@@ -20,6 +20,7 @@ def test_document_ordered():
         created_by=agent,
         created_by_structure=structure,
         is_deleted=True,
+        is_infected=False,
     )
     doc_2 = baker.make(
         Document,
@@ -27,6 +28,7 @@ def test_document_ordered():
         date_creation=timezone.make_aware(datetime(2022, 1, 1)),
         created_by=agent,
         created_by_structure=structure,
+        is_infected=False,
     )
     doc_3 = baker.make(
         Document,
@@ -34,6 +36,7 @@ def test_document_ordered():
         date_creation=timezone.make_aware(datetime(2023, 1, 1)),
         created_by=agent,
         created_by_structure=structure,
+        is_infected=False,
     )
     doc_4 = baker.make(
         Document,
@@ -41,6 +44,7 @@ def test_document_ordered():
         date_creation=timezone.make_aware(datetime(2024, 1, 1)),
         created_by=agent,
         created_by_structure=structure,
+        is_infected=False,
     )
 
     assert list(Document.objects.order_list()) == [doc_4, doc_3, doc_2, doc_1]

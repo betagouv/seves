@@ -360,3 +360,62 @@ def test_cant_delete_document_of_evenement_i_cant_see(client, document_recipe):
     evenement.refresh_from_db()
     assert evenement.documents.filter(is_deleted=True).count() == 0
     assert evenement.documents.filter(is_deleted=False).count() == 1
+
+
+def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_authentification_user: User, settings):
+    settings.BYPASS_ANTIVIRUS = False
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id("documents-add")).to_be_visible()
+    page.get_by_test_id("documents-add").click()
+
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+
+    page.locator("#id_nom").fill("Name of the document")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
+    page.get_by_test_id("documents-send").click()
+
+    assert evenement.documents.count() == 1
+    document = evenement.documents.get()
+
+    assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
+    assert document.nom == "Name of the document"
+    assert document.description == "Description"
+    assert document.created_by == mocked_authentification_user.agent
+    assert document.created_by_structure == mocked_authentification_user.agent.structure
+    assert document.is_infected is None
+
+    # Check the document is not listed on the page
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_text("Name of the document Information")).to_be_visible()
+    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
+    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
+    expect(page.get_by_text("En cours d'analyse antivirus")).to_be_visible()
+
+    document.is_infected = True
+    document.save()
+
+    page.reload()
+    # Check the document is not listed on the page
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_text("Name of the document Information")).not_to_be_visible()
+    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).not_to_be_visible()
+    expect(
+        page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")
+    ).not_to_be_visible()
+    expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
+
+    document.is_infected = False
+    document.save()
+
+    page.reload()
+    # Check the document is now listed on the page
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_text("Name of the document Information")).to_be_visible()
+    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
+    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()

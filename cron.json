@@ -11,6 +11,10 @@
 	  },
 	  {
 		"command": "7,17,27,37,47,57 * * * * python manage.py send_queued_mail"
+	  },
+	  {
+		"command": "*/10 * * * * python manage.py scan_documents",
+	    "size": "2XL"
 	  }
 	]
   }

@@ -1,7 +1,12 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, When, Value, IntegerField, QuerySet, Q
+from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE, SERVICE_ACCOUNT_NAME
+
+
+class DocumentManager(Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(is_infected=True)
 
 
 class DocumentQueryset(QuerySet):

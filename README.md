@@ -118,6 +118,19 @@ Pour faciliter le dévellopement au quotidien il est possible d'utiliser un autr
 
 Un exemple est donné dans le fichier `.env.dist`, les informations sur les logins et mots de passe, ainsi que les endpoints pour le backend [sont disponibles dans la documentation](https://oidctest.wsweet.org/).
 
+# Travailler avec l'antivirus en local
+
+Les fichiers uploadés sur les documents sont analysé par un antivirus et ne sont pas disponible au téléchargement tant qu'ils n'ont pas été analysé.
+En local il est possible de désactiver ce comportement avec la variable d'environnement `BYPASS_ANTIVIRUS` afin d'avoir accès aux fichiers de manière immédiate.
+
+Cette même variable est utilisée dans les tests pour que le fichier soit disponible immédiatement sur l'objet concerné.
+
+Si vous souhaitez réaliser les analyses antivirus en local il faut:
+- Vérifier que `BYPASS_ANTIVIRUS` est bien à `False`
+- Installer clamav : [instructions pour linux](https://docs.clamav.net/manual/Installing.html#installing-with-a-package-manager) . Attention a bien installer le daemon `clamav-daemon`.
+- Lancer la commande `scan_documents` pour analyser les documents et mettre à jour leur statut en base.
+
+
 # Tests
 ## E2E
 Les tests E2E sont réalisés avec la bibliothèque [Playwright](https://playwright.dev/python/) ([installé précédemment](#Installation-des-dépendances-Python)).
