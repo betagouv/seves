@@ -55,7 +55,10 @@ class DocumentUploadView(
             messages.success(request, "Le document a été ajouté avec succès.", extra_tags="core documents")
             return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
-        messages.error(request, "Une erreur s'est produite lors de l'ajout du document")
+        messages.error(request, "Une erreur s'est produite lors de l'ajout du document", extra_tags="core documents")
+        for _, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error, extra_tags="core documents")
         return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
 

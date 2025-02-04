@@ -13,6 +13,7 @@
                             class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un document</h1>
 
                             {{ document_form.as_dsfr_div }}
+                            <span class="fr-hint-text">Formats supportés : {{ allowed_extensions|join:", " }}</span>
 
                         </div>
                         <div class="fr-modal__footer">

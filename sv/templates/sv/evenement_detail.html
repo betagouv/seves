@@ -34,6 +34,7 @@
                 <button class="fr-btn fr-btn--tertiary-no-outline btn-full add-document-form-btn"><span class="fr-icon-add-line" aria-hidden="true"></span>Ajouter un document</button>
                 <div class="fr-hidden document-form">
                     {{ add_document_form.as_dsfr_div }}
+                    <span class="fr-hint-text">Formats supportés : {{ allowed_extensions|join:", " }}</span>
                     <div class="message-documents-actions">
                         <button class="fr-btn fr-btn--tertiary btn-full" id="message-add-document" disabled>Valider l'ajout du document</button>
                     </div>
