@@ -34,6 +34,7 @@ jobs:
           OIDC_RP_USER_ENDPOINT: null
           OIDC_RP_JWKS_ENDPOINT: null
           OIDC_RP_LOGOUT_ENDPOINT: null
+          DJANGO_ADMIN_URL: mon_url_secrete_admin
       - name: Run ruff
         run: ruff check .
       - name: Run ruff format
@@ -45,3 +46,4 @@ jobs:
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
+          DJANGO_ADMIN_URL: mon_url_secrete_admin
