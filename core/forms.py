@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton
 from core.models import Document, Contact, Message, Structure, Visibilite
+from core.widgets import RestrictedFileWidget
 
 User = get_user_model()
 
@@ -65,7 +66,7 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un Document")
+    file = forms.FileField(label="Ajouter un Document", widget=RestrictedFileWidget)
 
     class Meta:
         model = Document
@@ -259,7 +260,7 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
         required=False,
     )
     file = forms.FileField(
-        label="Ajouter un Document", required=False, widget=forms.FileInput(attrs={"disabled": True})
+        label="Ajouter un Document", required=False, widget=RestrictedFileWidget(attrs={"disabled": True})
     )
 
     class Meta:

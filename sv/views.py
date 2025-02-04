@@ -29,6 +29,7 @@ from core.mixins import (
 )
 from core.models import Visibilite
 from core.redirect import safe_redirect
+from core.validators import AUTHORIZED_EXTENSIONS
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -159,6 +160,7 @@ class EvenementDetailView(
             next=self.get_object().get_absolute_url(),
         )
         context["add_document_form"] = MessageDocumentForm()
+        context["allowed_extensions"] = AUTHORIZED_EXTENSIONS
         context["active_detection"] = (
             int(self.request.GET.get("detection"))
             if self.request.GET.get("detection")

@@ -133,6 +133,8 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   faker
+python-magic==0.4.27
+    # via -r requirements.in
 python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1

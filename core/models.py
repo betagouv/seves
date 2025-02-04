@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -11,6 +12,7 @@ from .managers import DocumentQueryset, ContactQueryset, LienLibreQueryset, Stru
 from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from .storage import get_timestamped_filename
+from .validators import validate_upload_file, AUTHORIZED_EXTENSIONS
 
 User = get_user_model()
 
@@ -159,7 +161,10 @@ class Document(models.Model):
     nom = models.CharField(max_length=256)
     description = models.TextField()
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
-    file = models.FileField(upload_to=get_timestamped_filename)
+    file = models.FileField(
+        upload_to=get_timestamped_filename,
+        validators=[validate_upload_file, FileExtensionValidator(AUTHORIZED_EXTENSIONS)],
+    )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")

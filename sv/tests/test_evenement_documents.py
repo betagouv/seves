@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -25,7 +27,7 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     assert evenement.documents.count() == 1
@@ -42,6 +44,57 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
     expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+
+
+def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id("documents-add")).to_be_visible()
+    page.get_by_test_id("documents-add").click()
+
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+
+    page.locator("#id_nom").fill("Name of the document")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("scalingo.json")
+    page.get_by_test_id("documents-send").click()
+
+    assert evenement.documents.count() == 0
+
+    expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
+    expect(
+        page.get_by_text(
+            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz."
+        )
+    ).to_be_visible()
+
+
+def test_cant_add_document_with_correct_extension_but_fake_content(
+    live_server, page: Page, mocked_authentification_user: User
+):
+    evenement = EvenementFactory()
+    with open("test.csv", mode="w+") as file:
+        file.write("<script>alert('Hello');</script>")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id("documents-add")).to_be_visible()
+    page.get_by_test_id("documents-add").click()
+
+    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+
+    page.locator("#id_nom").fill("Name of the document")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("test.csv")
+    page.get_by_test_id("documents-send").click()
+
+    assert evenement.documents.count() == 0
+
+    expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
+    expect(page.get_by_text("Type de fichier non autorisé: text/html")).to_be_visible()
+    Path("test.csv").unlink()
 
 
 def test_can_see_and_delete_document_on_evenement(
@@ -230,7 +283,7 @@ def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Pa
     page.locator("#id_nom").fill("Test Document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description test")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     # Vérification que le document a été créé
@@ -267,7 +320,7 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     page.locator("#fr-modal-add-doc #id_nom").fill("Document 1")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#fr-modal-add-doc #id_description").fill("Description 1")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     # Ajout du second document
@@ -276,7 +329,7 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     page.locator("#fr-modal-add-doc #id_nom").fill("Document 2")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#fr-modal-add-doc #id_description").fill("Description 2")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     # Vérification que les deux documents ont été créés
