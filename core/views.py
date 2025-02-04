@@ -21,7 +21,7 @@ from .forms import (
     StructureAddForm,
     StructureSelectionForm,
 )
-from .mixins import PreventActionIfVisibiliteBrouillonMixin
+from .mixins import PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite
 from .notifications import notify_message
 from .redirect import safe_redirect
@@ -96,16 +96,19 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return response
 
 
-class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
     template_name = "core/_contact_add_form.html"
     form_class = ContactAddForm
 
     def get_fiche_object(self):
         content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
         fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        return get_object_or_404(ModelClass, pk=fiche_id)
+        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.get_fiche_object()
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -115,7 +118,7 @@ class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         initial["structure"] = self.request.user.agent.structure
         return initial
 
-    def form_valid(self, form):
+    def form_valid(self, form, **kwargs):
         selection_form = ContactSelectionForm(
             structure=form.cleaned_data.get("structure"),
             fiche_id=form.cleaned_data.get("fiche_id"),
@@ -124,23 +127,23 @@ class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
                 "next": form.cleaned_data.get("next"),
             },
         )
-        return render(self.request, self.template_name, {"form": form, "selection_form": selection_form})
+        context = self.get_context_data(**kwargs)
+        context.update({"form": form, "selection_form": selection_form})
+        return render(self.request, self.template_name, context)
 
 
-class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
     template_name = "core/_contact_add_form.html"
     form_class = ContactSelectionForm
 
     def get_fiche_object(self):
-        content_type_id = self.request.POST.get("content_type_id")
-        fiche_id = self.request.POST.get("fiche_id")
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        return get_object_or_404(ModelClass, pk=fiche_id)
+        return self._get_object_from_content_type(
+            object_id=self.request.POST.get("fiche_id"), content_type_id=self.request.POST.get("content_type_id")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next")
+        context["object"] = self.get_fiche_object()
         return context
 
     def get_form_kwargs(self):
@@ -170,7 +173,7 @@ class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
 
         return safe_redirect(self.request.POST.get("next") + "#tabpanel-contacts-panel")
 
-    def form_invalid(self, form):
+    def form_invalid(self, form, **kwargs):
         add_form = ContactAddForm(
             initial={
                 "structure": form.data.get("structure"),
@@ -179,13 +182,17 @@ class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
                 "next": form.data.get("next"),
             }
         )
-        return render(
-            self.request,
-            self.template_name,
+        context = self.get_context_data(**kwargs)
+        context.update(
             {
                 "form": add_form,
                 "selection_form": form,
-            },
+            }
+        )
+        return render(
+            self.request,
+            self.template_name,
+            context,
         )
 
 
@@ -327,16 +334,14 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):
         return fiche
 
 
-class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
     template_name = "core/_structure_add_form.html"
     form_class = StructureAddForm
 
     def get_fiche_object(self):
         content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
         fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        return get_object_or_404(ModelClass, pk=fiche_id)
+        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -345,7 +350,12 @@ class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         initial["content_type_id"] = self.request.GET.get("content_type_id")
         return initial
 
-    def form_valid(self, form):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.get_fiche_object()
+        return context
+
+    def form_valid(self, form, **kwargs):
         selection_form = StructureSelectionForm(
             fiche_id=form.cleaned_data.get("fiche_id"),
             content_type_id=form.cleaned_data.get("content_type_id"),
@@ -354,23 +364,23 @@ class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, FormView):
                 "next": form.cleaned_data.get("next"),
             },
         )
-        return render(self.request, self.template_name, {"form": form, "selection_form": selection_form})
+        context = self.get_context_data(**kwargs)
+        context.update({"form": form, "selection_form": selection_form})
+        return render(self.request, self.template_name, context)
 
 
-class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
+class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
     template_name = "core/_structure_add_form.html"
     form_class = StructureSelectionForm
 
     def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")
         fiche_id = self.request.POST.get("fiche_id")
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        return get_object_or_404(ModelClass, pk=fiche_id)
+        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next")
+        context["object"] = self.get_fiche_object()
         return context
 
     def get_form_kwargs(self):
@@ -384,7 +394,8 @@ class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
         )
         return kwargs
 
-    def form_invalid(self, form):
+    def form_invalid(self, form, **kwargs):
+        context = self.get_context_data(**kwargs)
         add_form = StructureAddForm(
             initial={
                 "fiche_id": form.data.get("fiche_id"),
@@ -393,14 +404,13 @@ class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, FormView):
                 "structure_niveau1": form.data.get("structure_selected"),
             }
         )
-        return render(
-            self.request,
-            self.template_name,
+        context.update(
             {
                 "form": add_form,
                 "selection_form": form,
-            },
+            }
         )
+        return render(self.request, self.template_name, context)
 
     def form_valid(self, form):
         content_type = ContentType.objects.get(pk=form.cleaned_data["content_type_id"]).model_class()
