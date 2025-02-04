@@ -290,3 +290,12 @@ def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
     assert response.status_code == 403
     fiche_zone.refresh_from_db()
     assert fiche_zone.commentaire != "AAAA"
+
+
+def test_shows_correct_organisme_and_statut(live_server, page: Page):
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+
+    page.goto(f"{live_server.url}{evenement.fiche_zone_delimitee.get_update_url()}")
+
+    expect(page.get_by_text(str(evenement.organisme_nuisible))).to_be_visible()
+    expect(page.get_by_text(str(evenement.statut_reglementaire))).to_be_visible()

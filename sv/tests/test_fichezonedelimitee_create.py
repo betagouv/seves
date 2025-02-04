@@ -211,3 +211,13 @@ def test_has_same_rayon_units_order_for_zone_tampon_and_zone_infestee(live_serve
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     form_page.goto_create_form_page(live_server, evenement)
     assert form_page.has_same_rayon_units_order_for_zone_tampon_and_zone_infestee() is True
+
+
+def test_shows_correct_organisme_and_statut(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, evenement)
+
+    expect(page.get_by_text(str(evenement.organisme_nuisible))).to_be_visible()
+    expect(page.get_by_text(str(evenement.statut_reglementaire))).to_be_visible()

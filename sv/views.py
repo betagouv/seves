@@ -460,7 +460,9 @@ class FicheZoneDelimiteeCreateView(CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            self.evenement = Evenement.objects.get(pk=self.request.GET.get("evenement"))
+            self.evenement = Evenement.objects.select_related("organisme_nuisible", "statut_reglementaire").get(
+                pk=self.request.GET.get("evenement")
+            )
         except Evenement.DoesNotExist:
             return HttpResponseBadRequest("L'événement n'existe pas.")
 
@@ -475,6 +477,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["evenement"] = self.evenement
         form_kwargs = {"evenement": self.evenement}
         if self.request.POST:
             context["zone_infestee_formset"] = ZoneInfesteeFormSet(
@@ -569,8 +572,16 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin
     def test_func(self) -> bool | None:
         return self.get_object().evenement.can_user_access(self.request.user)
 
+    def get_object(self, queryset=None):
+        return super().get_object(
+            FicheZoneDelimitee.objects.select_related(
+                "evenement__organisme_nuisible", "evenement__statut_reglementaire"
+            )
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["evenement"] = self.get_object().evenement
         form_kwargs = {"evenement": self.get_object().evenement}
         if self.request.POST:
             context["zone_infestee_formset"] = ZoneInfesteeFormSetUpdate(
@@ -589,8 +600,6 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin
     def get_initial(self):
         initial = super().get_initial()
         initial["evenement"] = self.object.evenement
-        initial["organisme_nuisible"] = self.object.evenement.organisme_nuisible
-        initial["statut_reglementaire"] = self.object.evenement.statut_reglementaire
         initial["detections_hors_zone"] = list(
             FicheDetection.objects.filter(hors_zone_infestee=self.object, zone_infestee__isnull=True).values_list(
                 "id", flat=True
