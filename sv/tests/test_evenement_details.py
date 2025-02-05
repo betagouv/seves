@@ -4,6 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
 
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
+from core.factories import StructureFactory
 from core.models import Structure, Visibilite
 from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
 from sv.models import Evenement, FicheDetection
@@ -234,3 +236,52 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
     expect(page.get_by_text("Zone tampon")).to_be_visible()
+
+
+def test_visibilite_locale_display(live_server, page: Page):
+    evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_test_id("evenement-visibilite")).to_have_text(
+        f"{evenement.createur}, {MUS_STRUCTURE}, {BSV_STRUCTURE}"
+    )
+    expect(page.locator("#tooltip-visibilite")).not_to_be_visible()
+
+
+def test_visibilite_nationale_display(live_server, page: Page):
+    evenement = EvenementFactory(visibilite=Visibilite.NATIONALE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_test_id("evenement-visibilite")).to_have_text("Toutes les structures")
+    expect(page.locator("#tooltip-visibilite")).not_to_be_visible()
+
+
+def test_visibilite_limitee_display_short_text(live_server, page: Page):
+    """Test l'affichage de la visibilité limitée avec une liste courte de structures."""
+    evenement = EvenementFactory()
+    structure = StructureFactory()
+    evenement.allowed_structures.add(structure)
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_test_id("evenement-visibilite")).to_have_text(structure.libelle)
+    expect(page.locator("#tooltip-visibilite")).not_to_be_visible()
+
+
+def test_visibilite_limitee_display_long_text(live_server, page: Page):
+    """Test l'affichage de la visibilité limitée avec une longue liste de structures."""
+    evenement = EvenementFactory()
+    structures = [StructureFactory(libelle=f"Structure Test {i}") for i in range(10)]
+    evenement.allowed_structures.add(*structures)
+    evenement.visibilite = Visibilite.LIMITEE
+    evenement.save()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    # Vérification de la troncature
+    texte_affiche = page.get_by_test_id("evenement-visibilite").inner_text().strip()
+    assert len(texte_affiche.rstrip("…")) <= 150
+    assert texte_affiche.endswith("…")
+
+    # Vérification que chaque structure est présente dans le tooltip
+    tooltip = page.locator("#tooltip-visibilite")
+    for i in range(10):
+        expect(tooltip).to_contain_text(f"Structure Test {i}")

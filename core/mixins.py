@@ -200,6 +200,15 @@ class WithVisibiliteMixin(models.Model):
             return True
         return False
 
+    def get_visibilite_display_text(self) -> str:
+        match self.visibilite:
+            case Visibilite.LOCALE:
+                return f"{self.createur}, {MUS_STRUCTURE}, {BSV_STRUCTURE}"
+            case Visibilite.LIMITEE:
+                return ", ".join(str(s) for s in self.allowed_structures.all())
+            case Visibilite.NATIONALE:
+                return "Toutes les structures"
+
     def save(self, *args, **kwargs):
         if self.pk:
             if self.is_visibilite_limitee and self.allowed_structures.count() == 0:
