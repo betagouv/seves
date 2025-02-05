@@ -8,6 +8,7 @@ from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
 from django.utils.translation import ngettext
 
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
 from core.models import Structure
@@ -526,4 +527,12 @@ class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["allowed_structures"].queryset = Structure.objects.has_at_least_one_active_contact().distinct()
+        structures_queryset = Structure.objects.has_at_least_one_active_contact().distinct()
+        self.fields["allowed_structures"].queryset = structures_queryset
+
+        # Initialiser les structures présélectionnées et désactivées
+        mus_bsv = structures_queryset.filter(niveau1=AC_STRUCTURE, niveau2__in=[MUS_STRUCTURE, BSV_STRUCTURE])
+        structures_disabled = list(mus_bsv) + [self.instance.createur]
+        disabled_pks = [structure.pk for structure in structures_disabled]
+        self.fields["allowed_structures"].widget.disabled_choices = disabled_pks
+        self.fields["allowed_structures"].widget.checked_choices = disabled_pks

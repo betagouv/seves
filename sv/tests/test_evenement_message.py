@@ -211,8 +211,8 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page):
     page.get_by_test_id("element-actions").click()
     page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
 
-    page.get_by_text("MUS").click()
-    page.get_by_text("BSV").click()
+    page.get_by_text("MUS", exact=True).click()
+    page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
