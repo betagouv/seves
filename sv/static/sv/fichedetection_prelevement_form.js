@@ -27,6 +27,7 @@ function addChoicesEspeceEchantillon(element){
         searchResultLimit: 50,
         classNames: {containerInner: 'fr-select'},
         itemSelectText: '',
+        position: 'top',
     });
     choicesEspece.input.element.addEventListener('input', function (event) {
         const query = choicesEspece.input.element.value
