@@ -102,21 +102,17 @@
                 </div>
                 <div class="fr-col-6 fr-col-lg-5">
                     <span class="bold fr-mr-2v">Visibilité</span>
-                    {% if evenement.is_visibilite_locale %}
-                        Locale
-                    {% elif evenement.is_visibilite_nationale %}
-                        Toutes les structures
-                    {% else %}
-                        {% with  evenement.allowed_structures.all|join:', ' as structures_str %}
-                            {% if structures_str|length > 150 %}
+                    <span data-testid="evenement-visibilite">
+                        {% with structures_str=evenement.get_visibilite_display_text %}
+                            {% if evenement.is_visibilite_limitee and structures_str|length > 150 %}
                                 {{ structures_str|truncatechars:150 }}
-                                <button class="fr-btn--tooltip fr-btn" aria-describedby="tooltip-2989" type="button" id="button-2995"></button>
-                                <span class="fr-tooltip fr-placement" id="tooltip-2989" role="tooltip" aria-hidden="true">{{ evenement.allowed_structures.all|join:', ' }}</span>
+                                <button class="fr-btn--tooltip fr-btn" aria-describedby="tooltip-visibilite" type="button"></button>
+                                <span class="fr-tooltip fr-placement" id="tooltip-visibilite" role="tooltip" aria-hidden="true">{{ structures_str }}</span>
                             {% else %}
                                 {{ structures_str }}
                             {% endif %}
                         {% endwith %}
-                    {% endif %}
+                    </span>
                 </div>
 
             </div>
