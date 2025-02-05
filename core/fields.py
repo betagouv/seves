@@ -27,6 +27,19 @@ class MultiModelChoiceField(forms.MultipleChoiceField):
 class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
     option_template_name = "forms/dsfr_checkbox_option.html"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.disabled_choices = []
+        self.checked_choices = []
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value in self.disabled_choices:
+            option["attrs"]["disabled"] = "disabled"
+        if value in self.checked_choices:
+            option["attrs"]["checked"] = "checked"
+        return option
+
 
 class DSFRToogle(forms.CheckboxInput):
     template_name = "forms/dsfr_toogle.html"

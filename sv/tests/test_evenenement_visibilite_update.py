@@ -131,3 +131,58 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     evenement.refresh_from_db()
     assert evenement.allowed_structures.get() == structure_1
     assert evenement.visibilite == Visibilite.LIMITEE
+
+
+def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: Page, mocked_authentification_user):
+    # Créer les structures AC (MUS et BSV) et ajoute des contacts actifs
+    mus_structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, defaults={"libelle": MUS_STRUCTURE}
+    )
+    mus_contact = ContactAgentFactory(agent__structure=mus_structure)
+    mus_contact.agent.user.is_active = True
+    mus_contact.agent.user.save()
+    bsv_structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=BSV_STRUCTURE, defaults={"libelle": BSV_STRUCTURE}
+    )
+    bsv_contact = ContactAgentFactory(agent__structure=bsv_structure)
+    bsv_contact.agent.user.is_active = True
+    bsv_contact.agent.user.save()
+
+    # Créer une structure créatrice
+    creator_structure = StructureFactory()
+    creator_contact = ContactAgentFactory(agent__structure=creator_structure)
+    creator_contact.agent.user.is_active = True
+    creator_contact.agent.user.save()
+
+    # Créer d'autres structures non-AC pour la comparaison
+    other_structure = StructureFactory()
+    agent_contact = ContactAgentFactory(agent__structure=other_structure)
+    agent_contact.agent.user.is_active = True
+    agent_contact.agent.user.save()
+
+    # Configurer l'utilisateur authentifié comme membre de MUS
+    mocked_authentification_user.agent.structure = mus_structure
+    mocked_authentification_user.agent.save()
+
+    evenement = EvenementFactory(createur=creator_structure)
+
+    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+
+    # Vérifier que les structures AC sont cochées et désactivées
+    mus_checkbox = page.get_by_label(str(mus_structure))
+    bsv_checkbox = page.get_by_label(str(bsv_structure))
+    expect(mus_checkbox).to_be_checked()
+    expect(mus_checkbox).to_be_disabled()
+    expect(bsv_checkbox).to_be_checked()
+    expect(bsv_checkbox).to_be_disabled()
+
+    # Vérifier que la structure créatrice est cochée et désactivée
+    creator_checkbox = page.get_by_label(str(creator_structure))
+    expect(creator_checkbox).to_be_checked()
+    expect(creator_checkbox).to_be_disabled()
+
+    # Vérifier que les autres structures ne sont ni cochées ni désactivées
+    other_checkbox = page.get_by_label(str(other_structure))
+    expect(other_checkbox).not_to_be_checked()
+    expect(other_checkbox).not_to_be_disabled()

@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('#structures-form');
-    const checkboxes = form.querySelectorAll('input[type=checkbox]');
+    const checkboxes = form.querySelectorAll('input[type=checkbox]:not([disabled])');
+
 
     function init() {
         form.addEventListener('submit', validateForm);
