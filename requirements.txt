@@ -24,7 +24,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-cryptography==42.0.8
+cryptography==44.0.0
     # via
     #   josepy
     #   mozilla-django-oidc
@@ -110,7 +110,7 @@ pycparser==2.22
     # via cffi
 pyee==11.1.0
     # via playwright
-pyopenssl==24.1.0
+pyopenssl==25.0.0
     # via josepy
 pytest==8.3.3
     # via
@@ -167,6 +167,7 @@ typing-extensions==4.11.0
     # via
     #   faker
     #   pyee
+    #   pyopenssl
 urllib3==2.3.0
     # via
     #   botocore
