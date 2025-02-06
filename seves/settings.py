@@ -26,7 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Environment variables (django-environ)
 env = environ.Env(
     # set casting and default value
-    DEBUG=(bool, False)
+    DEBUG=(bool, False),
+    DJANGO_ADMIN_ENABLED=(bool, False),
 )
 # Take environment variables from .env file
 env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -48,11 +49,11 @@ ADMIN_URL = os.environ.get("DJANGO_ADMIN_URL")
 if not ADMIN_URL:
     raise ImproperlyConfigured("DJANGO_ADMIN_URL doit être défini dans les variables d'environnement")
 
+ADMIN_ENABLED = env("DJANGO_ADMIN_ENABLED")
 
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
@@ -66,6 +67,8 @@ INSTALLED_APPS = [
     "post_office",
     "reversion",
 ]
+if ADMIN_ENABLED:
+    INSTALLED_APPS.append("django.contrib.admin")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

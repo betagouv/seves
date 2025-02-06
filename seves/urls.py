@@ -16,26 +16,29 @@ Including another URLconf
 """
 
 from mozilla_django_oidc.urls import OIDCCallbackClass
-from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
 from django.conf import settings
 
-# Personnalisation du titre et de l'en-tête de l'interface d'administration
-admin.site.site_header = "Administration de Sèves"
-admin.site.site_title = "Sèves"
-admin.site.index_title = "Bienvenue sur l'administration de Sèves"
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="fiche-liste"), name="index"),
     path("login-eap-callback", OIDCCallbackClass.as_view(), name="custom_oidc_authentication_callback"),
-    path(f"{settings.ADMIN_URL}/", admin.site.urls),
     path("sv/", include("sv.urls"), name="sv-index"),
     path("core/", include("core.urls"), name="core"),
     path("account/", include("account.urls"), name="account"),
     path("oidc/", include("mozilla_django_oidc.urls")),
 ]
 
+if settings.ADMIN_ENABLED:
+    from django.contrib import admin
+
+    admin.site.site_header = "Administration de Sèves"
+    admin.site.site_title = "Sèves"
+    admin.site.index_title = "Bienvenue sur l'administration de Sèves"
+    urlpatterns += [
+        path(f"{settings.ADMIN_URL}/", admin.site.urls),
+    ]
 
 if settings.DEBUG:
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
