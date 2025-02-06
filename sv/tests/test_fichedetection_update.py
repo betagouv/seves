@@ -324,7 +324,8 @@ def test_update_lieu(
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
     if new_lieu.is_etablissement:
-        lieu_form_elements.is_etablissement_checkbox.click(force=True)
+        if not lieu_form_elements.is_etablissement_checkbox.is_checked():
+            lieu_form_elements.is_etablissement_checkbox.click(force=True)
         lieu_form_elements.nom_etablissement_input.fill(new_lieu.nom_etablissement)
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
         lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
