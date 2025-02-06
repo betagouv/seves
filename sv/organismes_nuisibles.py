@@ -2248,7 +2248,7 @@ ORGANISMES_NUISIBLES = [
     {"code_oepp": "TOFBV0", "libelle_long": "Blunervirus solani", "libelle_court": "Blunervirus solani"},
     {"code_oepp": "ALECCA", "libelle_long": "Aleurocanthus camelliae", "libelle_court": "Aleurocanthus camelliae"},
     {
-        "code_oepp": "STEHHA:",
+        "code_oepp": "STEHHA",
         "libelle_long": "Hypothenemus hampei (scolyte du grain de café)",
         "libelle_court": "Hypothenemus hampei",
     },
