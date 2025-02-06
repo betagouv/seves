@@ -261,7 +261,7 @@ class Command(BaseCommand):
                 if row["ON_code_OEPP"]:
                     try:
                         organisme = self._get_instance_from_fk(
-                            row["ON_code_OEPP"].strip(""),
+                            row["ON_code_OEPP"].strip(" "),
                             OrganismeNuisible,
                             "code_oepp__iexact",
                             allow_empty=False,
@@ -277,7 +277,7 @@ class Command(BaseCommand):
                         organisme = self._get_instance_from_fk(
                             row["ON_nom_scientifique"],
                             OrganismeNuisible,
-                            "libelle_court__icontains",
+                            "libelle_long__icontains",
                             allow_empty=False,
                             num=row["Alerte_num_MUS"],
                         )
@@ -411,20 +411,14 @@ class Command(BaseCommand):
                 is_officiel = row["officiel"] == "Officiel"
 
                 annee, numero = row["Alerte_num_MUS"].split("/")
-                numero, created = NumeroFiche.objects.get_or_create(annee=annee, numero=numero)
-                existing_event = None
+                existing_event = Evenement.objects.filter(numero_annee=annee, numero_evenement=numero).first()
                 rayon_data = {}
                 if row["ZD_rayon_ZT"]:
                     rayon, unit = self._rayon(row["ZD_rayon_ZT"], row, "ZD_rayon_ZT")
                     if rayon and unit:
                         rayon_data = {"rayon_zone_tampon": rayon, "unite_rayon_zone_tampon": unit}
 
-                if not created:
-                    try:
-                        existing_event = Evenement.objects.get(numero=numero)
-                    except Evenement.DoesNotExist:
-                        print("Weird case " + row["Alerte_num_MUS"])
-                        continue
+                if existing_event:
                     if organisme != existing_event.organisme_nuisible:
                         errors[row["Alerte_num_MUS"]].add(
                             "Problème de cohérence d'organisme nuisible entre les différentes lignes"
@@ -458,12 +452,12 @@ class Command(BaseCommand):
                             "Problème de cohérence de d'unite de zone tampon entre les différentes lignes"
                         )
 
-                numero_detection = (int(numero.numero) * 1000) + 1
+                numero_detection = (int(numero) * 1000) + 1
                 try_again = True
 
                 while try_again:
                     try:
-                        numero_detection = NumeroFiche.objects.create(annee=numero.annee, numero=numero_detection)
+                        numero_detection = NumeroFiche.objects.create(annee=annee, numero=numero_detection)
                         try_again = False
                     except IntegrityError:
                         numero_detection += 1
@@ -473,7 +467,8 @@ class Command(BaseCommand):
                         evenement = existing_event
                     else:
                         evenement = Evenement.objects.create(
-                            numero=numero,
+                            numero_annee=annee,
+                            numero_evenement=numero,
                             organisme_nuisible=organisme,
                             createur=createur,
                             statut_reglementaire=statut_reglementaire,
@@ -527,14 +522,20 @@ class Command(BaseCommand):
                         errors[row["Alerte_num_MUS"]].add("Impossible de lire la valeur de date_prelevement")
                         continue
 
+                    numero_ri = ""
+                    if (
+                        is_officiel
+                        and row["Echantillon_num_inspection_resytal"]
+                        and row["Echantillon_num_inspection_resytal"] != "/"
+                    ):
+                        numero_ri = row["Echantillon_num_inspection_resytal"].strip()
+
                     try:
                         Prelevement.objects.create(
                             type_analyse=Prelevement.TypeAnalyse.PREMIERE_INTENTION,
                             is_officiel=is_officiel,
                             numero_echantillon=row["Echantillon_num_phytopass"],
-                            numero_rapport_inspection=row["Echantillon_num_inspection_resytal"]
-                            if row["Echantillon_num_inspection_resytal"] != "/" and is_officiel
-                            else "",
+                            numero_rapport_inspection=numero_ri,
                             structure_preleveuse=structure,
                             date_prelevement=date_prelevement,
                             matrice_prelevee=matrice,
@@ -561,9 +562,7 @@ class Command(BaseCommand):
                                 type_analyse=type_analyse,
                                 is_officiel=True,
                                 numero_echantillon=row["Echantillon_num_phytopass"],
-                                numero_rapport_inspection=row["Echantillon_num_inspection_resytal"]
-                                if row["Echantillon_num_inspection_resytal"] != "/"
-                                else "",
+                                numero_rapport_inspection=numero_ri,
                                 structure_preleveuse=structure,
                                 date_prelevement=date_prelevement,
                                 matrice_prelevee=matrice,
@@ -578,9 +577,7 @@ class Command(BaseCommand):
                                     type_analyse=type_analyse,
                                     is_officiel=True,
                                     numero_echantillon=row["Echantillon_num_phytopass"],
-                                    numero_rapport_inspection=row["Echantillon_num_inspection_resytal"]
-                                    if row["Echantillon_num_inspection_resytal"] != "/"
-                                    else "",
+                                    numero_rapport_inspection=numero_ri,
                                     structure_preleveuse=structure,
                                     date_prelevement=date_prelevement,
                                     matrice_prelevee=matrice,
@@ -610,12 +607,12 @@ class Command(BaseCommand):
                             )
                             continue
 
-                    if FicheZoneDelimitee.objects.filter(numero=numero).exists():
+                    if existing_event and existing_event.fiche_zone_delimitee:
                         print(f"Skipping zone {numero}")
                         continue
                     else:
                         fiche_zone = FicheZoneDelimitee.objects.create(
-                            numero=numero, createur=createur, **rayon_data, commentaire=row["ZD_Contexte_Commentaire"]
+                            createur=createur, **rayon_data, commentaire=row["ZD_Contexte_Commentaire"]
                         )
                         print("Adding FDZ to evenement")
                         print(evenement)
