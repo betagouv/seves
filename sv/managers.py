@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Max
 from core.models import Visibilite
 
 
@@ -16,6 +16,14 @@ class StructurePreleveuseManager(models.Manager):
 class FicheDetectionManager(models.Manager):
     def get_queryset(self):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
+
+    def get_last_used_numero(self, evenement_id):
+        result = (
+            self.select_for_update().filter(evenement_id=evenement_id).aggregate(max_numero=Max("numero_detection"))
+        )
+        if result["max_numero"]:
+            return int(result["max_numero"].split(".")[-1])
+        return 0
 
 
 class BaseVisibilityQuerySet(models.QuerySet):
@@ -51,18 +59,18 @@ class FicheDetectionQuerySet(BaseVisibilityQuerySet):
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
 
     def optimized_for_list(self):
-        return self.select_related("numero", "createur", "evenement", "evenement__organisme_nuisible")
+        return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
 
     def order_by_numero_fiche(self):
-        return self.order_by("-numero__annee", "-numero__numero")
+        return self.order_by("-numero_detection")
 
     def optimized_for_details(self):
-        return self.select_related("numero", "contexte", "createur", "evenement", "statut_evenement")
+        return self.select_related("contexte", "createur", "evenement", "statut_evenement")
 
     def get_all_not_in_fiche_zone_delimitee(self, instance):
         query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
         query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
-        return self.filter(query).select_related("numero")
+        return self.filter(query)
 
     def with_fiche_zone_delimitee_numero(self):
         return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")

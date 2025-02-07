@@ -86,15 +86,15 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
 @pytest.mark.django_db
 def test_search_with_fiche_number(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche valide (format année.numéro)"""
-    FicheDetectionFactory(numero__annee=2024, numero__numero=1)
-    FicheDetectionFactory(numero__annee=2024, numero__numero=2)
+    FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=1, numero_detection="2024.1.1")
+    FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=2, numero_detection="2024.1.2")
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Numéro").fill("2024.1")
+    page.get_by_label("Numéro").fill("2024.1.1")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
-    expect(page.get_by_role("cell", name="2024.2")).not_to_be_visible()
+    expect(page.get_by_role("cell", name="2024.1.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.2.1")).not_to_be_visible()
 
 
 def test_search_with_invalid_fiche_number(client):
@@ -103,7 +103,8 @@ def test_search_with_invalid_fiche_number(client):
     assert response.status_code == 200
     assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
     assert (
-        str(response.context["form"].errors["numero"][0]) == "Format 'numero' invalide. Il devrait être 'annee.numero'"
+        str(response.context["form"].errors["numero"][0])
+        == "Format 'numero' invalide. Le format correct est 'annee.numero.numero'"
     )
 
 
@@ -221,20 +222,20 @@ def test_search_without_filters(live_server, page: Page, mocked_authentification
 
 
 def test_list_is_ordered(live_server, page):
-    FicheDetectionFactory(numero__annee=2024, numero__numero=30)
-    FicheDetectionFactory(numero__annee=2023, numero__numero=7)
-    FicheDetectionFactory(numero__annee=2024, numero__numero=31)
+    FicheDetectionFactory(evenement__numero_annee=2023, evenement__numero_evenement=1, numero_detection="2023.1.7")
+    FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=1, numero_detection="2024.1.30")
+    FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=2, numero_detection="2024.2.31")
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.31"
+    assert page.text_content(cell_selector).strip() == "2024.2.31"
 
     cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.30"
+    assert page.text_content(cell_selector).strip() == "2024.1.30"
 
     cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2023.7"
+    assert page.text_content(cell_selector).strip() == "2023.1.7"
 
 
 def test_search_fiche_zone(live_server, page: Page):

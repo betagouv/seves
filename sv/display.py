@@ -40,7 +40,7 @@ class DisplayedFiche:
     def from_fiche_detection(cls, fiche: FicheDetection):
         return cls(
             type="D",
-            numero=str(fiche.numero) if fiche.numero else "non attribué",
+            numero=fiche.numero,
             organisme_nuisible=fiche.evenement.organisme_nuisible,
             is_ac_notified=fiche.evenement.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),

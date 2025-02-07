@@ -105,7 +105,6 @@ class EvenementDetailView(
             .prefetch_related(
                 "detections",
                 "detections__createur",
-                "detections__numero",
                 Prefetch(
                     "detections__lieux__prelevements",
                     queryset=Prelevement.objects.select_related(
@@ -145,7 +144,7 @@ class EvenementDetailView(
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
-            context["detections_hors_zone_infestee"] = fiche_zone.fichedetection_set.select_related("numero").all()
+            context["detections_hors_zone_infestee"] = fiche_zone.fichedetection_set.all()
             context["zones_infestees"] = [
                 (zone_infestee, zone_infestee.fichedetection_set.all())
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
