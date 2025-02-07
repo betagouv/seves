@@ -428,7 +428,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("README.md")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     assert evenement.documents.count() == 1
