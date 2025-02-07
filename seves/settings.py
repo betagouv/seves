@@ -227,6 +227,7 @@ POST_OFFICE = {
     },
     "DEFAULT_PRIORITY": env("EMAIL_PRIORITY", default="medium"),
     "MESSAGE_ID_ENABLED": True,
+    "CELERY_ENABLED": True,
 }
 
 if env("EMAIL_HOST", default=None):
@@ -242,3 +243,7 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 
 BYPASS_ANTIVIRUS = env("BYPASS_ANTIVIRUS", default=False)
 CLAMAV_CONFIG_FILE = env("CLAMAV_CONFIG_FILE", default="/etc/clamav/clamd.conf")
+
+CELERY_TASK_ALWAYS_EAGER = env("CELERY_TASK_ALWAYS_EAGER", default=False)
+if not CELERY_TASK_ALWAYS_EAGER:
+    CELERY_BROKER_URL = env.cache_url("SCALINGO_REDIS_URL")["LOCATION"]

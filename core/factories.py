@@ -1,7 +1,7 @@
 import factory
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
-from core.models import Structure, Agent, Contact
+from core.models import Structure, Agent, Contact, Document
 
 
 class StructureFactory(DjangoModelFactory):
@@ -76,3 +76,19 @@ class ContactStructureFactory(DjangoModelFactory):
     agent = None
     structure = factory.SubFactory(StructureFactory)
     email = factory.Sequence(lambda n: f"contact{n}@test.fr")
+
+
+class DocumentFactory(DjangoModelFactory):
+    class Meta:
+        model = Document
+
+    nom = factory.Faker("sentence", nb_words=2)
+    file = factory.django.FileField(filename="test.csv")
+
+    @factory.lazy_attribute
+    def created_by(self):
+        return Agent.objects.get(user__email="test@example.com")
+
+    @factory.lazy_attribute
+    def created_by_structure(self):
+        return Structure.objects.get(libelle="Structure Test")
