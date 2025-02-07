@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import reversion
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -261,7 +263,7 @@ class FicheDetection(
         if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:
             return self.zone_infestee.fiche_zone_delimitee
 
-    @property
+    @cached_property
     def latest_version(self):
         lieux_ids = list(self.lieux.all().values_list("id", flat=True))
         lieu_versions = get_versions_from_ids(lieux_ids, Lieu)
