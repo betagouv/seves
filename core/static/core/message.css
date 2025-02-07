@@ -1,3 +1,7 @@
+#message-type-title::first-letter {
+    text-transform: capitalize;
+}
+
 .message-title{
     display: flex;
     align-items: baseline;

@@ -114,11 +114,12 @@ document.addEventListener('DOMContentLoaded', function () {
     addShortcuts(choicesRecipients, choicesCopy);
     document.querySelectorAll(".message-panel").forEach(element =>{
         element.addEventListener("click", event =>{
+            const messageType = event.target.dataset.messageType
             document.getElementById('sidebar').classList.toggle('open');
             document.querySelector('.main-container').classList.toggle('open')
-            document.getElementById("id_message_type").value=event.target.dataset.messageType
+            document.getElementById("id_message_type").value=messageType
+            document.getElementById("message-type-title").innerText=messageType
 
-            const messageType = event.target.dataset.messageType
             const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
             const destinatairesInput = document.getElementById("id_recipients")
             const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
