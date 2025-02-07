@@ -2,8 +2,9 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from playwright.sync_api import expect
-from model_bakery import baker
 from django.urls import reverse
+
+from core.factories import AgentFactory
 
 User = get_user_model()
 
@@ -25,12 +26,12 @@ def test_user_can_see_navigation_without_group(live_server, page, mocked_authent
 @pytest.mark.django_db
 def test_can_add_permissions(live_server, page, mocked_authentification_user):
     structure = mocked_authentification_user.agent.structure
-    group = Group.objects.create(name="access_admin")
+    group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
-    baker.make(User, agent__structure=structure, agent__prenom="Ian", agent__nom="Gillan")
-    baker.make(User, agent__structure=structure, agent__prenom="Ritchie", agent__nom="Blackmore")
-    baker.make(User, agent__structure=structure, agent__prenom="Ian", agent__nom="Paice")
-    baker.make(User, agent__nom="Lennon", agent__prenom="John")
+    AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
+    AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
+    AgentFactory(structure=structure, prenom="Ian", nom="Paice")
+    AgentFactory(prenom="John", nom="Lennon")
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=False)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
@@ -53,10 +54,10 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
 @pytest.mark.django_db
 def test_can_remove_permissions(live_server, page, mocked_authentification_user):
     structure = mocked_authentification_user.agent.structure
-    group = Group.objects.create(name="access_admin")
+    group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
-    baker.make(User, agent__structure=structure, agent__prenom="Ian", agent__nom="Gillan")
-    baker.make(User, agent__structure=structure, agent__prenom="Ritchie", agent__nom="Blackmore")
+    AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
+    AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=True)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")

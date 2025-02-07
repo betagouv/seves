@@ -7,7 +7,7 @@ BASE_NUM_QUERIES = 16
 
 
 def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(
-    client, django_assert_num_queries, mocked_authentification_user, fiche_zone_bakery
+    client, django_assert_num_queries, mocked_authentification_user
 ):
     """Vérifie l'évolution du nombre de requêtes SQL générées lors du chargement du formulaire de modification d'une zone délimitée,
     quel que soit le nombre de fiches de détection affichées dans les champs hors zone infestée et zone infestée"""

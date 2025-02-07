@@ -4,20 +4,19 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-
-from core.models import Agent, Structure, Document
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from playwright.sync_api import Page
 from model_bakery import baker
 from model_bakery.recipe import Recipe, foreign_key
+from playwright.sync_api import Page
+
+from core.models import Agent, Structure, Document
 from sv.models import (
     FicheDetection,
     FicheZoneDelimitee,
     StatutReglementaire,
-    Lieu,
     Region,
     Departement,
 )
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..constants import DEPARTEMENTS, REGIONS
 
 User = get_user_model()
@@ -94,19 +93,6 @@ def fiche_detection_bakery(db, mocked_authentification_user):
 
 
 @pytest.fixture
-def lieu_bakery(db, mocked_authentification_user):
-    def _lieu_bakery():
-        code_insee = str(random.randint(10000, 99999))
-        latitude = random.uniform(-90, 90)
-        longitude = random.uniform(-180, 180)
-        return baker.make(
-            Lieu, code_insee=code_insee, wgs84_latitude=latitude, wgs84_longitude=longitude, _fill_optional=True
-        )
-
-    return _lieu_bakery
-
-
-@pytest.fixture
 def fiche_detection(fiche_detection_bakery):
     return fiche_detection_bakery()
 
@@ -137,13 +123,6 @@ def fill_commune(db, page: Page, choice_js_fill_from_element):
         choice_js_fill_from_element(page, element, fill_content="Lille", exact_name="Lille (59)")
 
     return _fill_commune
-
-
-@pytest.fixture(params=["fiche_detection_bakery", "fiche_zone_bakery"])
-def fiche_variable(request, fiche_detection_bakery, fiche_zone_bakery):
-    if request.param == "fiche_detection_bakery":
-        return fiche_detection_bakery
-    return fiche_zone_bakery
 
 
 @pytest.fixture(autouse=True)
