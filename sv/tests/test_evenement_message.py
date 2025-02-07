@@ -30,6 +30,7 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     page.get_by_role("link", name="Message").click()
 
     choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
+    expect(page.locator("#message-type-title")).to_have_text("message")
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -211,6 +212,7 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page):
     page.get_by_test_id("element-actions").click()
     page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
 
+    expect(page.locator("#message-type-title")).to_have_text("compte rendu sur demande d'intervention")
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")

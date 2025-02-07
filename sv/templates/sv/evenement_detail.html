@@ -21,6 +21,7 @@
         <div class="close-sidebar-container">
             <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
         </div>
+        <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v"></h5>
         <form method="post" enctype="multipart/form-data" action="{{ evenement.add_message_url }}">
             {% csrf_token %}
             <div class=" fr-fieldset__element fr-hidden">
