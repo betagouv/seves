@@ -178,6 +178,7 @@ def test_saving_without_changes_does_create_revision(
     page.wait_for_timeout(600)
 
     fiche.refresh_from_db()
+    del fiche.latest_version
     assert latest_version.pk != fiche.latest_version.pk
     assert latest_version.revision.date_created <= fiche.latest_version.revision.date_created
 

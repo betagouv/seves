@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import reversion
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -70,7 +72,7 @@ class FicheZoneDelimitee(models.Model):
         with reversion.create_revision():
             super().save(*args, **kwargs)
 
-    @property
+    @cached_property
     def latest_version(self):
         zone_infestees = ZoneInfestee.objects.filter(fiche_zone_delimitee_id=self.pk).values_list("id", flat=True)
         zone_infestees_versions = get_versions_from_ids(zone_infestees, ZoneInfestee)

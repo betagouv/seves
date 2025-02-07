@@ -414,11 +414,13 @@ def test_fiche_detection_latest_revision():
 
     fiche_detection.commentaire = "Lorem"
     fiche_detection.save()
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
 
     latest_version = fiche_detection.latest_version
     lieu = LieuFactory(fiche_detection=fiche_detection, nom="Maison")
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert fiche_detection.latest_version.revision.comment == "Le lieu 'Maison' a été ajouté à la fiche"
@@ -426,12 +428,14 @@ def test_fiche_detection_latest_revision():
     latest_version = fiche_detection.latest_version
     lieu.nom = "Nouvelle maison"
     lieu.save()
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
 
     latest_version = fiche_detection.latest_version
     structure_sivep, _ = StructurePreleveuse.objects.get_or_create(nom="SIVEP")
     prelevement = PrelevementFactory(lieu=lieu, structure_preleveuse=structure_sivep)
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert (
@@ -443,11 +447,13 @@ def test_fiche_detection_latest_revision():
     new_structure, _ = StructurePreleveuse.objects.get_or_create(nom="SEMAE")
     prelevement.structure_preleveuse = new_structure
     prelevement.save()
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
 
     latest_version = fiche_detection.latest_version
     prelevement.delete()
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert (
@@ -457,6 +463,7 @@ def test_fiche_detection_latest_revision():
 
     latest_version = fiche_detection.latest_version
     lieu.delete()
+    del fiche_detection.latest_version
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert fiche_detection.latest_version.revision.comment == "Le lieu 'Nouvelle maison' a été supprimé de la fiche"
@@ -478,6 +485,7 @@ def test_fiche_detection_latest_revision_performances(django_assert_num_queries)
     LieuFactory(fiche_detection=fiche_detection)
     PrelevementFactory(lieu__fiche_detection=fiche_detection)
 
+    del fiche_detection.latest_version
     with django_assert_num_queries(5):
         assert fiche_detection.latest_version is not None
 
@@ -490,11 +498,13 @@ def test_fiche_zone_delimitee_latest_revision():
 
     fiche_zone_delimitee.commentaire = "Lorem"
     fiche_zone_delimitee.save()
+    del fiche_zone_delimitee.latest_version
     assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
     assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
 
     latest_version = fiche_zone_delimitee.latest_version
     zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee, nom="Zone 3")
+    del fiche_zone_delimitee.latest_version
     assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
     assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
     assert fiche_zone_delimitee.latest_version.revision.comment == "La zone infestée 'Zone 3' a été ajoutée à la fiche"
@@ -502,11 +512,13 @@ def test_fiche_zone_delimitee_latest_revision():
     latest_version = fiche_zone_delimitee.latest_version
     zone_infestee.nom = "Zone 4"
     zone_infestee.save()
+    del fiche_zone_delimitee.latest_version
     assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
     assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
 
     latest_version = fiche_zone_delimitee.latest_version
     zone_infestee.delete()
+    del fiche_zone_delimitee.latest_version
     assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
     assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
     assert (
