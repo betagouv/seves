@@ -167,7 +167,6 @@ def test_saving_without_changes_does_create_revision(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    fiche_detection_bakery,
     mocked_authentification_user,
 ):
     fiche = FicheDetectionFactory()
@@ -747,7 +746,6 @@ def test_update_prelevement(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    lieu_bakery,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
@@ -799,7 +797,6 @@ def test_update_multiple_prelevements(
     fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    lieu_bakery,
     choice_js_fill_from_element,
 ):
     """Test que les modifications des descripteurs de plusieurs prelevements existants sont bien enregistrées en base de données."""
@@ -1138,7 +1135,6 @@ def test_fiche_detection_update_has_locking_protection(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    fiche_detection_bakery,
     mocked_authentification_user,
 ):
     fiche = FicheDetectionFactory(commentaire="AAA")

@@ -8,7 +8,6 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.models import Contact, Visibilite
-from sv.constants import REGIONS, DEPARTEMENTS
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
@@ -22,7 +21,6 @@ from ..models import (
     Lieu,
     Departement,
     PositionChaineDistribution,
-    Region,
     StructurePreleveuse,
     SiteInspection,
     Laboratoire,
@@ -47,12 +45,6 @@ def create_fixtures_if_needed(db):
 
     for contexte in CONTEXTES:
         Contexte.objects.get_or_create(nom=contexte)
-
-    for nom in REGIONS:
-        Region.objects.get_or_create(nom=nom)
-    for numero, nom, region_nom in DEPARTEMENTS:
-        region = Region.objects.get(nom=region_nom)
-        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):

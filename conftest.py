@@ -3,10 +3,11 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from model_bakery import baker
 from playwright.sync_api import expect
 
-from core.models import Agent, Structure, Contact
-from model_bakery import baker
+from core.factories import StructureFactory
+from core.models import Agent, Contact
 
 User = get_user_model()
 
@@ -29,7 +30,7 @@ def mocked_authentification_user(db):
     user = baker.make(get_user_model(), email="test@example.com")
     user.is_active = True
     user.save()
-    structure = baker.make(Structure, niveau2="Structure Test", libelle="Structure Test")
+    structure = StructureFactory(niveau2="Structure Test", libelle="Structure Test")
     Contact.objects.create(structure=structure, email="structure_test@test.fr")
     agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")
     Contact.objects.create(agent=agent, email="text@example.com")
