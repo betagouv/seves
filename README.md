@@ -130,6 +130,17 @@ Si vous souhaitez réaliser les analyses antivirus en local il faut:
 - Installer clamav : [instructions pour linux](https://docs.clamav.net/manual/Installing.html#installing-with-a-package-manager) . Attention a bien installer le daemon `clamav-daemon`.
 - Lancer la commande `scan_documents` pour analyser les documents et mettre à jour leur statut en base.
 
+# Travailler avec les taches Celery en local
+
+Si vous souhaitez exécuter les taches directement lors de la création sans passer par le broker et le worker
+vous pouvez utiliser la variable d'env `CELERY_TASK_ALWAYS_EAGER` à `True`.
+
+Pour travailler avec un broker et Celery en local, il faut:
+- Installer un server redis (ou le broker compatible de votre choix)
+- Configurer la variable `SCALINGO_REDIS_URL` dans votre fichier `.env`
+- Pour lancer les tâches, dans un shell : `celery -A seves worker --loglevel=INFO`
+- Pour les tâches de mail les mails sont directement affichés dans la console du worker
+
 
 # Tests
 ## E2E

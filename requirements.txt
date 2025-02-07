@@ -4,8 +4,14 @@
 #
 #    pip-compile requirements.in
 #
+amqp==5.3.1
+    # via kombu
 asgiref==3.8.1
     # via django
+async-timeout==5.0.1
+    # via -r requirements.in
+billiard==4.2.1
+    # via celery
 bleach[css]==6.1.0
     # via django-post-office
 boto3==1.34.134
@@ -14,6 +20,8 @@ botocore==1.34.134
     # via
     #   boto3
     #   s3transfer
+celery==5.4.0
+    # via -r requirements.in
 certifi==2025.1.31
     # via
     #   requests
@@ -24,6 +32,18 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
+click==8.1.8
+    # via
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
+click-didyoumean==0.3.1
+    # via celery
+click-plugins==1.1.1
+    # via celery
+click-repl==0.3.0
+    # via celery
 cryptography==44.0.0
     # via
     #   josepy
@@ -84,6 +104,8 @@ jmespath==1.0.1
     #   botocore
 josepy==1.14.0
     # via mozilla-django-oidc
+kombu==5.4.2
+    # via celery
 model-bakery==1.20.1
     # via -r requirements.in
 mozilla-django-oidc==4.0.1
@@ -104,6 +126,8 @@ pluggy==1.5.0
     # via pytest
 pre-commit==4.1.0
     # via -r requirements.in
+prompt-toolkit==3.0.50
+    # via click-repl
 psycopg2-binary==2.9.10
     # via -r requirements.in
 pycparser==2.22
@@ -132,6 +156,7 @@ pytest-xdist==3.6.1
 python-dateutil==2.9.0.post0
     # via
     #   botocore
+    #   celery
     #   faker
 python-magic==0.4.27
     # via -r requirements.in
@@ -139,6 +164,8 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
+redis==5.2.1
+    # via -r requirements.in
 requests==2.32.3
     # via
     #   mozilla-django-oidc
@@ -168,13 +195,24 @@ typing-extensions==4.11.0
     #   faker
     #   pyee
     #   pyopenssl
+tzdata==2025.1
+    # via
+    #   celery
+    #   kombu
 urllib3==2.3.0
     # via
     #   botocore
     #   requests
     #   sentry-sdk
+vine==5.1.0
+    # via
+    #   amqp
+    #   celery
+    #   kombu
 virtualenv==20.29.1
     # via pre-commit
+wcwidth==0.2.13
+    # via prompt-toolkit
 webencodings==0.5.1
     # via
     #   bleach

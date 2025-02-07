@@ -22,3 +22,6 @@ django-post_office
 factory-boy
 django-reversion
 python-magic
+celery
+async_timeout
+redis
