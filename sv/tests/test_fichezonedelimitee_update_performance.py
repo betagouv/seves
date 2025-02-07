@@ -3,7 +3,7 @@ from model_bakery import baker
 from sv.factories import FicheZoneFactory, EvenementFactory
 from sv.models import FicheDetection
 
-BASE_NUM_QUERIES = 16
+BASE_NUM_QUERIES = 13
 
 
 def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(
@@ -36,5 +36,5 @@ def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection
         evenement=evenement,
         _quantity=3,
     )
-    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+    with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche_zone_delimitee.get_update_url())

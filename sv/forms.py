@@ -340,7 +340,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm
         elif self.instance.pk:
             queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
 
-        self.fields["detections_hors_zone"].queryset = queryset.select_related("numero").order_by_numero_fiche()
+        self.fields["detections_hors_zone"].queryset = queryset.order_by_numero_fiche()
 
     def clean(self):
         if duplicate_fiches_detection := self._get_duplicate_detections():
@@ -357,7 +357,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm
         """Renvoie une liste d'id de fiches détection contenues à la fois dans les zones infestées et hors zone infestée."""
         detections_hors_zone = set(self.cleaned_data.get("detections_hors_zone", []))
         duplicate_fiches_detection = detections_hors_zone.intersection(self.detections_zones_infestees_formset)
-        return sorted([d.numero for d in duplicate_fiches_detection], key=lambda x: (x.annee, x.numero))
+        return sorted([d.numero for d in duplicate_fiches_detection])
 
     def save(self, commit=True):
         instance = super().save(commit=False)

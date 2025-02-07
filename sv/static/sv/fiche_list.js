@@ -1,3 +1,21 @@
+function handleTypeFicheChange(event, disableRegion) {
+    const numeroInput = document.getElementById('id_numero');
+    if (numeroInput.value) {
+        if (!numeroInput.checkValidity()) {
+            event.preventDefault();
+            numeroInput.reportValidity();
+            return;
+        }
+        numeroInput.value = '';
+    }
+    const regionSelect = document.getElementById('id_lieux__departement__region');
+    regionSelect.disabled = disableRegion;
+    if (disableRegion) {
+        regionSelect.selectedIndex = 0;
+    }
+    event.target.closest("form").submit();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const choices = new Choices(document.getElementById('id_evenement__organisme_nuisible'), {
         classNames: {
@@ -16,17 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
         this.elements['evenement__etat'].value = '';
         choices.setChoiceByValue('');
     });
-    document.getElementById("id_type_fiche_0").addEventListener("click", event =>{
-        document.getElementById('id_lieux__departement__region').disabled = false
-        event.target.closest("form").submit()
-    })
-    document.getElementById("id_type_fiche_1").addEventListener("click", event =>{
-        document.getElementById('id_lieux__departement__region').disabled = true
-        document.getElementById('id_lieux__departement__region').selectedIndex = 0
-        event.target.closest("form").submit()
-    })
-    if (new URLSearchParams(window.location.search).get('type_fiche') === "zone"){
-        document.getElementById('id_lieux__departement__region').disabled = true
-        document.getElementById('id_lieux__departement__region').selectedIndex = 0
+
+    document.getElementById("id_type_fiche_0").addEventListener("click", e => handleTypeFicheChange(e, false));
+    document.getElementById("id_type_fiche_1").addEventListener("click", e => handleTypeFicheChange(e, true));
+
+    if (new URLSearchParams(window.location.search).get('type_fiche') === "zone") {
+        document.getElementById('id_lieux__departement__region').disabled = true;
+        document.getElementById('id_lieux__departement__region').selectedIndex = 0;
     }
+
 });
