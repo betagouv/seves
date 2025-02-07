@@ -17,7 +17,7 @@ def test_need_group_to_add_permission(live_server, page, mocked_authentification
 @pytest.mark.django_db
 def test_user_can_see_navigation_without_group(live_server, page, mocked_authentification_user):
     page.goto(f"{live_server.url}")
-    page.locator(".fr-icon-account-circle-line").click()
+    page.get_by_role("button", name="test@example.com").click()
     page.wait_for_timeout(200)
     expect(page.get_by_text("Gestion des droits d'accès")).not_to_be_visible()
 

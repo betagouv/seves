@@ -2,9 +2,32 @@ body{
     background-color: #F6F6F6;
 }
 header{
-    display: flex;
-    justify-content: space-between;
     border-bottom: 2px solid #000091;
+}
+@media (min-width: 62em) {
+    .fr-header__body-row {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        min-height: 4rem;
+    }
+}
+
+.fr-header__tools-links .fr-btn--header-blue {
+    --hover: var(--background-action-high-blue-france-hover);
+    background-color: var(--background-action-high-blue-france);
+    color: var(--text-inverted-blue-france);
+    margin-right: 1rem !important;
+    padding: .5rem 1rem !important;
+}
+
+.fr-header__body-row .fr-btns-group .fr-btn {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.fr-header__body-row .fr-btns-group {
+    margin-top: -1rem;
 }
 .alert-container{
     margin: 2rem 1.5rem;
