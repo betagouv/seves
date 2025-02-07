@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0022_alter_document_document_type"),
+        ("core", "0023_alter_document_file"),
     ]
 
     operations = [
