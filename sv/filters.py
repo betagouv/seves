@@ -1,11 +1,17 @@
 import django_filters
+from django.db.models import TextChoices
 from django.forms import forms
 
 from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
 from seves import settings
 from .models import FicheDetection, Region, OrganismeNuisible, Evenement
-from django.forms.widgets import DateInput, TextInput
+from django.forms.widgets import DateInput
+
+
+class TypeFiche(TextChoices):
+    DETECTION = ("detection", "Détection")
+    ZONE = ("zone", "Zone")
 
 
 class FicheFilterForm(DSFRForm, forms.Form):
@@ -13,13 +19,9 @@ class FicheFilterForm(DSFRForm, forms.Form):
 
 
 class FicheFilter(django_filters.FilterSet):
-    numero = django_filters.CharFilter(
-        method="filter_numero",
-        label="Numéro",
-        widget=TextInput(attrs={"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}),
-    )
+    numero = django_filters.CharFilter(method="filter_numero", label="Numéro")
     type_fiche = django_filters.ChoiceFilter(
-        choices=[("detection", "Détection"), ("zone", "Zone")],
+        choices=TypeFiche.choices,
         label="Type",
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
         empty_label=None,
@@ -60,16 +62,34 @@ class FicheFilter(django_filters.FilterSet):
         super().__init__(*args, **kwargs)
         if not self.data.get("type_fiche"):
             data = self.data.copy()
-            data["type_fiche"] = "detection"
+            data["type_fiche"] = TypeFiche.DETECTION
             self.data = data
+        self.form.fields["numero"].widget.attrs.update(self._get_numero_validation_attrs(self.data.get("type_fiche")))
+        self._validate_numero_format()
 
+    def _validate_numero_format(self):
         if self.data.get("numero"):
             try:
-                _annee, _numero = map(int, self.data.get("numero").split("."))
+                _numero = map(int, self.data.get("numero").split("."))
+                match self.data.get("type_fiche"):
+                    case TypeFiche.DETECTION:
+                        _annee, _numero_evenement, _numero_detection = _numero
+                    case TypeFiche.ZONE:
+                        _annee, _numero_evenement = _numero
             except ValueError:
                 errors = self.errors.get("numero", [])
-                errors.append("Format 'numero' invalide. Il devrait être 'annee.numero'")
+                format_type = (
+                    "annee.numero.numero" if self.data.get("numero") == TypeFiche.DETECTION else "annee.numero"
+                )
+                errors.append(f"Format 'numero' invalide. Il devrait être '{format_type}'")
                 self.errors["numero"] = errors
+
+    def _get_numero_validation_attrs(self, type_fiche):
+        match type_fiche:
+            case TypeFiche.DETECTION:
+                return {"pattern": "^[0-9]{4}\\.[0-9]+\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO.NUMERO"}
+            case TypeFiche.ZONE:
+                return {"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}
 
     def filter_queryset(self, queryset):
         self.form.cleaned_data.pop("type_fiche")
@@ -78,8 +98,13 @@ class FicheFilter(django_filters.FilterSet):
     def filter_numero(self, queryset, name, value):
         if self.errors.get("numero") or not value:
             return queryset
-        annee, numero = map(int, value.split("."))
-        return queryset.filter(numero__annee=annee, numero__numero=numero)
+
+        parts = list(map(int, value.split(".")))
+        filters = {"evenement__numero_annee": parts[0], "evenement__numero_evenement": parts[1]}
+        if self.data.get("type_fiche") == TypeFiche.DETECTION:
+            filters["numero_detection"] = parts[2]
+
+        return queryset.filter(**filters)
 
     def filter_region(self, queryset, name, value):
         return queryset.filter(lieux__departement__region=value).distinct()

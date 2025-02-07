@@ -1,42 +1,4 @@
-import datetime
-
-from django.db import models, transaction
-
-
-class NumeroFiche(models.Model):
-    class Meta:
-        unique_together = ("annee", "numero")
-        verbose_name = "Numéro de fiche"
-        verbose_name_plural = "Numéros de fiche"
-        db_table = "sv_numero_fiche"
-
-    annee = models.IntegerField(verbose_name="Année")
-    numero = models.IntegerField(verbose_name="Numéro")
-
-    def __str__(self):
-        return f"{self.annee}.{self.numero}"
-
-    def _save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-    @classmethod
-    @transaction.atomic  # Assure que la méthode est exécutée dans une transaction pour éviter les race conditions
-    def get_next_numero(cls):
-        annee_courante = datetime.datetime.now().year
-        last_fiche = cls.objects.filter(annee=annee_courante).order_by("-numero").first()
-
-        # Si une fiche existe déjà pour cette année
-        # On incrémente le numéro
-        # Si aucune fiche n'existe pour cette année
-        # On réinitialise le numéro à 1
-        if last_fiche is not None:
-            numero = last_fiche.numero + 1
-        else:
-            numero = 1
-
-        new_fiche = cls(annee=annee_courante, numero=numero)
-        new_fiche._save()
-        return new_fiche
+from django.db import models
 
 
 class OrganismeNuisible(models.Model):

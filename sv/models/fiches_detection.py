@@ -1,7 +1,8 @@
 import reversion
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import TextChoices, Q
+from django.db.models.aggregates import Max
 from django.urls import reverse
 from reversion.models import Version
 
@@ -13,7 +14,6 @@ from core.versions import get_versions_from_ids
 from sv.managers import (
     FicheDetectionManager,
 )
-from .common import NumeroFiche
 from .lieux import Lieu
 from .prelevements import Prelevement
 
@@ -148,13 +148,12 @@ class FicheDetection(
                     | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)
                 ),
                 name="check_hors_zone_infestee_or_zone_infestee_or_none",
-            )
+            ),
+            models.UniqueConstraint(fields=["evenement", "numero_detection"], name="unique_evenement_numero_detection"),
         ]
 
     # Informations générales
-    numero = models.OneToOneField(
-        NumeroFiche, on_delete=models.PROTECT, verbose_name="Numéro de fiche", null=True, blank=True
-    )
+    numero_detection = models.PositiveIntegerField(verbose_name="Numéro de détection")
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
@@ -198,9 +197,22 @@ class FicheDetection(
     def _save(self, *args, **kwargs):
         self._original_state["hors_zone_infestee"] = self.hors_zone_infestee_id
         self._original_state["zone_infestee"] = self.zone_infestee_id
-        if not self.numero:
-            self.numero = NumeroFiche.get_next_numero()
+        if not self.numero_detection:
+            self.numero_detection = self.get_next_numero_detection()
         super().save(*args, **kwargs)
+
+    @transaction.atomic
+    def get_next_numero_detection(self):
+        result = (
+            FicheDetection.objects.select_for_update()
+            .filter(evenement_id=self.evenement_id)
+            .aggregate(max_numero=Max("numero_detection"))
+        )
+        return (result["max_numero"] or 0) + 1
+
+    @property
+    def numero(self):
+        return f"{self.evenement.numero}.{self.numero_detection}"
 
     def _handle_hors_zone_infestee_change(self):
         if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
@@ -249,7 +261,7 @@ class FicheDetection(
         return self.evenement.can_user_access(user)
 
     def __str__(self):
-        return str(self.numero)
+        return self.numero
 
     @property
     def is_linked_to_fiche_zone_delimitee(self):

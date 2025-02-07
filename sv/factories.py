@@ -16,7 +16,6 @@ from .constants import (
 from .models import (
     Prelevement,
     Lieu,
-    NumeroFiche,
     FicheDetection,
     Departement,
     OrganismeNuisible,
@@ -33,14 +32,6 @@ from .models import (
     SiteInspection,
 )
 from datetime import datetime
-
-
-class NumeroFicheFactory(DjangoModelFactory):
-    class Meta:
-        model = NumeroFiche
-
-    annee = factory.Faker("year")
-    numero = factory.Faker("pyint", min_value=0, max_value=1000)
 
 
 class OrganismeNuisibleFactory(DjangoModelFactory):
@@ -210,7 +201,7 @@ class FicheDetectionFactory(DjangoModelFactory):
     mesures_surveillance_specifique = factory.Faker("paragraph")
     date_creation = factory.Faker("date_this_decade")
     vegetaux_infestes = factory.Faker("sentence")
-    numero = factory.SubFactory("sv.factories.NumeroFicheFactory")
+    numero_detection = factory.Faker("pyint", min_value=0, max_value=1000)
     evenement = factory.SubFactory("sv.factories.EvenementFactory")
     statut_evenement = factory.LazyFunction(
         lambda: StatutEvenement.objects.get_or_create(libelle=FuzzyChoice(STATUTS_EVENEMENT).fuzz())[0]
