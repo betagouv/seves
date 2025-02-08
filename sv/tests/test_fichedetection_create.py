@@ -533,3 +533,28 @@ def test_can_add_fiche_detection_from_existing_evenement(live_server, page: Page
 
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1
+
+
+def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.save_btn.click()
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.cancel_btn.click()
+    form_elements.publish_btn.click()
+    page.wait_for_timeout(600)
+    assert FicheDetection.objects.count() == 1

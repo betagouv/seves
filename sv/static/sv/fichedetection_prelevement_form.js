@@ -100,7 +100,6 @@ function showAddPrelevementmodal(event) {
     const currentModal = getNextAvailablePrelevementModal()
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     populateLieuSelect(currentModal.querySelector((`[id^="id_prelevements-"][id$="-lieu"]`)))
-
     dataRequiredToRequired(currentModal)
     dsfr(currentModal).modal.disclose();
 }
@@ -142,15 +141,9 @@ function savePrelevement(event){
 function saveModalWhenOpening(event){
     const modalId = event.target.getAttribute("id").split("-").pop()
     populateLieuSelect(event.target.querySelector((`[id^="id_prelevements-"][id$="-lieu"]`)))
-    modalHTMLContent[modalId] = event.target.querySelector(".fr-modal__content").innerHTML
-}
-
-
-function resetModalWhenClosing(event){
-    const originalTarget = event.explicitOriginalTarget
-    if (! originalTarget.classList.contains("prelevement-save-btn")){
-        const modalId = event.originalTarget.getAttribute("id").split("-").pop()
-        event.originalTarget.querySelector(".fr-modal__content").innerHTML = modalHTMLContent[modalId]
+    // On ne sauvegarde que si ce n'est pas déjà fait (cas de la modification)
+    if (!modalHTMLContent[modalId]) {
+        modalHTMLContent[modalId] = event.target.querySelector(".fr-modal__content").innerHTML
     }
 }
 
@@ -181,6 +174,17 @@ function handleChangeTypeAnalyse(event){
     });
 }
 
+function handleModalClose(event) {
+    const modal = event.target.closest('dialog');
+    const modalId = modal.id.split('-').pop();
+    const modalContent = modal.querySelector('.fr-modal__content');
+    // Réinitialise le contenu
+    if (modalContent && modalHTMLContent[modalId]) {
+        modalContent.innerHTML = modalHTMLContent[modalId];
+    }
+    dsfr(modal).modal.conceal();
+}
+
 (function() {
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
@@ -189,10 +193,10 @@ function handleChangeTypeAnalyse(event){
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document.querySelectorAll("select[id$=structure_preleveuse]").forEach(element => element.addEventListener("change", setIsOfficiel))
     document.querySelectorAll("input[name$=type_analyse]").forEach(element => element.addEventListener("change", handleChangeTypeAnalyse))
-    document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
-    document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
-    document.querySelectorAll("[id^=modal-add-edit-prelevement-] .prelevement-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
+    document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close, [id^=modal-add-edit-prelevement-] .prelevement-cancel-btn")
+        .forEach(button => button.addEventListener('click', handleModalClose));
+
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(element =>{
         if (element.dataset.alreadyExisting){
             const data = buildPrelevementCardFromModal(element)
