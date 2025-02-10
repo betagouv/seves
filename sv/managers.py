@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Max
+from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+
 from core.models import Visibilite
 
 
@@ -18,11 +19,10 @@ class FicheDetectionManager(models.Manager):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
 
     def get_last_used_numero(self, evenement_id):
-        result = (
-            self.select_for_update().filter(evenement_id=evenement_id).aggregate(max_numero=Max("numero_detection"))
-        )
-        if result["max_numero"]:
-            return int(result["max_numero"].split(".")[-1])
+        fiches = self.select_for_update().filter(evenement_id=evenement_id).values_list("numero_detection", flat=True)
+        if fiches:
+            last_parts = [int(v.split(".")[-1]) for v in fiches]
+            return max(last_parts)
         return 0
 
 
