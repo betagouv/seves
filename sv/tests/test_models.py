@@ -706,3 +706,12 @@ def test_siret_invalid_characters():
     lieu = LieuFactory(siret_etablissement="123ABC45678901")
     with pytest.raises(ValidationError):
         lieu.full_clean()
+
+
+@pytest.mark.django_db
+def test_fiche_detection_numero():
+    evenement = EvenementFactory()
+    FicheDetectionFactory.create_batch(10, evenement=evenement)
+
+    last_fiche = FicheDetectionFactory(evenement=evenement)
+    assert last_fiche.numero_detection.endswith(".11")
