@@ -3,12 +3,9 @@ import random
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from model_bakery import baker
-from model_bakery.recipe import Recipe, foreign_key
 from playwright.sync_api import Page
 
-from core.models import Agent, Structure, Document
 from sv.models import (
     FicheDetection,
     FicheZoneDelimitee,
@@ -95,25 +92,6 @@ def fiche_detection_bakery(db, mocked_authentification_user):
 @pytest.fixture
 def fiche_detection(fiche_detection_bakery):
     return fiche_detection_bakery()
-
-
-@pytest.fixture
-def document_recipe(fiche_detection_bakery, db):
-    def _document_recipe():
-        fiche = fiche_detection_bakery()
-        content_type = ContentType.objects.get_for_model(fiche)
-        agent_recipe = Recipe(Agent)
-        structure_recipe = Recipe(Structure, libelle="Structure Test")
-        return Recipe(
-            Document,
-            created_by=foreign_key(agent_recipe),
-            created_by_structure=foreign_key(structure_recipe),
-            content_type=content_type,
-            object_id=fiche.pk,
-            _create_files=True,
-        )
-
-    return _document_recipe
 
 
 @pytest.fixture

@@ -6,6 +6,7 @@ from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
+from core.factories import DocumentFactory
 from core.models import Structure, Document
 from django.contrib.auth import get_user_model
 
@@ -97,11 +98,9 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
     Path("test.csv").unlink()
 
 
-def test_can_see_and_delete_document_on_evenement(
-    live_server, page: Page, mocked_authentification_user: User, document_recipe
-):
+def test_can_see_and_delete_document_on_evenement(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
-    document = document_recipe().make(nom="Test document", description="")
+    document = DocumentFactory(nom="Test document", description="", content_object=evenement)
     evenement.documents.set([document])
     assert evenement.documents.count() == 1
 
@@ -124,9 +123,9 @@ def test_can_see_and_delete_document_on_evenement(
     expect(page.get_by_text("Document supprimé")).to_be_visible()
 
 
-def test_can_edit_document_on_evenement(live_server, page: Page, document_recipe):
+def test_can_edit_document_on_evenement(live_server, page: Page):
     evenement = EvenementFactory()
-    document = document_recipe().make(nom="Test document", description="My description")
+    document = DocumentFactory(content_object=evenement, nom="Test document", description="My description")
     evenement.documents.set([document])
     assert evenement.documents.count() == 1
 
@@ -152,10 +151,10 @@ def test_can_edit_document_on_evenement(live_server, page: Page, document_recipe
     expect(page.get_by_text("New name", exact=True)).to_be_visible()
 
 
-def test_can_filter_documents_by_type_on_evenement(live_server, page: Page, document_recipe):
+def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
     evenement = EvenementFactory()
-    document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
-    document_2 = document_recipe().make(nom="Ma carto", document_type="cartographie", description="")
+    document_1 = DocumentFactory(content_object=evenement, description="", nom="Test document", document_type="autre")
+    document_2 = DocumentFactory(content_object=evenement, description="", nom="Ma carto", document_type="cartographie")
     evenement.documents.set([document_1, document_2])
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
@@ -175,12 +174,12 @@ def test_can_filter_documents_by_type_on_evenement(live_server, page: Page, docu
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, document_recipe):
+def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     evenement = EvenementFactory()
-    document_1 = document_recipe().make(nom="Test document", document_type="autre", description="")
+    document_1 = DocumentFactory(nom="Test document", content_object=evenement, description="")
     other_structure = baker.make(Structure)
-    document_2 = document_recipe().make(
-        nom="Ma carto", document_type="cartographie", description="", created_by_structure=other_structure
+    document_2 = DocumentFactory(
+        nom="Ma carto", content_object=evenement, description="", created_by_structure=other_structure
     )
     _structure_with_no_document = baker.make(Structure, libelle="Should not be in the list")
     evenement.documents.set([document_1, document_2])
@@ -232,9 +231,9 @@ def test_cant_add_document_if_brouillon(client):
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_cant_delete_document_if_brouillon(client, document_recipe):
+def test_cant_delete_document_if_brouillon(client):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    document = document_recipe().make(nom="Test document", description="un document")
+    document = DocumentFactory(content_object=evenement)
     evenement.documents.set([document])
 
     response = client.post(
@@ -251,9 +250,9 @@ def test_cant_delete_document_if_brouillon(client, document_recipe):
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_cant_edit_document_if_brouillon(client, document_recipe):
+def test_cant_edit_document_if_brouillon(client):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    document = document_recipe().make(nom="Test document", description="un document")
+    document = DocumentFactory(nom="Test document", description="un document", content_object=evenement)
     evenement.documents.set([document])
 
     response = client.post(
@@ -352,10 +351,9 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
 
 
-def test_cant_forge_document_edit_of_document_i_cant_see(client, document_recipe):
+def test_cant_forge_document_edit_of_document_i_cant_see(client):
     evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
-    document = document_recipe().make(nom="Test document", description="")
-    evenement.documents.set([document])
+    document = DocumentFactory(nom="Test document", description="", content_object=evenement)
 
     response = client.get(evenement.get_absolute_url())
     assert response.status_code == 403
@@ -398,9 +396,9 @@ def test_cant_forge_document_updload_on_evenement_i_cant_see(client):
     assert evenement.documents.count() == 0
 
 
-def test_cant_delete_document_of_evenement_i_cant_see(client, document_recipe):
+def test_cant_delete_document_of_evenement_i_cant_see(client):
     evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
-    document = document_recipe().make(nom="Test document", description="")
+    document = DocumentFactory(content_object=evenement)
     evenement.documents.set([document])
 
     response = client.get(evenement.get_absolute_url())

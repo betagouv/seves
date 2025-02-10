@@ -1,6 +1,8 @@
 import factory
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
+from factory.fuzzy import FuzzyChoice
+
 from core.models import Structure, Agent, Contact, Document
 
 
@@ -83,7 +85,9 @@ class DocumentFactory(DjangoModelFactory):
         model = Document
 
     nom = factory.Faker("sentence", nb_words=2)
+    description = factory.Faker("paragraph")
     file = factory.django.FileField(filename="test.csv")
+    document_type = FuzzyChoice([choice[0] for choice in Document.TypeDocument.choices])
 
     @factory.lazy_attribute
     def created_by(self):
