@@ -9,7 +9,6 @@ from core.models import Structure, Visibilite
 from sv.constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES
 from sv.models import (
     FicheDetection,
-    NumeroFiche,
     StatutEvenement,
     OrganismeNuisible,
     Contexte,
@@ -411,6 +410,7 @@ class Command(BaseCommand):
                 is_officiel = row["officiel"] == "Officiel"
 
                 annee, numero = row["Alerte_num_MUS"].split("/")
+                numero = numero.lstrip("0")
                 existing_event = Evenement.objects.filter(numero_annee=annee, numero_evenement=numero).first()
                 rayon_data = {}
                 if row["ZD_rayon_ZT"]:
@@ -452,16 +452,6 @@ class Command(BaseCommand):
                             "Problème de cohérence de d'unite de zone tampon entre les différentes lignes"
                         )
 
-                numero_detection = (int(numero) * 1000) + 1
-                try_again = True
-
-                while try_again:
-                    try:
-                        numero_detection = NumeroFiche.objects.create(annee=annee, numero=numero_detection)
-                        try_again = False
-                    except IntegrityError:
-                        numero_detection += 1
-
                 with transaction.atomic():
                     if existing_event:
                         evenement = existing_event
@@ -477,7 +467,6 @@ class Command(BaseCommand):
                         )
 
                     fiche = FicheDetection.objects.create(
-                        numero=numero_detection,
                         numero_rasff=rasff,
                         statut_evenement=status,
                         date_creation=self._get_date_notif(row),
@@ -648,7 +637,3 @@ class Command(BaseCommand):
             print(k)
             for value in values:
                 print(f"    - {value}")
-
-
-# TODO la zone et l'événement, même numéro c'est ok
-# TODO dans la zone copier le numéro de l'événement
