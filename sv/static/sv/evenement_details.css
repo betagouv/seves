@@ -14,9 +14,13 @@
     border: none !important;
 }
 .no-tab-look .fr-tabs__list {
-    width: 60% !important;
+    width: calc(100% - min(40%, 340px));
     min-width: 700px;
     order: 0 !important;
+    flex-wrap: wrap;
+}
+.no-tab-look .fr-tabs__list li{
+    margin-bottom: 5px;
 }
 .no-tab-look::before{
     box-shadow: none !important;
@@ -24,7 +28,7 @@
 [id^="detection-actions-"] {
     display: flex;
     justify-content: flex-end;
-    width: 40%;
+    width: min(40%, 340px);
     min-width: 340px;
     margin-left: auto;
 }
