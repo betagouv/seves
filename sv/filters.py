@@ -6,7 +6,7 @@ from core.fields import DSFRRadioButton
 from core.forms import DSFRForm
 from seves import settings
 from .models import FicheDetection, Region, OrganismeNuisible, Evenement
-from django.forms.widgets import DateInput
+from django.forms.widgets import DateInput, TextInput
 
 
 class TypeFiche(TextChoices):
@@ -19,7 +19,11 @@ class FicheFilterForm(DSFRForm, forms.Form):
 
 
 class FicheFilter(django_filters.FilterSet):
-    numero = django_filters.CharFilter(method="filter_numero", label="Numéro")
+    numero = django_filters.CharFilter(
+        method="filter_numero",
+        label="Numéro",
+        widget=TextInput(attrs={"pattern": "^\d{4}.*", "title": "Le champ doit commencer par quatre chiffres"}),
+    )
     type_fiche = django_filters.ChoiceFilter(
         choices=TypeFiche.choices,
         label="Type",
@@ -72,27 +76,25 @@ class FicheFilter(django_filters.FilterSet):
             data = self.data.copy()
             data["type_fiche"] = TypeFiche.DETECTION
             self.data = data
-        self.form.fields["numero"].widget.attrs.update(self._get_numero_validation_attrs(self.data.get("type_fiche")))
         self._validate_numero_format()
 
     def _validate_numero_format(self):
         if not self.data.get("numero"):
             return
+        errors = self.errors.get("numero", [])
 
         try:
-            list_of_numero = [int(numero) for numero in self.data.get("numero").split(".")]
-            assert len(list_of_numero) == 3 if self._is_detection else 2
-        except (ValueError, AssertionError):
-            errors = self.errors.get("numero", [])
-            format_type = "annee.numero.numero" if self._is_detection else "annee.numero"
-            errors.append(f"Format 'numero' invalide. Le format correct est '{format_type}'")
-            self.errors["numero"] = errors
+            _annee = int(self.data.get("numero")[:4])
+        except ValueError:
+            errors.append("Format 'numero' invalide. Le numéro doit commencer par quatre chiffres'")
 
-    def _get_numero_validation_attrs(self, type_fiche):
-        if self._is_detection:
-            return {"pattern": "^[0-9]{4}\\.[0-9]+\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO.NUMERO"}
-        if self._is_zone:
-            return {"pattern": "^[0-9]{4}\\.[0-9]+$", "title": "Format attendu : ANNEE.NUMERO"}
+        if self._is_zone and self.data.get("numero").count(".") > 1:
+            errors.append("Format 'numero' invalide. Le format correct est annee ou annee.numero'")
+        if self._is_detection and self.data.get("numero").count(".") > 2:
+            errors.append(
+                "Format 'numero' invalide. Le format correct est annee, annee.numero ou annee.numero.detection'"
+            )
+        self.errors["numero"] = errors
 
     def filter_queryset(self, queryset):
         self.form.cleaned_data.pop("type_fiche")
@@ -103,7 +105,7 @@ class FicheFilter(django_filters.FilterSet):
             return queryset
 
         if self._is_detection:
-            return queryset.filter(numero_detection=value)
+            return queryset.filter(numero_detection__startswith=value)
         if self._is_zone:
             parts = list(map(int, value.split(".")))
             return queryset.filter(evenement__numero_annee=parts[0], evenement__numero_evenement=parts[1])

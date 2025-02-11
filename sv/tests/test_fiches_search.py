@@ -97,6 +97,61 @@ def test_search_with_fiche_number(live_server, page: Page, mocked_authentificati
     expect(page.get_by_role("cell", name="2024.2.1")).not_to_be_visible()
 
 
+@pytest.mark.django_db
+def test_search_with_fiche_number_allows_year_only(live_server, page: Page, mocked_authentification_user):
+    FicheDetectionFactory(numero_detection="2024.1.1")
+    FicheDetectionFactory(numero_detection="2024.1.2")
+    FicheDetectionFactory(numero_detection="2024.10.1")
+    FicheDetectionFactory(numero_detection="2023.1.2")
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Numéro").fill("2024")
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name="2024.1.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.1.2")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.10.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2023.1.2")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_search_with_fiche_number_allows_year_and_first_char(live_server, page: Page, mocked_authentification_user):
+    FicheDetectionFactory(numero_detection="2024.1.1")
+    FicheDetectionFactory(numero_detection="2024.1.2")
+    FicheDetectionFactory(numero_detection="2024.10.1")
+    FicheDetectionFactory(numero_detection="2024.101.1")
+    FicheDetectionFactory(numero_detection="2024.20.1")
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Numéro").fill("2024.1")
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name="2024.1.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.1.2")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.10.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.101.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2023.20.2")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_search_with_fiche_number_allows_year_and_evenement_number(live_server, page, mocked_authentification_user):
+    FicheDetectionFactory(numero_detection="2024.1.1")
+    FicheDetectionFactory(numero_detection="2024.1.2")
+    FicheDetectionFactory(numero_detection="2024.10.1")
+    FicheDetectionFactory(numero_detection="2024.101.1")
+    FicheDetectionFactory(numero_detection="2024.20.1")
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Numéro").fill("2024.1.")
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name="2024.1.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.1.2")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.10.1")).not_to_be_visible()
+    expect(page.get_by_role("cell", name="2024.101.1")).not_to_be_visible()
+    expect(page.get_by_role("cell", name="2023.20.2")).not_to_be_visible()
+
+
 def test_search_with_invalid_fiche_number(client):
     """Test la recherche d'une fiche détection en utilisant un numéro de fiche invalide (format année.numéro)"""
     response = client.get(reverse("fiche-liste") + "?numero=az.erty")
@@ -104,7 +159,7 @@ def test_search_with_invalid_fiche_number(client):
     assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
     assert (
         str(response.context["form"].errors["numero"][0])
-        == "Format 'numero' invalide. Le format correct est 'annee.numero.numero'"
+        == "Format 'numero' invalide. Le numéro doit commencer par quatre chiffres'"
     )
 
 
