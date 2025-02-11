@@ -285,3 +285,19 @@ def test_visibilite_limitee_display_long_text(live_server, page: Page):
     tooltip = page.locator("#tooltip-visibilite")
     for i in range(10):
         expect(tooltip).to_contain_text(f"Structure Test {i}")
+
+
+def test_will_edit_correct_fiche_detection(live_server, page: Page):
+    evenement = EvenementFactory()
+    fiche_1 = FicheDetectionFactory(evenement=evenement)
+    fiche_2 = FicheDetectionFactory(evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name=fiche_1.numero_detection).click()
+    page.get_by_role("button", name="Modifier").click()
+    assert fiche_1.get_update_url() in page.url
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name=fiche_2.numero_detection).click()
+    page.get_by_role("button", name="Modifier").click()
+    assert fiche_2.get_update_url() in page.url
