@@ -45,7 +45,7 @@
                     {% if is_creation %}
                         <input type="submit" value="Enregistrer" class="fr-btn">
                     {% else %}
-                        <a href="{% url 'evenement-details' fichedetection.evenement.pk %}" class="fr-link fr-mr-3w">Annuler</a>
+                        <a href="{{ fichedetection.evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
                         <input type="submit" name="action" value="Enregistrer les modifications" data-action="enregistrer-modifications" class="fr-btn" data-testid="fiche-detection-save-btn">
                     {% endif %}
                 </p>

@@ -89,7 +89,7 @@ class Evenement(
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("evenement-details", kwargs={"pk": self.pk})
+        return reverse("evenement-details", kwargs={"numero": self.numero})
 
     def get_update_url(self):
         return reverse("evenement-update", kwargs={"pk": self.pk})
