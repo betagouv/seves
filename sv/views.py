@@ -5,7 +5,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Min
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse, Http404
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
@@ -121,8 +121,16 @@ class EvenementDetailView(
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
             return self.object
-        self.object = super().get_object(queryset)
-        return self.object
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        try:
+            annee, numero_evenement = self.kwargs["numero"].split(".")
+            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            return self.object
+        except (ValueError, Evenement.DoesNotExist):
+            raise Http404("Événement non trouvé")
 
     def test_func(self) -> bool | None:
         """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
@@ -457,7 +465,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("evenement-details", args=[self.object.evenement.pk]) + "#tabpanel-zone-panel"
+        return reverse("evenement-details", args=[self.object.evenement.numero]) + "#tabpanel-zone-panel"
 
     def dispatch(self, request, *args, **kwargs):
         try:

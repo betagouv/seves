@@ -23,7 +23,7 @@ urlpatterns = [
         name="fiche-liste",
     ),
     path(
-        "evenement/<int:pk>/",
+        "evenement/<str:numero>/",
         EvenementDetailView.as_view(),
         name="evenement-details",
     ),
