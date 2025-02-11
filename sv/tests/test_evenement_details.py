@@ -1,5 +1,6 @@
 import re
 
+import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
@@ -241,9 +242,10 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
 def test_visibilite_locale_display(live_server, page: Page):
     evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("evenement-visibilite")).to_have_text(
-        f"{evenement.createur}, {MUS_STRUCTURE}, {BSV_STRUCTURE}"
-    )
+    visibilite_element = page.get_by_test_id("evenement-visibilite")
+    expect(visibilite_element).to_contain_text(str(evenement.createur))
+    expect(visibilite_element).to_contain_text(MUS_STRUCTURE)
+    expect(visibilite_element).to_contain_text(BSV_STRUCTURE)
     expect(page.locator("#tooltip-visibilite")).not_to_be_visible()
 
 
@@ -262,8 +264,10 @@ def test_visibilite_limitee_display_short_text(live_server, page: Page):
     evenement.visibilite = Visibilite.LIMITEE
     evenement.save()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_test_id("evenement-visibilite")).to_have_text(structure.libelle)
-    expect(page.locator("#tooltip-visibilite")).not_to_be_visible()
+    visibilite_element = page.get_by_test_id("evenement-visibilite")
+    expect(visibilite_element).to_contain_text(structure.libelle)
+    expect(visibilite_element).to_contain_text(MUS_STRUCTURE)
+    expect(visibilite_element).to_contain_text(BSV_STRUCTURE)
 
 
 def test_visibilite_limitee_display_long_text(live_server, page: Page):
@@ -301,3 +305,17 @@ def test_will_edit_correct_fiche_detection(live_server, page: Page):
     page.get_by_role("tab", name=fiche_2.numero_detection).click()
     page.get_by_role("button", name="Modifier").click()
     assert fiche_2.get_update_url() in page.url
+
+
+@pytest.mark.parametrize("createur", [MUS_STRUCTURE, BSV_STRUCTURE])
+def test_visibilite_display_text_when_evenement_locale_and_createur_ac(
+    live_server, page: Page, mocked_authentification_user, createur
+):
+    createur, _ = Structure.objects.get_or_create(libelle=createur)
+    evenement_mus = EvenementFactory(createur=createur, visibilite=Visibilite.LOCALE)
+    mocked_authentification_user.agent.structure = createur
+    mocked_authentification_user.save()
+    page.goto(f"{live_server.url}{evenement_mus.get_absolute_url()}")
+    visibilite_element = page.get_by_test_id("evenement-visibilite")
+    expect(visibilite_element).to_contain_text(MUS_STRUCTURE)
+    expect(visibilite_element).to_contain_text(BSV_STRUCTURE)

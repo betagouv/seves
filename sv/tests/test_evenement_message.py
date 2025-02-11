@@ -518,7 +518,7 @@ def test_create_multiple_messages_adds_contacts_once(
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
 
 
-def test_create_message_from_local_changes_to_limitee_and_add_structures_in_allowed_structures(
+def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_allowed_structures(
     live_server, page: Page, mocked_authentification_user: User, choice_js_fill
 ):
     evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
