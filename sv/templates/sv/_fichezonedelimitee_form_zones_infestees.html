@@ -11,14 +11,8 @@
         </div>
     </div>
     {% if zone_infestee_formset.non_form_errors %}
-        <div class="fr-alert fr-alert--error fr-mb-4w">
-            {% for error in zone_infestee_formset.non_form_errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                Masquer le message
-            </button>
-        </div>
+        {% include "core/_show_form_errors.html" with errors=zone_infestee_formset.non_form_errors %}
+
     {% endif %}
     <div class="fr-grid-row fr-grid-row--gutters" id="zones-infestees">
         {{ zone_infestee_formset.management_form }}
@@ -37,7 +31,7 @@
                                     {% endfor %}
                                 {% endfor %}
                             </ul>
-                            <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                            <button class="fr-btn--close fr-btn btn--close-js" title="Masquer le message">
                                 Masquer le message
                             </button>
                         </div>

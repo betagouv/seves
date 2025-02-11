@@ -7,20 +7,8 @@
 {% endblock %}
 
 {% block scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const element = document.getElementById('id_structure');
-            const choices = new Choices(element, {
-                itemSelectText: '',
-                classNames: {
-                    containerInner: 'fr-select fr-mt-1w',
-                },
-                searchResultLimit: 500,
-            });
-        });
-    </script>
+    <script type="text/javascript" src="{% static 'sv/contact_add_form.js' %}"></script>
 {% endblock %}
-
 
 {% block content %}
     <div class="fr-container">
@@ -62,14 +50,7 @@
                                     {% if selection_form.contacts.errors %}
                                         <div class="grid-row">
                                             <div class="fr-col-8">
-                                                <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-4w">
-                                                    {% for error in selection_form.contacts.errors %}
-                                                        <p>{{ error }}</p>
-                                                    {% endfor %}
-                                                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
-                                                        Masquer le message
-                                                    </button>
-                                                </div>
+                                                {% include "core/_show_form_errors.html" with errors=selection_form.contacts.errors classes="fr-alert--sm" %}
                                             </div>
                                         </div>
                                     {% endif %}

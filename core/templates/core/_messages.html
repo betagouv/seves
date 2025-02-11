@@ -4,7 +4,7 @@
             {% if value in message.extra_tags %}
                 <div class="fr-alert fr-alert--{{ message.level_tag }}">
                     <h3 class="fr-alert__title">{{message}}</h3>
-                    <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)">
+                    <button class="fr-btn--close fr-btn btn--close-js" title="Masquer le message">
                         Masquer le message
                     </button>
                 </div>
