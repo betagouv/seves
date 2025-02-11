@@ -274,8 +274,7 @@ class FicheDetection(
 
     @cached_property
     def latest_version(self):
-        lieux_ids = list(self.lieux.all().values_list("id", flat=True))
-        lieu_versions = get_versions_from_ids(lieux_ids, Lieu)
+        lieu_versions = get_versions_from_ids([lieu.id for lieu in self.lieux.all()], Lieu)
 
         prelevements = Prelevement.objects.filter(lieu__fiche_detection__pk=self.pk).values_list("id", flat=True)
         prelevement_versions = get_versions_from_ids(prelevements, Prelevement)
