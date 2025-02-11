@@ -87,6 +87,7 @@ class Prelevement(models.Model):
     class Resultat(models.TextChoices):
         DETECTE = "detecte", "Détecté"
         NON_DETECTE = "non_detecte", "Non détecté"
+        NON_CONCLUSIF = "non_conclusif", "Non conclusif"
 
     class TypeAnalyse(models.TextChoices):
         PREMIERE_INTENTION = "premiere_intention", "1ère intention"
@@ -149,10 +150,6 @@ class Prelevement(models.Model):
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"
-
-    @property
-    def is_result_positive(self):
-        return self.resultat in Prelevement.Resultat.DETECTE
 
     def clean(self):
         super().clean()

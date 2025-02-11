@@ -59,7 +59,7 @@ function displayPrelevementsCards() {
         clone.classList.remove('fr-hidden');
         clone.querySelector('.prelevement-nom').textContent = card.structure;
         clone.querySelector('.prelevement-lieu').textContent = "Lieu : " + card.lieu;
-        clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.detecte}`;
+        clone.querySelector('.prelevement-type').textContent = `${card.officiel} | ${card.resultat}`;
         clone.querySelector('.prelevement-delete-btn').setAttribute("data-id", card.id)
         clone.querySelector('.prelevement-delete-btn').setAttribute("aria-describedby", "tooltip-delete-prelevement-" + card.id)
         clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-prelevement-" + card.id)
@@ -110,12 +110,13 @@ function buildPrelevementCardFromModal(element){
     const lieuElement = element.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`)
     const officielElement = element.querySelector(`[id^="id_prelevements-"][id$="-is_officiel"]`)
     const resultatElement = element.querySelector(`input[name*="-resultat"]:checked`)
+    const resultats = JSON.parse(document.getElementById("prelevement-resultats").textContent);
     return {
         "id": element.dataset.id,
         "structure":structureElement.options[structureElement.selectedIndex].text,
         "lieu": lieuElement.options[lieuElement.selectedIndex].text,
         "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
-        "detecte": resultatElement.value === "detecte" ? "DÉTECTÉ" : "NON DÉTECTÉ"
+        "resultat": resultats[resultatElement.value].toUpperCase()
     }
 }
 

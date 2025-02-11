@@ -585,7 +585,7 @@ def test_add_new_prelevement_with_empty_date(
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option("Test")
     prelevement_form_elements.structure_input.select_option("DSF")
-    prelevement_form_elements.resultat_input("detecte").click()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()

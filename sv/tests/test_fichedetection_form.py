@@ -5,6 +5,7 @@ from django.urls import reverse
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..models import (
     StructurePreleveuse,
+    Prelevement,
 )
 
 from sv.constants import STRUCTURES_PRELEVEUSES
@@ -562,7 +563,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     assert StructurePreleveuse.objects.count() > 0
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
-    prelevement_form_elements.resultat_input("detecte").click()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
 
@@ -617,3 +618,37 @@ def test_info_message_in_prelevement_bloc_should_be_visible_without_locations(
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
 
     expect(page.locator("#no-lieux-text")).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_prelevement_resultat_card(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+):
+    """Test le bon affichage du résultat dans la liste des prélèvements"""
+    # Ajout d'un lieu nécessaire pour pouvoir ajouter un prélèvement
+    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+
+    # Ajout du prélèvement initial (Détecté)
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements = PrelevementFormDomElements(page)
+    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.save_btn.click()
+    expect(page.locator("#prelevements-list")).to_contain_text("DÉTECTÉ")
+
+    # Modification du statut à "Non détecté"
+    page.locator("#prelevements-list").get_by_role("button").first.click()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.NON_DETECTE).click()
+    prelevement_form_elements.save_btn.click()
+    expect(page.locator("#prelevements-list")).to_contain_text("NON DÉTECTÉ")
+
+    # Modification du statut à "Non conclusif"
+    page.locator("#prelevements-list").get_by_role("button").first.click()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.NON_CONCLUSIF).click()
+    prelevement_form_elements.save_btn.click()
+    expect(page.locator("#prelevements-list")).to_contain_text("NON CONCLUSIF")

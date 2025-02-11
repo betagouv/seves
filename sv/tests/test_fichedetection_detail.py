@@ -78,20 +78,15 @@ def test_lieu_details_with_no_data(live_server, page, fiche_detection):
     expect(page.get_by_test_id("lieu-1-wgs84")).to_contain_text("nc.")
 
 
-def test_prelevement_card(live_server, page, fiche_detection):
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    prelevement = baker.make(
-        Prelevement, lieu=lieu, is_officiel=False, numero_echantillon="12345", resultat=Prelevement.Resultat.DETECTE
-    )
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+def test_prelevement_card(live_server, page):
+    prelevement = PrelevementFactory(is_officiel=False, resultat=Prelevement.Resultat.DETECTE)
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_absolute_url()}")
 
     expect(page.locator(".prelevement").get_by_text(prelevement.numero_echantillon)).to_be_visible()
     expect(page.locator(".prelevement").get_by_text(prelevement.lieu.nom)).to_be_visible()
     expect(page.locator(".prelevement").get_by_text(prelevement.get_resultat_display())).to_be_visible()
     expect(page.locator(".prelevement").get_by_text("Prélèvement non officiel")).to_be_visible()
+    expect(page.locator(".prelevement").get_by_text("DÉTECTÉ")).to_be_visible()
 
 
 def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
