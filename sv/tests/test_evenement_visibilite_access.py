@@ -40,7 +40,7 @@ def test_agent_in_structure_createur_can_view_evenement_limitee(
 
 
 @pytest.mark.django_db
-def test_agent_not_in_structure_createur_cannot_view_evenement_local(
+def test_agent_not_in_structure_createur_cannot_view_evenement_locale(
     live_server, page: Page, mocked_authentification_user
 ):
     evenement = EvenementFactory(visibilite=Visibilite.LOCALE)

@@ -203,9 +203,9 @@ class WithVisibiliteMixin(models.Model):
     def get_visibilite_display_text(self) -> str:
         match self.visibilite:
             case Visibilite.LOCALE:
-                return f"{self.createur}, {MUS_STRUCTURE}, {BSV_STRUCTURE}"
+                return ", ".join({str(self.createur), MUS_STRUCTURE, BSV_STRUCTURE})
             case Visibilite.LIMITEE:
-                return ", ".join(str(s) for s in self.allowed_structures.all())
+                return ", ".join(str(s) for s in self.allowed_structures.all()) + f", {MUS_STRUCTURE}, {BSV_STRUCTURE}"
             case Visibilite.NATIONALE:
                 return "Toutes les structures"
 

@@ -21,7 +21,7 @@ def test_evenement_does_not_have_bloc_suivi_display(live_server, page, mocked_au
         Visibilite.NATIONALE,
     ],
 )
-def test_fiche_local_or_national_have_bloc_suivi_display(
+def test_fiche_locale_or_nationale_have_bloc_suivi_display(
     live_server, page, visibilite: Visibilite, mocked_authentification_user
 ):
     evenement = EvenementFactory(visibilite=visibilite)

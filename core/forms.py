@@ -327,9 +327,9 @@ class VisibiliteUpdateBaseForm(DSFRForm):
         super().__init__(*args, **kwargs)
         object = obj or self.instance
 
-        local = (Visibilite.LOCALE, Visibilite.LOCALE.capitalize())
+        locale = (Visibilite.LOCALE, Visibilite.LOCALE.capitalize())
         limitee = (Visibilite.LIMITEE, Visibilite.LIMITEE.capitalize())
-        national = (Visibilite.NATIONALE, Visibilite.NATIONALE.capitalize())
+        nationale = (Visibilite.NATIONALE, Visibilite.NATIONALE.capitalize())
 
-        self.fields["visibilite"].choices = [local, limitee, national]
+        self.fields["visibilite"].choices = [locale, limitee, nationale]
         self.fields["visibilite"].initial = object.visibilite
