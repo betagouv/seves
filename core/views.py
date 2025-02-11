@@ -69,6 +69,9 @@ class DocumentUploadView(
 class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
+
+        if isinstance(self.document.content_object, Message):
+            return self.document.content_object.content_object
         return self.document.content_object
 
     def test_func(self):

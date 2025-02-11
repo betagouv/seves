@@ -5,8 +5,8 @@ from django.urls import reverse
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
-from core.models import Message, Contact, Agent, Structure, Visibilite
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
+from core.models import Message, Contact, Agent, Structure, Visibilite, Document
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -609,3 +609,28 @@ def test_cant_forge_post_of_message_in_evenement_we_cant_see(client, mocked_auth
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.messages.count() == 0
+
+
+def test_can_delete_document_attached_to_message(live_server, page: Page, mocked_authentification_user: User):
+    evenement = EvenementFactory()
+    structure, _ = Structure.objects.get_or_create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    sender = ContactAgentFactory()
+    evenement.contacts.add(sender)
+    contact = ContactAgentFactory()
+    evenement.contacts.add(contact)
+    message = Message.objects.create(content_object=evenement, sender=sender, title="Minor", content="Swing")
+    message.recipients.set([contact])
+    document = DocumentFactory(nom="Test document", description="", content_object=message)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+
+    page.locator(f'a[aria-controls="fr-modal-{document.id}"]').click()
+    expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()
+    page.get_by_test_id(f"documents-delete-{document.id}").click()
+
+    page.wait_for_timeout(600)
+    document = Document.objects.get()
+    assert document.is_deleted is True
+    assert document.deleted_by == mocked_authentification_user.agent
