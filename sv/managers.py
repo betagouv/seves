@@ -19,7 +19,13 @@ class FicheDetectionManager(models.Manager):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
 
     def get_last_used_numero(self, evenement_id):
-        fiches = self.select_for_update().filter(evenement_id=evenement_id).values_list("numero_detection", flat=True)
+        from sv.models import FicheDetection
+
+        fiches = (
+            FicheDetection._base_manager.select_for_update()
+            .filter(evenement_id=evenement_id)
+            .values_list("numero_detection", flat=True)
+        )
         if fiches:
             last_parts = [int(v.split(".")[-1]) for v in fiches]
             return max(last_parts)

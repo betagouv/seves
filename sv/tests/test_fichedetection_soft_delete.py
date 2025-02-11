@@ -39,3 +39,21 @@ def test_cant_forge_deletion_of_fiche_we_cant_see(client, mocked_authentificatio
     assert response.status_code == 302
     fiche_detection.refresh_from_db()
     assert fiche_detection.is_deleted is False
+
+
+@pytest.mark.django_db
+def test_can_delete_fiche_detection_and_create_new_one_after(live_server, page):
+    fiche_detection = FicheDetectionFactory()
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+
+    page.get_by_text("Supprimer la détection", exact=True).click()
+    page.get_by_test_id("submit-delete").click()
+
+    expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
+
+    assert FicheDetection.objects.count() == 0
+    expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()
+
+    page.get_by_role("link", name="Ajouter une détection").click()
+    page.get_by_role("button", name="Enregistrer").click()
+    assert FicheDetection.objects.count() == 1
