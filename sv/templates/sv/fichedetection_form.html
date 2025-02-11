@@ -17,7 +17,6 @@
 
 {% block content %}
     <main>
-        {{ form.instance.free_link_ids|json_script:"free-links-id" }}
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
 
         <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
