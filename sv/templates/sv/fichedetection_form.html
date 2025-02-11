@@ -17,7 +17,9 @@
 
 {% block content %}
     <main>
-        {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
+        {% if is_creation %}
+            {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
+        {% endif %}
         {{ prelevement_resultats|json_script:"prelevement-resultats" }}
 
         <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">

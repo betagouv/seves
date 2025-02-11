@@ -25,7 +25,12 @@ function setUpOrganismeNuisible(){
     })
 }
 
+function hasStatusToOrganismeNuisibleData() {
+    return document.getElementById('status-to-organisme-nuisible-id') !== null;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    setUpOrganismeNuisible()
+    if (hasStatusToOrganismeNuisibleData()) {
+        setUpOrganismeNuisible();
+    }
 });
