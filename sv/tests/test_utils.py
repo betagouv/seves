@@ -1,10 +1,10 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from django.urls import reverse
 from playwright.sync_api import Page, Locator
 from playwright.sync_api import expect
 
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Prelevement
 
 
 class FicheDetectionFormDomElements:
@@ -332,11 +332,17 @@ class PrelevementFormDomElements:
             .locator("#espece-echantillon .choices__list--single")
         )
 
-    def resultat_input(self, resultat_value) -> Locator:
+    def resultat_input(self, resultat_value: Union[str, Prelevement.Resultat]) -> Locator | None:
         modal = self.page.locator(".fr-modal__content").locator("visible=true")
-        if resultat_value in ("non detecte", "Non détecté"):
-            return modal.get_by_text("Non détecté", exact=True)
-        return modal.get_by_text("Détecté", exact=True)
+        if isinstance(resultat_value, str):
+            resultat_value = Prelevement.Resultat(resultat_value)
+        match resultat_value:
+            case Prelevement.Resultat.DETECTE:
+                return modal.get_by_text("Détecté", exact=True)
+            case Prelevement.Resultat.NON_DETECTE:
+                return modal.get_by_text("Non détecté", exact=True)
+            case Prelevement.Resultat.NON_CONCLUSIF:
+                return modal.get_by_text("Non conclusif", exact=True)
 
     def type_analyse_input(self, resultat_value) -> Locator:
         modal = self.page.locator(".fr-modal__content").locator("visible=true")

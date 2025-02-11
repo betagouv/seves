@@ -143,7 +143,7 @@
                                                 </p>
                                                 <p class="fr-card__desc prelevement__type {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}">
                                                     Prélèvement {% if prelevement.is_officiel %}officiel{% else %}non officiel{% endif %}
-                                                    | {% if prelevement.is_result_positive %}DÉTECTÉ{% else %}NON DÉTECTÉ{% endif %}
+                                                    | {{ prelevement.get_resultat_display|upper }}
                                                 </p>
                                                 <div class="fr-card__start">
                                                     <p class="fr-card__detail fr-icon-road-map-line">{{ lieu.nom }}</p>

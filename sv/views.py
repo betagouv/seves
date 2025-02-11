@@ -54,7 +54,12 @@ from .models import (
     Laboratoire,
     Evenement,
 )
-from .view_mixins import WithPrelevementHandlingMixin, WithStatusToOrganismeNuisibleMixin, WithAddUserContactsMixin
+from .view_mixins import (
+    WithPrelevementHandlingMixin,
+    WithStatusToOrganismeNuisibleMixin,
+    WithAddUserContactsMixin,
+    WithPrelevementResultatsMixin,
+)
 
 
 class FicheListView(ListView):
@@ -205,7 +210,9 @@ class EvenementUpdateView(
         return HttpResponseRedirect(self.get_object().get_absolute_url())
 
 
-class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):
+class FicheDetectionCreateView(
+    WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, WithPrelevementResultatsMixin, CreateView
+):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
 
@@ -292,6 +299,7 @@ class FicheDetectionUpdateView(
     WithStatusToOrganismeNuisibleMixin,
     WithPrelevementHandlingMixin,
     WithAddUserContactsMixin,
+    WithPrelevementResultatsMixin,
     UserPassesTestMixin,
     UpdateView,
 ):

@@ -80,3 +80,10 @@ class WithAddUserContactsMixin:
 
         if structure_contact := agent_contact.get_structure_contact():
             obj.contacts.add(structure_contact)
+
+
+class WithPrelevementResultatsMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["prelevement_resultats"] = dict(Prelevement.Resultat.choices)
+        return context
