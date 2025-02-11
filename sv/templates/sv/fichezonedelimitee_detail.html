@@ -3,7 +3,7 @@
 
 <div class="fiche-header">
     <div>
-        {% include "sv/_latest_revision.html" with latest_revision=fiche.latest_version %}
+        {% include "sv/_latest_revision.html" with latest_version=fiche.latest_version %}
     </div>
     <div class="fiche-action">
         <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
