@@ -60,3 +60,8 @@ class DSFRCheckboxInput(forms.CheckboxInput):
         context = super().get_context(name, value, attrs)
         context["widget"]["label"] = self.label
         return context
+
+
+class ContactModelMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return obj.display_with_agent_unit
