@@ -68,13 +68,15 @@ class FicheListView(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
+        contact = self.request.user.agent.structure.contact_set.get()
         if self.list_of_zones:
             queryset = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.request.user)
             queryset = queryset.optimized_for_list().order_by_numero_fiche().with_nb_fiches_detection()
+            queryset = queryset.with_fin_de_suivi(contact)
         else:
             queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
             queryset = queryset.with_list_of_lieux_with_commune().with_first_region_name()
-            queryset = queryset.optimized_for_list().order_by_numero_fiche()
+            queryset = queryset.optimized_for_list().order_by_numero_fiche().with_fin_de_suivi(contact)
         self.filter = FicheFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
@@ -168,6 +170,8 @@ class EvenementDetailView(
         )
         context["add_document_form"] = MessageDocumentForm()
         context["allowed_extensions"] = AUTHORIZED_EXTENSIONS
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["active_detection"] = (
             int(self.request.GET.get("detection"))
             if self.request.GET.get("detection")
@@ -203,6 +207,12 @@ class EvenementUpdateView(
             for error in errors:
                 messages.error(self.request, error)
         return HttpResponseRedirect(self.get_object().get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
+        return context
 
 
 class FicheDetectionCreateView(WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, CreateView):

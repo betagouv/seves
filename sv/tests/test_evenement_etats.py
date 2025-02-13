@@ -1,8 +1,9 @@
 import pytest
+from django.urls import reverse
 from model_bakery import baker
 
 from core.factories import ContactStructureFactory
-from sv.factories import EvenementFactory
+from sv.factories import EvenementFactory, FicheDetectionFactory
 from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
@@ -28,6 +29,7 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page,
     """Test que l'ajout d'un élément de suivi de type 'fin de suivi' ajoute l'état 'fin de suivi'
     à la structure de l'agent connecté sur l'événement."""
     evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
     _add_contacts(evenement, mocked_authentification_user)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Fil de suivi").click()
@@ -37,6 +39,10 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page,
     page.get_by_test_id("fildesuivi-add-submit").click()
     page.get_by_test_id("contacts").click()
     expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
+    expect(page.get_by_test_id("evenement-header").get_by_text("Fin de suivi", exact=True)).to_be_visible()
+
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    expect(page.get_by_role("cell", name="Fin de suivi")).to_be_visible()
 
 
 def test_element_suivi_fin_suivi_already_exists(live_server, page: Page, mocked_authentification_user):

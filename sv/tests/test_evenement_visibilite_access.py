@@ -2,7 +2,7 @@ import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, ContactStructureFactory
 from sv.factories import EvenementFactory, FicheDetectionFactory
 from core.models import Structure, Visibilite
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, AC_STRUCTURE
@@ -85,6 +85,7 @@ def test_agent_ac_can_view_own_evenement_brouillon(
     live_server, page: Page, mocked_authentification_user, structure_ac: str
 ):
     structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=structure_ac)
+    ContactStructureFactory(structure=structure)
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=structure)
     mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
@@ -108,9 +109,9 @@ def test_agent_ac_can_view_evenement(
     evenement.visibilite = visibilite_libelle
     evenement.save()
     FicheDetectionFactory(evenement=evenement)
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=structure_ac
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=structure_ac)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert response.status == 200
@@ -122,6 +123,7 @@ def test_agent_ac_can_view_evenement(
 @pytest.mark.django_db
 def test_agent_can_see_visibilite_limitee_if_in_list(live_server, page: Page, mocked_authentification_user):
     structure = StructureFactory()
+    ContactStructureFactory(structure=structure)
     evenement = EvenementFactory()
     evenement.allowed_structures.set([structure])
     evenement.visibilite = Visibilite.LIMITEE

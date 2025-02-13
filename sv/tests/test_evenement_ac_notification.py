@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.factories import ContactStructureFactory
 from core.models import Structure, Contact, Message
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
 from ..factories import EvenementFactory, FicheDetectionFactory
@@ -55,9 +56,9 @@ def test_cant_notify_ac_if_user_is_from_ac(live_server, page, mocked_authentific
 
 
 def test_cant_notify_ac_if_user_is_from_ac_with_request(mocked_authentification_user, client):
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
     evenement = EvenementFactory()
     response = client.post(
         reverse("notify-ac"),
