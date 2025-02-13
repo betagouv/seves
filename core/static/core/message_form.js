@@ -1,3 +1,5 @@
+import { validateFileSize } from "./document.js";
+
 
 function cloneDocumentInput(input, currentID, destination){
     let newFileInput = input.cloneNode()
@@ -39,9 +41,9 @@ function allowToUploadWhenTypeIsSelected(typeInput, fileInput,messageAddDocument
     })
 }
 
-function allowToValidateWhenDocumentIsSelected(typeInput, fileInput,messageAddDocumentButton){
+function allowToValidateWhenDocumentIsSelectedAndValidSize(typeInput, fileInput,messageAddDocumentButton){
     fileInput.addEventListener("change", ()=>{
-        if (typeInput.value !== ""){
+        if (typeInput.value !== "" && validateFileSize(fileInput)){
             messageAddDocumentButton.removeAttribute("disabled")
         }
     })
@@ -72,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputDestination = document.getElementById("inputs-for-upload")
 
     allowToUploadWhenTypeIsSelected(typeInput, fileInput, messageAddDocumentButton)
-    allowToValidateWhenDocumentIsSelected(typeInput, fileInput, messageAddDocumentButton)
+    allowToValidateWhenDocumentIsSelectedAndValidSize(typeInput, fileInput, messageAddDocumentButton)
 
     addDocumentFormButton.addEventListener("click", event =>{
         event.preventDefault();

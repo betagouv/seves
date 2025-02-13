@@ -1,3 +1,5 @@
+import os
+import tempfile
 from pathlib import Path
 
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +12,7 @@ from core.factories import DocumentFactory
 from core.models import Structure, Document
 from django.contrib.auth import get_user_model
 
+from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -470,3 +473,89 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
     expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
+
+
+def test_document_upload_exceeding_max_size_shows_validation_error_and_prevents_creation(live_server, page: Page):
+    # Créer un fichier temporaire CSV de 16Mo
+    file_size = 16 * 1024 * 1024
+    fd, temp_path = tempfile.mkstemp(suffix=".csv")
+    os.truncate(fd, file_size)
+    os.close(fd)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    # Vérifier que le champ de fichier a la bonne valeur data-max-size
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    max_size_attr = file_input.get_attribute("data-max-size")
+    assert int(max_size_attr) == MAX_UPLOAD_SIZE_BYTES
+
+    # Télécharger le fichier trop volumineux
+    page.locator("#id_nom").fill("Document trop volumineux")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Test validation taille")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(temp_path)
+    page.get_by_test_id("documents-send").click()
+
+    # Vérifier le message de validation
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Le fichier est trop volumineux (maximum 15 Mo autorisés)" in validation_message
+
+    os.unlink(temp_path)
+
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_document_upload_with_missing_max_size_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    # Supprimer l'attribut data-max-size du champ de fichier
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.removeAttribute('data-max-size');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Test attribut manquant")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Erreur de configuration: limite de taille non définie" in validation_message
+
+    page.get_by_test_id("documents-send").click()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_document_upload_with_invalid_max_size_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    # Définir une valeur non numérique pour data-max-size
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.setAttribute('data-max-size', 'not-a-number');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration invalide")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Test attribut invalide")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Erreur de configuration: limite de taille invalide" in validation_message
+
+    page.get_by_test_id("documents-send").click()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0

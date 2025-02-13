@@ -2,6 +2,8 @@ import magic
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 
+MAX_UPLOAD_SIZE_MEGABYTES = 15
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MEGABYTES * 1024 * 1024
 
 AUTHORIZED_EXTENSIONS = [
     "png",
