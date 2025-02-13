@@ -259,6 +259,12 @@ class WithEtatMixin(models.Model):
     def is_already_cloturer(self):
         return self.etat == self.Etat.CLOTURE
 
+    def get_publish_success_message(self):
+        return "Objet publié avec succès"
+
+    def get_publish_error_message(self):
+        return "Cet objet ne peut pas être publié"
+
 
 class WithFreeLinkIdsMixin:
     @property

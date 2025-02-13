@@ -34,7 +34,7 @@ def test_can_publish_evenement(live_server, page: Page):
     publish_btn = page.get_by_text("Publier l'événement", exact=True)
     expect(publish_btn).to_be_enabled()
     publish_btn.click()
-    expect(page.get_by_text("Objet publié avec succès")).to_be_visible()
+    expect(page.get_by_text(f"Événement {evenement.numero} publié avec succès")).to_be_visible()
 
     publish_btn = page.get_by_text("Publier l'événement", exact=True)
     expect(publish_btn).not_to_be_visible()
