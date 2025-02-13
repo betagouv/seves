@@ -29,7 +29,12 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        with_active_contact.nom,
+        with_active_contact.contact_set.get().display_with_agent_unit,
+    )
     expect(page.locator("#message-type-title")).to_have_text("message")
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -63,7 +68,12 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", with_active_contact.nom, str(with_active_contact))
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        with_active_contact.nom,
+        with_active_contact.contact_set.get().display_with_agent_unit,
+    )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
 
@@ -127,12 +137,32 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     page.get_by_role("link", name="Message").click()
 
     # Add multiple recipients
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[0].nom, str(agents[0]))
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[1].nom, str(agents[1]))
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        agents[0].nom,
+        agents[0].contact_set.get().display_with_agent_unit,
+    )
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        agents[1].nom,
+        agents[1].contact_set.get().display_with_agent_unit,
+    )
 
     # Add multiples recipients as copy
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[2].nom, str(agents[2]))
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", agents[3].nom, str(agents[3]))
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        agents[2].nom,
+        agents[2].contact_set.get().display_with_agent_unit,
+    )
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        agents[3].nom,
+        agents[3].contact_set.get().display_with_agent_unit,
+    )
 
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -429,9 +459,11 @@ def test_create_message_adds_agent_and_structure_contacts(
     page.get_by_role("link", name="Message").click()
 
     # Ajout du destinataire
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
     # Ajout de la copie
-    choice_js_fill(page, ".choices__input--cloned:nth-of-type(1)", contact_copy.agent.nom, str(contact_copy.agent))
+    choice_js_fill(
+        page, ".choices__input--cloned:nth-of-type(1)", contact_copy.agent.nom, contact_copy.display_with_agent_unit
+    )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -482,7 +514,7 @@ def test_create_multiple_messages_adds_contacts_once(
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
     page.locator("#id_title").fill("Message 1")
     page.locator("#id_content").fill("Message de test 1")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -491,7 +523,7 @@ def test_create_multiple_messages_adds_contacts_once(
     page.get_by_test_id("element-actions").click()
     page.locator(".message-actions").get_by_role("link", name="Message", exact=True).click()
 
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
     page.locator("#id_title").fill("Message 2")
     page.locator("#id_content").fill("Message de test 2")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -535,7 +567,7 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
     page.get_by_role("link", name="Message").click()
 
     # Envoi du message
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -569,7 +601,7 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
     page.get_by_role("link", name="Message").click()
 
     # Envoi du message
-    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, str(contact.agent))
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()

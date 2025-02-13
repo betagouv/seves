@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton
+from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.models import Document, Contact, Message, Structure, Visibilite
 from core.widgets import RestrictedFileWidget
 
@@ -143,10 +143,10 @@ class ContactSelectionForm(forms.Form):
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    recipients = forms.ModelMultipleChoiceField(
+    recipients = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
     )
-    recipients_copy = forms.ModelMultipleChoiceField(
+    recipients_copy = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
     )
     recipients_limited_recipients = forms.MultipleChoiceField(
@@ -208,8 +208,9 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.sender = sender
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
-        self.fields["recipients"].queryset = Contact.objects.with_structure_and_agent().can_be_emailed()
-        self.fields["recipients_copy"].queryset = Contact.objects.with_structure_and_agent().can_be_emailed()
+        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+        self.fields["recipients"].queryset = queryset
+        self.fields["recipients_copy"].queryset = queryset
 
         if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_label(obj)
