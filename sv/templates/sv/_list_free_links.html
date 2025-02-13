@@ -1,13 +1,13 @@
 <div class="fiche-detail__liens white-container {{ classes }}">
-    <h2 class="fr-h6">Liens libres</h2>
+    <h2 class="fr-h6">Événements en liens libres</h2>
     {% for link in free_links_list %}
         {% if link.related_object_1 == object and not link.related_object_2.is_deleted %}
-            <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}">{{ link.related_object_2 }}</a>
+            <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}" target="_blank">{{ link.related_object_2 }}</a>
         {% endif %}
         {% if link.related_object_2 == object and not link.related_object_1.is_deleted %}
-            <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}">{{ link.related_object_1 }}</a>
+            <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}" target="_blank">{{ link.related_object_1 }}</a>
         {% endif %}
     {% empty %}
-        <p>Pas de liens pour cette fiche.</p>
+        <p>Pas de liens pour cet événement.</p>
     {% endfor %}
 </div>

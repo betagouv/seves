@@ -90,8 +90,8 @@
             {% include "sv/_latest_revision.html" %}
         </div>
 
-        <div class="fr-container--fluid fr-mb-2w">
-            <div class="fr-grid-row fr-my-1w white-container--lite">
+        <div class="fr-container--fluid">
+            <div class="fr-grid-row white-container--lite">
                 <div class="fr-col-6 fr-col-lg-4">
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Statut réglementaire</span> {{ evenement.statut_reglementaire }}</div>
@@ -118,6 +118,8 @@
 
             </div>
         </div>
+
+        {% include "sv/_list_free_links.html" with classes="fr-my-4v" object=evenement %}
 
         <div id="detail-content">
             <div class="fr-tabs">
@@ -185,8 +187,6 @@
                     {% endif %}
                 </div>
             </div>
-
-            {% include "sv/_list_free_links.html" with classes="fr-mt-8v" object=evenement %}
         </div>
 
         {% if not evenement.is_draft %}
