@@ -17,7 +17,7 @@ def test_can_delete_fiche_detection(live_server, page):
     page.get_by_text("Supprimer la détection", exact=True).click()
     page.get_by_test_id("submit-delete").click()
 
-    expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
+    expect(page.get_by_text(f"La détection {fiche_detection.numero} a bien été supprimée")).to_be_visible()
 
     assert FicheDetection.objects.count() == 0
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()
@@ -49,7 +49,7 @@ def test_can_delete_fiche_detection_and_create_new_one_after(live_server, page):
     page.get_by_text("Supprimer la détection", exact=True).click()
     page.get_by_test_id("submit-delete").click()
 
-    expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
+    expect(page.get_by_text(f"La détection {fiche_detection.numero} a bien été supprimée")).to_be_visible()
 
     assert FicheDetection.objects.count() == 0
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()

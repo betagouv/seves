@@ -7,8 +7,8 @@
                         <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-delete-{{ prefix }}-{{ object_pk }}">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1 id="fr-modal-title-modal-{{ prefix }}-{{ object_pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer une fiche</h1>
-                        <p>Si vous supprimez la fiche, toutes les données présentes dans la fiche sont supprimées. Confirmez-vous la suppression ?</p>
+                        <h1 id="fr-modal-title-modal-{{ prefix }}-{{ object_pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer la détection {{ fichedetection.numero }}</h1>
+                        <p>Si vous supprimez la détection, toutes les données présentes dans la détection sont supprimées. Confirmez-vous la suppression ?</p>
 
                         <form method="post" action="{% url 'soft-delete' %}">
                             <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">

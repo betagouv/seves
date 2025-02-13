@@ -114,6 +114,15 @@ class AllowsSoftDeleteMixin(models.Model):
         self.is_deleted = True
         self.save()
 
+    def get_soft_delete_success_message(self):
+        return "L'objet a bien été supprimé"
+
+    def get_soft_delete_permission_error_message(self):
+        return "Vous n'avez pas les droits pour supprimer cet objet"
+
+    def get_soft_delete_attribute_error_message(self):
+        return "Ce type d'objet ne peut pas être supprimé"
+
     class Meta:
         abstract = True
 

@@ -7,8 +7,8 @@
                         <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1 id="fr-modal-title-modal-zone-{{ fiche.pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer une fiche</h1>
-                        <p>Si vous supprimez la fiche, toutes les données présentes dans la fiche sont supprimées. Confirmez-vous la suppression ?</p>
+                        <h1 id="fr-modal-title-modal-zone-{{ fiche.pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer la zone {{ fiche.evenement.numero }}</h1>
+                        <p>Si vous supprimez la zone, toutes les données présentes dans la zone sont supprimées. Confirmez-vous la suppression ?</p>
                         <form method="post" action="{% url 'fiche-zone-delimitee-delete' fiche.pk %}">
                             {% csrf_token %}
                             <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">

@@ -289,3 +289,12 @@ class FicheDetection(
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
+
+    def get_soft_delete_success_message(self):
+        return f"La détection {self.numero} a bien été supprimée"
+
+    def get_soft_delete_permission_error_message(self):
+        return f"Vous n'avez pas les droits pour supprimer la détection {self.numero}"
+
+    def get_soft_delete_attribute_error_message(self):
+        return f"La détection {self.numero} ne peut pas être supprimée"

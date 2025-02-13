@@ -7,7 +7,7 @@
                         <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-delete-evenement">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1 id="fr-modal-title-modal-evenement" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer un événement</h1>
+                        <h1 id="fr-modal-title-modal-evenement" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer l'événement {{ evenement.numero }}</h1>
                         <p>Si vous supprimez l'événement, toutes les données présentes dans l'événement sont supprimées. Confirmez-vous la suppression ?</p>
 
                         <form method="post" action="{% url 'soft-delete' %}">

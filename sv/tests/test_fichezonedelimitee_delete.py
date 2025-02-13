@@ -17,7 +17,7 @@ def test_can_delete_fichezonedelimitee(live_server, page: Page):
     page.get_by_role("button", name="Supprimer la zone").click()
     page.get_by_role("button", name="Supprimer", exact=True).click()
 
-    expect(page.get_by_role("heading", name="La fiche zone délimitée a été supprimée avec succès")).to_be_visible()
+    expect(page.get_by_role("heading", name="La zone a bien été supprimée")).to_be_visible()
     assert FicheZoneDelimitee.objects.filter(evenement=evenement).count() == 0
 
 
