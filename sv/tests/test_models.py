@@ -715,3 +715,13 @@ def test_fiche_detection_numero():
 
     last_fiche = FicheDetectionFactory(evenement=evenement)
     assert last_fiche.numero_detection.endswith(".11")
+
+
+@pytest.mark.django_db
+def test_default_detection_order():
+    evenement = EvenementFactory()
+    detection_1 = FicheDetectionFactory(evenement=evenement, numero_detection="2")
+    detection_2 = FicheDetectionFactory(evenement=evenement, numero_detection="1")
+    detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection="3")
+
+    assert list(evenement.detections.all()) == [detection_2, detection_1, detection_3]
