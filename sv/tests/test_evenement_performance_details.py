@@ -1,6 +1,7 @@
 import pytest
 from model_bakery import baker
 
+from core.factories import DocumentFactory, MessageFactory
 from core.models import Message, Document, Structure, Contact
 from sv.factories import EvenementFactory, FicheDetectionFactory, PrelevementFactory, FicheZoneFactory
 from sv.models import Lieu, ZoneInfestee
@@ -36,6 +37,29 @@ def test_evenement_performances_with_messages_from_same_user(
     )
 
     with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+        response = client.get(evenement.get_absolute_url())
+
+    assert len(response.context["message_list"]) == 4
+
+
+@pytest.mark.django_db
+def test_evenement_performances_with_multiple_messages_with_documents(
+    client, django_assert_max_num_queries, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    client.get(evenement.get_absolute_url())
+
+    MessageFactory(content_object=evenement)
+    with django_assert_max_num_queries(BASE_NUM_QUERIES + 10):
+        client.get(evenement.get_absolute_url())
+
+    message_1, message_2, message_3 = MessageFactory.create_batch(3, content_object=evenement)
+    DocumentFactory(content_object=message_1)
+    DocumentFactory(content_object=message_1)
+    DocumentFactory(content_object=message_2)
+    DocumentFactory(content_object=message_3)
+
+    with django_assert_max_num_queries(BASE_NUM_QUERIES + 10):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_list"]) == 4

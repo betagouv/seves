@@ -25,33 +25,33 @@
         {% for message in message_list %}
             <tr id="table-sm-row-key-1" data-row-key="1">
                 <td>
-                    <a href="{% url 'message-view' message.pk  %}" class="cell-link">{{ message.date_creation }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.date_creation }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'message-view' message.pk  %}" class="cell-link">{{ message.sender.agent.structure }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.sender.agent.structure }}</a>
                 </td>
                 <td>
                     {% if message.recipients.all|length == 0 %}
-                        <a href="{% url 'message-view' message.pk  %}" class="cell-link"></a>
+                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"></a>
                     {% elif message.recipients.all|length == 1 %}
-                        <a href="{% url 'message-view' message.pk  %}"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
+                        <a href="#" class="fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
                     {%  elif message.recipients.all|length > 1 %}
-                        <a href="{% url 'message-view' message.pk  %}" class="fr-link" aria-describedby="message-tooltip-{{ message.pk }}">
+                        <a href="#" class="fr-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"aria-describedby="message-tooltip-{{ message.pk }}">
                             <p class="fr-tag">{{ message.recipients.all.0 }} et {{ message.recipients.all|length|add:"-1" }} autres</p>
                         </a>
                         <span class="fr-tooltip fr-placement" id="message-tooltip-{{ message.pk }}" role="tooltip" aria-hidden="true">{{ message.recipients.all|join:", " }}</span>
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'message-view' message.pk  %}" class="cell-link">{{ message.title|truncatechars:100 }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.title|truncatechars:100 }}</a>
                 </td>
                 <td>
                     {% if message.documents.exists %}
-                        <a href="{% url 'message-view' message.pk  %}" class="cell-link"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
+                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'message-view' message.pk  %}" class="cell-link">{{ message.get_message_type_display|capfirst }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.get_message_type_display|capfirst }}</a>
                 </td>
             </tr>
         {% endfor %}

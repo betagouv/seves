@@ -55,8 +55,6 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     assert page.text_content(cell_selector) == "Message"
 
     page.locator(cell_selector).click()
-    message = Message.objects.get()
-    page.wait_for_url(f"**{message.get_absolute_url()}")
 
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
@@ -109,8 +107,6 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
     assert page.text_content(cell_selector) == "Message"
 
     page.locator(cell_selector).click()
-    message = Message.objects.get()
-    page.wait_for_url(f"**{message.get_absolute_url()}")
 
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
@@ -118,8 +114,8 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
     message = Message.objects.get()
     assert message.documents.count() == 2
 
-    expect(page.get_by_text("README.md", exact=True)).to_be_visible()
-    expect(page.get_by_text("requirements.txt", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="requirements.txt", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
@@ -186,8 +182,6 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     assert page.text_content(cell_selector) == "Message"
 
     page.locator(cell_selector).click()
-    message = Message.objects.get()
-    page.wait_for_url(f"**{message.get_absolute_url()}")
 
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
@@ -224,8 +218,6 @@ def test_can_add_and_see_note_without_document(live_server, page: Page):
     assert page.text_content(cell_selector) == "Note"
 
     page.locator(cell_selector).click()
-    message = Message.objects.get()
-    page.wait_for_url(f"**{message.get_absolute_url()}")
 
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
@@ -326,9 +318,10 @@ def test_formatting_contacts_messages_details_page(live_server, page: Page):
     message = Message.objects.create(content_object=evenement, sender=sender, title="Minor", content="Swing")
     message.recipients.set([contact])
 
-    page.goto(f"{live_server.url}{message.get_absolute_url()}")
-    expect(page.get_by_text("De : Reinhardt Django (MUS)", exact=True)).to_be_visible()
-    expect(page.get_by_text("A : Reinhardt Jean (MUS)", exact=True)).to_be_visible()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("cell", name=str(message.title)).click()
+    expect(page.locator(".sidebar").get_by_text("De : Reinhardt Django (MUS)")).to_be_visible()
+    expect(page.locator(".sidebar").get_by_text("A : Reinhardt Jean (MUS)")).to_be_visible()
 
 
 def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_cant_pick):
@@ -376,29 +369,6 @@ def test_cant_add_message_if_evenement_brouillon(
         },
         follow=True,
     )
-
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
-
-
-@pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_access_message_details_if_evenement_brouillon(
-    client, mocked_authentification_user, with_active_contact, message_type, message_label
-):
-    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    message = Message.objects.create(
-        message_type=message_type,
-        title="un titre",
-        content="un contenu",
-        sender=Contact.objects.get(agent=mocked_authentification_user.agent),
-        content_object=evenement,
-    )
-    recipient_contact = Contact.objects.get(agent=with_active_contact)
-    message.recipients.set([recipient_contact])
-
-    response = client.get(message.get_absolute_url(), follow=True)
 
     messages = list(response.context["messages"])
     assert len(messages) == 1
@@ -656,7 +626,7 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Test document", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="Test document")).to_be_visible()
 
     page.locator(f'a[aria-controls="fr-modal-{document.id}"]').click()
     expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()

@@ -1,9 +1,11 @@
+import random
+
 import factory
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
-from core.models import Structure, Agent, Contact, Document
+from core.models import Structure, Agent, Contact, Document, Message
 
 
 class StructureFactory(DjangoModelFactory):
@@ -111,3 +113,36 @@ class DocumentFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def created_by_structure(self):
         return Structure.objects.get(libelle="Structure Test")
+
+
+class MessageFactory(DjangoModelFactory):
+    class Meta:
+        model = Message
+
+    message_type = FuzzyChoice([choice[0] for choice in Message.MESSAGE_TYPE_CHOICES])
+    title = factory.Faker("sentence", nb_words=10)
+    content = factory.Faker("paragraph")
+
+    sender = factory.SubFactory(ContactAgentFactory)
+
+    @factory.post_generation
+    def recipients(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.recipients.set(extracted)
+            return
+        for i in range(random.randint(1, 10)):
+            factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
+            self.recipients.add(factory_class())
+
+    @factory.post_generation
+    def recipients_copy(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.recipients_copy.set(extracted)
+            return
+        for i in range(random.randint(1, 10)):
+            factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
+            self.recipients_copy.add(factory_class())
