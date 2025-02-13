@@ -53,6 +53,7 @@ def test_update_evenement_can_add_and_delete_free_links(
     assert lien_libre.related_object_2 == evenement_to_add
 
     expect(page.get_by_role("link", name=str(evenement_to_add.numero))).to_be_visible()
+    expect(page.get_by_role("link", name=str(evenement_to_add.numero))).to_have_attribute("target", "_blank")
     expect(page.get_by_role("link", name=str(evenement_to_delete.numero))).not_to_be_visible()
 
 
