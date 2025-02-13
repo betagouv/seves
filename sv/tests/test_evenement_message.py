@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -620,3 +623,45 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     document = Document.objects.get()
     assert document.is_deleted is True
     assert document.deleted_by == mocked_authentification_user.agent
+
+
+def test_message_with_document_exceeding_max_size_shows_validation_error(
+    live_server, page: Page, with_active_contact, choice_js_fill
+):
+    # Créer un fichier temporaire CSV de 16Mo
+    file_size = 16 * 1024 * 1024
+    fd, temp_path = tempfile.mkstemp(suffix=".csv")
+    os.truncate(fd, file_size)
+    os.close(fd)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        with_active_contact.nom,
+        with_active_contact.contact_set.get().display_with_agent_unit,
+    )
+    page.locator("#id_title").fill("Message avec fichier trop volumineux")
+    page.locator("#id_content").fill("Test de validation de taille de fichier")
+    page.get_by_role("button", name="Ajouter un document").click()
+
+    file_input = page.locator(".sidebar #id_file")
+    max_size_attr = file_input.get_attribute("data-max-size")
+    assert int(max_size_attr) == 15 * 1024 * 1024
+
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files(temp_path)
+
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Le fichier est trop volumineux (maximum 15 Mo autorisés)" in validation_message
+
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+    assert evenement.messages.count() == 0
+
+    os.unlink(temp_path)

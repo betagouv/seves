@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.models import Document, Contact, Message, Structure, Visibilite
+from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
 
 User = get_user_model()
@@ -66,7 +67,7 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un Document", widget=RestrictedFileWidget)
+    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget)
 
     class Meta:
         model = Document
@@ -78,6 +79,12 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         super().__init__(*args, **kwargs)
         self.add_content_type_fields(obj)
         self.add_next_field(next)
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if file and file.size > MAX_UPLOAD_SIZE_BYTES:
+            raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
+        return file
 
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
@@ -261,7 +268,7 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
         required=False,
     )
     file = forms.FileField(
-        label="Ajouter un Document", required=False, widget=RestrictedFileWidget(attrs={"disabled": True})
+        label="Ajouter un document", required=False, widget=RestrictedFileWidget(attrs={"disabled": True})
     )
 
     class Meta:

@@ -17,6 +17,7 @@
             <div class="fr-hidden document-form">
                 {{ add_document_form.as_dsfr_div }}
                 <span class="fr-hint-text">Formats supportés : {{ allowed_extensions|join:", " }}</span>
+                <span class="fr-hint-text">Taille maximale autorisée : {{ max_upload_size_mb }} Mo</span>
                 <div class="message-documents-actions">
                     <button class="fr-btn fr-btn--tertiary btn-full" id="message-add-document" disabled>Valider l'ajout du document</button>
                 </div>

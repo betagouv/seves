@@ -29,7 +29,7 @@ from core.mixins import (
 )
 from core.models import Visibilite
 from core.redirect import safe_redirect
-from core.validators import AUTHORIZED_EXTENSIONS
+from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -183,6 +183,7 @@ class EvenementDetailView(
             if self.request.GET.get("detection")
             else self.object.first_detection_id  # first_detection_id sera None s'il n'y a pas de détection
         )
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         return context
 
 
