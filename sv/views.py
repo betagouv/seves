@@ -729,5 +729,5 @@ class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
         raise PermissionDenied()
 
     def get_success_url(self):
-        messages.success(self.request, "La fiche zone délimitée a été supprimée avec succès")
+        messages.success(self.request, "La zone a bien été supprimée")
         return self.request.POST.get("next")

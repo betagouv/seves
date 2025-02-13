@@ -86,7 +86,7 @@ def test_can_delete_evenement(live_server, page):
     page.get_by_text("Supprimer l'événement", exact=True).click()
     page.get_by_test_id("submit-evenement-delete").click()
 
-    expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
+    expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
     assert Evenement.objects.count() == 0
     assert Evenement._base_manager.get().pk == evenement.pk
@@ -120,7 +120,7 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
     page.get_by_text("Supprimer l'événement", exact=True).click()
     page.get_by_test_id("submit-evenement-delete").click()
 
-    expect(page.get_by_text("Objet supprimé avec succès")).to_be_visible()
+    expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
     evenement_not_deleted = Evenement.objects.get()
     assert evenement_not_deleted == fiche_detection.evenement

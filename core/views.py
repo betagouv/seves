@@ -449,11 +449,11 @@ class SoftDeleteView(View):
 
         try:
             obj.soft_delete(request.user)
-            messages.success(request, "Objet supprimé avec succès")
+            messages.success(request, obj.get_soft_delete_success_message())
         except AttributeError:
-            messages.error(request, "Ce type d'objet ne peut pas être supprimé")
+            messages.error(request, obj.get_soft_delete_attribute_error_message())
         except PermissionDenied:
-            messages.error(request, "Vous n'avez pas les droits pour supprimer cet objet")
+            messages.error(request, obj.get_soft_delete_permission_error_message())
 
         return safe_redirect(request.POST.get("next"))
 

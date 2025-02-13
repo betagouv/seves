@@ -155,3 +155,12 @@ class Evenement(
 
     def get_publish_error_message(self):
         return f"L'évènement {self.numero} ne peut pas être publié"
+
+    def get_soft_delete_success_message(self):
+        return f"L'évènement {self.numero} a bien été supprimé"
+
+    def get_soft_delete_permission_error_message(self):
+        return f"Vous n'avez pas les droits pour supprimer l'évènement {self.numero}"
+
+    def get_soft_delete_attribute_error_message(self):
+        return f"L'évènement {self.numero} ne peut pas être supprimé"
