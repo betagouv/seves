@@ -3,7 +3,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
-from core.factories import StructureFactory, ContactAgentFactory
+from core.factories import StructureFactory, ContactAgentFactory, ContactStructureFactory
 from core.models import Structure, Visibilite
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -19,9 +19,9 @@ def test_users_cant_update_visibilite(live_server, page: Page, mocked_authentifi
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
 def test_users_from_ac_can_update_visibilite(live_server, page: Page, mocked_authentification_user, structure_ac):
     evenement = EvenementFactory()
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=structure_ac
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=structure_ac)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
@@ -39,9 +39,9 @@ def test_users_from_ac_can_update_visibilite(live_server, page: Page, mocked_aut
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
 def test_cant_update_visibilite_when_draft(live_server, page: Page, mocked_authentification_user, structure_ac):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=structure_ac
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=structure_ac)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     evenement.createur = mocked_authentification_user.agent.structure
     evenement.save()
@@ -55,9 +55,9 @@ def test_users_from_ac_can_update_visibilite_backward(
     live_server, page: Page, mocked_authentification_user, structure_ac
 ):
     evenement = EvenementFactory(visibilite=Visibilite.NATIONALE)
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=structure_ac
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=structure_ac)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()

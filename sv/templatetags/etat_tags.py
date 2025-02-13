@@ -7,6 +7,7 @@ register = template.Library()
 ETATS_FICHE_COLORS = {
     "en_cours": "success",  # Vert
     "cloture": "error",  # Rouge
+    "fin de suivi": "warning",  # Orange
 }
 
 

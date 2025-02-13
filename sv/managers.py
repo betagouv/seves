@@ -1,7 +1,8 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Exists
 
-from core.models import Visibilite
+from core.models import Visibilite, FinSuiviContact
 
 
 class LaboratoireManager(models.Manager):
@@ -32,7 +33,7 @@ class FicheDetectionManager(models.Manager):
         return 0
 
 
-class BaseVisibilityQuerySet(models.QuerySet):
+class FichesCommonQueryset(models.QuerySet):
     def get_fiches_user_can_view(self, user):
         from sv.models import Evenement
 
@@ -48,8 +49,20 @@ class BaseVisibilityQuerySet(models.QuerySet):
             )
         )
 
+    def with_fin_de_suivi(self, contact):
+        from sv.models import Evenement
 
-class FicheDetectionQuerySet(BaseVisibilityQuerySet):
+        content_type = ContentType.objects.get_for_model(Evenement)
+        return self.annotate(
+            has_fin_de_suivi=Exists(
+                FinSuiviContact.objects.filter(
+                    content_type=content_type, object_id=OuterRef("evenement__pk"), contact=contact
+                )
+            )
+        )
+
+
+class FicheDetectionQuerySet(FichesCommonQueryset):
     def with_list_of_lieux_with_commune(self):
         from sv.models import Lieu
 
@@ -87,7 +100,7 @@ class FicheZoneManager(models.Manager):
         return FicheZoneQuerySet(self.model, using=self._db)
 
 
-class FicheZoneQuerySet(BaseVisibilityQuerySet):
+class FicheZoneQuerySet(FichesCommonQueryset):
     def optimized_for_list(self):
         return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
 
