@@ -5,7 +5,9 @@
   {% endif %}
   {% for field, errors in fields %}
     {% if field.name not in manual_render_fields %}
-      {{ errors }}
+      {% if errors %}
+        {{ errors }}
+      {% endif %}
       <div {% with classes=field.css_classes %}class="{{ classes }} fr-fieldset__element"{% endwith %}>
         {% if field.label %}{{ field.label_tag }}{% endif %}
         {{ field }}
