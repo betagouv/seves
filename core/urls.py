@@ -8,7 +8,6 @@ from .views import (
     ContactSelectionView,
     ContactDeleteView,
     MessageCreateView,
-    MessageDetailsView,
     SoftDeleteView,
     StructureAddFormView,
     StructureSelectionView,
@@ -53,11 +52,6 @@ urlpatterns = [
         "message-add/<int:obj_type_pk>/<int:obj_pk>/",
         MessageCreateView.as_view(),
         name="message-add",
-    ),
-    path(
-        "message/<int:pk>/",
-        MessageDetailsView.as_view(),
-        name="message-view",
     ),
     path(
         "suppression/",

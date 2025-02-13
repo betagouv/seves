@@ -1,34 +1,12 @@
 #message-type-title::first-letter {
     text-transform: capitalize;
 }
-
-.message-title{
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between
-}
-.message-container {
-    background-color: white;
-}
-.message-container .fr-grid-row .fr-card {
-    height: unset;
-}
-.message-container--date, .message-send-btn {
-    text-align: right;
-}
 .message-document-container {
     display: flex;
     align-items: center;
     justify-content: space-between
 }
-.message-document-container .fr-link {
-    max-width:75%;
-}
 
-
-.message-container .choices__button:hover{
-    background-color: unset;
-}
 .btn-full{
     width: 100%;
     display: block;

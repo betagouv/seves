@@ -115,8 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll(".message-panel").forEach(element =>{
         element.addEventListener("click", event =>{
             const messageType = event.target.dataset.messageType
-            document.getElementById('sidebar').classList.toggle('open');
-            document.querySelector('.main-container').classList.toggle('open')
             document.getElementById("id_message_type").value=messageType
             document.getElementById("message-type-title").innerText=messageType
 
@@ -147,8 +145,4 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     })
 
-    document.querySelectorAll(".close-sidebar").forEach(element => {element.addEventListener("click", event =>{
-        document.getElementById('sidebar').classList.toggle('open');
-        document.querySelector('.main-container').classList.toggle('open')
-    })})
 });

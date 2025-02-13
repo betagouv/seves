@@ -6,7 +6,7 @@
   height: 100vh;
   position: fixed;
   top: 0px;
-  right: calc(-1 * var(--sidebar-width));
+  right: calc(-1 * var(--sidebar-width) - 20px);
   transition: right 0.3s ease;
   z-index: 1000;
   overflow-y: scroll;

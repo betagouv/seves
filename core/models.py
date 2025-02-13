@@ -1,16 +1,15 @@
+from django.apps import apps
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
-from django.contrib.auth import get_user_model
-from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
-from django.apps import apps
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
 from .storage import get_timestamped_filename
 from .validators import validate_upload_file, AUTHORIZED_EXTENSIONS
 
@@ -234,9 +233,6 @@ class Message(models.Model):
 
     def get_fiche_url(self):
         return self.content_object.get_absolute_url()
-
-    def get_absolute_url(self):
-        return reverse("message-view", kwargs={"pk": self.pk})
 
 
 class LienLibre(models.Model):

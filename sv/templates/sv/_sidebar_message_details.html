@@ -1,0 +1,52 @@
+<aside id="sidebar-message-details-{{ message.pk }}" class="sidebar white-container--lite">
+    <div class="close-sidebar-container">
+        <a href="#" class="fr-link close-sidebar fr-mb-2v">Fermer</a>
+    </div>
+    <h5 class="fr-h5 fr-mb-0-5v">{{ message.title }}</h5>
+    <div class="fr-pt-2v">
+        <div class="fr-mb-2w">
+            <div class="fr-container--fluid">
+                <p><span class="fr-text--bold fr-my-1v">De : </span>{{ message.sender.display_with_agent_unit }}<br/>
+                    {% if message.recipients.all|length %}
+                        <span class="fr-text--bold fr-my-1v">A : </span>
+                        {% for recipient in message.recipients.all %}
+                            {{ recipient.display_with_agent_unit }}{% if not forloop.last %} ; {% endif %}
+                        {% endfor %}<br/>
+                    {% endif %}
+                    {% if message.recipients_copy.all|length %}
+                        <span class="fr-text--bold fr-my-1v">CC : </span>
+                        {% for recipient in message.recipients_copy.all %}
+                            {{ recipient.display_with_agent_unit }}{% if not forloop.last %} ; {% endif %}
+                        {% endfor %}<br/>
+                    {% endif %}
+                    <span class="fr-text--bold fr-my-1v">Le : </span>
+                    {{ message.date_creation }}<br/>
+                </p>
+            </div>
+            <hr class="fr-hr-or">
+
+            {% if message.documents.all %}
+                <p class="fr-hint-text">Pièces jointes. Retrouvez l'ensemble des documents dans l'onglet "Documents" du bloc de suivi.</p>
+                <div class="fr-mb-4w">
+                    {% for document in message.documents.all %}
+                        <div class="fr-card fr-card--shadow fr-my-2v">
+                            <div class="fr-px-2w fr-py-1w message-document-container">
+                                <a href="{{ document.file.url }}" target="_blank" class="fr-link">{{ document.nom }}</a>
+                                {% if document.is_deleted %}
+                                    Document supprimé
+                                {% else %}
+                                    <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w"></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <p data-testid="message-content">
+                {{ message.content|linebreaksbr }}
+            </p>
+
+        </div>
+    </div>
+</aside>
