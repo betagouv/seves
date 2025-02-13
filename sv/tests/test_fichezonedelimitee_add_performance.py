@@ -13,7 +13,7 @@ def test_add_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(
     evenement = EvenementFactory()
     FicheDetectionFactory(evenement=evenement)
 
-    url = f"{reverse('fiche-zone-delimitee-creation')}?evenement={ evenement.pk }"
+    url = f"{reverse('fiche-zone-delimitee-creation')}?evenement={evenement.pk}"
     client.get(url)
 
     with django_assert_num_queries(BASE_NUM_QUERIES):

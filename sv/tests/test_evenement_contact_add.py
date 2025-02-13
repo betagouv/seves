@@ -93,7 +93,7 @@ def test_structure_list(live_server, page):
     Agent.objects.all().delete()
     Structure.objects.all().delete()
     for i in range(0, 3):
-        structure = baker.make(Structure, libelle=f"Structure {i+1}")
+        structure = baker.make(Structure, libelle=f"Structure {i + 1}")
         agent = baker.make(Agent, structure=structure)
         user = agent.user
         user.is_active = True
@@ -109,7 +109,7 @@ def test_structure_list(live_server, page):
     page.wait_for_selector("input:focus", state="visible", timeout=2_000)
     page.locator("*:focus").fill("Structure")
     for i in range(0, 3):
-        expect(page.get_by_role("option", name=f"Structure {i+1}", exact=True)).to_be_visible()
+        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
 
 
 def test_add_contact_form_select_structure(live_server, page, contacts, choice_js_fill):

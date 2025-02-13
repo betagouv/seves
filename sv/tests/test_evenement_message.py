@@ -380,7 +380,7 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     evenement = EvenementFactory()
     nb_structure = 20
     for i in range(nb_structure):
-        structure = Structure.objects.create(niveau1=f"Structure {i+1}", libelle=f"Structure {i+1}")
+        structure = Structure.objects.create(niveau1=f"Structure {i + 1}", libelle=f"Structure {i + 1}")
         Contact.objects.create(structure=structure, email=f"structure{i}@test.fr")
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
