@@ -142,6 +142,7 @@ class FicheDetection(
         verbose_name = "Fiche détection"
         verbose_name_plural = "Fiches détection"
         db_table = "sv_fiche_detection"
+        ordering = ["numero_detection"]
         constraints = [
             models.CheckConstraint(
                 check=(
