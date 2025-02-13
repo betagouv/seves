@@ -468,9 +468,9 @@ class PublishView(View):
 
         if obj.can_publish(request.user):
             obj.publish()
-            messages.success(request, "Objet publié avec succès")
+            messages.success(request, obj.get_publish_success_message())
         else:
-            messages.error(request, "Cet objet ne peut pas être publié.")
+            messages.error(request, obj.get_publish_error_message())
         return safe_redirect(request.POST.get("next"))
 
 

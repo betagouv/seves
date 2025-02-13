@@ -149,3 +149,9 @@ class Evenement(
         if is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
+
+    def get_publish_success_message(self):
+        return f"Événement {self.numero} publié avec succès"
+
+    def get_publish_error_message(self):
+        return f"L'évènement {self.numero} ne peut pas être publié"
