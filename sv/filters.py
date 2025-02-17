@@ -22,7 +22,9 @@ class FicheFilter(django_filters.FilterSet):
     numero = django_filters.CharFilter(
         method="filter_numero",
         label="Numéro",
-        widget=TextInput(attrs={"pattern": "^\d{4}.*", "title": "Le champ doit commencer par quatre chiffres"}),
+        widget=TextInput(
+            attrs={"placeholder": "2024", "pattern": "^\d{4}.*", "title": "Le champ doit commencer par quatre chiffres"}
+        ),
     )
     type_fiche = django_filters.ChoiceFilter(
         choices=TypeFiche.choices,

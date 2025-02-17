@@ -88,6 +88,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         widget=forms.TextInput(
             attrs={
                 "pattern": "[0-9]{14}",
+                "placeholder": "110 070 018 00012",
                 "title": "Le SIRET doit contenir exactement 14 chiffres",
             }
         ),
@@ -171,6 +172,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         widgets = {
             "numero_rapport_inspection": forms.TextInput(
                 attrs={
+                    "placeholder": "24-123456",
                     "pattern": r"^\d{2}-\d{6}$",
                     "title": "Format attendu : AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres",
                 }
