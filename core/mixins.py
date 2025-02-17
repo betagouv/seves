@@ -44,8 +44,14 @@ class WithMessagesListInContextMixin:
         context["message_list"] = (
             self.get_object()
             .messages.all()
+            .select_related("sender__agent__structure")
             .prefetch_related(
-                "recipients__structure", "recipients__agent", "recipients_copy", "sender__agent", "documents"
+                "recipients__structure",
+                "recipients__agent",
+                "recipients__agent__structure",
+                "recipients_copy__agent",
+                "recipients_copy__agent__structure",
+                "documents",
             )
         )
         return context

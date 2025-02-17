@@ -77,7 +77,9 @@ class FicheZoneDelimitee(models.Model):
         zone_infestees = ZoneInfestee.objects.filter(fiche_zone_delimitee_id=self.pk).values_list("id", flat=True)
         zone_infestees_versions = get_versions_from_ids(zone_infestees, ZoneInfestee)
 
-        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+        instance_version = (
+            Version.objects.get_for_object(self).select_related("revision__user__agent__structure").first()
+        )
 
         versions = list(zone_infestees_versions) + [instance_version]
         versions = [v for v in versions if v]

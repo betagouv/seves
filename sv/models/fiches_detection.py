@@ -280,7 +280,9 @@ class FicheDetection(
         prelevements = Prelevement.objects.filter(lieu__fiche_detection__pk=self.pk).values_list("id", flat=True)
         prelevement_versions = get_versions_from_ids(prelevements, Prelevement)
 
-        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+        instance_version = (
+            Version.objects.get_for_object(self).select_related("revision__user__agent__structure").first()
+        )
 
         versions = list(lieu_versions) + list(prelevement_versions) + [instance_version]
         versions = [v for v in versions if v]

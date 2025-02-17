@@ -109,6 +109,7 @@ class EvenementDetailView(
         return (
             Evenement.objects.all()
             .annotate(first_detection_id=Min("detections__id"))
+            .select_related("createur", "organisme_nuisible", "statut_reglementaire")
             .prefetch_related(
                 "detections",
                 "detections__createur",

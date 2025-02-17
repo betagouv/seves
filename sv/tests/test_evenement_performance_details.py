@@ -5,7 +5,7 @@ from core.models import Message, Document, Structure, Contact
 from sv.factories import EvenementFactory, FicheDetectionFactory, PrelevementFactory, FicheZoneFactory
 from sv.models import Lieu, ZoneInfestee
 
-BASE_NUM_QUERIES = 20  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 17  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -25,7 +25,7 @@ def test_evenement_performances_with_messages_from_same_user(
     client.get(evenement.get_absolute_url())
 
     baker.make(Message, content_object=evenement, sender=mocked_authentification_user.agent.contact_set.get())
-    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
     baker.make(
@@ -35,7 +35,7 @@ def test_evenement_performances_with_messages_from_same_user(
         _quantity=3,
     )
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_list"]) == 4
