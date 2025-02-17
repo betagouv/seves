@@ -72,7 +72,7 @@
 
                     <div class="fr-grid-row fr-grid-row--gutters">
                         {% for lieu_initial in fichedetection.lieux.all %}
-                            {% include "sv/fichedetection_detail_lieu.html" with lieu=lieu_initial lieu_index=forloop.counter %}
+                            {% include "sv/fichedetection_detail_lieu.html" with lieu=lieu_initial lieu_index=lieu_initial.pk %}
                             <div class="fr-col-6 fr-col-lg-12">
                                 <div class="lieu-initial fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border ">
                                     <div class="fr-card__body">
@@ -84,7 +84,7 @@
                                                 <div class="fr-col-1">
                                                     <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
                                                             data-fr-opened="false"
-                                                            aria-controls="fr-modal-lieu-{{forloop.counter}}"
+                                                            aria-controls="fr-modal-lieu-{{lieu_initial.pk}}"
                                                             title="Consulter le détail du lieu {{lieu_initial.nom}}"></button>
                                                 </div>
                                             </div>
@@ -110,7 +110,7 @@
                     <div class="fr-grid-row fr-grid-row--gutters">
                         {% for lieu in fichedetection.lieux.all %}
                             {% for prelevement in lieu.prelevements.all %}
-                                {% include "sv/fichedetection_detail_prelevement.html" with prelevement=prelevement prelevement_index=forloop.counter %}
+                                {% include "sv/fichedetection_detail_prelevement.html" with prelevement=prelevement prelevement_index=prelevement.pk %}
                                 <div class="fr-col-6 fr-col-lg-12">
                                     <div class="prelevement fr-card fr-card--horizontal fr-card--sm fr-card--grey fr-card--no-border" style="margin-bottom: 1rem;">
                                         <div class="fr-card__body">
@@ -122,7 +122,7 @@
                                                     <div class="fr-col-1">
                                                         <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
                                                                 data-fr-opened="false"
-                                                                aria-controls="fr-modal-prelevement-{{forloop.counter}}"
+                                                                aria-controls="fr-modal-prelevement-{{prelevement.pk}}"
                                                                 title="Consulter le détail du prélèvement {{prelevement.numero_echantillon}}">
                                                         </button>
                                                     </div>
