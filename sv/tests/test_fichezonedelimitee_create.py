@@ -4,7 +4,7 @@ from django.utils import timezone
 from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from sv.factories import FicheDetectionFactory, EvenementFactory
+from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
@@ -126,6 +126,50 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
     for zone_infestee, detections_zone_infestee, zone_infestee_from_db in zip(
         [zone_infestee1, zone_infestee2],
         [detections_zone_infestee1, detections_zone_infestee2],
+        zones_infestees_from_db,
+    ):
+        assert zone_infestee_from_db.nom == zone_infestee.nom
+        assert zone_infestee_from_db.caracteristique_principale == zone_infestee.caracteristique_principale
+        assert zone_infestee_from_db.surface_infestee_totale == zone_infestee.surface_infestee_totale
+        assert zone_infestee_from_db.unite_surface_infestee_totale == zone_infestee.unite_surface_infestee_totale
+        assert all(
+            detection in detections_zone_infestee for detection in zone_infestee_from_db.fichedetection_set.all()
+        )
+
+
+@pytest.mark.django_db
+def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(
+    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
+):
+    evenement = EvenementFactory()
+
+    detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (
+        FicheDetectionFactory.create_batch(2, evenement=evenement) for _ in range(3)
+    )
+    fiche = FicheZoneFactory.build()
+    zone_infestee1, zone_infestee2 = ZoneInfesteeFactory.build_batch(2, fiche_zone_delimitee=fiche)
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+
+    form_page.goto_create_form_page(live_server, evenement)
+    form_page.fill_form(fiche, zone_infestee1, detections_hors_zone_infestee, detections_zone_infestee1)
+    form_page.add_new_zone_infestee(zone_infestee2, detections_zone_infestee2)
+    page.get_by_role("button", name="Supprimer la zone infestée").nth(0).click()
+    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    form_page.save()
+
+    form_page.check_message_succes()
+    fiche_from_db = FicheZoneDelimitee.objects.get()
+
+    # Vérification des détections hors zone infestée
+    detections_hors_zone_infestee.append(fiche_detection)
+    assert all(detection in detections_hors_zone_infestee for detection in fiche_from_db.fichedetection_set.all())
+
+    # Vérification des zones infestées
+    zones_infestees_from_db = fiche_from_db.zoneinfestee_set.all()
+    assert zones_infestees_from_db.count() == 1
+    for zone_infestee, detections_zone_infestee, zone_infestee_from_db in zip(
+        [zone_infestee2],
+        [detections_zone_infestee2],
         zones_infestees_from_db,
     ):
         assert zone_infestee_from_db.nom == zone_infestee.nom

@@ -475,11 +475,11 @@ class ZoneInfesteeFormSet(BaseInlineFormSet):
 
 
 ZoneInfesteeFormSet = inlineformset_factory(
-    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=1, can_delete=False
+    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=1, can_delete=True
 )
 
 ZoneInfesteeFormSetUpdate = inlineformset_factory(
-    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=0, can_delete=False
+    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=0, can_delete=True
 )
 
 

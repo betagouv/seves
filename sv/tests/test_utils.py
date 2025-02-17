@@ -640,7 +640,7 @@ class FicheZoneDelimiteeFormPage:
     ):
         detections = detections or ()
         self.add_zone_infestee_btn.click()
-        index = int(self.zone_infestee_total_forms.get_attribute("value")) - 1
+        index = max(int(self.zone_infestee_total_forms.get_attribute("value")) - 1, 0)
         self.fill_zone_infestee_form(index, zoneinfestee, detections)
 
     def save(self):
