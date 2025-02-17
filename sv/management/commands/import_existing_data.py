@@ -583,12 +583,12 @@ class Command(BaseCommand):
 
                     caracteristique = ""
                     if row["ZD_Contexte"]:
-                        data = row["ZD_Contexte"].replace(";", "").strip().strip(".")
+                        data = row["ZD_Contexte"].replace(";", "").strip().strip(".").strip(" ").lower()
                         try:
                             caracteristique = next(
                                 value
                                 for value, label in ZoneInfestee.CaracteristiquePrincipale.choices
-                                if label == data
+                                if label.lower() == data
                             )
                         except:
                             errors[row["Alerte_num_MUS"]].add(
