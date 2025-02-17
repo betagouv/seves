@@ -1,6 +1,5 @@
 {% load get_field_label %}
 
-
 <div class="white-container fr-mt-4w">
     <div class="fr-grid-row">
         <div class="fr-col">
@@ -17,10 +16,15 @@
     <div class="fr-grid-row fr-grid-row--gutters" id="zones-infestees">
         {{ zone_infestee_formset.management_form }}
         {% for zone_infestee_form in zone_infestee_formset %}
-            {% if zone_infestee_form.instance.pk %}
-                {{ zone_infestee_form.id }}
-            {% endif %}
-            <div class="fr-col-4">
+            <div id="zone-infestee-{% if zone_infestee_form.instance.pk %}{{ zone_infestee_form.instance.pk }}{% else %}0{% endif %}" class="fr-col-4">
+                {% if zone_infestee_form.instance.pk %}
+                    {% include "sv/_fichezone_form__zi_delete_modal.html" with index=zone_infestee_form.instance.pk %}
+                {% else %}
+                    {% include "sv/_fichezone_form__zi_delete_modal.html" with index=0 %}
+                {% endif %}
+                {% if zone_infestee_form.instance.pk %}
+                    {{ zone_infestee_form.id }}
+                {% endif %}
                 <div class="zone-infestees__zone-infestee-form fr-p-3w">
                     {% if zone_infestee_form.errors %}
                         <div class="fr-alert fr-alert--error fr-mb-4w">
@@ -74,12 +78,32 @@
                         <div class="fr-mb-1w">{{ zone_infestee_form.detections.label_tag }}</div>
                         {{ zone_infestee_form.detections }}
                     </div>
+                    <ul class="fr-btns-group fr-btns-group--sm fr-mt-2w">
+                        <li>
+                            <button
+                                type="button"
+                                class="fr-btn fr-btn--secondary fr-icon-delete-fill"
+                                aria-controls="modal-delete-zi-confirmation-{% if zone_infestee_form.instance.pk %}{{ zone_infestee_form.instance.pk }}{% else %}0{% endif %}"
+                                data-fr-opened="false"
+                                title="Supprimer la zone infestée">
+                            </button>
+                            <span
+                                class="fr-tooltip fr-placement delete-tooltip"
+                                role="tooltip"
+                                aria-hidden="true">
+                                Supprimer la zone infestée
+                            </span>
+                            <span class="fr-hidden">{{ zone_infestee_form.DELETE }}</span>
+
+                        </li>
+                    </ul>
                 </div>
             </div>
         {% endfor %}
 
         <template id="zone-form-template">
-            <div class="fr-col-4">
+            {% include "sv/_fichezone_form__zi_delete_modal.html" with index="__prefix__" %}
+            <div class="fr-col-4" id="zone-infestee-__prefix__" data-new-zone="true">
                 <div class="zone-infestees__zone-infestee-form fr-p-3w">
                     <div class="fr-mb-3w">
                         <div>{{ empty_form.nom.label_tag }}</div>
@@ -119,7 +143,25 @@
                         <div class="fr-mb-1w">{{ empty_form.detections.label_tag }}</div>
                         {{ empty_form.detections }}
                     </div>
+                    <ul class="fr-btns-group fr-btns-group--sm fr-mt-2w">
+                        <li>
+                            <button
+                                type="button"
+                                class="fr-btn fr-btn--secondary fr-icon-delete-fill"
+                                aria-controls="modal-delete-zi-confirmation-__prefix__"
+                                data-fr-opened="false"
+                                title="Supprimer la zone infestée">
+                            </button>
+                            <span
+                                class="fr-tooltip fr-placement delete-tooltip"
+                                role="tooltip"
+                                aria-hidden="true">
+                                Supprimer la zone infestée
+                            </span>
+                        </li>
+                    </ul>
                 </div>
+
             </div>
         </template>
     </div>

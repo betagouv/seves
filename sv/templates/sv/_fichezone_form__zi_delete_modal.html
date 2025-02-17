@@ -1,0 +1,21 @@
+<dialog aria-labelledby="fr-modal-delete-zi-confirmation-title" id="modal-delete-zi-confirmation-{{ index }}" class="fr-modal" role="dialog">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button type="button" class="fr-btn--close fr-btn" aria-controls="modal-delete-zi-confirmation-{{ index }}">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-delete-zi-confirmation-title" class="fr-modal__title">Supprimer</h1>
+                        <p>Souhaitez-vous réellement supprimer la zone infestée ?</p>
+                        <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
+                            <button type="button" class="fr-btn delete-zone-infestee" data-pk="{{ index }}">Supprimer</button>
+                            <button type="button" class="fr-btn fr-btn--secondary " aria-controls="modal-delete-zi-confirmation-{{ index }}">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

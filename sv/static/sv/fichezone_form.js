@@ -21,17 +21,42 @@ function initializeAllChoices() {
 }
 
 
+function getNextIdToUse(){
+    let num = 0
+    while (document.getElementById(`id_zoneinfestee_set-${num}-nom`)) {
+        num++
+    }
+    return num
+}
+
 function addZoneInfesteeForm() {
-    const totalFormsInput = document.getElementById('id_zoneinfestee_set-TOTAL_FORMS');
-    let totalForms = parseInt(totalFormsInput.value);
-
+    const nextIdToUse = getNextIdToUse()
     let newTabTemplate = document.getElementById('zone-form-template').innerHTML;
-    newTabTemplate = newTabTemplate.replace(/__prefix__/g, totalForms);
+    newTabTemplate = newTabTemplate.replace(/__prefix__/g, nextIdToUse.toString());
     document.getElementById('zones-infestees').insertAdjacentHTML('beforeend', newTabTemplate);
+    const newDeleteBtn = document.querySelector(`#modal-delete-zi-confirmation-${nextIdToUse} .delete-zone-infestee`)
+    newDeleteBtn.addEventListener("click", removeZoneInfesteeForm)
+    new Choices(document.getElementById(`id_zoneinfestee_set-${nextIdToUse}-detections`), options);
+    updatetotalFormsInput()
+}
 
-    new Choices(document.getElementById(`id_zoneinfestee_set-${totalForms}-detections`), options);
+function updatetotalFormsInput(){
+    const totalFormsInput = document.getElementById('id_zoneinfestee_set-TOTAL_FORMS')
+    totalFormsInput.value = document.querySelectorAll('[id^="zone-infestee-"]').length
+}
 
-    totalFormsInput.value = totalForms+1;
+function removeZoneInfesteeForm(event){
+    const zoneElement = document.getElementById(`zone-infestee-${event.target.dataset.pk}`)
+    const isNewZone = zoneElement.dataset.newZone  === "true"
+    if (isNewZone) {
+        zoneElement.remove()
+    } else {
+        zoneElement.querySelector('[id^="id_zoneinfestee_set-"][id$="DELETE"]').setAttribute("checked", true)
+        zoneElement.classList.add("fr-hidden")
+    }
+
+    dsfr(event.target.closest("dialog")).modal.conceal()
+    updatetotalFormsInput()
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,5 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         addZoneInfesteeForm();
     });
+    document.querySelectorAll("button.delete-zone-infestee").forEach(element => element.addEventListener("click", removeZoneInfesteeForm))
 
 });
