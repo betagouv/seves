@@ -70,6 +70,13 @@ class ContactAgentFactory(DjangoModelFactory):
     structure = None
     email = factory.LazyAttribute(lambda obj: obj.agent.user.email)
 
+    @factory.post_generation
+    def with_active_agent(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        self.agent.user.is_active = True
+        self.agent.user.save()
+
 
 class ContactStructureFactory(DjangoModelFactory):
     class Meta:
@@ -78,6 +85,14 @@ class ContactStructureFactory(DjangoModelFactory):
     agent = None
     structure = factory.SubFactory(StructureFactory)
     email = factory.Sequence(lambda n: f"contact{n}@test.fr")
+
+    @factory.post_generation
+    def with_one_active_agent(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        active_agent = AgentFactory(structure=self.structure)
+        active_agent.user.is_active = True
+        active_agent.user.save()
 
 
 class DocumentFactory(DjangoModelFactory):

@@ -13,12 +13,7 @@ from sv.models import Evenement
 
 @pytest.fixture
 def contact(db):
-    structure = baker.make(Structure, _fill_optional=True)
-    agent = baker.make(Agent, structure=structure)
-    user = agent.user
-    user.is_active = True
-    user.save()
-    return baker.make(Contact, agent=agent)
+    return ContactAgentFactory(with_active_agent=True)
 
 
 @pytest.fixture
@@ -92,13 +87,9 @@ def test_structure_list(live_server, page):
     Contact.objects.all().delete()
     Agent.objects.all().delete()
     Structure.objects.all().delete()
+
     for i in range(0, 3):
-        structure = baker.make(Structure, libelle=f"Structure {i + 1}")
-        agent = baker.make(Agent, structure=structure)
-        user = agent.user
-        user.is_active = True
-        user.save()
-        baker.make(Contact, email="foo@example.com", agent=agent)
+        ContactAgentFactory(agent__structure__libelle=f"Structure {i + 1}", with_active_agent=True)
     assert Structure.objects.count() == 3
 
     evenement = EvenementFactory(createur=Structure.objects.first())
