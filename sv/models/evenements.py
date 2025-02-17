@@ -126,7 +126,12 @@ class Evenement(
     def latest_version(self):
         detections_latest_versions = [f.latest_version for f in self.detections.all()]
         zone_latest_version = self.fiche_zone_delimitee.latest_version if self.fiche_zone_delimitee else None
-        instance_version = Version.objects.get_for_object(self).select_related("revision").first()
+        instance_version = (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
 
         versions = list(detections_latest_versions) + [zone_latest_version, instance_version]
         versions = [v for v in versions if v]
