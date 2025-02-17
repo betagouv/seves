@@ -145,7 +145,7 @@ pytest==8.3.3
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via -r requirements.in
 pytest-env==1.1.5
     # via -r requirements.in
