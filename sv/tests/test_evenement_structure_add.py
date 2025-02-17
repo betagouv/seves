@@ -1,10 +1,9 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory, AgentFactory
+from core.factories import StructureFactory, AgentFactory, ContactStructureFactory
 from core.models import Structure, Contact
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -12,15 +11,7 @@ from sv.models import Evenement
 
 @pytest.fixture
 def contacts_structure():
-    structure1, structure2 = StructureFactory.create_batch(2)
-    contact1 = baker.make(Contact, structure=structure1)
-    contact2 = baker.make(Contact, structure=structure2)
-
-    for structure in (structure1, structure2):
-        active_agent = AgentFactory(structure=structure)
-        active_agent.user.is_active = True
-        active_agent.user.save()
-    return [contact1, contact2]
+    return ContactStructureFactory.create_batch(2, with_one_active_agent=True)
 
 
 @pytest.mark.django_db
@@ -54,17 +45,11 @@ def test_cant_forge_url_to_create_open_redirect_add_structure_form(live_server, 
 
 
 @pytest.mark.django_db
-def test_add_structure_form_hides_empty_emails(live_server, page, contacts_structure):
-    structure_1 = StructureFactory(niveau1="Level 1")
-    structure_2 = StructureFactory(niveau1="Level 2")
-    structure_3 = StructureFactory(niveau1="Level 3")
-    for structure in (structure_1, structure_2, structure_3):
-        active_agent = AgentFactory(structure=structure)
-        active_agent.user.is_active = True
-        active_agent.user.save()
-    baker.make(Contact, structure=structure_1, email="foo@example.com")
-    baker.make(Contact, structure=structure_2, email="")
-    baker.make(Contact, structure=structure_3, email="bar@example.com")
+def test_add_structure_form_hides_empty_emails(live_server, page):
+    ContactStructureFactory(structure__niveau1="Level 1", with_one_active_agent=True)
+    ContactStructureFactory(structure__niveau1="Level 2", with_one_active_agent=True, email="")
+    ContactStructureFactory(structure__niveau1="Level 3", with_one_active_agent=True)
+
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
@@ -128,14 +113,10 @@ def test_structure_niveau2_are_visible_after_select_structure_niveau1(live_serve
 
 @pytest.mark.django_db
 def test_structure_niveau2_without_emails_are_not_visible_after_select_structure_niveau1(live_server, page):
-    structure_1 = baker.make(Structure, niveau1="Level 1", libelle="Foo")
-    structure_2 = baker.make(Structure, niveau1="Level 1", libelle="Bar")
-    for structure in (structure_1, structure_2):
-        active_agent = AgentFactory(structure=structure)
-        active_agent.user.is_active = True
-        active_agent.user.save()
-    baker.make(Contact, structure=structure_1, email="foo@example.com")
-    baker.make(Contact, structure=structure_2, email="")
+    ContactStructureFactory(structure__niveau1="Level 1", structure__libelle="Foo", with_one_active_agent=True)
+    ContactStructureFactory(
+        structure__niveau1="Level 1", structure__libelle="Bar", with_one_active_agent=True, email=""
+    )
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_role("link", name="Ajouter une structure").click()
@@ -161,13 +142,8 @@ def test_add_structure_to_an_evenement(live_server, page, contacts_structure):
 
 @pytest.mark.django_db
 def test_add_multiple_structures_to_an_evenement(live_server, page):
-    structure1, structure2 = StructureFactory.create_batch(2, niveau1="AC")
-    for structure in (structure1, structure2):
-        active_agent = AgentFactory(structure=structure)
-        active_agent.user.is_active = True
-        active_agent.user.save()
-    contact1 = baker.make(Contact, structure=structure1)
-    contact2 = baker.make(Contact, structure=structure2)
+    contact1 = ContactStructureFactory(structure__niveau1="AC", with_one_active_agent=True)
+    contact2 = ContactStructureFactory(structure__niveau1="AC", with_one_active_agent=True)
 
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
