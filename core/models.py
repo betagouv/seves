@@ -158,7 +158,7 @@ class Document(models.Model):
         TRACABILITE = "tracabilité", "Traçabilité"
 
     nom = models.CharField(max_length=256)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
         upload_to=get_timestamped_filename,
@@ -168,7 +168,9 @@ class Document(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")
     created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
-    deleted_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True)
+    deleted_by = models.ForeignKey(
+        Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True, blank=True
+    )
     is_infected = models.BooleanField(default=None, null=True, verbose_name="Est ce que le fichier est infecté")
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
