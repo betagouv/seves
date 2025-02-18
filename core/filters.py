@@ -17,7 +17,7 @@ class DocumentFilter(django_filters.FilterSet):
     created_by_structure = django_filters.ModelChoiceFilter(
         queryset=Structure.objects.all(),
         field_name="created_by_structure",
-        label="Unité",
+        label="Structure",
     )
 
     class Meta:
