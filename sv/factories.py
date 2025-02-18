@@ -37,6 +37,7 @@ from datetime import datetime
 class OrganismeNuisibleFactory(DjangoModelFactory):
     class Meta:
         model = OrganismeNuisible
+        django_get_or_create = ("libelle_court",)
 
     code_oepp = factory.Faker("lexify", text="??????")
     libelle_court = factory.Faker("lexify", text="??????")

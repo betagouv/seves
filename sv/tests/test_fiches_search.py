@@ -4,7 +4,7 @@ from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from seves import settings
-from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory
+from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory, OrganismeNuisibleFactory
 from ..models import (
     Region,
     OrganismeNuisible,
@@ -200,6 +200,30 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
     expect(page.get_by_role("cell", name=organisme_2.libelle_court)).not_to_be_visible()
+
+
+def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: Page, choice_js_fill):
+    organisme = OrganismeNuisibleFactory(libelle_court="Xylella fastidiosa")
+    fiche_1 = FicheDetectionFactory(evenement__organisme_nuisible=organisme)
+    organisme_sub_specie = OrganismeNuisibleFactory(libelle_court="Xylella fastidiosa subsp. fastidiosa")
+    fiche_2 = FicheDetectionFactory(evenement__organisme_nuisible=organisme_sub_specie)
+    fiche_3 = FicheDetectionFactory()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    choice_js_fill(page, ".choices__list--single", organisme.libelle_court, organisme.libelle_court)
+    page.get_by_role("button", name="Rechercher").click()
+
+    assert (
+        page.url
+        == f"{live_server.url}{reverse('fiche-liste')}?type_fiche=detection&numero=&lieux__departement__region=&evenement__organisme_nuisible={organisme.id}&start_date=&end_date=&evenement__etat="
+    )
+
+    expect(page.get_by_role("cell", name=fiche_1.numero)).to_be_visible()
+    expect(page.get_by_role("cell", name=organisme.libelle_court, exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=fiche_2.numero)).to_be_visible()
+    expect(page.get_by_role("cell", name=organisme_sub_specie.libelle_court)).to_be_visible()
+    expect(page.get_by_role("cell", name=fiche_3.numero)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=fiche_3.evenement.organisme_nuisible.libelle_court)).not_to_be_visible()
 
 
 def test_search_with_period(live_server, page: Page, mocked_authentification_user) -> None:
