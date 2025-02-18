@@ -36,7 +36,10 @@ class FicheFilter(django_filters.FilterSet):
         label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_region"
     )
     evenement__organisme_nuisible = django_filters.ModelChoiceFilter(
-        label="Organisme", queryset=OrganismeNuisible.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE
+        label="Organisme",
+        queryset=OrganismeNuisible.objects.all(),
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        method="filter_organisme_nuisible",
     )
     start_date = django_filters.DateFilter(
         field_name="date_creation__date",
@@ -111,6 +114,9 @@ class FicheFilter(django_filters.FilterSet):
         if self._is_zone:
             parts = list(map(int, value.split(".")))
             return queryset.filter(evenement__numero_annee=parts[0], evenement__numero_evenement=parts[1])
+
+    def filter_organisme_nuisible(self, queryset, name, value):
+        return queryset.filter(evenement__organisme_nuisible__libelle_court__startswith=value).distinct()
 
     def filter_region(self, queryset, name, value):
         return queryset.filter(lieux__departement__region=value).distinct()
