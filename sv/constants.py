@@ -142,7 +142,9 @@ STATUTS_REGLEMENTAIRES = {
     "OQP": "organisme quarantaine prioritaire",
     "OQ": "organisme quarantaine",
     "OQZP": "organisme quarantaine zone protégée",
-    "ORNQ": "organisme réglementée non quarantaine",
+    "ORNQ": "organisme réglementé non quarantaine",
+    "OTR": "organisme temporairement réglementé",
+    "OE": "organisme émergent",
 }
 
 CONTEXTES = [

@@ -14,7 +14,7 @@ from sv.models import (
     Departement,
 )
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..constants import DEPARTEMENTS, REGIONS
+from ..constants import DEPARTEMENTS, REGIONS, STATUTS_REGLEMENTAIRES
 
 User = get_user_model()
 
@@ -44,15 +44,7 @@ def check_select_options(page, label, expected_options):
 
 @pytest.fixture(autouse=True)
 def add_status_reglementaire_objects():
-    status = {
-        "OQP": "organisme quarantaine prioritaire",
-        "OQ": "organisme quarantaine",
-        "OQZP": "organisme quarantaine zone protégée",
-        "ORNQ": "organisme réglementée non quarantaine",
-        "OTR": "organisme temporairement réglementé",
-        "OE": "organisme émergent",
-    }
-    for code, libelle in status.items():
+    for code, libelle in STATUTS_REGLEMENTAIRES.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
 
 
