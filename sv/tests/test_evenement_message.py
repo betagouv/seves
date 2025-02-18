@@ -540,12 +540,34 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
-    # Vérification que le message a été créé
     evenement.refresh_from_db()
     assert evenement.is_visibilite_limitee is True
     assert len(evenement.allowed_structures.all()) == 2
     assert contact.agent.structure in evenement.allowed_structures.all()
     assert mocked_authentification_user.agent.structure in evenement.allowed_structures.all()
+
+
+def test_create_message_from_locale_from_same_structure_does_not_changes_visibilite_to_limitee(
+    live_server, page: Page, mocked_authentification_user: User, choice_js_fill
+):
+    evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
+
+    # Création du contact destinataire
+    contact = ContactAgentFactory(agent__structure=mocked_authentification_user.agent.structure, with_active_agent=True)
+
+    # Ajout d'un message
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+
+    # Envoi du message
+    choice_js_fill(page, ".choices__input--cloned:first-of-type", contact.agent.nom, contact.display_with_agent_unit)
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("Message de test")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    evenement.refresh_from_db()
+    assert evenement.is_visibilite_locale is True
 
 
 def test_create_message_from_visibilite_limitee_add_structures_in_allowed_structures(
