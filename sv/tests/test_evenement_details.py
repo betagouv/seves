@@ -9,7 +9,7 @@ from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import StructureFactory
 from core.models import Structure, Visibilite, Contact
 from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
-from sv.models import Evenement, FicheDetection
+from sv.models import Evenement, FicheDetection, Etat
 
 
 def test_can_add_zone(live_server, page: Page):
@@ -320,3 +320,18 @@ def test_visibilite_display_text_when_evenement_locale_and_createur_ac(
     visibilite_element = page.get_by_test_id("evenement-visibilite")
     expect(visibilite_element).to_contain_text(MUS_STRUCTURE)
     expect(visibilite_element).to_contain_text(BSV_STRUCTURE)
+
+
+def test_hide_details_synthese_switch_if_evenement_draft(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_text("Détail")).not_to_be_visible()
+    expect(page.get_by_text("Synthèse")).not_to_be_visible()
+
+
+@pytest.mark.parametrize("etat", [Etat.EN_COURS, Etat.CLOTURE])
+def test_show_details_synthese_switch(live_server, page: Page, etat: Etat):
+    evenement = EvenementFactory(etat=etat)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_text("Détail")).to_be_visible()
+    expect(page.get_by_text("Synthèse")).to_be_visible()
