@@ -179,7 +179,7 @@ class LieuFormDomElements:
 
     @property
     def cancel_btn(self) -> Locator:
-        return self.page.get_by_role("link", name="Annuler")
+        return self.page.locator('[id^="modal-add-lieu-"][open="true"]').get_by_role("link", name="Annuler")
 
     @property
     def title(self) -> Locator:
@@ -294,7 +294,7 @@ class PrelevementFormDomElements:
 
     @property
     def cancel_btn(self) -> Locator:
-        return self.page.get_by_role("link", name="Annuler")
+        return self.page.locator('[id^="modal-add-edit-prelevement-"][open="true"]').get_by_role("link", name="Annuler")
 
     @property
     def save_btn(self) -> Locator:

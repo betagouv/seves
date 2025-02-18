@@ -21,6 +21,17 @@ function initializeDetectionTags() {
     });
 }
 
+function updateAddDetectionLink(activeDetectionId) {
+    const addDetectionLink = document.getElementById("add-detection-link");
+    const currentHref = addDetectionLink.getAttribute('href');
+    const hrefParts = currentHref.split('?');
+    const baseUrl = hrefParts[0];
+    const urlParams = new URLSearchParams(hrefParts[1]);
+    urlParams.set('active_detection', activeDetectionId);
+    const newUrl = `${baseUrl}?${urlParams.toString()}`;
+    addDetectionLink.setAttribute('href', newUrl);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const viewManager = new ViewManager(evenementViewModeConfig);
     viewManager.initialize();
@@ -29,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.addEventListener('dsfr.disclose', event=>{
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
+            updateAddDetectionLink(tabId);
         })
     })
 

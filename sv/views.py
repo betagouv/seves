@@ -252,6 +252,7 @@ class FicheDetectionCreateView(
             for i in range(0, 10)
         ]
         context["prelevement_forms"] = forms
+        context["back_link"] = self._get_back_link()
         return context
 
     def _get_or_create_evenement(self, request, evenement_form):
@@ -304,6 +305,11 @@ class FicheDetectionCreateView(
             evenement.contacts.add(self.request.user.agent.structure.contact_set.get())
 
         return HttpResponseRedirect(self.get_success_url())
+
+    def _get_back_link(self):
+        if self.request.GET.get("evenement"):
+            evenement = Evenement.objects.get(pk=self.request.GET.get("evenement"))
+            return evenement.get_absolute_url() + f"?detection={self.request.GET.get('active_detection')}"
 
 
 class FicheDetectionUpdateView(
@@ -374,6 +380,7 @@ class FicheDetectionUpdateView(
         )
         formset.custom_kwargs = {"convert_required_to_data_required": True}
         context["lieu_formset"] = formset
+        context["back_link"] = self.object.evenement.get_absolute_url() + f"?detection={self.object.pk}"
         return context
 
     def get_form_kwargs(self):
