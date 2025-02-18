@@ -81,6 +81,10 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
     page.get_by_role("button", name="Effacer").click()
 
     expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    assert (
+        page.url
+        == f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=detection&numero=&lieux__departement__region=&evenement__organisme_nuisible=&start_date=&end_date=&evenement__etat="
+    )
 
 
 @pytest.mark.django_db

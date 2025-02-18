@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         this.elements['end_date'].value = '';
         this.elements['evenement__etat'].value = '';
         choices.setChoiceByValue('');
+        e.target.closest("form").submit();
     });
 
     document.getElementById("id_type_fiche_0").addEventListener("click", e => handleTypeFicheChange(e, false));
