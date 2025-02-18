@@ -7,7 +7,7 @@ from playwright.sync_api import expect, Page
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import StructureFactory
-from core.models import Structure, Visibilite
+from core.models import Structure, Visibilite, Contact
 from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
 from sv.models import Evenement, FicheDetection
 
@@ -312,6 +312,7 @@ def test_visibilite_display_text_when_evenement_locale_and_createur_ac(
     live_server, page: Page, mocked_authentification_user, createur
 ):
     createur, _ = Structure.objects.get_or_create(libelle=createur)
+    Contact.objects.get_or_create(structure=createur)
     evenement_mus = EvenementFactory(createur=createur, visibilite=Visibilite.LOCALE)
     mocked_authentification_user.agent.structure = createur
     mocked_authentification_user.save()
