@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.addEventListener('dsfr.disclose', event=>{
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
+            window.history.pushState({}, '', `?detection=${tabId}`);
         })
     })
 

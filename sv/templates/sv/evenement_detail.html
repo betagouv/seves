@@ -125,7 +125,7 @@
                                     </li>
                                 {% endfor %}
                                 <li>
-                                    <a href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
+                                    <a id="add-detection-link" href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
                                         <span class="fr-icon-add-line" aria-hidden="true"></span> Ajouter une détection</a>
                                 </li>
                             </ul>

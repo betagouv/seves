@@ -1,12 +1,12 @@
+import re
+
 import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..models import (
-    StructurePreleveuse,
-    Prelevement,
-)
+from ..factories import EvenementFactory, FicheDetectionFactory
+from ..models import StructurePreleveuse, Prelevement
 
 from sv.constants import STRUCTURES_PRELEVEUSES
 
@@ -91,10 +91,12 @@ def test_close_button_of_add_lieu_form_modal(live_server, page: Page, form_eleme
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
-def test_cancel_button_of_add_lieu_form_modal(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+def test_cancel_button_of_add_lieu_form_modal(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements
+):
     """Test que le bouton Annuler ferme la modal d'ajout d'un lieu"""
     form_elements.add_lieu_btn.click()
-    page.get_by_role("link", name="Annuler").click()
+    lieu_form_elements.cancel_btn.click()
     expect(page.get_by_role("dialog")).to_be_hidden()
 
 
@@ -424,7 +426,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
 
     page.get_by_role("button", name="Modifier le lieu").click()
-    page.get_by_role("link", name="Annuler").click()
+    page.get_by_label("Modifier le lieu").get_by_role("link", name="Annuler").click()
     form_elements.add_lieu_btn.click()
 
     _check_add_lieu_form_fields_are_empty(page, lieu_form_elements)
@@ -652,3 +654,17 @@ def test_prelevement_resultat_card(
     prelevement_form_elements.resultat_input(Prelevement.Resultat.NON_CONCLUSIF).click()
     prelevement_form_elements.save_btn.click()
     expect(page.locator("#prelevements-list")).to_contain_text("NON CONCLUSIF")
+
+
+@pytest.mark.parametrize("action_name", ["Ajouter une détection", "Modifier"])
+def test_return_to_correct_detection_after_creation_or_update(live_server, page: Page, action_name):
+    evenement = EvenementFactory()
+    _, detection_2, _ = FicheDetectionFactory.create_batch(3, evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}?detection={detection_2.pk}")
+
+    page.get_by_role("link", name=action_name).click()
+    page.get_by_role("link", name="Annuler").click()
+
+    expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
+    expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
