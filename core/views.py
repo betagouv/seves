@@ -268,11 +268,20 @@ class MessageCreateView(
             if structure := contact.get_structure_contact():
                 self.obj.contacts.add(structure)
 
+    def _is_internal_communication(self, structures):
+        """
+        Returns True if all contacts involved are part of the same structure
+        """
+        return len(structures) <= 1
+
     def _handle_visibilite_if_needed(self, message):
         if not hasattr(self.obj, "visibilite"):
             return
 
         structures = [c.structure for c in self.obj.contacts.structures_only()]
+
+        if self._is_internal_communication(structures):
+            return
         if self.obj.visibilite == Visibilite.LOCALE:
             with transaction.atomic():
                 self.obj.allowed_structures.set(structures)
