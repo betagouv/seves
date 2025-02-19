@@ -76,6 +76,19 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         )
         for _ in range(3)
     )
+    for i, detection in enumerate(FicheDetection.objects.all()):
+        detection.numero_detection = f"2024.01.{i}"
+        detection.save()
+    detections_hors_zone_infestee = list(
+        FicheDetection.objects.filter(id__in=[obj.id for obj in detections_hors_zone_infestee])
+    )
+    detections_zone_infestee1 = list(
+        FicheDetection.objects.filter(id__in=[obj.id for obj in detections_zone_infestee1])
+    )
+    detections_zone_infestee2 = list(
+        FicheDetection.objects.filter(id__in=[obj.id for obj in detections_zone_infestee2])
+    )
+
     fiche = baker.prepare(
         FicheZoneDelimitee,
         _fill_optional=True,
