@@ -1,8 +1,11 @@
 from django.urls import reverse
 from playwright.sync_api import expect
 
+from sv.factories import FicheDetectionFactory
 
-def test_can_download_export_fiche_detection(live_server, page, fiche_detection):
+
+def test_can_download_export_fiche_detection(live_server, page):
+    FicheDetectionFactory()
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
 
     page.get_by_test_id("extract-open").click()
