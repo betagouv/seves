@@ -1,9 +1,9 @@
 import pytest
 from django.utils import html
-from model_bakery import baker
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
-from core.models import Structure, Agent, Contact, Message
+from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.models import Message
 from core.notifications import notify_message
 from sv.factories import EvenementFactory
 
@@ -11,11 +11,10 @@ from sv.factories import EvenementFactory
 def create_message_and_notify(
     *, message_type, object, content="My message \n Thanks", recipients=None, recipients_copy=None
 ):
-    sender = baker.make(Contact, agent=baker.make(Agent))
     message = Message.objects.create(
         title="TITLE",
         content=content,
-        sender=sender,
+        sender=ContactAgentFactory(),
         message_type=message_type,
         content_object=object,
     )
@@ -42,12 +41,8 @@ def assert_mail_common(mails, message, evenement):
 @pytest.mark.django_db
 def test_notification_message(mailoutbox):
     evenement = EvenementFactory()
-    contact_1 = baker.make(Contact, agent=baker.make(Agent))
-    contact_2 = baker.make(Contact, structure=baker.make(Structure))
-    contact_3 = baker.make(Contact, structure=baker.make(Structure))
-    contact_4 = baker.make(Contact, agent=baker.make(Agent))
-    _contact_5 = baker.make(Contact, structure=baker.make(Structure))
-    _contact_6 = baker.make(Contact, agent=baker.make(Agent))
+    contact_1, contact_4, _contact_6 = ContactAgentFactory.create_batch(3)
+    contact_2, contact_3, _contact_5 = ContactStructureFactory.create_batch(3)
 
     message = create_message_and_notify(
         message_type=Message.MESSAGE,
@@ -65,12 +60,8 @@ def test_notification_message(mailoutbox):
 @pytest.mark.django_db
 def test_notification_demande_intervention(mailoutbox):
     evenement = EvenementFactory()
-    agent_1 = baker.make(Contact, agent=baker.make(Agent))
-    agent_2 = baker.make(Contact, agent=baker.make(Agent))
-    _agent_3 = baker.make(Contact, agent=baker.make(Agent))
-    structure_1 = baker.make(Contact, structure=baker.make(Structure))
-    structure_2 = baker.make(Contact, structure=baker.make(Structure))
-    _structure_3 = baker.make(Contact, structure=baker.make(Structure))
+    agent_1, agent_2, _agent_3 = ContactAgentFactory.create_batch(3)
+    structure_1, structure_2, _structure_3 = ContactStructureFactory.create_batch(3)
 
     message = create_message_and_notify(
         message_type=Message.DEMANDE_INTERVENTION,
@@ -92,10 +83,8 @@ def test_notification_demande_intervention(mailoutbox):
 @pytest.mark.django_db
 def test_notification_point_de_situation(mailoutbox):
     evenement = EvenementFactory()
-    agent_1 = baker.make(Contact, agent=baker.make(Agent))
-    _agent_2 = baker.make(Contact, agent=baker.make(Agent))
-    structure_1 = baker.make(Contact, structure=baker.make(Structure))
-    _structure_2 = baker.make(Contact, structure=baker.make(Structure))
+    agent_1, _agent_2 = ContactAgentFactory.create_batch(2)
+    structure_1, _structure_2 = ContactStructureFactory.create_batch(2)
     evenement.contacts.set([agent_1, structure_1])
 
     message = create_message_and_notify(
@@ -112,9 +101,9 @@ def test_notification_point_de_situation(mailoutbox):
 @pytest.mark.django_db
 def test_notification_fin_de_suivi(mailoutbox):
     evenement = EvenementFactory()
-    agent_1 = baker.make(Contact, agent=baker.make(Agent, structure__niveau2=MUS_STRUCTURE))
-    agent_2 = baker.make(Contact, agent=baker.make(Agent, structure__niveau2="FOO"))
-    structure_1 = baker.make(Contact, structure=baker.make(Structure))
+    agent_1 = ContactAgentFactory(agent__structure__niveau2=MUS_STRUCTURE)
+    agent_2 = ContactAgentFactory(agent__structure__niveau2="FOO")
+    structure_1 = ContactStructureFactory()
     evenement.contacts.set([agent_1, agent_2, structure_1])
 
     message = create_message_and_notify(
@@ -130,10 +119,10 @@ def test_notification_fin_de_suivi(mailoutbox):
 
 def test_notification_notification_ac(mailoutbox):
     evenement = EvenementFactory()
-    agent_1 = baker.make(Contact, agent=baker.make(Agent))
-    structure_1 = baker.make(Contact, structure=baker.make(Structure))
-    contact_mus = baker.make(Contact, structure=baker.make(Structure, niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE))
-    contact_bsv = baker.make(Contact, structure=baker.make(Structure, niveau1=AC_STRUCTURE, niveau2=BSV_STRUCTURE))
+    structure_1 = ContactStructureFactory()
+    contact_mus = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    contact_bsv = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
+    agent_1 = ContactAgentFactory()
 
     message = create_message_and_notify(
         message_type=Message.NOTIFICATION_AC,
@@ -151,8 +140,8 @@ def test_notification_notification_ac(mailoutbox):
 
 def test_notification_compte_rendu(mailoutbox):
     evenement = EvenementFactory()
-    contact_mus = baker.make(Contact, structure=baker.make(Structure, niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE))
-    contact_bsv = baker.make(Contact, structure=baker.make(Structure, niveau1=AC_STRUCTURE, niveau2=BSV_STRUCTURE))
+    contact_mus = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    contact_bsv = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
 
     message = create_message_and_notify(
         message_type=Message.COMPTE_RENDU,
