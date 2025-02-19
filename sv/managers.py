@@ -1,8 +1,15 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Exists
-
+from django.db.models.functions import Cast
 from core.models import Visibilite, FinSuiviContact
+
+from django.db.models import IntegerField, Func, Value
+
+
+class SplitPart(Func):
+    function = "SPLIT_PART"
+    arity = 3
 
 
 class LaboratoireManager(models.Manager):
@@ -80,8 +87,15 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
     def optimized_for_list(self):
         return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
 
+    def with_numero_detection_only(self):
+        return self.annotate(
+            numero_detection_only=Cast(SplitPart("numero_detection", Value("."), 3), IntegerField()),
+        )
+
     def order_by_numero_fiche(self):
-        return self.order_by("-numero_detection")
+        return self.with_numero_detection_only().order_by(
+            "-evenement__numero_annee", "-evenement__numero_evenement", "-numero_detection_only"
+        )
 
     def optimized_for_details(self):
         return self.select_related("contexte", "createur", "evenement", "statut_evenement")

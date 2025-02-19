@@ -1,7 +1,4 @@
-from model_bakery import baker
-
-from sv.factories import FicheZoneFactory, EvenementFactory
-from sv.models import FicheDetection
+from sv.factories import FicheZoneFactory, EvenementFactory, FicheDetectionFactory
 
 BASE_NUM_QUERIES = 13
 
@@ -13,28 +10,12 @@ def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection
     quel que soit le nombre de fiches de détection affichées dans les champs hors zone infestée et zone infestée"""
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
-    baker.make(
-        FicheDetection,
-        _fill_optional=True,
-        createur=mocked_authentification_user.agent.structure,
-        hors_zone_infestee=None,
-        zone_infestee=None,
-        evenement=evenement,
-        _quantity=3,
-    )
+    FicheDetectionFactory.create_batch(3, evenement=evenement)
     client.get(fiche_zone_delimitee.get_update_url())
 
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche_zone_delimitee.get_update_url())
 
-    baker.make(
-        FicheDetection,
-        _fill_optional=True,
-        createur=mocked_authentification_user.agent.structure,
-        hors_zone_infestee=None,
-        zone_infestee=None,
-        evenement=evenement,
-        _quantity=3,
-    )
+    FicheDetectionFactory.create_batch(3, evenement=evenement)
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(fiche_zone_delimitee.get_update_url())
