@@ -2,27 +2,18 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
-from core.models import Message, Contact, Agent, Structure, Visibilite, Document
+from core.models import Message, Contact, Structure, Visibilite, Document
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
 User = get_user_model()
 
 
-@pytest.fixture
-def with_active_contact(tmp_path):
-    agent = baker.make(Agent)
-    agent.user.is_active = True
-    agent.user.save()
-    baker.make(Contact, agent=agent)
-    return agent
-
-
-def test_can_add_and_see_message_without_document(live_server, page: Page, with_active_contact, choice_js_fill):
+def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -32,8 +23,8 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     choice_js_fill(
         page,
         ".choices__input--cloned:first-of-type",
-        with_active_contact.nom,
-        with_active_contact.contact_set.get().display_with_agent_unit,
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
     )
     expect(page.locator("#message-type-title")).to_have_text("message")
     page.locator("#id_title").fill("Title of the message")
@@ -46,7 +37,7 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     assert page.text_content(cell_selector) == "Structure Test"
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
-    assert page.text_content(cell_selector).strip() == str(with_active_contact)
+    assert page.text_content(cell_selector).strip() == str(active_contact)
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
     assert page.text_content(cell_selector) == "Title of the message"
@@ -60,7 +51,8 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, with_
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
 
-def test_can_add_and_see_message_multiple_documents(live_server, page: Page, with_active_contact, choice_js_fill):
+def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -69,8 +61,8 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
     choice_js_fill(
         page,
         ".choices__input--cloned:first-of-type",
-        with_active_contact.nom,
-        with_active_contact.contact_set.get().display_with_agent_unit,
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -120,13 +112,8 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, wit
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
-    agents = []
-    for _ in range(4):
-        agent = baker.make(Agent)
-        agent.user.is_active = True
-        agent.user.save()
-        baker.make(Contact, agent=agent)
-        agents.append(agent)
+    contacts = ContactAgentFactory.create_batch(4, with_active_agent=True)
+    agents = [contact.agent for contact in contacts]
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -311,9 +298,10 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 def test_formatting_contacts_messages_details_page(live_server, page: Page):
     evenement = EvenementFactory()
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
-    sender = Contact.objects.create(agent=baker.make(Agent, nom="Reinhardt", prenom="Django", structure=structure))
+
+    sender = ContactAgentFactory(agent__nom="Reinhardt", agent__prenom="Django", agent__structure=structure)
     evenement.contacts.add(sender)
-    contact = Contact.objects.create(agent=baker.make(Agent, nom="Reinhardt", prenom="Jean", structure=structure))
+    contact = ContactAgentFactory(agent__nom="Reinhardt", agent__prenom="Jean", agent__structure=structure)
     evenement.contacts.add(contact)
     message = Message.objects.create(content_object=evenement, sender=sender, title="Minor", content="Swing")
     message.recipients.set([contact])
@@ -326,9 +314,8 @@ def test_formatting_contacts_messages_details_page(live_server, page: Page):
 
 def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_cant_pick):
     evenement = EvenementFactory()
-    user = baker.make(User, is_active=False)
-    agent = baker.make(Agent, user=user)
-    baker.make(Contact, agent=agent, structure=None)
+    agent = ContactAgentFactory(agent__user__is_active=False).agent
+
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     page.get_by_test_id("element-actions").click()
@@ -339,11 +326,9 @@ def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_c
 
 def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_fill, choice_js_cant_pick):
     evenement = EvenementFactory()
-    structure_with_email = baker.make(Structure, niveau1="FOO", niveau2="FOO", libelle="FOO")
-    baker.make(Contact, agent=None, structure=structure_with_email)
+    ContactStructureFactory(structure__niveau1="FOO", structure__niveau2="FOO", structure__libelle="FOO")
+    ContactStructureFactory(structure__niveau1="BAR", structure__niveau2="BAR", structure__libelle="BAR", email="")
 
-    structure_without_email = baker.make(Structure, niveau1="BAR", niveau2="BAR", libelle="BAR")
-    baker.make(Contact, agent=None, email="", structure=structure_without_email)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     page.get_by_test_id("element-actions").click()
@@ -354,16 +339,15 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
-def test_cant_add_message_if_evenement_brouillon(
-    client, mocked_authentification_user, with_active_contact, message_type, message_label
-):
+def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification_user, message_type, message_label):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
         evenement.add_message_url,
         data={
             "sender": Contact.objects.get(agent=mocked_authentification_user.agent).pk,
-            "recipients": [with_active_contact.pk],
+            "recipients": [active_contact.pk],
             "message_type": message_type,
             "content": "My content \n with a line return",
         },

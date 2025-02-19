@@ -2,10 +2,10 @@ import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.utils.http import urlencode
 from playwright.sync_api import expect
-from model_bakery import baker
 from django.urls import reverse
 
-from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.constants import MUS_STRUCTURE
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact, Structure, Agent
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -18,20 +18,11 @@ def contact(db):
 
 @pytest.fixture
 def contacts(db):
-    # creation de deux contacts de type Agent
-    agent1, agent2 = baker.make(Agent, _quantity=2)
-    baker.make(Contact, agent=agent1)
-    baker.make(Contact, agent=agent2)
+    ContactAgentFactory.create_batch(2)
+
     # création de la structure MUS et de deux contacts de type Agent associés
-    structure_mus = baker.make(Structure, libelle="MUS")
-    agentMUS1, agentMUS2 = baker.make(Agent, _quantity=2, structure=structure_mus)
-    for agent in (agentMUS1, agentMUS2):
-        user = agent.user
-        user.is_active = True
-        user.save()
-    contactMUS1 = baker.make(Contact, agent=agentMUS1)
-    contactMUS2 = baker.make(Contact, agent=agentMUS2)
-    return [contactMUS1, contactMUS2]
+    structure = StructureFactory(libelle=MUS_STRUCTURE)
+    return ContactAgentFactory.create_batch(2, agent__structure=structure, with_active_agent=True)
 
 
 def test_add_contact_form(live_server, page, mocked_authentification_user):
