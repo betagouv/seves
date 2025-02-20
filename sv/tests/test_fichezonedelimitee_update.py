@@ -141,6 +141,10 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
 
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.wait_for_function("pickedDetections !== undefined")
+    page.evaluate("pickedDetections.push = function() {};")
+    page.evaluate("pickedDetections = [];")  # Bypass front-end protection
+    page.evaluate("window.rebuildChoicesOptions();")
     form_page.select_detections_in_zone_infestee(0, (fiche_detection,))
     form_page.save()
     expect(
@@ -159,6 +163,7 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(live_server, 
     fiche_detection.save()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
     form_page.add_new_zone_infestee(ZoneInfesteeFactory(), (fiche_detection,))
     form_page.save()
     expect(
@@ -339,3 +344,67 @@ def test_shows_correct_organisme_and_statut(live_server, page: Page):
 
     expect(page.get_by_text(str(evenement.organisme_nuisible))).to_be_visible()
     expect(page.get_by_text(str(evenement.statut_reglementaire))).to_be_visible()
+
+
+def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee_check_ui(
+    live_server,
+    page: Page,
+    choice_js_fill,
+    choice_js_option_disabled,
+):
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = fiche_detection.evenement
+    evenement.fiche_zone_delimitee = fiche_zone_delimitee
+    evenement.save()
+    ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
+    fiche_detection.save()
+
+    FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    choice_js_option_disabled(
+        page,
+        "#zones-infestees .fr-col-4:nth-of-type(1) .choices__input--cloned:first-of-type",
+        str(fiche_detection.numero),
+    )
+
+
+def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_in_new_zone_infestee_check_ui(
+    live_server,
+    page: Page,
+    choice_js_fill,
+    choice_js_option_disabled,
+):
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = fiche_detection.evenement
+    evenement.fiche_zone_delimitee = fiche_zone_delimitee
+    evenement.save()
+    ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
+    fiche_detection.save()
+    other_detection = FicheDetectionFactory(evenement=evenement)
+
+    FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    form_page.add_new_zone_infestee(ZoneInfesteeFactory.build(), ())
+    choice_js_option_disabled(
+        page,
+        "#zones-infestees .fr-col-4:nth-of-type(2) .choices__input--cloned:first-of-type",
+        str(fiche_detection.numero),
+    )
+
+    choice_js_fill(
+        page,
+        "#zones-infestees .fr-col-4:nth-of-type(2) .choices__input--cloned:first-of-type",
+        str(other_detection.numero),
+        str(other_detection.numero),
+    )
+    choice_js_option_disabled(
+        page,
+        ".fichezoneform__detections-hors-zone-infestee .choices__list--multiple",
+        str(other_detection.numero),
+    )

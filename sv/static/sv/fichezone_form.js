@@ -1,3 +1,24 @@
+let pickedDetections = []
+let allChoices = []
+
+function rebuildDetectionOptions(detectionChoices){
+    detectionChoices.enable()
+    const currentChoices = detectionChoices.passedElement.optionsAsChoices()
+    const updatedChoices = currentChoices.map(choice => ({
+        value: choice.value,
+        label: choice.label,
+        disabled: pickedDetections.includes(choice.value),
+        selected: choice.selected
+    }));
+    detectionChoices.clearChoices()
+    detectionChoices.setChoices(updatedChoices, 'value', 'label', false);
+}
+
+
+function rebuildChoicesOptions(){
+    allChoices.forEach(choices => { rebuildDetectionOptions(choices)})
+}
+
 function initializeChoices(elementId) {
     options = {
         searchResultLimit: 500,
@@ -9,8 +30,14 @@ function initializeChoices(elementId) {
         noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche détection à sélectionner',
         searchFields: ['label'],
-    };
-    new Choices(document.getElementById(elementId), options);
+    }
+    let choices = new Choices(document.getElementById(elementId), options)
+    choices.passedElement.element.addEventListener('change', event=> {
+        pickedDetections.push(event.detail.value)
+        rebuildChoicesOptions()
+    })
+    allChoices.push(choices)
+    rebuildDetectionOptions(choices)
 }
 
 function initializeAllChoices() {
@@ -18,6 +45,14 @@ function initializeAllChoices() {
     for (let i = 0; i < totalForms; i++) {
         initializeChoices(`id_zoneinfestee_set-${i}-detections`);
     }
+}
+
+function initializepickedDetections() {
+    allChoices.forEach((detectionChoice) =>{
+        detectionChoice.getValue().forEach((item) =>{
+            pickedDetections.push(item.value)
+        })
+    } )
 }
 
 
@@ -36,7 +71,7 @@ function addZoneInfesteeForm() {
     document.getElementById('zones-infestees').insertAdjacentHTML('beforeend', newTabTemplate);
     const newDeleteBtn = document.querySelector(`#modal-delete-zi-confirmation-${nextIdToUse} .delete-zone-infestee`)
     newDeleteBtn.addEventListener("click", removeZoneInfesteeForm)
-    new Choices(document.getElementById(`id_zoneinfestee_set-${nextIdToUse}-detections`), options);
+    initializeChoices(`id_zoneinfestee_set-${nextIdToUse}-detections`)
     updatetotalFormsInput()
 }
 
@@ -57,12 +92,34 @@ function removeZoneInfesteeForm(event){
 
     dsfr(event.target.closest("dialog")).modal.conceal()
     updatetotalFormsInput()
+
+    allChoices.forEach((choices) =>{
+        if (zoneElement.contains(choices.passedElement.element)){
+            allChoices = allChoices.filter(item => item !== choices)
+            const selectedValues = choices.getValue(true)
+            pickedDetections = pickedDetections.filter(item => !selectedValues.includes(item))
+        }
+    })
+    rebuildChoicesOptions()
+}
+
+function enableAllOptions(){
+    // Some options are disabled so that the user can't pick the detection twice in different pickers
+    // But we need to re-enabled the options because disabled choices are not sent in the form
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set
+    allChoices.forEach(detectionChoices =>{
+        Array.from(detectionChoices.passedElement.element.options).forEach(option => {
+            option.disabled = false
+        })
+    })
 }
 
 document.addEventListener('DOMContentLoaded', function() {
 
     initializeChoices('id_detections_hors_zone');
     initializeAllChoices();
+    initializepickedDetections();
+    rebuildChoicesOptions();
     const addZoneButton = document.getElementById('add-zone-infestee');
     addZoneButton.addEventListener('click', function(event) {
         event.preventDefault();
@@ -70,4 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.querySelectorAll("button.delete-zone-infestee").forEach(element => element.addEventListener("click", removeZoneInfesteeForm))
 
+    document.getElementById("save-btn").addEventListener("click", event =>{
+        event.preventDefault()
+        enableAllOptions()
+        document.getElementById("fiche-zone-delimitee-form").submit()
+    })
 });
