@@ -44,7 +44,7 @@
                         <input type="hidden" name="evenement" value="{{ form.instance.evenement.pk }}">
                     {% endif %}
 
-                    <a href="{{ back_link }}" class="fr-link fr-mr-3w">Annuler</a>
+                    <a id="cancel-link" href="#" class="fr-link fr-mr-3w">Annuler</a>
                     {% if is_creation %}
                         <input type="submit" value="Enregistrer" class="fr-btn">
                     {% else %}
