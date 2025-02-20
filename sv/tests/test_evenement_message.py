@@ -625,9 +625,8 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     assert document.deleted_by == mocked_authentification_user.agent
 
 
-def test_message_with_document_exceeding_max_size_shows_validation_error(
-    live_server, page: Page, with_active_contact, choice_js_fill
-):
+def test_message_with_document_exceeding_max_size_shows_validation_error(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
     # Créer un fichier temporaire CSV de 16Mo
     file_size = 16 * 1024 * 1024
     fd, temp_path = tempfile.mkstemp(suffix=".csv")
@@ -641,8 +640,8 @@ def test_message_with_document_exceeding_max_size_shows_validation_error(
     choice_js_fill(
         page,
         ".choices__input--cloned:first-of-type",
-        with_active_contact.nom,
-        with_active_contact.contact_set.get().display_with_agent_unit,
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
     )
     page.locator("#id_title").fill("Message avec fichier trop volumineux")
     page.locator("#id_content").fill("Test de validation de taille de fichier")
