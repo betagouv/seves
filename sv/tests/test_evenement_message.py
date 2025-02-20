@@ -664,3 +664,62 @@ def test_message_with_document_exceeding_max_size_shows_validation_error(live_se
     assert evenement.messages.count() == 0
 
     os.unlink(temp_path)
+
+
+def test_can_add_message_with_document_confirmation_modal_reject(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("README.md")
+
+    page.get_by_test_id("fildesuivi-add-submit").click()
+    expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
+    page.locator("#send-without-adding-document").click()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+    message = Message.objects.get()
+    assert message.documents.count() == 0
+
+
+def test_can_add_message_with_document_confirmation_modal_confirm(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+
+    choice_js_fill(
+        page,
+        ".choices__input--cloned:first-of-type",
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("README.md")
+
+    page.get_by_test_id("fildesuivi-add-submit").click()
+    expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
+    page.locator("#send-with-adding-document").click()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+    message = Message.objects.get()
+    assert message.documents.count() == 1
+    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()

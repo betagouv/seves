@@ -1,5 +1,5 @@
 import { validateFileSize } from "./document.js";
-
+let currentID = 0
 
 function cloneDocumentInput(input, currentID, destination){
     let newFileInput = input.cloneNode()
@@ -65,8 +65,53 @@ function addShortcuts(choicesRecipients, choicesCopy){
     }
 }
 
+function changeFormBasedOnMessageType(messageType){
+    document.getElementById("id_message_type").value=messageType
+    document.getElementById("message-type-title").innerText=messageType
+
+    const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
+    const destinatairesInput = document.getElementById("id_recipients")
+    const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
+
+    if (messageType === "note" || messageType === "point de situation" || messageType === "fin de suivi") {
+        destinatairesElement.classList.add("fr-hidden")
+        destinatairesInput.required = false
+        copieElement.classList.add("fr-hidden")
+    } else if (messageType === "compte rendu sur demande d'intervention") {
+        destinatairesElement.classList.add("fr-hidden")
+        destinatairesInput.required = false
+        copieElement.classList.add("fr-hidden")
+        document.getElementById("id_recipients_limited_recipients").parentNode.classList.remove("fr-hidden")
+    } else {
+        destinatairesElement.classList.remove("fr-hidden")
+        destinatairesInput.required = true
+        copieElement.classList.remove("fr-hidden")
+    }
+    if (messageType === "fin de suivi") {
+        document.getElementById("id_title").value = "Fin de suivi"
+    } else {
+        document.getElementById("id_title").value = ""
+    }
+}
+
+function validateDocument(event, typeInput, fileInput, inputDestination){
+    event.preventDefault();
+
+    cloneDocumentInput(fileInput, currentID, inputDestination)
+    cloneDocumentTypeInput(typeInput, currentID, inputDestination)
+    addDocumentCard(currentID, fileInput)
+
+        // Reset form
+    typeInput.selectedIndex = 0
+    fileInput.value = null
+    fileInput.setAttribute("disabled", "true")
+    document.getElementById("message-add-document").setAttribute("disabled", "true")
+    currentID += 1;
+    document.querySelector(".add-document-form-btn").classList.remove("fr-hidden")
+    document.querySelector(".document-form").classList.add("fr-hidden")
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-    let currentID = 0
     const addDocumentFormButton = document.querySelector(".add-document-form-btn")
     const messageAddDocumentButton = document.getElementById("message-add-document")
     const fileInput = document.getElementById('id_file');
@@ -82,23 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addDocumentFormButton.classList.add("fr-hidden")
     })
 
-    messageAddDocumentButton.addEventListener("click", function (event) {
-        event.preventDefault();
-
-        cloneDocumentInput(fileInput, currentID, inputDestination)
-        cloneDocumentTypeInput(typeInput, currentID, inputDestination)
-        addDocumentCard(currentID, fileInput)
-
-        // Reset form
-        typeInput.selectedIndex = 0
-        fileInput.value = null
-        fileInput.setAttribute("disabled", "true")
-        messageAddDocumentButton.setAttribute("disabled", "true")
-        currentID += 1;
-        addDocumentFormButton.classList.remove("fr-hidden")
-        document.querySelector(".document-form").classList.add("fr-hidden")
-
-    });
+    messageAddDocumentButton.addEventListener("click", event => {validateDocument(event, typeInput, fileInput,inputDestination)})
 
     const choicesRecipients = new Choices(document.getElementById('id_recipients'), {
         removeItemButton: true,
@@ -116,35 +145,28 @@ document.addEventListener('DOMContentLoaded', function () {
     addShortcuts(choicesRecipients, choicesCopy);
     document.querySelectorAll(".message-panel").forEach(element =>{
         element.addEventListener("click", event =>{
-            const messageType = event.target.dataset.messageType
-            document.getElementById("id_message_type").value=messageType
-            document.getElementById("message-type-title").innerText=messageType
-
-            const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
-            const destinatairesInput = document.getElementById("id_recipients")
-            const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
-
-            if (messageType === "note" || messageType === "point de situation" || messageType === "fin de suivi") {
-                destinatairesElement.classList.add("fr-hidden")
-                destinatairesInput.required = false
-                copieElement.classList.add("fr-hidden")
-            } else if (messageType === "compte rendu sur demande d'intervention") {
-                destinatairesElement.classList.add("fr-hidden")
-                destinatairesInput.required = false
-                copieElement.classList.add("fr-hidden")
-                document.getElementById("id_recipients_limited_recipients").parentNode.classList.remove("fr-hidden")
-            } else {
-                destinatairesElement.classList.remove("fr-hidden")
-                destinatairesInput.required = true
-                copieElement.classList.remove("fr-hidden")
-            }
-            if (messageType === "fin de suivi") {
-                document.getElementById("id_title").value = "Fin de suivi"
-            } else {
-                document.getElementById("id_title").value = ""
-            }
-
+            changeFormBasedOnMessageType(event.target.dataset.messageType)
         })
+    })
+
+    document.getElementById("message-send-btn").addEventListener("click", event =>{
+        event.preventDefault()
+        const isDocumentBlockVisible = !document.querySelector(".document-form").classList.contains("fr-hidden")
+        const hasFile = !!document.getElementById('id_file').files[0]
+
+        if (isDocumentBlockVisible && hasFile) {
+            dsfr(document.getElementById('fr-modal-document-confirmation')).modal.disclose();
+        } else {
+            event.target.closest("form").submit()
+        }
+    })
+
+    document.getElementById("send-without-adding-document").addEventListener("click", event => {
+        document.getElementById("message-form").submit()
+    })
+    document.getElementById("send-with-adding-document").addEventListener("click", event => {
+        document.getElementById("message-add-document").click()
+        document.getElementById("message-form").submit()
     })
 
 });
