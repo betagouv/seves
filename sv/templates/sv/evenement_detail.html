@@ -20,6 +20,7 @@
 
 {% block aside %}
     {% include "sv/_sidebar_message_form.html" %}
+    {% include "sv/_document_warning_modal.html" %}
 
     {% for message in message_list %}
         {% include "sv/_sidebar_message_details.html" %}
