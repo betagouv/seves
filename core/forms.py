@@ -195,7 +195,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     def _get_structures(self, obj):
         if hasattr(self, "_structures"):
             return self._structures
-        self._structures = obj.contacts.structures_only().select_related("structure")
+        self._structures = obj.contacts.structures_only().exclude(structure=self.sender.agent.structure)
+        self._structures = self._structures.select_related("structure")
         return self._structures
 
     def _get_recipients_label(self, obj):
