@@ -74,3 +74,14 @@ def choice_js_cant_pick(db, page):
         expect(page.get_by_role("option", name=exact_name, exact=True)).not_to_be_visible()
 
     return _choice_js_cant_pick
+
+
+@pytest.fixture
+def choice_js_option_disabled(db, page):
+    def _choice_js_cant_pick(page, locator, exact_name):
+        page.query_selector(locator).click()
+        page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        element = page.locator(locator).locator("xpath=..").locator(".choices__item--choice")
+        expect(element.get_by_role("option", name=exact_name, exact=True))
+
+    return _choice_js_cant_pick
