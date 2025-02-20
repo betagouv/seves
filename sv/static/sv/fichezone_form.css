@@ -5,6 +5,9 @@
 .zone-infestees__zone-infestee-form {
     background-color: var(--background-alt-grey);
 }
+.zone-infestees__zone-infestee-form ul li {
+    text-align: right;
+}
 .zone-infestee-form__numero-input {
     width: 50%;
 }

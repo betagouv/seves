@@ -1,3 +1,4 @@
+import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
@@ -86,6 +87,42 @@ def test_add_zone_infestee(live_server, page: Page, choice_js_fill):
     assert zone_infestee_created.rayon == new_zone_infestee.rayon
     assert zone_infestee_created.unite_rayon == new_zone_infestee.unite_rayon
     assert fiche_detection_updated.zone_infestee == zone_infestee_created
+
+
+def test_update_can_delete_zone_infestee(live_server, page: Page, choice_js_fill):
+    to_keep = ZoneInfesteeFactory(nom="To keep")
+    FicheDetectionFactory(evenement__fiche_zone_delimitee=to_keep.fiche_zone_delimitee)
+    to_delete = ZoneInfesteeFactory(nom="To delete", fiche_zone_delimitee=to_keep.fiche_zone_delimitee)
+
+    page.goto(f"{live_server.url}{to_keep.fiche_zone_delimitee.get_update_url()}")
+
+    page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
+    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+
+    assert ZoneInfestee.objects.get(id=to_keep.id).nom == "To keep"
+    with pytest.raises(ZoneInfestee.DoesNotExist):
+        ZoneInfestee.objects.get(id=to_delete.id)
+
+
+def test_update_can_add_and_delete_zone_infestee(live_server, page: Page, choice_js_fill):
+    fiche_zone = FicheZoneFactory()
+    FicheDetectionFactory(evenement__fiche_zone_delimitee=fiche_zone)
+    new_zone_infestee_1 = ZoneInfesteeFactory.build(nom="To keep")
+    new_zone_infestee_2 = ZoneInfesteeFactory.build(nom="To delete")
+
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    form_page.add_new_zone_infestee(new_zone_infestee_1, ())
+    form_page.add_new_zone_infestee(new_zone_infestee_2, ())
+
+    page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
+    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+
+    ZoneInfestee.objects.get(nom="To keep")
+    with pytest.raises(ZoneInfestee.DoesNotExist):
+        ZoneInfestee.objects.get(id=new_zone_infestee_2.id)
 
 
 def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(
