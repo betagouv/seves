@@ -637,3 +637,6 @@ class Command(BaseCommand):
             print(k)
             for value in values:
                 print(f"    - {value}")
+
+
+# TODO gérer les dates de création date_creation
