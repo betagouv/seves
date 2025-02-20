@@ -120,3 +120,11 @@ label:has(+ .choices select[data-required="true"])::after,
 .required-field::after {
     content: "*";
 }
+
+.ac-notified {
+    background-color: #faa18d;
+    min-height: 1.5rem;
+    padding: 0 .5rem;
+    border-radius: .25rem;
+    color: white;
+}

@@ -94,13 +94,6 @@ body{
     text-overflow: ellipsis;
     margin-bottom: 0.5rem !important;
 }
-.ac-notified {
-    background-color: #faa18d;
-    min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: .25rem;
-    color: white;
-}
 .ac-not-notified {
     background-color: var(--background-contrast-grey);
     min-height: 1.5rem;
