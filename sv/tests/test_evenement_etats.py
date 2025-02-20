@@ -8,7 +8,7 @@ from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.models import Contact, FinSuiviContact
+from core.models import Contact, FinSuiviContact, Message
 
 
 @pytest.fixture
@@ -144,6 +144,7 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     evenement = EvenementFactory()
     mocked_authentification_user.agent.structure = contact_ac.structure
     evenement.contacts.add(contact_ac)
+    evenement.contacts.add(ContactStructureFactory(structure=evenement.createur))
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
@@ -151,9 +152,9 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
 
     cloturer_element = page.get_by_label("Clôturer un événement")
     expect(cloturer_element.get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
+        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalé la fin de suivi :"
     )
-    expect(cloturer_element.get_by_role("listitem")).to_contain_text(contact_ac.structure.libelle)
+    expect(page.get_by_test_id("structures-not-in-fin-suivi")).to_contain_text(contact_ac.structure.libelle)
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.EN_COURS
 
@@ -181,7 +182,7 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
     page.get_by_role("link", name="Clôturer l'événement").click()
 
     expect(page.get_by_label("Clôturer un événement").get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalées la fin de suivi :"
+        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalé la fin de suivi :"
     )
     expect(page.get_by_label("Clôturer un événement").get_by_role("listitem")).to_contain_text(
         contact2.structure.libelle
@@ -211,3 +212,38 @@ def test_show_cloture_tag(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_text("Clôturé")).to_be_visible()
+
+
+def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
+    live_server, page: Page, mocked_authentification_user
+):
+    """Test qu'une structure de l'AC peut clôturer un événement si elle est la dernière structure de la liste des contacts à ne pas avoir signalé la fin de suivi.
+    Dans ce cas, l'état 'fin de suivi' est ajouté à la structure de l'AC et un message fin de suivi est ajouté automatiquement."""
+    evenement = EvenementFactory()
+    contact_mus = ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )
+    contact_1 = ContactStructureFactory()
+    evenement.contacts.set([contact_mus, contact_1])
+    evenement_content_type = ContentType.objects.get_for_model(evenement)
+    FinSuiviContact(content_type=evenement_content_type, object_id=evenement.id, contact=contact_1).save()
+    mocked_authentification_user.agent.structure = contact_mus.structure
+    mocked_authentification_user.agent.save()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("link", name="Clôturer l'événement").click()
+    page.get_by_role("button", name="Confirmer la clôture").click()
+
+    expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.CLOTURE
+    assert FinSuiviContact.objects.filter(
+        content_type=evenement_content_type, object_id=evenement.id, contact=contact_mus
+    ).exists()
+    assert Message.objects.filter(
+        message_type=Message.FIN_SUIVI,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        content_type=evenement_content_type,
+        object_id=evenement.id,
+    ).exists()

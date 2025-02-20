@@ -266,7 +266,24 @@ class WithEtatMixin(models.Model):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
     def can_be_cloturer_by(self, user):
-        return not self.is_draft and not self.is_already_cloturer() and user.agent.structure.is_ac
+        return user.agent.structure.is_ac
+
+    def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
+        """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
+        return len(contacts_not_in_fin_suivi) == 1 and contacts_not_in_fin_suivi[0].structure == user.agent.structure
+
+    def can_be_cloturer(self, user, contacts_not_in_fin_suivi) -> bool:
+        if self.is_draft or self.is_already_cloturer() or not self.can_be_cloturer_by(user):
+            return False
+
+        if not contacts_not_in_fin_suivi:
+            return True
+
+        if self.is_the_only_remaining_structure(user, contacts_not_in_fin_suivi):
+            return True
+
+        # Plusieurs contacts sans fin de suivi
+        return False
 
     def is_already_cloturer(self):
         return self.etat == self.Etat.CLOTURE
