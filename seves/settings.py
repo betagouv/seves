@@ -181,6 +181,10 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+AWS_S3_OBJECT_PARAMETERS = {
+    "ContentDisposition": "attachment",
+}
+
 
 if all(
     [
