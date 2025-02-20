@@ -15,7 +15,7 @@
                             <p>Étes-vous sûr.e de vouloir clôturer l'événement {{ evenement.numero }} ?</p>
                         {% else %}
                             <p>Vous ne pouvez pas clôturer l'événement n°{{ evenement.numero }} car les structures suivantes n'ont pas signalé la fin de suivi : </p>
-                            <ul>
+                            <ul data-testid="structures-not-in-fin-suivi">
                                 {% for contact in contacts_not_in_fin_suivi %}
                                     <li>{{ contact.structure }}</li>
                                 {% endfor %}

@@ -154,7 +154,7 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     expect(cloturer_element.get_by_role("paragraph")).to_contain_text(
         f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalé la fin de suivi :"
     )
-    expect(cloturer_element.get_by_role("listitem")).to_contain_text(contact_ac.structure.libelle)
+    expect(page.get_by_test_id("structures-not-in-fin-suivi")).to_contain_text(contact_ac.structure.libelle)
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.EN_COURS
 
