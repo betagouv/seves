@@ -59,6 +59,7 @@ from .view_mixins import (
     WithStatusToOrganismeNuisibleMixin,
     WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
+    WithClotureContextMixin,
 )
 
 
@@ -100,6 +101,7 @@ class EvenementDetailView(
     WithMessagesListInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
     UserPassesTestMixin,
     DetailView,
 ):
@@ -155,7 +157,6 @@ class EvenementDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
-        context["can_be_cloturer"] = self.object.can_be_cloturer_by(self.request.user)
         context["can_be_ac_notified"] = self.object.can_notifiy(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
@@ -165,10 +166,6 @@ class EvenementDetailView(
                 (zone_infestee, zone_infestee.fichedetection_set.all())
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
             ]
-
-        contacts_not_in_fin_suivi = self.get_object().get_contacts_structures_not_in_fin_suivi()
-        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi
-        context["can_cloturer_evenement"] = len(contacts_not_in_fin_suivi) == 0
         context["message_form"] = MessageForm(
             sender=self.request.user,
             obj=self.get_object(),
@@ -432,27 +429,32 @@ class FicheDetectionExportView(View):
 class EvenementCloturerView(View):
     def post(self, request, pk):
         data = self.request.POST
-        content_type = ContentType.objects.get(pk=data["content_type_id"]).model_class()
-        evenement = content_type.objects.get(pk=pk)
+        content_type = ContentType.objects.get(pk=data["content_type_id"])
+        evenement = content_type.model_class().objects.get(pk=pk)
         redirect_url = evenement.get_absolute_url()
-        if not evenement.can_be_cloturer_by(request.user):
-            messages.error(request, "Cet événement ne peut pas être clôturé.")
-            return redirect(redirect_url)
+
         if evenement.is_already_cloturer():
             messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")
             return redirect(redirect_url)
 
+        if not evenement.can_be_cloturer_by(request.user):
+            messages.error(request, "Vous n'avez pas les droits pour clôturer cet événement.")
+            return redirect(redirect_url)
+
         contacts_not_in_fin_suivi = evenement.get_contacts_structures_not_in_fin_suivi()
-        if contacts_not_in_fin_suivi:
+        if evenement.can_be_cloturer(self.request.user, contacts_not_in_fin_suivi):
+            if evenement.is_the_only_remaining_structure(self.request.user, contacts_not_in_fin_suivi):
+                evenement.add_fin_suivi(self.request.user)
+            evenement.cloturer()
+            messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
+            return redirect(redirect_url)
+
+        if len(contacts_not_in_fin_suivi) > 1:
             messages.error(
                 request,
                 f"L'événement n°{evenement.numero} ne peut pas être clôturé car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
             )
             return redirect(redirect_url)
-
-        evenement.cloturer()
-        messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
-        return redirect(redirect_url)
 
 
 class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):

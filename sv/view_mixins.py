@@ -87,3 +87,21 @@ class WithPrelevementResultatsMixin:
         context = super().get_context_data(**kwargs)
         context["prelevement_resultats"] = dict(Prelevement.Resultat.choices)
         return context
+
+
+class WithClotureContextMixin:
+    """
+    Mixin qui ajoute au contexte les informations relatives à la clôture d'un événement.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        evenement = self.get_object()
+        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi = (
+            evenement.get_contacts_structures_not_in_fin_suivi()
+        )
+        context["is_evenement_can_be_cloturer_by_user"] = evenement.can_be_cloturer_by(self.request.user)
+        context["is_evenement_can_be_cloturer"] = evenement.can_be_cloturer(
+            self.request.user, contacts_not_in_fin_suivi
+        )
+        return context

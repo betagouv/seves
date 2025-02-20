@@ -164,3 +164,20 @@ class Evenement(
 
     def get_soft_delete_attribute_error_message(self):
         return f"L'évènement {self.numero} ne peut pas être supprimé"
+
+    def add_fin_suivi(self, user):
+        with transaction.atomic():
+            fin_suivi_contact = FinSuiviContact(
+                content_object=self,
+                contact=Contact.objects.get(structure=user.agent.structure),
+            )
+            fin_suivi_contact.full_clean()
+            fin_suivi_contact.save()
+
+            Message.objects.create(
+                title="Fin de suivi",
+                content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
+                sender=user.agent.contact_set.get(),
+                message_type=Message.FIN_SUIVI,
+                content_object=self,
+            )
