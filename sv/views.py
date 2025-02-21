@@ -485,7 +485,7 @@ class FicheZoneDelimiteeCreateView(CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("evenement-details", args=[self.object.evenement.numero]) + "#tabpanel-zone-panel"
+        return reverse("evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -596,7 +596,7 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return self.get_object().get_absolute_url() + "#tabpanel-zone-panel"
+        return self.get_object().get_absolute_url() + "?tab=zone"
 
     def test_func(self) -> bool | None:
         return self.get_object().evenement.can_user_access(self.request.user)
