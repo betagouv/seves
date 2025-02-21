@@ -21,7 +21,28 @@ function initializeDetectionTags() {
     });
 }
 
+function selectZoneTab() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'zone') {
+        const tabzone = document.getElementById("tabpanel-zone-panel");
+        dsfr(tabzone).tabPanel.disclose();
+    }
+}
+
+function updateURLParameters(paramName, paramValue) {
+    const params = new URLSearchParams(window.location.search);
+    params.set(paramName, paramValue);
+    window.history.pushState({}, '', `?${params.toString()}`);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    document.documentElement.addEventListener('dsfr.start', () => {
+        setTimeout(() => {
+            selectZoneTab();
+        }, 1000);
+    });
+
     const viewManager = new ViewManager(evenementViewModeConfig);
     viewManager.initialize();
 
@@ -29,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.addEventListener('dsfr.disclose', event=>{
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
-            window.history.pushState({}, '', `?detection=${tabId}`);
+            updateURLParameters('detection', tabId);
         })
     })
 

@@ -220,6 +220,7 @@ def test_fiche_zone_is_visible_after_creation(live_server, page):
     page.get_by_role("tab", name="Zone").click()
     page.get_by_role("button", name="Ajouter une zone").click()
     page.get_by_role("button", name="Enregistrer").click()
+    page.wait_for_timeout(1000)
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
     expect(page.get_by_text("Zone tampon")).to_be_visible()
@@ -234,6 +235,7 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
     page.get_by_role("tab", name="Zone").click()
     page.get_by_role("button", name="Modifier").click()
     page.get_by_role("button", name="Enregistrer").click()
+    page.wait_for_timeout(2000)
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
     expect(page.get_by_text("Zone tampon")).to_be_visible()
