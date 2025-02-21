@@ -237,6 +237,16 @@ class Message(models.Model):
     def get_fiche_url(self):
         return self.content_object.get_absolute_url()
 
+    def get_email_type_display(self) -> str:
+        """Renvoie une version abrégée du type de message pour les emails."""
+        match self.message_type:
+            case self.DEMANDE_INTERVENTION:
+                return "DI"
+            case self.COMPTE_RENDU:
+                return "CR sur DI"
+            case _:
+                return self.get_message_type_display()
+
 
 class LienLibre(models.Model):
     content_type_1 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_1")

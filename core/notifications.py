@@ -10,11 +10,12 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
-            "subject": f"Sèves - {message_obj.content_object.numero} - {message_obj.message_type} - {subject}",
+            "subject": f"[Sèves] {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()}",
             "html_content": """
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
+                    <p style="white-space: pre-wrap; line-height: 1.5;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
@@ -31,8 +32,9 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
         template=template,
         context={
             "message_obj": message_obj,
+            "subject": subject,
             "content": content,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
         },
     )
 

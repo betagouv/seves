@@ -14,6 +14,7 @@ from core.mixins import (
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
+    EmailNotificationMixin,
 )
 from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
@@ -30,6 +31,7 @@ class Evenement(
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
+    EmailNotificationMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -91,6 +93,9 @@ class Evenement(
 
     def get_absolute_url(self):
         return reverse("evenement-details", kwargs={"numero": self.numero})
+
+    def get_absolute_url_with_message(self, message_id: int):
+        return f"{self.get_absolute_url()}?message={message_id}"
 
     def get_update_url(self):
         return reverse("evenement-update", kwargs={"pk": self.pk})
@@ -181,3 +186,6 @@ class Evenement(
                 message_type=Message.FIN_SUIVI,
                 content_object=self,
             )
+
+    def get_email_subject(self):
+        return f"{self.organisme_nuisible.code_oepp} {self.numero}"

@@ -1,11 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    function openSidebar(sidebar) {
+        sidebar.classList.add('open');
+        document.querySelector('.main-container').classList.add('open');
+    }
+
     function bindClickToSidebar(clicked_element, sidebar){
         clicked_element.addEventListener("click", event => {
             event.preventDefault()
             document.querySelectorAll(".sidebar").forEach(element=>element.classList.remove('open'))
-            sidebar.classList.add('open');
-            document.querySelector('.main-container').classList.add('open')
+            openSidebar(sidebar);
         })
     }
 
@@ -17,8 +21,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelector('.main-container').classList.toggle('open')
             })
         })
-
     }
+
+    function openMessageFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const messageId = urlParams.get('message');
+        if (messageId) {
+            openSidebar(document.getElementById(`sidebar-message-details-${messageId}`));
+        }
+    }
+
     document.querySelectorAll(".fil-de-suivi-sidebar").forEach(element => {
         const messageId = element.dataset.messagePk
         bindClickToSidebar(element, document.getElementById(`sidebar-message-details-${messageId}`))
@@ -27,4 +39,5 @@ document.addEventListener('DOMContentLoaded', function () {
         bindClickToSidebar(element, document.getElementById('sidebar'))
     })
     bindAllCloseSidebar()
+    openMessageFromUrl();
 })
