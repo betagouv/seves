@@ -1,5 +1,8 @@
+import re
+
 import pytest
 from django.utils import html
+from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory
@@ -29,7 +32,8 @@ def create_message_and_notify(
 def assert_mail_common(mails, message, evenement):
     assert len(mails) == 1
     mail = mails[0]
-    assert mail.subject == f"Sèves - {evenement.numero} - {message.message_type} - {message.title}"
+    message_type = message.get_email_type_display()
+    assert mail.subject == f"[Sèves] {evenement.organisme_nuisible.code_oepp} {evenement.numero} - {message_type}"
     assert mail.from_email == "no-reply@beta.gouv.fr"
     assert message.sender.agent.prenom in mail.body
     assert message.sender.agent.nom in mail.body
@@ -153,3 +157,34 @@ def test_notification_compte_rendu(mailoutbox):
     assert message.content in mail.body
     assert set(mail.to) == {contact_mus.email, contact_bsv.email}
     assert set(mail.cc) == set()
+
+
+def test_email_contains_correct_link_to_fiche_with_message(mailoutbox):
+    evenement = EvenementFactory()
+    message = create_message_and_notify(
+        message_type=Message.MESSAGE,
+        object=evenement,
+        recipients=[ContactAgentFactory()],
+    )
+    body = mailoutbox[0].body
+    url = re.search(r'href="([^"]+)"', body).group(1)
+    expected_url = f"http://testserver.com{evenement.get_absolute_url_with_message(message.id)}"
+    assert url == expected_url
+
+
+def test_open_message_sidebar_when_clicking_on_link(live_server, page: Page, mailoutbox):
+    evenement = EvenementFactory()
+    contact = ContactAgentFactory()
+    message = create_message_and_notify(
+        message_type=Message.MESSAGE,
+        object=evenement,
+        recipients=[contact],
+    )
+    body = mailoutbox[0].body
+    url = re.search(r'href="([^"]+)"', body).group(1)
+    url = url.replace("http://testserver.com", live_server.url)
+    page.goto(url)
+    expect(page.locator(".sidebar").get_by_text(f"De : {message.sender.display_with_agent_unit}")).to_be_visible()
+    expect(page.locator(".sidebar").get_by_text(f"A : {contact.display_with_agent_unit}")).to_be_visible()
+    expect(page.locator(".sidebar").get_by_text(message.title)).to_be_visible()
+    expect(page.locator(".sidebar").get_by_text(message.content)).to_be_visible()

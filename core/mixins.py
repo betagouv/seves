@@ -348,3 +348,10 @@ class WithObjectFromContentTypeMixin:
         ModelClass = content_type.model_class()
         self._object = get_object_or_404(ModelClass, pk=object_id)
         return self._object
+
+
+class EmailNotificationMixin:
+    """Mixin pour les modèles qui peuvent être notifiés par email."""
+
+    def get_email_subject(self):
+        raise NotImplementedError
