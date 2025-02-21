@@ -21,7 +21,21 @@ function initializeDetectionTags() {
     });
 }
 
+function selectZoneTab() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'zone') {
+        const tabzone = document.getElementById("tabpanel-zone-panel");
+        dsfr(tabzone).tabPanel.disclose();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    // TODO: merge PR MAJ DSFR v1.13.0 pour utiliser dsfr.ready/dsfr.start
+    document.documentElement.addEventListener('dsfr.ready', function() {
+        selectZoneTab();
+    });
+
     const viewManager = new ViewManager(evenementViewModeConfig);
     viewManager.initialize();
 
