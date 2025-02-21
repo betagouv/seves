@@ -273,6 +273,10 @@ class MessageCreateView(
             return
 
         structures = [c.structure for c in self.obj.contacts.structures_only()]
+
+        if len(structures) <= 1:
+            # We only have the sender structure
+            return
         if self.obj.visibilite == Visibilite.LOCALE:
             with transaction.atomic():
                 self.obj.allowed_structures.set(structures)
