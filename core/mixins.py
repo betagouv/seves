@@ -259,6 +259,9 @@ class WithEtatMixin(models.Model):
     def is_draft(self):
         return self.etat == self.Etat.BROUILLON
 
+    def is_cloture(self):
+        return self.etat == self.Etat.CLOTURE
+
     def can_publish(self, user):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 

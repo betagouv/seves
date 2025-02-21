@@ -146,7 +146,7 @@ class Evenement(
         return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
 
     def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if is_fin_de_suivi:
+        if not self.is_cloture() and is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
