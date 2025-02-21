@@ -92,6 +92,9 @@ class Evenement(
     def get_absolute_url(self):
         return reverse("evenement-details", kwargs={"numero": self.numero})
 
+    def get_absolute_url_with_message(self, message_id: int):
+        return f"{self.get_absolute_url()}?message={message_id}"
+
     def get_update_url(self):
         return reverse("evenement-update", kwargs={"pk": self.pk})
 

@@ -44,7 +44,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
             "message_obj": message_obj,
             "subject": subject,
             "content": content,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
         },
     )
 

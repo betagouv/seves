@@ -17,8 +17,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelector('.main-container').classList.toggle('open')
             })
         })
-
     }
+
+    function openMessageFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const messageId = urlParams.get('message');
+        if (messageId) {
+            document.getElementById(`sidebar-message-details-${messageId}`).classList.add('open');
+            document.querySelector('.main-container').classList.add('open');
+        }
+    }
+
     document.querySelectorAll(".fil-de-suivi-sidebar").forEach(element => {
         const messageId = element.dataset.messagePk
         bindClickToSidebar(element, document.getElementById(`sidebar-message-details-${messageId}`))
@@ -27,4 +36,5 @@ document.addEventListener('DOMContentLoaded', function () {
         bindClickToSidebar(element, document.getElementById('sidebar'))
     })
     bindAllCloseSidebar()
+    openMessageFromUrl();
 })
