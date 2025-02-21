@@ -6,15 +6,26 @@ from core.models import Message, Contact
 from django.conf import settings
 
 
+def get_message_type_display(message: Message) -> str:
+    match message.message_type:
+        case Message.DEMANDE_INTERVENTION:
+            return "DI"
+        case Message.COMPTE_RENDU:
+            return "CR sur DI"
+        case _:
+            return message.get_message_type_display()
+
+
 def _send_message(recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message):
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
-            "subject": f"Sèves - {message_obj.content_object.numero} - {message_obj.message_type} - {subject}",
+            "subject": f"[Sèves] {message_obj.content_object.organisme_nuisible.code_oepp} {message_obj.content_object.numero} - {get_message_type_display(message_obj)}",
             "html_content": """
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
+                    <p style="white-space: pre-wrap; line-height: 1.5;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
@@ -31,8 +42,9 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
         template=template,
         context={
             "message_obj": message_obj,
+            "subject": subject,
             "content": content,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
         },
     )
 
