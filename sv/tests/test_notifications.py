@@ -4,7 +4,7 @@ from django.utils import html
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import Message
-from core.notifications import notify_message
+from core.notifications import notify_message, get_message_type_display
 from sv.factories import EvenementFactory
 
 
@@ -29,7 +29,8 @@ def create_message_and_notify(
 def assert_mail_common(mails, message, evenement):
     assert len(mails) == 1
     mail = mails[0]
-    assert mail.subject == f"Sèves - {evenement.numero} - {message.message_type} - {message.title}"
+    message_type = get_message_type_display(message)
+    assert mail.subject == f"[Sèves] {evenement.organisme_nuisible.code_oepp} {evenement.numero} - {message_type}"
     assert mail.from_email == "no-reply@beta.gouv.fr"
     assert message.sender.agent.prenom in mail.body
     assert message.sender.agent.nom in mail.body
