@@ -205,3 +205,9 @@ def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mo
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.EN_COURS
+
+
+def test_show_cloture_tag(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_text("Clôturé")).to_be_visible()
