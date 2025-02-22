@@ -306,19 +306,44 @@ def test_search_without_filters(live_server, page: Page, mocked_authentification
 
 def test_list_is_ordered(live_server, page):
     FicheDetectionFactory(evenement__numero_annee=2023, evenement__numero_evenement=1, numero_detection="2023.1.7")
+    FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=11, numero_detection="2024.11.1")
     FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=1, numero_detection="2024.1.30")
     FicheDetectionFactory(evenement__numero_annee=2024, evenement__numero_evenement=2, numero_detection="2024.2.31")
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.2.31"
+    assert page.text_content(cell_selector).strip() == "2024.11.1"
 
     cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.1.30"
+    assert page.text_content(cell_selector).strip() == "2024.2.31"
 
     cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(2)"
+    assert page.text_content(cell_selector).strip() == "2024.1.30"
+
+    cell_selector = ".fiches__list-row:nth-child(4) td:nth-child(2)"
     assert page.text_content(cell_selector).strip() == "2023.1.7"
+
+
+def test_list_of_zone_is_ordered(live_server, page):
+    EvenementFactory(numero_annee=2023, numero_evenement=1, fiche_zone_delimitee=FicheZoneFactory())
+    EvenementFactory(numero_annee=2024, numero_evenement=11, fiche_zone_delimitee=FicheZoneFactory())
+    EvenementFactory(numero_annee=2024, numero_evenement=1, fiche_zone_delimitee=FicheZoneFactory())
+    EvenementFactory(numero_annee=2024, numero_evenement=2, fiche_zone_delimitee=FicheZoneFactory())
+
+    page.goto(f"{live_server.url}{reverse('fiche-liste')}?type_fiche=zone")
+
+    cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(2)"
+    assert page.text_content(cell_selector).strip() == "2024.11"
+
+    cell_selector = ".fiches__list-row:nth-child(2) td:nth-child(2)"
+    assert page.text_content(cell_selector).strip() == "2024.2"
+
+    cell_selector = ".fiches__list-row:nth-child(3) td:nth-child(2)"
+    assert page.text_content(cell_selector).strip() == "2024.1"
+
+    cell_selector = ".fiches__list-row:nth-child(4) td:nth-child(2)"
+    assert page.text_content(cell_selector).strip() == "2023.1"
 
 
 def test_search_fiche_zone(live_server, page: Page):
