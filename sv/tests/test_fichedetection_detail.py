@@ -55,7 +55,6 @@ def test_lieu_details_second_lieu(live_server, page, fiche_detection):
     evenement.createur = fiche_detection.createur
     evenement.save()
     lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    lieu2.refresh_from_db()
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu2.nom}").click()
     expect(page.get_by_role("heading", name=lieu2.nom)).to_be_visible()
@@ -78,7 +77,6 @@ def test_lieu_details_of_second_detection_when_first_detection_has_lieu(live_ser
     LieuFactory(fiche_detection=fiche_detection_1)
     fiche_detection_2 = FicheDetectionFactory(evenement=evenement)
     lieu = LieuFactory(fiche_detection=fiche_detection_2)
-    lieu.refresh_from_db()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.wait_for_timeout(4000)
