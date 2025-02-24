@@ -72,6 +72,7 @@ function changeFormBasedOnMessageType(messageType){
     const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
     const destinatairesInput = document.getElementById("id_recipients")
     const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
+    document.getElementById("id_recipients_limited_recipients").parentNode.classList.add("fr-hidden")
 
     if (messageType === "note" || messageType === "point de situation" || messageType === "fin de suivi") {
         destinatairesElement.classList.add("fr-hidden")
