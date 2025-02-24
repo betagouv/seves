@@ -66,6 +66,9 @@ export class ViewManager {
 
     initialize() {
         this.#getElements();
+        if(!this.#elements.detailBtn && !this.#elements.syntheseBtn){
+            return
+        }
         this.#initViewState();
         this.#initViewModeButtons();
     }
