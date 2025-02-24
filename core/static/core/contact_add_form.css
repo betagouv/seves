@@ -2,3 +2,6 @@
     background-color: var(--background-default-grey);
     min-height: 600px
 }
+.choices {
+    margin-top: 0.5rem;
+}
