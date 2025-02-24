@@ -119,6 +119,21 @@ def test_search_with_fiche_number_allows_year_only(live_server, page: Page, mock
 
 
 @pytest.mark.django_db
+def test_search_zone_with_fiche_number_allows_year_only(live_server, page: Page, mocked_authentification_user):
+    EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), numero_annee=2024, numero_evenement=1)
+    EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), numero_annee=2024, numero_evenement=2)
+    EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), numero_annee=2023, numero_evenement=1)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
+    page.get_by_label("Numéro").fill("2024")
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.locator('role=cell[name="2024.1"]')).to_have_count(2)
+    expect(page.locator('role=cell[name="2024.2"]')).to_have_count(2)
+    expect(page.get_by_role("cell", name="2023.1")).not_to_be_visible()
+
+
+@pytest.mark.django_db
 def test_search_with_fiche_number_allows_year_and_first_char(live_server, page: Page, mocked_authentification_user):
     FicheDetectionFactory(numero_detection="2024.1.1")
     FicheDetectionFactory(numero_detection="2024.1.2")
