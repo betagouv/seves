@@ -113,6 +113,8 @@ class FicheFilter(django_filters.FilterSet):
             return queryset.filter(numero_detection__startswith=value)
         if self._is_zone:
             parts = list(map(int, value.split(".")))
+            if len(parts) == 1:
+                return queryset.filter(evenement__numero_annee=parts[0])
             return queryset.filter(evenement__numero_annee=parts[0], evenement__numero_evenement=parts[1])
 
     def filter_organisme_nuisible(self, queryset, name, value):
