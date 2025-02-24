@@ -147,9 +147,9 @@ function setUpCommune(element) {
     })
 
     choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
-        communeInput.value = event.detail.choice.value
-        inseeInput.value = event.detail.choice.customProperties.inseeCode
-        departementInput.value = event.detail.choice.customProperties.departementCode
+        communeInput.value = event.detail.value
+        inseeInput.value = event.detail.customProperties.inseeCode
+        departementInput.value = event.detail.customProperties.departementCode
     })
 }
 

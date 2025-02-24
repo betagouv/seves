@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const choices = new Choices(element, {
         itemSelectText: '',
         classNames: {
-            containerInner: 'fr-select fr-mt-1w',
+            containerInner: 'fr-select',
         },
         searchResultLimit: 500,
     });

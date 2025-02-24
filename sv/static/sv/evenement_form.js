@@ -12,7 +12,7 @@ function setUpOrganismeNuisible(){
         let found = false;
         const statutElement = document.getElementById('id_statut_reglementaire')
         statusToNuisibleId.forEach((status) =>{
-            if (status.nuisibleIds.includes(parseInt(event.detail.choice.value))) {
+            if (status.nuisibleIds.includes(parseInt(event.detail.value))) {
                 statutElement.value = status.statusID;
                 statutElement.dispatchEvent(new Event('change'));
                 found = true;

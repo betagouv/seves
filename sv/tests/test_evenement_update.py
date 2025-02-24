@@ -176,9 +176,9 @@ def test_update_evenement_free_links_filtered_by_user_visibility(
     page.goto(f"{live_server.url}{evenement.get_update_url()}")
     page.locator("#liens-libre .choices").click()
 
-    expect(page.get_by_text(str(visible_evenement.numero))).to_be_visible()
-    expect(page.get_by_text(str(limited_visible_evenement.numero))).to_be_visible()
-    expect(page.get_by_text(str(hidden_evenement.numero))).not_to_be_visible()
+    expect(page.get_by_role("option", name=str(visible_evenement.numero))).to_be_visible()
+    expect(page.get_by_role("option", name=str(limited_visible_evenement.numero))).to_be_visible()
+    expect(page.get_by_role("option", name=str(hidden_evenement.numero))).not_to_be_visible()
 
 
 def test_update_evenement_has_locking_protection(live_server, page: Page, choice_js_fill):
