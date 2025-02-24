@@ -1,9 +1,12 @@
 import random
 import string
+from datetime import datetime
 
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
+from faker import Faker
+
 from core.models import Visibilite, Structure
 from .constants import (
     STATUTS_REGLEMENTAIRES,
@@ -12,6 +15,8 @@ from .constants import (
     STATUTS_EVENEMENT,
     CONTEXTES,
     SITES_INSPECTION,
+    DEPARTEMENTS,
+    REGIONS,
 )
 from .models import (
     Prelevement,
@@ -30,8 +35,10 @@ from .models import (
     StatutEvenement,
     Contexte,
     SiteInspection,
+    Region,
 )
-from datetime import datetime
+
+fake = Faker()
 
 
 class OrganismeNuisibleFactory(DjangoModelFactory):
@@ -44,18 +51,28 @@ class OrganismeNuisibleFactory(DjangoModelFactory):
     libelle_long = factory.Faker("sentence", nb_words=5)
 
 
+class RegionFactory(DjangoModelFactory):
+    class Meta:
+        model = Region
+        django_get_or_create = ("nom",)
+
+    nom = factory.fuzzy.FuzzyChoice(REGIONS)
+
+
 class DepartementFactory(DjangoModelFactory):
     class Meta:
         model = Departement
         django_get_or_create = ("nom",)
 
-    @factory.lazy_attribute
-    def _departement(self):
-        return FuzzyChoice(Departement.objects.all()).fuzz()
+    region = factory.SubFactory("sv.factories.RegionFactory")
 
-    nom = factory.LazyAttribute(lambda o: o._departement.nom)
-    numero = factory.LazyAttribute(lambda o: o._departement.numero)
-    region = factory.LazyAttribute(lambda o: o._departement.region)
+    @factory.lazy_attribute
+    def numero(self):
+        return random.choice([d[0] for d in DEPARTEMENTS if self.region.nom == d[2]])
+
+    @factory.lazy_attribute
+    def nom(self):
+        return [d[1] for d in DEPARTEMENTS if self.numero == d[0]][0]
 
 
 class StatutReglementaireFactory(DjangoModelFactory):
@@ -164,6 +181,12 @@ class PrelevementFactory(DjangoModelFactory):
             return "".join(random.choices(string.digits, k=2)) + "-" + "".join(random.choices(string.digits, k=6))
         return ""
 
+    @classmethod
+    def build_with_some_related_objects_saved(cls, *args, **kwargs):
+        matrice_prelevee = MatricePreleveeFactory()
+        espece = EspeceEchantillonFactory()
+        return cls.build(matrice_prelevee=matrice_prelevee, espece_echantillon=espece, *args, **kwargs)
+
 
 class LieuFactory(DjangoModelFactory):
     class Meta:
@@ -171,8 +194,9 @@ class LieuFactory(DjangoModelFactory):
 
     nom = factory.Faker("sentence", nb_words=2)
     fiche_detection = factory.SubFactory("sv.factories.FicheDetectionFactory")
-    wgs84_longitude = factory.Faker("longitude")
-    wgs84_latitude = factory.Faker("latitude")
+
+    wgs84_longitude = factory.LazyFunction(lambda: float(fake.longitude()))
+    wgs84_latitude = factory.LazyFunction(lambda: float(fake.latitude()))
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")

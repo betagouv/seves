@@ -9,7 +9,12 @@ from core.constants import AC_STRUCTURE
 from core.models import Structure
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory
+from ..factories import (
+    FicheDetectionFactory,
+    LieuFactory,
+    LaboratoireFactory,
+    PrelevementFactory,
+)
 from ..models import (
     FicheDetection,
     Lieu,
@@ -193,14 +198,7 @@ def test_add_new_lieu(
 ):
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory()
-    lieu = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        _save_related=True,
-        _fill_optional=True,
-    )
+    lieu = LieuFactory.build(code_insee="17000")
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
@@ -235,30 +233,9 @@ def test_add_multiple_lieux(
 ):
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory()
-    lieu_1 = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        _fill_optional=True,
-        _save_related=True,
-    )
-    lieu_2 = baker.prepare(
-        Lieu,
-        wgs84_latitude=49.8566,
-        wgs84_longitude=3.3522,
-        code_insee="17001",
-        _fill_optional=True,
-        _save_related=True,
-    )
-    lieu_3 = baker.prepare(
-        Lieu,
-        wgs84_latitude=50.8566,
-        wgs84_longitude=4.3522,
-        code_insee="17002",
-        _fill_optional=True,
-        _save_related=True,
-    )
+    lieu_1 = LieuFactory.build(code_insee="17000")
+    lieu_2 = LieuFactory.build(code_insee="17001")
+    lieu_3 = LieuFactory.build(code_insee="17002")
     lieux = [lieu_1, lieu_2, lieu_3]
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
@@ -373,15 +350,7 @@ def test_update_two_lieux(
     """Test que les modifications des descripteurs de plusieurs lieux existants sont bien enregistrées en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
     LieuFactory(fiche_detection=fiche_detection)
-    new_lieux = baker.prepare(
-        Lieu,
-        _quantity=2,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        _fill_optional=True,
-        _save_related=True,
-        code_insee="17000",
-    )
+    new_lieux = LieuFactory.build_batch(2, code_insee="17000")
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_lieu in enumerate(new_lieux):
@@ -533,7 +502,7 @@ def test_add_new_prelevement_non_officiel(
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = LieuFactory()
-    prelevement = baker.prepare(Prelevement, lieu=lieu, resultat="detecte", _fill_optional=True, _save_related=True)
+    prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -606,14 +575,7 @@ def test_add_new_prelevement_officiel(
 ):
     """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = LieuFactory()
-    prelevement = baker.prepare(
-        Prelevement,
-        lieu=lieu,
-        _fill_optional=True,
-        resultat="detecte",
-        _save_related=True,
-        numero_rapport_inspection="24-123456",
-    )
+    prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -666,9 +628,7 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     structure_exploitant, _ = StructurePreleveuse.objects.get_or_create(nom=STRUCTURE_EXPLOITANT)
     structure_sral, _ = StructurePreleveuse.objects.get_or_create(nom="SRAL")
     lieu = LieuFactory()
-    prelevement = baker.prepare(
-        Prelevement, lieu=lieu, _fill_optional=True, resultat=Prelevement.Resultat.DETECTE, _save_related=True
-    )
+    prelevement = PrelevementFactory.build(lieu=lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -706,8 +666,11 @@ def test_add_multiple_prelevements(
 ):
     """Test que l'ajout de plusieurs prelevements lié à un même lieu est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    prelevements = baker.prepare(Prelevement, _quantity=3, lieu=lieu, _fill_optional=True, _save_related=True)
+    lieu = LieuFactory(fiche_detection=fiche_detection)
+    prelevement_1 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu)
+    prelevement_2 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu)
+    prelevement_3 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu)
+    prelevements = [prelevement_1, prelevement_2, prelevement_3]
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for prelevement in prelevements:
@@ -753,14 +716,7 @@ def test_update_prelevement(
     """Test que les modifications des descripteurs d'un prelevement existant sont bien enregistrées en base de données."""
     prelevement = PrelevementFactory()
     new_lieu = LieuFactory(fiche_detection=prelevement.lieu.fiche_detection)
-    new_prelevement = baker.prepare(
-        Prelevement,
-        lieu=new_lieu,
-        resultat="detecte",
-        _fill_optional=True,
-        _save_related=True,
-        numero_rapport_inspection="24-123456",
-    )
+    new_prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=new_lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
     page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
@@ -805,24 +761,8 @@ def test_update_multiple_prelevements(
     lieu1, lieu2 = LieuFactory.create_batch(2, fiche_detection=fiche_detection)
     PrelevementFactory(lieu=lieu1, is_officiel=True)
     PrelevementFactory(lieu=lieu2, is_officiel=True)
-    new_prelevement_1 = baker.prepare(
-        Prelevement,
-        lieu=lieu1,
-        resultat="detecte",
-        is_officiel=True,
-        _fill_optional=True,
-        _save_related=True,
-        numero_rapport_inspection="24-123456",
-    )
-    new_prelevement_2 = baker.prepare(
-        Prelevement,
-        lieu=lieu2,
-        resultat="detecte",
-        is_officiel=True,
-        _fill_optional=True,
-        _save_related=True,
-        numero_rapport_inspection="24-123456",
-    )
+    new_prelevement_1 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu1, is_officiel=False)
+    new_prelevement_2 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu2, is_officiel=False)
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
