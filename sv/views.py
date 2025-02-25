@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch, Min
+from django.db.models import Prefetch, OuterRef, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse, Http404
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -108,9 +108,16 @@ class EvenementDetailView(
     model = Evenement
 
     def get_queryset(self):
+        first_detections_subquery = (
+            FicheDetection.objects.filter(evenement=OuterRef("pk"))
+            .with_numero_detection_only()
+            .order_by("numero_detection_only")
+            .values("id")[:1]
+        )
+
         return (
             Evenement.objects.all()
-            .annotate(first_detection_id=Min("detections__id"))
+            .annotate(first_detection_id=Subquery(first_detections_subquery))
             .select_related("createur", "organisme_nuisible", "statut_reglementaire")
             .prefetch_related(
                 "detections",

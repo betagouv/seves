@@ -335,3 +335,18 @@ def test_show_details_synthese_switch(live_server, page: Page, etat: Etat):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_text("Détail")).to_be_visible()
     expect(page.get_by_text("Synthèse")).to_be_visible()
+
+
+def test_first_detection_by_number_is_selected_by_default(live_server, page: Page):
+    """Test que la première fiche de détection (par numéro et non par id) est sélectionnée par défaut."""
+    evenement = EvenementFactory()
+
+    FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.3")
+    FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.2")
+    detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.1")
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.get_by_role("tab", name=detection_3.numero_detection)).to_have_class(
+        re.compile(r"(^|\s)selected($|\s)")
+    )
