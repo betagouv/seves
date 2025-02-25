@@ -2,7 +2,6 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
-from model_bakery import baker
 from reversion.models import Version
 
 from core.factories import StructureFactory
@@ -15,9 +14,9 @@ from sv.factories import (
     FicheZoneFactory,
     ZoneInfesteeFactory,
     EvenementFactory,
+    StructurePreleveuseFactory,
 )
 from sv.models import (
-    FicheZoneDelimitee,
     ZoneInfestee,
     FicheDetection,
     Lieu,
@@ -73,38 +72,26 @@ def departement_base(region_base):
 
 @pytest.mark.django_db
 def test_fiche_detection_with_no_zones():
-    baker.make(FicheDetection, hors_zone_infestee=None, zone_infestee=None)
+    FicheDetectionFactory(hors_zone_infestee=None, zone_infestee=None)
     assert FicheDetection.objects.count() == 1
 
 
 @pytest.mark.django_db
 def test_fiche_detection_with_zone_infestee():
-    baker.make(
-        FicheDetection,
-        hors_zone_infestee=None,
-        zone_infestee=baker.make(ZoneInfestee, fiche_zone_delimitee=baker.make(FicheZoneDelimitee)),
-    )
+    FicheDetectionFactory(hors_zone_infestee=None, zone_infestee=ZoneInfesteeFactory())
     assert FicheDetection.objects.count() == 1
 
 
 @pytest.mark.django_db
 def test_fiche_detection_with_hors_zone_infestee():
-    baker.make(
-        FicheDetection,
-        hors_zone_infestee=baker.make(FicheZoneDelimitee),
-        zone_infestee=None,
-    )
+    FicheDetectionFactory(hors_zone_infestee=FicheZoneFactory(), zone_infestee=None)
     assert FicheDetection.objects.count() == 1
 
 
 @pytest.mark.django_db
 def test_fiche_detection_with_hors_zone_infestee_and_zone_infestee():
     with pytest.raises(IntegrityError):
-        baker.make(
-            FicheDetection,
-            hors_zone_infestee=baker.make(FicheZoneDelimitee),
-            zone_infestee=baker.make(ZoneInfestee, fiche_zone_delimitee=baker.make(FicheZoneDelimitee)),
-        )
+        FicheDetectionFactory(hors_zone_infestee=FicheZoneFactory(), zone_infestee=ZoneInfesteeFactory())
 
 
 @pytest.mark.django_db
@@ -135,8 +122,8 @@ def test_invalid_wgs84_latitude(fiche_detection):
 
 def test_numero_rapport_inspection_format_valide():
     rapport = Prelevement(
-        lieu=baker.make(Lieu),
-        structure_preleveuse=baker.make(StructurePreleveuse),
+        lieu=LieuFactory(),
+        structure_preleveuse=StructurePreleveuseFactory(),
         is_officiel=True,
         resultat=Prelevement.Resultat.DETECTE,
         numero_rapport_inspection="24-123456",
@@ -181,7 +168,7 @@ def test_prelevement_officiel_cant_be_from_exploitant():
     with pytest.raises(ValidationError):
         Prelevement.objects.create(
             is_officiel=True,
-            lieu=baker.make(Lieu),
+            lieu=LieuFactory(),
             resultat=Prelevement.Resultat.DETECTE,
             structure_preleveuse=exploitant,
         )
