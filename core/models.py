@@ -302,3 +302,8 @@ class Visibilite(models.TextChoices):
     LOCALE = "locale", "Votre structure et l'administration centrale pourront consulter et modifier la fiche"
     LIMITEE = "limitee", "Les structures de votre choix pourront consulter et modifier la fiche"
     NATIONALE = "nationale", "La fiche sera visible et modifiable par toutes les structures"
+
+    @classmethod
+    def get_masculine_label(cls, value):
+        masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
+        return masculine_labels.get(value)
