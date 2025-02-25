@@ -335,3 +335,33 @@ def test_show_details_synthese_switch(live_server, page: Page, etat: Etat):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_text("Détail")).to_be_visible()
     expect(page.get_by_text("Synthèse")).to_be_visible()
+
+
+def test_first_detection_by_number_is_selected_by_default(live_server, page: Page):
+    """Test que la première fiche de détection (par numéro et non par id) est sélectionnée par défaut."""
+    evenement = EvenementFactory()
+
+    FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.3")
+    FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.2")
+    detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.1")
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.get_by_role("tab", name=detection_3.numero_detection)).to_have_class(
+        re.compile(r"(^|\s)selected($|\s)")
+    )
+
+
+def test_detections_are_order_by_detection_number_not_by_id(live_server, page: Page):
+    """Test que les fiches détections sont triées par numéro et non par id."""
+    evenement = EvenementFactory()
+    detection_10 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.10")
+    detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.3")
+    detection_2 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.2")
+    detection_1 = FicheDetectionFactory(evenement=evenement, numero_detection=f"{evenement.numero}.1")
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.locator("#tabpanel-detection-panel ul > li")).to_contain_text(
+        [detection_1.numero, detection_2.numero, detection_3.numero, detection_10.numero]
+    )

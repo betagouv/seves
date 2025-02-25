@@ -17,6 +17,7 @@ from .constants import (
     SITES_INSPECTION,
     DEPARTEMENTS,
     REGIONS,
+    POSITION_CHAINE_DISTRIBUTION,
 )
 from .models import (
     Prelevement,
@@ -36,6 +37,7 @@ from .models import (
     Contexte,
     SiteInspection,
     Region,
+    PositionChaineDistribution,
 )
 
 fake = Faker()
@@ -187,6 +189,26 @@ class PrelevementFactory(DjangoModelFactory):
         espece = EspeceEchantillonFactory()
         return cls.build(matrice_prelevee=matrice_prelevee, espece_echantillon=espece, *args, **kwargs)
 
+    @classmethod
+    def create_minimal(cls, **kwargs):
+        return cls.create(
+            numero_echantillon="",
+            date_prelevement=None,
+            matrice_prelevee=None,
+            espece_echantillon=None,
+            laboratoire=None,
+            numero_rapport_inspection="",
+            **kwargs,
+        )
+
+
+class PositionChaineDistributionFactory(DjangoModelFactory):
+    class Meta:
+        model = PositionChaineDistribution
+        django_get_or_create = ("libelle",)
+
+    libelle = factory.lazy_attribute(lambda _: random.choice(POSITION_CHAINE_DISTRIBUTION))
+
 
 class LieuFactory(DjangoModelFactory):
     class Meta:
@@ -210,6 +232,29 @@ class LieuFactory(DjangoModelFactory):
     siret_etablissement = factory.Faker("numerify", text="##############")
     code_inupp_etablissement = factory.Faker("numerify", text="#######")
     site_inspection = factory.SubFactory("sv.factories.SiteInspectionFactory")
+    position_chaine_distribution_etablissement = factory.SubFactory("sv.factories.PositionChaineDistributionFactory")
+
+    @classmethod
+    def create_minimal(cls, **kwargs):
+        return cls.create(
+            wgs84_longitude=None,
+            wgs84_latitude=None,
+            adresse_lieu_dit="",
+            commune="",
+            code_insee="",
+            departement=None,
+            is_etablissement=False,
+            nom_etablissement="",
+            activite_etablissement="",
+            pays_etablissement="",
+            raison_sociale_etablissement="",
+            adresse_etablissement="",
+            siret_etablissement="",
+            code_inupp_etablissement="",
+            site_inspection=None,
+            position_chaine_distribution_etablissement=None,
+            **kwargs,
+        )
 
 
 class FicheDetectionFactory(DjangoModelFactory):
