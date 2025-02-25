@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from sv.models import FicheDetection, OrganismeNuisible, FicheZoneDelimitee
 
 
@@ -27,7 +28,7 @@ class DisplayedFiche:
             is_ac_notified=fiche.evenement.is_ac_notified,
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
-            visibilite=str(fiche.evenement.visibilite),
+            visibilite=fiche.evenement.visibility_display,
             **fiche.evenement.get_etat_data_from_fin_de_suivi(fiche.has_fin_de_suivi),
             communes_list=[],
             get_absolute_url=fiche.get_absolute_url() + "#tabpanel-zone-panel",
@@ -45,7 +46,7 @@ class DisplayedFiche:
             date_creation=fiche.date_creation.strftime("%d/%m/%Y"),
             createur=str(fiche.createur),
             **fiche.evenement.get_etat_data_from_fin_de_suivi(fiche.has_fin_de_suivi),
-            visibilite=str(fiche.evenement.visibilite),
+            visibilite=fiche.evenement.visibility_display,
             communes_list=fiche.lieux_list_with_commune,
             get_absolute_url=fiche.get_absolute_url() + f"?detection={fiche.pk}",
             numero_evenement=str(fiche.evenement.numero) if fiche.evenement.numero else "non attribué",

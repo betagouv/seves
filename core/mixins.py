@@ -225,6 +225,10 @@ class WithVisibiliteMixin(models.Model):
             case Visibilite.NATIONALE:
                 return "Toutes les structures"
 
+    @property
+    def visibility_display(self) -> str:
+        return Visibilite.get_masculine_label(self.visibilite)
+
     def save(self, *args, **kwargs):
         if self.pk:
             if self.is_visibilite_limitee and self.allowed_structures.count() == 0:
