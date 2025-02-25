@@ -1,10 +1,16 @@
 import pytest
 from model_bakery import baker
 
-from core.factories import DocumentFactory, MessageFactory
-from core.models import Message, Document, Structure, Contact
-from sv.factories import EvenementFactory, FicheDetectionFactory, PrelevementFactory, FicheZoneFactory
-from sv.models import Lieu, ZoneInfestee
+from core.factories import DocumentFactory, MessageFactory, ContactStructureFactory
+from core.models import Message
+from sv.factories import (
+    EvenementFactory,
+    FicheDetectionFactory,
+    PrelevementFactory,
+    FicheZoneFactory,
+    ZoneInfesteeFactory,
+)
+from sv.models import Lieu
 
 BASE_NUM_QUERIES = 17  # Please note a first call is made without assertion to warm up any possible cache
 
@@ -87,7 +93,7 @@ def test_evenement_performances_with_document(client, django_assert_num_queries)
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(evenement.get_absolute_url())
 
-    baker.make(Document, content_object=evenement, _quantity=3, _create_files=True)
+    DocumentFactory.create_batch(3, content_object=evenement)
     with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(evenement.get_absolute_url())
 
@@ -116,10 +122,8 @@ def test_evenement_performances_when_adding_structure(client, django_assert_num_
     with django_assert_num_queries(BASE_NUM_QUERIES):
         client.get(evenement.get_absolute_url())
 
-    for _ in range(0, 10):
-        structure = baker.make(Structure)
-        contact = baker.make(Contact, structure=structure, agent=None)
-        evenement.contacts.add(contact)
+    for structure in ContactStructureFactory.create_batch(10):
+        evenement.contacts.add(structure)
 
     with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(evenement.get_absolute_url())
@@ -142,7 +146,7 @@ def test_fiche_zone_delimitee_with_multiple_zone_infestee(
     client, django_assert_num_queries, mocked_authentification_user
 ):
     evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
     FicheDetectionFactory.create_batch(3, zone_infestee=zone_infestee, evenement=evenement)
 
     client.get(evenement.get_absolute_url())
