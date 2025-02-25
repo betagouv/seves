@@ -153,7 +153,13 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     recipients = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
     )
+    recipients_structures_only = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
+    )
     recipients_copy = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
+    )
+    recipients_copy_structures_only = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
     )
     recipients_limited_recipients = forms.MultipleChoiceField(
@@ -164,13 +170,19 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
 
-    manual_render_fields = ["recipients_limited_recipients"]
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+        "recipients_limited_recipients",
+    ]
 
     class Meta:
         model = Message
         fields = [
             "recipients",
+            "recipients_structures_only",
             "recipients_copy",
+            "recipients_copy_structures_only",
             "recipients_limited_recipients",
             "message_type",
             "title",
@@ -220,9 +232,15 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
 
-        if self._get_structures(obj):
+        queryset_structures = self._get_structures(obj)
+        self.fields["recipients_structures_only"].queryset = queryset_structures
+        self.fields["recipients_copy_structures_only"].queryset = queryset_structures
+
+        if queryset_structures:
             self.fields["recipients"].label = self._get_recipients_label(obj)
+            self.fields["recipients_structures_only"].label = self._get_recipients_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
+            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_label(obj)
 
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
@@ -240,6 +258,13 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
                 self.fields.pop("recipients_copy")
             if message_type not in Message.TYPES_WITH_LIMITED_RECIPIENTS:
                 self.fields.pop("recipients_limited_recipients")
+
+            if message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
+                self.fields.pop("recipients")
+                self.fields.pop("recipients_copy")
+            else:
+                self.fields.pop("recipients_structures_only")
+                self.fields.pop("recipients_copy_structures_only")
 
     def _convert_checkboxes_to_contacts(self):
         try:

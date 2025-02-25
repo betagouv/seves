@@ -5,9 +5,20 @@
     <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v"></h5>
     <form method="post" id="message-form" enctype="multipart/form-data" action="{{ evenement.add_message_url }}">
         {% csrf_token %}
+        <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v">
+            Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement
+        </div>
         <div class=" fr-fieldset__element fr-hidden">
             <label>Destinataires</label>
             {{ message_form.recipients_limited_recipients }}
+        </div>
+        <div class=" fr-fieldset__element fr-hidden">
+            {{ message_form.recipients_structures_only.label_tag }}
+            {{ message_form.recipients_structures_only }}
+        </div>
+        <div class=" fr-fieldset__element fr-hidden">
+            {{ message_form.recipients_copy_structures_only.label_tag }}
+            {{ message_form.recipients_copy_structures_only }}
         </div>
         {{ message_form.as_dsfr_div }}
         <div class="fr-p-2w">

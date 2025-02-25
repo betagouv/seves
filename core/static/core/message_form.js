@@ -49,50 +49,77 @@ function allowToValidateWhenDocumentIsSelectedAndValidSize(typeInput, fileInput,
     })
 }
 
-function addStructuresToRecipients(event, choiceElement){
+function addStructuresToRecipients(event, choiceElements){
     event.preventDefault()
-    choiceElement.setChoiceByValue(event.target.getAttribute("data-structures").split(","))
+    choiceElements.forEach(element =>{element.setChoiceByValue(event.target.getAttribute("data-structures").split(","))})
 }
 
-function addShortcuts(choicesRecipients, choicesCopy){
-    const destinatairesShortcutElement = document.querySelector(".destinataires-shortcut")
-    if (!! destinatairesShortcutElement){
-        destinatairesShortcutElement.addEventListener("click", event => addStructuresToRecipients(event, choicesRecipients))
-    }
-    const copieShortcutElement = document.querySelector(".copie-shortcut")
-    if (!! destinatairesShortcutElement){
-        copieShortcutElement.addEventListener("click", event => addStructuresToRecipients(event, choicesCopy))
-    }
+function addShortcut(classToWatch, elements){
+    const destinatairesShortcutElement = document.querySelectorAll(classToWatch)
+    destinatairesShortcutElement.forEach(shortcut => {
+        shortcut.addEventListener("click", event => addStructuresToRecipients(event, elements))
+    })
 }
+
+function getMessageConfig(){
+    const helpElement = document.getElementById("point-situation-help")
+    const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
+    const destinatairesStructureElement = document.querySelector('label[for="id_recipients_structures_only"]').parentNode
+    const destinatairesInput = document.getElementById("id_recipients")
+    const destinatairesStructureInput = document.getElementById("id_recipients_structures_only")
+    const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
+    const copieStructuresElement = document.querySelector('label[for="id_recipients_copy_structures_only"]').parentNode
+    const limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode
+    const allElements = [destinatairesElement, copieElement, limitedRecipientsElement, helpElement]
+    const allRequiredInputs = [destinatairesInput, destinatairesStructureInput]
+    const configuration = {
+        "compte rendu sur demande d'intervention": {
+            toShow: [limitedRecipientsElement],
+            required: []
+        },
+        "message": {
+            toShow: [destinatairesElement, copieElement],
+            required : [destinatairesInput]
+        },
+        "demande d'intervention": {
+            toShow: [destinatairesStructureElement, copieStructuresElement],
+            required: [destinatairesStructureInput]
+        },
+        "point de situation": {
+            toShow: [helpElement],
+            required: []
+        }
+    }
+    return [configuration, allElements, allRequiredInputs]
+}
+
 
 function changeFormBasedOnMessageType(messageType){
     document.getElementById("id_message_type").value=messageType
     document.getElementById("message-type-title").innerText=messageType
 
-    const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
-    const destinatairesInput = document.getElementById("id_recipients")
-    const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
-    document.getElementById("id_recipients_limited_recipients").parentNode.classList.add("fr-hidden")
+    const [configuration, allElements, allRequiredInputs] = getMessageConfig()
+    allElements.forEach(element =>{element.classList.add("fr-hidden")})
+    allRequiredInputs.forEach(element =>{element.required = false})
 
-    if (messageType === "note" || messageType === "point de situation" || messageType === "fin de suivi") {
-        destinatairesElement.classList.add("fr-hidden")
-        destinatairesInput.required = false
-        copieElement.classList.add("fr-hidden")
-    } else if (messageType === "compte rendu sur demande d'intervention") {
-        destinatairesElement.classList.add("fr-hidden")
-        destinatairesInput.required = false
-        copieElement.classList.add("fr-hidden")
-        document.getElementById("id_recipients_limited_recipients").parentNode.classList.remove("fr-hidden")
-    } else {
-        destinatairesElement.classList.remove("fr-hidden")
-        destinatairesInput.required = true
-        copieElement.classList.remove("fr-hidden")
+    if (messageType in configuration){
+        configuration[messageType].toShow.forEach(element => {element.classList.remove("fr-hidden")})
+        configuration[messageType].required.forEach(element => {element.required= true})
     }
     if (messageType === "fin de suivi") {
         document.getElementById("id_title").value = "Fin de suivi"
     } else {
         document.getElementById("id_title").value = ""
     }
+}
+
+function initializeChoices(element){
+    return new Choices(element, {
+        removeItemButton: true,
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: '',
+        searchResultLimit: 500,
+    })
 }
 
 function validateDocument(event, typeInput, fileInput, inputDestination){
@@ -102,7 +129,7 @@ function validateDocument(event, typeInput, fileInput, inputDestination){
     cloneDocumentTypeInput(typeInput, currentID, inputDestination)
     addDocumentCard(currentID, fileInput)
 
-        // Reset form
+    // Reset form
     typeInput.selectedIndex = 0
     fileInput.value = null
     fileInput.setAttribute("disabled", "true")
@@ -129,21 +156,14 @@ document.addEventListener('DOMContentLoaded', function () {
     })
 
     messageAddDocumentButton.addEventListener("click", event => {validateDocument(event, typeInput, fileInput,inputDestination)})
+    const choicesRecipients = initializeChoices(document.getElementById('id_recipients'))
+    const choicesCopy = initializeChoices(document.getElementById('id_recipients_copy'))
+    const choicesStructuresRecipients = initializeChoices(document.getElementById('id_recipients_structures_only'))
+    const choicesStructuresCopy = initializeChoices(document.getElementById('id_recipients_copy_structures_only'))
 
-    const choicesRecipients = new Choices(document.getElementById('id_recipients'), {
-        removeItemButton: true,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
-        searchResultLimit: 500,
-    });
-    const choicesCopy = new Choices(document.getElementById('id_recipients_copy'), {
-        removeItemButton: true,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
-        searchResultLimit: 500,
-    });
 
-    addShortcuts(choicesRecipients, choicesCopy);
+    addShortcut(".destinataires-shortcut", [choicesRecipients, choicesStructuresRecipients]);
+    addShortcut(".copie-shortcut", [choicesCopy, choicesStructuresCopy]);
     document.querySelectorAll(".message-panel").forEach(element =>{
         element.addEventListener("click", event =>{
             changeFormBasedOnMessageType(event.target.dataset.messageType)

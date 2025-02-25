@@ -94,7 +94,7 @@ def test_notification_point_de_situation(mailoutbox):
 
     mail = assert_mail_common(mailoutbox, message, evenement)
     assert message.content in mail.body
-    assert set(mail.to) == {agent_1.email}
+    assert set(mail.to) == {agent_1.email, structure_1.email}
     assert set(mail.cc) == set()
 
 
