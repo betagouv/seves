@@ -37,7 +37,13 @@
                         <a href="#" class="fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
                     {%  elif message.recipients.all|length > 1 %}
                         <a href="#" class="fr-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"aria-describedby="message-tooltip-{{ message.pk }}">
-                            <p class="fr-tag">{{ message.recipients.all.0 }} et {{ message.recipients.all|length|add:"-1" }} autres</p>
+                            <p class="fr-tag">{{ message.recipients.all.0 }} et
+                                {% if message.recipients.all|length|add:"-1" == 1 %}
+                                    1 autre
+                                {% else %}
+                                    {{ message.recipients.all|length|add:"-1" }} autres
+                                {% endif %}
+                            </p>
                         </a>
                         <span class="fr-tooltip fr-placement" id="message-tooltip-{{ message.pk }}" role="tooltip" aria-hidden="true">{{ message.recipients.all|join:", " }}</span>
                     {% endif %}
