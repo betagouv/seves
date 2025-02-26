@@ -11,3 +11,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const notice = event.target.parentNode.parentNode.parentNode;
         notice.parentNode.removeChild(notice)
     }))})
+
+document.addEventListener('DOMContentLoaded', function() {
+    const blockingErrorModal = document.getElementById("fr-modal-blocking-error")
+    if (!!blockingErrorModal){
+        setTimeout(() => {
+            dsfr(blockingErrorModal).modal.disclose()
+            blockingErrorModal.addEventListener("dsfr.conceal", () => {
+                window.location = window.location.href
+            })
+        }, 1000)
+    }
+})

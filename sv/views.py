@@ -30,6 +30,7 @@ from core.mixins import (
 from core.models import Visibilite
 from core.redirect import safe_redirect
 from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
+from core.views import WithFormErrorsAsMessagesMixin
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -185,7 +186,11 @@ class EvenementDetailView(
 
 
 class EvenementUpdateView(
-    WithStatusToOrganismeNuisibleMixin, UserPassesTestMixin, WithAddUserContactsMixin, UpdateView
+    WithStatusToOrganismeNuisibleMixin,
+    UserPassesTestMixin,
+    WithAddUserContactsMixin,
+    WithFormErrorsAsMessagesMixin,
+    UpdateView,
 ):
     form_class = EvenementUpdateForm
 
@@ -205,12 +210,6 @@ class EvenementUpdateView(
         response = super().form_valid(form)
         self.add_user_contacts(self.object)
         return response
-
-    def form_invalid(self, form):
-        for _, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, error)
-        return HttpResponseRedirect(self.get_object().get_absolute_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -310,6 +309,7 @@ class FicheDetectionUpdateView(
     WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
+    WithFormErrorsAsMessagesMixin,
     UpdateView,
 ):
     model = FicheDetection
@@ -409,12 +409,6 @@ class FicheDetectionUpdateView(
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form):
-        for _, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, error)
-        return super().form_invalid(form)
-
 
 class FicheDetectionExportView(View):
     http_method_names = ["post"]
@@ -481,7 +475,7 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeCreateView(CreateView):
+class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
@@ -578,12 +572,6 @@ class FicheZoneDelimiteeCreateView(CreateView):
         messages.success(self.request, "La fiche zone délimitée a été créée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form):
-        for _, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, error)
-        return super().form_invalid(form)
-
     def formset_invalid(self):
         messages.error(
             self.request,
@@ -592,7 +580,9 @@ class FicheZoneDelimiteeCreateView(CreateView):
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin, UpdateView):
+class FicheZoneDelimiteeUpdateView(
+    WithAddUserContactsMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
+):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
@@ -686,12 +676,6 @@ class FicheZoneDelimiteeUpdateView(WithAddUserContactsMixin, UserPassesTestMixin
 
         messages.success(self.request, "La fiche zone délimitée a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form):
-        for _, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, error)
-        return super().form_invalid(form)
 
     def formset_invalid(self):
         messages.error(
