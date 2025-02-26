@@ -70,7 +70,7 @@ function getMessageConfig(){
     const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
     const copieStructuresElement = document.querySelector('label[for="id_recipients_copy_structures_only"]').parentNode
     const limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode
-    const allElements = [destinatairesElement, copieElement, limitedRecipientsElement, helpElement]
+    const allElements = [destinatairesElement, copieElement, destinatairesStructureElement, copieStructuresElement, limitedRecipientsElement, helpElement]
     const allRequiredInputs = [destinatairesInput, destinatairesStructureInput]
     const configuration = {
         "compte rendu sur demande d'intervention": {
