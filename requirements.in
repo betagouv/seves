@@ -25,3 +25,5 @@ python-magic
 celery
 async_timeout
 redis
+paramiko
+testcontainers[sftp]
