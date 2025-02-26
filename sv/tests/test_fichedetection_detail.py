@@ -1,17 +1,13 @@
-from model_bakery import baker
 from playwright.sync_api import expect
 
 from sv.factories import LieuFactory, EvenementFactory, FicheDetectionFactory, PrelevementFactory
-from sv.models import Lieu, Prelevement
+from sv.models import Prelevement
 
 
-def test_lieu_details(live_server, page, fiche_detection):
+def test_lieu_details(live_server, page):
     "Test que les détails d'un lieu s'affichent correctement dans la modale"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True, is_etablissement=True)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    lieu = LieuFactory(is_etablissement=True)
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Adresse ou lieu-dit")).to_be_visible()
@@ -48,14 +44,10 @@ def test_lieu_details(live_server, page, fiche_detection):
     )
 
 
-def test_lieu_details_second_lieu(live_server, page, fiche_detection):
+def test_lieu_details_second_lieu(live_server, page):
     "Test que si je clique sur le bouton 'Consulter le détail du lieu' d'un deuxième lieu, les détails de ce lieu s'affichent correctement dans la modale"
-    baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    lieu2 = baker.make(Lieu, fiche_detection=fiche_detection, _fill_optional=True)
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    _, lieu2 = LieuFactory.create_batch(2)
+    page.goto(f"{live_server.url}{lieu2.fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu2.nom}").click()
     expect(page.get_by_role("heading", name=lieu2.nom)).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-adresse")).to_contain_text(lieu2.adresse_lieu_dit)
@@ -93,13 +85,10 @@ def test_lieu_details_of_second_detection_when_first_detection_has_lieu(live_ser
     expect(page.locator(".fr-modal--opened")).to_contain_text(str(lieu.wgs84_longitude).replace(".", ","))
 
 
-def test_lieu_details_with_no_data(live_server, page, fiche_detection):
+def test_lieu_details_with_no_data(live_server, page):
     "Test que les détails d'un lieu s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    lieu = LieuFactory.create_minimal()
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-adresse")).to_contain_text("nc.")
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-commune")).to_contain_text(lieu.commune)
@@ -121,14 +110,11 @@ def test_prelevement_card(live_server, page):
     expect(page.locator(".prelevement").get_by_text("DÉTECTÉ")).to_be_visible()
 
 
-def test_prelevement_non_officiel_details_with_no_data(live_server, page, fiche_detection):
+def test_prelevement_non_officiel_details_with_no_data(live_server, page):
     "Test que les détails d'un prélèvement non officiel s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
-    lieu = baker.make(Lieu, fiche_detection=fiche_detection)
-    evenement = fiche_detection.evenement
-    evenement.createur = fiche_detection.createur
-    evenement.save()
-    prelevement = baker.make(Prelevement, lieu=lieu)
-    page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
+    prelevement = PrelevementFactory.create_minimal(is_officiel=False)
+
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_absolute_url()}")
     page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-is-officiel")).to_contain_text(
         "oui" if prelevement.is_officiel else "non"
