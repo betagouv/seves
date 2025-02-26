@@ -189,13 +189,20 @@ function setupCharacterCounter(element) {
     });
 }
 
-
 (function() {
+
+    document.documentElement.addEventListener('dsfr.start', () => {
+        setTimeout(() => {
+            document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => {
+                dsfr(modal).modal.node.addEventListener('dsfr.conceal', resetModalWhenClosing);
+            });
+        }, 500);
+    });
+
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
     document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
-    document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.conceal', resetModalWhenClosing))
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
     document.querySelectorAll("[id^=modal-add-lieu-] .lieu-cancel-btn").forEach(element => element.addEventListener("click", closeDSFRModal))
