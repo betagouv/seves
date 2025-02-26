@@ -93,10 +93,6 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
     mocked_authentification_user.agent.structure = contact_ac.structure
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message").fill("a")
-    page.get_by_test_id("fildesuivi-add-submit").click()
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
     page.get_by_role("button", name="Confirmer la clôture").click()
