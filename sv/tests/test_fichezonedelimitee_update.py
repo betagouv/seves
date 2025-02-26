@@ -294,11 +294,14 @@ def test_fiche_zone_update_has_locking_protection(
 
     fiche_zone.refresh_from_db()
     assert fiche_zone.commentaire == "CCC"
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
     expect(
         page.get_by_text(
-            "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+            "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. Fermer cette modale pour charger la dernière version."
         )
     ).to_be_visible()
+    page.keyboard.press("Escape")
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
 
 
 def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):

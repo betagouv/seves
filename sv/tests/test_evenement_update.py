@@ -197,8 +197,11 @@ def test_update_evenement_has_locking_protection(live_server, page: Page, choice
     evenement.refresh_from_db()
     assert evenement.organisme_nuisible.libelle_court != nuisible.libelle_court
 
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
     expect(
         page.get_by_text(
-            "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+            "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. Fermer cette modale pour charger la dernière version."
         )
     ).to_be_visible()
+    page.keyboard.press("Escape")
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")

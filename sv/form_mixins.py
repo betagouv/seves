@@ -64,5 +64,6 @@ class WithLatestVersionLocking(forms.Form):
         super().clean()
         if self.cleaned_data.get("latest_version") and self.latest_version != self.cleaned_data["latest_version"]:
             raise ValidationError(
-                "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche."
+                "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche.",
+                code="blocking_error",
             )
