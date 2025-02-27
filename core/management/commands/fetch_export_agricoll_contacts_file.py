@@ -9,6 +9,15 @@ from django.core.management.base import BaseCommand
 import paramiko
 
 
+class SingleHostVerificationPolicy(paramiko.MissingHostKeyPolicy):
+    def __init__(self, expected_hostname):
+        self.expected_hostname = expected_hostname
+
+    def missing_host_key(self, client, hostname, key):
+        if hostname != self.expected_hostname:
+            raise paramiko.SSHException("Connexion refusée - host non autorisé")
+
+
 class Command(BaseCommand):
     help = "Récupère et déchiffre les fichiers les plus récents depuis le SFTP client"
 
@@ -28,7 +37,7 @@ class Command(BaseCommand):
     def connect_to_sftp(self, credentials):
         self.stdout.write("Connexion au serveur SFTP...")
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # TODO: Ajouter une vérification de l'hôte
+        client.set_missing_host_key_policy(SingleHostVerificationPolicy(credentials["hostname"]))
         client.connect(**credentials)
         sftp = client.open_sftp()
         self.stdout.write(self.style.SUCCESS("Connexion SFTP établie"))
@@ -167,10 +176,6 @@ class Command(BaseCommand):
             os.remove(symmetric_key_file_path)
             os.remove(encrypt_data_file_path)
             # TODO: remove le fichier de données déchiffré après utilisation
-        except KeyError as e:
-            self.stdout.write(self.style.ERROR(f"{str(e)}"))
-        except FileNotFoundError as e:
-            self.stdout.write(self.style.WARNING(f"{str(e)}"))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Erreur : {str(e)}"))
         finally:
