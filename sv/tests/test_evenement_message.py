@@ -54,6 +54,62 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
 
+def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js_fill):
+    active_contact = ContactStructureFactory(with_one_active_agent=True)
+    other_active_contact = ContactStructureFactory(with_one_active_agent=True)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+
+    choice_js_fill(
+        page,
+        "#id_recipients_structures_only ~ input",
+        active_contact.display_with_agent_unit,
+        active_contact.display_with_agent_unit,
+    )
+    page.keyboard.press("Escape")
+    choice_js_fill(
+        page,
+        "#id_recipients_copy_structures_only ~ input",
+        other_active_contact.display_with_agent_unit,
+        other_active_contact.display_with_agent_unit,
+    )
+    expect(page.locator("#message-type-title")).to_have_text("demande d'intervention")
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
+    assert page.text_content(cell_selector) == "Structure Test"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
+    assert page.text_content(cell_selector).strip() == str(active_contact)
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "Title of the message"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Demande d'intervention"
+
+    page.locator(cell_selector).click()
+
+    expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
+    assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
+
+    message = Message.objects.get()
+    assert list(message.recipients.all()) == [
+        active_contact,
+    ]
+    assert list(message.recipients_copy.all()) == [
+        other_active_contact,
+    ]
+    assert message.message_type == Message.DEMANDE_INTERVENTION
+
+
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
     active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory()
