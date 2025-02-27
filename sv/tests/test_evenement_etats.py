@@ -1,6 +1,5 @@
 import pytest
 from django.urls import reverse
-from model_bakery import baker
 
 from core.factories import ContactStructureFactory
 from sv.factories import EvenementFactory, FicheDetectionFactory
@@ -115,7 +114,7 @@ def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
     """Test qu'un agent de l'AC connecté peut cloturer un événement si toutes les structures de la liste des contacts sont en fin de suivi."""
     evenement = EvenementFactory()
     mocked_authentification_user.agent.structure = contact_ac.structure
-    contact2 = Contact.objects.create(structure=baker.make(Structure, _fill_optional=True))
+    contact2 = ContactStructureFactory()
 
     evenement.contacts.add(contact2)
     evenement.contacts.add(contact_ac)
@@ -165,7 +164,7 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
     """Test qu'un agent de l'AC connecté ne peut pas cloturer un événement si une structure de la liste des contacts n'est pas en fin de suivi."""
     evenement = EvenementFactory()
     mocked_authentification_user.agent.structure = contact_ac.structure
-    contact2 = Contact.objects.create(structure=baker.make(Structure, _fill_optional=True))
+    contact2 = ContactStructureFactory()
 
     evenement.contacts.add(contact2)
     evenement.contacts.add(contact_ac)
@@ -194,7 +193,7 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
 def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mocked_authentification_user):
     """Test qu'un agent connecté non membre de l'AC ne peut pas cloturer un événement même si la/les structure(s) de la liste des contacts sont en fin de suivi."""
     evenement = EvenementFactory()
-    contact = Contact.objects.create(structure=baker.make(Structure, _fill_optional=True))
+    contact = ContactStructureFactory()
     evenement.contacts.add(contact)
     FinSuiviContact.objects.create(
         content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact

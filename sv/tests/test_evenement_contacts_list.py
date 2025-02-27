@@ -1,19 +1,19 @@
 import pytest
-from model_bakery import baker
 from playwright.sync_api import expect
-from core.models import Contact, Structure, Agent
+
+from core.factories import ContactAgentFactory, StructureFactory
+from core.models import Contact, Structure
 from sv.factories import EvenementFactory
 
 
 @pytest.mark.django_db
 def test_contacts_agents_order_in_list(live_server, page):
     evenement = EvenementFactory()
-    structure_mus = Structure.objects.create(niveau1="AC/DAC/DGAL", niveau2="MUS", libelle="MUS")
-    structure_ddpp17 = Structure.objects.create(niveau1="DDI/DDPP", niveau2="DDPP17", libelle="DDPP17")
-    agent1 = baker.make(Agent, structure=structure_mus)
-    agent2 = baker.make(Agent, structure=structure_ddpp17)
-    contact1 = Contact.objects.create(agent=agent1)
-    contact2 = Contact.objects.create(agent=agent2)
+    structure_mus = StructureFactory(niveau1="AC/DAC/DGAL", niveau2="MUS", libelle="MUS")
+    structure_ddpp17 = StructureFactory(niveau1="DDI/DDPP", niveau2="DDPP17", libelle="DDPP17")
+    contact1 = ContactAgentFactory(agent__structure=structure_mus)
+    contact2 = ContactAgentFactory(agent__structure=structure_ddpp17)
+
     evenement.contacts.set([contact1, contact2])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
@@ -50,7 +50,7 @@ def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
     evenement = EvenementFactory()
     contact_structure = Contact.objects.get(email="structure_test@test.fr")
     contact_agent_1 = Contact.objects.get(email="text@example.com")
-    contact_agent_2 = Contact.objects.create(agent=baker.make(Agent, structure=contact_structure.structure))
+    contact_agent_2 = ContactAgentFactory(agent__structure=contact_structure.structure)
     evenement.contacts.set([contact_agent_1, contact_agent_2, contact_structure])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
