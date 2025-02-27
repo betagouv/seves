@@ -1,5 +1,6 @@
 import base64
 import datetime
+import hashlib
 import os
 import subprocess
 import tempfile
@@ -9,13 +10,57 @@ from django.core.management.base import BaseCommand
 import paramiko
 
 
-class SingleHostVerificationPolicy(paramiko.MissingHostKeyPolicy):
+class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
+    """
+    Politique de vérification pour les connexions SFTP vers CleverCloud.
+    Vérifie à la fois le nom d'hôte et l'empreinte de la clé publique du serveur.
+    """
+
+    # Liste des empreintes officielles de CleverCloud
+    # https://www.clever-cloud.com/developers/doc/addons/fs-bucket/#from-your-favorite-sftp-client
+    CLEVER_CLOUD_FINGERPRINTS = [
+        "SHA256:+ku6hhQb1O3OVzkZa2B+htPD+P+5K/X6QQYWXym/4Zo",
+        "SHA256:8tZzRvA3Fh9poG7g1bu8m0LQS819UBh7AYcEXJYiPqw",
+        "SHA256:HHGCP5cf0jQbQrIRXjiC9aYJGNQ+L9ijOmJUueLp+9A",
+        "SHA256:Hyt6ox+v2Lrvdfl29jwe1/dBq9zh2fmq2DO6rqurl7o",
+        "SHA256:drShQbl3Ox+sYYYP+urOCtuMiJFh7k1kECdvZ4hMuAE",
+        "SHA256:h1oUNRkYaIycchUsyAXPQHnu6MtTF2YUEYuisu+vnOE",
+        "SHA256:+550bmBCNAHscjOmKrdweueVUz2E6h1KzmSV+0c0U7w",
+        "SHA256:1O7d6cdmqj42Dw4nX90Y+6zIFTUI+aIwD0SLMQuj0ko",
+        "SHA256:AkHQnQXJ1lFEtliLHl8hlG7NiIZZgVn/uuRMCZJOKJk",
+        "SHA256:Atxhx7U0MOuZC7e4vs1tpyTJmNttB7d4+HNC5hiavFo",
+        "SHA256:Bla7GeL6hggg+rf6iDlKMrzIhxEBYB3VL7Q6PYGJYt4",
+        "SHA256:H5ZhQ/5JdMPSG49ojUNEhwSuRD663mnIJb/YDFFntyk",
+        "SHA256:TZr6eFrzoJmn4RS55Tb6yTd+WV9lTGtW0q+uLVbI7IE",
+        "SHA256:ZYFb1AsB+q++NRf7yW8E5rNOfxTRwjpJt6hqFP/NBNs",
+        "SHA256:d+nTyowvYtcxF28mCUu1ilqPJuLMExGyJ16Sv/pvoVY",
+        "SHA256:flpv4s3VxOrQFc/IG+BpR1s9dgDvR07A6zunNqO4Co0",
+        "SHA256:hvZN8rgSG82weLOeMTXdh1VwhjuRv+MJNnUt/X9R39g",
+        "SHA256:ls20B8C6Jdqx7RPQAjzVX7KmnrHizJum2sEvNhMcl60",
+        "SHA256:u1AzFc2AdFmlPRdNIZsn0sQJ/CKbfC2ZmXnQfabPek4",
+        "SHA256:wUPBX3X5gALgxXqD+IwG5qPRb0jbiOZ8/U1BOZeNhtk",
+        "SHA256:yRHC/tAlBpHLlRZ5rwbZ1z+159Bj3yg0VxHf+hXINLg",
+        "SHA256:yhn79aqxOGQZ+LXdN1/vIY+jwRIbBamlVT1+HdFoA6o",
+    ]
+
     def __init__(self, expected_hostname):
         self.expected_hostname = expected_hostname
 
+    def _get_key_fingerprint(self, key):
+        """Génère l'empreinte SHA256 d'une clé au format similaire à SSH"""
+        hash_obj = hashlib.sha256(key.asbytes())
+        fingerprint = "SHA256:" + base64.b64encode(hash_obj.digest()).decode("utf-8").rstrip("=")
+        return fingerprint
+
     def missing_host_key(self, client, hostname, key):
+        # Vérification du hostname
         if hostname != self.expected_hostname:
             raise paramiko.SSHException("Connexion refusée - host non autorisé")
+
+        # Vérification de l'empreinte à partir de la clé publique
+        key_fingerprint = self._get_key_fingerprint(key)
+        if key_fingerprint not in self.CLEVER_CLOUD_FINGERPRINTS:
+            raise paramiko.SSHException("Connexion refusée - empreinte de clé non reconnue")
 
 
 class Command(BaseCommand):
@@ -37,7 +82,7 @@ class Command(BaseCommand):
     def connect_to_sftp(self, credentials):
         self.stdout.write("Connexion au serveur SFTP...")
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(SingleHostVerificationPolicy(credentials["hostname"]))
+        client.set_missing_host_key_policy(CleverCloudSftpVerifier(credentials["hostname"]))
         client.connect(**credentials)
         sftp = client.open_sftp()
         self.stdout.write(self.style.SUCCESS("Connexion SFTP établie"))
