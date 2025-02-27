@@ -1,10 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import expect
 
 from core.factories import ContactAgentFactory
-from core.models import Contact, Agent, Structure
+from core.models import Structure
 from sv.factories import EvenementFactory
 
 
@@ -31,20 +30,19 @@ def test_can_remove_myself_from_an_evenement(live_server, page, mocked_authentif
 
 def test_can_remove_another_contact_from_a_fiche(live_server, page):
     evenement = EvenementFactory()
-    agent = baker.make(Agent)
-    contact = baker.make(Contact, agent=agent)
+    contact = ContactAgentFactory()
     evenement.contacts.set([contact])
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
 
     page.locator(f'a[aria-controls="fr-modal-contact-{contact.id}"]').click()
-    expect(page.get_by_text(str(agent), exact=True)).to_be_visible()
+    expect(page.get_by_text(str(contact.agent), exact=True)).to_be_visible()
     expect(page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
     page.get_by_test_id(f"contact-delete-{contact.id}").click()
 
     assert page.url == f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-contacts-panel"
     assert evenement.contacts.count() == 0
-    expect(page.get_by_text(str(agent), exact=True)).not_to_be_visible()
+    expect(page.get_by_text(str(contact.agent), exact=True)).not_to_be_visible()
 
 
 def test_cant_forge_contact_deletion_of_evenement_i_cant_see(client):
