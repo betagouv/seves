@@ -123,7 +123,7 @@ def test_invalid_wgs84_latitude(fiche_detection):
 def test_numero_rapport_inspection_format_valide():
     rapport = Prelevement(
         lieu=LieuFactory(),
-        structure_preleveuse=StructurePreleveuseFactory(),
+        structure_preleveuse=StructurePreleveuseFactory(not_exploitant=True),
         is_officiel=True,
         resultat=Prelevement.Resultat.DETECTE,
         numero_rapport_inspection="24-123456",
