@@ -232,11 +232,11 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
 
-        queryset_structures = self._get_structures(obj)
+        queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
         self.fields["recipients_structures_only"].queryset = queryset_structures
         self.fields["recipients_copy_structures_only"].queryset = queryset_structures
 
-        if queryset_structures:
+        if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_label(obj)
             self.fields["recipients_structures_only"].label = self._get_recipients_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
@@ -281,6 +281,9 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self._convert_checkboxes_to_contacts()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_STRUCTURES_ONLY:
+            self.cleaned_data["recipients"] = self.cleaned_data["recipients_structures_only"]
+            self.cleaned_data["recipients_copy"] = self.cleaned_data["recipients_copy_structures_only"]
         self.instance.sender = self.sender
 
 
