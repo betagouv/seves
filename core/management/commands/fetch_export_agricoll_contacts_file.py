@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 import paramiko
 
@@ -216,11 +217,14 @@ class Command(BaseCommand):
             symmetric_key_file_path = self.decrypt_symmetric_key(
                 private_key_data, encrypted_symmetric_key_file_path, settings.BASE_DIR
             )
-            self.decrypt_data_file(encrypt_data_file_path, symmetric_key_file_path, settings.BASE_DIR)
+            decrypted_file_path = self.decrypt_data_file(
+                encrypt_data_file_path, symmetric_key_file_path, settings.BASE_DIR
+            )
             os.remove(encrypted_symmetric_key_file_path)
             os.remove(symmetric_key_file_path)
             os.remove(encrypt_data_file_path)
-            # TODO: remove le fichier de données déchiffré après utilisation
+            call_command("import_contacts", decrypted_file_path)
+            os.remove(decrypted_file_path)
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Erreur : {str(e)}"))
         finally:
