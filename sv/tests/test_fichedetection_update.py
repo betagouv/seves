@@ -756,8 +756,8 @@ def test_update_multiple_prelevements(
     lieu1, lieu2 = LieuFactory.create_batch(2, fiche_detection=fiche_detection)
     PrelevementFactory(lieu=lieu1, is_officiel=True)
     PrelevementFactory(lieu=lieu2, is_officiel=True)
-    new_prelevement_1 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu1, is_officiel=False)
-    new_prelevement_2 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu2, is_officiel=False)
+    new_prelevement_1 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu1, is_officiel=True)
+    new_prelevement_2 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu2, is_officiel=True)
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
