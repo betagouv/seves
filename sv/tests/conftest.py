@@ -1,5 +1,3 @@
-import random
-
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -8,7 +6,6 @@ from playwright.sync_api import Page
 
 from sv.models import (
     FicheDetection,
-    FicheZoneDelimitee,
     StatutReglementaire,
     Region,
     Departement,
@@ -46,25 +43,6 @@ def check_select_options(page, label, expected_options):
 def add_status_reglementaire_objects():
     for code, libelle in STATUTS_REGLEMENTAIRES.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
-
-
-@pytest.fixture
-def fiche_zone_bakery(db, mocked_authentification_user):
-    def _fiche_zone_bakery():
-        return baker.make(
-            FicheZoneDelimitee,
-            _fill_optional=True,
-            createur=mocked_authentification_user.agent.structure,
-            rayon_zone_tampon=random.uniform(1, 100),
-            surface_tampon_totale=random.uniform(1, 100),
-        )
-
-    return _fiche_zone_bakery
-
-
-@pytest.fixture
-def fiche_zone(fiche_zone_bakery):
-    return fiche_zone_bakery()
 
 
 @pytest.fixture
