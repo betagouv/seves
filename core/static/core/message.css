@@ -6,7 +6,9 @@
     align-items: center;
     justify-content: space-between
 }
-
+label[for=id_recipients]::after, label[for=id_recipients_structures_only]::after{
+    content: none !important;
+}
 .btn-full{
     width: 100%;
     display: block;
@@ -30,7 +32,7 @@
     display: flex;
     justify-content: end;
 }
-label[for=id_recipients], label[for=id_recipients_copy]
+label[for=id_recipients], label[for=id_recipients_copy], label[for=id_recipients_structures_only], label[for=id_recipients_copy_structures_only]
 {
     display: flex;
     justify-content: space-between;
