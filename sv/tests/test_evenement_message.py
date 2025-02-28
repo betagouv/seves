@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 
 import pytest
@@ -217,7 +218,8 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     assert page.text_content(cell_selector) == "Structure Test"
     cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
     cell_content = page.text_content(cell_selector).strip()
-    agent, other = cell_content.split("et")
+    clean_content = " ".join(cell_content.split())
+    agent, other = re.split(r" et ", clean_content)
     assert agent.strip() in [str(agent) for agent in agents]
     assert "1 autre" in other
 
