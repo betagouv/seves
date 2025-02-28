@@ -150,17 +150,13 @@ class ContactSelectionForm(forms.Form):
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
-    )
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
     recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label_suffix="", label="Destinataires :"
+        queryset=Contact.objects.none(), label="Destinataires*"
     )
-    recipients_copy = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
-    )
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     recipients_copy_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), required=False, label="Copie :", label_suffix=""
+        queryset=Contact.objects.none(), required=False, label="Copie"
     )
     recipients_limited_recipients = forms.MultipleChoiceField(
         choices=[("mus", "MUS"), ("bsv", "BSV")],
@@ -214,13 +210,13 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     def _get_recipients_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         return mark_safe(
-            f"Destinataires :<a href='#' class='fr-link destinataires-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
+            f"Destinataires*<a href='#' class='fr-link destinataires-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
         )
 
     def _get_recipients_copy_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         return mark_safe(
-            f"Copie :<a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
+            f"Copie <a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
         )
 
     def __init__(self, *args, sender, **kwargs):
