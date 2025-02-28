@@ -3,11 +3,15 @@ import datetime
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 import paramiko
+from paramiko.client import SSHClient
+from paramiko.sftp_attr import SFTPAttributes
+from paramiko.sftp_client import SFTPClient
 
 
 class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
@@ -57,7 +61,7 @@ class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
 class Command(BaseCommand):
     help = "Récupère et déchiffre les fichiers les plus récents depuis le SFTP client"
 
-    def get_sftp_credentials(self):
+    def get_sftp_credentials(self) -> dict[str, str]:
         sftp_host = settings.SFTP_HOST
         sftp_username = settings.SFTP_USERNAME
         sftp_password = settings.SFTP_PASSWORD
@@ -70,7 +74,7 @@ class Command(BaseCommand):
 
         return {"hostname": sftp_host, "username": sftp_username, "password": sftp_password, "port": sftp_port}
 
-    def connect_to_sftp(self, credentials):
+    def connect_to_sftp(self, credentials: dict[str, str]) -> tuple[SSHClient, SFTPClient]:
         self.stdout.write("Connexion au serveur SFTP...")
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(CleverCloudSftpVerifier(credentials["hostname"]))
@@ -79,13 +83,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Connexion SFTP établie"))
         return client, sftp
 
-    def print_files(self, sftp):
+    def print_files(self, sftp: SFTPClient) -> None:
         self.stdout.write("Liste des fichiers disponibles:")
         for attr in sftp.listdir_attr():
             mod_time = datetime.datetime.fromtimestamp(attr.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
             self.stdout.write(f"- {attr.filename} (Taille: {attr.st_size} octets, Modifié: {mod_time})")
 
-    def find_latest_encrypted_files(self, sftp):
+    def find_latest_encrypted_files(self, sftp: SFTPClient) -> tuple[SFTPAttributes, SFTPAttributes]:
         """Trouve les fichiers chiffrés (fichier de données et la clé symétrique) les plus récents sur le serveur SFTP"""
         file_list = sftp.listdir_attr()
 
@@ -112,24 +116,30 @@ class Command(BaseCommand):
 
         return latest_data_file, latest_encrypted_symmetric_key_file
 
-    def download_files(self, sftp, encrypted_data_file, encrypted_symmetric_key_file, base_dir):
+    def download_files(
+        self,
+        sftp: SFTPClient,
+        encrypted_data_file: SFTPAttributes,
+        encrypted_symmetric_key_file: SFTPAttributes,
+        base_dir: Path,
+    ):
         self.stdout.write(
             f"Téléchargement de {encrypted_data_file.filename} et {encrypted_symmetric_key_file.filename}..."
         )
-        data_file_path = os.path.join(base_dir, encrypted_data_file.filename)
-        symmetric_key_file_path = os.path.join(base_dir, encrypted_symmetric_key_file.filename)
-        sftp.get(encrypted_data_file.filename, data_file_path)
-        sftp.get(encrypted_symmetric_key_file.filename, symmetric_key_file_path)
+        encrypted_data_file_path = os.path.join(base_dir, encrypted_data_file.filename)
+        encrypted_symmetric_key_file_path = os.path.join(base_dir, encrypted_symmetric_key_file.filename)
+        sftp.get(encrypted_data_file.filename, encrypted_data_file_path)
+        sftp.get(encrypted_symmetric_key_file.filename, encrypted_symmetric_key_file_path)
         self.stdout.write(self.style.SUCCESS("Fichiers téléchargés"))
-        return data_file_path, symmetric_key_file_path
+        return encrypted_data_file_path, encrypted_symmetric_key_file_path
 
-    def get_private_key_data(self):
+    def get_private_key_data(self) -> bytes:
         private_key_base64 = os.environ.get("SFTP_PRIVATE_KEY")
         if not private_key_base64:
             raise KeyError("Variable d'environnement SFTP_PRIVATE_KEY requise")
         return base64.b64decode(private_key_base64)
 
-    def decrypt_symmetric_key(self, private_key_data, encrypted_symmetric_key_file_path, base_dir):
+    def decrypt_symmetric_key(self, private_key_data: bytes, encrypted_symmetric_key_file_path: str, base_dir: Path):
         self.stdout.write("Déchiffrement de la clé symétrique...")
         with tempfile.NamedTemporaryFile() as temp_key_file_private_key:
             temp_key_file_private_key.write(private_key_data)
@@ -156,11 +166,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Clé symétrique déchiffrée"))
         return symmetric_key_file_path
 
-    def decrypt_data_file(self, data_file_path, symmetric_key_path, base_dir):
+    def decrypt_data_file(self, encrypt_data_file_path: str, symmetric_key_path: str, base_dir: Path):
         self.stdout.write("Déchiffrement du fichier de données...")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         decrypted_file_path = os.path.join(
-            base_dir, f"{timestamp}_{os.path.basename(data_file_path).replace('.encrypted', '')}"
+            base_dir, f"{timestamp}_{os.path.basename(encrypt_data_file_path).replace('.encrypted', '')}"
         )
         try:
             subprocess.run(
@@ -173,7 +183,7 @@ class Command(BaseCommand):
                     "-salt",
                     "-pbkdf2",
                     "-in",
-                    data_file_path,
+                    encrypt_data_file_path,
                     "-out",
                     decrypted_file_path,
                     "-pass",
