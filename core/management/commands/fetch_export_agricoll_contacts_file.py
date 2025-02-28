@@ -20,7 +20,6 @@ class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
     Vérifie à la fois le nom d'hôte et l'empreinte de la clé publique du serveur.
     """
 
-    # Liste des empreintes officielles de CleverCloud
     # https://www.clever-cloud.com/developers/doc/addons/fs-bucket/#from-your-favorite-sftp-client
     CLEVER_CLOUD_FINGERPRINTS = [
         "SHA256:+ku6hhQb1O3OVzkZa2B+htPD+P+5K/X6QQYWXym/4Zo",
@@ -46,14 +45,11 @@ class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
         "SHA256:yRHC/tAlBpHLlRZ5rwbZ1z+159Bj3yg0VxHf+hXINLg",
         "SHA256:yhn79aqxOGQZ+LXdN1/vIY+jwRIbBamlVT1+HdFoA6o",
     ]
-
-    def __init__(self, expected_hostname):
-        self.expected_hostname = expected_hostname
+    EXPECTED_HOSTNAME = settings.SFTP_HOST
 
     def missing_host_key(self, client, hostname, key):
-        if hostname != self.expected_hostname:
+        if hostname != self.EXPECTED_HOSTNAME:
             raise paramiko.SSHException("Connexion refusée - host non autorisé")
-
         if key.fingerprint not in self.CLEVER_CLOUD_FINGERPRINTS:
             raise paramiko.SSHException("Connexion refusée - empreinte de clé non reconnue")
 
@@ -77,7 +73,7 @@ class Command(BaseCommand):
     def connect_to_sftp(self, credentials: dict[str, str]) -> tuple[SSHClient, SFTPClient]:
         self.stdout.write("Connexion au serveur SFTP...")
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(CleverCloudSftpVerifier(credentials["hostname"]))
+        client.set_missing_host_key_policy(CleverCloudSftpVerifier())
         client.connect(**credentials)
         sftp = client.open_sftp()
         self.stdout.write(self.style.SUCCESS("Connexion SFTP établie"))
