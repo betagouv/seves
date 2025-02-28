@@ -1,6 +1,5 @@
 import base64
 import datetime
-import hashlib
 import os
 import subprocess
 import tempfile
@@ -47,20 +46,11 @@ class CleverCloudSftpVerifier(paramiko.MissingHostKeyPolicy):
     def __init__(self, expected_hostname):
         self.expected_hostname = expected_hostname
 
-    def _get_key_fingerprint(self, key):
-        """Génère l'empreinte SHA256 d'une clé au format similaire à SSH"""
-        hash_obj = hashlib.sha256(key.asbytes())
-        fingerprint = "SHA256:" + base64.b64encode(hash_obj.digest()).decode("utf-8").rstrip("=")
-        return fingerprint
-
     def missing_host_key(self, client, hostname, key):
-        # Vérification du hostname
         if hostname != self.expected_hostname:
             raise paramiko.SSHException("Connexion refusée - host non autorisé")
 
-        # Vérification de l'empreinte à partir de la clé publique
-        key_fingerprint = self._get_key_fingerprint(key)
-        if key_fingerprint not in self.CLEVER_CLOUD_FINGERPRINTS:
+        if key.fingerprint not in self.CLEVER_CLOUD_FINGERPRINTS:
             raise paramiko.SSHException("Connexion refusée - empreinte de clé non reconnue")
 
 
