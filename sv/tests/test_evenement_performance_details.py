@@ -151,5 +151,5 @@ def test_fiche_zone_delimitee_with_multiple_zone_infestee(
 
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 25):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 23):
         client.get(evenement.get_absolute_url())

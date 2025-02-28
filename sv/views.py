@@ -116,6 +116,7 @@ class EvenementDetailView(
             .prefetch_related(
                 "detections",
                 "detections__createur",
+                "detections__contexte",
                 Prefetch(
                     "detections__lieux__prelevements",
                     queryset=Prelevement.objects.select_related(
