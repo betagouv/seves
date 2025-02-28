@@ -75,20 +75,17 @@ def get_geo_position(lat, long):
         new_lat = (float(deg) + float(minutes) / 60 + float(seconds) / (60 * 60)) * (
             -1 if direction in ["W", "S"] else 1
         )
-
         long = long.replace("'' ", '"').replace("′", "'").replace(" ", "").replace("″", '"')
         deg, minutes, seconds, direction = re.split("[°'\"]", long)
         new_long = (float(deg) + float(minutes) / 60 + float(seconds) / (60 * 60)) * (
             -1 if direction in ["W", "S"] else 1
         )
         return {"wgs84_longitude": new_long, "wgs84_latitude": new_lat}
-
     if "," in lat and "," in long:
         try:
             return {"wgs84_longitude": float(long.replace(",", ".")), "wgs84_latitude": float(lat.replace(",", "."))}
         except ValueError:
             return None
-
     if "." in lat and "." in long:
         try:
             return {"wgs84_longitude": float(long), "wgs84_latitude": float(lat)}
@@ -600,13 +597,14 @@ class Command(BaseCommand):
                         print(f"Skipping zone {numero}")
                         continue
                     else:
-                        fiche_zone = FicheZoneDelimitee.objects.create(
-                            createur=createur, **rayon_data, commentaire=row["ZD_Contexte_Commentaire"]
-                        )
-                        print("Adding FDZ to evenement")
-                        print(evenement)
-                        evenement.fiche_zone_delimitee = fiche_zone
-                        evenement.save()
+                        if row["ZD_Contexte_Commentaire"] or row["ZD_surface_ZI"].strip() or row["ZD_rayon_ZI"].strip():
+                            fiche_zone = FicheZoneDelimitee.objects.create(
+                                createur=createur, **rayon_data, commentaire=row["ZD_Contexte_Commentaire"]
+                            )
+                            print("Adding FDZ to evenement")
+                            print(evenement)
+                            evenement.fiche_zone_delimitee = fiche_zone
+                            evenement.save()
                     if row["ZD_surface_ZI"].strip() or row["ZD_rayon_ZI"].strip():
                         surface_data = {}
                         if row["ZD_surface_ZI"]:
