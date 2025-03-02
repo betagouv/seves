@@ -83,8 +83,8 @@ class SftpAgricoll:
             mod_time = datetime.datetime.fromtimestamp(file_attr.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
             print(f"- {file_attr.filename}, Modifié: {mod_time})")
 
-    def get_latest_encrypted_data_filename(self) -> str:
-        """Trouve le fichier de données chiffré (.encrypted) le plus récent."""
+    def download_latest_encrypted_data_filename(self):
+        """Trouve et télécharge le fichier de données chiffré (.encrypted) le plus récent sur le serveur SFTP."""
         file_list = self.sftp.listdir_attr()
         encrypted_files = [
             f
@@ -93,34 +93,28 @@ class SftpAgricoll:
             and not f.filename.endswith(self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX)
         ]
         try:
-            return max(encrypted_files, key=lambda f: f.st_mtime).filename
+            latest_encrypted_data_filename = max(encrypted_files, key=lambda f: f.st_mtime).filename
+            self.logger.info(f"Téléchargement de {latest_encrypted_data_filename}...")
+            self.sftp.get(latest_encrypted_data_filename, self.encrypted_data_file_path)
+            self.logger.info("Fichier téléchargé")
         except ValueError:
             raise FileNotFoundError(
                 f"Aucun fichier de données chiffré ({self.ENCRYPTED_DATA_FILE_SUFFIX}) trouvé sur le serveur SFTP"
             )
 
-    def get_latest_encrypted_symmetric_key_filename(self) -> str:
+    def download_latest_encrypted_symmetric_key_filename(self):
         """Trouve la clé symétrique chiffrée (.key.encrypted) la plus récente."""
         file_list = self.sftp.listdir_attr()
         key_files = [f for f in file_list if f.filename.endswith(self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX)]
         try:
-            return max(key_files, key=lambda f: f.st_mtime).filename
+            latest_encrypted_symmetric_key_filename = max(key_files, key=lambda f: f.st_mtime).filename
+            self.logger.info(f"Téléchargement de {latest_encrypted_symmetric_key_filename}...")
+            self.sftp.get(latest_encrypted_symmetric_key_filename, self.encrypted_symmetric_key_file_path)
+            self.logger.info("Fichier téléchargé")
         except ValueError:
             raise FileNotFoundError(
                 f"Aucune clé symétrique chiffrée ({self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX}) trouvée sur le serveur SFTP"
             )
-
-    def download_files(
-        self,
-        remote_encrypted_data_filename: str,
-        remote_encrypted_symmetric_key_filename: str,
-    ):
-        self.logger.info(
-            f"Téléchargement de {remote_encrypted_data_filename} et {remote_encrypted_symmetric_key_filename}..."
-        )
-        self.sftp.get(remote_encrypted_data_filename, self.encrypted_data_file_path)
-        self.sftp.get(remote_encrypted_symmetric_key_filename, self.encrypted_symmetric_key_file_path)
-        self.logger.info("Fichiers téléchargés")
 
     def _get_private_key_content(self) -> bytes:
         private_key_base64 = os.environ.get("SFTP_PRIVATE_KEY")
