@@ -52,6 +52,9 @@ class CleverCloudSftpVerifier(MissingHostKeyPolicy):
 
 
 class SftpAgricoll:
+    ENCRYPTED_DATA_FILE_SUFFIX = ".encrypted"
+    ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX = ".key.encrypted"
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.client: SSHClient | None = None
@@ -80,39 +83,32 @@ class SftpAgricoll:
             mod_time = datetime.datetime.fromtimestamp(file_attr.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
             print(f"- {file_attr.filename}, Modifié: {mod_time})")
 
-    def get_latest_encrypted_filenames(self) -> tuple[str, str]:
-        """Trouve les fichiers chiffrés (fichier de données et la clé symétrique) les plus récents sur le serveur SFTP"""
+    def get_latest_encrypted_data_filename(self) -> str:
+        """Trouve le fichier de données chiffré (.encrypted) le plus récent."""
         file_list = self.sftp.listdir_attr()
+        encrypted_files = [
+            f
+            for f in file_list
+            if f.filename.endswith(self.ENCRYPTED_DATA_FILE_SUFFIX)
+            and not f.filename.endswith(self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX)
+        ]
+        try:
+            return max(encrypted_files, key=lambda f: f.st_mtime).filename
+        except ValueError:
+            raise FileNotFoundError(
+                f"Aucun fichier de données chiffré ({self.ENCRYPTED_DATA_FILE_SUFFIX}) trouvé sur le serveur SFTP"
+            )
 
-        if not file_list:
-            raise FileNotFoundError("Aucun fichier trouvé sur le serveur SFTP")
-
-        latest_encrypted_data_file_attrs = None
-        latest_encrypted_symmetric_key_file_attrs = None
-        encrypted_data_file_suffix = ".encrypted"
-        encrypted_symmetric_key_file_suffix = ".key.encrypted"
-        for file_attr in file_list:
-            if file_attr.filename.endswith(encrypted_data_file_suffix) and not file_attr.filename.endswith(
-                encrypted_symmetric_key_file_suffix
-            ):
-                if (
-                    latest_encrypted_data_file_attrs is None
-                    or file_attr.st_mtime > latest_encrypted_data_file_attrs.st_mtime
-                ):
-                    latest_encrypted_data_file_attrs = file_attr
-            elif file_attr.filename.endswith(encrypted_symmetric_key_file_suffix):
-                if (
-                    latest_encrypted_symmetric_key_file_attrs is None
-                    or file_attr.st_mtime > latest_encrypted_symmetric_key_file_attrs.st_mtime
-                ):
-                    latest_encrypted_symmetric_key_file_attrs = file_attr
-
-        if not latest_encrypted_data_file_attrs:
-            raise FileNotFoundError("Aucun fichier de données chiffré (.encrypted) trouvé sur le serveur SFTP")
-        if not latest_encrypted_symmetric_key_file_attrs:
-            raise FileNotFoundError("Aucune clé symétrique chiffrée (.key.encrypted) trouvé sur le serveur SFTP")
-
-        return latest_encrypted_data_file_attrs.filename, latest_encrypted_symmetric_key_file_attrs.filename
+    def get_latest_encrypted_symmetric_key_filename(self) -> str:
+        """Trouve la clé symétrique chiffrée (.key.encrypted) la plus récente."""
+        file_list = self.sftp.listdir_attr()
+        key_files = [f for f in file_list if f.filename.endswith(self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX)]
+        try:
+            return max(key_files, key=lambda f: f.st_mtime).filename
+        except ValueError:
+            raise FileNotFoundError(
+                f"Aucune clé symétrique chiffrée ({self.ENCRYPTED_SYMMETRIC_KEY_FILE_SUFFIX}) trouvée sur le serveur SFTP"
+            )
 
     def download_files(
         self,
