@@ -408,3 +408,34 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_in_new_z
         ".fichezoneform__detections-hors-zone-infestee .choices__list--multiple",
         str(other_detection.numero),
     )
+
+
+def test_update_form_remove_from_detections_list_refresh_choices_for_other_lists(
+    live_server,
+    page: Page,
+    choice_js_fill,
+):
+    fiche_detection = FicheDetectionFactory()
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = fiche_detection.evenement
+    evenement.fiche_zone_delimitee = fiche_zone_delimitee
+    evenement.save()
+
+    detection_1 = FicheDetectionFactory(
+        evenement=evenement, zone_infestee=ZoneInfesteeFactory(nom="Test 1", fiche_zone_delimitee=fiche_zone_delimitee)
+    )
+
+    FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
+    page.locator(f"button[aria-label='Remove item: {detection_1.id}']").click(force=True)
+    choice_js_fill(
+        page,
+        ".fichezoneform__detections-hors-zone-infestee .choices__input--cloned:first-of-type",
+        str(detection_1.numero),
+        str(detection_1.numero),
+    )
+    page.locator("#save-btn").click()
+
+    detection_1.refresh_from_db()
+    assert detection_1.zone_infestee is None
+    assert detection_1.hors_zone_infestee == fiche_zone_delimitee

@@ -33,7 +33,7 @@ function initializeChoices(elementId) {
     }
     let choices = new Choices(document.getElementById(elementId), options)
     choices.passedElement.element.addEventListener('change', event=> {
-        pickedDetections.push(event.detail.value)
+        initializepickedDetections()
         rebuildChoicesOptions()
     })
     allChoices.push(choices)
@@ -48,6 +48,7 @@ function initializeAllChoices() {
 }
 
 function initializepickedDetections() {
+    pickedDetections = []
     allChoices.forEach((detectionChoice) =>{
         detectionChoice.getValue().forEach((item) =>{
             pickedDetections.push(item.value)
