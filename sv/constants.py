@@ -191,6 +191,7 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "DRAERO",
         "ELSIAU",
         "BLMOV0",
+        "GIBBCI",
     ],
     "OQZP": ["BNYVV0", "RHYCFE"],
     "OQP": [
