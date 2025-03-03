@@ -3,10 +3,9 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
-from model_bakery import baker
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, UserFactory
 from core.models import Agent, Contact
 
 User = get_user_model()
@@ -27,7 +26,7 @@ def set_django_allow_async_unsafe():
 
 @pytest.fixture(autouse=True)
 def mocked_authentification_user(db):
-    user = baker.make(get_user_model(), email="test@example.com")
+    user = UserFactory(email="test@example.com")
     user.is_active = True
     user.save()
     structure = StructureFactory(niveau2="Structure Test", libelle="Structure Test")

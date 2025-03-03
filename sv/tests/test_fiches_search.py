@@ -1,15 +1,19 @@
 import pytest
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from seves import settings
-from ..factories import FicheDetectionFactory, LieuFactory, FicheZoneFactory, EvenementFactory, OrganismeNuisibleFactory
+from ..factories import (
+    FicheDetectionFactory,
+    LieuFactory,
+    FicheZoneFactory,
+    EvenementFactory,
+    OrganismeNuisibleFactory,
+    RegionFactory,
+    ZoneInfesteeFactory,
+)
 from ..models import (
-    Region,
     OrganismeNuisible,
-    Lieu,
-    ZoneInfestee,
     Evenement,
 )
 
@@ -48,8 +52,8 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
 @pytest.mark.django_db
 def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
-    baker.make(Region, _quantity=5)
-    baker.make(OrganismeNuisible, _quantity=5)
+    RegionFactory.create_batch(5)
+    OrganismeNuisibleFactory.create_batch(5)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
@@ -72,8 +76,8 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
 @pytest.mark.django_db
 def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, choice_js_fill) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
-    baker.make(Region, _quantity=2)
-    baker.make(OrganismeNuisible, _quantity=2)
+    RegionFactory.create_batch(2)
+    OrganismeNuisibleFactory.create_batch(2)
     on = OrganismeNuisible.objects.first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?evenement__organisme_nuisible={on.pk}")
@@ -290,7 +294,7 @@ def test_search_with_multiple_filters(live_server, page: Page, mocked_authentifi
     Effectue une recherche en sélectionnant plusieurs filtres et
     vérifier que les fiches détectées retournées satisfont toutes les conditions spécifiées."""
     fiche1, fiche2 = FicheDetectionFactory.create_batch(2)
-    lieu = baker.make(Lieu, fiche_detection=fiche1, _fill_optional=True)
+    lieu = LieuFactory(fiche_detection=fiche1)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Région").select_option(str(lieu.departement.region.id))
@@ -411,7 +415,7 @@ def test_link_fiche_zone(live_server, page):
     cell_selector = ".fiches__list-row:nth-child(1) td:nth-child(10)"
     assert page.locator(cell_selector).inner_text().strip() == "1"
 
-    zone_infestee = baker.make(ZoneInfestee, fiche_zone_delimitee=fiche_zone)
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone)
     FicheDetectionFactory.create_batch(2, zone_infestee=zone_infestee)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?type_fiche=zone")
