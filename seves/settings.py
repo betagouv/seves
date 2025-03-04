@@ -255,3 +255,23 @@ if not CELERY_TASK_ALWAYS_EAGER:
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# Configuration des paramètres SFTP
+SFTP_HOST = env("SFTP_HOST")
+SFTP_USERNAME = env("SFTP_USERNAME")
+SFTP_PASSWORD = env("SFTP_PASSWORD")
+SFTP_PORT = 22
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
