@@ -15,7 +15,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
-                    <p style="white-space: pre-wrap; line-height: 1.5;">{{ subject }}</p>
+                    <p style="white-space: pre-wrap; line-height: 1.5; font-weight: bold; text-decoration: underline;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
