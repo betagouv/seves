@@ -26,9 +26,10 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
 
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     expect(page.locator("#message-type-title")).to_have_text("message")
     page.locator("#id_title").fill("Title of the message")
@@ -66,16 +67,18 @@ def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js
 
     choice_js_fill(
         page,
-        "#id_recipients_structures_only ~ input",
+        'label[for="id_recipients_structures_only"] ~ div.choices',
         active_contact.display_with_agent_unit,
         active_contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
     choice_js_fill(
         page,
-        "#id_recipients_copy_structures_only ~ input",
+        'label[for="id_recipients_copy_structures_only"] ~ div.choices',
         other_active_contact.display_with_agent_unit,
         other_active_contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     expect(page.locator("#message-type-title")).to_have_text("demande d'intervention")
     page.locator("#id_title").fill("Title of the message")
@@ -120,9 +123,10 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -182,30 +186,36 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     # Add multiple recipients
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         agents[0].nom,
         agents[0].contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
+    page.keyboard.press("Escape")
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         agents[1].nom,
         agents[1].contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
 
     # Add multiples recipients as copy
     choice_js_fill(
         page,
-        "#id_recipients_copy ~ input",
+        'label[for="id_recipients_copy"] ~ div.choices',
         agents[2].nom,
         agents[2].contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
+    page.keyboard.press("Escape")
     choice_js_fill(
         page,
-        "#id_recipients_copy ~ input",
+        'label[for="id_recipients_copy"] ~ div.choices',
         agents[3].nom,
         agents[3].contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
 
     page.locator("#id_title").fill("Title of the message")
@@ -393,7 +403,7 @@ def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_c
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_cant_pick(page, "#id_recipients ~ input", agent.nom, str(agent))
+    choice_js_cant_pick(page, 'label[for="id_recipients"] ~ div.choices', agent.nom, str(agent))
 
 
 def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_fill, choice_js_cant_pick):
@@ -406,8 +416,8 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, "#id_recipients ~ input", "FOO", "FOO")
-    choice_js_cant_pick(page, "#id_recipients ~ input", "BAR", "BAR")
+    choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "FOO", "FOO", use_locator_as_parent_element=True)
+    choice_js_cant_pick(page, 'label[for="id_recipients"] ~ div.choices', "BAR", "BAR")
 
 
 @pytest.mark.parametrize("message_type, message_label", Message.MESSAGE_TYPE_CHOICES)
@@ -444,20 +454,28 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     page.get_by_role("link", name="Message").click()
 
     # Test le champ Destinataires
-    page.locator("#id_recipients ~ input").click()
+    page.locator('label[for="id_recipients"] ~ div.choices').click()
     page.wait_for_selector("input:focus", state="visible", timeout=2_000)
     page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
+        expect(
+            page.locator('label[for="id_recipients"] ~ div.choices')
+            .locator(".choices__list")
+            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
+        ).to_be_visible()
 
     page.locator(".fr-select").first.press("Escape")
 
     # Test le champ Copie
-    page.locator("#id_recipients_copy ~ input").click()
+    page.locator('label[for="id_recipients_copy"] ~ div.choices').click()
     page.wait_for_selector("input:focus", state="visible", timeout=2_000)
     page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
+        expect(
+            page.locator('label[for="id_recipients_copy"] ~ div.choices')
+            .locator(".choices__list")
+            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
+        ).to_be_visible()
 
 
 def test_create_message_adds_agent_and_structure_contacts(
@@ -485,10 +503,22 @@ def test_create_message_adds_agent_and_structure_contacts(
     page.get_by_role("link", name="Message").click()
 
     # Ajout du destinataire
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.keyboard.press("Escape")
     # Ajout de la copie
-    choice_js_fill(page, "#id_recipients_copy ~ input", contact_copy.agent.nom, contact_copy.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients_copy"] ~ div.choices',
+        contact_copy.agent.nom,
+        contact_copy.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.keyboard.press("Escape")
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
@@ -540,7 +570,13 @@ def test_create_multiple_messages_adds_contacts_once(
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.locator("#id_title").fill("Message 1")
     page.locator("#id_content").fill("Message de test 1")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -549,7 +585,13 @@ def test_create_multiple_messages_adds_contacts_once(
     page.get_by_test_id("element-actions").click()
     page.locator(".message-actions").get_by_role("link", name="Message", exact=True).click()
 
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.locator("#id_title").fill("Message 2")
     page.locator("#id_content").fill("Message de test 2")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -593,7 +635,13 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
     page.get_by_role("link", name="Message").click()
 
     # Envoi du message
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -619,7 +667,13 @@ def test_create_message_from_locale_from_same_structure_does_not_changes_visibil
     page.get_by_role("link", name="Message").click()
 
     # Envoi du message
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -649,7 +703,13 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
     page.get_by_role("link", name="Message").click()
 
     # Envoi du message
-    choice_js_fill(page, "#id_recipients ~ input", contact.agent.nom, contact.display_with_agent_unit)
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        contact.agent.nom,
+        contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
@@ -730,9 +790,10 @@ def test_message_with_document_exceeding_max_size_shows_validation_error(live_se
     page.get_by_role("link", name="Message").click()
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message avec fichier trop volumineux")
     page.locator("#id_content").fill("Test de validation de taille de fichier")
@@ -766,9 +827,10 @@ def test_can_add_message_with_document_confirmation_modal_reject(live_server, pa
 
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
@@ -780,7 +842,6 @@ def test_can_add_message_with_document_confirmation_modal_reject(live_server, pa
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
     page.locator("#send-without-adding-document").click()
-
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
     message = Message.objects.get()
     assert message.documents.count() == 0
@@ -795,9 +856,10 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
 
     choice_js_fill(
         page,
-        "#id_recipients ~ input",
+        'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
