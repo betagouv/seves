@@ -172,7 +172,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("message-send-btn").addEventListener("click", event =>{
         event.preventDefault()
+        const messageForm = document.getElementById("message-form")
+        messageForm.reportValidity()
+
+        if (!messageForm.checkValidity()) {
+            return
+        }
         event.target.disabled = true
+
         const isDocumentBlockVisible = !document.querySelector(".document-form").classList.contains("fr-hidden")
         const hasFile = !!document.getElementById('id_file').files[0]
 
