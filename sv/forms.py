@@ -11,7 +11,7 @@ from django.utils.translation import ngettext
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
-from core.models import Structure
+from core.models import Structure, Visibilite
 from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin, WithLatestVersionLocking
 from sv.models import (
     FicheZoneDelimitee,
@@ -31,6 +31,12 @@ class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
     class Meta:
         model = Evenement
         fields = ["visibilite"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["visibilite"].choices = [
+            (value, Visibilite.get_masculine_label(value)) for value, _ in Visibilite.choices
+        ]
 
 
 class DepartementModelChoiceField(forms.ModelChoiceField):

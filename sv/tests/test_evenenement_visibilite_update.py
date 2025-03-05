@@ -27,8 +27,8 @@ def test_users_from_ac_can_update_visibilite(live_server, page: Page, mocked_aut
     page.get_by_role("button", name="Actions").click()
     page.locator("#action-1").get_by_text("Modifier la visibilité").click()
 
-    expect(page.get_by_label("Locale")).to_be_checked()
-    page.get_by_label("Nationale").click(force=True)
+    expect(page.get_by_label("Local")).to_be_checked()
+    page.get_by_label("National").click(force=True)
     page.get_by_role("button", name="Valider").click()
 
     expect(page.get_by_text("La visibilité de l'évenement a bien été modifiée.")).to_be_visible()
@@ -63,8 +63,8 @@ def test_users_from_ac_can_update_visibilite_backward(
     page.get_by_role("button", name="Actions").click()
     page.locator("#action-1").get_by_text("Modifier la visibilité").click()
 
-    expect(page.get_by_label("Nationale")).to_be_checked()
-    page.get_by_label("Locale").click(force=True)
+    expect(page.get_by_label("National")).to_be_checked()
+    page.get_by_label("Local").click(force=True)
     page.get_by_role("button", name="Valider").click()
 
     expect(page.get_by_text("La visibilité de l'évenement a bien été modifiée.")).to_be_visible()
