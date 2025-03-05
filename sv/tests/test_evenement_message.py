@@ -814,3 +814,32 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
     message = Message.objects.get()
     assert message.documents.count() == 1
     expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
+
+
+def test_can_add_and_see_point_de_situation(live_server, page: Page):
+    active_contact = ContactAgentFactory(with_active_agent=True)
+    evenement = EvenementFactory()
+    evenement.contacts.add(active_contact)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Point de situation").click()
+
+    expect(page.locator("#message-type-title")).to_have_text("point de situation")
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
+    assert page.text_content(cell_selector) == "Structure Test"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
+    assert page.text_content(cell_selector).strip() == str(active_contact)
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "Title of the message"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Point de situation"
