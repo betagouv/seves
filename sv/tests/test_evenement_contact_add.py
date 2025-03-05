@@ -144,7 +144,7 @@ def test_add_contact_to_an_evenement(live_server, page, contacts, choice_js_fill
     page.get_by_role("tab", name="Contacts").click()
 
     expect(page.get_by_text("Le contact a été ajouté avec succès.")).to_be_visible()
-    expect(page.locator(".fr-card__content")).to_be_visible()
+    expect(page.get_by_test_id("contacts-agents")).to_be_visible()
 
 
 def test_cant_add_inactive_contact_to_an_evenement(live_server, page, contacts, choice_js_fill):
@@ -178,8 +178,10 @@ def test_add_multiple_contacts_to_an_evenement(live_server, page, contacts, choi
 
     expect(page.get_by_text("Les 2 contacts ont été ajoutés avec succès.")).to_be_visible()
     page.get_by_role("tab", name="Contacts").click()
-    expect(page.locator(".fr-card__content").first).to_be_visible()
-    expect(page.locator("div:nth-child(2) > .fr-card > .fr-card__body > .fr-card__content")).to_be_visible()
+    assert page.get_by_test_id("contacts-agents").count() == 2
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}", exact=True)
+    ).to_be_visible()
 
 
 def test_no_contact_selected(live_server, page, contact, choice_js_fill):
