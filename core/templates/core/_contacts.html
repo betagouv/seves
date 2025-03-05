@@ -8,15 +8,19 @@
 </div>
 <div class="fr-container--fluid">
     <div class="fr-grid-row fr-grid-row--gutters">
-        {% for contact in contacts_agents %}
-            <div class="fr-col-12 fr-col-sm-6 fr-col-md-4 fr-col-lg-3" data-testid="contacts-agents">
-                {% include "core/_carte_resume_contact.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi %}
-            </div>
-        {% endfor %}
-        {% for contact in contacts_structures %}
-            <div class="fr-col-12 fr-col-sm-6 fr-col-md-4 fr-col-lg-3" data-testid="contacts-structures">
-                {% include "core/_carte_resume_contact.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi %}
-            </div>
-        {% endfor %}
+        <div class="fr-col-12 fr-col-lg-6">
+            {% for contact in contacts_structures %}
+                <div data-testid="contacts-structures" class="contact-structure fr-grid-row fr-mb-2v fr-p-2w">
+                    {% include "core/_carte_resume_contact_structure.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="fr-col-12 fr-col-lg-6">
+            {% for contact in contacts_agents %}
+                <div data-testid="contacts-agents" class="contact-agent fr-grid-row fr-mb-2v fr-p-2w">
+                    {% include "core/_carte_resume_contact_agent.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi %}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>

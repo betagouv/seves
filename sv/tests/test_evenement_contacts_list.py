@@ -19,10 +19,12 @@ def test_contacts_agents_order_in_list(live_server, page):
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
 
-    expect(page.locator(".fr-card__content").first).to_contain_text(f"{contact2.agent.nom} {contact2.agent.prenom}")
-    expect(page.locator(".fr-card__content").first).to_contain_text(contact2.agent.structure.libelle)
-    expect(page.locator(".fr-card__content").last).to_contain_text(f"{contact1.agent.nom} {contact1.agent.prenom}")
-    expect(page.locator(".fr-card__content").last).to_contain_text(contact1.agent.structure.libelle)
+    expect(page.get_by_test_id("contacts-agents").first).to_contain_text(
+        f"{contact2.agent.nom} {contact2.agent.prenom}"
+    )
+    expect(page.get_by_test_id("contacts-agents").first).to_contain_text(contact2.agent.structure.libelle)
+    expect(page.get_by_test_id("contacts-agents").last).to_contain_text(f"{contact1.agent.nom} {contact1.agent.prenom}")
+    expect(page.get_by_test_id("contacts-agents").last).to_contain_text(contact1.agent.structure.libelle)
 
 
 @pytest.mark.django_db
@@ -40,8 +42,8 @@ def test_contacts_structures_order_in_list(
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
 
-    expect(page.locator(".fr-card__content").first).to_contain_text(contact2.structure.libelle)
-    expect(page.locator(".fr-card__content").last).to_contain_text(contact1.structure.libelle)
+    expect(page.get_by_test_id("contacts-structures").first).to_contain_text(contact2.structure.libelle)
+    expect(page.get_by_test_id("contacts-structures").last).to_contain_text(contact1.structure.libelle)
 
 
 def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(

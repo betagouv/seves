@@ -137,7 +137,7 @@ def test_add_structure_to_an_evenement(live_server, page, contacts_structure):
     page.get_by_text(contacts_structure[0].structure.libelle).click()
     page.get_by_role("button", name="Ajouter les structures sélectionnées").click()
     expect(page.get_by_text("La structure a été ajoutée avec succès.")).to_be_visible()
-    expect(page.locator("p").filter(has_text=contacts_structure[0].structure.libelle)).to_be_visible()
+    expect(page.get_by_test_id("contacts-structures").get_by_text(contacts_structure[0].structure.libelle))
 
 
 @pytest.mark.django_db
