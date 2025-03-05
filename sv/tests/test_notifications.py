@@ -89,11 +89,9 @@ def test_notification_point_de_situation(mailoutbox):
     evenement = EvenementFactory()
     agent_1, _agent_2 = ContactAgentFactory.create_batch(2)
     structure_1, _structure_2 = ContactStructureFactory.create_batch(2)
-    evenement.contacts.set([agent_1, structure_1])
 
     message = create_message_and_notify(
-        message_type=Message.POINT_DE_SITUATION,
-        object=evenement,
+        message_type=Message.POINT_DE_SITUATION, object=evenement, recipients=[agent_1, structure_1]
     )
 
     mail = assert_mail_common(mailoutbox, message, evenement)

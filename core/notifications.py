@@ -47,13 +47,11 @@ def notify_message(message_obj: Message):
         case Message.MESSAGE:
             recipients = [r.email for r in message_obj.recipients.all()]
             copy = [r.email for r in message_obj.recipients_copy.all()]
-        case Message.COMPTE_RENDU:
+        case Message.COMPTE_RENDU | Message.POINT_DE_SITUATION:
             recipients = [r.email for r in message_obj.recipients.all()]
         case Message.DEMANDE_INTERVENTION:
             recipients = [r.email for r in message_obj.recipients.structures_only()]
             copy = [r.email for r in message_obj.recipients_copy.structures_only()]
-        case Message.POINT_DE_SITUATION:
-            recipients = [c.email for c in message_obj.content_object.contacts.all()]
         case Message.FIN_SUIVI:
             recipients = message_obj.content_object.contacts.agents_only().filter(
                 agent__structure__niveau2=MUS_STRUCTURE

@@ -221,6 +221,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
+        self.obj = obj
         self.sender = sender
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
@@ -280,6 +281,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_STRUCTURES_ONLY:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_structures_only"]
             self.cleaned_data["recipients_copy"] = self.cleaned_data["recipients_copy_structures_only"]
+        if self.cleaned_data["message_type"] == Message.POINT_DE_SITUATION:
+            self.cleaned_data["recipients"] = self.obj.contacts.all()
         self.instance.sender = self.sender
 
 
