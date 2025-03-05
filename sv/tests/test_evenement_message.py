@@ -327,7 +327,28 @@ def test_cant_add_compte_rendu_without_recipient(live_server, page: Page):
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
-    expect(page.get_by_text("Au moins un destinataire doit être sélectionné.")).to_be_visible()
+    validation_message = page.locator("input[name='recipients_limited_recipients']").first.evaluate(
+        "el => el.validationMessage"
+    )
+    assert "Veuillez sélectionner au moins un destinataire" == validation_message
+    evenement.refresh_from_db()
+    assert Message.objects.all().count() == 0
+
+    # Bypass front-end protection
+    page.get_by_test_id("fildesuivi-add-submit").evaluate("""el => {
+      // Cloner l'élément pour supprimer tous les écouteurs existants
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+
+      el.addEventListener('click', (event) => {
+        event.preventDefault();
+        const form = el.closest('form').submit();
+      });
+    }""")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+    page.get_by_text("Au moins un destinataire doit être sélectionné.")
+    evenement.refresh_from_db()
+    assert Message.objects.all().count() == 0
 
 
 def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
