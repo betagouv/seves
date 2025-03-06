@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from unittest import mock
 
 import pytest
 from django.conf import settings
@@ -617,3 +619,85 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
     form_elements.publish_btn.click()
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_fiche_detection_with_lieu_using_siret(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    mocked_authentification_user,
+    choice_js_fill,
+    settings,
+):
+    def handle(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": "12007901700030",
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                    },
+                }
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.route("https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*", handle)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+        mock_post.assert_called_once_with(
+            "https://api.insee.fr/token",
+            headers={"Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic Rk9POkJBUg=="},
+            data={
+                "grant_type": "client_credentials",
+                "validity_period": 3600,
+            },
+            timeout=0.2,
+        )
+        expect(form_elements.add_prelevement_btn).to_be_disabled()
+        choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+        form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+
+        form_elements.add_lieu_btn.click()
+        page.wait_for_timeout(200)
+        lieu_form_elements.nom_input.fill("Mon lieu")
+        lieu_form_elements.is_etablissement_checkbox.click(force=True)
+        lieu_form_elements.sirene_btn.click()
+        choice_js_fill(
+            page,
+            "#header-search-0 .fr-select .choices__list--single",
+            "120 079 017",
+            "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
+        )
+
+        lieu_form_elements.save_btn.click()
+        form_elements.publish_btn.click()
+        page.wait_for_timeout(1000)
+
+    fiche_detection = FicheDetection.objects.get()
+    lieu_from_db = fiche_detection.lieux.get()
+    assert lieu_from_db.nom == "Mon lieu"
+    assert lieu_from_db.is_etablissement is True
+    assert lieu_from_db.siret_etablissement == "12007901700030"
+    assert lieu_from_db.pays_etablissement == "France"
+    assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET"

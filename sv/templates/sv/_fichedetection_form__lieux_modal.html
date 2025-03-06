@@ -41,10 +41,20 @@
                                 {{ form.wgs84_longitude }}
                                 {{ form.wgs84_latitude }}
                             </p>
+                            <hr class="fr-hr-or fr-mt-8v">
                             <p class="fr-checkbox-group">
-                                {{ form.is_etablissement }} {{ form.is_etablissement.label_tag}}
+                                {{ form.is_etablissement }} {{ form.is_etablissement.label_tag }}
                             </p>
                             <div class="etablissement-fields">
+                                <div class="etablissement-fields--lookup">
+                                    <button id="lieux-{{ id }}-sirene-btn" class="fr-btn fr-btn--secondary fr-mx-auto fr-my-4v">
+                                        Rechercher dans la base Sirene (France)
+                                    </button>
+                                    <div class="fr-search-bar fr-hidden fr-my-4v" id="header-search-{{ id }}" role="search">
+                                        <select class="fr-input" type="search" id="search-siret-{{ id }}-input" name="search-{{ id }}-input" data-token="{{ sirene_token }}"></select>
+                                        <button class="fr-btn" title="Rechercher">Rechercher</button>
+                                    </div>
+                                </div>
                                 <p>
                                     {{ form.nom_etablissement.label_tag }}{{ form.nom_etablissement }}
                                 </p>
