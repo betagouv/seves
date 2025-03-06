@@ -1,9 +1,14 @@
+import base64
+
+import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from requests import ConnectTimeout
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
@@ -360,3 +365,26 @@ class EmailNotificationMixin:
 
     def get_email_subject(self):
         raise NotImplementedError
+
+
+class WithSireneTokenMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if not (settings.SIRENE_CONSUMER_KEY and settings.SIRENE_CONSUMER_SECRET):
+            return context
+        basic_auth = f"{settings.SIRENE_CONSUMER_KEY}:{settings.SIRENE_CONSUMER_SECRET}"
+        auth_header = base64.b64encode(basic_auth.encode()).decode()
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {auth_header}",
+        }
+        data = {"grant_type": "client_credentials", "validity_period": 60 * 60}
+
+        try:
+            response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
+            context["sirene_token"] = response.json()["access_token"]
+        except (KeyError, ConnectionError, ConnectTimeout):
+            pass
+
+        return context

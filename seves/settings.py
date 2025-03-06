@@ -283,7 +283,14 @@ CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_STYLE_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_FONT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_IMG_SRC = ("'self'", "data:")
-CSP_CONNECT_SRC = ("'self'", "geo.api.gouv.fr")
+CSP_CONNECT_SRC = (
+    "'self'",
+    "geo.api.gouv.fr",
+    "api.insee.fr",
+)
 SENTRY_ENV = env("SENTRY_ENVIRONMENT", default="demo")
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
 CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={SENTRY_ENV}"
+
+SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
+SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")

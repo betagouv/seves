@@ -26,6 +26,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
+    WithSireneTokenMixin,
 )
 from core.models import Visibilite
 from core.redirect import safe_redirect
@@ -224,7 +225,11 @@ class EvenementUpdateView(
 
 
 class FicheDetectionCreateView(
-    WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, WithPrelevementResultatsMixin, CreateView
+    WithStatusToOrganismeNuisibleMixin,
+    WithSireneTokenMixin,
+    WithPrelevementHandlingMixin,
+    WithPrelevementResultatsMixin,
+    CreateView,
 ):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
@@ -314,6 +319,7 @@ class FicheDetectionUpdateView(
     WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
+    WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
     UpdateView,
 ):
