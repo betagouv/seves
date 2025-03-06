@@ -27,3 +27,4 @@ async_timeout
 redis
 django-csp
 django-countries
+testcontainers[sftp]

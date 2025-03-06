@@ -70,6 +70,7 @@ class Command(BaseCommand):
             raise Exception(f"Erreur lors de l'importation à la ligne {ligne} : {e}")
 
     def handle(self, *args, **kwargs):
+        self.stdout.write("Début de l'importation...")
         start_time = time.time()
         csv_file_path = kwargs["csv_file"]
         ligne = 1
