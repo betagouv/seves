@@ -7,21 +7,31 @@
 PRIVATE_KEY_FILENAME="private.key"
 SYMMETRIC_KEY_FILENAME="symmetric.key"
 DATA_FILENAME="agricoll.csv"
+# Le premier paramètre est le chemin SFTP, par défaut c'est la racine
+SFTP_PATH="${1:-.}"
 
 # Stocke dans un fichier les cles publiques du serveur SFTP
 echo $SFTP_CLEVERCLOUD_KNOWN_HOSTS | base64 -d > clevercloud_known_hosts
 
 # Récupère la clé symétrique chiffrée la plus récente (fichier .key.encrypted)
-sshpass -p "$SFTP_PASSWORD" sftp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST" <<< $'ls -lt *.key.encrypted\nbye' > sftp_key_output.txt
+sshpass -p "$SFTP_PASSWORD" sftp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST" <<EOF > sftp_key_output.txt
+cd ${SFTP_PATH}
+ls -lt *.key.encrypted
+bye
+EOF
 LATEST_ENCRYPTED_KEY_FILENAME=$(cat sftp_key_output.txt | grep -v "sftp>" | grep ".key.encrypted" | head -1 | awk '{print $NF}')
 
 # Récupère le fichier de données chiffé le plus récent (fichier .csv.encrypted)
-sshpass -p "$SFTP_PASSWORD" sftp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST" <<< $'ls -lt *.csv.encrypted\nbye' > sftp_data_output.txt
+sshpass -p "$SFTP_PASSWORD" sftp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST" <<EOF > sftp_data_output.txt
+cd ${SFTP_PATH}
+ls -lt *.csv.encrypted
+bye
+EOF
 LATEST_ENCRYPTED_DATA_FILENAME=$(cat sftp_data_output.txt | grep -v "sftp>" | grep ".csv.encrypted" | head -1 | awk '{print $NF}')
 
 # Télécharge les deux fichiers chiffrés (clé symétrique et fichier de données)
-sshpass -p "$SFTP_PASSWORD" scp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST:$LATEST_ENCRYPTED_KEY_FILENAME" .
-sshpass -p "$SFTP_PASSWORD" scp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST:$LATEST_ENCRYPTED_DATA_FILENAME" .
+sshpass -p "$SFTP_PASSWORD" scp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST:$SFTP_PATH/$LATEST_ENCRYPTED_KEY_FILENAME" .
+sshpass -p "$SFTP_PASSWORD" scp -o UserKnownHostsFile=clevercloud_known_hosts -o StrictHostKeyChecking=yes "$SFTP_USERNAME@$SFTP_HOST:$SFTP_PATH/$LATEST_ENCRYPTED_DATA_FILENAME" .
 
 # Déchiffre la clé symétrique
 echo $SFTP_PRIVATE_KEY | base64 -d > $PRIVATE_KEY_FILENAME
