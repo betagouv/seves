@@ -4,13 +4,9 @@ from .views import (
     DocumentUploadView,
     DocumentDeleteView,
     DocumentUpdateView,
-    ContactAddFormView,
-    ContactSelectionView,
     ContactDeleteView,
     MessageCreateView,
     SoftDeleteView,
-    StructureAddFormView,
-    StructureSelectionView,
     ACNotificationView,
     PublishView,
 )
@@ -41,8 +37,6 @@ urlpatterns = [
         auth_views.logout,
         name="logout",
     ),
-    path("contacts/ajout", ContactAddFormView.as_view(), name="contact-add-form"),
-    path("contacts/ajout/agents", ContactSelectionView.as_view(), name="contact-add-form-select-agents"),
     path(
         "contacts/suppression/",
         ContactDeleteView.as_view(),
@@ -68,6 +62,4 @@ urlpatterns = [
         ACNotificationView.as_view(),
         name="notify-ac",
     ),
-    path("structures/ajout/selection", StructureAddFormView.as_view(), name="structure-selection-add-form"),
-    path("structures/ajout", StructureSelectionView.as_view(), name="structure-add"),
 ]
