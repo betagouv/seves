@@ -1,12 +1,11 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.utils.http import urlencode
 from playwright.sync_api import expect
 from django.urls import reverse
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
-from core.models import Contact, Structure, Agent
+from core.models import Contact
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -25,217 +24,82 @@ def contacts(db):
     return ContactAgentFactory.create_batch(2, agent__structure=structure, with_active_agent=True)
 
 
-def test_add_contact_form(live_server, page, mocked_authentification_user):
+def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill):
+    contact = ContactAgentFactory(with_active_agent=True)
     evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-
-    expect(page.get_by_role("link", name="Retour à l'évenement")).to_be_visible()
-    expect(page.get_by_role("heading", name="Ajouter un agent")).to_be_visible()
-    expect(page.get_by_text("Structure", exact=True)).to_be_visible()
-    expect(page.get_by_text(mocked_authentification_user.agent.structure.libelle).nth(1)).to_be_visible()
-    expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
-
-
-@pytest.mark.django_db
-def test_cant_forge_url_to_create_open_redirect_add_contact_form(live_server, page):
-    evenement = EvenementFactory()
-    content_type = ContentType.objects.get_for_model(evenement)
-    url = (
-        reverse("structure-selection-add-form")
-        + f"?fiche_id={evenement.pk}&content_type_id={content_type.pk}&next=https://google.fr"
-    )
-    page.goto(f"{live_server.url}/{url}")
-
-    expect(page.get_by_role("link", name="Retour à l'évenement")).to_have_attribute(
-        "href", evenement.get_absolute_url()
-    )
-
-
-def test_cant_access_add_contact_form_if_evenement_brouillon(live_server, page):
-    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    content_type = ContentType.objects.get_for_model(evenement)
-    page.goto(
-        f"{live_server.url}/{reverse('contact-add-form')}?fiche_id={evenement.id}&content_type_id={content_type.id}&next={evenement.get_absolute_url()}"
-    )
-    expect(page.get_by_text("Action impossible car la fiche est en brouillon")).to_be_visible()
-
-
-def test_add_contact_form_back_to_evenement(live_server, page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    page.get_by_role("link", name="Retour à l'évenement").click()
-
-    expect(page).to_have_url(f"{live_server.url}{evenement.get_absolute_url()}")
-
-
-@pytest.mark.django_db
-def test_structure_list(live_server, page):
-    """Test que la liste des structures soit bien dans le contexte du formulaire d'ajout de contact"""
-    Contact.objects.all().delete()
-    Agent.objects.all().delete()
-    Structure.objects.all().delete()
-
-    for i in range(0, 3):
-        ContactAgentFactory(agent__structure__libelle=f"Structure {i + 1}", with_active_agent=True)
-    assert Structure.objects.count() == 3
-
-    evenement = EvenementFactory(createur=Structure.objects.first())
-    url = f"{reverse('contact-add-form')}?{urlencode({'fiche_id': evenement.pk, 'content_type_id': ContentType.objects.get_for_model(evenement).id, 'next': evenement.get_absolute_url()})}"
-    page.goto(f"{live_server.url}{url}")
-
-    page.query_selector(".choices").click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Structure")
-    for i in range(0, 3):
-        expect(page.get_by_role("option", name=f"Structure {i + 1}", exact=True)).to_be_visible()
-
-
-def test_add_contact_form_select_structure(live_server, page, contacts, choice_js_fill):
-    """Test l'affichage des contacts dans le formulaire de sélection suite à la selection d'une structure"""
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
-    page.get_by_role("button", name="Rechercher").click()
-    contact1 = contacts[0]
-    contact2 = contacts[1]
-    expect(page.get_by_text(f"{contact1.agent.nom}")).to_be_visible()
-    expect(page.get_by_text(f"{contact1.agent.nom}")).to_contain_text(f"{contact1.agent.nom} {contact1.agent.prenom}")
-    expect(page.get_by_text(f"{contact2.agent.nom}")).to_be_visible()
-    expect(page.get_by_text(f"{contact2.agent.nom}")).to_contain_text(f"{contact2.agent.nom} {contact2.agent.prenom}")
-
-
-def test_cant_add_contact_form_select_structure_if_evenement_brouillon(client):
-    """Test que si un événement est en visibilité brouillon, on ne peut pas afficher des contacts dans le formulaire de sélection suite à la selection d'une structure"""
-    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-
-    response = client.post(
-        reverse("contact-add-form"),
-        data={
-            "fiche_id": evenement.id,
-            "structure": evenement.createur,
-            "next": evenement.get_absolute_url(),
-            "content_type_id": ContentType.objects.get_for_model(evenement).id,
-        },
-        follow=True,
-    )
-
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
-
-
-def test_add_contact_to_an_evenement(live_server, page, contacts, choice_js_fill):
-    evenement = EvenementFactory()
-    contact1 = contacts[0]
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
+    choice_js_fill(page, "#add-contact-agent-form .choices", contact.agent.nom, contact.display_with_agent_unit)
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
     page.get_by_role("tab", name="Contacts").click()
 
-    expect(page.get_by_text("Le contact a été ajouté avec succès.")).to_be_visible()
+    expect(page.get_by_text("L'agent a été ajouté avec succès.")).to_be_visible()
     expect(page.get_by_test_id("contacts-agents")).to_be_visible()
+    assert page.get_by_test_id("contacts-agents").count() == 1
+    assert Evenement.objects.filter(pk=evenement.pk, contacts=contact).exists()
 
 
-def test_cant_add_inactive_contact_to_an_evenement(live_server, page, contacts, choice_js_fill):
-    contact1 = contacts[0]
-    user = contact1.agent.user
-    user.is_active = False
-    user.save()
-
+def test_cant_add_inactive_agent_to_an_evenement(live_server, page, choice_js_cant_pick):
+    contact = ContactAgentFactory()
     evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
-    page.get_by_role("button", name="Rechercher").click()
-    expect(page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}")).not_to_be_visible()
-    expect(page.get_by_text(f"{contacts[1].agent.nom} {contacts[1].agent.prenom}")).to_be_visible()
+
+    choice_js_cant_pick(page, "#add-contact-agent-form .choices", contact.agent.nom, contact.display_with_agent_unit)
 
 
-def test_add_multiple_contacts_to_an_evenement(live_server, page, contacts, choice_js_fill):
+def test_cant_add_inactive_structure_to_an_evenement(live_server, page, choice_js_cant_pick):
+    contact = ContactStructureFactory(email="")
     evenement = EvenementFactory()
-    contact1 = contacts[0]
-    contact2 = contacts[1]
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", "MUS", "MUS")
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}").click()
-    page.get_by_text(f"{contact2.agent.nom} {contact2.agent.prenom}").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
 
-    expect(page.get_by_text("Les 2 contacts ont été ajoutés avec succès.")).to_be_visible()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+
+    choice_js_cant_pick(page, "#add-contact-structure-form .choices", str(contact), str(contact))
+
+
+def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill):
+    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(2, with_active_agent=True)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent_1.agent.nom, contact_agent_1.display_with_agent_unit
+    )
+    page.get_by_role("tab", name="Contacts").click()
+    page.wait_for_timeout(1000)
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent_2.agent.nom, contact_agent_2.display_with_agent_unit
+    )
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
+    expect(page.get_by_text("Les 2 agents ont été ajoutés avec succès.")).to_be_visible()
     page.get_by_role("tab", name="Contacts").click()
     assert page.get_by_test_id("contacts-agents").count() == 2
     expect(
-        page.get_by_test_id("contacts-agents").get_by_text(f"{contact1.agent.nom} {contact1.agent.prenom}", exact=True)
+        page.get_by_test_id("contacts-agents").get_by_text(
+            f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}", exact=True
+        )
+    ).to_be_visible()
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(
+            f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}", exact=True
+        )
     ).to_be_visible()
 
 
-def test_no_contact_selected(live_server, page, contact, choice_js_fill):
-    """Test l'affichage d'un message d'erreur si aucun contact n'est sélectionné"""
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
-
-    expect(page.get_by_text("Veuillez sélectionner au")).to_be_visible()
-    expect(page.locator("#form-selection")).to_contain_text("Veuillez sélectionner au moins un contact")
-
-
-def test_add_contact_form_back_to_evenement_after_select_structure(live_server, page, contact, choice_js_fill):
-    """Test le lien de retour vers l'événement après la selection d'une structure et l'affichage des contacts associés"""
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_role("link", name="Retour à l'évenement").click()
-
-    expect(page).to_have_url(f"{live_server.url}{evenement.get_absolute_url()}")
-
-
-def test_add_contact_form_back_to_fiche_after_error_message(live_server, page, contact, choice_js_fill):
-    """Test le lien de retour vers l'événement après l'affichage du message d'erreur si aucun contact n'est sélectionné"""
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", contact.agent.structure.libelle, contact.agent.structure.libelle)
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
-    page.get_by_role("link", name="Retour à l'évenement").click()
-
-    expect(page).to_have_url(f"{live_server.url}{evenement.get_absolute_url()}")
-
-
-def test_cant_add_contact_if_evenement_brouillon(client, contact):
+def test_cant_add_contact_agent_if_evenement_brouillon(client, contact):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
-        reverse("contact-add-form-select-agents"),
+        reverse("agent-add"),
         data={
-            "structure": contact.agent.structure.id,
-            "contacts": [contact.id],
+            "contacts_agents": [contact.id],
             "content_type_id": ContentType.objects.get_for_model(evenement).id,
-            "fiche_id": evenement.id,
-            "next": evenement.get_absolute_url(),
+            "content_id": evenement.id,
         },
         follow=True,
     )
@@ -270,44 +134,42 @@ def test_cant_delete_contact_if_evenement_brouillon(client, contact):
 def test_add_agent_contact_adds_structure_contact(live_server, page, choice_js_fill):
     """Test que l'ajout d'un contact agent ajoute automatiquement le contact de sa structure"""
     structure_contact = ContactStructureFactory()
-    agent_contact = ContactAgentFactory(agent__structure=structure_contact.structure)
-    agent_contact.agent.user.is_active = True
-    agent_contact.agent.user.save()
+    agent_contact = ContactAgentFactory(agent__structure=structure_contact.structure, with_active_agent=True)
     evenement = EvenementFactory()
 
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
     choice_js_fill(
-        page, ".choices__list--single", structure_contact.structure.libelle, structure_contact.structure.libelle
+        page, "#add-contact-agent-form .choices", agent_contact.agent.nom, agent_contact.display_with_agent_unit
     )
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text(f"{agent_contact.agent.nom} {agent_contact.agent.prenom}").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
 
-    expect(page.locator("[data-testid='contacts-agents']").get_by_text(str(agent_contact), exact=True)).to_be_visible()
+    expect(page.get_by_test_id("contacts-agents").get_by_text(str(agent_contact), exact=True)).to_be_visible()
     expect(
-        page.locator("[data-testid='contacts-structures']").get_by_text(str(structure_contact), exact=True)
+        page.get_by_test_id("contacts-structures").get_by_text(str(agent_contact.agent.structure), exact=True)
     ).to_be_visible()
 
 
 def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, page, choice_js_fill):
     """Test que l'ajout de plusieurs contacts agents de la même structure n'ajoute qu'une seule fois le contact structure"""
     structure_contact = ContactStructureFactory()
-    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(2, agent__structure=structure_contact.structure)
-    for contact_agent in (contact_agent_1, contact_agent_2):
-        contact_agent.agent.user.is_active = True
-        contact_agent.agent.user.save()
+    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
+        2, agent__structure=structure_contact.structure, with_active_agent=True
+    )
     evenement = EvenementFactory()
 
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
-    page.get_by_role("link", name="Ajouter un agent").click()
-    choice_js_fill(page, ".choices__list--single", str(structure_contact.structure), str(structure_contact.structure))
-    page.get_by_role("button", name="Rechercher").click()
-    page.get_by_text(f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}").click()
-    page.get_by_text(f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}").click()
-    page.get_by_role("button", name="Ajouter les contacts sélectionnés").click()
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent_1.agent.nom, contact_agent_1.display_with_agent_unit
+    )
+    page.get_by_role("tab", name="Contacts").click()
+    page.wait_for_timeout(1000)
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent_2.agent.nom, contact_agent_2.display_with_agent_unit
+    )
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
     page.get_by_role("tab", name="Contacts").click()
 
     agents_section = page.locator("[data-testid='contacts-agents']")
@@ -317,3 +179,37 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
     structures_section = page.locator("[data-testid='contacts-structures']")
     expect(structures_section).to_have_count(1)
     expect(structures_section.get_by_text(str(structure_contact.structure), exact=True)).to_be_visible()
+
+
+def test_cant_forge_add_contact_structure_on_evenement_i_cant_see(client, mocked_authentification_user):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_structures": [Contact.objects.get(structure=mocked_authentification_user.agent.structure)],
+    }
+    response = client.post(reverse("structure-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0
+
+
+def test_cant_forge_add_contact_agent_on_evenement_i_cant_see(client, mocked_authentification_user):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_agents": [Contact.objects.get(agent=mocked_authentification_user.agent)],
+    }
+    response = client.post(reverse("agent-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0

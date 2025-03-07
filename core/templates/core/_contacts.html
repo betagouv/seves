@@ -1,13 +1,33 @@
-<div class="fr-btns-group--right fr-mb-3w">
-    <a href="{% url 'structure-selection-add-form'%}?fiche_id={{evenement.pk}}&content_type_id={{content_type.id}}&next={{evenement.get_absolute_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
-        Ajouter une structure
-    </a>
-    <a href="{% url 'contact-add-form'%}?fiche_id={{evenement.pk}}&content_type_id={{content_type.id}}&next={{evenement.get_absolute_url}}" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">
-        Ajouter un agent
-    </a>
-</div>
 <div class="fr-container--fluid">
     <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-12 fr-col-lg-6">
+            <form action="{% url 'structure-add' %}" method="post" id="add-contact-structure-form">
+                {% csrf_token %}
+                {{ add_contact_structure_form.content_id }}
+                {{ add_contact_structure_form.content_type_id }}
+                <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.label_tag }}</p>
+                <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.help_text }}</p>
+                <div class="contact-form-container">
+                    <div class="contact-form-input">{{ add_contact_structure_form.contacts_structures }}</div>
+                    <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+                </div>
+            </form>
+        </div>
+        <div class="fr-col-12 fr-col-lg-6">
+            <form action="{% url 'agent-add' %}" method="post" id="add-contact-agent-form">
+                {% csrf_token %}
+                {{ add_contact_agent_form.content_id }}
+                {{ add_contact_agent_form.content_type_id }}
+                <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.label_tag }}</p>
+                <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.help_text }}</p>
+                <div class="contact-form-container">
+                    <div class="contact-form-input">{{ add_contact_agent_form.contacts_agents }}</div>
+                    <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="contacts" class="fr-grid-row fr-grid-row--gutters">
         <div class="fr-col-12 fr-col-lg-6">
             {% for contact in contacts_structures %}
                 <div data-testid="contacts-structures" class="contact-structure fr-grid-row fr-mb-2v fr-p-2w">

@@ -18,7 +18,7 @@ from django.views.generic import (
 )
 from reversion.models import Version
 
-from core.forms import MessageForm, MessageDocumentForm
+from core.forms import MessageForm, MessageDocumentForm, StructureAddForm, AgentAddForm
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -158,7 +158,8 @@ class EvenementDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        content_type = ContentType.objects.get_for_model(self.get_object())
+        context["content_type"] = content_type
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
@@ -188,6 +189,9 @@ class EvenementDetailView(
             else getattr(self.object.detections.first(), "id", None)
         )
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        initial_data = {"content_id": self.get_object().id, "content_type_id": content_type.id}
+        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=self.get_object())
+        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=self.get_object())
         return context
 
 
