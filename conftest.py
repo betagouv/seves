@@ -55,7 +55,9 @@ def choice_js_fill(db, page):
             list_element = page.locator(locator).locator(".choices__list")
             list_element.get_by_role("option", name=exact_name, exact=True).click()
         else:
-            page.get_by_role("option", name=exact_name, exact=True).click()
+            page.locator(".choices__list--dropdown .choices__list").get_by_role(
+                "option", name=exact_name, exact=True
+            ).click()
 
     return _choice_js_fill
 

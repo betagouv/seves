@@ -1,4 +1,3 @@
-import math
 from collections import defaultdict
 from copy import copy
 
@@ -9,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField
-from core.models import Document, Contact, Message, Structure, Visibilite
+from core.models import Document, Contact, Message, Visibilite, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
 
@@ -99,54 +98,6 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["nom", "document_type", "description"]
-
-
-class ContactAddForm(DSFRForm, forms.Form):
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
-    structure = forms.ModelChoiceField(
-        queryset=Structure.objects.none(),
-        empty_label="Choisir dans la liste",
-        label_suffix="",
-    )
-    next = forms.CharField(widget=forms.HiddenInput(), required=False)
-    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["structure"].queryset = Structure.objects.can_be_contacted()
-
-
-class ContactSelectionForm(forms.Form):
-    structure = forms.ModelChoiceField(queryset=Structure.objects.all(), widget=forms.HiddenInput())
-    contacts = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.none(),
-        widget=forms.CheckboxSelectMultiple(),
-        label="",
-        error_messages={"required": "Veuillez sélectionner au moins un contact"},
-    )
-    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
-    next = forms.CharField(widget=forms.HiddenInput(), required=False)
-    contacts_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-
-    def __init__(self, *args, **kwargs):
-        structure = kwargs.pop("structure")
-        fiche_id = kwargs.pop("fiche_id")
-        content_type_id = kwargs.pop("content_type_id")
-        super().__init__(*args, **kwargs)
-        self.fields["structure"].initial = structure
-        self.fields["fiche_id"].initial = fiche_id
-        self.fields["content_type_id"].initial = content_type_id
-        content_type = ContentType.objects.get(pk=content_type_id).model_class()
-        fiche = content_type.objects.get(pk=fiche_id)
-        self.fields["contacts"].queryset = (
-            Contact.objects.filter(agent__structure=structure)
-            .can_be_emailed()
-            .exclude(pk__in=fiche.contacts.all())
-            .order_by("structure", "agent__nom")
-        )
-        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
-        self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
 
 
 class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
@@ -304,54 +255,6 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
         fields = ["document_type", "file"]
 
 
-class StructureAddForm(forms.Form):
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
-    next = forms.CharField(widget=forms.HiddenInput(), required=False)
-    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
-    structure_niveau1 = forms.ChoiceField(choices=[], label="En :", widget=forms.RadioSelect)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        niveau1_choices = Structure.objects.can_be_contacted()
-        niveau1_choices = niveau1_choices.values_list("niveau1", flat=True).distinct().order_by("niveau1")
-        self.fields["structure_niveau1"].choices = [(niveau1, niveau1) for niveau1 in niveau1_choices]
-        self.fields["structure_niveau1"].initial = niveau1_choices.first()
-
-
-class StructureSelectionForm(forms.Form):
-    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
-    next = forms.CharField(widget=forms.HiddenInput(), required=False)
-    structure_selected = forms.CharField(widget=forms.HiddenInput())
-    contacts = forms.ModelMultipleChoiceField(
-        queryset=Contact.objects.none(),
-        widget=forms.CheckboxSelectMultiple(),
-        label="",
-        error_messages={"required": "Veuillez sélectionner au moins une structure"},
-    )
-    contacts_count_half = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-
-    def __init__(self, *args, **kwargs):
-        fiche_id = kwargs.pop("fiche_id")
-        content_type_id = kwargs.pop("content_type_id")
-        structure_selected = kwargs.pop("structure_selected")
-        super().__init__(*args, **kwargs)
-        self.fields["fiche_id"].initial = fiche_id
-        self.fields["content_type_id"].initial = content_type_id
-        self.fields["structure_selected"].initial = structure_selected
-        content_type = ContentType.objects.get(pk=content_type_id).model_class()
-        fiche = content_type.objects.get(pk=fiche_id)
-        existing_contact = fiche.contacts.all()
-        self.fields["contacts"].queryset = (
-            Contact.objects.filter(structure__niveau1=structure_selected)
-            .can_be_emailed()
-            .exclude(pk__in=existing_contact)
-            .order_by("structure", "agent__nom")
-        )
-        # Calcul du nombre de contacts à afficher dans la première colonne (arrondi supérieur)
-        self.fields["contacts_count_half"].initial = math.ceil(self.fields["contacts"].queryset.count() / 2)
-
-
 class VisibiliteUpdateBaseForm(DSFRForm):
     visibilite = forms.ChoiceField(
         label="",
@@ -369,3 +272,52 @@ class VisibiliteUpdateBaseForm(DSFRForm):
 
         self.fields["visibilite"].choices = [locale, limitee, nationale]
         self.fields["visibilite"].initial = object.visibilite
+
+
+class StructureAddForm(DSFRForm):
+    content_id = forms.IntegerField(widget=forms.HiddenInput())
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    contacts_structures = forms.ModelMultipleChoiceField(
+        queryset=Contact.objects.none(),
+        widget=forms.SelectMultiple(),
+        label="Ajouter une structure",
+        help_text="Saisissez quelques caractères (nom, département...) pour voir des suggestions",
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("obj", None)
+        super().__init__(*args, **kwargs)
+        queryset = (
+            Contact.objects.structures_only()
+            .filter(structure__in=Structure.objects.can_be_contacted())
+            .order_by("structure__libelle")
+            .select_related("structure")
+        )
+        if obj:
+            queryset = queryset.exclude(id__in=obj.contacts.values_list("id", flat=True))
+        self.fields["contacts_structures"].queryset = queryset
+
+
+class AgentAddForm(DSFRForm):
+    content_id = forms.IntegerField(widget=forms.HiddenInput())
+    content_type_id = forms.IntegerField(widget=forms.HiddenInput())
+    contacts_agents = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(),
+        label="Ajouter un agent",
+        help_text="Saisissez quelques caractères (nom, prénom...) pour voir des suggestions",
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("obj", None)
+        super().__init__(*args, **kwargs)
+        queryset = (
+            Contact.objects.agents_only()
+            .can_be_emailed()
+            .select_related("agent", "agent__structure")
+            .order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
+        )
+        if obj:
+            queryset = queryset.exclude(id__in=obj.contacts.values_list("id", flat=True))
+        self.fields["contacts_agents"].queryset = queryset
