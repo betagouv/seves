@@ -47,8 +47,8 @@ def test_agent_not_in_structure_createur_cannot_view_evenement_locale(
     mocked_authentification_user.agent.structure = StructureFactory()
     mocked_authentification_user.agent.save()
 
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("403 Forbidden")).to_be_visible()
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 403
     page.goto(f"{live_server.url}{reverse('fiche-liste')}")
     expect(page.get_by_role("link", name=str(evenement.numero))).not_to_be_visible()
 
@@ -75,8 +75,8 @@ def test_agent_ac_cannot_view_evenement_brouillon(
         niveau1=AC_STRUCTURE, niveau2=structure_ac
     )
     mocked_authentification_user.agent.save()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("403 Forbidden")).to_be_visible()
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 403
 
 
 @pytest.mark.django_db
@@ -146,5 +146,5 @@ def test_agent_cant_see_visibilite_limitee_if_not_in_list(live_server, page: Pag
 
     mocked_authentification_user.agent.structure = structure
     mocked_authentification_user.agent.save()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("403 Forbidden")).to_be_visible()
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 403
