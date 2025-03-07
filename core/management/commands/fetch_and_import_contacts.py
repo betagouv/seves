@@ -25,7 +25,6 @@ class Command(BaseCommand):
             return
         try:
             subprocess.run(os.path.join(settings.BASE_DIR, "bin", "fetch_contacts_agricoll_and_key.sh"), check=True)
-            self.stdout.write(self.style.SUCCESS("Fichier de données récupéré et déchiffré avec succès"))
             call_command("import_contacts", "agricoll.csv")
         except subprocess.CalledProcessError as e:
             self.stderr.write(f"Erreur lors de l'exécution du script : {e}")
