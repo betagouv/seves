@@ -8,8 +8,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
+from celery.exceptions import OperationalError
 from django.views.generic.edit import FormView, CreateView, UpdateView
-
 from sv.view_mixins import WithAddUserContactsMixin
 from .forms import (
     DocumentUploadForm,
@@ -25,6 +25,9 @@ from .mixins import PreventActionIfVisibiliteBrouillonMixin, WithObjectFromConte
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite
 from .notifications import notify_message
 from .redirect import safe_redirect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentUploadView(
@@ -47,7 +50,14 @@ class DocumentUploadView(
             agent = request.user.agent
             document.created_by = agent
             document.created_by_structure = agent.structure
-            document.save()
+            try:
+                document.save()
+            except OperationalError:
+                messages.error(
+                    request, "Une erreur s'est produite lors de l'ajout du document.", extra_tags="core documents"
+                )
+                logger.error("Could not connect to Redis")
+                return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
             fiche = self.get_fiche_object()
             self.add_user_contacts(fiche)
@@ -297,15 +307,19 @@ class MessageCreateView(
             s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
         ]
         for i in document_numbers:
-            Document.objects.create(
-                file=form.cleaned_data[f"document_{i}"],
-                nom=form.cleaned_data[f"document_{i}"]._name,
-                document_type=form.cleaned_data[f"document_type_{i}"],
-                content_type=content_type,
-                object_id=message.pk,
-                created_by=self.request.user.agent,
-                created_by_structure=self.request.user.agent.structure,
-            )
+            try:
+                Document.objects.create(
+                    file=form.cleaned_data[f"document_{i}"],
+                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    document_type=form.cleaned_data[f"document_type_{i}"],
+                    content_type=content_type,
+                    object_id=message.pk,
+                    created_by=self.request.user.agent,
+                    created_by_structure=self.request.user.agent.structure,
+                )
+            except OperationalError:
+                logger.error("Could not connect to Redis")
+                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
 
     def _mark_contact_as_fin_suivi(self, form):
         message_type = form.cleaned_data.get("message_type")
@@ -333,8 +347,16 @@ class MessageCreateView(
         self.add_user_contacts(self.obj)
         self._handle_visibilite_if_needed(form.instance)
         self._create_documents(form)
-        notify_message(form.instance)
-        messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
+        try:
+            notify_message(form.instance)
+        except OperationalError:
+            messages.error(
+                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
+            )
+            logger.error("Could not connect to Redis")
+
+        else:
+            messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
 
     def form_invalid(self, form):

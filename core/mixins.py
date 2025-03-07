@@ -11,6 +11,10 @@ from .filters import DocumentFilter
 from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure
 from .notifications import notify_message
 from .redirect import safe_redirect
+from celery.exceptions import OperationalError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WithDocumentUploadFormMixin:
@@ -166,6 +170,9 @@ class AllowACNotificationMixin(models.Model):
                 self._add_bsv_and_mus_to_contacts()
         except ValidationError as e:
             raise ValidationError(f"Une erreur s'est produite lors de la notification : {e.message}")
+        except OperationalError:
+            logger.error("Could not connect to Redis")
+            raise ValidationError("Une erreur s'est produite lors de l'envoi du message de notification.")
 
     class Meta:
         abstract = True
