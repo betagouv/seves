@@ -13,7 +13,7 @@ class HandlePermissionsView(SuccessMessageMixin, FormView):
     form_class = UserPermissionForm
     template_name = "user_permissions.html"
     success_url = reverse_lazy("handle-permissions")
-    success_message = "Modifications de droits enregistrés sur Sèves Santé des végetaux"
+    success_message = "Modification de droits enregistrées sur Sèves Santé des végétaux"
 
     def dispatch(self, request, *args, **kwargs):
         user_groups = request.user.groups.values_list("name", flat=True)
