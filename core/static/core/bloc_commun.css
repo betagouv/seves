@@ -48,3 +48,6 @@
 .contacts-count{
     font-weight: bold;
 }
+#contacts {
+    min-height: 400px;
+}
