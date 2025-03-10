@@ -215,6 +215,8 @@ OIDC_OP_JWKS_ENDPOINT = env("OIDC_RP_JWKS_ENDPOINT")
 OIDC_RP_LOGOUT_ENDPOINT = env("OIDC_RP_LOGOUT_ENDPOINT")
 OIDC_AUTHENTICATION_CALLBACK_URL = "custom_oidc_authentication_callback"
 OIDC_OP_LOGOUT_URL_METHOD = "core.auth_views.logout"
+OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
+OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
 
@@ -271,3 +273,5 @@ LOGGING = {
         },
     },
 }
+
+CAN_GIVE_ACCESS_GROUP = "access_admin"
