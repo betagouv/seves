@@ -151,6 +151,12 @@ function setUpCommune(element) {
         inseeInput.value = event.detail.customProperties.inseeCode
         departementInput.value = event.detail.customProperties.departementCode
     })
+
+    choicesCommunes.passedElement.element.addEventListener('removeItem', function (event) {
+        communeInput.value = ""
+        inseeInput.value = ""
+        departementInput.value = ""
+    })
 }
 
 
