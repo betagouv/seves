@@ -56,6 +56,7 @@ dj-static==0.0.6
 django==5.1.7
     # via
     #   -r requirements.in
+    #   django-csp
     #   django-debug-toolbar
     #   django-filter
     #   django-post-office
@@ -64,6 +65,8 @@ django==5.1.7
     #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
+django-csp==3.8
+    # via -r requirements.in
 django-debug-toolbar==5.0.1
     # via -r requirements.in
 django-environ==0.12.0

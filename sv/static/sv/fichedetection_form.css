@@ -160,6 +160,15 @@ main {
 [id^=lieu-form] .character-counter {
     text-align: right;
 }
+[id^=lieu-form] .wgs-latitude-field{
+    flex: 0.55;
+    margin-top: .5rem;
+}
+[id^=lieu-form] .wgs-longitude-field{
+    flex: 0.55;
+    margin-right: .5rem;
+}
+
 
 .lieu-initial,
 .prelevement {

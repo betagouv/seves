@@ -46,6 +46,7 @@ jobs:
           OIDC_RP_LOGOUT_ENDPOINT: null
           DJANGO_ADMIN_URL: mon_url_secrete_admin
           SCALINGO_REDIS_URL: redis://127.0.0.1:6379
+          SENTRY_REPORT_URL: null
       - name: Run ruff
         run: ruff check .
       - name: Run ruff format

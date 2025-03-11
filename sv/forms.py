@@ -63,7 +63,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "style": "flex: 0.55; margin-right: .5rem;",
+                "class": "wgs-longitude-field",
                 "placeholder": "Longitude",
             }
         ),
@@ -72,7 +72,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "style": "flex: 0.55; margin-top: .5rem;",
+                "class": "wgs-latitude-field",
                 "placeholder": "Latitude",
             }
         ),

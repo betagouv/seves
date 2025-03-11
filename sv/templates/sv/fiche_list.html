@@ -134,7 +134,7 @@
             Ce tag est utilisé pour générer les URLs de pagination tout en conservant les filtres de recherche.
             -->
                         {% if page_obj.paginator.num_pages > 1 %}
-                            <nav role="navigation" class="fr-pagination" aria-label="Pagination" style="margin-top: 2rem;">
+                            <nav role="navigation" class="fr-pagination fr-mt-8v" aria-label="Pagination">
                                 <ul class="fr-pagination__list">
                                     <li>
                                         <a class="fr-pagination__link fr-pagination__link--first" href="?{% url_replace page='1' %}" role="link" aria-describedby="tooltip-first-page">
