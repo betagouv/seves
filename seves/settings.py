@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "django_filters",
     "post_office",
     "reversion",
+    "csp",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "seves.middlewares.LoginRequiredMiddleware",
     "reversion.middleware.RevisionMiddleware",
+    "csp.middleware.CSPMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
@@ -275,3 +277,13 @@ LOGGING = {
 }
 
 CAN_GIVE_ACCESS_GROUP = "access_admin"
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_STYLE_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_FONT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'", "geo.api.gouv.fr")
+SENTRY_ENV = env("SENTRY_ENVIRONMENT", default="demo")
+SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={SENTRY_ENV}"
