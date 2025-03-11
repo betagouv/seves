@@ -29,7 +29,7 @@ class Command(BaseCommand):
             if row["Structure"].startswith("AC/DAC/DGAL"):
                 niveau1 = "/".join(parts[:3])
                 niveau2 = "/".join(parts[3:])
-            elif row["Structure"].startswith(("SD/DRAAF", "SD/DAAF", "DDI/DDPP")):
+            elif row["Structure"].startswith(("SD/DRAAF", "SD/DAAF", "DDI/DDPP", "DDI/DDETSPP")):
                 niveau1 = "/".join(parts[:2])
                 niveau2 = parts[2]
 
