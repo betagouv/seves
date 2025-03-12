@@ -1,7 +1,7 @@
 <div class="fr-container--fluid">
     <div class="fr-grid-row fr-grid-row--gutters">
         <div class="fr-col-12 fr-col-lg-6">
-            <form action="{% url 'structure-add' %}" method="post">
+            <form action="{% url 'structure-add' %}" method="post" id="add-contact-structure-form">
                 {% csrf_token %}
                 {{ add_contact_structure_form.fiche_id }}
                 {{ add_contact_structure_form.content_type_id }}
@@ -14,7 +14,7 @@
             </form>
         </div>
         <div class="fr-col-12 fr-col-lg-6">
-            <form action="{% url 'agent-add' %}" method="post">
+            <form action="{% url 'agent-add' %}" method="post" id="add-contact-agent-form">
                 {% csrf_token %}
                 {{ add_contact_agent_form.fiche_id }}
                 {{ add_contact_agent_form.content_type_id }}
