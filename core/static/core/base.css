@@ -128,3 +128,27 @@ label:has(+ .choices select[data-required="true"])::after,
     border-radius: .25rem;
     color: white;
 }
+
+.environment-banner::before {
+    position: fixed;
+    top: 20px;
+    left: -55px;
+    width: 175px;
+    color: white;
+    text-align: center;
+    padding: 5px 0;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 9999;
+    transform: rotate(-45deg);
+    transform-origin: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.environment-recette::before {
+    content: "RECETTE";
+    background-color: red;
+}
+.environment-dev::before {
+    content: "DEV";
+    background-color: green;
+}

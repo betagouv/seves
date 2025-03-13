@@ -99,6 +99,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "seves.context_processors.select_empty_choice",
+                "seves.context_processors.environment_class",
             ],
         },
     },
@@ -288,9 +289,10 @@ CSP_CONNECT_SRC = (
     "geo.api.gouv.fr",
     "api.insee.fr",
 )
-SENTRY_ENV = env("SENTRY_ENVIRONMENT", default="demo")
+
+ENVIRONMENT = env("ENVIRONMENT", default=None)
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
-CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={SENTRY_ENV}"
+CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={ENVIRONMENT}"
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")
