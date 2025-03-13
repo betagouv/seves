@@ -97,6 +97,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "seves.context_processors.select_empty_choice",
+                "seves.context_processors.environment_class",
             ],
         },
     },
@@ -275,3 +276,5 @@ LOGGING = {
 }
 
 CAN_GIVE_ACCESS_GROUP = "access_admin"
+
+ENVIRONMENT = env("ENVIRONMENT", default=None)
