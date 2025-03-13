@@ -191,7 +191,6 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         agents[0].contact_set.get().display_with_agent_unit,
         use_locator_as_parent_element=True,
     )
-    page.keyboard.press("Escape")
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
@@ -199,8 +198,9 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         agents[1].contact_set.get().display_with_agent_unit,
         use_locator_as_parent_element=True,
     )
-    page.keyboard.press("Escape")
 
+    page.locator("#message-type-title").click()
+    page.wait_for_timeout(500)
     # Add multiples recipients as copy
     choice_js_fill(
         page,
@@ -209,7 +209,6 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         agents[2].contact_set.get().display_with_agent_unit,
         use_locator_as_parent_element=True,
     )
-    page.keyboard.press("Escape")
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',

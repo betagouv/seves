@@ -45,7 +45,10 @@ def mocked_authentification_user(db):
 @pytest.fixture
 def choice_js_fill(db, page):
     def _choice_js_fill(page, locator, fill_content, exact_name, use_locator_as_parent_element=False):
-        page.query_selector(locator).click()
+        if use_locator_as_parent_element:
+            page.locator(locator).locator("input.choices__input").click()
+        else:
+            page.query_selector(locator).click()
         page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         page.locator("*:focus").fill(fill_content)
         if use_locator_as_parent_element:
