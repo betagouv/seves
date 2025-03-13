@@ -78,10 +78,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.agent.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.agents_only()
-            .prefetch_related("agent__structure")
-            .services_deconcentres_first()
-            .order_by_structure_and_name()
+            for contact in obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
         ]
 
         context["contacts_structures"] = [
@@ -89,10 +86,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.structures_only()
-            .services_deconcentres_first()
-            .order_by_structure_and_niveau2()
-            .select_related("structure")
+            for contact in obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
         ]
 
         context["content_type"] = ContentType.objects.get_for_model(obj)
