@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager
 
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE, SERVICE_ACCOUNT_NAME
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME
 
 
 class DocumentManager(Manager):
@@ -55,20 +55,8 @@ class ContactQueryset(QuerySet):
     def can_be_emailed(self):
         return self.exclude_empty_emails().with_active_agent() | self.exclude_empty_emails().structures_only()
 
-    def services_deconcentres_first(self):
-        return self.annotate(
-            services_deconcentres_first=Case(
-                When(structure__niveau1__exact=AC_STRUCTURE, then=2),
-                default=1,
-                output_field=IntegerField(),
-            )
-        )
-
     def order_by_structure_and_name(self):
-        return self.order_by("services_deconcentres_first", "agent__structure__niveau2", "agent__nom")
-
-    def order_by_structure_and_niveau2(self):
-        return self.order_by("services_deconcentres_first", "structure__niveau2")
+        return self.order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
 
 
 class LienLibreQueryset(QuerySet):

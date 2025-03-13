@@ -1,30 +1,48 @@
 import pytest
 from playwright.sync_api import expect
 
-from core.factories import ContactAgentFactory, StructureFactory
-from core.models import Contact, Structure
+from core.factories import ContactAgentFactory, StructureFactory, ContactStructureFactory
+from core.models import Contact
 from sv.factories import EvenementFactory
 
 
 @pytest.mark.django_db
 def test_contacts_agents_order_in_list(live_server, page):
     evenement = EvenementFactory()
-    structure_mus = StructureFactory(niveau1="AC/DAC/DGAL", niveau2="MUS", libelle="MUS")
+    structure_bsv = StructureFactory(niveau1="AC/DAC/DGAL", niveau2="BSV", libelle="BSV")
     structure_ddpp17 = StructureFactory(niveau1="DDI/DDPP", niveau2="DDPP17", libelle="DDPP17")
-    contact1 = ContactAgentFactory(agent__structure=structure_mus)
-    contact2 = ContactAgentFactory(agent__structure=structure_ddpp17)
+    structure_mus = StructureFactory(niveau1="AC/DAC/DGAL", niveau2="MUS", libelle="MUS")
+    contacts_in_expected_order = [
+        ContactAgentFactory(
+            agent__structure=structure_bsv, agent__nom="Dubois", agent__prenom="Martin", with_active_agent=True
+        ),
+        ContactAgentFactory(
+            agent__structure=structure_bsv, agent__nom="Martin", agent__prenom="Sophie", with_active_agent=True
+        ),
+        ContactAgentFactory(
+            agent__structure=structure_ddpp17, agent__nom="Bernard", agent__prenom="Camille", with_active_agent=True
+        ),
+        ContactAgentFactory(
+            agent__structure=structure_ddpp17, agent__nom="Leroy", agent__prenom="Julie", with_active_agent=True
+        ),
+        ContactAgentFactory(
+            agent__structure=structure_ddpp17, agent__nom="Moreau", agent__prenom="Lucas", with_active_agent=True
+        ),
+        ContactAgentFactory(
+            agent__structure=structure_mus, agent__nom="Petit", agent__prenom="Thomas", with_active_agent=True
+        ),
+    ]
+    evenement.contacts.set(contacts_in_expected_order)
 
-    evenement.contacts.set([contact1, contact2])
-
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
 
-    expect(page.get_by_test_id("contacts-agents").first).to_contain_text(
-        f"{contact2.agent.nom} {contact2.agent.prenom}"
-    )
-    expect(page.get_by_test_id("contacts-agents").first).to_contain_text(contact2.agent.structure.libelle)
-    expect(page.get_by_test_id("contacts-agents").last).to_contain_text(f"{contact1.agent.nom} {contact1.agent.prenom}")
-    expect(page.get_by_test_id("contacts-agents").last).to_contain_text(contact1.agent.structure.libelle)
+    for i, contact in enumerate(contacts_in_expected_order):
+        agent_full_name = f"{contact.agent.nom} {contact.agent.prenom}"
+        structure_name = contact.agent.structure.libelle
+        contact_element = page.get_by_test_id("contacts-agents").nth(i)
+        expect(contact_element).to_contain_text(agent_full_name)
+        expect(contact_element).to_contain_text(structure_name)
 
 
 @pytest.mark.django_db
@@ -33,17 +51,23 @@ def test_contacts_structures_order_in_list(
     page,
 ):
     evenement = EvenementFactory()
-    structure_mus = Structure.objects.create(niveau1="AC/DAC/DGAL", niveau2="MUS", libelle="MUS")
-    structure_ddpp17 = Structure.objects.create(niveau1="DDI/DDPP", niveau2="DDPP17", libelle="DDPP17")
-    contact1 = Contact.objects.create(structure=structure_mus)
-    contact2 = Contact.objects.create(structure=structure_ddpp17)
-    evenement.contacts.set([contact1, contact2])
+    contact_bsv = ContactStructureFactory(
+        structure__niveau1="AC/DAC/DGAL", structure__niveau2="BSV", structure__libelle="BSV"
+    )
+    contact_ddpp17 = ContactStructureFactory(
+        structure__niveau1="DDI/DDPP", structure__niveau2="DDPP17", structure__libelle="DDPP17"
+    )
+    contact_mus = ContactStructureFactory(
+        structure__niveau1="AC/DAC/DGAL", structure__niveau2="MUS", structure__libelle="MUS"
+    )
+    contacts_in_expected_order = [contact_bsv, contact_ddpp17, contact_mus]
+    evenement.contacts.set(contacts_in_expected_order)
 
-    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
 
-    expect(page.get_by_test_id("contacts-structures").first).to_contain_text(contact2.structure.libelle)
-    expect(page.get_by_test_id("contacts-structures").last).to_contain_text(contact1.structure.libelle)
+    for i, contact in enumerate(contacts_in_expected_order):
+        expect(page.get_by_test_id("contacts-structures").nth(i)).to_contain_text(str(contact))
 
 
 def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
