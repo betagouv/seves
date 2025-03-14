@@ -275,7 +275,7 @@ class VisibiliteUpdateBaseForm(DSFRForm):
 
 
 class StructureAddForm(DSFRForm):
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    content_id = forms.IntegerField(widget=forms.HiddenInput())
     content_type_id = forms.IntegerField(widget=forms.HiddenInput())
     contacts_structures = forms.ModelMultipleChoiceField(
         queryset=Contact.objects.none(),
@@ -300,7 +300,7 @@ class StructureAddForm(DSFRForm):
 
 
 class AgentAddForm(DSFRForm):
-    fiche_id = forms.IntegerField(widget=forms.HiddenInput())
+    content_id = forms.IntegerField(widget=forms.HiddenInput())
     content_type_id = forms.IntegerField(widget=forms.HiddenInput())
     contacts_agents = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(),

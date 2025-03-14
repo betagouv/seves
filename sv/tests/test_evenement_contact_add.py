@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
+from core.models import Contact
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -98,7 +99,7 @@ def test_cant_add_contact_agent_if_evenement_brouillon(client, contact):
         data={
             "contacts_agents": [contact.id],
             "content_type_id": ContentType.objects.get_for_model(evenement).id,
-            "fiche_id": evenement.id,
+            "content_id": evenement.id,
         },
         follow=True,
     )
@@ -163,7 +164,7 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
         page, "#add-contact-agent-form .choices", contact_agent_1.agent.nom, contact_agent_1.display_with_agent_unit
     )
     page.get_by_role("tab", name="Contacts").click()
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1000)
     choice_js_fill(
         page, "#add-contact-agent-form .choices", contact_agent_2.agent.nom, contact_agent_2.display_with_agent_unit
     )
@@ -178,3 +179,37 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
     structures_section = page.locator("[data-testid='contacts-structures']")
     expect(structures_section).to_have_count(1)
     expect(structures_section.get_by_text(str(structure_contact.structure), exact=True)).to_be_visible()
+
+
+def test_cant_forge_add_contact_structure_on_evenement_i_cant_see(client, mocked_authentification_user):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_structures": [Contact.objects.get(structure=mocked_authentification_user.agent.structure)],
+    }
+    response = client.post(reverse("structure-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0
+
+
+def test_cant_forge_add_contact_agent_on_evenement_i_cant_see(client, mocked_authentification_user):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_agents": [Contact.objects.get(agent=mocked_authentification_user.agent)],
+    }
+    response = client.post(reverse("agent-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0

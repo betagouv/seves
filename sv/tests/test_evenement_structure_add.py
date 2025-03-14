@@ -113,7 +113,7 @@ def test_cant_add_contact_structure_if_evenement_brouillon(client):
         data={
             "contacts_structures": [contact.id],
             "content_type_id": ContentType.objects.get_for_model(evenement).id,
-            "fiche_id": evenement.id,
+            "content_id": evenement.id,
         },
         follow=True,
     )

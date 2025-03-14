@@ -188,20 +188,9 @@ class EvenementDetailView(
             else getattr(self.object.detections.first(), "id", None)
         )
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
-        context["add_contact_structure_form"] = StructureAddForm(
-            initial={
-                "fiche_id": self.get_object().id,
-                "content_type_id": content_type.id,
-            },
-            obj=self.get_object(),
-        )
-        context["add_contact_agent_form"] = AgentAddForm(
-            initial={
-                "fiche_id": self.get_object().id,
-                "content_type_id": content_type.id,
-            },
-            obj=self.get_object(),
-        )
+        initial_data = {"content_id": self.get_object().id, "content_type_id": content_type.id}
+        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=self.get_object())
+        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=self.get_object())
         return context
 
 

@@ -339,51 +339,69 @@ class WithFormErrorsAsMessagesMixin(FormView):
         return super().form_invalid(form)
 
 
-class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, FormView):
-    form_class = StructureAddForm
+class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
     def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")
-        fiche_id = self.request.POST.get("fiche_id")
+        content_id = self.request.POST.get("content_id")
         model_class = ContentType.objects.get(pk=content_type_id).model_class()
-        self.obj = model_class.objects.get(pk=fiche_id)
+        self.obj = model_class.objects.get(pk=content_id)
         return self.obj
 
-    def form_valid(self, form):
-        contacts_structures = form.cleaned_data["contacts_structures"]
-        for structure in contacts_structures:
-            self.obj.contacts.add(structure)
-        message = ngettext(
-            "La structure a été ajoutée avec succès.",
-            "Les %(count)d structures ont été ajoutées avec succès.",
-            len(contacts_structures),
-        ) % {"count": len(contacts_structures)}
-        messages.success(self.request, message, extra_tags="core contacts")
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        form = StructureAddForm(request.POST)
+        if form.is_valid():
+            self.obj = self.get_fiche_object()
+            contacts_structures = form.cleaned_data["contacts_structures"]
+            for structure in contacts_structures:
+                self.obj.contacts.add(structure)
+
+            message = ngettext(
+                "La structure a été ajoutée avec succès.",
+                "Les %(count)d structures ont été ajoutées avec succès.",
+                len(contacts_structures),
+            ) % {"count": len(contacts_structures)}
+            messages.success(request, message, extra_tags="core contacts")
+            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+        messages.error(request, "Erreur lors de l'ajout de la structure.")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
-class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, FormView):
-    form_class = AgentAddForm
+class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
     def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")
-        fiche_id = self.request.POST.get("fiche_id")
+        content_id = self.request.POST.get("content_id")
         model_class = ContentType.objects.get(pk=content_type_id).model_class()
-        self.obj = model_class.objects.get(pk=fiche_id)
+        self.obj = model_class.objects.get(pk=content_id)
         return self.obj
 
-    def form_valid(self, form):
-        contacts_agents = form.cleaned_data["contacts_agents"]
-        for contact_agent in contacts_agents:
-            self.obj.contacts.add(contact_agent)
-            if contact_structure := contact_agent.get_structure_contact():
-                self.obj.contacts.add(contact_structure)
-        message = ngettext(
-            "L'agent a été ajouté avec succès.",
-            "Les %(count)d agents ont été ajoutés avec succès.",
-            len(contacts_agents),
-        ) % {"count": len(contacts_agents)}
-        messages.success(self.request, message, extra_tags="core contacts")
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        form = AgentAddForm(request.POST)
+        if form.is_valid():
+            self.obj = self.get_fiche_object()
+            contacts_agents = form.cleaned_data["contacts_agents"]
+            for contact_agent in contacts_agents:
+                self.obj.contacts.add(contact_agent)
+                if contact_structure := contact_agent.get_structure_contact():
+                    self.obj.contacts.add(contact_structure)
+
+            message = ngettext(
+                "L'agent a été ajouté avec succès.",
+                "Les %(count)d agents ont été ajoutés avec succès.",
+                len(contacts_agents),
+            ) % {"count": len(contacts_agents)}
+            messages.success(request, message, extra_tags="core contacts")
+            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+        messages.error(request, "Erreur lors de l'ajout de l'agent.")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
