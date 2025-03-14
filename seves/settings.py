@@ -283,6 +283,8 @@ CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_STYLE_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_FONT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_IMG_SRC = ("'self'", "data:")
+if DEBUG:
+    CSP_IMG_SRC = ("'self'", "data:", "127.0.0.1:9000")
 CSP_CONNECT_SRC = ("'self'", "geo.api.gouv.fr")
 SENTRY_ENV = env("SENTRY_ENVIRONMENT", default="demo")
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")

@@ -35,6 +35,20 @@ function updateURLParameters(paramName, paramValue) {
     window.history.pushState({}, '', `?${params.toString()}`);
 }
 
+function showImage(element, direction){
+    const currentModal = element.closest("dialog")
+    dsfr(currentModal).modal.conceal()
+    const modalBtn = document.querySelector(`[aria-controls="${currentModal.getAttribute('id')}"]`)
+
+    let button = null
+    if (direction === "left"){
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) - 1}"]`)
+    } else {
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) + 1}"]`)
+    }
+    button.click()
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         selectZoneTab();
@@ -55,4 +69,15 @@ document.addEventListener('DOMContentLoaded', function() {
     showOnlyActionsForDetection(selectedTagDocument.getAttribute("id").replace("tabpanel-", ""))
 
     initializeDetectionTags();
+
+    document.querySelectorAll(".next-modal").forEach(element =>{
+        element.addEventListener("click", event =>{
+            showImage(element, "right")
+        })
+    })
+    document.querySelectorAll(".previous-modal").forEach(element =>{
+        element.addEventListener("click", event =>{
+            showImage(element, "left")
+        })
+    })
 });

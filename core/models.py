@@ -187,6 +187,10 @@ class Document(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.document_type})"
 
+    @property
+    def is_cartographie(self):
+        return self.document_type == Document.TypeDocument.CARTOGRAPHIE
+
 
 class Message(models.Model):
     MESSAGE = "message"
