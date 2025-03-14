@@ -109,7 +109,7 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.4.2
     # via celery
-model-bakery==1.20.3
+model-bakery==1.20.4
     # via -r requirements.in
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
