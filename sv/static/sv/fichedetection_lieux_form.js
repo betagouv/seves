@@ -197,7 +197,7 @@ function setupCharacterCounter(element) {
 
 
 function fetchSiret(value, token) {
-    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + value.replaceAll(" ", "")+ '*';
+    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + value.replaceAll(" ", "")+ '* AND -periode(etatAdministratifEtablissement:F)';
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -211,8 +211,8 @@ function fetchSiret(value, token) {
             }
             data["etablissements"].forEach((etablissement) => {
                 let address = etablissement["adresseEtablissement"]
-                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]}`
-                let resultEtablissement = `${etablissement["siret"]} - ${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
+                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
+                let resultEtablissement = `${etablissement["siret"]} - ${streetData}`
                 const uniteLegale = etablissement["uniteLegale"]
                 let resultUnite = `${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["prenom1UniteLegale"]?? ""} ${uniteLegale["nomUniteLegale"]?? ""}`
                 results.push({
