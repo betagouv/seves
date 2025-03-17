@@ -148,9 +148,8 @@ class Lieu(models.Model):
         "raison_sociale_etablissement",
         "adresse_etablissement",
         "siret_etablissement",
-        "site_inspection",
-        "position_chaine_distribution_etablissement",
         "code_inupp_etablissement",
+        "position_chaine_distribution_etablissement",
     ]
 
     def __str__(self):

@@ -11,7 +11,7 @@ from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import LaboratoireFactory, EvenementFactory
+from ..factories import LaboratoireFactory, EvenementFactory, LieuFactory, SiteInspectionFactory
 from ..models import (
     FicheDetection,
     StatutEvenement,
@@ -272,6 +272,65 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.code_inupp_etablissement == lieu.code_inupp_etablissement
     assert lieu_from_db.site_inspection == lieu.site_inspection
     assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
+
+
+@pytest.mark.django_db
+def test_create_fiche_detection_with_lieu_not_etablissement(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    mocked_authentification_user,
+    fill_commune,
+    choice_js_fill,
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+    site_inspection = SiteInspectionFactory()
+    lieu = LieuFactory.build(
+        is_etablissement=False,
+    )
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    page.wait_for_timeout(200)
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    fill_commune(page)
+    lieu_form_elements.lieu_site_inspection_input.select_option(str(site_inspection.id))
+    lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
+    lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+    lieu_form_elements.save_btn.click()
+    expect(form_elements.add_prelevement_btn).to_be_enabled()
+    form_elements.publish_btn.click()
+
+    page.wait_for_timeout(1000)
+
+    fiche_detection = FicheDetection.objects.get()
+    lieu_from_db = fiche_detection.lieux.get()
+    assert lieu_from_db.nom == lieu.nom
+    assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
+    assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+    assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
+    assert lieu_from_db.commune == "Lille"
+    assert lieu_from_db.code_insee == "59350"
+    assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
+    assert lieu_from_db.site_inspection == site_inspection
+    assert lieu_from_db.is_etablissement is False
+
+    assert lieu_from_db.nom_etablissement == ""
+    assert lieu_from_db.activite_etablissement == ""
+    assert lieu_from_db.pays_etablissement == ""
+    assert lieu_from_db.raison_sociale_etablissement == ""
+    assert lieu_from_db.adresse_etablissement == ""
+    assert lieu_from_db.siret_etablissement == ""
+    assert lieu_from_db.code_inupp_etablissement == ""
+    assert lieu_from_db.position_chaine_distribution_etablissement is None
 
 
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
