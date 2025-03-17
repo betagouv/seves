@@ -250,10 +250,6 @@ class LieuFormDomElements:
         return self.page.locator('[id$="-sirene-btn"]').locator("visible=true")
 
     @property
-    def nom_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="nom_etablissement"]').locator("visible=true")
-
-    @property
     def activite_etablissement_input(self) -> Locator:
         return self.page.locator('[id^="id_lieux-"][id$="activite_etablissement"]').locator("visible=true")
 

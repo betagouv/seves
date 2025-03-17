@@ -298,7 +298,6 @@ def test_update_lieu(
     if new_lieu.is_etablissement:
         if not lieu_form_elements.is_etablissement_checkbox.is_checked():
             lieu_form_elements.is_etablissement_checkbox.click(force=True)
-        lieu_form_elements.nom_etablissement_input.fill(new_lieu.nom_etablissement)
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
         lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
@@ -322,7 +321,6 @@ def test_update_lieu(
     assert lieu_from_db.code_insee == "59350"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.is_etablissement == new_lieu.is_etablissement
-    assert lieu_from_db.nom_etablissement == new_lieu.nom_etablissement
     assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == new_lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
@@ -1130,7 +1128,6 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
                 f"lieux-{i}-site_inspection": [""],
                 f"lieux-{i}-wgs84_longitude": [""],
                 f"lieux-{i}-wgs84_latitude": [""],
-                f"lieux-{i}-nom_etablissement": [""],
                 f"lieux-{i}-activite_etablissement": [""],
                 f"lieux-{i}-pays_etablissement": [""],
                 f"lieux-{i}-raison_sociale_etablissement": [""],

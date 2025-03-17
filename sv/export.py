@@ -32,7 +32,6 @@ class FicheDetectionExport:
         ("site_inspection", "Site d'inspection"),
         ("wgs84_longitude", "Longitude WGS84"),
         ("wgs84_latitude", "Latitude WGS84"),
-        ("nom_etablissement", "Nom établissement"),
         ("activite_etablissement", "Activité établissement"),
         ("pays_etablissement", "Pays établissement"),
         ("raison_sociale_etablissement", "Raison sociale établissement"),
