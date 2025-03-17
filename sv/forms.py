@@ -91,7 +91,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     siret_etablissement = forms.CharField(
         required=False,
         max_length=14,
-        label="Siret établissement",
+        label="N° SIRET",
         widget=forms.TextInput(
             attrs={
                 "pattern": "[0-9]{14}",
@@ -104,7 +104,12 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     class Meta:
         model = Lieu
         exclude = []
-        labels = {"is_etablissement": "Il s'agit d'un établissement"}
+        labels = {
+            "is_etablissement": "Il s'agit d'un établissement",
+            "raison_sociale_etablissement": "Raison sociale",
+            "adresse_etablissement": "Adresse",
+            "pays_etablissement": "Pays",
+        }
 
     def clean_departement(self):
         if self.cleaned_data["departement"] == "":

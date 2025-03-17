@@ -238,7 +238,6 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.is_etablissement_checkbox.click(force=True)
-    lieu_form_elements.nom_etablissement_input.fill(lieu.nom_etablissement)
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
@@ -265,7 +264,6 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.code_insee == "59350"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.is_etablissement == lieu.is_etablissement
-    assert lieu_from_db.nom_etablissement == lieu.nom_etablissement
     assert lieu_from_db.activite_etablissement == lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == lieu.raison_sociale_etablissement
@@ -325,7 +323,6 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     assert lieu_from_db.site_inspection == site_inspection
     assert lieu_from_db.is_etablissement is False
 
-    assert lieu_from_db.nom_etablissement == ""
     assert lieu_from_db.activite_etablissement == ""
     assert lieu_from_db.pays_etablissement == ""
     assert lieu_from_db.raison_sociale_etablissement == ""
