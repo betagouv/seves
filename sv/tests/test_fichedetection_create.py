@@ -660,7 +660,10 @@ def test_create_fiche_detection_with_lieu_using_siret(
         libelle_long="Mon ON",
     )
 
-    page.route("https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*", handle)
+    page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
@@ -700,4 +703,4 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.is_etablissement is True
     assert lieu_from_db.siret_etablissement == "12007901700030"
     assert lieu_from_db.pays_etablissement == "France"
-    assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET"
+    assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
