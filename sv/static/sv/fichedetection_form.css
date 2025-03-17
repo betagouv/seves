@@ -112,6 +112,17 @@ main {
 #organisme-nuisible .choices {
     flex: 1.42;
 }
+#organisme-nuisible  [hidden]{
+    display: block !important;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+
 
 
 /* Lieux */

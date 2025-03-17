@@ -175,6 +175,21 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
 
 
 @pytest.mark.django_db
+def test_fiche_detection_without_organisme_nuisible_shows_error(
+    live_server,
+    page: Page,
+):
+    statut_reglementaire = StatutReglementaire.objects.first()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
+    page.get_by_role("button", name="Enregistrer").click()
+
+    validation_message = page.locator("#id_organisme_nuisible").evaluate("el => el.validationMessage")
+    assert "Sélectionnez un élément dans la liste." == validation_message
+
+
+@pytest.mark.django_db
 def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill, mocked_authentification_user
 ):
