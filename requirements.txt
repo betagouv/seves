@@ -91,7 +91,7 @@ faker==33.0.0
     #   factory-boy
 filelock==3.13.4
     # via virtualenv
-greenlet==3.0.3
+greenlet==3.1.1
     # via playwright
 gunicorn==23.0.0
     # via -r requirements.in
@@ -121,7 +121,7 @@ packaging==24.0
     #   pytest
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.43.0
+playwright==1.50.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -135,7 +135,7 @@ psycopg2-binary==2.9.10
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyee==11.1.0
+pyee==12.1.1
     # via playwright
 pyopenssl==25.0.0
     # via josepy
