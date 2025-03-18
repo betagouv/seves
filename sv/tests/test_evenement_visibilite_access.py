@@ -18,7 +18,7 @@ def test_agent_in_structure_createur_can_view_evenement(
     fiche_detection = FicheDetectionFactory(evenement__visibilite=visibilite_libelle, evenement__etat=etat_libelle)
     response = page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
     assert response.status == 200
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_text(str(fiche_detection.evenement.numero), exact=True)).to_be_visible()
 
 
@@ -35,7 +35,7 @@ def test_agent_in_structure_createur_can_view_evenement_limitee(
 
     response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert response.status == 200
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_text(str(evenement.numero), exact=True)).to_be_visible()
 
 
@@ -49,7 +49,7 @@ def test_agent_not_in_structure_createur_cannot_view_evenement_locale(
 
     response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert response.status == 403
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_role("link", name=str(evenement.numero))).not_to_be_visible()
 
 
@@ -61,7 +61,7 @@ def test_agent_not_in_structure_createur_can_view_evenement_national(
     FicheDetectionFactory(evenement=evenement)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_role("heading", name=f"Événement {str(evenement.numero)}")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_role("link", name=str(evenement.numero))).to_be_visible()
 
 
@@ -116,7 +116,7 @@ def test_agent_ac_can_view_evenement(
     response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert response.status == 200
     expect(page.get_by_role("heading", name=f"Événement {str(evenement.numero)}")).to_be_visible()
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_role("link", name=str(evenement.numero))).to_be_visible()
 
 

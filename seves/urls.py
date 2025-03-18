@@ -22,7 +22,7 @@ from django.conf import settings
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="fiche-liste"), name="index"),
+    path("", RedirectView.as_view(pattern_name="evenement-liste"), name="index"),
     path("login-eap-callback", OIDCCallbackClass.as_view(), name="custom_oidc_authentication_callback"),
     path("sv/", include("sv.urls"), name="sv-index"),
     path("core/", include("core.urls"), name="core"),

@@ -6,7 +6,7 @@ from sv.factories import FicheDetectionFactory
 
 def test_can_download_export_fiche_detection(live_server, page):
     FicheDetectionFactory()
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
 
     page.get_by_test_id("extract-open").click()
     expect(page.get_by_test_id("extract-submit")).to_be_visible()

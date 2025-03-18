@@ -44,13 +44,13 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="fr-header__service"><a href="{% url 'fiche-liste' %}" title="Accueil - Sèves - MASAF">
+                            <div class="fr-header__service"><a href="{% url 'evenement-liste' %}" title="Accueil - Sèves - MASAF">
                                 <p class="fr-header__service-title"> Sèves </p>
 
                             </a></div>
                             <div>
                                 {% block product %}
-                                    <a href="{% url 'fiche-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
+                                    <a href="{% url 'evenement-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
                                         {% block product_title %}
                                         {% endblock product_title %}
                                     </a>
@@ -66,8 +66,8 @@
                                             <a href="{% url 'fiche-detection-creation' %}">Créer une fiche</a>
                                         </button>
                                     </li>
-                                    <li class="{% block highlight_menu_fiches %}{% endblock %}">
-                                        <a class="fr-btn" href="{% url 'fiche-liste' %}">Fiches</a>
+                                    <li class="{% block highlight_menu_evenements %}{% endblock %}">
+                                        <a class="fr-btn" href="{% url 'evenement-liste' %}">Évènements</a>
                                     </li>
                                     <li>
                                         <a class="fr-btn" href="https://doc.seves.beta.gouv.fr" target="_blank">Aide</a>
