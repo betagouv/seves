@@ -40,7 +40,7 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page,
     expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
     expect(page.get_by_test_id("evenement-header").get_by_text("Fin de suivi", exact=True)).to_be_visible()
 
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
     expect(page.get_by_role("cell", name="Fin de suivi")).to_be_visible()
 
 
