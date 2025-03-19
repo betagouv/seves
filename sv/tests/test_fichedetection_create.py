@@ -701,3 +701,17 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.siret_etablissement == "12007901700030"
     assert lieu_from_db.pays_etablissement == "France"
     assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
+
+
+def test_fiche_detection_without_organisme_nuisible_shows_error(
+    live_server,
+    page: Page,
+):
+    statut_reglementaire = StatutReglementaire.objects.first()
+
+    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
+    page.get_by_role("button", name="Enregistrer").click()
+
+    validation_message = page.locator("#id_organisme_nuisible").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]

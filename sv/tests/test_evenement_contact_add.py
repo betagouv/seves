@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 from django.urls import reverse
 
 from core.constants import MUS_STRUCTURE
@@ -213,3 +213,15 @@ def test_cant_forge_add_contact_agent_on_evenement_i_cant_see(client, mocked_aut
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.contacts.count() == 0
+
+
+@pytest.mark.django_db
+def test_add_contact_agent_without_value_shows_front_error(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
+    validation_message = page.locator("#id_contacts_agents").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
