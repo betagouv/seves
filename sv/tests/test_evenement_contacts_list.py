@@ -89,3 +89,33 @@ def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
     contacts_agents = page.get_by_test_id("contacts-agents")
     for contact in contacts_agents.all():
         expect(contact).to_contain_text("Fin de suivi")
+
+
+def test_click_on_contact_agent_name_opens_sidebar_for_message(live_server, page):
+    evenement = EvenementFactory()
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    evenement.contacts.set([contact_agent])
+
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_test_id("contacts-agents").locator("a.email").click()
+
+    expect(page.locator("#message-type-title")).to_have_text("message")
+    expect(page.locator(".sidebar label[for='id_recipients'] ~ div.choices [data-deletable='']")).to_have_text(
+        contact_agent.agent.agent_with_structure + "Remove item"
+    )
+
+
+def test_click_on_contact_structure_name_opens_sidebar_for_message(live_server, page):
+    evenement = EvenementFactory()
+    contact_agent = ContactStructureFactory(with_one_active_agent=True)
+    evenement.contacts.set([contact_agent])
+
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.get_by_test_id("contacts-structures").locator("a.email").click()
+
+    expect(page.locator("#message-type-title")).to_have_text("message")
+    expect(page.locator(".sidebar label[for='id_recipients'] ~ div.choices [data-deletable='']")).to_have_text(
+        str(contact_agent.structure) + "Remove item"
+    )
