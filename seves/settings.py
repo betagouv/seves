@@ -36,6 +36,8 @@ env.read_env(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+ENVIRONMENT = env("ENVIRONMENT", default=None)
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 
@@ -171,11 +173,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Sentry
 SENTRY_DSN = env("SENTRY_DSN", default=None)
 if SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=1.0,
-    )
+    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()], traces_sample_rate=1.0, environment=ENVIRONMENT)
 
 
 STORAGES = {
@@ -296,7 +294,6 @@ CSP_CONNECT_SRC = (
     "api.insee.fr",
 )
 
-ENVIRONMENT = env("ENVIRONMENT", default=None)
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
 CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={ENVIRONMENT}"
 
