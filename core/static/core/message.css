@@ -37,14 +37,3 @@ label[for=id_recipients], label[for=id_recipients_copy], label[for=id_recipients
     display: flex;
     justify-content: space-between;
 }
-
-#message-form .choices [hidden]{
-    display: block !important;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    pointer-events: none;
-    top: 0;
-    left: 0;
-}
