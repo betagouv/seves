@@ -182,6 +182,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll(".message-panel").forEach(element =>{
         element.addEventListener("click", event =>{
             changeFormBasedOnMessageType(event.target.dataset.messageType)
+            if (!!event.target.dataset.recipient){
+                choicesRecipients.setChoiceByValue(event.target.dataset.recipient)
+            }
         })
     })
 
