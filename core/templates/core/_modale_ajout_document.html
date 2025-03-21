@@ -13,7 +13,10 @@
                             class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un document</h1>
 
                             {{ document_form.as_dsfr_div }}
-                            <span class="fr-hint-text">Formats supportés : {{ allowed_extensions|join:", " }}</span>
+                            <div id="allowed-extensions-infos">
+                                <span class="fr-hint-text">Formats supportés : </span>
+                                <span id="allowed-extensions-list" class="fr-hint-text">{{ allowed_extensions|join:", " }}</span>
+                            </div>
                             <span class="fr-hint-text">Taille maximale autorisée : {{ max_upload_size_mb }} Mo</span>
 
                         </div>

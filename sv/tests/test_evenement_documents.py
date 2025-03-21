@@ -2,6 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 
+import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -557,5 +558,153 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
     assert "Erreur de configuration: limite de taille invalide" in validation_message
 
     page.get_by_test_id("documents-send").click()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    accept_attr = file_input.get_attribute("accept")
+    assert accept_attr == ".png,.jpg,.jpeg"
+    assert page.locator("#allowed-extensions-list").inner_text() == "png, jpg, jpeg"
+
+
+@pytest.mark.django_db
+def test_can_upload_document_with_allowed_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.locator("#id_description").fill("upload d'un fichier de type cartographie avec une extension autorisée")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_test_id("documents-send").click()
+
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 1
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.locator("#id_description").fill("upload d'un fichier de type cartographie avec une extension non autorisée")
+
+    # TODO: voir si set_input_files peut prendre en compte l'attribut accept sinon remplacer par vérification des messages d'erreur générés côté backend
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
+    page.get_by_test_id("documents-send").click()
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Le fichier sélectionné ne correspond pas au type de document" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.removeAttribute('data-accept-allowed-extensions');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Test attribut manquant")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_test_id("documents-send").click()
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Erreur de configuration: extensions autorisées non définies" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_for_cartographie_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.setAttribute('data-accept-allowed-extensions', '{"default": ".pdf"}');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante pour cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.locator("#id_description").fill("Test attribut manquant pour cartographie")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
+    page.get_by_test_id("documents-send").click()
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Erreur de configuration: aucune extension définie pour ce type de document" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_document_upload_with_missing_accept_for_default_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.setAttribute('data-accept-allowed-extensions', '{"cartographie": ".png"}');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante pour default")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Test attribut manquant pour default")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
+    page.get_by_test_id("documents-send").click()
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Erreur de configuration: aucune extension définie pour ce type de document" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_incompatible_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("fake_contacts.csv")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.get_by_test_id("documents-send").click()
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "Le fichier sélectionné ne correspond pas au type de document" in validation_message
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
