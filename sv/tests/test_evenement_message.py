@@ -133,9 +133,9 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_file").set_input_files("fake_contacts.csv")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("README.md", exact=True)).to_be_visible()
+    expect(page.get_by_text("fake_contacts.csv", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Cartographie")
@@ -145,9 +145,9 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("requirements.txt")
+    page.locator(".sidebar #id_file").set_input_files("fake_contacts_structures.csv")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("requirements.txt", exact=True)).to_be_visible()
+    expect(page.get_by_text("fake_contacts_structures.csv", exact=True)).to_be_visible()
 
     # Test to delete the 2nd document to see if the server can handle non-consecutive IDs of inputs
     page.locator("#document_remove_1").click()
@@ -170,8 +170,8 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
     message = Message.objects.get()
     assert message.documents.count() == 2
 
-    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
-    expect(page.get_by_role("link", name="requirements.txt", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="fake_contacts.csv", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="fake_contacts_structures.csv", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
@@ -886,7 +886,7 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_file").set_input_files("fake_contacts.csv")
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
@@ -895,7 +895,7 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
     message = Message.objects.get()
     assert message.documents.count() == 1
-    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="fake_contacts.csv", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_point_de_situation(live_server, page: Page):

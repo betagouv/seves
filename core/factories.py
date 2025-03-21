@@ -103,8 +103,10 @@ class DocumentFactory(DjangoModelFactory):
 
     nom = factory.Faker("sentence", nb_words=2)
     description = factory.Faker("paragraph")
-    file = factory.django.FileField(filename="test.csv")
+    file = factory.django.FileField(filename="test.csv", from_path="fake_contacts.csv")
     document_type = FuzzyChoice([choice[0] for choice in Document.TypeDocument.choices])
+    mimetype = "text/csv"
+    is_infected = False
 
     @factory.lazy_attribute
     def created_by(self):
