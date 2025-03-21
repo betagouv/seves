@@ -33,7 +33,7 @@ from core.mixins import (
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
-from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
+from core.validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -208,7 +208,7 @@ class EvenementDetailView(
             next=self.get_object().get_absolute_url(),
         )
         context["add_document_form"] = MessageDocumentForm()
-        context["allowed_extensions"] = AUTHORIZED_EXTENSIONS
+        context["allowed_extensions"] = AllowedExtensions.values
         contact = self.request.user.agent.structure.contact_set.get()
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["active_detection"] = (

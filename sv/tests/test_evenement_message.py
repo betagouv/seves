@@ -133,25 +133,25 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_file").set_input_files("static/images/login.jpeg")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("README.md", exact=True)).to_be_visible()
+    expect(page.get_by_text("login.jpeg", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Cartographie")
-    page.locator(".sidebar #id_file").set_input_files("requirements.in")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("requirements.in", exact=True)).to_be_visible()
+    expect(page.get_by_text("marianne.png", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("requirements.txt")
+    page.locator(".sidebar #id_file").set_input_files("static/favicon/apple-touch-icon.png")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("requirements.txt", exact=True)).to_be_visible()
+    expect(page.get_by_text("apple-touch-icon.png", exact=True)).to_be_visible()
 
     # Test to delete the 2nd document to see if the server can handle non-consecutive IDs of inputs
     page.locator("#document_remove_1").click()
-    expect(page.get_by_text("requirements.in", exact=True)).not_to_be_visible()
+    expect(page.get_by_text("marianne.png", exact=True)).not_to_be_visible()
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
@@ -170,8 +170,8 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
     message = Message.objects.get()
     assert message.documents.count() == 2
 
-    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
-    expect(page.get_by_role("link", name="requirements.txt", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="login.jpeg", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="apple-touch-icon.png", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
@@ -857,7 +857,7 @@ def test_can_add_message_with_document_confirmation_modal_reject(live_server, pa
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
@@ -886,7 +886,7 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("README.md")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
@@ -895,7 +895,7 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
     message = Message.objects.get()
     assert message.documents.count() == 1
-    expect(page.get_by_role("link", name="README.md", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="marianne.png", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_point_de_situation(live_server, page: Page):
@@ -925,3 +925,111 @@ def test_can_add_and_see_point_de_situation(live_server, page: Page):
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
     assert page.text_content(cell_selector) == "Point de situation"
+
+
+def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+
+    file_input = page.locator(".sidebar #id_file")
+    assert file_input.get_attribute("accept") == ".png,.jpg,.jpeg"
+    assert page.locator(".sidebar #allowed-extensions-list").inner_text() == "png, jpg, jpeg"
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('.sidebar #id_file');
+        fileInput.removeAttribute('data-accept-allowed-extensions');
+    }""")
+
+    page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    file_input = page.locator(".sidebar #id_file")
+    file_input.set_input_files("static/images/marianne.png")
+
+    expect(file_input).to_be_disabled()
+    expect(page.locator("#message-add-document")).to_be_disabled()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_for_cartographie_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('.sidebar #id_file');
+        fileInput.setAttribute('data-accept-allowed-extensions', '{"compte_rendu_reunion": ".pdf"}');
+    }""")
+
+    page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    file_input = page.locator(".sidebar #id_file")
+    file_input.set_input_files("scalingo.json")
+
+    expect(file_input).to_be_disabled()
+    expect(page.locator("#message-add-document")).to_be_disabled()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_empty_option_is_delete_after_selecting_document_type(live_server, page: Page):
+    """Test que l'option vide est supprimée après avoir sélectionné un type de document"""
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.AUTRE)
+
+    expect(page.locator(".sidebar #id_document_type").locator("option[value='']")).not_to_be_visible()
+
+
+def test_empty_document_type_option_after_document_added(live_server, page: Page):
+    """Test que l'option vide est présente dans le nouveau formulaire d'ajout de document après avoir ajouté un document"""
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator("#message-add-document").click()
+    page.get_by_role("button", name="Ajouter un document").click()
+
+    expect(page.locator(".sidebar").get_by_label("Type de document", exact=True)).to_have_value("")
+
+
+@pytest.mark.django_db
+def test_document_cartographie_upload_disabled_when_invalid_file_added_for_other_type(live_server, page: Page):
+    evenement = EvenementFactory()
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as temp_pdf_file:
+        page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+        page.get_by_test_id("element-actions").click()
+        page.get_by_role("link", name="Message").click()
+        page.get_by_role("button", name="Ajouter un document").click()
+        page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.AUTRE)
+        page.locator(".sidebar #id_file").set_input_files(temp_pdf_file.name)
+        page.locator(".sidebar #id_document_type").select_option("Cartographie")
+
+    expect(page.locator("#message-add-document")).to_be_disabled()
+    validation_message = page.locator(".sidebar #id_file").evaluate("el => el.validationMessage")
+    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
