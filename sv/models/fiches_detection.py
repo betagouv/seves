@@ -66,7 +66,7 @@ class ZoneInfestee(models.Model):
             "plein_air_autre_plantes_sauvages",
             "(2) Plein air — autre (2.4) plantes sauvages dans des zones non protégées",
         )
-        PLEIN_AIR_AUTRE_AUTRE = "plein_air_autre_autre", "(2) Plein air — autre (2.5) autre (veuillez préciser)"
+        PLEIN_AIR_AUTRE_AUTRE = "plein_air_autre_autre", "(2) Plein air — autre"
         ENVIRONNEMENT_FERME_SERRE = "environnement_ferme_serre", "(3) Environnement fermé (3.1) serre"
         ENVIRONNEMENT_FERME_AUTRES_JARDINS_HIVER = (
             "environnement_ferme_autres_jardins_hiver",
@@ -82,7 +82,7 @@ class ZoneInfestee(models.Model):
         )
         ENVIRONNEMENT_FERME_AUTRE = (
             "environnement_ferme_autre",
-            "(3) Environnement fermé (3.5) autre (veuillez préciser)",
+            "(3) Environnement fermé (3.5) autre",
         )
 
     class Meta:
