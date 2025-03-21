@@ -2,6 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 
+import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -64,14 +65,9 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("scalingo.json")
     page.get_by_test_id("documents-send").click()
 
+    validation_message = page.locator("#fr-modal-add-doc #id_file").evaluate("el => el.validationMessage")
+    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
     assert evenement.documents.count() == 0
-
-    expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
-    expect(
-        page.get_by_text(
-            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, txt, eml."
-        )
-    ).to_be_visible()
 
 
 def test_cant_add_document_with_correct_extension_but_fake_content(
@@ -526,7 +522,7 @@ def test_document_upload_with_missing_max_size_shows_configuration_error(live_se
     page.locator("#id_nom").fill("Test configuration manquante")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Test attribut manquant")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    file_input.set_input_files("static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
     assert "Erreur de configuration: limite de taille non définie" in validation_message
@@ -552,7 +548,7 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
     page.locator("#id_nom").fill("Test configuration invalide")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Test attribut invalide")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    file_input.set_input_files("static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
     assert "Erreur de configuration: limite de taille invalide" in validation_message
@@ -650,3 +646,117 @@ def test_cant_see_download_document_btn_if_evenement_is_cloture(live_server, pag
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
+
+
+def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    accept_attr = file_input.get_attribute("accept")
+    assert accept_attr == ".png,.jpg,.jpeg"
+    assert page.locator("#fr-modal-add-doc #allowed-extensions-list").inner_text() == "png, jpg, jpeg"
+
+
+@pytest.mark.django_db
+def test_can_upload_document_with_allowed_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_test_id("documents-send").click()
+
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 1
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
+    page.get_by_test_id("documents-send").click()
+
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.removeAttribute('data-accept-allowed-extensions');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    file_input.set_input_files("static/images/marianne.png")
+
+    expect(page.get_by_test_id("documents-send")).to_be_disabled()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_missing_accept_for_cartographie_shows_configuration_error(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.evaluate("""() => {
+        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
+        fileInput.setAttribute('data-accept-allowed-extensions', '{"default": ".pdf"}');
+    }""")
+
+    page.locator("#id_nom").fill("Test configuration manquante pour cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    file_input.set_input_files("scalingo.json")
+
+    expect(page.get_by_test_id("documents-send")).to_be_disabled()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_upload_document_with_incompatible_extension_for_cartographie(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+
+    page.locator("#id_nom").fill("Test upload doc cartographie")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    file_input = page.locator("#fr-modal-add-doc #id_file")
+    file_input.set_input_files("fake_contacts.csv")
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    page.get_by_test_id("documents-send").click()
+
+    validation_message = file_input.evaluate("el => el.validationMessage")
+    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
