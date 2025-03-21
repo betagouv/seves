@@ -7,13 +7,6 @@ from django.contrib.auth import get_user_model
 from core.models import Contact, Agent, Structure
 
 
-def _reset_contacts():
-    # Remove objects created by fixtures
-    Contact.objects.all().delete()
-    Agent.objects.all().delete()
-    Structure.objects.all().delete()
-
-
 @pytest.fixture
 def mock_csv_data(tmp_path):
     """Fixture pour les données CSV de test"""
