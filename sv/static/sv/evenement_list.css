@@ -71,8 +71,6 @@ body{
     background-color: var(--background-contrast-grey) !important;
 }
 .evenements__list-row td {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
     padding-top: 0.50rem !important;
     padding-bottom: 0.50rem !important;
 }
