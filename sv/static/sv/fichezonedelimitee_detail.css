@@ -16,6 +16,19 @@
     }
 }
 
+.gallery {
+    display: flex;
+}
+.gallery-item {
+    text-align: center;
+}
+.gallery img {
+    height: 200px;
+    width: auto;
+}
+.cursor-pointer{
+    cursor: pointer;
+}
 .img-cartographie {
     width: 95%;
 }
