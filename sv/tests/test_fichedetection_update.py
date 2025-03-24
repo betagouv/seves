@@ -566,9 +566,10 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = LieuFactory()
-    prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu, is_officiel=False)
+    prelevement = PrelevementFactory.build_with_some_related_objects_saved(
+        lieu=lieu, is_officiel=True, type_analyse=Prelevement.TypeAnalyse.CONFIRMATION
+    )
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -1196,3 +1197,20 @@ def test_add_lieu_add_and_remove_commune(
     assert lieu_from_db.commune == ""
     assert lieu_from_db.code_insee == ""
     assert lieu_from_db.departement is None
+
+
+@pytest.mark.django_db
+def test_update_prelevement_from_officiel_to_non_officiel_empties_numero_RI(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    prelevement = PrelevementFactory(is_officiel=True, numero_rapport_inspection="12-123456")
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+
+    expect(prelevement_form_elements.numero_rapport_inspection_input).to_have_value("")
+    expect(prelevement_form_elements.numero_rapport_inspection_input).to_be_disabled()

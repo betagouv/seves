@@ -146,8 +146,6 @@ class Prelevement(models.Model):
         validators=[validate_numero_rapport_inspection],
     )
 
-    OFFICIEL_FIELDS = ["numero_rapport_inspection", "laboratoire"]
-
     def __str__(self):
         return f"Prélèvement n° {self.id}"
 

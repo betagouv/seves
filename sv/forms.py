@@ -220,9 +220,9 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 
     def clean(self):
         super().clean()
-        if not self.cleaned_data["is_officiel"]:
-            for field in Prelevement.OFFICIEL_FIELDS:
-                self.cleaned_data.pop(field)
+        if self.cleaned_data["is_officiel"] is False:
+            self.cleaned_data["numero_rapport_inspection"] = ""
+            self.cleaned_data["laboratoire"] = None
 
 
 class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):

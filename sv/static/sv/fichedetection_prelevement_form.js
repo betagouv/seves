@@ -162,6 +162,7 @@ function setIsOfficiel(event){
         isOfficielCheckbox.checked = true
         isOfficielCheckbox.disabled = false
     }
+    handleChangeIsOfficiel(event)
 }
 
 function handleChangeTypeAnalyse(event){
@@ -172,6 +173,17 @@ function handleChangeTypeAnalyse(event){
     laboElement.querySelectorAll('option').forEach(option => {
         option.disabled = isConfirmation && option.getAttribute('data-confirmation-officielle') === 'false'
     });
+}
+
+function handleChangeIsOfficiel(event){
+    const isOfficielCheckbox = event.target.closest("dialog").querySelector("[id$=is_officiel]")
+    const numeroRIElement =  event.target.closest("dialog").querySelector("[id$=numero_rapport_inspection]")
+    if (isOfficielCheckbox.checked === false){
+        numeroRIElement.value = ""
+        numeroRIElement.disabled = true
+    } else {
+        numeroRIElement.disabled = false
+    }
 }
 
 function handleModalClose(event) {
@@ -193,6 +205,7 @@ function handleModalClose(event) {
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document.querySelectorAll("select[id$=structure_preleveuse]").forEach(element => element.addEventListener("change", setIsOfficiel))
     document.querySelectorAll("input[name$=type_analyse]").forEach(element => element.addEventListener("change", handleChangeTypeAnalyse))
+    document.querySelectorAll("input[name$=is_officiel]").forEach(element => element.addEventListener("change", handleChangeIsOfficiel))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-edit-prelevement-] .fr-btn--close, [id^=modal-add-edit-prelevement-] .prelevement-cancel-btn")
         .forEach(button => button.addEventListener('click', handleModalClose));
