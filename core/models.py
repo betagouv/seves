@@ -81,7 +81,7 @@ class Contact(models.Model):
         ordering = ["structure", "agent"]
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     (Q(structure__isnull=False) & Q(agent__isnull=True))
                     | (Q(structure__isnull=True) & Q(agent__isnull=False))
                 ),
@@ -266,7 +266,7 @@ class LienLibre(models.Model):
     class Meta:
         constraints = [
             CheckConstraint(
-                check=~Q(content_type_1=models.F("content_type_2"), object_id_1=models.F("object_id_2")),
+                condition=~Q(content_type_1=models.F("content_type_2"), object_id_1=models.F("object_id_2")),
                 name="no_self_relation",
             ),
         ]
