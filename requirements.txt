@@ -121,7 +121,7 @@ packaging==24.0
     #   pytest
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.50.0
+playwright==1.51.0
     # via
     #   -r requirements.in
     #   pytest-playwright
