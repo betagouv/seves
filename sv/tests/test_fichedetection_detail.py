@@ -28,7 +28,6 @@ def test_lieu_details(live_server, page):
         str(lieu.wgs84_longitude).replace(".", ",")
     )
     expect(page.get_by_text("Il s'agit d'un établissement", exact=True)).to_be_visible()
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-nom-etablissement")).to_contain_text(lieu.nom_etablissement)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-activite-etablissement")).to_contain_text(lieu.activite_etablissement)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-pays-etablissement")).to_contain_text(lieu.pays_etablissement)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-raison-sociale-etablissement")).to_contain_text(

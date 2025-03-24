@@ -53,9 +53,10 @@ distlib==0.3.8
     # via virtualenv
 dj-static==0.0.6
     # via -r requirements.in
-django==5.1.6
+django==5.1.7
     # via
     #   -r requirements.in
+    #   django-csp
     #   django-debug-toolbar
     #   django-filter
     #   django-post-office
@@ -64,6 +65,8 @@ django==5.1.6
     #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
+django-csp==3.8
+    # via -r requirements.in
 django-debug-toolbar==5.0.1
     # via -r requirements.in
 django-environ==0.12.0
@@ -88,7 +91,7 @@ faker==33.0.0
     #   factory-boy
 filelock==3.13.4
     # via virtualenv
-greenlet==3.0.3
+greenlet==3.1.1
     # via playwright
 gunicorn==23.0.0
     # via -r requirements.in
@@ -106,7 +109,7 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.4.2
     # via celery
-model-bakery==1.20.3
+model-bakery==1.20.4
     # via -r requirements.in
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
@@ -118,7 +121,7 @@ packaging==24.0
     #   pytest
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.43.0
+playwright==1.50.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -132,7 +135,7 @@ psycopg2-binary==2.9.10
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyee==11.1.0
+pyee==12.1.1
     # via playwright
 pyopenssl==25.0.0
     # via josepy
@@ -170,11 +173,11 @@ requests==2.32.3
     # via
     #   mozilla-django-oidc
     #   pytest-base-url
-ruff==0.9.7
+ruff==0.11.2
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.20.0
+sentry-sdk[django]==2.23.1
     # via -r requirements.in
 six==1.16.0
     # via

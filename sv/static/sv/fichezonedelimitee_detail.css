@@ -15,3 +15,33 @@
         height: 100%;
     }
 }
+
+.gallery {
+    display: flex;
+    gap: 10px;
+}
+.gallery-item {
+    text-align: center;
+}
+.gallery-img {
+    height: 200px;
+    width: auto;
+}
+.cursor-pointer{
+    cursor: pointer;
+}
+.img-cartographie {
+    width: 95%;
+}
+.img-cartographie img{
+    max-width: 95%;
+}
+
+.img-cartographie--container {
+    display: flex;
+}
+
+
+.cartographies .fr-modal--opened, .cartographies .fr-modal {
+    transition: none !important;
+}

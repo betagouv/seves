@@ -1,9 +1,14 @@
+import base64
+
+import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from requests import ConnectTimeout
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
@@ -11,6 +16,10 @@ from .filters import DocumentFilter
 from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure
 from .notifications import notify_message
 from .redirect import safe_redirect
+from celery.exceptions import OperationalError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WithDocumentUploadFormMixin:
@@ -74,10 +83,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.agent.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.agents_only()
-            .prefetch_related("agent__structure")
-            .services_deconcentres_first()
-            .order_by_structure_and_name()
+            for contact in obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
         ]
 
         context["contacts_structures"] = [
@@ -85,10 +91,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.structures_only()
-            .services_deconcentres_first()
-            .order_by_structure_and_niveau2()
-            .select_related("structure")
+            for contact in obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
         ]
 
         context["content_type"] = ContentType.objects.get_for_model(obj)
@@ -166,6 +169,9 @@ class AllowACNotificationMixin(models.Model):
                 self._add_bsv_and_mus_to_contacts()
         except ValidationError as e:
             raise ValidationError(f"Une erreur s'est produite lors de la notification : {e.message}")
+        except OperationalError:
+            logger.error("Could not connect to Redis")
+            raise ValidationError("Une erreur s'est produite lors de l'envoi du message de notification.")
 
     class Meta:
         abstract = True
@@ -359,3 +365,26 @@ class EmailNotificationMixin:
 
     def get_email_subject(self):
         raise NotImplementedError
+
+
+class WithSireneTokenMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if not (settings.SIRENE_CONSUMER_KEY and settings.SIRENE_CONSUMER_SECRET):
+            return context
+        basic_auth = f"{settings.SIRENE_CONSUMER_KEY}:{settings.SIRENE_CONSUMER_SECRET}"
+        auth_header = base64.b64encode(basic_auth.encode()).decode()
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {auth_header}",
+        }
+        data = {"grant_type": "client_credentials", "validity_period": 60 * 60}
+
+        try:
+            response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
+            context["sirene_token"] = response.json()["access_token"]
+        except (KeyError, ConnectionError, ConnectTimeout):
+            pass
+
+        return context

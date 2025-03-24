@@ -4,27 +4,28 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
+from celery.exceptions import OperationalError
 from django.views.generic.edit import FormView, CreateView, UpdateView
-
 from sv.view_mixins import WithAddUserContactsMixin
 from .forms import (
     DocumentUploadForm,
     MessageForm,
     MessageDocumentForm,
     DocumentEditForm,
-    ContactAddForm,
-    ContactSelectionForm,
     StructureAddForm,
-    StructureSelectionForm,
+    AgentAddForm,
 )
-from .mixins import PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin
+from .mixins import PreventActionIfVisibiliteBrouillonMixin
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite
 from .notifications import notify_message
 from .redirect import safe_redirect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentUploadView(
@@ -47,7 +48,14 @@ class DocumentUploadView(
             agent = request.user.agent
             document.created_by = agent
             document.created_by_structure = agent.structure
-            document.save()
+            try:
+                document.save()
+            except OperationalError:
+                messages.error(
+                    request, "Une erreur s'est produite lors de l'ajout du document.", extra_tags="core documents"
+                )
+                logger.error("Could not connect to Redis")
+                return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
             fiche = self.get_fiche_object()
             self.add_user_contacts(fiche)
@@ -104,106 +112,6 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         response = super().form_valid(form)
         messages.success(self.request, "Le document a bien été mis à jour.", extra_tags="core documents")
         return response
-
-
-class ContactAddFormView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
-    template_name = "core/_contact_add_form.html"
-    form_class = ContactAddForm
-
-    def get_fiche_object(self):
-        content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
-        fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
-        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.get_fiche_object()
-        return context
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["fiche_id"] = self.request.GET.get("fiche_id")
-        initial["next"] = self.request.GET.get("next")
-        initial["content_type_id"] = self.request.GET.get("content_type_id")
-        initial["structure"] = self.request.user.agent.structure
-        return initial
-
-    def form_valid(self, form, **kwargs):
-        selection_form = ContactSelectionForm(
-            structure=form.cleaned_data.get("structure"),
-            fiche_id=form.cleaned_data.get("fiche_id"),
-            content_type_id=form.cleaned_data.get("content_type_id"),
-            initial={
-                "next": form.cleaned_data.get("next"),
-            },
-        )
-        context = self.get_context_data(**kwargs)
-        context.update({"form": form, "selection_form": selection_form})
-        return render(self.request, self.template_name, context)
-
-
-class ContactSelectionView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
-    template_name = "core/_contact_add_form.html"
-    form_class = ContactSelectionForm
-
-    def get_fiche_object(self):
-        return self._get_object_from_content_type(
-            object_id=self.request.POST.get("fiche_id"), content_type_id=self.request.POST.get("content_type_id")
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.get_fiche_object()
-        return context
-
-    def get_form_kwargs(self):
-        kwargs = super(ContactSelectionView, self).get_form_kwargs()
-        kwargs.update(
-            {
-                "structure": self.request.POST.get("structure", ""),
-                "fiche_id": self.request.POST.get("fiche_id", ""),
-                "content_type_id": self.request.POST.get("content_type_id", ""),
-            }
-        )
-        return kwargs
-
-    def form_valid(self, form):
-        content_type = ContentType.objects.get(pk=form.cleaned_data["content_type_id"]).model_class()
-        fiche = content_type.objects.get(pk=form.cleaned_data["fiche_id"])
-        contacts = form.cleaned_data["contacts"]
-        for contact in contacts:
-            fiche.contacts.add(contact)
-            if structure_contact := contact.get_structure_contact():
-                fiche.contacts.add(structure_contact)
-
-        message = ngettext(
-            "Le contact a été ajouté avec succès.", "Les %(count)d contacts ont été ajoutés avec succès.", len(contacts)
-        ) % {"count": len(contacts)}
-        messages.success(self.request, message, extra_tags="core contacts")
-
-        return safe_redirect(self.request.POST.get("next") + "#tabpanel-contacts-panel")
-
-    def form_invalid(self, form, **kwargs):
-        add_form = ContactAddForm(
-            initial={
-                "structure": form.data.get("structure"),
-                "fiche_id": form.data.get("fiche_id"),
-                "content_type_id": form.data.get("content_type_id"),
-                "next": form.data.get("next"),
-            }
-        )
-        context = self.get_context_data(**kwargs)
-        context.update(
-            {
-                "form": add_form,
-                "selection_form": form,
-            }
-        )
-        return render(
-            self.request,
-            self.template_name,
-            context,
-        )
 
 
 class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
@@ -297,15 +205,19 @@ class MessageCreateView(
             s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
         ]
         for i in document_numbers:
-            Document.objects.create(
-                file=form.cleaned_data[f"document_{i}"],
-                nom=form.cleaned_data[f"document_{i}"]._name,
-                document_type=form.cleaned_data[f"document_type_{i}"],
-                content_type=content_type,
-                object_id=message.pk,
-                created_by=self.request.user.agent,
-                created_by_structure=self.request.user.agent.structure,
-            )
+            try:
+                Document.objects.create(
+                    file=form.cleaned_data[f"document_{i}"],
+                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    document_type=form.cleaned_data[f"document_type_{i}"],
+                    content_type=content_type,
+                    object_id=message.pk,
+                    created_by=self.request.user.agent,
+                    created_by_structure=self.request.user.agent.structure,
+                )
+            except OperationalError:
+                logger.error("Could not connect to Redis")
+                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
 
     def _mark_contact_as_fin_suivi(self, form):
         message_type = form.cleaned_data.get("message_type")
@@ -333,8 +245,16 @@ class MessageCreateView(
         self.add_user_contacts(self.obj)
         self._handle_visibilite_if_needed(form.instance)
         self._create_documents(form)
-        notify_message(form.instance)
-        messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
+        try:
+            notify_message(form.instance)
+        except OperationalError:
+            messages.error(
+                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
+            )
+            logger.error("Could not connect to Redis")
+
+        else:
+            messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
 
     def form_invalid(self, form):
@@ -351,101 +271,6 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):
         message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
         fiche = message.content_object
         return fiche
-
-
-class StructureAddFormView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
-    template_name = "core/_structure_add_form.html"
-    form_class = StructureAddForm
-
-    def get_fiche_object(self):
-        content_type_id = self.request.GET.get("content_type_id") or self.request.POST.get("content_type_id")
-        fiche_id = self.request.GET.get("fiche_id") or self.request.POST.get("fiche_id")
-        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["fiche_id"] = self.request.GET.get("fiche_id")
-        initial["next"] = self.request.GET.get("next")
-        initial["content_type_id"] = self.request.GET.get("content_type_id")
-        return initial
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.get_fiche_object()
-        return context
-
-    def form_valid(self, form, **kwargs):
-        selection_form = StructureSelectionForm(
-            fiche_id=form.cleaned_data.get("fiche_id"),
-            content_type_id=form.cleaned_data.get("content_type_id"),
-            structure_selected=form.cleaned_data.get("structure_niveau1"),
-            initial={
-                "next": form.cleaned_data.get("next"),
-            },
-        )
-        context = self.get_context_data(**kwargs)
-        context.update({"form": form, "selection_form": selection_form})
-        return render(self.request, self.template_name, context)
-
-
-class StructureSelectionView(PreventActionIfVisibiliteBrouillonMixin, WithObjectFromContentTypeMixin, FormView):
-    template_name = "core/_structure_add_form.html"
-    form_class = StructureSelectionForm
-
-    def get_fiche_object(self):
-        content_type_id = self.request.POST.get("content_type_id")
-        fiche_id = self.request.POST.get("fiche_id")
-        return self._get_object_from_content_type(object_id=fiche_id, content_type_id=content_type_id)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.get_fiche_object()
-        return context
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update(
-            {
-                "fiche_id": self.request.POST.get("fiche_id", ""),
-                "content_type_id": self.request.POST.get("content_type_id", ""),
-                "structure_selected": self.request.POST.get("structure_selected", ""),
-            }
-        )
-        return kwargs
-
-    def form_invalid(self, form, **kwargs):
-        context = self.get_context_data(**kwargs)
-        add_form = StructureAddForm(
-            initial={
-                "fiche_id": form.data.get("fiche_id"),
-                "content_type_id": form.data.get("content_type_id"),
-                "next": form.data.get("next"),
-                "structure_niveau1": form.data.get("structure_selected"),
-            }
-        )
-        context.update(
-            {
-                "form": add_form,
-                "selection_form": form,
-            }
-        )
-        return render(self.request, self.template_name, context)
-
-    def form_valid(self, form):
-        content_type = ContentType.objects.get(pk=form.cleaned_data["content_type_id"]).model_class()
-        fiche = content_type.objects.get(pk=form.cleaned_data["fiche_id"])
-        contacts = form.cleaned_data["contacts"]
-        for contact in contacts:
-            fiche.contacts.add(contact)
-
-        message = ngettext(
-            "La structure a été ajoutée avec succès.",
-            "Les %(count)d structures ont été ajoutées avec succès.",
-            len(contacts),
-        ) % {"count": len(contacts)}
-        messages.success(self.request, message, extra_tags="core contacts")
-
-        return safe_redirect(self.request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
 class SoftDeleteView(View):
@@ -512,3 +337,71 @@ class WithFormErrorsAsMessagesMixin(FormView):
                 else:
                     messages.error(self.request, error.message)
         return super().form_invalid(form)
+
+
+class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def get_fiche_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        content_id = self.request.POST.get("content_id")
+        model_class = ContentType.objects.get(pk=content_type_id).model_class()
+        self.obj = model_class.objects.get(pk=content_id)
+        return self.obj
+
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        form = StructureAddForm(request.POST)
+        if form.is_valid():
+            self.obj = self.get_fiche_object()
+            contacts_structures = form.cleaned_data["contacts_structures"]
+            for structure in contacts_structures:
+                self.obj.contacts.add(structure)
+
+            message = ngettext(
+                "La structure a été ajoutée avec succès.",
+                "Les %(count)d structures ont été ajoutées avec succès.",
+                len(contacts_structures),
+            ) % {"count": len(contacts_structures)}
+            messages.success(request, message, extra_tags="core contacts")
+            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+        messages.error(request, "Erreur lors de l'ajout de la structure.")
+        return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+
+class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def get_fiche_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        content_id = self.request.POST.get("content_id")
+        model_class = ContentType.objects.get(pk=content_type_id).model_class()
+        self.obj = model_class.objects.get(pk=content_id)
+        return self.obj
+
+    def test_func(self) -> bool | None:
+        return self.get_fiche_object().can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        form = AgentAddForm(request.POST)
+        if form.is_valid():
+            self.obj = self.get_fiche_object()
+            contacts_agents = form.cleaned_data["contacts_agents"]
+            for contact_agent in contacts_agents:
+                self.obj.contacts.add(contact_agent)
+                if contact_structure := contact_agent.get_structure_contact():
+                    self.obj.contacts.add(contact_structure)
+
+            message = ngettext(
+                "L'agent a été ajouté avec succès.",
+                "Les %(count)d agents ont été ajoutés avec succès.",
+                len(contacts_agents),
+            ) % {"count": len(contacts_agents)}
+            messages.success(request, message, extra_tags="core contacts")
+            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+        messages.error(request, "Erreur lors de l'ajout de l'agent.")
+        return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")

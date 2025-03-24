@@ -160,6 +160,15 @@ main {
 [id^=lieu-form] .character-counter {
     text-align: right;
 }
+[id^=lieu-form] .wgs-latitude-field{
+    flex: 0.55;
+    margin-top: .5rem;
+}
+[id^=lieu-form] .wgs-longitude-field{
+    flex: 0.55;
+    margin-right: .5rem;
+}
+
 
 .lieu-initial,
 .prelevement {
@@ -170,8 +179,17 @@ main {
 .etablissement-fields {
     display: none;
 }
+.etablissement-fields--lookup{
+    text-align: center;
+}
+.etablissement-fields--lookup .fr-search-bar{
+    text-align: start;
+}
 .fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields {
     display: block;
+}
+.fr-search-bar .choices{
+    flex: 1.25;
 }
 
 

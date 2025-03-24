@@ -46,6 +46,7 @@ jobs:
           OIDC_RP_LOGOUT_ENDPOINT: null
           DJANGO_ADMIN_URL: mon_url_secrete_admin
           SCALINGO_REDIS_URL: redis://127.0.0.1:6379
+          SENTRY_REPORT_URL: null
       - name: Run ruff
         run: ruff check .
       - name: Run ruff format
@@ -53,8 +54,13 @@ jobs:
       - name: Run DjHTML
         run: ./bin/check_html_format.sh
       - name: Run tests
-        run: pytest
+        run: pytest --tracing=retain-on-failure
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
           DJANGO_ADMIN_URL: mon_url_secrete_admin
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-traces
+          path: test-results/

@@ -36,6 +36,8 @@ env.read_env(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+ENVIRONMENT = env("ENVIRONMENT", default=None)
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 
@@ -67,6 +69,7 @@ INSTALLED_APPS = [
     "django_filters",
     "post_office",
     "reversion",
+    "csp",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -81,6 +84,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "seves.middlewares.LoginRequiredMiddleware",
     "reversion.middleware.RevisionMiddleware",
+    "csp.middleware.CSPMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
@@ -97,6 +101,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "seves.context_processors.select_empty_choice",
+                "seves.context_processors.environment_class",
             ],
         },
     },
@@ -168,11 +173,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Sentry
 SENTRY_DSN = env("SENTRY_DSN", default=None)
 if SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=1.0,
-    )
+    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()], traces_sample_rate=1.0, environment=ENVIRONMENT)
 
 
 STORAGES = {
@@ -215,6 +216,8 @@ OIDC_OP_JWKS_ENDPOINT = env("OIDC_RP_JWKS_ENDPOINT")
 OIDC_RP_LOGOUT_ENDPOINT = env("OIDC_RP_LOGOUT_ENDPOINT")
 OIDC_AUTHENTICATION_CALLBACK_URL = "custom_oidc_authentication_callback"
 OIDC_OP_LOGOUT_URL_METHOD = "core.auth_views.logout"
+OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
+OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
 
@@ -255,3 +258,44 @@ if not CELERY_TASK_ALWAYS_EAGER:
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+        },
+    },
+}
+
+CAN_GIVE_ACCESS_GROUP = "access_admin"
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_STYLE_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_FONT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_IMG_SRC = (
+    "'self'",
+    "data:",
+    "s3.rbx.io.cloud.ovh.net",
+)
+if DEBUG:
+    CSP_IMG_SRC = ("'self'", "data:", "127.0.0.1:9000")
+CSP_CONNECT_SRC = (
+    "'self'",
+    "geo.api.gouv.fr",
+    "api.insee.fr",
+)
+
+SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={ENVIRONMENT}"
+
+SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
+SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")

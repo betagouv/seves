@@ -56,36 +56,13 @@ class FichesCommonQueryset(models.QuerySet):
             )
         )
 
-    def with_fin_de_suivi(self, contact):
-        from sv.models import Evenement
-
-        content_type = ContentType.objects.get_for_model(Evenement)
-        return self.annotate(
-            has_fin_de_suivi=Exists(
-                FinSuiviContact.objects.filter(
-                    content_type=content_type, object_id=OuterRef("evenement__pk"), contact=contact
-                )
-            )
-        )
-
 
 class FicheDetectionQuerySet(FichesCommonQueryset):
-    def with_list_of_lieux_with_commune(self):
-        from sv.models import Lieu
-
-        lieux_prefetch = Prefetch(
-            "lieux", queryset=Lieu.objects.exclude(commune="").order_by("id"), to_attr="lieux_list_with_commune"
-        )
-        return self.prefetch_related(lieux_prefetch)
-
     def with_first_region_name(self):
         from sv.models import Lieu
 
         first_lieu = Lieu.objects.filter(fiche_detection=OuterRef("pk")).order_by("id")
         return self.annotate(region=Subquery(first_lieu.values("departement__region__nom")[:1]))
-
-    def optimized_for_list(self):
-        return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
 
     def with_numero_detection_only(self):
         return self.annotate(
@@ -105,9 +82,6 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
         return self.filter(query)
 
-    def with_fiche_zone_delimitee_numero(self):
-        return self.select_related("hors_zone_infestee__numero", "zone_infestee__fiche_zone_delimitee__numero")
-
 
 class FicheZoneManager(models.Manager):
     def get_queryset(self):
@@ -115,9 +89,6 @@ class FicheZoneManager(models.Manager):
 
 
 class FicheZoneQuerySet(FichesCommonQueryset):
-    def optimized_for_list(self):
-        return self.select_related("createur", "evenement", "evenement__organisme_nuisible")
-
     def order_by_numero_fiche(self):
         return self.order_by("-evenement__numero_annee", "-evenement__numero_evenement")
 
@@ -151,3 +122,30 @@ class EvenementQueryset(models.QuerySet):
                 & Q(allowed_structures=user.agent.structure)
             )
         )
+
+    def with_list_of_lieux_with_commune(self):
+        from sv.models import Lieu, FicheDetection
+
+        lieux_prefetch = Prefetch(
+            "lieux", queryset=Lieu.objects.exclude(commune="").order_by("id"), to_attr="lieux_list_with_commune"
+        )
+        detections_prefetch = Prefetch(
+            "detections", queryset=FicheDetection.objects.filter(is_deleted=False).prefetch_related(lieux_prefetch)
+        )
+        return self.prefetch_related(detections_prefetch)
+
+    def with_fin_de_suivi(self, contact):
+        from sv.models import Evenement
+
+        content_type = ContentType.objects.get_for_model(Evenement)
+        return self.annotate(
+            has_fin_de_suivi=Exists(
+                FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)
+            )
+        )
+
+    def with_nb_fiches_detection(self):
+        return self.annotate(nb_fiches_detection=Count("detections", distinct=True))
+
+    def optimized_for_list(self):
+        return self.select_related("organisme_nuisible", "statut_reglementaire", "createur", "fiche_zone_delimitee")

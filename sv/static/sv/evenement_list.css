@@ -2,35 +2,25 @@ body{
     background-color: var(--background-default-grey);
 }
 
-.fiches__header {
+.evenements__header {
     background-color: var(--background-open-blue-france);
 }
-.fiche__header--title h2{
-    display: inline-block;
-}
-.fiche__header--type {
-    background-color: var(--background-contrast-grey) !important;
-    display: inline-block;
-}
-.fiche__header--type .fr-fieldset__element{
-    margin-bottom: 0px !important;
-}
-.fiche__header--actions {
+.evenement__header--actions {
     display: flex;
     justify-content: flex-end;
 }
 
-.fiches__search-form {
+.evenements__search-form {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 0.5rem;
 }
-.fiches__search-form .fr-fieldset__element{
+.evenements__search-form .fr-fieldset__element{
     flex: 1 1 200px;
     max-width: 300px;
 }
-.fiches__search-form input, .fiches__search-form select, .fiches__search-form .fr-radio-group {
+.evenements__search-form input, .evenements__search-form select, .evenements__search-form .fr-radio-group {
     margin-top: .5rem;
 }
 
@@ -50,43 +40,41 @@ body{
 }
 
 
-.fiches__list-container {
+.evenements__list-container {
     margin: 2rem;
 }
-.fiches__list-header {
+.evenements__list-header {
     display: flex;
     justify-content: space-between;
 }
-.fiches__count {
+.evenements__count {
     font-weight: bold;
 }
 
-.fiches__list-table{
+.evenements__list-table{
     border-collapse: collapse;
 }
-.fiches__table-header {
+.evenements__table-header {
     background-color: var(--background-default-grey);
     border-bottom: 1px solid var(--background-alt-grey);
 }
-.fiches__list-row {
+.evenements__list-row {
     background-image: none;
 }
-.fiches__list-row:nth-child(odd) {
+.evenements__list-row:nth-child(odd) {
     background-color: var(--background-alt-grey);
 }
-.fiches__list-row:nth-child(even) {
+.evenements__list-row:nth-child(even) {
     background-color: var(--background-default-grey) !important;
 }
-.fiches__list-row:hover {
+.evenements__list-row:hover {
     background-color: var(--background-contrast-grey) !important;
 }
-.fiches__list-row td {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+.evenements__list-row td {
     padding-top: 0.50rem !important;
     padding-bottom: 0.50rem !important;
 }
-.fiche__list-organisme {
+.evenement__list-organisme {
     display: -webkit-box !important;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -100,7 +88,7 @@ body{
     padding: 0 .5rem;
     border-radius: .25rem;
 }
-.fiches__list-row .fr-checkbox-group input[type="checkbox"] + label::before{
+.evenements__list-row .fr-checkbox-group input[type="checkbox"] + label::before{
     top: -10px !important;
 }
 .ri-node-tree {

@@ -25,3 +25,4 @@ python-magic
 celery
 async_timeout
 redis
+django-csp

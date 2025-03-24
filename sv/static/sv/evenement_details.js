@@ -21,7 +21,39 @@ function initializeDetectionTags() {
     });
 }
 
+function selectZoneTab() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'zone') {
+        const tabzone = document.getElementById("tabpanel-zone-panel");
+        dsfr(tabzone).tabPanel.disclose();
+    }
+}
+
+function updateURLParameters(paramName, paramValue) {
+    const params = new URLSearchParams(window.location.search);
+    params.set(paramName, paramValue);
+    window.history.pushState({}, '', `?${params.toString()}`);
+}
+
+function showImage(element, direction){
+    const currentModal = element.closest("dialog")
+    dsfr(currentModal).modal.conceal()
+    const modalBtn = document.querySelector(`[aria-controls="${currentModal.getAttribute('id')}"]`)
+
+    let button = null
+    if (direction === "left"){
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) - 1}"]`)
+    } else {
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) + 1}"]`)
+    }
+    button.click()
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        selectZoneTab();
+    }, 500);
+
     const viewManager = new ViewManager(evenementViewModeConfig);
     viewManager.initialize();
 
@@ -29,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.addEventListener('dsfr.disclose', event=>{
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
-            window.history.pushState({}, '', `?detection=${tabId}`);
+            updateURLParameters('detection', tabId);
         })
     })
 
@@ -37,4 +69,15 @@ document.addEventListener('DOMContentLoaded', function() {
     showOnlyActionsForDetection(selectedTagDocument.getAttribute("id").replace("tabpanel-", ""))
 
     initializeDetectionTags();
+
+    document.querySelectorAll(".next-modal").forEach(element =>{
+        element.addEventListener("click", event =>{
+            showImage(element, "right")
+        })
+    })
+    document.querySelectorAll(".previous-modal").forEach(element =>{
+        element.addEventListener("click", event =>{
+            showImage(element, "left")
+        })
+    })
 });

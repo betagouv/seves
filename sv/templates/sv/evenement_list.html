@@ -4,53 +4,43 @@
 {% load pagination_tags %}
 
 {% block extrahead %}
-    <link rel="stylesheet" href="{% static 'sv/fiche_list.css' %}">
+    <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'sv/fiche_list.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sv/evenement_list.js' %}"></script>
 {% endblock %}
 
-{% block highlight_menu_fiches %}menu__item--active{% endblock %}
+{% block highlight_menu_evenements %}menu__item--active{% endblock %}
 
 {% block content %}
     {% include "sv/_extract_modal.html" %}
     <form id="search-form" method="get" >
-        <div class="fiches__header fr-p-4v">
-            <div class="fiche__header--title">
-                <h2 class="fr-h3">Rechercher une fiche</h2>
-                <span class="fiche__header--type fr-py-1w">
-                    <div class=" fr-fieldset__element">
-                        {{ filter.form.type_fiche }}
-                    </div>
-                </span>
-            </div>
-
-            <div class="fiches__search-form">
+        <div class="evenements__header fr-p-4v">
+            <h2 class="fr-h3">Rechercher un évènement</h2>
+            <div class="evenements__search-form">
                 {{ filter.form.as_dsfr_div }}
             </div>
-            <div class="fr-fieldset__element fiche__header--actions">
+            <div class="fr-fieldset__element evenement__header--actions">
                 <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>
                 <button type="submit" class="fr-btn">Rechercher</button>
             </div>
         </div>
     </form>
 
-
-    <div class="fiches__list-container">
-        <div class="fiches__list-header">
-            <span class="fiches__count">{{ page_obj.paginator.count }} fiche{{ page_obj.paginator.count|pluralize }} au total</span>
+    <div class="evenements__list-container">
+        <div class="evenements__list-header">
+            <span class="evenements__count">{{ page_obj.paginator.count }} évènement{% if page_obj.paginator.count > 1 %}s{% endif %} au total</span>
             <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
                 Extraire
             </button>
         </div>
-        {% if fiches|length > 0 %}
+        {% if evenement_list|length > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
-                <table class="fiches__list-table">
+                <table class="evenements__list-table">
                     <thead>
-                        <tr class="fiches__table-header">
-                            <th scope="col" class="fr-col-1">Type</th>
-                            <th scope="col" class="fr-col-1">N°</th>
+                        <tr class="evenements__table-header">
+                            <th scope="col" class="fr-col-1">Notifier AC</th>
                             <th scope="col" class="fr-col-1">Évènement</th>
                             <th scope="col" class="fr-col-3">Organisme nuisible</th>
                             <th scope="col" class="fr-col-1">Création</th>
@@ -58,45 +48,39 @@
                             <th scope="col">Commune</th>
                             <th scope="col">État</th>
                             <th scope="col">Visibilité</th>
-                            <th scope="col">{{ last_column }}</th>
+                            <th scope="col">Détections</th>
+                            <th scope="col">Zone</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for fiche in fiches %}
-                            <tr class="fiches__list-row">
+                        {% for evenement in evenement_list %}
+                            <tr class="evenements__list-row">
                                 <td>
-                                    <span class="fr-ml-2v fr-badge fr-badge--no-icon">{{ fiche.type }}</span>
-                                    <span class="fr-ml-2v fr-icon--sm {% if fiche.is_ac_notified %}ac-notified fr-icon-notification-3-fill {% else %}ac-not-notified fr-icon-notification-3-line{% endif %}" aria-hidden="true"></span>
-
+                                    <span class="fr-ml-2v fr-icon--sm {% if evenement.is_ac_notified %}ac-notified fr-icon-notification-3-fill {% else %}ac-not-notified fr-icon-notification-3-line{% endif %}" aria-hidden="true"></span>
                                 </td>
                                 <td>
-                                    {{ fiche.numero|default:"nc." }}
+                                    <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
+                                </td>
+                                <td class="evenement__list-organisme">
+                                    {{ evenement.organisme_nuisible|default:"nc." }}
                                 </td>
                                 <td>
-                                    <a href="{{ fiche.get_absolute_url }}" class="fr-link" {% if fiche.type == "D" %}data-testid="{{ fiche.numero }}"{% endif %}>
-                                        {{ fiche.numero_evenement|default:"nc." }}
-                                    </a>
-                                </td>
-                                <td class="fiche__list-organisme">
-                                    {{ fiche.organisme_nuisible|default:"nc." }}
+                                    {{ evenement.date_creation|date:"d/m/Y" }}
                                 </td>
                                 <td>
-                                    {{ fiche.date_creation }}
+                                    {{ evenement.createur|truncatechars:30 }}
                                 </td>
                                 <td>
-                                    {{ fiche.createur|truncatechars:30 }}
-                                </td>
-                                <td>
-                                    {% with fiche.communes_list|length as num_lieux %}
+                                    {% with evenement.all_lieux_with_commune|length as num_lieux %}
                                         {% if num_lieux == 0 %}
                                             nc.
                                         {% endif %}
                                         {% if num_lieux <= 3 %}
-                                            {% for lieu in fiche.communes_list %}
+                                            {% for lieu in evenement.all_lieux_with_commune %}
                                                 {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                         {% else %}
-                                            {% for lieu in fiche.communes_list|slice:":3" %}
+                                            {% for lieu in evenement.all_lieux_with_commune|slice:":3" %}
                                                 {{ lieu.commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                             ... +{{ num_lieux|add:"-3" }}
@@ -104,25 +88,21 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    <span class="fr-badge fr-badge--{{fiche.etat|etat_fiche_color}} fr-badge--no-icon">{{ fiche.readable_etat }}</span>
+                                    <span class="fr-badge fr-badge--{{evenement.etat|etat_evenement_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
                                 </td>
                                 <td>
-                                    <span class="fr-badge">{{ fiche.visibilite }}</span>
+                                    <span class="fr-badge">{{ evenement.visibilite }}</span>
                                 </td>
+                                <td>{{ evenement.nb_fiches_detection }}</td>
                                 <td>
-                                    {% if fiche.type == "D" %}
-                                        <div class="fr-checkbox-group">
-                                            {% if fiche.nb_related_objects %}
-                                                <input type="checkbox" checked>
-                                            {% else %}
-                                                <input type="checkbox" checked disabled>
-                                            {% endif %}
-                                            <label class="fr-label" ></label>
-                                        </div>
-                                    {% else %}
-                                        <i class="ri-node-tree fr-mr-1w"></i>
-                                        {{  fiche.nb_related_objects }}
-                                    {% endif%}
+                                    <div class="fr-checkbox-group">
+                                        {% if evenement.fiche_zone_delimitee %}
+                                            <input type="checkbox" checked>
+                                        {% else %}
+                                            <input type="checkbox" checked disabled>
+                                        {% endif %}
+                                        <label class="fr-label" ></label>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -134,7 +114,7 @@
             Ce tag est utilisé pour générer les URLs de pagination tout en conservant les filtres de recherche.
             -->
                         {% if page_obj.paginator.num_pages > 1 %}
-                            <nav role="navigation" class="fr-pagination" aria-label="Pagination" style="margin-top: 2rem;">
+                            <nav role="navigation" class="fr-pagination fr-mt-8v" aria-label="Pagination">
                                 <ul class="fr-pagination__list">
                                     <li>
                                         <a class="fr-pagination__link fr-pagination__link--first" href="?{% url_replace page='1' %}" role="link" aria-describedby="tooltip-first-page">

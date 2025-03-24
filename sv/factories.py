@@ -224,7 +224,6 @@ class LieuFactory(DjangoModelFactory):
     code_insee = factory.Faker("numerify", text="#####")
     departement = factory.SubFactory("sv.factories.DepartementFactory")
     is_etablissement = factory.Faker("boolean")
-    nom_etablissement = factory.Faker("company")
     activite_etablissement = factory.Faker("job")
     pays_etablissement = factory.Faker("country")
     raison_sociale_etablissement = factory.Faker("company_suffix")
@@ -244,7 +243,6 @@ class LieuFactory(DjangoModelFactory):
             code_insee="",
             departement=None,
             is_etablissement=False,
-            nom_etablissement="",
             activite_etablissement="",
             pays_etablissement="",
             raison_sociale_etablissement="",

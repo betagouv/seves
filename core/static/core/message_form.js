@@ -93,7 +93,6 @@ function getMessageConfig(){
     return [configuration, allElements, allRequiredInputs]
 }
 
-
 function changeFormBasedOnMessageType(messageType){
     document.getElementById("id_message_type").value=messageType
     document.getElementById("message-type-title").innerText=messageType
@@ -111,6 +110,22 @@ function changeFormBasedOnMessageType(messageType){
     } else {
         document.getElementById("id_title").value = ""
     }
+}
+
+function validateLimitedRecipients() {
+    return Array.from(
+        document.querySelectorAll("input[name='recipients_limited_recipients']")
+    ).some(checkbox => checkbox.checked);
+}
+
+function updateLimitedRecipientsValidation() {
+    const messageType = document.getElementById("id_message_type").value;
+    if (messageType !== "compte rendu sur demande d'intervention") {
+        return;
+    }
+    const firstCheckbox = document.querySelector("input[name='recipients_limited_recipients']");
+    const errorMessage = validateLimitedRecipients() ? "" : "Veuillez sélectionner au moins un destinataire";
+    firstCheckbox.setCustomValidity(errorMessage);
 }
 
 function initializeChoices(element){
@@ -172,7 +187,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("message-send-btn").addEventListener("click", event =>{
         event.preventDefault()
+        const messageForm = document.getElementById("message-form")
+
+        updateLimitedRecipientsValidation();
+        messageForm.reportValidity()
+
+        if (!messageForm.checkValidity()) {
+            return
+        }
         event.target.disabled = true
+
         const isDocumentBlockVisible = !document.querySelector(".document-form").classList.contains("fr-hidden")
         const hasFile = !!document.getElementById('id_file').files[0]
 

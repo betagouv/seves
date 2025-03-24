@@ -71,7 +71,7 @@ function showLieuModal(event){
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     dsfr(currentModal).modal.disclose()
     dataRequiredToRequired(currentModal)
-
+    setUpCommune(currentModal.querySelector("[id^=commune-select-]"))
 }
 
 function buildLieuCardFromModal(element){
@@ -151,6 +151,12 @@ function setUpCommune(element) {
         inseeInput.value = event.detail.customProperties.inseeCode
         departementInput.value = event.detail.customProperties.departementCode
     })
+
+    choicesCommunes.passedElement.element.addEventListener('removeItem', function (event) {
+        communeInput.value = ""
+        inseeInput.value = ""
+        departementInput.value = ""
+    })
 }
 
 
@@ -189,8 +195,86 @@ function setupCharacterCounter(element) {
     });
 }
 
-(function() {
 
+function fetchSiret(value, token) {
+    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + value.replaceAll(" ", "")+ '* AND -periode(etatAdministratifEtablissement:F)';
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    };
+    let results = []
+    return fetch(url, {method: 'GET', headers: headers})
+        .then(response => response.json())
+        .then(data => {
+            if (!data["etablissements"]){
+                return []
+            }
+            data["etablissements"].forEach((etablissement) => {
+                let address = etablissement["adresseEtablissement"]
+                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
+                let resultEtablissement = `${etablissement["siret"]} - ${streetData}`
+                const uniteLegale = etablissement["uniteLegale"]
+                let resultUnite = `${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["prenom1UniteLegale"]?? ""} ${uniteLegale["nomUniteLegale"]?? ""}`
+                results.push({
+                    value: etablissement["siret"],
+                    label: resultUnite + " " + resultEtablissement ,
+                    customProperties: {
+                        "streetData": streetData,
+                        "siret": etablissement["siret"],
+                        "raison": uniteLegale["denominationUniteLegale"]
+                    }
+                })
+            });
+            return results
+        });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function configureSiretField(field){
+    const choicesSIRET = new Choices(field, {
+        removeItemButton: true,
+        placeholderValue: 'N° SIRET',
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucun résultat trouvé',
+        shouldSort: false,
+        searchResultLimit: 20,
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: '',
+        position: 'top',
+    });
+
+    choicesSIRET.input.element.addEventListener('input', debounce((event) => {
+        const query = choicesSIRET.input.element.value
+        if (query.length > 5) {
+            fetchSiret(query, field.dataset.token).then(results => {
+                choicesSIRET.clearChoices()
+                choicesSIRET.setChoices(results, 'value', 'label', true)
+            })
+        }
+    }, 300))
+
+    choicesSIRET.passedElement.element.addEventListener("choice", (event)=> {
+        field.closest("dialog").querySelector('[id$=siret_etablissement]').value = event.detail.customProperties.siret
+        field.closest("dialog").querySelector('[id$=raison_sociale_etablissement]').value = event.detail.customProperties.raison
+        field.closest("dialog").querySelector('[id$=adresse_lieu_dit]').value = event.detail.customProperties.streetData
+        field.closest("dialog").querySelector('[id$=adresse_etablissement]').value = event.detail.customProperties.streetData
+        field.closest("dialog").querySelector('[id$=pays_etablissement]').value = "France"
+
+        field.closest("dialog").querySelector('[id$=sirene-btn]').classList.remove("fr-hidden")
+        field.closest("dialog").querySelector('.fr-search-bar').classList.add("fr-hidden")
+        field.closest("dialog").querySelector('.fr-search-bar select').innerHTML = ""
+        choicesSIRET.destroy()
+    })
+}
+
+(function() {
     document.documentElement.addEventListener('dsfr.start', () => {
         setTimeout(() => {
             document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => {
@@ -201,7 +285,12 @@ function setupCharacterCounter(element) {
 
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
-    document.querySelectorAll("[id^=commune-select-]").forEach(setUpCommune)
+    document.querySelectorAll("[id^=commune-select-]").forEach(communeSelect =>{
+        const communeField = communeSelect.parentNode.parentNode.querySelector('[id$="-commune"]')
+        if (!!communeField.value){
+            setUpCommune(communeSelect)
+        }
+    })
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))
@@ -213,6 +302,20 @@ function setupCharacterCounter(element) {
         if (!!data.nom){
             document.lieuxCards.push(data)
         }
+    })
+
+    document.querySelectorAll(`[id$="-sirene-btn"]`).forEach(siretLookupBtn =>{
+        if (!siretLookupBtn.nextElementSibling.querySelector("select").dataset.token){
+            siretLookupBtn.classList.add("fr-hidden")
+            return
+        }
+
+        siretLookupBtn.addEventListener("click", event =>{
+            event.preventDefault()
+            siretLookupBtn.classList.add("fr-hidden")
+            configureSiretField(siretLookupBtn.nextElementSibling.querySelector("select"))
+            siretLookupBtn.nextElementSibling.classList.remove("fr-hidden")
+        })
     })
     displayLieuxCards()
 })();

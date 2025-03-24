@@ -1,0 +1,16 @@
+<div class="fr-col-4">
+    <p class="fr-mb-1v name">{{ contact.agent }}</p>
+    <p class="fr-tag fr-tag--sm structure">{{contact.agent.structure}}</p>
+    {% if is_in_fin_suivi %}
+        <span class="fr-badge fr-badge--sm fr-badge--new fr-badge--no-icon">Fin de suivi</span>
+    {% endif %}
+</div>
+<div class="fr-col-4">
+    <a href="mailto:{{ contact.email }}" class="fr-link email">{{ contact.email }}</a>
+</div>
+<div class="fr-col-3 phone">{{ contact.agent.telephone }}</div>
+<div class="fr-col-1">
+    <a href="#" class="fr-icon-delete-line fr-btn fr-btn--sm fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-contact-{{ contact.pk }}"></a>
+</div>
+
+{% include "core/_modale_suppression_contact.html" %}

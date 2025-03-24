@@ -3,10 +3,9 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
-from model_bakery import baker
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, UserFactory
 from core.models import Agent, Contact
 
 User = get_user_model()
@@ -27,7 +26,7 @@ def set_django_allow_async_unsafe():
 
 @pytest.fixture(autouse=True)
 def mocked_authentification_user(db):
-    user = baker.make(get_user_model(), email="test@example.com")
+    user = UserFactory(email="test@example.com")
     user.is_active = True
     user.save()
     structure = StructureFactory(niveau2="Structure Test", libelle="Structure Test")
@@ -45,11 +44,20 @@ def mocked_authentification_user(db):
 
 @pytest.fixture
 def choice_js_fill(db, page):
-    def _choice_js_fill(page, locator, fill_content, exact_name):
-        page.query_selector(locator).click()
+    def _choice_js_fill(page, locator, fill_content, exact_name, use_locator_as_parent_element=False):
+        if use_locator_as_parent_element:
+            page.locator(locator).locator("input.choices__input").click()
+        else:
+            page.query_selector(locator).click()
         page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         page.locator("*:focus").fill(fill_content)
-        page.get_by_role("option", name=exact_name, exact=True).click()
+        if use_locator_as_parent_element:
+            list_element = page.locator(locator).locator(".choices__list")
+            list_element.get_by_role("option", name=exact_name, exact=True).click()
+        else:
+            page.locator(".choices__list--dropdown .choices__list").get_by_role(
+                "option", name=exact_name, exact=True
+            ).click()
 
     return _choice_js_fill
 

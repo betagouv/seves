@@ -298,7 +298,6 @@ def test_update_lieu(
     if new_lieu.is_etablissement:
         if not lieu_form_elements.is_etablissement_checkbox.is_checked():
             lieu_form_elements.is_etablissement_checkbox.click(force=True)
-        lieu_form_elements.nom_etablissement_input.fill(new_lieu.nom_etablissement)
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
         lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
@@ -322,7 +321,6 @@ def test_update_lieu(
     assert lieu_from_db.code_insee == "59350"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.is_etablissement == new_lieu.is_etablissement
-    assert lieu_from_db.nom_etablissement == new_lieu.nom_etablissement
     assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == new_lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
@@ -1130,7 +1128,6 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
                 f"lieux-{i}-site_inspection": [""],
                 f"lieux-{i}-wgs84_longitude": [""],
                 f"lieux-{i}-wgs84_latitude": [""],
-                f"lieux-{i}-nom_etablissement": [""],
                 f"lieux-{i}-activite_etablissement": [""],
                 f"lieux-{i}-pays_etablissement": [""],
                 f"lieux-{i}-raison_sociale_etablissement": [""],
@@ -1171,3 +1168,32 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
     assert response.status_code == 403
     fiche_detection.refresh_from_db()
     assert fiche_detection.commentaire != "AAAA"
+
+
+@pytest.mark.django_db
+def test_add_lieu_add_and_remove_commune(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    fill_commune,
+):
+    fiche_detection = FicheDetectionFactory()
+    lieu = LieuFactory.build(code_insee="17000")
+
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    fill_commune(page)
+    page.locator("button[aria-label='Remove item: Lille']").click(force=True)
+    lieu_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+    page.wait_for_timeout(600)
+
+    fiche = FicheDetection.objects.get(id=fiche_detection.id)
+    lieu_from_db = fiche.lieux.first()
+    assert fiche.lieux.count() == 1
+    assert lieu_from_db.nom == lieu.nom
+    assert lieu_from_db.commune == ""
+    assert lieu_from_db.code_insee == ""
+    assert lieu_from_db.departement is None

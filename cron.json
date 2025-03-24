@@ -1,0 +1,16 @@
+{
+	"jobs": [
+	  {
+		"command": "*/10 * * * * python manage.py scan_documents",
+	    "size": "2XL"
+	  },
+	  {
+		"command": "*/10 * * * * python manage.py send_queued_mail",
+	    "size": "2XL"
+	  },
+	  {
+		"command": "0 5 * * * ./bin/backup_db.sh",
+	    "size": "2XL"
+	  }
+	]
+  }

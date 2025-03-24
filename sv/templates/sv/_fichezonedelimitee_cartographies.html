@@ -1,0 +1,44 @@
+<div class="white-container fr-mt-4w cartographies">
+    <p class="fr-h6">Cartographies</p>
+    <div>
+        <div class="fr-container--fluid">
+            <div class="fr-grid-row fr-grid-row--gutters gallery">
+                {% for document in document_filter.qs %}
+                    {% if document.is_cartographie and document.is_infected is False and document.is_deleted is False %}
+                        <div class="gallery-item">
+                            <img src="{{ document.file.url }}" class="img-thumbnail cursor-pointer gallery-img" data-thumbnail="{{ forloop.counter0 }}" data-fr-opened="false" aria-controls="fr-document-image-{{ document.pk }}">
+                            <p>{{ document.nom }}</p>
+                            <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" role="dialog" id="fr-document-image-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
+                                <div class="fr-container fr-container--fluid fr-container-md">
+                                    <div class="fr-grid-row fr-grid-row--center">
+                                        <div class="fr-col-12 fr-col-md-12 fr-col-lg-12">
+                                            <div class="fr-modal__body">
+                                                <div class="fr-modal__header">
+                                                    <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-document-image-{{ document.pk }}">Fermer</button>
+                                                </div>
+                                                <div class="fr-modal__content">
+                                                    <div class="img-cartographie--container">
+                                                        {% if not forloop.first %}
+                                                            <span class="fr-icon-arrow-left-line fr-icon--lg fr-my-auto previous-modal cursor-pointer"></span>
+                                                        {% endif %}
+                                                        <div class="img-cartographie">
+                                                            <img src="{{ document.file.url }}" loading="lazy" >
+                                                        </div>
+                                                        {% if not forloop.last %}
+                                                            <span class="fr-icon-arrow-right-line fr-icon--lg fr-my-auto next-modal cursor-pointer"></span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="fr-hint-text fr-mt-4v">Ajouté le {{ document.date_creation }} par {{ document.created_by_structure }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </dialog>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

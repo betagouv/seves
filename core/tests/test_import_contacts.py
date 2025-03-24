@@ -20,7 +20,8 @@ def mock_csv_data(tmp_path):
     data = """Structure,Prénom,Nom,Mail,Fonction_hiérarchique,Complément_fonction,Téléphone,Mobile
 DDI/DDPP/DDPP17/SSA,John,Doe,test@example.com,Manager,,+33 5 46 00 00 00,+33 6 00 00 00 00
 AC/DAC/DGAL/MUS,John2,Doe2,test2@example2.com,Super Manager,,+33 5 46 01 00 00,,
-SD/DAAF/DAAF973/SG,Prestataire,TEMPORAIRE,inconnu,,,,"""
+SD/DAAF/DAAF973/SG,Prestataire,TEMPORAIRE,inconnu,,,,
+DDI/DDETSPP/DDETSPP2A/SVP,Sophie,Martin,sophie.martin@example.com,Responsable,Contrôle sanitaire,+33 5 57 01 02 03,+33 6 12 34 56 78"""
     p = tmp_path / "test.csv"
     p.write_text(data, encoding="utf-8")
     return str(p)
@@ -43,11 +44,11 @@ def test_import_contacts(mock_csv_data):
     call_command("import_contacts", mock_csv_data, stdout=out)
     output = out.getvalue()
     assert "Importation terminée" in output
-    assert Agent.objects.count() == 2
-    assert Structure.objects.count() == 2
-    assert Contact.objects.count() == 4
+    assert Agent.objects.count() == 3
+    assert Structure.objects.count() == 3
+    assert Contact.objects.count() == 6
     User = get_user_model()
-    assert User.objects.count() == 2
+    assert User.objects.count() == 3
 
 
 @pytest.mark.django_db
@@ -67,9 +68,15 @@ def test_data_integrity(mock_csv_data):
     assert structure_mus.niveau2 == "MUS"
     assert structure_mus.libelle == "MUS"
 
+    structure_ddetspp2a = Structure.objects.get(niveau2="DDETSPP2A")
+    assert structure_ddetspp2a.niveau1 == "DDI/DDETSPP"
+    assert structure_ddetspp2a.niveau2 == "DDETSPP2A"
+    assert structure_ddetspp2a.libelle == "DDETSPP2A"
+
     # vérification de l'enregistrement des contacts de type Structure (FK structure non null)
     assert Contact.objects.get(structure=structure_ddpp17) is not None
     assert Contact.objects.get(structure=structure_mus) is not None
+    assert Contact.objects.get(structure=structure_ddetspp2a) is not None
 
     # vérification de l'enregistrement des contacts de type Agent (FK agent non null)
     contact = Contact.objects.get(email="test@example.com")
@@ -97,13 +104,26 @@ def test_data_integrity(mock_csv_data):
     assert contact2.agent.user.email == "test2@example2.com"
     assert contact2.agent.user.is_active is False
 
+    contact3 = Contact.objects.get(email="sophie.martin@example.com")
+    assert contact3.agent.structure == structure_ddetspp2a
+    assert contact3.agent.structure_complete == "DDI/DDETSPP/DDETSPP2A/SVP"
+    assert contact3.agent.prenom == "Sophie"
+    assert contact3.agent.nom == "Martin"
+    assert contact3.agent.fonction_hierarchique == "Responsable"
+    assert contact3.agent.complement_fonction == "Contrôle sanitaire"
+    assert contact3.agent.telephone == "+33 5 57 01 02 03"
+    assert contact3.agent.mobile == "+33 6 12 34 56 78"
+    assert contact3.agent.user.username == "sophie.martin@example.com"
+    assert contact3.agent.user.email == "sophie.martin@example.com"
+    assert contact3.agent.user.is_active is False
+
 
 @pytest.mark.django_db
 def test_ignore_unknown_email(mock_csv_data):
     """Test pour s'assurer que les lignes avec un email 'inconnu' sont ignorées"""
     _reset_contacts()
     call_command("import_contacts", mock_csv_data)
-    assert Contact.objects.filter(agent__isnull=False).count() == 2
+    assert Contact.objects.filter(agent__isnull=False).count() == 3
     with pytest.raises(ObjectDoesNotExist):
         Contact.objects.get(email="inconnu")
 

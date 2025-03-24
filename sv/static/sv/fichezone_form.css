@@ -2,6 +2,9 @@
 .zones-infestees__add-form-btn {
     text-align: right;
 }
+.fichezone_form__informations {
+    align-items: center;
+}
 .zone-infestees__zone-infestee-form {
     background-color: var(--background-alt-grey);
 }

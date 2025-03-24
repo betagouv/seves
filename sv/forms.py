@@ -11,7 +11,7 @@ from django.utils.translation import ngettext
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
-from core.models import Structure
+from core.models import Structure, Visibilite
 from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin, WithLatestVersionLocking
 from sv.models import (
     FicheZoneDelimitee,
@@ -31,6 +31,12 @@ class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
     class Meta:
         model = Evenement
         fields = ["visibilite"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["visibilite"].choices = [
+            (value, Visibilite.get_masculine_label(value)) for value, _ in Visibilite.choices
+        ]
 
 
 class DepartementModelChoiceField(forms.ModelChoiceField):
@@ -57,7 +63,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "style": "flex: 0.55; margin-right: .5rem;",
+                "class": "wgs-longitude-field",
                 "placeholder": "Longitude",
             }
         ),
@@ -66,7 +72,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.NumberInput(
             attrs={
-                "style": "flex: 0.55; margin-top: .5rem;",
+                "class": "wgs-latitude-field",
                 "placeholder": "Latitude",
             }
         ),
@@ -85,7 +91,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     siret_etablissement = forms.CharField(
         required=False,
         max_length=14,
-        label="Siret établissement",
+        label="N° SIRET",
         widget=forms.TextInput(
             attrs={
                 "pattern": "[0-9]{14}",
@@ -98,7 +104,12 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     class Meta:
         model = Lieu
         exclude = []
-        labels = {"is_etablissement": "Il s'agit d'un établissement"}
+        labels = {
+            "is_etablissement": "Il s'agit d'un établissement",
+            "raison_sociale_etablissement": "Raison sociale",
+            "adresse_etablissement": "Adresse",
+            "pays_etablissement": "Pays",
+        }
 
     def clean_departement(self):
         if self.cleaned_data["departement"] == "":

@@ -18,7 +18,7 @@ from django.views.generic import (
 )
 from reversion.models import Version
 
-from core.forms import MessageForm, MessageDocumentForm
+from core.forms import MessageForm, MessageDocumentForm, StructureAddForm, AgentAddForm
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -26,6 +26,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
+    WithSireneTokenMixin,
 )
 from core.models import Visibilite
 from core.redirect import safe_redirect
@@ -43,9 +44,8 @@ from sv.forms import (
     EvenementUpdateForm,
     StructureSelectionForVisibiliteForm,
 )
-from .display import DisplayedFiche
 from .export import FicheDetectionExport
-from .filters import FicheFilter
+from .filters import EvenementFilter
 from .models import (
     FicheDetection,
     Lieu,
@@ -64,35 +64,38 @@ from .view_mixins import (
 )
 
 
-class FicheListView(ListView):
-    model = FicheDetection
+class EvenementListView(ListView):
+    model = Evenement
     paginate_by = 100
-    context_object_name = "fiches"
-    template_name = "sv/fiche_list.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.list_of_zones = self.request.GET.get("type_fiche") == "zone"
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         contact = self.request.user.agent.structure.contact_set.get()
-        if self.list_of_zones:
-            queryset = FicheZoneDelimitee.objects.all().get_fiches_user_can_view(self.request.user)
-            queryset = queryset.optimized_for_list().order_by_numero_fiche().with_nb_fiches_detection()
-            queryset = queryset.with_fin_de_suivi(contact)
-        else:
-            queryset = FicheDetection.objects.all().get_fiches_user_can_view(self.request.user)
-            queryset = queryset.with_list_of_lieux_with_commune().with_first_region_name()
-            queryset = queryset.optimized_for_list().order_by_numero_fiche().with_fin_de_suivi(contact)
-        self.filter = FicheFilter(self.request.GET, queryset=queryset)
+        queryset = (
+            Evenement.objects.all()
+            .get_user_can_view(self.request.user)
+            .with_list_of_lieux_with_commune()
+            .with_fin_de_suivi(contact)
+            .with_nb_fiches_detection()
+            .optimized_for_list()
+            .order_by_numero()
+        )
+        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
-        method = DisplayedFiche.from_fiche_zone if self.list_of_zones else DisplayedFiche.from_fiche_detection
-        context["fiches"] = [method(fiche) for fiche in context["page_obj"]]
-        context["last_column"] = "Détections" if self.list_of_zones else "Zone"
+
+        for evenement in context["evenement_list"]:
+            etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
+            evenement.etat = etat_data["etat"]
+            evenement.readable_etat = etat_data["readable_etat"]
+
+            evenement.all_lieux_with_commune = []
+            for detection in evenement.detections.all():
+                if hasattr(detection, "lieux_list_with_commune"):
+                    evenement.all_lieux_with_commune.extend(detection.lieux_list_with_commune)
+
         return context
 
 
@@ -157,7 +160,8 @@ class EvenementDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        content_type = ContentType.objects.get_for_model(self.get_object())
+        context["content_type"] = content_type
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
@@ -187,6 +191,9 @@ class EvenementDetailView(
             else getattr(self.object.detections.first(), "id", None)
         )
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        initial_data = {"content_id": self.get_object().id, "content_type_id": content_type.id}
+        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=self.get_object())
+        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=self.get_object())
         return context
 
 
@@ -224,7 +231,11 @@ class EvenementUpdateView(
 
 
 class FicheDetectionCreateView(
-    WithStatusToOrganismeNuisibleMixin, WithPrelevementHandlingMixin, WithPrelevementResultatsMixin, CreateView
+    WithStatusToOrganismeNuisibleMixin,
+    WithSireneTokenMixin,
+    WithPrelevementHandlingMixin,
+    WithPrelevementResultatsMixin,
+    CreateView,
 ):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
@@ -314,6 +325,7 @@ class FicheDetectionUpdateView(
     WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
+    WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
     UpdateView,
 ):
@@ -488,7 +500,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("evenement-details", args=[self.object.evenement.numero]) + "#tabpanel-zone-panel"
+        return reverse("evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -595,7 +607,7 @@ class FicheZoneDelimiteeUpdateView(
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return self.get_object().get_absolute_url() + "#tabpanel-zone-panel"
+        return self.get_object().get_absolute_url() + "?tab=zone"
 
     def test_func(self) -> bool | None:
         return self.get_object().evenement.can_user_access(self.request.user)

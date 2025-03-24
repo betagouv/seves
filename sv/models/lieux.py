@@ -106,7 +106,6 @@ class Lieu(models.Model):
         null=True,
     )
     is_etablissement = models.BooleanField(verbose_name="Établissement", default=False)
-    nom_etablissement = models.CharField(max_length=100, verbose_name="Nom établissement", blank=True)
     activite_etablissement = models.CharField(max_length=100, verbose_name="Activité établissement", blank=True)
     pays_etablissement = models.CharField(max_length=100, verbose_name="Pays établissement", blank=True)
     raison_sociale_etablissement = models.CharField(
@@ -142,15 +141,13 @@ class Lieu(models.Model):
     code_inupp_etablissement = models.CharField(max_length=50, verbose_name="Code INUPP", blank=True)
 
     ETABLISSEMENT_FIELDS = [
-        "nom_etablissement",
         "activite_etablissement",
         "pays_etablissement",
         "raison_sociale_etablissement",
         "adresse_etablissement",
         "siret_etablissement",
-        "site_inspection",
-        "position_chaine_distribution_etablissement",
         "code_inupp_etablissement",
+        "position_chaine_distribution_etablissement",
     ]
 
     def __str__(self):

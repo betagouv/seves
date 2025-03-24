@@ -36,8 +36,8 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
 
     assert len(mailoutbox) == 1
 
-    page.goto(f"{live_server.url}{reverse('fiche-liste')}")
-    expect(page.locator(".fiches__list-row td:nth-child(1) .ac-notified")).to_be_visible()
+    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
+    expect(page.locator(".evenements__list-row td:nth-child(1) .ac-notified")).to_be_visible()
 
 
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):

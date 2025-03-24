@@ -1,7 +1,12 @@
-.contact-add-form__container {
-    background-color: var(--background-default-grey);
-    min-height: 600px
+label[for="id_contacts_structures"], label[for="id_contacts_agents"] {
+    font-size: 1rem;
+    font-weight: bold;
 }
-.choices {
-    margin-top: 0.5rem;
+.contact-form-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.contact-form-input {
+    flex-grow: 1;
 }
