@@ -145,7 +145,7 @@ class FicheDetection(
         ordering = ["numero_detection"]
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=True)
                     | Q(hors_zone_infestee__isnull=True) & Q(zone_infestee__isnull=False)
                     | Q(hors_zone_infestee__isnull=False) & Q(zone_infestee__isnull=True)

@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="fichedetection",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(("hors_zone_infestee__isnull", True), ("zone_infestee__isnull", True)),
                     models.Q(("hors_zone_infestee__isnull", True), ("zone_infestee__isnull", False)),
                     models.Q(("hors_zone_infestee__isnull", False), ("zone_infestee__isnull", True)),
