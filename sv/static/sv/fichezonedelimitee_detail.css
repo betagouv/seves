@@ -23,7 +23,7 @@
 .gallery-item {
     text-align: center;
 }
-.gallery img {
+.gallery-img {
     height: 200px;
     width: auto;
 }

@@ -6,7 +6,7 @@
                 {% for document in document_filter.qs %}
                     {% if document.is_cartographie and document.is_infected is False and document.is_deleted is False %}
                         <div class="gallery-item">
-                            <img src="{{ document.file.url }}" class="img-thumbnail cursor-pointer" data-thumbnail="{{ forloop.counter0 }}" data-fr-opened="false" aria-controls="fr-document-image-{{ document.pk }}">
+                            <img src="{{ document.file.url }}" class="img-thumbnail cursor-pointer gallery-img" data-thumbnail="{{ forloop.counter0 }}" data-fr-opened="false" aria-controls="fr-document-image-{{ document.pk }}">
                             <p>{{ document.nom }}</p>
                             <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" role="dialog" id="fr-document-image-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
                                 <div class="fr-container fr-container--fluid fr-container-md">
