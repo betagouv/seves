@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="fichedetection",
             constraint=models.CheckConstraint(
-                check=models.Q(("visibilite", "brouillon"), ("numero__isnull", False), _negated=True),
+                condition=models.Q(("visibilite", "brouillon"), ("numero__isnull", False), _negated=True),
                 name="check_numero_fiche_is_null_when_visibilite_is_brouillon",
             ),
         ),

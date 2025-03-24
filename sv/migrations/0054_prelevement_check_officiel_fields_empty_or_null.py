@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="prelevement",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("is_officiel", True),
                     models.Q(
                         ("laboratoire_agree__isnull", True),

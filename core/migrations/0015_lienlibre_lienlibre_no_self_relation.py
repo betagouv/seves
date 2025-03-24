@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="lienlibre",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("content_type_1", models.F("content_type_2")),
                     ("object_id_1", models.F("object_id_2")),
                     _negated=True,
