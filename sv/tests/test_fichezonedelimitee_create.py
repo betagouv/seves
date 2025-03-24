@@ -64,9 +64,8 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(live_server, page
 
 
 @pytest.mark.django_db
-def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(live_server, page: Page, choice_js_fill):
+    fiche_detection = FicheDetectionFactory()
     evenement = EvenementFactory()
     detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (
         baker.make(
@@ -138,9 +137,8 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
 
 
 @pytest.mark.django_db
-def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(live_server, page: Page, choice_js_fill):
+    fiche_detection = FicheDetectionFactory()
     evenement = EvenementFactory()
 
     detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (

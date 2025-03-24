@@ -744,7 +744,6 @@ def test_update_prelevement(
 def test_update_multiple_prelevements(
     live_server,
     page: Page,
-    fiche_detection: FicheDetection,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill_from_element,
