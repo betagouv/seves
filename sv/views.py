@@ -27,11 +27,11 @@ from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
     WithSireneTokenMixin,
+    WithFormErrorsAsMessagesMixin,
 )
 from core.models import Visibilite
 from core.redirect import safe_redirect
 from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
-from core.views import WithFormErrorsAsMessagesMixin
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
