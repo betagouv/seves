@@ -9,6 +9,7 @@ from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from requests import ConnectTimeout, ReadTimeout
+from django.views.generic import FormView
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
@@ -388,3 +389,14 @@ class WithSireneTokenMixin:
             pass
 
         return context
+
+
+class WithFormErrorsAsMessagesMixin(FormView):
+    def form_invalid(self, form):
+        for _, errors in form.errors.as_data().items():
+            for error in errors:
+                if error.code == "blocking_error":
+                    messages.error(self.request, error.message, extra_tags="blocking")
+                else:
+                    messages.error(self.request, error.message)
+        return super().form_invalid(form)
