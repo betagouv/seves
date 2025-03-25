@@ -285,6 +285,7 @@ CSP_IMG_SRC = (
     "'self'",
     "data:",
     "s3.rbx.io.cloud.ovh.net",
+    "s3.eu-west-par.io.cloud.ovh.net",
 )
 if DEBUG:
     CSP_IMG_SRC = ("'self'", "data:", "127.0.0.1:9000")
