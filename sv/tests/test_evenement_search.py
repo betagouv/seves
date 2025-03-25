@@ -116,15 +116,25 @@ def test_search_with_evenement_number_allows_year_only(live_server, page: Page):
     expect(page.get_by_role("cell", name="2023.1")).not_to_be_visible()
 
 
-def test_search_with_invalid_evenement_number(client):
-    """Test la recherche d'une fiche détection en utilisant un numéro d'évenement invalide (format année.numéro)"""
-    response = client.get(reverse("evenement-liste") + "?numero=az.erty")
-    assert response.status_code == 200
-    assert "numero" in response.context["form"].errors  # Le formulaire doit contenir une erreur pour le champ 'numero'
-    assert (
-        str(response.context["form"].errors["numero"][0])
-        == "Format 'numero' invalide. Le numéro doit commencer par quatre chiffres'"
-    )
+def test_search_with_invalid_evenement_number(live_server, page: Page):
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    numero_input = page.get_by_label("Numéro")
+
+    numero_input.fill("az.erty")
+    page.get_by_role("button", name="Rechercher").click()
+    validation_message = numero_input.evaluate("el => el.validationMessage")
+    assert validation_message in [
+        "Please match the requested format.",
+        "Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2025.1)",
+    ]
+
+    numero_input.fill("2025-15")
+    page.get_by_role("button", name="Rechercher").click()
+    validation_message = numero_input.evaluate("el => el.validationMessage")
+    assert validation_message in [
+        "Please match the requested format.",
+        "Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2025.1)",
+    ]
 
 
 def test_search_with_region(live_server, page: Page, mocked_authentification_user) -> None:
