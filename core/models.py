@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -157,13 +159,12 @@ class Document(models.Model):
         TRANSPORT = "document_de_transport", "Document de transport"
         TRACABILITE = "tracabilité", "Traçabilité"
 
-    ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = {
-        TypeDocument.CARTOGRAPHIE: [
-            AllowedExtensions.PNG,
-            AllowedExtensions.JPG,
-            AllowedExtensions.JPEG,
-        ]
-    }
+    ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
+        lambda: list(AllowedExtensions),
+        {
+            TypeDocument.CARTOGRAPHIE: [AllowedExtensions.PNG, AllowedExtensions.JPG, AllowedExtensions.JPEG],
+        },
+    )
 
     nom = models.CharField(max_length=256)
     description = models.TextField(blank=True)
@@ -204,6 +205,15 @@ class Document(models.Model):
         if document_type not in Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE:
             return
         FileExtensionValidator(Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type])(file)
+
+    @classmethod
+    def get_accept_format_per_document_type(cls):
+        accept_allowed_extensions = {}
+        for document_type in cls.TypeDocument:
+            extensions = cls.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type]
+            extension_values = [ext.value for ext in extensions]
+            accept_allowed_extensions[document_type] = "." + ",.".join(extension_values)
+        return accept_allowed_extensions
 
     def clean(self):
         super().clean()

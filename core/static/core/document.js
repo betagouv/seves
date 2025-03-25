@@ -48,11 +48,8 @@ export function getAcceptAllowedExtensionsAttributeValue(fileInput, documentType
         return null;
     }
 
-    // Détermine les extensions à utiliser pour le type de document sélectionné
     const currentDocumentType = documentTypeSelect.value;
-    const extensionsToUse = currentDocumentType === "cartographie" ? allowedExtensions['cartographie'] : allowedExtensions['default'];
-
-    // Vérifie si des extensions sont définies pour ce type de document
+    const extensionsToUse = allowedExtensions[currentDocumentType];
     if (!extensionsToUse) {
         console.error(`Erreur de configuration: aucune extension définie dans l'attribut '${attributeName}' pour le type '${currentDocumentType}' ou pas de valeur par défaut`);
         fileInput.setCustomValidity(`Erreur de configuration: aucune extension définie pour ce type de document`);
@@ -81,9 +78,7 @@ function validateSelectedFileExtension(fileInput, extensionsToUse) {
     }
 
     // Normaliser les extensions autorisées
-    const allowedExtensions = extensionsToUse
-        .split(',')
-        .map(ext => ext.trim().toLowerCase().replace(/^\./, ''));
+    const allowedExtensions = extensionsToUse.split(',').map(ext => ext.replace(/^\./, ''));
 
     // Vérifier si l'extension est autorisée
     if (!allowedExtensions.includes(fileExtension)) {

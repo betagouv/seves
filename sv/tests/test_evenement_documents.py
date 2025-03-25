@@ -585,7 +585,6 @@ def test_can_upload_document_with_allowed_extension_for_cartographie(live_server
     page.get_by_test_id("documents-add").click()
     page.locator("#id_nom").fill("Test upload doc cartographie")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    page.locator("#id_description").fill("upload d'un fichier de type cartographie avec une extension autorisée")
     page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
@@ -602,15 +601,16 @@ def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_s
     page.get_by_test_id("documents-add").click()
     page.locator("#id_nom").fill("Test upload doc cartographie")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    page.locator("#id_description").fill("upload d'un fichier de type cartographie avec une extension non autorisée")
 
-    # TODO: voir si set_input_files peut prendre en compte l'attribut accept sinon remplacer par vérification des messages d'erreur générés côté backend
     page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
     page.get_by_test_id("documents-send").click()
 
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "Le fichier sélectionné ne correspond pas au type de document" in validation_message
+    expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
+    expect(
+        page.get_by_text(
+            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg."
+        )
+    ).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
 
