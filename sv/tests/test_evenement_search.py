@@ -337,3 +337,13 @@ def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero))).to_have_count(1)
+
+
+def test_filter_deleted_detection_in_count_column(live_server, page):
+    evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
+    FicheDetectionFactory(evenement=evenement, is_deleted=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    assert page.locator(".evenements__list-row:nth-child(1) td:nth-child(9)").inner_text().strip() == "1"
