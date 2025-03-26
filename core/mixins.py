@@ -111,8 +111,11 @@ class AllowsSoftDeleteMixin(models.Model):
     def can_user_delete(self, user):
         raise NotImplementedError
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user)
+
     def soft_delete(self, user):
-        if not self.can_user_delete(user):
+        if not self.can_be_deleted(user):
             raise PermissionDenied
         self.is_deleted = True
         self.save()
@@ -141,7 +144,7 @@ class AllowACNotificationMixin(models.Model):
     is_ac_notified = models.BooleanField(default=False)
 
     def can_notifiy(self, user):
-        return not self.is_ac_notified and not self.is_draft and not user.agent.structure.is_ac
+        return not self.is_ac_notified and not self.is_draft and not self.is_cloture and not user.agent.structure.is_ac
 
     def _add_bsv_and_mus_to_contacts(self):
         bsv_contact = Contact.objects.get(structure__niveau2=BSV_STRUCTURE)

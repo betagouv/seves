@@ -205,3 +205,16 @@ def test_update_evenement_has_locking_protection(live_server, page: Page, choice
     ).to_be_visible()
     page.keyboard.press("Escape")
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+
+def test_edit_button_not_visible_if_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Actions")).to_be_disabled()
+    expect(page.get_by_role("link", name="Modifier l'événement")).not_to_be_visible()
+
+
+def test_cant_access_update_page_if_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_update_url()}")
+    expect(page.get_by_text("Vous n'avez pas le droit d'accéder à cette page.")).to_be_visible()

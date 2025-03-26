@@ -104,7 +104,7 @@ class Evenement(
         return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
 
     def can_update_visibilite(self, user):
-        return not self.is_draft and user.agent.structure.is_mus_or_bsv
+        return not self.is_draft and not self.is_already_cloturer() and user.agent.structure.is_mus_or_bsv
 
     def __str__(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
@@ -117,9 +117,15 @@ class Evenement(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and not self.is_cloture()
+
     def soft_delete(self, user):
         if not self.can_user_delete(user):
             raise PermissionDenied
+
+        if self.is_cloture():
+            raise AttributeError("L'évènement ne peut pas être supprimé car il est clôturé")
 
         with transaction.atomic():
             for detection in self.detections.all():
@@ -189,3 +195,6 @@ class Evenement(
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
+
+    def can_be_updated(self, user):
+        return not self.is_already_cloturer() and self.can_user_access(user)

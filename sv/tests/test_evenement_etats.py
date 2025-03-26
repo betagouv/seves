@@ -242,3 +242,23 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
         content_type=evenement_content_type,
         object_id=evenement.id,
     ).exists()
+
+
+def test_cant_see_cloture_evenement_button_if_is_already_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
+
+
+def test_cant_cloture_evenement_if_already_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(
+        reverse("evenement-cloturer", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+    )
+
+    evenement.refresh_from_db()
+    assert response.status_code == 302
+    assert evenement.is_deleted is False

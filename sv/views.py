@@ -158,16 +158,24 @@ class EvenementDetailView(
     def handle_no_permission(self):
         raise PermissionDenied()
 
+    def get_permission_context(self):
+        user = self.request.user
+        return {
+            "can_publish": self.get_object().can_publish(user),
+            "can_update_visibilite": self.get_object().can_update_visibilite(user),
+            "can_be_ac_notified": self.get_object().can_notifiy(user),
+            "can_be_updated": self.get_object().can_be_updated(user),
+            "can_be_deleted": self.get_object().can_be_deleted(user),
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(self.get_permission_context())
         content_type = ContentType.objects.get_for_model(self.get_object())
         context["content_type"] = content_type
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        context["can_publish"] = self.get_object().can_publish(self.request.user)
-        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
-        context["can_be_ac_notified"] = self.object.can_notifiy(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
@@ -216,7 +224,7 @@ class EvenementUpdateView(
         return kwargs
 
     def test_func(self) -> bool | None:
-        return self.get_object().can_user_access(self.request.user)
+        return self.get_object().can_be_updated(self.request.user)
 
     def form_valid(self, form):
         response = super().form_valid(form)
