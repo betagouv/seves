@@ -448,3 +448,33 @@ def test_update_form_remove_from_detections_list_refresh_choices_for_other_lists
     detection_1.refresh_from_db()
     assert detection_1.zone_infestee is None
     assert detection_1.hors_zone_infestee == fiche_zone_delimitee
+
+
+def test_cant_see_update_fiche_zone_delimitee_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), etat=Evenement.Etat.CLOTURE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+
+    expect(page.get_by_role("button", name="Modifier")).not_to_be_visible()
+
+
+def test_cant_access_update_fiche_zone_delimitee_form_if_evenement_is_cloture(client):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.CLOTURE)
+
+    response = client.get(fiche_zone.get_update_url())
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_update_fiche_zone_delimitee_form_if_evenement_is_cloture(client):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(fiche_zone.get_update_url(), data={"commentaire": "AAAA"})
+
+    assert response.status_code == 403
+    fiche_zone.refresh_from_db()
+    assert fiche_zone.commentaire != "AAAA"

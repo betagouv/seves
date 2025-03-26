@@ -24,6 +24,7 @@ from ..models import (
     Departement,
     StructurePreleveuse,
     Laboratoire,
+    Evenement,
 )
 from ..models import (
     Region,
@@ -1159,3 +1160,25 @@ def test_update_prelevement_from_officiel_to_non_officiel_empties_numero_RI(
 
     expect(prelevement_form_elements.numero_rapport_inspection_input).to_have_value("")
     expect(prelevement_form_elements.numero_rapport_inspection_input).to_be_disabled()
+
+
+def test_cant_see_update_fiche_detection_btn_if_evenement_is_cloture(live_server, page: Page):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Modifier")).not_to_be_visible()
+
+
+def test_cant_access_update_detection_form_if_evenement_is_cloture(client):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    response = client.get(fiche_detection.get_update_url())
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_update_detection_if_evenement_is_cloture(client):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    response = client.post(fiche_detection.get_update_url(), data={"commentaire": ["AAAA"]})
+    assert response.status_code == 403
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.commentaire != "AAAA"

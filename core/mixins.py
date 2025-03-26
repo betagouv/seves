@@ -113,8 +113,11 @@ class AllowsSoftDeleteMixin(models.Model):
     def can_user_delete(self, user):
         raise NotImplementedError
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user)
+
     def soft_delete(self, user):
-        if not self.can_user_delete(user):
+        if not self.can_be_deleted(user):
             raise PermissionDenied
         self.is_deleted = True
         self.save()
@@ -143,7 +146,7 @@ class AllowACNotificationMixin(models.Model):
     is_ac_notified = models.BooleanField(default=False)
 
     def can_notifiy(self, user):
-        return not self.is_ac_notified and not self.is_draft and not user.agent.structure.is_ac
+        return not self.is_ac_notified and not (self.is_draft or self.is_cloture) and not user.agent.structure.is_ac
 
     def _add_bsv_and_mus_to_contacts(self):
         bsv_contact = Contact.objects.get(structure__niveau2=BSV_STRUCTURE)
@@ -271,6 +274,7 @@ class WithEtatMixin(models.Model):
     def is_draft(self):
         return self.etat == self.Etat.BROUILLON
 
+    @property
     def is_cloture(self):
         return self.etat == self.Etat.CLOTURE
 
@@ -285,7 +289,7 @@ class WithEtatMixin(models.Model):
         return len(contacts_not_in_fin_suivi) == 1 and contacts_not_in_fin_suivi[0].structure == user.agent.structure
 
     def can_be_cloturer(self, user, contacts_not_in_fin_suivi) -> bool:
-        if self.is_draft or self.is_already_cloturer() or not self.can_be_cloturer_by(user):
+        if self.is_draft or self.is_cloture or not self.can_be_cloturer_by(user):
             return False
 
         if not contacts_not_in_fin_suivi:
@@ -296,9 +300,6 @@ class WithEtatMixin(models.Model):
 
         # Plusieurs contacts sans fin de suivi
         return False
-
-    def is_already_cloturer(self):
-        return self.etat == self.Etat.CLOTURE
 
     def get_publish_success_message(self):
         return "Objet publié avec succès"
@@ -425,3 +426,33 @@ class WithNumeroMixin(models.Model):
     @property
     def numero(self):
         return f"{self.numero_annee}-{self.numero_evenement}"
+
+
+class BasePermissionMixin:
+    def _user_can_interact(self, user):
+        raise NotImplementedError
+
+
+class WithDocumentPermissionMixin(BasePermissionMixin):
+    def can_add_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_update_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_download_document(self, user):
+        return self._user_can_interact(user)
+
+
+class WithContactPermissionMixin(BasePermissionMixin):
+    def can_add_agent(self, user):
+        return self._user_can_interact(user)
+
+    def can_add_structure(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_contact(self, user):
+        return self._user_can_interact(user)

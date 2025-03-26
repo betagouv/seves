@@ -158,16 +158,37 @@ class EvenementDetailView(
     def handle_no_permission(self):
         raise PermissionDenied()
 
+    def get_permission_context(self):
+        user = self.request.user
+        return {
+            "can_publish": self.get_object().can_publish(user),
+            "can_update_visibilite": self.get_object().can_update_visibilite(user),
+            "can_be_ac_notified": self.get_object().can_notifiy(user),
+            "can_be_updated": self.get_object().can_be_updated(user),
+            "can_be_deleted": self.get_object().can_be_deleted(user),
+            "can_add_fiche_detection": self.get_object().can_add_fiche_detection(user),
+            "can_delete_fiche_detection": self.get_object().can_delete_fiche_detection(),
+            "can_update_fiche_detection": self.get_object().can_update_fiche_detection(user),
+            "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
+            "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
+            "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
+            "can_add_agent": self.get_object().can_add_agent(user),
+            "can_add_structure": self.get_object().can_add_structure(user),
+            "can_delete_contact": self.get_object().can_delete_contact(user),
+            "can_add_document": self.get_object().can_add_document(user),
+            "can_update_document": self.get_object().can_update_document(user),
+            "can_delete_document": self.get_object().can_delete_document(user),
+            "can_download_document": self.get_object().can_download_document(user),
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(self.get_permission_context())
         content_type = ContentType.objects.get_for_model(self.get_object())
         context["content_type"] = content_type
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
-        context["can_publish"] = self.get_object().can_publish(self.request.user)
-        context["can_update_visibilite"] = self.get_object().can_update_visibilite(self.request.user)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
-        context["can_be_ac_notified"] = self.object.can_notifiy(self.request.user)
         context["latest_version"] = self.object.latest_version
         fiche_zone = self.get_object().fiche_zone_delimitee
         if fiche_zone:
@@ -216,7 +237,7 @@ class EvenementUpdateView(
         return kwargs
 
     def test_func(self) -> bool | None:
-        return self.get_object().can_user_access(self.request.user)
+        return self.get_object().can_be_updated(self.request.user)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -251,9 +272,7 @@ class FicheDetectionCreateView(
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        if not self.evenement:
-            return True
-        return self.evenement.can_user_access(self.request.user)
+        return True if not self.evenement else self.evenement.can_add_fiche_detection(self.request.user)
 
     def get_success_url(self):
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
@@ -352,7 +371,7 @@ class FicheDetectionUpdateView(
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
 
     def test_func(self):
-        return self.get_object().evenement.can_user_access(self.request.user)
+        return self.get_object().evenement.can_update_fiche_detection(self.request.user)
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -462,7 +481,7 @@ class EvenementCloturerView(View):
         evenement = content_type.model_class().objects.get(pk=pk)
         redirect_url = evenement.get_absolute_url()
 
-        if evenement.is_already_cloturer():
+        if evenement.is_cloture:
             messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")
             return redirect(redirect_url)
 
@@ -516,7 +535,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTest
     context_object_name = "fiche"
 
     def test_func(self):
-        return self.evenement.can_user_access(self.request.user)
+        return self.evenement.can_add_fiche_zone_delimitee(self.request.user)
 
     def get_success_url(self):
         return reverse("sv:evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
@@ -629,7 +648,7 @@ class FicheZoneDelimiteeUpdateView(
         return self.get_object().get_absolute_url() + "?tab=zone"
 
     def test_func(self) -> bool | None:
-        return self.get_object().evenement.can_user_access(self.request.user)
+        return self.get_object().can_be_updated(self.request.user)
 
     def get_object(self, queryset=None):
         return super().get_object(
@@ -748,7 +767,7 @@ class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
     model = FicheZoneDelimitee
 
     def test_func(self):
-        return self.get_object().can_user_delete(self.request.user)
+        return self.get_object().can_be_deleted(self.request.user)
 
     def handle_no_permission(self):
         raise PermissionDenied()

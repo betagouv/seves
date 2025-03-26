@@ -131,6 +131,29 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
     assert FicheDetection._base_manager.filter(evenement=evenement).count() == 3
 
 
+def test_delete_button_not_visible_if_evenement_cloture(live_server, page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_text("Actions")).not_to_be_visible()
+    expect(page.get_by_text("Supprimer l'événement", exact=True)).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_delete_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+    }
+    response = client.post(reverse("soft-delete"), data=payload)
+
+    evenement.refresh_from_db()
+    assert response.status_code == 302
+    assert evenement.is_deleted is False
+
+
 def test_evenement_can_view_basic_data(live_server, page: Page):
     evenement = EvenementFactory(visibilite=Visibilite.NATIONALE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
