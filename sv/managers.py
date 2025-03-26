@@ -145,7 +145,9 @@ class EvenementQueryset(models.QuerySet):
         )
 
     def with_nb_fiches_detection(self):
-        return self.annotate(nb_fiches_detection=Count("detections", distinct=True))
+        return self.annotate(
+            nb_fiches_detection=Count("detections", filter=Q(detections__is_deleted=False), distinct=True)
+        )
 
     def optimized_for_list(self):
         return self.select_related("organisme_nuisible", "statut_reglementaire", "createur", "fiche_zone_delimitee")
