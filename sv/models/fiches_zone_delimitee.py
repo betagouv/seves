@@ -64,8 +64,11 @@ class FicheZoneDelimitee(models.Model):
             return str(self.evenement.numero)
         return ""
 
-    def can_user_delete(self, user):
-        return self.evenement.can_user_access(user)
+    def can_be_deleted(self, user):
+        return self.evenement._user_can_interact(user)
+
+    def can_be_updated(self, user):
+        return self.evenement._user_can_interact(user)
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():

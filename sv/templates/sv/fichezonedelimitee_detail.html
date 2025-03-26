@@ -6,13 +6,17 @@
         {% include "core/_latest_revision.html" with latest_version=fiche.latest_version %}
     </div>
     <div class="fiche-action">
-        <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
-            Supprimer la zone
-        </button>
-        {% include "sv/_delete_fichezonedelimitee_modal.html" %}
-        <button class="fr-btn fr-btn--secondary fr-mr-2w">
-            <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
-        </button>
+        {% if can_delete_fiche_zone_delimitee %}
+            <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
+                Supprimer la zone
+            </button>
+            {% include "sv/_delete_fichezonedelimitee_modal.html" %}
+        {% endif %}
+        {% if can_update_fiche_zone_delimitee %}
+            <button class="fr-btn fr-btn--secondary fr-mr-2w">
+                <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier</span></a>
+            </button>
+        {% endif %}
     </div>
 </div>
 

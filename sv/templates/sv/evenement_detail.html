@@ -63,7 +63,6 @@
                         </form>
                     {% endif %}
                     {% include "sv/_evenement_action_navigation.html" %}
-                    {% include "sv/_cloturer_modal.html" %}
                 </div>
             </div>
             {% include "sv/_evenement_badges.html" %}
@@ -129,21 +128,27 @@
                                                 aria-controls="tabpanel-{{ fichedetection.pk }}-panel">{{ fichedetection }}</button>
                                     </li>
                                 {% endfor %}
-                                <li>
-                                    <a id="add-detection-link" href="{% url 'sv:fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
-                                        <span class="fr-icon-add-line" aria-hidden="true"></span> Ajouter une détection</a>
-                                </li>
+                                {% if can_add_fiche_detection %}
+                                    <li>
+                                        <a id="add-detection-link" href="{% url 'sv:fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
+                                            <span class="fr-icon-add-line" aria-hidden="true"></span> Ajouter une détection</a>
+                                    </li>
+                                {% endif %}
                             </ul>
 
                             {% for fichedetection in evenement.detections.all %}
                                 <div id="detection-actions-{{ fichedetection.pk }}" {% if not fichedetection.pk == active_detection %}class="fr-hidden"{% endif %}>
-                                    <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
-                                        Supprimer la détection
-                                    </button>
-                                    {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
-                                    <button class="fr-btn fr-btn--secondary">
-                                        <a href="{% url 'sv:fiche-detection-modification' fichedetection.pk %}">Modifier</a>
-                                    </button>
+                                    {% if can_delete_fiche_detection %}
+                                        <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-detection-{{ fichedetection.pk }}">
+                                            Supprimer la détection
+                                        </button>
+                                        {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
+                                    {% endif %}
+                                    {% if can_update_fiche_detection %}
+                                        <button class="fr-btn fr-btn--secondary">
+                                            <a href="{% url 'sv:fiche-detection-modification' fichedetection.pk %}">Modifier</a>
+                                        </button>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
 

@@ -98,8 +98,6 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
-    page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.CLOTURE
 
@@ -260,3 +258,23 @@ def test_cant_publish_evenement_i_cant_see(client):
 
     assert response.status_code == 302
     assert evenement.etat == Evenement.Etat.BROUILLON
+
+
+def test_cant_see_cloture_evenement_button_if_is_already_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
+
+
+def test_cant_cloture_evenement_if_already_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(
+        reverse("sv:evenement-cloturer", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+    )
+
+    evenement.refresh_from_db()
+    assert response.status_code == 302
+    assert evenement.is_deleted is False

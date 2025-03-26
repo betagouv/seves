@@ -169,6 +169,9 @@ class FicheDetection(
     def can_user_delete(self, user):
         return self.evenement.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and not self.evenement.is_cloture
+
     def __str__(self):
         return self.numero
 
