@@ -30,7 +30,7 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
     assert page.text_content(cell_selector) == "Notification à l'administration centrale"
 
     page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).to_be_disabled()
+    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
 
     evenement.refresh_from_db()
     assert evenement.is_ac_notified is True
@@ -145,5 +145,29 @@ def test_cant_forge_notify_ac_of_evenement_i_cant_see(client):
     )
 
     assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.is_ac_notified is False
+
+
+def test_cant_see_notify_ac_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+
+
+def test_cant_notify_ac_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(
+        reverse("notify-ac"),
+        {
+            "next": evenement.get_absolute_url(),
+            "content_id": evenement.id,
+            "content_type_id": ContentType.objects.get_for_model(Evenement).id,
+        },
+    )
+
+    assert response.status_code == 302
     evenement.refresh_from_db()
     assert evenement.is_ac_notified is False

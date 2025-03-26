@@ -1,13 +1,12 @@
-{% include "sv/_update_visibilite_modale.html" %}
-<nav role="navigation" class="fr-translate fr-nav">
-    <div class="fr-nav__item">
-        <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
-                aria-expanded="false" title="Sélectionner une action">Actions</button>
-        <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
-            <ul class="fr-menu__list">
-                {% if not evenement.is_draft and not user.agent.structure.is_ac %}
-                    <li>
-                        {% if can_be_ac_notified %}
+{% if can_be_ac_notified or can_update_visibilite or can_be_updated or is_evenement_can_be_cloturer_by_user and not is_cloture or can_be_deleted %}
+    <nav role="navigation" class="fr-translate fr-nav">
+        <div class="fr-nav__item">
+            <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
+                    aria-expanded="false" title="Sélectionner une action">Actions</button>
+            <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
+                <ul class="fr-menu__list">
+                    {% if can_be_ac_notified %}
+                        <li>
                             <form action="{% url 'notify-ac' %}" method="post">
                                 <button class="fr-translate__language fr-nav__link" href="#" type="submit"><span class="fr-icon-notification-3-fill fr-mr-2v fr-icon--sm" aria-hidden="true">
                                     {% csrf_token %}
@@ -16,22 +15,32 @@
                                     <input type="hidden" value="{{ evenement.pk }}" name="content_id">
                                 </span>Déclarer à l'AC</button>
                             </form>
-                        {% else %}
-                            <button class="fr-translate__language fr-nav__link" href="#" type="submit" disabled><span class="fr-icon-notification-3-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Déclarer à l'AC</button>
-                        {% endif %}
-                    </li>
-                {% endif %}
-                {% if can_update_visibilite %}
-                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
-                {% endif %}
-                <li><a class="fr-translate__language fr-nav__link" href="{{ evenement.get_update_url}}" ><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
-                {%  if is_evenement_can_be_cloturer_by_user and not is_cloture %}
-                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
-                {% endif %}
-                <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
-            </ul>
-
+                        </li>
+                    {% endif %}
+                    {% if can_update_visibilite %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
+                    {% endif %}
+                    {% if can_be_updated %}
+                        <li><a class="fr-translate__language fr-nav__link" href="{{ evenement.get_update_url}}" ><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
+                    {% endif %}
+                    {%  if is_evenement_can_be_cloturer_by_user and not is_cloture %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
+                    {% endif %}
+                    {% if can_be_deleted %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
-{% include "sv/_delete_evenement_modal.html" %}
+    </nav>
+{% endif %}
+
+{% if can_update_visibilite %}
+    {% include "sv/_update_visibilite_modale.html" %}
+{% endif %}
+{% if is_evenement_can_be_cloturer_by_user and not is_cloture %}
+    {% include "sv/_cloturer_modal.html" %}
+{% endif %}
+{% if can_be_deleted %}
+    {% include "sv/_delete_evenement_modal.html" %}
+{% endif %}

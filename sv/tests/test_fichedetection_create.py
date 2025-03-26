@@ -769,3 +769,26 @@ def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.detections.count() == 0
+
+
+def test_cant_see_add_detection_btn_to_existing_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Ajouter une détection")).not_to_be_visible()
+
+
+def test_cant_access_add_detection_form_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.get(reverse("sv:fiche-detection-creation"), data={"evenement": evenement.id})
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_add_detection_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.post(
+        reverse("sv:fiche-detection-creation"), data={"evenement": evenement.id, "latest_version": 0}
+    )
+    assert response.status_code == 403
+    assert evenement.detections.count() == 0

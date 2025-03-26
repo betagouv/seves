@@ -106,7 +106,7 @@ class Evenement(
         return reverse("sv:evenement-visibilite-update", kwargs={"pk": self.pk})
 
     def can_update_visibilite(self, user):
-        return not self.is_draft and user.agent.structure.is_mus_or_bsv
+        return not self.is_draft and not self.is_cloture and user.agent.structure.is_mus_or_bsv
 
     def __str__(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
@@ -119,9 +119,15 @@ class Evenement(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and not self.is_cloture
+
     def soft_delete(self, user):
         if not self.can_user_delete(user):
             raise PermissionDenied
+
+        if self.is_cloture:
+            raise AttributeError("L'évènement ne peut pas être supprimé car il est clôturé")
 
         with transaction.atomic():
             for detection in self.detections.all():
@@ -153,7 +159,7 @@ class Evenement(
         return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
 
     def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if not self.is_cloture() and is_fin_de_suivi:
+        if not self.is_cloture and is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
@@ -191,3 +197,45 @@ class Evenement(
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
+
+    def can_be_updated(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_add_fiche_detection(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_delete_fiche_detection(self):
+        return not self.is_cloture
+
+    def can_update_fiche_detection(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_delete_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_deleted(user)
+
+    def can_update_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
+
+    def can_add_fiche_zone_delimitee(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_add_agent(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_add_structure(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_delete_contact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_add_document(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_update_document(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_delete_document(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_download_document(self, user):
+        return not self.is_cloture and self.can_user_access(user)

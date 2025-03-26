@@ -560,3 +560,93 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
     page.get_by_test_id("documents-send").click()
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
+
+
+def test_cant_see_add_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id("documents-add")).not_to_be_visible()
+
+
+def test_cant_forge_upload_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    file = SimpleUploadedFile("file.png", b"file_content", content_type="image/png")
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "file": file,
+        "content_type": ContentType.objects.get_for_model(evenement).pk,
+        "object_id": evenement.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+
+    response = client.post(reverse("document-upload"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_cant_see_update_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]')).not_to_be_visible()
+
+
+def test_cant_forge_update_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(nom="Test document", description="", content_object=evenement)
+    evenement.documents.set([document])
+
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "pk": document.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+    response = client.post(reverse("document-update", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    document.refresh_from_db()
+    assert document.nom != "This is mine"
+
+
+def test_cant_see_delete_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id(f"documents-delete-{document.id}")).not_to_be_visible()
+
+
+def test_cant_forge_delete_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    payload = {"pk": document.pk, "next": f"/sv/evenement/{evenement.pk}/"}
+    response = client.post(reverse("document-delete", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.filter(is_deleted=True).count() == 0
+    assert evenement.documents.filter(is_deleted=False).count() == 1
+
+
+def test_cant_see_download_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
