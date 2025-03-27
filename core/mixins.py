@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from requests import ConnectTimeout
+from requests import ConnectTimeout, ReadTimeout
 
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
@@ -384,7 +384,7 @@ class WithSireneTokenMixin:
         try:
             response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
             context["sirene_token"] = response.json()["access_token"]
-        except (KeyError, ConnectionError, ConnectTimeout):
+        except (KeyError, ConnectionError, ConnectTimeout, ReadTimeout):
             pass
 
         return context
