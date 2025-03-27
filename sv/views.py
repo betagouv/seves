@@ -235,10 +235,20 @@ class FicheDetectionCreateView(
     WithSireneTokenMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
+    UserPassesTestMixin,
     CreateView,
 ):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
+
+    def test_func(self):
+        evenement_pk = (
+            self.request.GET.get("evenement") if self.request.method == "GET" else self.request.POST.get("evenement")
+        )
+        if evenement_pk:
+            evenement = Evenement.objects.get(pk=evenement_pk)
+            return evenement.can_user_access(self.request.user)
+        return True
 
     def get_success_url(self):
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
@@ -274,6 +284,7 @@ class FicheDetectionCreateView(
         return evenement_form.save()
 
     def post(self, request, *args, **kwargs):
+        self.object = None
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
@@ -494,10 +505,13 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
+class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTestMixin, CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
+
+    def test_func(self):
+        return self.evenement.can_user_access(self.request.user)
 
     def get_success_url(self):
         return reverse("sv:evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
@@ -505,7 +519,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.evenement = Evenement.objects.select_related("organisme_nuisible", "statut_reglementaire").get(
-                pk=self.request.GET.get("evenement")
+                pk=self.request.GET.get("evenement") or self.request.POST.get("evenement")
             )
         except Evenement.DoesNotExist:
             return HttpResponseBadRequest("L'événement n'existe pas.")
