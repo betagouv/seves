@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from core.models import Structure
 from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory, EvenementFactory
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Evenement
@@ -307,6 +308,14 @@ def test_fiche_zone_update_has_locking_protection(
     ).to_be_visible()
     page.keyboard.press("Escape")
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+
+def test_cant_access_update_zone_delimitee_form_of_evenement_i_cant_see(client):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone, createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    assert client.get(fiche_zone.get_update_url()).status_code == 403
 
 
 def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):

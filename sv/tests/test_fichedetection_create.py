@@ -8,6 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
+from core.factories import StructureFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
@@ -734,3 +735,64 @@ def test_can_create_evenement_if_last_evenement_is_deleted(
     page.get_by_role("button", name="Enregistrer").click()
 
     assert Evenement.objects.last().numero == "2025.2"
+
+
+def test_cant_access_fiche_detection_form_for_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    url = reverse("sv:fiche-detection-creation") + f"?evenement={evenement.id}"
+    assert client.get(url).status_code == 403
+
+
+def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    prelevements = {}
+    lieux = {}
+    for i in range(0, 20):
+        prelevements.update(
+            {
+                f"prelevements-{i}-numero_rapport_inspection": [""],
+                f"prelevements-{i}-laboratoire": [""],
+                f"prelevements-{i}-numero_echantillon": [""],
+                f"prelevements-{i}-structure_preleveuse": [""],
+                f"prelevements-{i}-date_prelevement": [""],
+                f"prelevements-{i}-matrice_prelevee": [""],
+            }
+        )
+    for i in range(0, 10):
+        lieux.update(
+            {
+                f"lieux-{i}-nom": [""],
+                f"lieux-{i}-adresse_lieu_dit": [""],
+                f"lieux-{i}-commune": [""],
+                f"lieux-{i}-code_insee": [""],
+                f"lieux-{i}-departement": [""],
+                f"lieux-{i}-site_inspection": [""],
+                f"lieux-{i}-wgs84_longitude": [""],
+                f"lieux-{i}-wgs84_latitude": [""],
+                f"lieux-{i}-activite_etablissement": [""],
+                f"lieux-{i}-pays_etablissement": [""],
+                f"lieux-{i}-raison_sociale_etablissement": [""],
+                f"lieux-{i}-adresse_etablissement": [""],
+                f"lieux-{i}-siret_etablissement": [""],
+                f"lieux-{i}-code_inupp_etablissement": [""],
+                f"lieux-{i}-position_chaine_distribution_etablissement": [""],
+            }
+        )
+    payload = {
+        "evenement": evenement.id,
+        "latest_version": 0,
+        "lieux-TOTAL_FORMS": ["10"],
+        "lieux-INITIAL_FORMS": ["0"],
+        "lieux-MIN_NUM_FORMS": ["0"],
+        "lieux-MAX_NUM_FORMS": ["1000"],
+        **prelevements,
+        **lieux,
+    }
+    response = client.post(reverse("sv:fiche-detection-creation"), data=payload)
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.detections.count() == 0

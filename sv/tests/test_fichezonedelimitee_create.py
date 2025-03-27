@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
 from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
@@ -260,3 +261,41 @@ def test_shows_correct_organisme_and_statut(live_server, page: Page, choice_js_f
 
     expect(page.get_by_text(str(evenement.organisme_nuisible))).to_be_visible()
     expect(page.get_by_text(str(evenement.statut_reglementaire))).to_be_visible()
+
+
+def test_cant_access_add_fiche_zone_delimitee_form_of_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+    response = client.get(reverse("sv:fiche-zone-delimitee-creation") + f"?evenement={evenement.pk}")
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    payload = {
+        "evenement": evenement.pk,
+        "latest_version": "0",
+        "commentaire": "",
+        "zoneinfestee_set-TOTAL_FORMS": "1",
+        "zoneinfestee_set-INITIAL_FORMS": "0",
+        "zoneinfestee_set-MIN_NUM_FORMS": "0",
+        "zoneinfestee_set-MAX_NUM_FORMS": "1000",
+        "zoneinfestee_set-0-nom": "",
+        "zoneinfestee_set-0-caracteristique_principale": "",
+        "zoneinfestee_set-0-rayon": "",
+        "zoneinfestee_set-0-unite_rayon": "km",
+        "zoneinfestee_set-0-surface_infestee_totale": "",
+        "zoneinfestee_set-0-unite_surface_infestee_totale": "m2",
+        "rayon_zone_tampon": "",
+        "unite_rayon_zone_tampon": "km",
+        "surface_tampon_totale": "",
+        "unite_surface_tampon_totale": "m2",
+    }
+    response = client.post(reverse("sv:fiche-zone-delimitee-creation"), data=payload)
+
+    evenement.refresh_from_db()
+    assert evenement.fiche_zone_delimitee is None
+    assert response.status_code == 403

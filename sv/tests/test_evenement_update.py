@@ -1,5 +1,7 @@
+import pytest
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from core.models import LienLibre, Structure, Visibilite
 from ..factories import EvenementFactory, OrganismeNuisibleFactory
 from ..factories import StatutReglementaireFactory
@@ -69,13 +71,27 @@ def test_update_evenement_cant_add_self_links(
     choice_js_cant_pick(page, "#liens-libre .choices", str(evenement.numero), fiche_input)
 
 
-def test_cant_access_update_evenement_if_no_rights(live_server, page: Page, choice_js_fill):
+def test_cant_access_update_form_evenement_if_no_rights(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     evenement.createur = Structure.objects.create(niveau1="Other structure")
     evenement.save()
 
     response = page.goto(f"{live_server.url}{evenement.get_update_url()}")
     assert response.status == 403
+
+
+@pytest.mark.django_db
+def test_cant_update_evenement_i_cant_see(client):
+    organisme_nuisible = OrganismeNuisibleFactory()
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_update_url())
+    assert response.status_code == 403
+
+    response = client.post(evenement.get_update_url(), data={"organisme_nuisible": organisme_nuisible.pk})
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.organisme_nuisible != organisme_nuisible
 
 
 def test_update_evenement_adds_agent_and_structure_contacts(
