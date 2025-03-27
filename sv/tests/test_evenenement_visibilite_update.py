@@ -9,11 +9,37 @@ from sv.factories import EvenementFactory
 from sv.models import Evenement
 
 
-def test_users_cant_update_visibilite(live_server, page: Page, mocked_authentification_user):
+def test_users_not_from_ac_cant_update_visibilite(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_text("Modifier la visibilité")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_users_not_from_ac_cant_forge_update_visibilite(client):
+    evenement = EvenementFactory()
+
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LOCALE
+
+
+@pytest.mark.django_db
+def test_cant_forge_update_visibilite_of_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LOCALE
 
 
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])

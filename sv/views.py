@@ -235,10 +235,25 @@ class FicheDetectionCreateView(
     WithSireneTokenMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
+    UserPassesTestMixin,
     CreateView,
 ):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        evenement_pk = request.GET.get("evenement") if request.method == "GET" else request.POST.get("evenement")
+
+        self.evenement = None
+        if evenement_pk:
+            self.evenement = Evenement.objects.get(pk=evenement_pk)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        if not self.evenement:
+            return True
+        return self.evenement.can_user_access(self.request.user)
 
     def get_success_url(self):
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
@@ -248,7 +263,7 @@ class FicheDetectionCreateView(
         kwargs["user"] = self.request.user
         kwargs["latest_version"] = 0
         if self.request.GET.get("evenement"):
-            kwargs["data"] = {"evenement": Evenement.objects.get(pk=self.request.GET.get("evenement"))}
+            kwargs["data"] = {"evenement": self.evenement}
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -268,20 +283,19 @@ class FicheDetectionCreateView(
         return context
 
     def _get_or_create_evenement(self, request, evenement_form):
-        if request.POST.get("evenement"):
-            return Evenement.objects.get(pk=request.POST.get("evenement"))
-
+        if self.evenement:
+            return self.evenement
         return evenement_form.save()
 
     def post(self, request, *args, **kwargs):
+        self.object = None
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
-        if request.POST.get("evenement"):
-            evenement = Evenement.objects.get(pk=request.POST.get("evenement"))
+        if self.evenement:
             evenement_data = {
-                "organisme_nuisible": evenement.organisme_nuisible.pk,
-                "statut_reglementaire": evenement.statut_reglementaire.pk,
+                "organisme_nuisible": self.evenement.organisme_nuisible.pk,
+                "statut_reglementaire": self.evenement.statut_reglementaire.pk,
             }
             evenement_form = EvenementForm(evenement_data, user=self.request.user)
         else:
@@ -494,10 +508,13 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
+class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTestMixin, CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
+
+    def test_func(self):
+        return self.evenement.can_user_access(self.request.user)
 
     def get_success_url(self):
         return reverse("sv:evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
@@ -505,7 +522,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.evenement = Evenement.objects.select_related("organisme_nuisible", "statut_reglementaire").get(
-                pk=self.request.GET.get("evenement")
+                pk=self.request.GET.get("evenement") or self.request.POST.get("evenement")
             )
         except Evenement.DoesNotExist:
             return HttpResponseBadRequest("L'événement n'existe pas.")

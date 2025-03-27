@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from core.factories import ContactStructureFactory
+from core.factories import ContactStructureFactory, StructureFactory
 from sv.factories import EvenementFactory, FicheDetectionFactory
 from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
@@ -242,3 +242,21 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
         content_type=evenement_content_type,
         object_id=evenement.id,
     ).exists()
+
+
+@pytest.mark.django_db
+def test_cant_publish_evenement_i_cant_see(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    response = client.post(
+        reverse("publish"),
+        data={
+            "content_type_id": ContentType.objects.get_for_model(evenement).id,
+            "content_id": evenement.id,
+        },
+    )
+
+    assert response.status_code == 302
+    assert evenement.etat == Evenement.Etat.BROUILLON
