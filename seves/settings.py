@@ -82,7 +82,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "seves.middlewares.LoginRequiredMiddleware",
+    "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
@@ -276,6 +276,8 @@ LOGGING = {
 }
 
 CAN_GIVE_ACCESS_GROUP = "access_admin"
+SV_GROUP = "sv_user"
+SSA_GROUP = "ssa_user"
 
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")

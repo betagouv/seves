@@ -25,21 +25,26 @@ def set_django_allow_async_unsafe():
 
 
 @pytest.fixture(autouse=True)
-def mocked_authentification_user(db):
-    user = UserFactory(email="test@example.com")
-    user.is_active = True
-    user.save()
-    structure = StructureFactory(niveau2="Structure Test", libelle="Structure Test")
-    Contact.objects.create(structure=structure, email="structure_test@test.fr")
-    agent = Agent.objects.create(user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC")
-    Contact.objects.create(agent=agent, email="text@example.com")
+def mocked_authentification_user(db, request):
+    if "disable_mocked_authentification_user" in request.keywords:
+        yield
+    else:
+        user = UserFactory(email="test@example.com")
+        user.is_active = True
+        user.save()
+        structure = StructureFactory(niveau2="Structure Test", libelle="Structure Test")
+        Contact.objects.create(structure=structure, email="structure_test@test.fr")
+        agent = Agent.objects.create(
+            user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC"
+        )
+        Contact.objects.create(agent=agent, email="text@example.com")
 
-    def mocked(self, request):
-        request.user = user
-        return self.get_response(request)
+        def mocked(self, request):
+            request.user = user
+            return self.get_response(request)
 
-    with patch("seves.middlewares.LoginRequiredMiddleware.__call__", mocked):
-        yield user
+        with patch("seves.middlewares.LoginAndGroupRequiredMiddleware.__call__", mocked):
+            yield user
 
 
 @pytest.fixture
