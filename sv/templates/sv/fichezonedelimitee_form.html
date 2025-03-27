@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-    <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'fiche-zone-delimitee-creation' %}?evenement={{ request.GET.evenement }}{% endif %}" id="fiche-zone-delimitee-form" method="post" class="fr-container--fluid fr-m-4w">
+    <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'sv:fiche-zone-delimitee-creation' %}?evenement={{ request.GET.evenement }}{% endif %}" id="fiche-zone-delimitee-form" method="post" class="fr-container--fluid fr-m-4w">
 
         <div class="fr-grid-row">
             <div class="fr-col-8">

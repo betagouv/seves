@@ -11,7 +11,7 @@
                         <p>La version actuelle de Sèves permet uniquement d'extraire la totalité des fiches, l'extraction et le téléchargement démarreront automatiquement après confirmation via le bouton "extraire" ci-dessous.</p>
                         <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg">
                             <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-extract">Annuler</button>
-                            <form method="post" action="{% url 'fiche-detection-export' %}">
+                            <form method="post" action="{% url 'sv:fiche-detection-export' %}">
                                 {% csrf_token %}
                                 <button class="fr-btn" data-testid="extract-submit" aria-controls="fr-modal-extract">Extraire</button>
                             </form>

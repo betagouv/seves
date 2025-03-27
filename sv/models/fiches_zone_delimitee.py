@@ -58,7 +58,7 @@ class FicheZoneDelimitee(models.Model):
         return self.evenement.get_absolute_url()
 
     def get_update_url(self):
-        return reverse("fiche-zone-delimitee-update", kwargs={"pk": self.pk})
+        return reverse("sv:fiche-zone-delimitee-update", kwargs={"pk": self.pk})
 
     def __str__(self):
         if hasattr(self, "evenement"):

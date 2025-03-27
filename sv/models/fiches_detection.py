@@ -255,7 +255,7 @@ class FicheDetection(
         return self.evenement.get_absolute_url()
 
     def get_update_url(self):
-        return reverse("fiche-detection-modification", kwargs={"pk": self.pk})
+        return reverse("sv:fiche-detection-modification", kwargs={"pk": self.pk})
 
     def can_user_delete(self, user):
         return self.evenement.can_user_access(user)

@@ -25,7 +25,7 @@ def test_fiche_detection_are_filtered_by_evenement_of_fiche_detection(client):
     fiches_same_evenement = FicheDetectionFactory.create_batch(3, evenement=fiche.evenement)
     fiches_other_evenement = FicheDetectionFactory.create_batch(3)
 
-    url = f"{reverse('fiche-zone-delimitee-creation')}?evenement={fiche.evenement.pk}"
+    url = f"{reverse('sv:fiche-zone-delimitee-creation')}?evenement={fiche.evenement.pk}"
     response = client.get(url)
     context = response.context
     form = context["form"]

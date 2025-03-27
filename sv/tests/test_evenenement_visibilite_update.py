@@ -74,7 +74,7 @@ def test_users_from_ac_can_update_visibilite_backward(
 
 def test_user_not_from_ac_cant_load_structure_add_page(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     response = page.goto(f"{live_server.url}{url}")
 
     assert response.status == 403
@@ -99,7 +99,7 @@ def test_existing_allowed_structures_are_selected_on_structure_add_page(
     )
     mocked_authentification_user.agent.save()
 
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
     expect(page.get_by_label(str(selected_structure))).to_be_checked()
@@ -123,7 +123,7 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     mocked_authentification_user.agent.save()
 
     assert evenement.visibilite == Visibilite.LOCALE
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
     page.get_by_label(str(structure_1)).click(force=True)
     page.get_by_role("button", name="Valider").click()
@@ -166,7 +166,7 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
 
     evenement = EvenementFactory(createur=creator_structure)
 
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
     # Vérifier que les structures AC sont cochées et désactivées

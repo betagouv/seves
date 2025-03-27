@@ -16,6 +16,7 @@ from .views import (
     EvenementListView,
 )
 
+app_name = "sv"
 urlpatterns = [
     path(
         "evenements/",

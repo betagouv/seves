@@ -9,7 +9,7 @@
                     <div class="fr-modal__content">
                         <h1 id="fr-modal-title-modal-zone-{{ fiche.pk }}" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Supprimer la zone {{ fiche.evenement.numero }}</h1>
                         <p>Cette action est irréversible. Confirmez-vous la suppression de cette zone ?</p>
-                        <form method="post" action="{% url 'fiche-zone-delimitee-delete' fiche.pk %}">
+                        <form method="post" action="{% url 'sv:fiche-zone-delimitee-delete' fiche.pk %}">
                             {% csrf_token %}
                             <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">
                             <button type="submit" class="fr-btn" data-testid="submit-delete">Supprimer</button>

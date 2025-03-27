@@ -92,16 +92,16 @@ class Evenement(
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("evenement-details", kwargs={"numero": self.numero})
+        return reverse("sv:evenement-details", kwargs={"numero": self.numero})
 
     def get_absolute_url_with_message(self, message_id: int):
         return f"{self.get_absolute_url()}?message={message_id}"
 
     def get_update_url(self):
-        return reverse("evenement-update", kwargs={"pk": self.pk})
+        return reverse("sv:evenement-update", kwargs={"pk": self.pk})
 
     def get_visibilite_update_url(self):
-        return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
+        return reverse("sv:evenement-visibilite-update", kwargs={"pk": self.pk})
 
     def can_update_visibilite(self, user):
         return not self.is_draft and user.agent.structure.is_mus_or_bsv

@@ -1162,7 +1162,7 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
     response = client.get(fiche_detection.get_absolute_url())
     assert response.status_code == 403
 
-    response = client.post(reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.pk}), data=payload)
+    response = client.post(reverse("sv:fiche-detection-modification", kwargs={"pk": fiche_detection.pk}), data=payload)
 
     assert response.status_code == 403
     fiche_detection.refresh_from_db()
