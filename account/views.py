@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.views.generic import FormView
 
 from account.forms import UserPermissionForm
+from seves import settings
 
 User = get_user_model()
 
@@ -47,6 +49,7 @@ class HandlePermissionsView(SuccessMessageMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
+        sv_group = Group.objects.get(name=settings.SV_GROUP)
         for key in form.changed_data:
             value = form.cleaned_data[key]
             if not (value in (True, False) and key.startswith("user_")):
@@ -56,4 +59,5 @@ class HandlePermissionsView(SuccessMessageMixin, FormView):
             user = User.objects.get(pk=pk)
             user.is_active = value
             user.save()
+            user.groups.add(sv_group)
         return super().form_valid(form)
