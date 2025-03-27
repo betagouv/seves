@@ -126,7 +126,7 @@
                                     </li>
                                 {% endfor %}
                                 <li>
-                                    <a id="add-detection-link" href="{% url 'fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
+                                    <a id="add-detection-link" href="{% url 'sv:fiche-detection-creation' %}?evenement={{ evenement.pk }}" class="fr-tag fr-tag--tertiary fr-mx-1w">
                                         <span class="fr-icon-add-line" aria-hidden="true"></span> Ajouter une détection</a>
                                 </li>
                             </ul>
@@ -138,7 +138,7 @@
                                     </button>
                                     {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
                                     <button class="fr-btn fr-btn--secondary">
-                                        <a href="{% url 'fiche-detection-modification' fichedetection.pk %}">Modifier</a>
+                                        <a href="{% url 'sv:fiche-detection-modification' fichedetection.pk %}">Modifier</a>
                                     </button>
                                 </div>
                             {% endfor %}
@@ -162,7 +162,7 @@
                     {% else %}
                         <div class="white-container fr-pb-6w">
                             <h3>Cet événement ne contient pas de zone</h3>
-                            <a href="{% url 'fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button "><button class="fr-btn fr-btn--secondary fr-mr-2w fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button></a>
+                            <a href="{% url 'sv:fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button "><button class="fr-btn fr-btn--secondary fr-mr-2w fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button></a>
                         </div>
                     {% endif %}
                 </div>

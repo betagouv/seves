@@ -330,7 +330,7 @@ def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
         "zoneinfestee_set-MIN_NUM_FORMS": ["0"],
         "zoneinfestee_set-MAX_NUM_FORMS": ["1000"],
     }
-    response = client.post(reverse("fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
+    response = client.post(reverse("sv:fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
 
     assert response.status_code == 403
     fiche_zone.refresh_from_db()

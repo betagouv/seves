@@ -14,7 +14,7 @@
                             <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
                                 <button type="button" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-delete-evenement">Annuler</button>
                                 {% csrf_token %}
-                                <input type="hidden" value="{% url 'evenement-liste' %}" name="next">
+                                <input type="hidden" value="{% url 'sv:evenement-liste' %}" name="next">
                                 <input type="hidden" value="{{ content_type.pk }}" name="content_type_id">
                                 <input type="hidden" value="{{ evenement.pk }}" name="content_id">
                                 <button type="submit" class="fr-btn" data-testid="submit-evenement-delete">Supprimer</button>

@@ -51,13 +51,13 @@ def create_fixtures_if_needed(db):
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(page.get_by_role("heading", name="Création d'une fiche détection", exact=True)).to_be_visible()
 
 
 def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.informations_title).to_be_visible()
     expect(form_elements.objet_evenement_title).to_be_visible()
     expect(form_elements.lieux_title).to_be_visible()
@@ -129,7 +129,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
 
 def test_date_creation_field_is_current_day(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la date de création soit egale à la date du jour"""
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
 
 
@@ -142,7 +142,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     statut_reglementaire = StatutReglementaire.objects.first()
     contexte = Contexte.objects.first()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
@@ -183,7 +183,7 @@ def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
     structure.save()
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(libelle_court="Mon ON", libelle_long="Mon ON")
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_label("Numéro Europhyt").fill("1" * 8)
@@ -226,7 +226,7 @@ def test_create_fiche_detection_with_lieu(
         _fill_optional=True,
     )
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
@@ -293,7 +293,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
         is_etablissement=False,
     )
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
@@ -341,7 +341,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
@@ -373,7 +373,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
@@ -396,7 +396,7 @@ def test_add_lieu_with_name_only_and_save(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -426,7 +426,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     organisme_nuisible.libelle_long = "Mon ON"
     organisme_nuisible.save()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     page.get_by_role("button", name="Enregistrer").click()
@@ -458,7 +458,7 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     organisme_nuisible_no_status.libelle_court = "Pas mon ON"
     organisme_nuisible_no_status.save()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Pas mon ON", "Pas mon ON")
@@ -479,7 +479,7 @@ def test_prelevements_are_always_linked_to_lieu(
     )
     structures = baker.make(StructurePreleveuse, _quantity=2)
     page.wait_for_timeout(600)
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -508,7 +508,7 @@ def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_role("button", name="Enregistrer").dblclick()
@@ -528,7 +528,7 @@ def test_laboratoire_disable_in_prelevement_confirmation(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
 
     # Ajouter un lieu
     form_elements.add_lieu_btn.click()
@@ -563,7 +563,7 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
 
     # Ajouter un lieu
     form_elements.add_lieu_btn.click()
@@ -604,7 +604,7 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -664,7 +664,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+        page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
         mock_post.assert_called_once_with(
             "https://api.insee.fr/token",
             headers={"Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic Rk9POkJBUg=="},

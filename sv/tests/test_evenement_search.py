@@ -18,7 +18,7 @@ from ..models import (
 
 
 def get_fiche_detection_search_form_url() -> str:
-    return reverse("evenement-liste")
+    return reverse("sv:evenement-liste")
 
 
 def test_search_form_have_all_fields(live_server, page: Page) -> None:
@@ -165,7 +165,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
@@ -185,7 +185,7 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=evenement_1.numero)).to_be_visible()

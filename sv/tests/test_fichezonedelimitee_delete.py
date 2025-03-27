@@ -33,7 +33,7 @@ def test_cant_delete_fiche_zone_delimitee_without_permission(client, mocked_auth
     response = client.get(evenement.get_absolute_url())
     assert response.status_code == 403
 
-    response = client.post(reverse("fiche-zone-delimitee-delete", kwargs={"pk": fiche_zone.pk}), data={"next": "/"})
+    response = client.post(reverse("sv:fiche-zone-delimitee-delete", kwargs={"pk": fiche_zone.pk}), data={"next": "/"})
     assert response.status_code == 403
 
     fiche_zone.refresh_from_db()

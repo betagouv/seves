@@ -481,7 +481,7 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
 
     def form_valid(self, form):
         if form.cleaned_data["visibilite"] == Visibilite.LIMITEE:
-            return redirect(reverse("structure-add-visibilite", kwargs={"pk": self.object.pk}))
+            return redirect(reverse("sv:structure-add-visibilite", kwargs={"pk": self.object.pk}))
         else:
             with transaction.atomic():
                 self.object = form.save(commit=False)
@@ -500,7 +500,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     context_object_name = "fiche"
 
     def get_success_url(self):
-        return reverse("evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
+        return reverse("sv:evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
 
     def dispatch(self, request, *args, **kwargs):
         try:

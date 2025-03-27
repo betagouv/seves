@@ -22,7 +22,7 @@
         {% endif %}
         {{ prelevement_resultats|json_script:"prelevement-resultats" }}
 
-        <form action="{% if is_creation %}{% url 'fiche-detection-creation' %}{% else %}{% url 'fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
+        <form action="{% if is_creation %}{% url 'sv:fiche-detection-creation' %}{% else %}{% url 'sv:fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
             {% csrf_token %}
             {{ form.latest_version }}
 

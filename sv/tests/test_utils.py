@@ -541,7 +541,7 @@ class FicheZoneDelimiteeFormPage:
             expect(self.detections_hors_zone_infestee.get_by_text(str(detection.numero))).to_be_visible()
 
     def goto_create_form_page(self, live_server, evenement):
-        self.page.goto(f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
+        self.page.goto(f"{live_server.url}{reverse('sv:fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
 
     def fill_zone_infestee_form(
         self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None

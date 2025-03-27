@@ -36,7 +36,7 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
 
     assert len(mailoutbox) == 1
 
-    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
+    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
     expect(page.locator(".evenements__list-row td:nth-child(1) .ac-notified")).to_be_visible()
 
 

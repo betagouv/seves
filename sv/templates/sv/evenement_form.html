@@ -15,7 +15,7 @@
 {% block content %}
     <main class="main-container">
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
-        <form action="{% url 'evenement-update' evenement.id  %}" method="post">
+        <form action="{% url 'sv:evenement-update' evenement.id  %}" method="post">
             {% csrf_token %}
             {{ form.latest_version }}
 
