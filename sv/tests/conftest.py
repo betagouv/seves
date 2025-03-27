@@ -1,11 +1,9 @@
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from model_bakery import baker
 from playwright.sync_api import Page
 
 from sv.models import (
-    FicheDetection,
     StatutReglementaire,
     Region,
     Departement,
@@ -43,25 +41,6 @@ def check_select_options(page, label, expected_options):
 def add_status_reglementaire_objects():
     for code, libelle in STATUTS_REGLEMENTAIRES.items():
         StatutReglementaire.objects.get_or_create(code=code, libelle=libelle)
-
-
-@pytest.fixture
-def fiche_detection_bakery(db, mocked_authentification_user):
-    def _fiche_detection_bakery():
-        return baker.make(
-            FicheDetection,
-            _fill_optional=True,
-            createur=mocked_authentification_user.agent.structure,
-            hors_zone_infestee=None,
-            zone_infestee=None,
-        )
-
-    return _fiche_detection_bakery
-
-
-@pytest.fixture
-def fiche_detection(fiche_detection_bakery):
-    return fiche_detection_bakery()
 
 
 @pytest.fixture

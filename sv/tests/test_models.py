@@ -95,7 +95,8 @@ def test_fiche_detection_with_hors_zone_infestee_and_zone_infestee():
 
 
 @pytest.mark.django_db
-def test_valid_wgs84_coordinates(fiche_detection):
+def test_valid_wgs84_coordinates():
+    fiche_detection = FicheDetectionFactory()
     lieu = Lieu(
         fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=45.0, wgs84_latitude=45.0
     )
@@ -103,7 +104,8 @@ def test_valid_wgs84_coordinates(fiche_detection):
 
 
 @pytest.mark.django_db
-def test_invalid_wgs84_longitude(fiche_detection):
+def test_invalid_wgs84_longitude():
+    fiche_detection = FicheDetectionFactory()
     lieu = Lieu(
         fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=181.0, wgs84_latitude=45.0
     )
@@ -112,7 +114,8 @@ def test_invalid_wgs84_longitude(fiche_detection):
 
 
 @pytest.mark.django_db
-def test_invalid_wgs84_latitude(fiche_detection):
+def test_invalid_wgs84_latitude():
+    fiche_detection = FicheDetectionFactory()
     lieu = Lieu(
         fiche_detection=fiche_detection, nom="Test", commune="une commune", wgs84_longitude=45.0, wgs84_latitude=91.0
     )

@@ -99,7 +99,7 @@ class Prelevement(models.Model):
         db_table = "sv_prelevement"
         constraints = [
             models.CheckConstraint(
-                check=Q(is_officiel=True) | Q(numero_rapport_inspection=""),
+                condition=Q(is_officiel=True) | Q(numero_rapport_inspection=""),
                 name="check_numero_officiel_empty_or_null",
             )
         ]

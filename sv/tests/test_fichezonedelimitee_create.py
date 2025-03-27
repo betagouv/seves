@@ -1,7 +1,6 @@
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
@@ -39,12 +38,7 @@ def test_fiche_detection_are_filtered_by_evenement_of_fiche_detection(client):
 @pytest.mark.django_db
 def test_can_create_fiche_zone_delimitee_without_zone_infestee(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
-    fiche = baker.prepare(
-        FicheZoneDelimitee,
-        _fill_optional=True,
-        rayon_zone_tampon=10,
-        surface_tampon_totale=15,
-    )
+    fiche = FicheZoneFactory.build()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
@@ -64,17 +58,11 @@ def test_can_create_fiche_zone_delimitee_without_zone_infestee(live_server, page
 
 
 @pytest.mark.django_db
-def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(live_server, page: Page, choice_js_fill):
+    fiche_detection = FicheDetectionFactory()
     evenement = EvenementFactory()
     detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (
-        baker.make(
-            FicheDetection,
-            evenement=evenement,
-            _quantity=2,
-        )
-        for _ in range(3)
+        FicheDetectionFactory.create_batch(2, evenement=evenement) for _ in range(3)
     )
     for i, detection in enumerate(FicheDetection.objects.all()):
         detection.numero_detection = f"2024.01.{i}"
@@ -89,15 +77,8 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
         FicheDetection.objects.filter(id__in=[obj.id for obj in detections_zone_infestee2])
     )
 
-    fiche = baker.prepare(
-        FicheZoneDelimitee,
-        _fill_optional=True,
-        rayon_zone_tampon=10,
-        surface_tampon_totale=15,
-    )
-    zone_infestee1, zone_infestee2 = baker.prepare(
-        ZoneInfestee, fiche_zone_delimitee=fiche, _fill_optional=True, _quantity=2, surface_infestee_totale=10, rayon=15
-    )
+    fiche = FicheZoneFactory.build()
+    zone_infestee1, zone_infestee2 = ZoneInfesteeFactory.build_batch(2, fiche_zone_delimitee=fiche)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
@@ -138,9 +119,8 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(
 
 
 @pytest.mark.django_db
-def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(
-    live_server, page: Page, choice_js_fill, fiche_detection: FicheDetection
-):
+def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(live_server, page: Page, choice_js_fill):
+    fiche_detection = FicheDetectionFactory()
     evenement = EvenementFactory()
 
     detections_hors_zone_infestee, detections_zone_infestee1, detections_zone_infestee2 = (
@@ -184,8 +164,8 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(
 def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     fiche_detection = FicheDetectionFactory(evenement=evenement)
-    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee)
-    zone_infestee = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_zone_delimitee = FicheZoneFactory.build()
+    zone_infestee = ZoneInfesteeFactory.build(fiche_zone_delimitee=fiche_zone_delimitee)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
@@ -205,8 +185,8 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(live_s
 def test_cant_have_same_detection_in_zone_infestee_forms(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     fiche_detection = FicheDetectionFactory(evenement=evenement)
-    fiche_zone_delimitee = baker.prepare(FicheZoneDelimitee)
-    zone_infestee1, zone_infestee2 = baker.prepare(ZoneInfestee, fiche_zone_delimitee=fiche_zone_delimitee, _quantity=2)
+    fiche_zone_delimitee = FicheZoneFactory.build()
+    zone_infestee1, zone_infestee2 = ZoneInfesteeFactory.build_batch(2, fiche_zone_delimitee=fiche_zone_delimitee)
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
@@ -230,7 +210,7 @@ def test_cant_access_create_fiche_zone_delimitee_form_when_evenement_is_already_
     live_server, page: Page, choice_js_fill
 ):
     """Test que l'accès direct au formulaire de création (via l'URL) d'une fiche zone délimitée avec un événement déjà rattaché affiche un message d'erreur"""
-    fiche_zone_delimitee = baker.make(FicheZoneDelimitee)
+    fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
 
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="contact",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(("structure__isnull", False), ("agent__isnull", True)),
                     models.Q(("structure__isnull", True), ("agent__isnull", False)),
                     _connector="OR",

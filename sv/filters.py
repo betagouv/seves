@@ -1,3 +1,5 @@
+import re
+
 import django_filters
 from django.db.models import OuterRef, Exists
 
@@ -12,7 +14,11 @@ class EvenementFilter(django_filters.FilterSet):
         method="filter_numero",
         label="Numéro évènement",
         widget=TextInput(
-            attrs={"placeholder": "2024", "pattern": "^\d{4}.*", "title": "Le champ doit commencer par quatre chiffres"}
+            attrs={
+                "placeholder": "2024",
+                "pattern": "^\\d{4}(\\.\\d+)?$",
+                "title": "Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2024.5)",
+            }
         ),
     )
     region = django_filters.ModelChoiceFilter(
@@ -52,17 +58,19 @@ class EvenementFilter(django_filters.FilterSet):
         self._validate_numero_format()
 
     def _validate_numero_format(self):
-        if not self.data.get("numero"):
+        numero = self.data.get("numero")
+        if not numero:
             return
         errors = self.errors.get("numero", [])
 
+        if not re.match(r"^\d{4}(\.\d+)?$", numero):
+            errors.append("Format 'numero' invalide. Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2025.1)")
+            return
+
         try:
-            _annee = int(self.data.get("numero")[:4])
+            _annee = int(numero[:4])
         except ValueError:
             errors.append("Format 'numero' invalide. Le numéro doit commencer par quatre chiffres'")
-
-        if self.data.get("numero").count(".") > 1:
-            errors.append("Format 'numero' invalide. Le format correct est annee ou annee.numero'")
 
         self.errors["numero"] = errors
 
