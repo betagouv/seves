@@ -198,3 +198,21 @@ class Evenement(
 
     def can_be_updated(self, user):
         return not self.is_already_cloturer() and self.can_user_access(user)
+
+    def can_add_fiche_detection(self):
+        return not self.is_already_cloturer()
+
+    def can_delete_fiche_detection(self):
+        return not self.is_already_cloturer()
+
+    def can_update_fiche_detection(self, user):
+        return not self.is_already_cloturer() and self.can_user_access(user)
+
+    def can_delete_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_deleted(user)
+
+    def can_update_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
+
+    def can_add_fiche_zone_delimitee(self, user):
+        return not self.is_already_cloturer() and self.can_user_access(user)

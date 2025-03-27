@@ -701,3 +701,24 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.siret_etablissement == "12007901700030"
     assert lieu_from_db.pays_etablissement == "France"
     assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
+
+
+def test_cant_see_add_detection_btn_to_existing_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Ajouter une détection")).not_to_be_visible()
+
+
+def test_cant_access_add_detection_form_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.get(reverse("fiche-detection-creation"), data={"evenement": evenement.id})
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_add_detection_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.post(reverse("fiche-detection-creation"), data={"evenement": evenement.id, "latest_version": 0})
+    assert response.status_code == 403
+    assert evenement.detections.count() == 0

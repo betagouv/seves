@@ -166,6 +166,12 @@ class EvenementDetailView(
             "can_be_ac_notified": self.get_object().can_notifiy(user),
             "can_be_updated": self.get_object().can_be_updated(user),
             "can_be_deleted": self.get_object().can_be_deleted(user),
+            "can_add_fiche_detection": self.get_object().can_add_fiche_detection(),
+            "can_delete_fiche_detection": self.get_object().can_delete_fiche_detection(),
+            "can_update_fiche_detection": self.get_object().can_update_fiche_detection(user),
+            "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
+            "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
+            "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
         }
 
     def get_context_data(self, **kwargs):
@@ -239,6 +245,7 @@ class EvenementUpdateView(
 
 
 class FicheDetectionCreateView(
+    UserPassesTestMixin,
     WithStatusToOrganismeNuisibleMixin,
     WithSireneTokenMixin,
     WithPrelevementHandlingMixin,
@@ -247,6 +254,12 @@ class FicheDetectionCreateView(
 ):
     form_class = FicheDetectionForm
     template_name = "sv/fichedetection_form.html"
+
+    def test_func(self):
+        evenement_id = self.request.GET.get("evenement") or self.request.POST.get("evenement")
+        if not evenement_id:
+            return True
+        return not Evenement.objects.get(pk=evenement_id).is_cloture()
 
     def get_success_url(self):
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
@@ -282,6 +295,7 @@ class FicheDetectionCreateView(
         return evenement_form.save()
 
     def post(self, request, *args, **kwargs):
+        self.object = None
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
 
@@ -345,7 +359,7 @@ class FicheDetectionUpdateView(
         return f"{self.object.evenement.get_absolute_url()}?detection={self.object.pk}"
 
     def test_func(self):
-        return self.get_object().evenement.can_user_access(self.request.user)
+        return self.get_object().evenement.can_update_fiche_detection(self.request.user)
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -502,10 +516,13 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
+class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTestMixin, CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
+
+    def test_func(self):
+        return self.evenement.can_add_fiche_zone_delimitee(self.request.user)
 
     def get_success_url(self):
         return reverse("evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
@@ -513,7 +530,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.evenement = Evenement.objects.select_related("organisme_nuisible", "statut_reglementaire").get(
-                pk=self.request.GET.get("evenement")
+                pk=self.request.GET.get("evenement") or self.request.POST.get("evenement")
             )
         except Evenement.DoesNotExist:
             return HttpResponseBadRequest("L'événement n'existe pas.")
@@ -618,7 +635,7 @@ class FicheZoneDelimiteeUpdateView(
         return self.get_object().get_absolute_url() + "?tab=zone"
 
     def test_func(self) -> bool | None:
-        return self.get_object().evenement.can_user_access(self.request.user)
+        return self.get_object().can_be_updated(self.request.user)
 
     def get_object(self, queryset=None):
         return super().get_object(
@@ -737,7 +754,7 @@ class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
     model = FicheZoneDelimitee
 
     def test_func(self):
-        return self.get_object().can_user_delete(self.request.user)
+        return self.get_object().can_be_deleted(self.request.user)
 
     def handle_no_permission(self):
         raise PermissionDenied()
