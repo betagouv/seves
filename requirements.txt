@@ -7,7 +7,9 @@
 amqp==5.3.1
     # via kombu
 asgiref==3.8.1
-    # via django
+    # via
+    #   django
+    #   django-countries
 async-timeout==5.0.1
     # via -r requirements.in
 billiard==4.2.1
@@ -65,6 +67,8 @@ django==5.1.7
     #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
+django-countries==7.6.1
+    # via -r requirements.in
 django-csp==3.8
     # via -r requirements.in
 django-debug-toolbar==5.0.1
@@ -195,6 +199,7 @@ tinycss2==1.2.1
     # via bleach
 typing-extensions==4.11.0
     # via
+    #   django-countries
     #   faker
     #   pyee
     #   pyopenssl
