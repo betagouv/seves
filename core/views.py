@@ -328,17 +328,6 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
         return safe_redirect(request.POST.get("next"))
 
 
-class WithFormErrorsAsMessagesMixin(FormView):
-    def form_invalid(self, form):
-        for _, errors in form.errors.as_data().items():
-            for error in errors:
-                if error.code == "blocking_error":
-                    messages.error(self.request, error.message, extra_tags="blocking")
-                else:
-                    messages.error(self.request, error.message)
-        return super().form_invalid(form)
-
-
 class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
