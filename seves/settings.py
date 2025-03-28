@@ -64,12 +64,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "sv.apps.SvConfig",
+    "ssa.apps.SsaConfig",
     "core.apps.CoreConfig",
     "account.apps.AccountConfig",
     "django_filters",
     "post_office",
     "reversion",
     "csp",
+    "django_countries",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")

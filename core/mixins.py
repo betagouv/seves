@@ -1,4 +1,5 @@
 import base64
+import datetime
 
 import requests
 from django.conf import settings
@@ -400,3 +401,27 @@ class WithFormErrorsAsMessagesMixin(FormView):
                 else:
                     messages.error(self.request, error.message)
         return super().form_invalid(form)
+
+
+class WithNumeroMixin(models.Model):
+    numero_annee = models.IntegerField(verbose_name="Année")
+    numero_evenement = models.IntegerField(verbose_name="Numéro")
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def _get_annee_and_numero(cls):
+        annee_courante = datetime.datetime.now().year
+        last_fiche = (
+            cls._base_manager.filter(numero_annee=annee_courante)
+            .select_for_update()
+            .order_by("-numero_evenement")
+            .first()
+        )
+        numero_evenement = last_fiche.numero_evenement + 1 if last_fiche else 1
+        return annee_courante, numero_evenement
+
+    @property
+    def numero(self):
+        return f"{self.numero_annee}-{self.numero_evenement}"
