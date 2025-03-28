@@ -709,7 +709,7 @@ def test_fiche_detection_without_organisme_nuisible_shows_error(
 ):
     statut_reglementaire = StatutReglementaire.objects.first()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_role("button", name="Enregistrer").click()
 
