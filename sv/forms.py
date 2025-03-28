@@ -353,6 +353,8 @@ class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm
             queryset = FicheDetection.objects.filter(evenement=evenement)
         elif self.instance.pk:
             queryset = FicheDetection.objects.all().get_all_not_in_fiche_zone_delimitee(self.instance)
+        else:
+            queryset = FicheDetection.objects.none()
 
         self.fields["detections_hors_zone"].queryset = queryset.order_by_numero_fiche()
 

@@ -308,7 +308,10 @@ class PublishView(View):
         return safe_redirect(request.POST.get("next"))
 
 
-class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, View):
+class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.obj.can_user_access(self.request.user)
+
     def get_fiche_object(self):
         content_type_id = self.request.POST.get("content_type_id")
         content_id = self.request.POST.get("content_id")

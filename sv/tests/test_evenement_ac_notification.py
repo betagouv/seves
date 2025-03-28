@@ -1,8 +1,9 @@
+import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory
+from core.factories import ContactStructureFactory, StructureFactory
 from core.models import Structure, Contact, Message
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
 from ..factories import EvenementFactory, FicheDetectionFactory
@@ -123,3 +124,26 @@ def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page
     evenement.refresh_from_db()
     assert evenement.contacts.filter(structure__niveau2=MUS_STRUCTURE).exists()
     assert evenement.contacts.filter(structure__niveau2=BSV_STRUCTURE).exists()
+
+
+@pytest.mark.django_db
+def test_cant_forge_notify_ac_of_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
+
+    response = client.post(
+        reverse("notify-ac"),
+        {
+            "next": evenement.get_absolute_url(),
+            "content_id": evenement.id,
+            "content_type_id": ContentType.objects.get_for_model(Evenement).id,
+        },
+    )
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.is_ac_notified is False
