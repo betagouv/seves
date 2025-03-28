@@ -81,8 +81,12 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
-        if file and file.size > MAX_UPLOAD_SIZE_BYTES:
+        if not file:
+            return
+        if file.size > MAX_UPLOAD_SIZE_BYTES:
             raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
+        if document_type := self.cleaned_data.get("document_type"):
+            Document.validate_file_extention_for_document_type(file, document_type)
         return file
 
 
