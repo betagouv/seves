@@ -20,7 +20,7 @@ def test_users_not_from_ac_cant_update_visibilite(live_server, page: Page, mocke
 def test_users_not_from_ac_cant_forge_update_visibilite(client):
     evenement = EvenementFactory()
 
-    url = reverse("evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
     response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
 
     assert response.status_code == 302
@@ -34,7 +34,7 @@ def test_cant_forge_update_visibilite_of_evenement_i_cant_see(client):
     response = client.get(evenement.get_absolute_url())
     assert response.status_code == 403
 
-    url = reverse("evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
     response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
 
     assert response.status_code == 302

@@ -722,7 +722,7 @@ def test_cant_access_fiche_detection_form_for_evenement_i_cant_see(client):
     evenement = EvenementFactory(createur=StructureFactory())
     assert client.get(evenement.get_absolute_url()).status_code == 403
 
-    url = reverse("fiche-detection-creation") + f"?evenement={evenement.id}"
+    url = reverse("sv:fiche-detection-creation") + f"?evenement={evenement.id}"
     assert client.get(url).status_code == 403
 
 
@@ -773,7 +773,7 @@ def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
         **prelevements,
         **lieux,
     }
-    response = client.post(reverse("fiche-detection-creation"), data=payload)
+    response = client.post(reverse("sv:fiche-detection-creation"), data=payload)
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.detections.count() == 0

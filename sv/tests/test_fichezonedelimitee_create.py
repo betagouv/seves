@@ -266,7 +266,7 @@ def test_shows_correct_organisme_and_statut(live_server, page: Page, choice_js_f
 def test_cant_access_add_fiche_zone_delimitee_form_of_evenement_i_cant_see(client):
     evenement = EvenementFactory(createur=StructureFactory())
     assert client.get(evenement.get_absolute_url()).status_code == 403
-    response = client.get(reverse("fiche-zone-delimitee-creation") + f"?evenement={evenement.pk}")
+    response = client.get(reverse("sv:fiche-zone-delimitee-creation") + f"?evenement={evenement.pk}")
     assert response.status_code == 403
 
 
@@ -294,7 +294,7 @@ def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
         "surface_tampon_totale": "",
         "unite_surface_tampon_totale": "m2",
     }
-    response = client.post(reverse("fiche-zone-delimitee-creation"), data=payload)
+    response = client.post(reverse("sv:fiche-zone-delimitee-creation"), data=payload)
 
     evenement.refresh_from_db()
     assert evenement.fiche_zone_delimitee is None
