@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -65,3 +66,12 @@ class DSFRCheckboxInput(forms.CheckboxInput):
 class ContactModelMultipleChoiceField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
         return obj.display_with_agent_unit
+
+
+class SEVESChoiceField(forms.ChoiceField):
+    def __init__(self, *args, **kwargs):
+        empty_label = kwargs.pop("empty_label", settings.SELECT_EMPTY_CHOICE)
+        choices = kwargs.get("choices", [])
+        choices.insert(0, ("", empty_label))
+        kwargs["choices"] = choices
+        super().__init__(*args, **kwargs)
