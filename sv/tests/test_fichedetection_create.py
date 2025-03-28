@@ -13,7 +13,14 @@ from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import LaboratoireFactory, EvenementFactory, LieuFactory, SiteInspectionFactory
+from ..factories import (
+    LaboratoireFactory,
+    EvenementFactory,
+    LieuFactory,
+    SiteInspectionFactory,
+    OrganismeNuisibleFactory,
+    StatutReglementaireFactory,
+)
 from ..models import (
     FicheDetection,
     StatutEvenement,
@@ -715,3 +722,23 @@ def test_fiche_detection_without_organisme_nuisible_shows_error(
 
     validation_message = page.locator("#id_organisme_nuisible").evaluate("el => el.validationMessage")
     assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
+
+
+def test_can_create_evenement_if_last_evenement_is_deleted(
+    live_server, page: Page, mocked_authentification_user, choice_js_fill, form_elements: FicheDetectionFormDomElements
+):
+    EvenementFactory(numero_annee=2025, numero_evenement=1, is_deleted=True)
+    organisme_nuisible = OrganismeNuisibleFactory()
+    statut_reglementaire = StatutReglementaireFactory()
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    form_elements.statut_reglementaire_input.select_option(statut_reglementaire.libelle)
+    page.get_by_role("button", name="Enregistrer").click()
+
+    assert Evenement.objects.last().numero == "2025.2"

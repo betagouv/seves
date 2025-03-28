@@ -36,6 +36,9 @@ class FicheDetectionAdmin(VersionAdmin):
 class EvenementnAdmin(VersionAdmin):
     autocomplete_fields = ["contacts"]
 
+    def get_queryset(self, request):
+        return self.model._base_manager.all()
+
 
 @admin.register(VersionFicheZoneDelimitee)
 class VersionFicheZoneDelimiteeAdmin(VersionAdmin):
