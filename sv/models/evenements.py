@@ -70,7 +70,7 @@ class Evenement(
     def _get_annee_and_numero(self):
         annee_courante = datetime.datetime.now().year
         last_fiche = (
-            Evenement.objects.filter(numero_annee=annee_courante)
+            Evenement._base_manager.filter(numero_annee=annee_courante)
             .select_for_update()
             .order_by("-numero_evenement")
             .first()
