@@ -4,7 +4,7 @@ from playwright.sync_api import Page
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
 
-NB_QUERIES = 4
+NB_QUERIES = 5
 
 
 def test_list_performances(live_server, mocked_authentification_user, page: Page, django_assert_num_queries, client):

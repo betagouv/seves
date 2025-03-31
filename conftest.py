@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.urls import resolve
 from playwright.sync_api import expect
 
 from core.factories import StructureFactory, UserFactory
@@ -41,6 +42,8 @@ def mocked_authentification_user(db, request):
 
         def mocked(self, request):
             request.user = user
+            match = resolve(request.path_info)
+            request.domain = match.app_name
             return self.get_response(request)
 
         with patch("seves.middlewares.LoginAndGroupRequiredMiddleware.__call__", mocked):
