@@ -33,6 +33,17 @@ header .fr-menu {
 .fr-header__body-row .fr-btns-group {
     margin-top: -1rem;
 }
+.product-switch .fr-menu .fr-nav__link{
+    padding: 0.25rem 0.5rem;
+}
+.product-switch .fr-menu__list{
+    background: transparent;
+}
+.product-switch .fr-translate .fr-translate__btn::before {
+    width: 0px;
+}
+
+
 .alert-container{
     margin: 2rem 1.5rem;
 }

@@ -1,7 +1,7 @@
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 
-NUMBER_BASE_QUERIES = 6
+NUMBER_BASE_QUERIES = 7
 
 
 def test_evenement_produit_performances(client, django_assert_num_queries):
