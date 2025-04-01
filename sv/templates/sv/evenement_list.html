@@ -1,7 +1,6 @@
 {% extends 'sv/base.html' %}
 {% load static %}
 {% load etat_tags %}
-{% load pagination_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
@@ -108,65 +107,7 @@
                         {% endfor %}
                         <tbody>
                         </table>
-
-            <!--
-            Utilisation du tag 'url_replace' pour maintenir les paramètres de recherche lors de la pagination.
-            Ce tag est utilisé pour générer les URLs de pagination tout en conservant les filtres de recherche.
-            -->
-                        {% if page_obj.paginator.num_pages > 1 %}
-                            <nav role="navigation" class="fr-pagination fr-mt-8v" aria-label="Pagination">
-                                <ul class="fr-pagination__list">
-                                    <li>
-                                        <a class="fr-pagination__link fr-pagination__link--first" href="?{% url_replace page='1' %}" role="link" aria-describedby="tooltip-first-page">
-                                            Première page
-                                        </a>
-                                        <span class="fr-tooltip fr-placement" id="tooltip-first-page" role="tooltip" aria-hidden="true">Première page</span>
-                                    </li>
-
-                                    <li>
-                                        <a class="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
-                                           {% if page_obj.has_previous %}
-                                               href="?{% url_replace page=page_obj.previous_page_number %}"
-                                           {% endif %}
-                                           role="link"
-                                           aria-disabled="{{ page_obj.has_previous|yesno:'false,true' }}">
-                                            Page précédente
-                                        </a>
-                                    </li>
-
-                                    {% for i in page_obj.paginator.page_range %}
-                                        {% if page_obj.number == i %}
-                                            <li>
-                                                <a class="fr-pagination__link" aria-current="page" title="Page {{ i }}">
-                                                    {{ i }}
-                                                </a>
-                                            </li>
-                                        {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
-                                            <li>
-                                                <a class="fr-pagination__link" href="?{% url_replace page=i %}" title="Page {{ i }}">
-                                                    {{ i }}
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    <li>
-                                        <a class="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
-                                           {% if page_obj.has_next %}href="?{% url_replace page=page_obj.next_page_number %}"{% endif %}
-                                           aria-disabled="{{ page_obj.has_next|yesno:'false,true' }}">
-                                            Page suivante
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="fr-pagination__link fr-pagination__link--last" href="?{% url_replace page=page_obj.paginator.num_pages %}" role="link" aria-describedby="tooltip-last-page">
-                                            Dernière page
-                                        </a>
-                                        <span class="fr-tooltip fr-placement" id="tooltip-last-page" role="tooltip" aria-hidden="true">Dernière page</span>
-                                    </li>
-                                </ul>
-                            </nav>
-                        {% endif %}
+                        {% include "core/_pagination.html" %}
                     </div>
         {% endif %}
     </div>

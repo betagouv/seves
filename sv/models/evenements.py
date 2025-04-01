@@ -2,7 +2,6 @@ import datetime
 
 import reversion
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
@@ -155,17 +154,6 @@ class Evenement(
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
-
-    def get_etat_data_for_contact(self, contact):
-        content_type = ContentType.objects.get_for_model(self)
-        is_fin_de_suivi = FinSuiviContact.objects.filter(content_type=content_type, object_id=self.pk)
-        is_fin_de_suivi = is_fin_de_suivi.filter(contact=contact).exists()
-        return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
-
-    def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if not self.is_cloture and is_fin_de_suivi:
-            return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
-        return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
     def get_publish_success_message(self):
         return f"Événement {self.numero} publié avec succès"

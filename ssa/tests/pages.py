@@ -126,6 +126,9 @@ class EvenementProduitCreationPage:
 
 
 class EvenementProduitDetailsPage:
+    def submit_form(self):
+        self.page.locator(".fiche-produit-form-header .fr-btn").click()
+
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -170,3 +173,56 @@ class EvenementProduitDetailsPage:
     @property
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
+
+
+class EvenementProduitListPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-liste')}")
+
+    def _cell_content(self, line_index, cell_index):
+        return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
+
+    def numero_cell(self, line_index=1):
+        return self._cell_content(line_index, 1)
+
+    def date_creation_cell(self, line_index=1):
+        return self._cell_content(line_index, 2)
+
+    def description_cell(self, line_index=1):
+        return self._cell_content(line_index, 3)
+
+    def createur_cell(self, line_index=1):
+        return self._cell_content(line_index, 6)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 7)
+
+    def liens_cell(self, line_index=1):
+        return self._cell_content(line_index, 8)
+
+    @property
+    def numero_field(self):
+        return self.page.locator("#id_numero")
+
+    @property
+    def numero_rasff_field(self):
+        return self.page.locator("#id_numero_rasff")
+
+    @property
+    def type_evenement_select(self):
+        return self.page.locator("#id_type_evenement")
+
+    @property
+    def start_date_field(self):
+        return self.page.locator("#id_start_date")
+
+    @property
+    def end_date_field(self):
+        return self.page.locator("#id_end_date")
+
+    def submit_search(self):
+        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
