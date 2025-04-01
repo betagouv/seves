@@ -15,7 +15,7 @@ from django.views.generic import FormView
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
@@ -303,6 +303,17 @@ class WithEtatMixin(models.Model):
     def get_publish_error_message(self):
         return "Cet objet ne peut pas être publié"
 
+    def get_etat_data_for_contact(self, contact):
+        content_type = ContentType.objects.get_for_model(self)
+        is_fin_de_suivi = FinSuiviContact.objects.filter(content_type=content_type, object_id=self.pk)
+        is_fin_de_suivi = is_fin_de_suivi.filter(contact=contact).exists()
+        return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
+
+    def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
+        if not self.is_cloture and is_fin_de_suivi:
+            return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
+        return {"etat": self.etat, "readable_etat": self.get_etat_display()}
+
 
 class WithFreeLinkIdsMixin:
     @property
@@ -421,7 +432,7 @@ class WithNumeroMixin(models.Model):
 
     @property
     def numero(self):
-        return f"{self.numero_annee}-{self.numero_evenement}"
+        return f"{self.numero_annee}.{self.numero_evenement}"
 
 
 class BasePermissionMixin:

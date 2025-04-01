@@ -128,6 +128,15 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         return self.numero
 
     @property
+    def product_description(self):
+        product_description = self.denomination
+        if self.marque:
+            product_description += f" {self.marque}"
+        if self.description_complementaire:
+            product_description += f" {self.description_complementaire}"
+        return product_description
+
+    @property
     def readable_product_fields(self):
         return {
             "Dénomination": self.denomination,
