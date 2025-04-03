@@ -5,7 +5,6 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -20,6 +19,9 @@ from ..factories import (
     SiteInspectionFactory,
     OrganismeNuisibleFactory,
     StatutReglementaireFactory,
+    DepartementFactory,
+    PositionChaineDistributionFactory,
+    StructurePreleveuseFactory,
 )
 from ..models import (
     FicheDetection,
@@ -27,11 +29,7 @@ from ..models import (
     StatutReglementaire,
     Contexte,
     OrganismeNuisible,
-    Lieu,
     Departement,
-    PositionChaineDistribution,
-    StructurePreleveuse,
-    SiteInspection,
     Laboratoire,
     Evenement,
     Prelevement,
@@ -217,20 +215,14 @@ def test_create_fiche_detection_with_lieu(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    dept = baker.make(Departement)
-    site_inspection = baker.make(SiteInspection)
-    position = baker.make(PositionChaineDistribution)
-    lieu = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        siret_etablissement="12345678901234",
+    dept = DepartementFactory()
+    site_inspection = SiteInspectionFactory()
+    position = PositionChaineDistributionFactory()
+    lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
         site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
-        _fill_optional=True,
     )
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
@@ -274,7 +266,7 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.activite_etablissement == lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == lieu.raison_sociale_etablissement
-    assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement
+    assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement.replace("\n", " ")
     assert lieu_from_db.siret_etablissement == lieu.siret_etablissement
     assert lieu_from_db.code_inupp_etablissement == lieu.code_inupp_etablissement
     assert lieu_from_db.site_inspection == lieu.site_inspection
@@ -484,7 +476,7 @@ def test_prelevements_are_always_linked_to_lieu(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    structures = baker.make(StructurePreleveuse, _quantity=2)
+    structures = StructurePreleveuseFactory.create_batch(2)
     page.wait_for_timeout(600)
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
