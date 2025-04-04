@@ -13,3 +13,20 @@
     top: 100% !important;
     bottom: auto !important;
 }
+#numero-europhyt,
+#numero-rasff {
+    display: flex;
+    align-items: center;
+}
+#numero-europhyt label {
+    flex: 0.75;
+}
+#id_numero_europhyt {
+    flex: 1.25;
+}
+#numero-rasff label {
+    flex: 0.65;
+}
+#id_numero_rasff {
+    flex: 1.35;
+}

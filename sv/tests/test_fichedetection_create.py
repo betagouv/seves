@@ -7,7 +7,6 @@ from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.constants import AC_STRUCTURE
 from core.factories import StructureFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
@@ -78,10 +77,6 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
 
     expect(form_elements.statut_evenement_label).to_be_visible()
     expect(form_elements.statut_evenement_input).to_be_visible()
-    expect(form_elements.numero_europhyt_label).not_to_be_visible()
-    expect(form_elements.numero_europhyt_input).not_to_be_visible()
-    expect(form_elements.numero_rasff_label).not_to_be_visible()
-    expect(form_elements.numero_rasff_input).not_to_be_visible()
     expect(form_elements.statut_evenement_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_evenement_input).to_have_value("")
     statuts_evenement = list(StatutEvenement.objects.values_list("libelle", flat=True))
@@ -178,28 +173,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     assert fiche_detection.mesures_consignation == "test mesures consignation"
     assert fiche_detection.mesures_phytosanitaires == "test mesures phyto"
     assert fiche_detection.mesures_surveillance_specifique == "test mesures surveillance"
-
-
-@pytest.mark.django_db
-def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill, mocked_authentification_user
-):
-    structure = mocked_authentification_user.agent.structure
-    structure.niveau1 = AC_STRUCTURE
-    structure.save()
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(libelle_court="Mon ON", libelle_long="Mon ON")
-
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-    page.get_by_role("button", name="Enregistrer").click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == "11111111"
-    assert fiche_detection.numero_rasff == "222222222"
 
 
 @pytest.mark.django_db

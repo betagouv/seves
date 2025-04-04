@@ -264,8 +264,6 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
         model = FicheDetection
         fields = [
             "statut_evenement",
-            "numero_europhyt",
-            "numero_rasff",
             "organisme_nuisible",
             "statut_reglementaire",
             "contexte",
@@ -283,10 +281,6 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-
-        if not self.user.agent.structure.is_ac:
-            self.fields.pop("numero_europhyt")
-            self.fields.pop("numero_rasff")
 
         if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (
             self.instance.pk and self.instance.evenement
@@ -497,7 +491,10 @@ ZoneInfesteeFormSetUpdate = inlineformset_factory(
 class EvenementForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Evenement
-        fields = ["organisme_nuisible", "statut_reglementaire"]
+        fields = [
+            "organisme_nuisible",
+            "statut_reglementaire",
+        ]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -514,12 +511,21 @@ class EvenementForm(DSFRForm, forms.ModelForm):
 class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     class Meta:
         model = Evenement
-        fields = ["organisme_nuisible", "statut_reglementaire", "latest_version"]
+        fields = [
+            "organisme_nuisible",
+            "statut_reglementaire",
+            "latest_version",
+            "numero_europhyt",
+            "numero_rasff",
+        ]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links(model=Evenement)
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_europhyt")
+            self.fields.pop("numero_rasff")
 
     def save(self, commit=True):
         instance = super().save(commit)

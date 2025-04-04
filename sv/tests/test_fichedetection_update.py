@@ -4,7 +4,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.constants import AC_STRUCTURE
 from core.models import Structure
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
@@ -929,54 +928,6 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_update_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    fiche_detection = FicheDetectionFactory()
-    structure = mocked_authentification_user.agent.structure
-    structure.niveau1 = AC_STRUCTURE
-    structure.save()
-
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == "11111111"
-    assert fiche_detection.numero_rasff == "222222222"
-
-
-@pytest.mark.django_db
-def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    fiche_detection = FicheDetectionFactory()
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.evaluate("""
-            const form = document.querySelector('main form');
-            const input1 = document.createElement('input');
-            input1.name = 'numero_europhyt';
-            input1.value = '11111111';
-            form.appendChild(input1);
-
-            const input2 = document.createElement('input');
-            input2.name = 'numero_rasff';
-            input2.placeholder = '222222222';
-            form.appendChild(input2);
-        """)
-
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt != "11111111"
-    assert fiche_detection.numero_rasff != "222222222"
-
-
-@pytest.mark.django_db
 def test_laboratoire_disable_in_prelevement_confirmation(
     live_server,
     page: Page,
@@ -1137,8 +1088,6 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
         "evenement": ["18585"],
         "action": ["Enregistrer les modifications"],
         "statut_evenement": [""],
-        "numero_europhyt": [""],
-        "numero_rasff": [""],
         "contexte": [""],
         "date_premier_signalement": [""],
         "vegetaux_infestes": [""],
