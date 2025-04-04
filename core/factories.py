@@ -129,7 +129,7 @@ class MessageFactory(DjangoModelFactory):
     def recipients(self, create, extracted, **kwargs):
         if not create:
             return
-        if extracted:
+        if extracted is not None:
             self.recipients.set(extracted)
             return
         for i in range(random.randint(1, 10)):
@@ -140,7 +140,7 @@ class MessageFactory(DjangoModelFactory):
     def recipients_copy(self, create, extracted, **kwargs):
         if not create:
             return
-        if extracted:
+        if extracted is not None:
             self.recipients_copy.set(extracted)
             return
         for i in range(random.randint(1, 10)):
