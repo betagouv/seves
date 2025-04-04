@@ -1,4 +1,10 @@
-import { validateFileSize } from "./document.js";
+import {
+    getAcceptAllowedExtensionsAttributeValue,
+    updateAcceptAttributeFileInput,
+    validateFileSize,
+    isSelectedFileExtensionValid
+} from "./document.js";
+
 let currentID = 0
 
 function cloneDocumentInput(input, currentID, destination){
@@ -31,22 +37,36 @@ function addDocumentCard(currentID, fileInput){
     });
 }
 
-function allowToUploadWhenTypeIsSelected(typeInput, fileInput,messageAddDocumentButton){
-    typeInput.addEventListener("change", ()=>{
-        if (typeInput.value !== ""){
-            fileInput.removeAttribute("disabled")
-        } else {
-            messageAddDocumentButton.setAttribute("disabled", "true")
-        }
-    })
+function removeEmptyOptionIfExist(selectElement) {
+    const emptyOption = Array.from(selectElement.options).find(option => option.value === "");
+    if (emptyOption) {
+        emptyOption.remove();
+    }
 }
 
-function allowToValidateWhenDocumentIsSelectedAndValidSize(typeInput, fileInput,messageAddDocumentButton){
-    fileInput.addEventListener("change", ()=>{
-        if (typeInput.value !== "" && validateFileSize(fileInput)){
-            messageAddDocumentButton.removeAttribute("disabled")
-        }
-    })
+function onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan) {
+    const documentTypeAllowedExtensions = getAcceptAllowedExtensionsAttributeValue(fileInput, typeInput);
+    if (documentTypeAllowedExtensions === null) {
+        messageAddDocumentButton.setAttribute("disabled", "true");
+        return;
+    }
+    removeEmptyOptionIfExist(typeInput);
+    fileInput.removeAttribute("disabled");
+    updateAcceptAttributeFileInput(fileInput, typeInput, documentTypeAllowedExtensions, extensionsInfoSpan);
+    const hasValidFile = fileInput.files && fileInput.files.length > 0 && isSelectedFileExtensionValid(fileInput, documentTypeAllowedExtensions);
+    if (hasValidFile) {
+        messageAddDocumentButton.removeAttribute("disabled");
+    }
+    else {
+        messageAddDocumentButton.setAttribute("disabled", "true");
+    }
+}
+
+function onFileInputChange(fileInput, typeInput, messageAddDocumentButton) {
+    const documentTypeAllowedExtensions = getAcceptAllowedExtensionsAttributeValue(fileInput, typeInput);
+    if (typeInput.value !== "" && validateFileSize(fileInput) && documentTypeAllowedExtensions !== null && isSelectedFileExtensionValid(fileInput, documentTypeAllowedExtensions)) {
+        messageAddDocumentButton.removeAttribute("disabled")
+    }
 }
 
 function addStructuresToRecipients(event, choiceElements){
@@ -137,21 +157,30 @@ function initializeChoices(element){
     })
 }
 
+function addEmptyOptionInDocumentTypeSelect(typeInput) {
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.text = "Sélectionnez un type";
+    typeInput.insertBefore(emptyOption, typeInput.firstChild);
+}
+
+function resetAddDocumentForm(typeInput, fileInput) {
+    addEmptyOptionInDocumentTypeSelect(typeInput);
+    typeInput.selectedIndex = 0;
+    fileInput.value = null;
+    fileInput.setAttribute("disabled", "true");
+    document.getElementById("message-add-document").setAttribute("disabled", "true");
+    currentID += 1;
+    document.querySelector(".add-document-form-btn").classList.remove("fr-hidden");
+    document.querySelector(".document-form").classList.add("fr-hidden");
+}
+
 function validateDocument(event, typeInput, fileInput, inputDestination){
     event.preventDefault();
-
     cloneDocumentInput(fileInput, currentID, inputDestination)
     cloneDocumentTypeInput(typeInput, currentID, inputDestination)
     addDocumentCard(currentID, fileInput)
-
-    // Reset form
-    typeInput.selectedIndex = 0
-    fileInput.value = null
-    fileInput.setAttribute("disabled", "true")
-    document.getElementById("message-add-document").setAttribute("disabled", "true")
-    currentID += 1;
-    document.querySelector(".add-document-form-btn").classList.remove("fr-hidden")
-    document.querySelector(".document-form").classList.add("fr-hidden")
+    resetAddDocumentForm(typeInput, fileInput);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -160,9 +189,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const fileInput = document.getElementById('id_file');
     const typeInput = document.getElementById('id_document_type');
     const inputDestination = document.getElementById("inputs-for-upload")
+    const extensionsInfoSpan = document.getElementById("allowed-extensions-list");
 
-    allowToUploadWhenTypeIsSelected(typeInput, fileInput, messageAddDocumentButton)
-    allowToValidateWhenDocumentIsSelectedAndValidSize(typeInput, fileInput, messageAddDocumentButton)
+    typeInput.addEventListener("change", () => onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan));
+    fileInput.addEventListener("change", () => onFileInputChange(fileInput, typeInput, messageAddDocumentButton));
 
     addDocumentFormButton.addEventListener("click", event =>{
         event.preventDefault();
