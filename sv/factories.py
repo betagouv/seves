@@ -259,8 +259,6 @@ class FicheDetectionFactory(DjangoModelFactory):
     class Meta:
         model = FicheDetection
 
-    numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
-    numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
     date_premier_signalement = factory.Faker("date_this_decade")
     commentaire = factory.Faker("paragraph")
     mesures_conservatoires_immediates = factory.Faker("paragraph")
@@ -346,6 +344,8 @@ class EvenementFactory(DjangoModelFactory):
     etat = Evenement.Etat.EN_COURS
     numero_annee = factory.Faker("year")
     numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
+    numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
+    numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
 
     @factory.lazy_attribute
     def createur(self):

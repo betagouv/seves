@@ -68,8 +68,6 @@ class FicheDetection(
         verbose_name="Numéro de détection", max_length=16, validators=[validate_numero_detection], unique=True
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
-    numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
     statut_evenement = models.ForeignKey(
         StatutEvenement,
         on_delete=models.PROTECT,

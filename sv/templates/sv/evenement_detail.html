@@ -72,28 +72,32 @@
 
         <div class="fr-container--fluid fr-mb-4v">
             <div class="fr-grid-row white-container--lite">
-                <div class="fr-col-6 fr-col-lg-4">
+                <div class="fr-col-12 fr-col-lg-4">
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Organisme nuisible</span> {{ evenement.organisme_nuisible }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Statut réglementaire</span> {{ evenement.statut_reglementaire }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Code OEPP</span> {{ evenement.organisme_nuisible.code_oepp }}</div>
                 </div>
-                <div class="fr-col-6 fr-col-lg-3">
+                <div class="fr-col-12 fr-col-lg-3">
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Date de création</span> {{ evenement.date_creation|date }}</div>
                     <div class="fr-mb-2v"><span class="bold fr-mr-2v">Créateur</span> {{ evenement.createur }}</div>
                 </div>
-                <div class="fr-col-6 fr-col-lg-5">
-                    <span class="bold fr-mr-2v">Visibilité</span>
-                    <span data-testid="evenement-visibilite">
-                        {% with structures_str=evenement.get_visibilite_display_text %}
-                            {% if evenement.is_visibilite_limitee and structures_str|length > 150 %}
-                                {{ structures_str|truncatechars:150 }}
-                                <button class="fr-btn--tooltip fr-btn" aria-describedby="tooltip-visibilite" type="button"></button>
-                                <span class="fr-tooltip fr-placement" id="tooltip-visibilite" role="tooltip" aria-hidden="true">{{ structures_str }}</span>
-                            {% else %}
-                                {{ structures_str }}
-                            {% endif %}
-                        {% endwith %}
-                    </span>
+                <div class="fr-col-12 fr-col-lg-5">
+                    <div class="fr-mb-2v">
+                        <span class="bold fr-mr-2v">Visibilité</span>
+                        <span data-testid="evenement-visibilite">
+                            {% with structures_str=evenement.get_visibilite_display_text %}
+                                {% if evenement.is_visibilite_limitee and structures_str|length > 150 %}
+                                    {{ structures_str|truncatechars:150 }}
+                                    <button class="fr-btn--tooltip fr-btn" aria-describedby="tooltip-visibilite" type="button"></button>
+                                    <span class="fr-tooltip fr-placement" id="tooltip-visibilite" role="tooltip" aria-hidden="true">{{ structures_str }}</span>
+                                {% else %}
+                                    {{ structures_str }}
+                                {% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">N° Europhyt</span> {{ evenement.numero_europhyt }}</div>
+                    <div class="fr-mb-2v"><span class="bold fr-mr-2v">N° RASFF</span> {{ evenement.numero_rasff }}</div>
                 </div>
 
             </div>

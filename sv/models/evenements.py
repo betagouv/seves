@@ -51,8 +51,10 @@ class Evenement(
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    fin_suivi = GenericRelation(FinSuiviContact)
+    numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
+    numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
 
+    fin_suivi = GenericRelation(FinSuiviContact)
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
