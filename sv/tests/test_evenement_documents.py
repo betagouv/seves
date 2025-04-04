@@ -5,10 +5,9 @@ from pathlib import Path
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.factories import DocumentFactory
+from core.factories import DocumentFactory, StructureFactory
 from core.models import Structure, Document
 from django.contrib.auth import get_user_model
 
@@ -180,11 +179,11 @@ def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
 def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     evenement = EvenementFactory()
     document_1 = DocumentFactory(nom="Test document", content_object=evenement, description="")
-    other_structure = baker.make(Structure)
+    other_structure = StructureFactory(libelle="Other structure")
     document_2 = DocumentFactory(
         nom="Ma carto", content_object=evenement, description="", created_by_structure=other_structure
     )
-    _structure_with_no_document = baker.make(Structure, libelle="Should not be in the list")
+    _structure_with_no_document = StructureFactory(libelle="Should not be in the list")
     evenement.documents.set([document_1, document_2])
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
@@ -192,9 +191,11 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
-    assert page.locator(".documents__filters #id_created_by_structure").all_inner_texts() == [
-        "\n".join(["---------", "Structure Test"])
-    ]
+    choices = page.locator(".documents__filters #id_created_by_structure").all_inner_texts()[0].split("\n")
+    assert len(choices) == 3
+    assert "---------" in choices
+    assert "Other structure" in choices
+    assert "Structure Test" in choices
     page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
     page.get_by_test_id("documents-filter").click()
 

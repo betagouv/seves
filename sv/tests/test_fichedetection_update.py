@@ -2,23 +2,28 @@ import pytest
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.models import Structure
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory, EvenementFactory
+from ..factories import (
+    FicheDetectionFactory,
+    LieuFactory,
+    LaboratoireFactory,
+    PrelevementFactory,
+    EvenementFactory,
+    DepartementFactory,
+    SiteInspectionFactory,
+    PositionChaineDistributionFactory,
+)
 from ..models import (
     FicheDetection,
     Lieu,
     Prelevement,
     Departement,
-    PositionChaineDistribution,
-    OrganismeNuisible,
     StructurePreleveuse,
-    SiteInspection,
     Laboratoire,
 )
 from ..models import (
@@ -126,8 +131,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
     fiche_detection = FicheDetectionFactory()
     new_fiche_detection = FicheDetectionFactory()
-    new_fiche_detection.organisme_nuisible = baker.make(OrganismeNuisible)
-    new_fiche_detection.save()
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
@@ -271,21 +274,14 @@ def test_update_lieu(
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
-    dept = baker.make(Departement)
-    site_inspection = baker.make(SiteInspection)
-    position = baker.make(PositionChaineDistribution)
-    new_lieu = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        siret_etablissement="12345678901234",
+    dept = DepartementFactory()
+    site_inspection = SiteInspectionFactory()
+    position = PositionChaineDistributionFactory()
+    new_lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
         site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
-        _fill_optional=True,
-        _save_related=True,
     )
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
@@ -324,7 +320,7 @@ def test_update_lieu(
     assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == new_lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
-    assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement
+    assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement.replace("\n", " ")
     assert lieu_from_db.siret_etablissement == new_lieu.siret_etablissement
     assert lieu_from_db.site_inspection == new_lieu.site_inspection
     assert (

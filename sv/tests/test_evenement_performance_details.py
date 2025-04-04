@@ -1,16 +1,14 @@
 import pytest
-from model_bakery import baker
 
 from core.factories import DocumentFactory, MessageFactory, ContactStructureFactory
-from core.models import Message
 from sv.factories import (
     EvenementFactory,
     FicheDetectionFactory,
     PrelevementFactory,
     FicheZoneFactory,
     ZoneInfesteeFactory,
+    LieuFactory,
 )
-from sv.models import Lieu
 
 BASE_NUM_QUERIES = 21  # Please note a first call is made without assertion to warm up any possible cache
 
@@ -31,16 +29,13 @@ def test_evenement_performances_with_messages_from_same_user(
     evenement = EvenementFactory()
     client.get(evenement.get_absolute_url())
 
-    baker.make(Message, content_object=evenement, sender=mocked_authentification_user.agent.contact_set.get())
+    sender = mocked_authentification_user.agent.contact_set.get()
+    MessageFactory(content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
+
     with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
-    baker.make(
-        Message,
-        content_object=evenement,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        _quantity=3,
-    )
+    MessageFactory.create_batch(3, content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
     with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         response = client.get(evenement.get_absolute_url())
@@ -80,7 +75,7 @@ def test_evenement_performances_with_lieux(client, django_assert_num_queries):
     with django_assert_num_queries(BASE_NUM_QUERIES + 6):
         client.get(evenement.get_absolute_url())
 
-    baker.make(Lieu, fiche_detection=fiche_detection, _quantity=3, _fill_optional=True)
+    LieuFactory.create_batch(3, fiche_detection=fiche_detection)
     with django_assert_num_queries(BASE_NUM_QUERIES + 12):
         client.get(evenement.get_absolute_url())
 
