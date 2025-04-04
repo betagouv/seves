@@ -165,3 +165,10 @@ label:has(+ .choices select[data-required="true"])::after,
     content: "DEV";
     background-color: green;
 }
+
+.img-modal {
+    width: 95%;
+}
+.img-modal img{
+    max-width: 95%;
+}

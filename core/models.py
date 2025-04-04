@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE, MIMETYPE_TO_READABLE
 from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
 from .storage import get_timestamped_filename
 from .validators import validate_upload_file, AUTHORIZED_EXTENSIONS
@@ -172,7 +172,7 @@ class Document(models.Model):
         Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True, blank=True
     )
     is_infected = models.BooleanField(default=None, null=True, verbose_name="Est ce que le fichier est infecté")
-
+    mimetype = models.CharField(max_length=100, blank=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
@@ -190,6 +190,16 @@ class Document(models.Model):
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE
+
+    @property
+    def readable_mime_type(self):
+        if not self.mimetype:
+            return
+        return MIMETYPE_TO_READABLE.get(self.mimetype)
+
+    @property
+    def is_image(self):
+        return self.readable_mime_type == "Image"
 
 
 class Message(models.Model):

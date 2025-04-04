@@ -19,30 +19,20 @@
     background-color: var(--background-open-blue-france);
 }
 
-.document__details--deleted{
-    background-color: var(--background-disabled-grey);
-}
-.document__details--structure{
-    color: var(--info-425-625);
-}
-.document__details .fr-card__desc{
-    order: initial;
-}
-.document__details .fr-btn--tooltip::before {
-    -webkit-mask-image: url(../../../static/icons/system/information-line.svg);
-    mask-image: url(../../../static/icons/system/information-line.svg);
-}
-.document__actions a[target="_blank"]::after {
-    content: none;
-}
-.document__actions a {
-    background-image: none;
-}
 .documents__filters {
     display:flex;
     align-items: end;
 }
-
+.no-border {
+    box-shadow: none !important;
+    margin-bottom: 0px !important;
+}
+.document-deleted td{
+    background-color: var(--background-disabled-grey) !important;
+}
+.document-deleted .fr-badge{
+    background-color: var(--grey-950-100-active) !important;
+}
 
 /* Bloc contacts */
 .contacts-count{

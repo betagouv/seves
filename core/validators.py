@@ -46,6 +46,7 @@ class MagicMimeValidator:
         file.seek(0)
         if file_mime not in AUTHORIZED_MIME_TYPES:
             raise ValidationError(f"Type de fichier non autorisé: {file_mime}")
+        return file_mime
 
 
 def validate_upload_file(file):
