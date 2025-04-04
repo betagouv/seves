@@ -1,4 +1,5 @@
 let rappelConso = []
+
 document.addEventListener('DOMContentLoaded', () => {
     const rappelPart1Container = document.getElementById("rappel-1")
     const rappelPart2Container = document.getElementById("rappel-2")
@@ -60,6 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
         form.submit()
     }
 
+    function disableSourceOptions(typeEvenementInput, sourceInput){
+        const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
+        sourceInput.querySelectorAll('option').forEach(option => {
+            if(option.value!=="autre") {
+                option.disabled = (option.getAttribute('data-for-human-case') === 'true') !== isHumanCase;
+            }
+        });
+        sourceInput.selectedIndex = 0;
+    }
+
     addRappelConsoBtn.addEventListener("click", event =>{
         event.preventDefault()
         for (const input of rappelContainer) {
@@ -76,4 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
+
+    const typeEvenementInput = document.getElementById('id_type_evenement')
+    const sourceInput = document.getElementById('id_source')
+    typeEvenementInput.addEventListener("change", event => {
+        disableSourceOptions(typeEvenementInput, sourceInput)
+    })
+    disableSourceOptions(typeEvenementInput, sourceInput)
 });

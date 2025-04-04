@@ -3,6 +3,7 @@ from django.contrib.postgres.forms import SimpleArrayField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton
 from core.forms import DSFRForm
+from ssa.fields import SelectWithAttributeField
 from ssa.models import EvenementProduit, TypeEvenement, Source, CerfaRecu, TemperatureConservation, ActionEngagees
 from ssa.models.evenement_produit import PretAManger
 
@@ -14,7 +15,7 @@ class EvenementProduitForm(DSFRForm, forms.ModelForm):
         widget=forms.TextInput(attrs={"pattern": "^(\d{4}\.\d{4}|AA\d{2}\.\d{4})$", "placeholder": "0000.0000"}),
         label="N° RASFF/ACC",
     )
-    source = SEVESChoiceField(choices=Source.choices, required=False)
+    source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
     cerfa_recu = SEVESChoiceField(choices=CerfaRecu.choices, required=False)
 
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
