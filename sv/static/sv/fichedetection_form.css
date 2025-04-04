@@ -16,9 +16,9 @@ main {
 #mesures-gestion{
     grid-column: span 3;
 }
-#lieux, #prelevements {
+#objet-evenement, #lieux, #prelevements {
     overflow-y: auto;
-    max-height: 805px;
+    max-height: 450px;
 }
 
 
