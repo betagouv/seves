@@ -2,7 +2,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit
+from ssa.models import EvenementProduit, TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
 
 
@@ -104,3 +104,20 @@ def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentifica
 
     evenement_produit = EvenementProduit.objects.get()
     assert evenement_produit.numeros_rappel_conso == ["2025-01-1234", "2025-02-1234", "2025-04-1234"]
+
+
+def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page: Page):
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.type_evenement.select_option(label=TypeEvenement.ALERTE_PRODUIT_NATIONALE.label)
+
+    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
+        expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_disabled()
+
+    creation_page.type_evenement.select_option(label=TypeEvenement.INVESTIGATION_CAS_HUMAINS.label)
+    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
+        expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_enabled()
+
+    for source in Source:
+        if source not in EvenementProduit.SOURCES_FOR_HUMAN_CASE and source != Source.AUTRE:
+            expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_disabled()

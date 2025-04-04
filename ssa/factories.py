@@ -32,7 +32,6 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
-    source = FuzzyChoice([choice[0] for choice in Source.choices])
     cerfa_recu = FuzzyChoice([choice[0] for choice in CerfaRecu.choices])
     description = factory.Faker("paragraph")
 
@@ -67,3 +66,11 @@ class EvenementProduitFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @factory.lazy_attribute
+    def source(self):
+        if self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
+            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+
+        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS}
+        return random.choice(list(other_sources))

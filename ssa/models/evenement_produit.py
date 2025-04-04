@@ -105,6 +105,8 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
 
+    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS]
+
     def get_absolute_url(self):
         return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})
 
@@ -119,3 +121,21 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
 
     def __str__(self):
         return self.numero
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(source=Source.AUTRE)
+                    | (
+                        models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
+                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                    )
+                    | (
+                        ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
+                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                    )
+                ),
+                name="type_evenement_source_constraint",
+            ),
+        ]
