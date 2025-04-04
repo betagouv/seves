@@ -18,7 +18,7 @@ main {
 }
 #lieux, #prelevements {
     overflow-y: auto;
-    max-height: 805px;
+    max-height: 690px;
 }
 
 
