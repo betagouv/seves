@@ -1,10 +1,11 @@
 import reversion
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
 
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
-from ssa.models.validators import validate_numero_rasff
+from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
 
 
 class TypeEvenement(models.TextChoices):
@@ -99,6 +100,10 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
     reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")
+
+    numeros_rappel_conso = ArrayField(
+        models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
+    )
 
     def get_absolute_url(self):
         return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})

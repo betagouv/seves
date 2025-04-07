@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 from factory.django import DjangoModelFactory
@@ -18,6 +19,10 @@ import factory
 from ssa.models.evenement_produit import PretAManger
 
 
+def generate_rappel_conso():
+    return f"{random.randint(2000, 2030)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}"
+
+
 class EvenementProduitFactory(DjangoModelFactory):
     class Meta:
         model = EvenementProduit
@@ -25,7 +30,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
     numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
-    numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
+    numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     source = FuzzyChoice([choice[0] for choice in Source.choices])
     cerfa_recu = FuzzyChoice([choice[0] for choice in CerfaRecu.choices])
@@ -45,6 +50,10 @@ class EvenementProduitFactory(DjangoModelFactory):
     reference_clusters = factory.Faker("sentence", nb_words=5)
 
     actions_engagees = FuzzyChoice([choice[0] for choice in ActionEngagees.choices])
+
+    numeros_rappel_conso = factory.LazyAttribute(
+        lambda x: [generate_rappel_conso() for _ in range(random.randint(0, 5))]
+    )
 
     @factory.lazy_attribute
     def createur(self):

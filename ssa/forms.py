@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.postgres.forms import SimpleArrayField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton
 from core.forms import DSFRForm
@@ -46,6 +47,8 @@ class EvenementProduitForm(DSFRForm, forms.ModelForm):
         choices=ActionEngagees.choices,
         help_text="En cas de multiples mesures, indiquer la plus contraigrante ou la dernière en date",
     )
+
+    numeros_rappel_conso = SimpleArrayField(base_field=forms.CharField(), required=False, widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")

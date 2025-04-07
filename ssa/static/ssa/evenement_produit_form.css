@@ -29,3 +29,22 @@
 .radio-inline-container {
     display: flex;
 }
+
+.rappel-conso-container {
+    display: flex;
+    justify-content: space-between;
+    max-width: 350px;
+}
+.rappel-conso-container input {
+    margin-bottom: 0;
+}
+
+#rappel-1{
+    width: 8ch;
+}
+#rappel-2{
+    width: 6ch;
+}
+#rappel-3{
+    width: 8ch;
+}

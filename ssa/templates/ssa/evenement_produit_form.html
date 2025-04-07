@@ -4,6 +4,9 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
 {% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
+{% endblock %}
 {% block content %}
     <form method="post">
         {% csrf_token %}
@@ -12,8 +15,8 @@
             <div class="evenement-produit-form-header">
                 <h1>Création d'une événement</h1>
                 <div>
-                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
-                    <button type="submit" name="action" value="publish" class="fr-btn">Enregistrer</button>
+                    <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
+                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">Enregistrer</button>
                 </div>
             </div>
 
@@ -109,6 +112,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="white-container--lite fr-mt-4w">
+                <div class="fr-container--fluid">
+                    <div class="fr-grid-row fr-grid-row--gutters ">
+                        <div class="fr-col-12 fr-col-lg-4">
+                            {{ form.numeros_rappel_conso }}
+                            <h3>Rappel conso</h3>
+                            <label>Numéro de fiche</label>
+                            <div class="rappel-conso-container">
+                                <input class="fr-input" type="text" id="rappel-1" pattern="^\d{4}$" placeholder="2025" title="Le nombre doit être exactement 4 chiffres">
+                                <input class="fr-input" type="text" id="rappel-2" pattern="^\d{2}$" placeholder="01" title="Le nombre doit être exactement 2 chiffres">
+                                <input class="fr-input" type="text" id="rappel-3" pattern="^\d{4}$" placeholder="0181" title="Le nombre doit être exactement 4 chiffres">
+                                <button class="fr-btn" id="rappel-submit" disabled>Ajouter</button>
+                            </div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-8">
+                            <p>Liste des fiches</p>
+                            <div id="rappel-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </form>
 
