@@ -1,0 +1,45 @@
+<div class="white-container--lite fr-mt-4w">
+    <h3>Établissements</h3>
+    {{ formset.management_form }}
+    <button type="button" id="add-etablissement" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w">Ajouter</button>
+    <div class="fr-mt-2w" id="etablissement-card-container">
+    </div>
+</div>
+
+<template id="etablissement-template">
+    <button class="fr-btn fr-hidden"  data-fr-opened="false" aria-controls="fr-modal-etablissement__prefix__" ></button>
+    <dialog aria-labelledby="fr-modal-title-modal-etablissement__prefix__" role="dialog" id="fr-modal-etablissement__prefix__" class="fr-modal modal-etablissement">
+        <div class="fr-container fr-container--fluid fr-container-md">
+            <div class="fr-grid-row fr-grid-row--center">
+                <div class="fr-col-12 fr-col-md-8">
+                    <div class="fr-modal__body">
+                        <div class="fr-modal__header">
+                            <a href="#" class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-etablissement__prefix__" target="_self">Fermer</a>
+                        </div>
+                        <div class="fr-modal__content">
+                            <h1 id="fr-modal-title-modal--etablissement__prefix__" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un établissement</h1>
+                            {{ empty_form.as_dsfr_div }}
+                        </div>
+                        <div class="fr-modal__footer">
+                            <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                                <a href="#" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-etablissement__prefix__">Annuler</a>
+                                <button type="submit" class="fr-btn save-btn" id="etablissement-save-btn-__prefix__">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+</template>
+
+<template id="etablissement-card-template">
+    <div class="etablissement-card">
+        <p class="raison-sociale"></p>
+        <p class="type-exploitant fr-tag fr-hidden fr-mb-2v"></p>
+        <p class="pays fr-tag fr-hidden fr-mb-2v"></p>
+        <div class="structure"></div>
+        <div class="numero-agrement"></div>
+        <p class="position-dossier fr-badge fr-hidden fr-my-2v"></p>
+    </div>
+</template>
