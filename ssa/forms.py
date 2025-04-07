@@ -5,7 +5,13 @@ from core.fields import SEVESChoiceField, DSFRRadioButton
 from core.forms import DSFRForm
 from ssa.fields import SelectWithAttributeField
 from ssa.models import EvenementProduit, TypeEvenement, Source, CerfaRecu, TemperatureConservation, ActionEngagees
+from ssa.models import (
+    Etablissement,
+    TypeExploitant,
+    PositionDossier,
+)
 from ssa.models.evenement_produit import PretAManger
+from ssa.widgets import PositionDossierWidget
 
 
 class EvenementProduitForm(DSFRForm, forms.ModelForm):
@@ -61,3 +67,27 @@ class EvenementProduitForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = EvenementProduit
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
+
+
+class EtablissementForm(DSFRForm, forms.ModelForm):
+    siret = forms.CharField(
+        required=False,
+        max_length=14,
+        label="N° SIRET",
+        widget=forms.TextInput(
+            attrs={
+                "pattern": "[0-9]{14}",
+                "placeholder": "110 070 018 00012",
+                "title": "Le Siret doit contenir exactement 14 chiffres",
+            }
+        ),
+    )
+    code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
+    position_dossier = SEVESChoiceField(
+        choices=PositionDossier.choices, label="Position dossier", required=False, widget=PositionDossierWidget
+    )
+
+    class Meta:
+        model = Etablissement
+        exclude = []

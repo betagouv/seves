@@ -5,3 +5,6 @@ from .evenement_produit import CerfaRecu as CerfaRecu
 from .evenement_produit import TemperatureConservation as TemperatureConservation
 from .evenement_produit import ActionEngagees as ActionEngagees
 from .evenement_produit import QuantificationUnite as QuantificationUnite
+from .etablissement import Etablissement as Etablissement
+from .etablissement import TypeExploitant as TypeExploitant
+from .etablissement import PositionDossier as PositionDossier

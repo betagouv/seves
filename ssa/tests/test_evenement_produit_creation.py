@@ -1,8 +1,9 @@
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit, TypeEvenement, Source
+from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.models import EvenementProduit, Etablissement
+from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
 
 
@@ -101,6 +102,7 @@ def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentifica
     creation_page.delete_rappel_conso("2025-03-1234")
     creation_page.add_rappel_conso("2025-04-1234")
     creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
 
     evenement_produit = EvenementProduit.objects.get()
     assert evenement_produit.numeros_rappel_conso == ["2025-01-1234", "2025-02-1234", "2025-04-1234"]
@@ -121,3 +123,40 @@ def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page
     for source in Source:
         if source not in EvenementProduit.SOURCES_FOR_HUMAN_CASE and source != Source.AUTRE:
             expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_disabled()
+
+
+def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal):
+    evenement = EvenementProduitFactory()
+
+    etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.create_batch(
+        3, evenement_produit=evenement
+    )
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement_1)
+    creation_page.add_etablissement(etablissement_2)
+    creation_page.add_etablissement(etablissement_3)
+
+    assert Etablissement.objects.count() == 3
+    etablissements = Etablissement.objects.all()
+
+    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=["_state"])
+    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=["_state"])
+    assert_models_are_equal(etablissements[2], etablissement_3, to_exclude=["_state"])
+
+
+def test_card_etablissement_content(live_server, page: Page):
+    etablissement = EtablissementFactory()
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.add_etablissement(etablissement)
+
+    etablissement_card = creation_page.etablissement_card()
+    expect(etablissement_card.get_by_text(etablissement.raison_sociale)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.pays.name)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()

@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 
+from django_countries import Countries
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice, FuzzyFloat
 
@@ -13,9 +14,13 @@ from ssa.models import (
     TemperatureConservation,
     QuantificationUnite,
     ActionEngagees,
+    Etablissement,
+    TypeExploitant,
+    PositionDossier,
 )
 import factory
 
+from ssa.models.departements import Departement
 from ssa.models.evenement_produit import PretAManger
 
 
@@ -74,3 +79,27 @@ class EvenementProduitFactory(DjangoModelFactory):
 
         other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS}
         return random.choice(list(other_sources))
+
+
+class EtablissementFactory(DjangoModelFactory):
+    class Meta:
+        model = Etablissement
+
+    evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
+
+    siret = factory.Faker("numerify", text="##############")
+    raison_sociale = factory.Faker("sentence", nb_words=5)
+
+    adresse_lieu_dit = factory.Faker("street_address")
+    commune = factory.Faker("city")
+    code_insee = factory.Faker("numerify", text="#####")
+    departement = FuzzyChoice([choice[0] for choice in Departement.choices])
+    pays = FuzzyChoice([c.code for c in Countries()])
+
+    type_exploitant = FuzzyChoice([choice[0] for choice in TypeExploitant.choices])
+    position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
+    numero_agrement = factory.Faker("numerify", text="###.##.###")
+
+    @factory.lazy_attribute
+    def quantite_en_stock(self):
+        return f"{random.randint(1, 100)} {random.choices(['palettes', 'm3', 'paquets', 'cartons'])}"

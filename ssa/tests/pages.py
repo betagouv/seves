@@ -1,6 +1,8 @@
 from django.urls import reverse
 from playwright.sync_api import Page
 
+from ssa.models import Etablissement
+
 
 class EvenementProduitCreationPage:
     info_fields = ["numero_rasff", "type_evenement", "source", "cerfa_recu", "description", "numero_rasff"]
@@ -65,3 +67,22 @@ class EvenementProduitCreationPage:
 
     def delete_rappel_conso(self, numero):
         self.page.locator(".fr-tag", has_text=numero).click()
+
+    def add_etablissement(self, etablissement: Etablissement):
+        self.page.locator("#add-etablissement").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+
+        modal.locator('[id$="siret"]').fill(etablissement.siret)
+        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="_lieu_dit"]').fill(etablissement.adresse_lieu_dit)
+        modal.locator('[id$="-commune"]').fill(etablissement.commune)
+        modal.locator('[id$="-departement"]').select_option(etablissement.departement)
+        modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
+        modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
+        modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
+        modal.locator('[id$="-quantite_en_stock"]').fill(str(etablissement.quantite_en_stock))
+        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
+        modal.locator(".save-btn").click()
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
