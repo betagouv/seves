@@ -4,8 +4,13 @@ from django.contrib.postgres.forms import SimpleArrayField
 from core.fields import SEVESChoiceField, DSFRRadioButton
 from core.forms import DSFRForm
 from ssa.fields import SelectWithAttributeField
-from ssa.models import EvenementProduit, TypeEvenement, Source, CerfaRecu, TemperatureConservation, ActionEngagees
 from ssa.models import (
+    EvenementProduit,
+    TypeEvenement,
+    Source,
+    CerfaRecu,
+    TemperatureConservation,
+    ActionEngagees,
     Etablissement,
     TypeExploitant,
     PositionDossier,
