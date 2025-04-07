@@ -43,6 +43,8 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.reference_clusters.fill(input_data.reference_clusters)
 
     creation_page.actions_engagees.select_option(input_data.actions_engagees)
+    for numero in input_data.numeros_rappel_conso:
+        creation_page.add_rappel_conso(numero)
     creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()
@@ -86,3 +88,19 @@ def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     expect(creation_page.numero_rasff).not_to_be_visible()
+
+
+def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.add_rappel_conso("2025-01-1234")
+    creation_page.add_rappel_conso("2025-02-1234")
+    creation_page.add_rappel_conso("2025-03-1234")
+    creation_page.delete_rappel_conso("2025-03-1234")
+    creation_page.add_rappel_conso("2025-04-1234")
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    assert evenement_produit.numeros_rappel_conso == ["2025-01-1234", "2025-02-1234", "2025-04-1234"]

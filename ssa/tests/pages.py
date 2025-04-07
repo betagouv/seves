@@ -31,6 +31,10 @@ class EvenementProduitCreationPage:
 
         self.temperature_conservation = page.get_by_label("Temperature conservation")
         self.produit_pret_a_manger = page.get_by_label("Produit pret a manger")
+        self.numero_rappel_part_1 = page.locator("#rappel-1")
+        self.numero_rappel_part_2 = page.locator("#rappel-2")
+        self.numero_rappel_part_3 = page.locator("#rappel-3")
+        self.numero_rappel_submit = page.locator("#rappel-submit")
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
@@ -47,7 +51,17 @@ class EvenementProduitCreationPage:
         self.page.locator(f"input[type='radio'][name='produit_pret_a_manger'][value='{value}']").check(force=True)
 
     def submit_as_draft(self):
-        self.page.locator(".evenement-produit-form-header").get_by_text("Enregistrer le brouillon", exact=True).click()
+        self.page.locator("#submit_draft").click()
 
     def publish(self):
-        self.page.locator(".evenement-produit-form-header").get_by_text("Enregistrer", exact=True).click()
+        self.page.locator("#submit_publish").click()
+
+    def add_rappel_conso(self, numero):
+        p1, p2, p3 = numero.split("-")
+        self.numero_rappel_part_1.fill(p1)
+        self.numero_rappel_part_2.fill(p2)
+        self.numero_rappel_part_3.fill(p3)
+        self.numero_rappel_submit.click()
+
+    def delete_rappel_conso(self, numero):
+        self.page.locator(".fr-tag", has_text=numero).click()
