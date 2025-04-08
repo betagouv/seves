@@ -20,6 +20,8 @@ AUTHORIZED_EXTENSIONS = [
     "csv",
     "qgs",
     "qgz",
+    "txt",
+    "eml",
 ]
 
 AUTHORIZED_MIME_TYPES = [
@@ -36,6 +38,8 @@ AUTHORIZED_MIME_TYPES = [
     "text/csv",
     "application/x-qgis",
     "application/x-qgis-project",
+    "text/plain",
+    "message/rfc822",
 ]
 
 

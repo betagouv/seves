@@ -69,7 +69,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
     expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
     expect(
         page.get_by_text(
-            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz."
+            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, txt, eml."
         )
     ).to_be_visible()
 
