@@ -65,10 +65,10 @@ class FicheZoneDelimitee(models.Model):
         return ""
 
     def can_be_deleted(self, user):
-        return not self.evenement.is_cloture and self.evenement.can_user_access(user)
+        return self.evenement._user_can_interact(user)
 
     def can_be_updated(self, user):
-        return not self.evenement.is_cloture and self.evenement.can_user_access(user)
+        return self.evenement._user_can_interact(user)
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():

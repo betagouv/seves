@@ -198,17 +198,20 @@ class Evenement(
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
 
-    def can_be_updated(self, user):
+    def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
+    def can_be_updated(self, user):
+        return self._user_can_interact(user)
+
     def can_add_fiche_detection(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_delete_fiche_detection(self):
         return not self.is_cloture
 
     def can_update_fiche_detection(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_delete_fiche_zone_delimitee(self, user):
         return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_deleted(user)
@@ -217,25 +220,25 @@ class Evenement(
         return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
 
     def can_add_fiche_zone_delimitee(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_add_agent(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_add_structure(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_delete_contact(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_add_document(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_update_document(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_delete_document(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
 
     def can_download_document(self, user):
-        return not self.is_cloture and self.can_user_access(user)
+        return self._user_can_interact(user)
