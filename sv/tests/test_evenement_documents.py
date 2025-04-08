@@ -46,7 +46,7 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
 
 
 def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
@@ -447,9 +447,9 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
-    expect(page.get_by_text("En cours d'analyse antivirus")).to_be_visible()
+    expect(page.get_by_text("Analyse antivirus", exact=True)).to_be_visible()
 
     document.is_infected = True
     document.save()
@@ -459,9 +459,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).not_to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).not_to_be_visible()
-    expect(
-        page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")
-    ).not_to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).not_to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
 
     document.is_infected = False
@@ -472,7 +470,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
 
 

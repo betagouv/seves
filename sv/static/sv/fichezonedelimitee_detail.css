@@ -30,12 +30,6 @@
 .cursor-pointer{
     cursor: pointer;
 }
-.img-cartographie {
-    width: 95%;
-}
-.img-cartographie img{
-    max-width: 95%;
-}
 
 .img-cartographie--container {
     display: flex;

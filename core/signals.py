@@ -9,6 +9,8 @@ from celery.exceptions import OperationalError
 from django.db import transaction
 import logging
 
+from .validators import MagicMimeValidator
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,6 +18,13 @@ logger = logging.getLogger(__name__)
 def bypass_antivirus_scan_if_needed(sender, instance, **kwargs):
     if instance._state.adding is True and settings.BYPASS_ANTIVIRUS and settings.DEBUG:
         instance.is_infected = False
+
+
+@receiver(pre_save, sender=Document)
+def set_mimetype_on_create(sender, instance, **kwargs):
+    if not instance.pk and not instance.mimetype and instance.file:
+        validator = MagicMimeValidator()
+        instance.mimetype = validator(instance.file)
 
 
 def run_virus_scan(instance):
