@@ -80,4 +80,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showImage(element, "left")
         })
     })
+    document.querySelectorAll(".bloc-commun-gestion .fr-tabs__tab").forEach(element => {
+        element.addEventListener("click", event => {
+            window.location.hash = event.target.getAttribute("id");
+        });
+    });
 });
