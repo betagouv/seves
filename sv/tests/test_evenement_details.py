@@ -365,3 +365,18 @@ def test_detections_are_order_by_detection_number_not_by_id(live_server, page: P
     expect(page.locator("#tabpanel-detection-panel ul > li")).to_contain_text(
         [detection_1.numero, detection_2.numero, detection_3.numero, detection_10.numero]
     )
+
+
+def test_documents_panel_is_visible_when_clicking_on_documents_link_twice(live_server, page: Page):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone)
+    FicheDetectionFactory(evenement=evenement)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    page.get_by_role("tab", name="Zone").click()
+    page.get_by_role("link", name="documents").click()
+    expect(page.get_by_label("Documents")).to_be_visible()
+    page.get_by_test_id("contacts").click()
+    page.get_by_role("link", name="documents").click()
+    expect(page.get_by_label("Documents")).to_be_visible()
