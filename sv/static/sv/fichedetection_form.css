@@ -71,7 +71,9 @@ main {
 #organisme-nuisible,
 #statut-reglementaire,
 #contexte,
-#date-1er-signalement {
+#date-1er-signalement,
+#organisme-nuisible-readonly,
+#statut-reglementaire-readonly {
     display: flex;
     align-items: center;
 }
@@ -97,6 +99,16 @@ main {
 
 #organisme-nuisible .choices {
     flex: 1.42;
+}
+#organisme-nuisible-readonly-label,
+#statut-reglementaire-readonly-label {
+    font-weight: bold;
+}
+#organisme-nuisible-readonly-label {
+    flex: 0.60;
+}
+#statut-reglementaire-readonly-label {
+    flex: 0.95;
 }
 
 

@@ -280,6 +280,7 @@ class FicheDetectionCreateView(
             for i in range(0, 10)
         ]
         context["prelevement_forms"] = forms
+        context["evenement"] = self.evenement
         return context
 
     def _get_or_create_evenement(self, request, evenement_form):
@@ -403,6 +404,7 @@ class FicheDetectionUpdateView(
         )
         formset.custom_kwargs = {"convert_required_to_data_required": True}
         context["lieu_formset"] = formset
+        context["evenement"] = self.get_object().evenement
         return context
 
     def get_form_kwargs(self):
