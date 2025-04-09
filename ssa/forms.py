@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from django_countries.fields import CountryField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton
 from core.forms import DSFRForm
@@ -88,6 +89,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         ),
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    pays = CountryField(blank=True).formfield()
     type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
     position_dossier = SEVESChoiceField(
         choices=PositionDossier.choices, label="Position dossier", required=False, widget=PositionDossierWidget

@@ -72,7 +72,7 @@ class Etablissement(models.Model):
             ),
         ],
     )
-    departement = models.CharField(choices=Departement.choices, null=True)
+    departement = models.CharField(choices=Departement.choices, blank=True)
     pays = CountryField(null=True)
 
     type_exploitant = models.CharField(

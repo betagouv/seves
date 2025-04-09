@@ -68,6 +68,13 @@ class EvenementProduitCreationPage:
     def delete_rappel_conso(self, numero):
         self.page.locator(".fr-tag", has_text=numero).click()
 
+    def add_etablissement_with_required_fields(self, etablissement: Etablissement):
+        self.page.locator("#add-etablissement").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+
+        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator(".save-btn").click()
+
     def add_etablissement(self, etablissement: Etablissement):
         self.page.locator("#add-etablissement").click()
         modal = self.page.locator(".fr-modal__body").locator("visible=true")
@@ -86,3 +93,6 @@ class EvenementProduitCreationPage:
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
+
+    def delete_etablissement(self, index):
+        return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()

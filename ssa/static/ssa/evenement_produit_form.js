@@ -89,7 +89,9 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         document.getElementById("main-form").insertAdjacentHTML('beforeend', template)
 
         const modal = document.getElementById("fr-modal-etablissement" + nextIdToUse.toString())
+        modal.setAttribute("data-etablissement-id", nextIdToUse.toString())
         modal.querySelector('[id$=raison_sociale]').required = true
+        modal.querySelector(".save-btn").setAttribute("data-etablissement-id", nextIdToUse)
         setTimeout(() => {
             dsfr(modal).modal.disclose()
             dsfr(modal).modal.node.addEventListener('dsfr.conceal', event => {
@@ -114,43 +116,67 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         return element.options[element.selectedIndex].innerText;
     }
 
+    function getEtablissementCard(baseCard, currentModal, currentID){
+
+        if (!!baseCard.querySelector(".etablissement-card")){
+            baseCard.querySelector(".etablissement-card").id = `etablissement-card-${currentID}`
+        }
+        baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
+
+        const typeExploitant = getSelectedLabel(currentModal.querySelector('[id$=type_exploitant]'))
+        if (typeExploitant != null) {
+            baseCard.querySelector('.type-exploitant').innerText = typeExploitant
+            baseCard.querySelector('.type-exploitant').classList.remove("fr-hidden")
+        }
+
+        const pays = getSelectedLabel(currentModal.querySelector('[id$=pays]'))
+        if (pays != null) {
+            baseCard.querySelector('.pays').innerText = pays
+            baseCard.querySelector('.pays').classList.remove("fr-hidden")
+        }
+
+        const structure = `Département : ${currentModal.querySelector('[id$=departement]').value || 'nc.'}`
+        baseCard.querySelector('.structure').textContent = structure
+
+        const numeroAgrement = `N° d'agrément : ${currentModal.querySelector('[id$=numero_agrement]').value || 'nc.'}`
+        baseCard.querySelector('.numero-agrement').textContent = numeroAgrement
+
+        const positionDossierInput = currentModal.querySelector('[id$=position_dossier]')
+        const positionDossier = getSelectedLabel(positionDossierInput)
+        if (positionDossier != null) {
+            baseCard.querySelector('.position-dossier').innerText = positionDossier
+            baseCard.querySelector('.position-dossier').classList.remove("fr-hidden")
+            const extraClass = positionDossierInput.options[positionDossierInput.selectedIndex].dataset.extraClass
+            baseCard.querySelector('.position-dossier').classList.add(extraClass)
+        }
+        return baseCard
+    }
+
+    function deleteEtablissement(etablissementID){
+        document.getElementById(`etablissement-card-${etablissementID}`).remove()
+        document.getElementById(`fr-modal-etablissement${etablissementID}`).remove()
+        document.querySelector(`[aria-controls="fr-modal-etablissement${etablissementID}"]`).remove()
+    }
+
     function submitFormAndAddEtablissementCard(event) {
         const currentModal = event.target.closest("dialog")
         if (formIsValid(currentModal) === false) {
             return
         }
 
-        const clone = document.getElementById('etablissement-card-template').content.cloneNode(true);
-        clone.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
+        const etablissementId = event.target.dataset.etablissementId
+        const existingCard = document.getElementById(`etablissement-card-${etablissementId}`)
 
-        const typeExploitant = getSelectedLabel(currentModal.querySelector('[id$=type_exploitant]'))
-        if (typeExploitant != null) {
-            clone.querySelector('.type-exploitant').innerText = typeExploitant
-            clone.querySelector('.type-exploitant').classList.remove("fr-hidden")
+        if(!existingCard){
+            const clone = document.getElementById('etablissement-card-template').content.cloneNode(true);
+            const card = getEtablissementCard(clone, currentModal, etablissementId)
+            card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
+            card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
+            document.getElementById("etablissement-card-container").appendChild(card);
+        } else {
+            existingCard.replaceWith(getEtablissementCard(existingCard, currentModal, etablissementId))
         }
 
-        const pays = getSelectedLabel(currentModal.querySelector('[id$=pays]'))
-        if (pays != null) {
-            clone.querySelector('.pays').innerText = pays
-            clone.querySelector('.pays').classList.remove("fr-hidden")
-        }
-
-        const structure = `Département : ${currentModal.querySelector('[id$=departement]').value || 'nc.'}`
-        clone.querySelector('.structure').textContent = structure
-
-        const numeroAgrement = `N° d'agrément : ${currentModal.querySelector('[id$=numero_agrement]').value || 'nc.'}`
-        clone.querySelector('.numero-agrement').textContent = numeroAgrement
-
-        const positionDossierInput = currentModal.querySelector('[id$=position_dossier]')
-        const positionDossier = getSelectedLabel(positionDossierInput)
-        if (positionDossier != null) {
-            clone.querySelector('.position-dossier').innerText = positionDossier
-            clone.querySelector('.position-dossier').classList.remove("fr-hidden")
-            const extraClass = positionDossierInput.options[positionDossierInput.selectedIndex].dataset.extraClass
-            clone.querySelector('.position-dossier').classList.add(extraClass)
-        }
-
-        document.getElementById("etablissement-card-container").appendChild(clone);
         dsfr(currentModal).modal.conceal()
         removeRequired(currentModal)
     }
@@ -184,3 +210,6 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         showEtablissementModal()
     })
 });
+
+// TODO quand on edite vérifier que l'on a bien qu'une seul carte à la place de deux :thinking:
+// TODO tester que la suppression n'envoit bien pas l'info

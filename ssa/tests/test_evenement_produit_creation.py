@@ -7,6 +7,9 @@ from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
 
 
+FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id"]
+
+
 def test_can_create_evenement_produit_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build()
     creation_page = EvenementProduitCreationPage(page, live_server.url)
@@ -50,7 +53,15 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
 
     evenement_produit = EvenementProduit.objects.get()
 
-    fields_to_exclude = ["_state", "id", "numero_annee", "numero_evenement", "date_creation", "numero_rasff"]
+    fields_to_exclude = [
+        "_state",
+        "id",
+        "numero_annee",
+        "numero_evenement",
+        "date_creation",
+        "numero_rasff",
+        "id",
+    ]
     evenement_produit_data = {k: v for k, v in evenement_produit.__dict__.items() if k not in fields_to_exclude}
     input_data = {k: v for k, v in input_data.__dict__.items() if k not in fields_to_exclude}
 
@@ -128,9 +139,7 @@ def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page
 def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal):
     evenement = EvenementProduitFactory()
 
-    etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.create_batch(
-        3, evenement_produit=evenement
-    )
+    etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(3, evenement_produit=evenement)
 
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
@@ -138,13 +147,15 @@ def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal
     creation_page.add_etablissement(etablissement_1)
     creation_page.add_etablissement(etablissement_2)
     creation_page.add_etablissement(etablissement_3)
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
 
     assert Etablissement.objects.count() == 3
     etablissements = Etablissement.objects.all()
 
-    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=["_state"])
-    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=["_state"])
-    assert_models_are_equal(etablissements[2], etablissement_3, to_exclude=["_state"])
+    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+    assert_models_are_equal(etablissements[2], etablissement_3, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
 def test_card_etablissement_content(live_server, page: Page):
@@ -160,3 +171,40 @@ def test_card_etablissement_content(live_server, page: Page):
     expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
+
+
+def test_can_add_etablissement_with_required_fields_only(live_server, page: Page, assert_models_are_equal):
+    evenement = EvenementProduitFactory()
+
+    etablissement = EtablissementFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement_with_required_fields(etablissement)
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert_models_are_equal(etablissement, etablissement, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_can_add_and_delete_etablissements(live_server, page: Page, assert_models_are_equal):
+    evenement = EvenementProduitFactory()
+
+    etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(3, evenement_produit=evenement)
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement_1)
+    creation_page.add_etablissement(etablissement_2)
+    creation_page.add_etablissement(etablissement_3)
+    creation_page.delete_etablissement(1)
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    assert Etablissement.objects.count() == 2
+    etablissements = Etablissement.objects.all()
+
+    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+    assert_models_are_equal(etablissements[1], etablissement_3, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
