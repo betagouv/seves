@@ -2,9 +2,11 @@ import reversion
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
+from reversion.models import Version
 
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
+from core.versions import get_versions_from_ids
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
 
 
@@ -121,6 +123,46 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
 
     def __str__(self):
         return self.numero
+
+    @property
+    def readable_product_fields(self):
+        return {
+            "Dénomination": self.denomination,
+            "Marque": self.marque,
+            "Lots, DLC/DDM": self.lots,
+            "Description complémentaire": self.description_complementaire,
+            "Température de conservation": self.get_temperature_conservation_display(),
+        }
+
+    @property
+    def readable_risk_fields(self):
+        return {
+            "Quantification": f"{self.quantification} {self.get_quantification_unite_display()}",
+            "Évaluation": self.evaluation,
+            "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
+            "Référence souche": self.reference_souches,
+            "Référence cluster": self.reference_clusters,
+        }
+
+    @property
+    def latest_version(self):
+        from ssa.models import Etablissement
+
+        etablissement_ids = [e.id for e in self.etablissements.all()]
+        etablissements_versions = get_versions_from_ids(etablissement_ids, Etablissement)
+
+        instance_version = (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
+
+        versions = list(etablissements_versions) + [instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)
 
     class Meta:
         constraints = [

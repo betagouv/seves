@@ -1,0 +1,17 @@
+#etablissement-card-container {
+    display: flex;
+    gap: 1rem;
+}
+.etablissement-card {
+    background-color: #E3E3FD;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    width: 400px;
+}
+.etablissement-card--header {
+    display: flex;
+    justify-content: space-between;
+}
+.raison-sociale {
+    font-weight: bold;
+}

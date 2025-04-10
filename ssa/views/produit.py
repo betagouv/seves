@@ -66,7 +66,7 @@ class EvenementProduitDetailView(DetailView):
     template_name = "ssa/evenement_produit_detail.html"
 
     def get_queryset(self):
-        return EvenementProduit.objects.all()
+        return EvenementProduit.objects.all().select_related("createur")
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
