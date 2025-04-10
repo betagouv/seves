@@ -5,7 +5,8 @@ from django.db.models import OuterRef, Exists
 
 from core.forms import DSFRForm
 from seves import settings
-from .models import FicheDetection, Region, OrganismeNuisible, Evenement
+from .models import FicheDetection, OrganismeNuisible, Evenement
+from core.models import Region
 from django.forms.widgets import DateInput, TextInput
 
 

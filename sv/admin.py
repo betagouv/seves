@@ -5,8 +5,6 @@ from .models import (
     OrganismeNuisible,
     StatutReglementaire,
     Contexte,
-    Departement,
-    Region,
     Lieu,
     StatutEtablissement,
     PositionChaineDistribution,
@@ -23,6 +21,7 @@ from .models import (
     Evenement,
     VersionFicheZoneDelimitee,
 )
+from core.models import Departement, Region
 
 admin.site.site_header = "Administration de Sèves"
 

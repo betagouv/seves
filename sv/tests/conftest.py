@@ -5,9 +5,8 @@ from playwright.sync_api import Page
 
 from sv.models import (
     StatutReglementaire,
-    Region,
-    Departement,
 )
+from core.models import Departement, Region
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..constants import DEPARTEMENTS, REGIONS, STATUTS_REGLEMENTAIRES
 

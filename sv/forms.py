@@ -11,7 +11,7 @@ from django.utils.translation import ngettext
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.forms import DSFRForm, VisibiliteUpdateBaseForm
-from core.models import Structure, Visibilite
+from core.models import Structure, Visibilite, Departement
 from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin, WithLatestVersionLocking
 from sv.models import (
     FicheZoneDelimitee,
@@ -21,7 +21,6 @@ from sv.models import (
     FicheDetection,
     Lieu,
     Prelevement,
-    Departement,
     EspeceEchantillon,
     Evenement,
 )

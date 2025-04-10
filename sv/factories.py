@@ -7,7 +7,7 @@ from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
-from core.models import Visibilite, Structure
+from core.models import Visibilite, Structure, Departement, Region
 from .constants import (
     STATUTS_REGLEMENTAIRES,
     STRUCTURES_PRELEVEUSES,
@@ -23,7 +23,6 @@ from .models import (
     Prelevement,
     Lieu,
     FicheDetection,
-    Departement,
     OrganismeNuisible,
     FicheZoneDelimitee,
     StatutReglementaire,
@@ -36,7 +35,6 @@ from .models import (
     StatutEvenement,
     Contexte,
     SiteInspection,
-    Region,
     PositionChaineDistribution,
 )
 

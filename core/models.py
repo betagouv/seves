@@ -311,3 +311,32 @@ class Visibilite(models.TextChoices):
     def get_masculine_label(cls, value):
         masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
         return masculine_labels.get(value)
+
+
+class Region(models.Model):
+    class Meta:
+        verbose_name = "Région"
+        verbose_name_plural = "Régions"
+        ordering = ["nom"]
+        app_label = "sv"
+
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
+
+    def __str__(self):
+        return self.nom
+
+
+class Departement(models.Model):
+    class Meta:
+        verbose_name = "Département"
+        verbose_name_plural = "Départements"
+        ordering = ["numero"]
+        constraints = [models.UniqueConstraint(fields=["numero", "nom"], name="unique_departement_numero_nom")]
+        app_label = "sv"
+
+    numero = models.CharField(max_length=3, verbose_name="Numéro", unique=True)
+    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
+    region = models.ForeignKey(Region, on_delete=models.PROTECT, verbose_name="Région")
+
+    def __str__(self):
+        return f"{self.numero} - {self.nom}"

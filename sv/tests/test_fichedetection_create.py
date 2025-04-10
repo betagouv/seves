@@ -9,7 +9,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.factories import StructureFactory
-from core.models import Contact, Visibilite
+from core.models import Contact, Visibilite, Departement
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
@@ -30,7 +30,6 @@ from ..models import (
     StatutReglementaire,
     Contexte,
     OrganismeNuisible,
-    Departement,
     Laboratoire,
     Evenement,
     Prelevement,

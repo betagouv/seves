@@ -5,7 +5,7 @@ from django.db.utils import IntegrityError
 from reversion.models import Version
 
 from core.factories import StructureFactory
-from core.models import Visibilite
+from core.models import Visibilite, Departement, Region
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import (
     FicheDetectionFactory,
@@ -22,8 +22,6 @@ from sv.models import (
     Lieu,
     OrganismeNuisible,
     StatutReglementaire,
-    Departement,
-    Region,
     Contexte,
     StatutEtablissement,
     PositionChaineDistribution,

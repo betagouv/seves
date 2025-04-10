@@ -5,7 +5,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import Structure
+from core.models import Structure, Departement, Region
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
@@ -22,12 +22,8 @@ from ..models import (
     FicheDetection,
     Lieu,
     Prelevement,
-    Departement,
     StructurePreleveuse,
     Laboratoire,
-)
-from ..models import (
-    Region,
 )
 
 
