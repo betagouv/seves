@@ -13,7 +13,7 @@ class TypeEvenement(models.TextChoices):
     ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
     NON_ALERTE = "non_alerte", "Non alerte"
     ALERTE_PRODUIT_UE = "alerte_produit_ue", "Alerte produit UE/INT (RASFF)"
-    NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (ACC)"
+    NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (AAC)"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
 
 
@@ -65,7 +65,7 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_rasff = models.CharField(
-        max_length=9, verbose_name="N° RASFF/ACC", blank=True, validators=[validate_numero_rasff]
+        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
     )
 
     # Informations générales

@@ -19,7 +19,7 @@ class EvenementProduitForm(DSFRForm, forms.ModelForm):
     numero_rasff = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={"pattern": "^(\d{4}\.\d{4}|AA\d{2}\.\d{4})$", "placeholder": "0000.0000"}),
-        label="N° RASFF/ACC",
+        label="N° RASFF/AAC",
     )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
     cerfa_recu = SEVESChoiceField(choices=CerfaRecu.choices, required=False)
