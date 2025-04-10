@@ -1,0 +1,54 @@
+<dialog aria-labelledby="fr-modal-title-modal-etablissement-{{ etablissement.pk }}" role="dialog"
+        id="fr-modal-etablissement-{{ etablissement.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-etablissement-{{ etablissement.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-etablissement-{{ etablissement.pk }}"
+                            class="fr-modal__title">{{ etablissement.raison_sociale }}</h1>
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Siret</div>
+                                <div class="fr-col-7">{{ etablissement.siret|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Adresse</div>
+                                <div class="fr-col-7">{{ etablissement.adresse_lieu_dit|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Commune</div>
+                                <div class="fr-col-7">{{ etablissement.commune|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Département</div>
+                                <div class="fr-col-7">{{ etablissement.get_departement_display|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Pays</div>
+                                <div class="fr-col-7">{{ etablissement.get_pays_display|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Type d'exploitant</div>
+                                <div class="fr-col-7">{{ etablissement.get_type_exploitant_display|default:"nc." }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Position dossier</div>
+                                <div class="fr-col-7">{% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% else %}nc.{% endif %}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">N° agrément</div>
+                                <div class="fr-col-7">{{ etablissement.numero_agrement|default:"nc." }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
