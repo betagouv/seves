@@ -86,3 +86,50 @@ class EvenementProduitCreationPage:
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
+
+
+class EvenementProduitDetailsPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self, object):
+        self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
+
+    @property
+    def title(self):
+        return self.page.locator(".top-row h1")
+
+    @property
+    def last_modification(self):
+        return self.page.locator(".last-modification")
+
+    @property
+    def information_block(self):
+        return self.page.get_by_role("heading", name="Informations").locator("..")
+
+    @property
+    def produit_block(self):
+        return self.page.get_by_role("heading", name="Produit").locator("..")
+
+    @property
+    def risque_block(self):
+        return self.page.get_by_role("heading", name="Risque").locator("..")
+
+    @property
+    def actions_block(self):
+        return self.page.get_by_role("heading", name="Actions engagées").locator("..")
+
+    @property
+    def rappel_block(self):
+        return self.page.get_by_role("heading", name="Rappel conso").locator("..")
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
+    def etablissement_open_modal(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index).locator(".fr-icon-eye-line").click()
+
+    @property
+    def etablissement_modal(self):
+        return self.page.locator(".fr-modal").locator("visible=true")

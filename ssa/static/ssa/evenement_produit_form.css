@@ -48,20 +48,6 @@
 #rappel-3 {
     width: 8ch;
 }
-
-#etablissement-card-container {
-    display: flex;
-    gap: 1rem;
-}
-.etablissement-card {
-    background-color: #E3E3FD;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    width: 400px;
-}
-.raison-sociale {
-    font-weight: bold;
-}
 .modal-etablissement input, .modal-etablissement select{
     margin-top: 0.5rem;
 }

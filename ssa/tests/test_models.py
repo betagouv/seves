@@ -2,7 +2,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from ssa.factories import EvenementProduitFactory
+from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, TypeEvenement, Source
 
 
@@ -38,3 +38,25 @@ def test_type_evenement_source_constraint():
 
     with pytest.raises(IntegrityError):
         EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTOCONTROLE)
+
+
+@pytest.mark.django_db
+def test_evenement_produit_latest_revision():
+    evenement = EvenementProduitFactory()
+    assert evenement.latest_version is not None
+    latest_version = evenement.latest_version
+
+    evenement.description = "Lorem"
+    evenement.save()
+    assert latest_version.pk != evenement.latest_version.pk
+    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+    latest_version = evenement.latest_version
+
+    etablissement = EtablissementFactory(evenement_produit=evenement)
+    assert latest_version.pk != evenement.latest_version.pk
+    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+
+    etablissement.raison_sociale = "Foo"
+    etablissement.save()
+    assert latest_version.pk != evenement.latest_version.pk
+    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created

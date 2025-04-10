@@ -1,6 +1,6 @@
 from django import forms
 
-from ssa.models.etablissement import PositionDossier
+from ssa.models.etablissement import PositionDossier, Etablissement
 
 
 class PositionDossierWidget(forms.Select):
@@ -13,6 +13,5 @@ class PositionDossierWidget(forms.Select):
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         option = super().create_option(name, value, label, selected, index, subindex, attrs)
         if value:
-            extra_class = "fr-badge--error" if value in self.RED_CASES else "fr-badge--info"
-            option["attrs"]["data-extra-class"] = extra_class
+            option["attrs"]["data-extra-class"] = Etablissement.get_position_dossier_css_class(value)
         return option

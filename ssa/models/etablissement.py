@@ -89,3 +89,20 @@ class Etablissement(models.Model):
 
     def __str__(self):
         return f"{self.raison_sociale}"
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
+    @classmethod
+    def get_position_dossier_css_class(self, value):
+        RED_CASES = [
+            PositionDossier.SURVENUE_NON_CONFORMITE,
+            PositionDossier.DETECTION_NON_CONFORMITE,
+            PositionDossier.DETECTION_ET_SURVENUE_NON_CONFORMITE,
+        ]
+        return "fr-badge--error" if value in RED_CASES else "fr-badge--info"
+
+    @property
+    def position_dossier_css_class(self):
+        return Etablissement.get_position_dossier_css_class(self.position_dossier)

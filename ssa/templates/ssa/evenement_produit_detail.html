@@ -1,1 +1,149 @@
-{{ object }}
+{% extends "ssa/base.html" %}
+{% load static %}
+{% load etat_tags %}
+{% block extrahead %}
+  <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
+{% endblock %}
+{% block content %}
+  <main class="main-container">
+    <div>
+      <div class="top-row">
+        <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+        <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
+      </div>
+    </div>
+
+    {% include "sv/_latest_revision.html" with latest_version=object.latest_version %}
+
+    <div id="detail-content">
+      <div class="white-container">
+        <h2 class="fr-h6">Informations</h2>
+        <div class="fr-container--fluid">
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-3">
+              <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-7 bold">Créateur</div>
+                  <div class="fr-col-5">{{ object.createur }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-7 bold">Date de création</div>
+                  <div class="fr-col-5">{{ object.date_creation|date }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-7 bold">N° RASFF AAC</div>
+                  <div class="fr-col-5">{{ object.numero_rasff|default:"nc."  }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="fr-col-4">
+              <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-5 bold">Type d'événement</div>
+                  <div class="fr-col-7">{{ object.get_type_evenement_display|default:"nc."  }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-5 bold">Source</div>
+                  <div class="fr-col-7">{{ object.get_source_display|default:"nc."  }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-5 bold">Cerfa reçu du professionnel</div>
+                  <div class="fr-col-7">{{ object.get_cerfa_recu_display|default:"nc."  }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="fr-col-5">
+              <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  <div class="fr-col-3 bold">Description de l'événement</div>
+                  <div class="fr-col-9">{{ object.description }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-container--fluid fr-mt-2w">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-6">
+            <div class="white-container">
+              <h2 class="fr-h6">Produit</h2>
+              <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  {% for key, value in object.readable_product_fields.items %}
+                    <div class="fr-col-4 bold">{{ key }}</div>
+                    <div class="fr-col-8">{{ value|default:"nc." }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="fr-col-6">
+            <div class="white-container">
+              <h2 class="fr-h6">Risque</h2>
+              <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                  {% for key, value in object.readable_risk_fields.items %}
+                    <div class="fr-col-4 bold">{{ key }}</div>
+                    <div class="fr-col-8">{{ value|default:"nc." }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12">
+            <div class="white-container">
+              <h2 class="fr-h6">Actions engagées</h2>
+              {{ object.get_actions_engagees_display|default:"nc."  }}
+            </div>
+          </div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12">
+            <div class="white-container">
+              <h2 class="fr-h6">Rappel conso</h2>
+              {% for numero in object.numeros_rappel_conso %}
+                {{ numero }}
+              {% empty %}
+                nc.
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12">
+            <div class="white-container">
+              <h2 class="fr-h6">Établissements</h2>
+              <div id="etablissement-card-container">
+                {% for etablissement in object.etablissements.all %}
+
+                  {% include "ssa/_modal_etablissement_details.html" %}
+                  <div class="etablissement-card">
+                    <div class="etablissement-card--header">
+                      <p class="raison-sociale">{{ etablissement.raison_sociale }}</p>
+                      <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
+                              data-fr-opened="false"
+                              aria-controls="fr-modal-etablissement-{{ etablissement.pk }}"
+                              title="Consulter le détail de l'établissement {{etablissement.raison_sociale}}">
+                      </button>
+                    </div>
+                    {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.get_type_exploitant_display }}</p>{% endif %}
+                    {% if etablissement.pays %}<p class="pays fr-tag fr-mb-2v">{{ etablissement.get_pays_display }}</p>{% endif %}
+                    <div class="structure">Département :{{ etablissement.departement|default:"nc." }}</div>
+                    <div class="numero-agrement">N° d'agrément : {{ etablissement.numero_agrement|default:"nc." }}</div>
+                    {% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% endif %}
+                  </div>
+                {% empty %}
+                  <p>Aucun établissement enregistré</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+{% endblock content %}
