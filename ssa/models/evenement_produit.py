@@ -127,6 +127,7 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
             models.CheckConstraint(
                 check=(
                     models.Q(source=Source.AUTRE)
+                    | models.Q(source="")
                     | (
                         models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
                         & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
