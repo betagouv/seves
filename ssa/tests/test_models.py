@@ -26,6 +26,10 @@ def test_type_evenement_source_constraint():
     EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.AUTRE)
     EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTRE)
 
+    # Both type can have no known source
+    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source="")
+    EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source="")
+
     # Non human case can have sources, but not any of SOURCES_FOR_HUMAN_CASE
     EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.AUTOCONTROLE)
     for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
