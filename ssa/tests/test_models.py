@@ -38,3 +38,17 @@ def test_type_evenement_source_constraint():
 
     with pytest.raises(IntegrityError):
         EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTOCONTROLE)
+
+
+@pytest.mark.django_db
+def test_numero_rasff_aac():
+    evenement = EvenementProduitFactory(numero_rasff="2024.1234")
+    evenement.full_clean()
+    evenement = EvenementProduitFactory(numero_rasff="AA24.5864")
+    evenement.full_clean()
+    evenement = EvenementProduitFactory(numero_rasff="987654")
+    evenement.full_clean()
+
+    evenement = EvenementProduitFactory(numero_rasff="989")
+    with pytest.raises(ValidationError):
+        evenement.full_clean()
