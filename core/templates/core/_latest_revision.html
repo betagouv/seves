@@ -1,6 +1,6 @@
 {% if latest_version %}
     <div class="fr-pl-1v fr-mt-2v last-modification fr-text--xs">
-        Dernière mise à jour le {{ latest_version.revision.date_created }}
+        Dernière mise à jour le {{ date_derniere_mise_a_jour }}
         {% if latest_version.revision.user %}
             par {{ latest_version.revision.user.agent.agent_with_structure }}
         {% endif %}

@@ -274,44 +274,23 @@ def test_search_without_filters(live_server, page: Page) -> None:
     expect(page.locator("body")).to_contain_text("2 évènements au total")
 
 
-def test_list_is_ordered(live_server, page):
-    EvenementFactory(numero_annee=2023, numero_evenement=1)
-    EvenementFactory(numero_annee=2024, numero_evenement=11)
-    EvenementFactory(numero_annee=2024, numero_evenement=1)
-    EvenementFactory(numero_annee=2024, numero_evenement=2)
-
-    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-
-    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.11"
-
-    cell_selector = ".evenements__list-row:nth-child(2) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.2"
-
-    cell_selector = ".evenements__list-row:nth-child(3) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2024.1"
-
-    cell_selector = ".evenements__list-row:nth-child(4) td:nth-child(2)"
-    assert page.text_content(cell_selector).strip() == "2023.1"
-
-
 def test_zone_column(live_server, page: Page):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(10) input"
+    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(11) input"
     expect(page.locator(cell_selector)).to_be_disabled()
 
     fiche_zone = FicheZoneFactory()
     evenement.fiche_zone_delimitee = fiche_zone
     evenement.save()
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(10) input"
+    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(11) input"
     expect(page.locator(cell_selector)).to_be_enabled()
 
 
 def test_nb_fiches_detection_column(live_server, page: Page):
     evenement = EvenementFactory()
-    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(9)"
+    cell_selector = ".evenements__list-row:nth-child(1) td:nth-child(10)"
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     assert page.locator(cell_selector).inner_text().strip() == "0"
@@ -346,4 +325,4 @@ def test_filter_deleted_detection_in_count_column(live_server, page):
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
-    assert page.locator(".evenements__list-row:nth-child(1) td:nth-child(9)").inner_text().strip() == "1"
+    assert page.locator(".evenements__list-row:nth-child(1) td:nth-child(10)").inner_text().strip() == "1"

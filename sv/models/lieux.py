@@ -1,7 +1,7 @@
 import reversion
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.db import models
+from django.db import models, transaction
 
 
 class PositionChaineDistribution(models.Model):
@@ -154,5 +154,9 @@ class Lieu(models.Model):
         return str(self.nom)
 
     def save(self, *args, **kwargs):
-        with reversion.create_revision():
-            super().save(*args, **kwargs)
+        from sv.models import FicheDetection
+
+        with transaction.atomic():
+            with reversion.create_revision():
+                super().save(*args, **kwargs)
+            FicheDetection.objects.update_date_derniere_mise_a_jour(self.fiche_detection.id)

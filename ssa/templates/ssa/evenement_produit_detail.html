@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    {% include "core/_latest_revision.html" with latest_version=object.latest_version %}
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=latest_version.revision.date_created latest_version=object.latest_version %}
 
     <div id="detail-content">
       <div class="white-container">
