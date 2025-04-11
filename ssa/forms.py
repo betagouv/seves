@@ -95,6 +95,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         ),
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
     pays = CountryField(blank=True).formfield()
     type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
     position_dossier = SEVESChoiceField(

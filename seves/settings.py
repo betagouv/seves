@@ -298,6 +298,7 @@ CSP_CONNECT_SRC = (
     "geo.api.gouv.fr",
     "api.insee.fr",
     "data.economie.gouv.fr",
+    "api-adresse.data.gouv.fr",
 )
 
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")

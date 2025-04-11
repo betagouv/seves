@@ -1,3 +1,5 @@
+import json
+
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -6,7 +8,6 @@ from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
-
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id"]
 
@@ -239,3 +240,91 @@ def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_
     creation_page.fill_required_fields(evenement)
     numero = "Événement produit : " + str(evenement_1.numero)
     choice_js_cant_pick(creation_page.page, "#liens-libre .choices", numero, numero)
+
+
+def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page, choice_js_fill_from_element):
+    evenement = EvenementProduitFactory.build()
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
+
+    creation_page.open_etablissement_modal()
+    creation_page.current_modal_raison_sociale_field.fill("Foo")
+    choice_js_fill_from_element(
+        page, creation_page.current_modal_address_field, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
+    )
+    creation_page.close_etablissement_modal()
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.adresse_lieu_dit == "251 Rue de Vaugirard"
+    assert etablissement.commune == "Paris"
+    assert etablissement.code_insee == "75115"
+    assert etablissement.pays.name == "France"
+    assert etablissement.departement == "Paris"
+
+
+def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Page, choice_js_fill_from_element):
+    evenement = EvenementProduitFactory.build()
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
+
+    creation_page.open_etablissement_modal()
+    creation_page.current_modal_raison_sociale_field.fill("Foo")
+    creation_page.force_etablissement_adresse("Mon addresse qui n'existe pas")
+    creation_page.close_etablissement_modal()
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.adresse_lieu_dit == "Mon addresse qui n'existe pas"
+    assert etablissement.commune == ""
+    assert etablissement.code_insee == ""
+    assert etablissement.pays.name == ""
+    assert etablissement.departement == ""
