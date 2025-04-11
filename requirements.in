@@ -2,7 +2,6 @@ Django
 django-environ
 psycopg2-binary
 gunicorn
-dj-static
 playwright
 ruff
 pre-commit
@@ -27,3 +26,4 @@ redis
 django-csp
 django-countries
 testcontainers[sftp]
+whitenoise
