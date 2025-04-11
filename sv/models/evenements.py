@@ -15,6 +15,8 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
     EmailNotificationMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
 )
 from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
@@ -32,6 +34,8 @@ class Evenement(
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
     EmailNotificationMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -220,25 +224,4 @@ class Evenement(
         return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
 
     def can_add_fiche_zone_delimitee(self, user):
-        return self._user_can_interact(user)
-
-    def can_add_agent(self, user):
-        return self._user_can_interact(user)
-
-    def can_add_structure(self, user):
-        return self._user_can_interact(user)
-
-    def can_delete_contact(self, user):
-        return self._user_can_interact(user)
-
-    def can_add_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_update_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_delete_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_download_document(self, user):
         return self._user_can_interact(user)

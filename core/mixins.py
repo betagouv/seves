@@ -426,3 +426,33 @@ class WithNumeroMixin(models.Model):
     @property
     def numero(self):
         return f"{self.numero_annee}-{self.numero_evenement}"
+
+
+class BasePermissionMixin:
+    def _user_can_interact(self, user):
+        raise NotImplementedError
+
+
+class WithDocumentPermissionMixin(BasePermissionMixin):
+    def can_add_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_update_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_document(self, user):
+        return self._user_can_interact(user)
+
+    def can_download_document(self, user):
+        return self._user_can_interact(user)
+
+
+class WithContactPermissionMixin(BasePermissionMixin):
+    def can_add_agent(self, user):
+        return self._user_can_interact(user)
+
+    def can_add_structure(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_contact(self, user):
+        return self._user_can_interact(user)
