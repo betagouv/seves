@@ -4,6 +4,10 @@
 {% block extrahead %}
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
 {% endblock %}
+{% block scripts %}
+  <script type="text/javascript" src="{% static 'ssa/_rappel_conso_link.js' %}"></script>
+{% endblock %}
+
 {% block content %}
   <main class="main-container">
     <div>
@@ -106,7 +110,7 @@
             <div class="white-container">
               <h2 class="fr-h6">Rappel conso</h2>
               {% for numero in object.numeros_rappel_conso %}
-                {{ numero }}
+                <span class="rappel-conso-link fr-mr-1w">{{ numero }}</span>
               {% empty %}
                 nc.
               {% endfor %}
