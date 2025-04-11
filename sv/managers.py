@@ -1,10 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Exists
-from django.db.models.functions import Cast
-from core.models import Visibilite, FinSuiviContact
-
+from django.db.models.functions import Cast, Greatest
 from django.db.models import IntegerField, Func, Value
+
+from core.models import Visibilite, FinSuiviContact
+from sv.managers_mixins import WithDerniereMiseAJourManagerMixin
 
 
 class SplitPart(Func):
@@ -22,7 +23,7 @@ class StructurePreleveuseManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
-class FicheDetectionManager(models.Manager):
+class FicheDetectionManager(WithDerniereMiseAJourManagerMixin, models.Manager):
     def get_queryset(self):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
 
@@ -83,7 +84,7 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         return self.filter(query)
 
 
-class FicheZoneManager(models.Manager):
+class FicheZoneManager(WithDerniereMiseAJourManagerMixin, models.Manager):
     def get_queryset(self):
         return FicheZoneQuerySet(self.model, using=self._db)
 
@@ -99,7 +100,7 @@ class FicheZoneQuerySet(FichesCommonQueryset):
         )
 
 
-class EvenementManager(models.Manager):
+class EvenementManager(WithDerniereMiseAJourManagerMixin, models.Manager):
     def get_queryset(self):
         return EvenementQueryset(self.model, using=self._db).filter(is_deleted=False)
 
@@ -107,6 +108,26 @@ class EvenementManager(models.Manager):
 class EvenementQueryset(models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero_annee", "-numero_evenement")
+
+    def with_date_derniere_mise_a_jour_and_order(self):
+        """
+        Calcule la date la plus récente de modification parmi l'événement,
+        ses détections et sa fiche zone délimitée, puis trie le queryset par cette date.
+        """
+        return self.annotate(
+            date_derniere_mise_a_jour_detections=models.Max(
+                "detections__date_derniere_mise_a_jour",
+            ),
+            date_derniere_mise_a_jour_zone=models.F(
+                "fiche_zone_delimitee__date_derniere_mise_a_jour",
+            ),
+            date_derniere_mise_a_jour_globale=Greatest(
+                "date_derniere_mise_a_jour",
+                "date_derniere_mise_a_jour_detections",
+                "date_derniere_mise_a_jour_zone",
+                output_field=models.DateTimeField(),
+            ),
+        ).order_by("-date_derniere_mise_a_jour_globale")
 
     def get_user_can_view(self, user):
         from sv.models import Evenement

@@ -4,7 +4,7 @@ from django.db import transaction
 import reversion
 from django.forms.models import model_to_dict
 
-from sv.models import Lieu, Prelevement, ZoneInfestee, FicheZoneDelimitee, VersionFicheZoneDelimitee
+from sv.models import Lieu, Prelevement, ZoneInfestee, FicheZoneDelimitee, VersionFicheZoneDelimitee, Evenement
 
 
 @receiver(pre_delete, sender=Lieu)
@@ -90,3 +90,4 @@ def create_evenement_version_on_fiche_zone_delimitee_delete(sender, instance: Fi
             zone_data["zones_infestees"] = [model_to_dict(zi) for zi in zones_infestees]
             reversion.add_to_revision(evenement)
             reversion.add_meta(VersionFicheZoneDelimitee, fiche_zone_delimitee_data=zone_data)
+        Evenement.objects.update_date_derniere_mise_a_jour(evenement.id)

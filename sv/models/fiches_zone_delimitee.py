@@ -2,7 +2,7 @@ from functools import cached_property
 
 import reversion
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import TextChoices
 from django.urls import reverse
 from reversion.models import Version, Revision
@@ -12,10 +12,11 @@ from core.versions import get_versions_from_ids
 from sv.managers import (
     FicheZoneManager,
 )
+from sv.models import WithDerniereMiseAJourMixin
 
 
 @reversion.register()
-class FicheZoneDelimitee(models.Model):
+class FicheZoneDelimitee(WithDerniereMiseAJourMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -181,5 +182,7 @@ class ZoneInfestee(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        with reversion.create_revision():
-            super().save(*args, **kwargs)
+        with transaction.atomic():
+            with reversion.create_revision():
+                super().save(*args, **kwargs)
+            FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.fiche_zone_delimitee.id)

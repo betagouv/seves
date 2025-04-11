@@ -22,6 +22,7 @@ from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
+from .models_mixins import WithDerniereMiseAJourMixin
 from ..managers import EvenementManager
 
 
@@ -36,6 +37,7 @@ class Evenement(
     EmailNotificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
+    WithDerniereMiseAJourMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")

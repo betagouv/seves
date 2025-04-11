@@ -16,6 +16,7 @@ from sv.managers import (
 )
 from .lieux import Lieu
 from .prelevements import Prelevement
+from .models_mixins import WithDerniereMiseAJourMixin
 from ..validators import validate_numero_detection
 
 
@@ -45,6 +46,7 @@ class StatutEvenement(models.Model):
 @reversion.register()
 class FicheDetection(
     AllowsSoftDeleteMixin,
+    WithDerniereMiseAJourMixin,
     models.Model,
 ):
     class Meta:
@@ -122,16 +124,21 @@ class FicheDetection(
         return self.numero_detection
 
     def _handle_hors_zone_infestee_change(self):
-        if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
-            with reversion.create_revision():
-                reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en hors zone infestée")
-                reversion.add_to_revision(self.hors_zone_infestee)
-        elif self._original_state["hors_zone_infestee"] and self.hors_zone_infestee_id is None:
-            from . import FicheZoneDelimitee
+        from . import FicheZoneDelimitee
 
-            with reversion.create_revision():
-                reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée en hors zone infestée")
-                reversion.add_to_revision(FicheZoneDelimitee.objects.get(pk=self._original_state["hors_zone_infestee"]))
+        if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
+            with transaction.atomic():
+                with reversion.create_revision():
+                    reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en hors zone infestée")
+                    reversion.add_to_revision(self.hors_zone_infestee)
+                FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.hors_zone_infestee.id)
+        elif self._original_state["hors_zone_infestee"] and self.hors_zone_infestee_id is None:
+            with transaction.atomic():
+                fiche_zone_delimitee = FicheZoneDelimitee.objects.get(pk=self._original_state["hors_zone_infestee"])
+                with reversion.create_revision():
+                    reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée en hors zone infestée")
+                    reversion.add_to_revision(fiche_zone_delimitee)
+                FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(fiche_zone_delimitee.id)
 
     def _handle_zone_infestee_change(self):
         from . import ZoneInfestee
