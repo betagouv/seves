@@ -10,17 +10,34 @@
 
 {% block content %}
     <div class="fr-container fr-pt-4w">
-
         <h1 class="fr-h1">Gestion des droits d'accès</h1>
-        <div class="white-container">
+        <h2 class="fr-h6">Structure : {{ user.agent.structure }}</h2>
+
+        <div class="users-container">
             <form method="post" action="">
-                <h3 class="fr-h5">Structure : {{ user.agent.structure }}</h3>
-                <div class="user-permissions--container">
-                    {% for field in form  %}
-                        {{ field }}
-                    {% endfor %}
-                </div>
                 {% csrf_token %}
+
+                <div class="fr-grid-row fr-grid-row--middle fr-mb-1w">
+                    <div class="fr-col-offset-{% if can_manage_sv and can_manage_ssa %}8{% else %}10{% endif %}"></div>
+                    {% if can_manage_sv %}
+                        <div class="group-name fr-col-2 fr-p-3v">SV</div>
+                    {% endif %}
+                    {% if can_manage_ssa %}
+                        <div class="group-name fr-col-2 fr-p-3v">SSA</div>
+                    {% endif %}
+                </div>
+                {% for user_data in users_with_fields %}
+                    <div class="user fr-grid-row fr-grid-row--middle fr-mb-1w">
+                        <div class="fr-col-{% if can_manage_sv and can_manage_ssa %}8{% else %}10{% endif %} fr-pl-2w">{{ user_data.user.agent }}</div>
+                        {% if can_manage_sv %}
+                            <div class="fr-col-2 fr-pt-1w fr-pl-2w">{{ user_data.sv_field }}</div>
+                        {% endif %}
+                        {% if can_manage_ssa %}
+                            <div class="fr-col-2 fr-pt-1w fr-pl-3w">{{ user_data.ssa_field }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-2w">
                     <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
                     <button id="cancel-link" class="fr-btn fr-btn--secondary">Annuler</button>
