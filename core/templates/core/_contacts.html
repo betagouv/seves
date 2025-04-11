@@ -1,32 +1,40 @@
 <div class="fr-container--fluid">
-    <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col-12 fr-col-lg-6">
-            <form action="{% url 'structure-add' %}" method="post" id="add-contact-structure-form">
-                {% csrf_token %}
-                {{ add_contact_structure_form.content_id }}
-                {{ add_contact_structure_form.content_type_id }}
-                <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.label_tag }}</p>
-                <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.help_text }}</p>
-                <div class="contact-form-container">
-                    <div class="contact-form-input">{{ add_contact_structure_form.contacts_structures }}</div>
-                    <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+
+    {% if can_add_structure or can_add_agent %}
+        <div class="fr-grid-row fr-grid-row--gutters">
+            {% if can_add_structure %}
+                <div class="fr-col-12 fr-col-lg-6">
+                    <form action="{% url 'structure-add' %}" method="post" id="add-contact-structure-form">
+                        {% csrf_token %}
+                        {{ add_contact_structure_form.content_id }}
+                        {{ add_contact_structure_form.content_type_id }}
+                        <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.label_tag }}</p>
+                        <p class="fr-mb-3v">{{ add_contact_structure_form.contacts_structures.help_text }}</p>
+                        <div class="contact-form-container">
+                            <div class="contact-form-input">{{ add_contact_structure_form.contacts_structures }}</div>
+                            <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </div>
-        <div class="fr-col-12 fr-col-lg-6">
-            <form action="{% url 'agent-add' %}" method="post" id="add-contact-agent-form">
-                {% csrf_token %}
-                {{ add_contact_agent_form.content_id }}
-                {{ add_contact_agent_form.content_type_id }}
-                <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.label_tag }}</p>
-                <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.help_text }}</p>
-                <div class="contact-form-container">
-                    <div class="contact-form-input">{{ add_contact_agent_form.contacts_agents }}</div>
-                    <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+            {% endif %}
+            {% if can_add_agent %}
+                <div class="fr-col-12 fr-col-lg-6">
+                    <form action="{% url 'agent-add' %}" method="post" id="add-contact-agent-form">
+                        {% csrf_token %}
+                        {{ add_contact_agent_form.content_id }}
+                        {{ add_contact_agent_form.content_type_id }}
+                        <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.label_tag }}</p>
+                        <p class="fr-mb-3v">{{ add_contact_agent_form.contacts_agents.help_text }}</p>
+                        <div class="contact-form-container">
+                            <div class="contact-form-input">{{ add_contact_agent_form.contacts_agents }}</div>
+                            <input type="submit" value="Ajouter" class="contact-form-btn fr-btn fr-btn--secondary">
+                        </div>
+                    </form>
                 </div>
-            </form>
+            {% endif %}
         </div>
-    </div>
+    {% endif %}
+
     <div id="contacts" class="fr-grid-row fr-grid-row--gutters">
         <div class="fr-col-12 fr-col-lg-6">
             {% for contact in contacts_structures %}
@@ -43,4 +51,5 @@
             {% endfor %}
         </div>
     </div>
+
 </div>

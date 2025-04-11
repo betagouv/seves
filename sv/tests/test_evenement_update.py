@@ -265,3 +265,16 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
     evenement.refresh_from_db()
     assert evenement.numero_europhyt == ""
     assert evenement.numero_rasff == ""
+
+
+def test_edit_button_not_visible_if_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Modifier l'événement")).not_to_be_visible()
+
+
+def test_cant_access_update_page_if_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_update_url()}")
+    expect(page.get_by_text("Vous n'avez pas le droit d'accéder à cette page.")).to_be_visible()

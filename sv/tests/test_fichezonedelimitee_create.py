@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
 from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection
+from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Evenement
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
 
@@ -299,3 +299,18 @@ def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
     evenement.refresh_from_db()
     assert evenement.fiche_zone_delimitee is None
     assert response.status_code == 403
+
+
+def test_cant_see_add_fiche_zone_delimitee_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ajouter une fiche zone")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_forge_add_fiche_zone_delimitee_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.post(reverse("sv:fiche-zone-delimitee-creation"), data={"evenement": evenement.pk})
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.fiche_zone_delimitee is None

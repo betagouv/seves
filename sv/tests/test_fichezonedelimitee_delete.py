@@ -38,3 +38,27 @@ def test_cant_delete_fiche_zone_delimitee_without_permission(client, mocked_auth
 
     fiche_zone.refresh_from_db()
     assert FicheZoneDelimitee.objects.filter(pk=fiche_zone.pk).exists()
+
+
+def test_cant_see_delete_fiche_zone_delimitee_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), etat=Evenement.Etat.CLOTURE)
+
+    page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+
+    expect(page.get_by_role("button", name="Supprimer la zone")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_delete_fiche_zone_delimitee_if_evenement_is_cloture(client, mocked_authentification_user):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(
+        reverse("sv:fiche-zone-delimitee-delete", kwargs={"pk": fiche_zone.pk}),
+        data={"next": evenement.get_absolute_url()},
+    )
+    assert response.status_code == 403
+
+    fiche_zone.refresh_from_db()
+    assert FicheZoneDelimitee.objects.filter(pk=fiche_zone.pk).exists()

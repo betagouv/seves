@@ -122,5 +122,5 @@ class WithClotureContextMixin:
         context["is_evenement_can_be_cloturer"] = evenement.can_be_cloturer(
             self.request.user, contacts_not_in_fin_suivi
         )
-        context["is_cloture"] = evenement.is_cloture()
+        context["is_cloture"] = evenement.is_cloture
         return context

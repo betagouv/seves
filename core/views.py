@@ -39,7 +39,7 @@ class DocumentUploadView(
         return get_object_or_404(ModelClass, pk=self.request.POST.get("object_id"))
 
     def test_func(self):
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_add_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -83,7 +83,7 @@ class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return self.document.content_object
 
     def test_func(self):
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_delete_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
         self.document.is_deleted = True
@@ -99,7 +99,7 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
     http_method_names = ["post"]
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_update_document(self.request.user)
 
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
@@ -122,7 +122,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
         return self.fiche
 
     def test_func(self):
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_delete_contact(self.request.user)
 
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))
@@ -342,7 +342,7 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         return self.obj
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_add_structure(self.request.user)
 
     def post(self, request, *args, **kwargs):
         form = StructureAddForm(request.POST)
@@ -375,7 +375,7 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         return self.obj
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_user_access(self.request.user)
+        return self.get_fiche_object().can_add_agent(self.request.user)
 
     def post(self, request, *args, **kwargs):
         form = AgentAddForm(request.POST)
