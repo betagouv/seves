@@ -2,7 +2,7 @@ from functools import cached_property
 
 import reversion
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import TextChoices
 from django.urls import reverse
 from reversion.models import Version, Revision
@@ -178,5 +178,9 @@ class ZoneInfestee(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        with reversion.create_revision():
-            super().save(*args, **kwargs)
+        from sv.models import Evenement
+
+        with transaction.atomic():
+            with reversion.create_revision():
+                super().save(*args, **kwargs)
+            Evenement.update_date_derniere_mise_a_jour(self.fiche_zone_delimitee.evenement.id)

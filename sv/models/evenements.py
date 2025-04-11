@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils import timezone
 from reversion.models import Version
 
 from core.mixins import (
@@ -53,6 +54,13 @@ class Evenement(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
+    date_derniere_mise_a_jour = models.DateTimeField(
+        db_index=True,
+        null=True,
+        blank=True,
+        verbose_name="Date dernière mise à jour",
+        help_text="Date de la dernière modification de l'événement ou de ses objets associés",
+    )
 
     fin_suivi = GenericRelation(FinSuiviContact)
     documents = GenericRelation(Document)
@@ -91,6 +99,7 @@ class Evenement(
                     annee, numero = Evenement._get_annee_and_numero()
                     self.numero_annee = annee
                     self.numero_evenement = numero
+                self.date_derniere_mise_a_jour = timezone.now()
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -127,6 +136,7 @@ class Evenement(
             for detection in self.detections.all():
                 detection.soft_delete(user)
             self.is_deleted = True
+            self.date_derniere_mise_a_jour = timezone.now()
             self.save()
 
     @property
@@ -191,3 +201,7 @@ class Evenement(
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
+
+    @classmethod
+    def update_date_derniere_mise_a_jour(cls, evenement_id):
+        cls.objects.filter(pk=evenement_id).update(date_derniere_mise_a_jour=timezone.now())

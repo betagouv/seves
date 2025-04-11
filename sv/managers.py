@@ -108,6 +108,9 @@ class EvenementQueryset(models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero_annee", "-numero_evenement")
 
+    def order_by_date_derniere_mise_a_jour(self):
+        return self.order_by("-date_derniere_mise_a_jour")
+
     def get_user_can_view(self, user):
         from sv.models import Evenement
 

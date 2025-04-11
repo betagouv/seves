@@ -77,7 +77,7 @@ class EvenementListView(ListView):
             .with_fin_de_suivi(contact)
             .with_nb_fiches_detection()
             .optimized_for_list()
-            .order_by_numero()
+            .order_by_date_derniere_mise_a_jour()
         )
         self.filter = EvenementFilter(self.request.GET, queryset=queryset)
         return self.filter.qs

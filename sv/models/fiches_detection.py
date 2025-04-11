@@ -146,6 +146,8 @@ class FicheDetection(
                 reversion.add_to_revision(ZoneInfestee.objects.get(pk=self._original_state["zone_infestee"]))
 
     def save(self, *args, **kwargs):
+        from . import Evenement
+
         need_revision = True
         if self.hors_zone_infestee_id != self._original_state["hors_zone_infestee"]:
             self._handle_hors_zone_infestee_change()
@@ -159,6 +161,8 @@ class FicheDetection(
         if need_revision:
             with reversion.create_revision():
                 self._save(*args, **kwargs)
+
+        Evenement.update_date_derniere_mise_a_jour(self.evenement_id)
 
     def get_absolute_url(self):
         return self.evenement.get_absolute_url()

@@ -15,6 +15,7 @@ from sv.factories import (
     ZoneInfesteeFactory,
     EvenementFactory,
     StructurePreleveuseFactory,
+    OrganismeNuisibleFactory,
 )
 from sv.models import (
     ZoneInfestee,
@@ -711,3 +712,245 @@ def test_default_detection_order():
     detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection="3")
 
     assert list(evenement.detections.all()) == [detection_2, detection_1, detection_3]
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_evenement_creation():
+    evenement = EvenementFactory()
+    assert evenement.date_derniere_mise_a_jour is not None
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_evenement_update():
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.organisme_nuisible = OrganismeNuisibleFactory()
+    evenement.save()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_evenement_delete():
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.is_deleted = True
+    evenement.save()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_detection_creation():
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    FicheDetectionFactory(evenement=evenement)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_detection_update():
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(fiche_detection.evenement).first()
+    fiche_detection.numero_europhyt = "123456"
+    fiche_detection.save()
+    fiche_detection.evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(fiche_detection.evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_detection_delete():
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(fiche_detection.evenement).first()
+    fiche_detection.delete()
+    fiche_detection.evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(fiche_detection.evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_lieu_creation():
+    fiche_detection = FicheDetectionFactory()
+    evenement = fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    LieuFactory(fiche_detection=fiche_detection)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_lieu_update():
+    lieu = LieuFactory()
+    evenement = lieu.fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    lieu.nom = "Nouveau nom"
+    lieu.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_lieu_delete():
+    lieu = LieuFactory()
+    evenement = lieu.fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    lieu.delete()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_prelevement_creation():
+    fiche_detection = FicheDetectionFactory()
+    evenement = fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    PrelevementFactory(lieu__fiche_detection=fiche_detection)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_prelevement_update():
+    prelevement = PrelevementFactory()
+    evenement = prelevement.lieu.fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    prelevement.resultat = Prelevement.Resultat.DETECTE
+    prelevement.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_prelevement_delete():
+    prelevement = PrelevementFactory()
+    evenement = prelevement.lieu.fiche_detection.evenement
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    prelevement.delete()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_zone_delimitee_creation():
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.fiche_zone_delimitee = FicheZoneFactory()
+    evenement.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_zone_delimitee_update():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.fiche_zone_delimitee.commentaire = "Nouveau commentaire"
+    evenement.fiche_zone_delimitee.save()
+    evenement.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_fiche_zone_delimitee_delete():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.fiche_zone_delimitee.delete()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_zone_infestee_creation():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_zone_infestee_update():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    zone_infestee.nom = "Nouveau nom"
+    zone_infestee.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_zone_infestee_delete():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    zone_infestee.delete()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_add_detection_in_hors_zone_delimitee():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    FicheDetectionFactory(evenement=evenement, hors_zone_infestee=evenement.fiche_zone_delimitee)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_delete_detection_in_hors_zone_delimitee():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    fiche_detection = FicheDetectionFactory(evenement=evenement, hors_zone_infestee=evenement.fiche_zone_delimitee)
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    fiche_detection.hors_zone_infestee = None
+    fiche_detection.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_add_detection_in_zone_infestee():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    FicheDetectionFactory(evenement=evenement, zone_infestee=zone_infestee)
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
+
+
+@pytest.mark.django_db
+def test_evenement_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee():
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory(evenement=evenement, zone_infestee=zone_infestee)
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(evenement).first()
+    fiche_detection.zone_infestee = None
+    fiche_detection.save()
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(evenement).first().id == version.id
