@@ -1,3 +1,5 @@
+import json
+
 from playwright.sync_api import Page, expect
 
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
@@ -64,3 +66,25 @@ def test_evenement_produit_detail_page_content_etablissement(live_server, page: 
     expect(details_page.etablissement_modal.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement)).to_be_visible()
+
+
+def test_evenement_produit_detail_page_link_to_rappel_conso(live_server, page: Page):
+    def handle(route):
+        data = {"nhits": 1, "records": [{"fields": {"id": 1234}}]}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+
+    evenement = EvenementProduitFactory(numeros_rappel_conso=["2025-03-0176"])
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.page.route(
+        "https://data.economie.gouv.fr/api/records/1.0/search/?dataset=rappelconso-v2-gtin-espaces&refine.numero_fiche=2025-03-0176",
+        handle,
+    )
+
+    details_page.navigate(evenement)
+
+    assert (
+        details_page.rappel_block.get_by_role("link", name="2025-03-0176").get_attribute("href")
+        == "https://rappel.conso.gouv.fr/fiche-rappel/1234/Interne"
+    )
+    assert details_page.rappel_block.get_by_role("link", name="2025-03-0176").get_attribute("target") == "_blank"
