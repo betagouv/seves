@@ -3,3 +3,8 @@ fileignoreconfig:
   checksum: 4a3cc3b9d5ca2556fe92ff75c8aa339ef5e52aa3e885da682d754df49b0c3aef
 - filename: ssa/models/evenement_produit.py
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+- filename: seves/settings.py
+  checksum: 29175afed1b25ca8075dbdeb1d839316d873b9e725b39066fedefa5fd0fbec96
+- filename: ssa/static/ssa/_etablissement_form.js
+  checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
+version: "1.0"
