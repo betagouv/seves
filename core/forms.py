@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField
+from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
 from core.models import Document, Contact, Message, Visibilite, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -62,7 +62,9 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
     nom = forms.CharField(
         help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
     )
-    document_type = forms.ChoiceField(choices=Document.TypeDocument, label="Type de document")
+    document_type = forms.ChoiceField(
+        choices=Document.TypeDocument, label="Type de document", initial=Document.TypeDocument.ARRETE
+    )
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
@@ -78,11 +80,22 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         super().__init__(*args, **kwargs)
         self.add_content_type_fields(obj)
         self.add_next_field(next)
+        self.set_file_accept_attribute()
+
+    def set_file_accept_attribute(self):
+        """Définit l'attribut 'accept' du widget fichier en fonction du type de document sélectionné."""
+        document_type = self.data.get("document_type", self.fields["document_type"].initial)
+        accept_attribute_per_document_type = Document.get_accept_attribute_per_document_type()
+        self.fields["file"].widget.attrs["accept"] = accept_attribute_per_document_type[document_type]
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
-        if file and file.size > MAX_UPLOAD_SIZE_BYTES:
+        if not file:
+            return
+        if file.size > MAX_UPLOAD_SIZE_BYTES:
             raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
+        if document_type := self.cleaned_data.get("document_type"):
+            Document.validate_file_extention_for_document_type(file, document_type)
         return file
 
 
@@ -238,11 +251,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):
-    document_type = forms.ChoiceField(
-        choices=[
-            ("", ""),
-        ]
-        + Document.TypeDocument.choices,
+    document_type = SEVESChoiceField(
+        choices=Document.TypeDocument.choices,
         label="Type de document",
         required=False,
     )
