@@ -8,17 +8,26 @@
 
 {% block content %}
     <div class="fr-container fr-pt-4w">
-
         <h1 class="fr-h1">Gestion des droits d'accès</h1>
-        <div class="white-container">
+        <h2 class="fr-h6">Structure : {{ user.agent.structure }}</h2>
+
+        <div class="users-container">
             <form method="post" action="">
-                <h3 class="fr-h5">Structure : {{ user.agent.structure }}</h3>
-                <div class="user-permissions--container">
-                    {% for field in form  %}
-                        {{ field }}
-                    {% endfor %}
-                </div>
                 {% csrf_token %}
+
+                <div class="fr-grid-row fr-grid-row--middle fr-mb-1w">
+                    <div class="fr-col-offset-8"></div>
+                    <div class="group-name fr-col-2 fr-p-3v">SV</div>
+                    <div class="group-name fr-col fr-p-3v">SSA</div>
+                </div>
+                {% for user_data in users_with_fields %}
+                    <div class="user fr-grid-row fr-grid-row--middle fr-mb-1w">
+                        <div class="fr-col-8 fr-pl-2w">{{ user_data.user.agent }}</div>
+                        <div class="fr-col-2 fr-pt-1w fr-pl-2w">{{ user_data.sv_field }}</div>
+                        <div class="fr-col-2 fr-pt-1w fr-pl-3w">{{ user_data.ssa_field }}</div>
+                    </div>
+                {% endfor %}
+
                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-2w">
                     <button class="fr-btn" type="submit">Enregistrer les modifications</button>
                 </div>
