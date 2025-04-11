@@ -1,5 +1,12 @@
-.user-permissions--container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px 40px;
+.users-container {
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+.group-name, .user {
+    background-color: white;
+    font-weight: bold;
+}
+.user {
+    padding: 0.8rem;
 }
