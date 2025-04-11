@@ -7,3 +7,8 @@ fileignoreconfig:
   checksum: 462c90d5f00940a51e6fa0f1c176daa4c1a23e0cb14dacb70e0d0a30caecfcf2
 - filename: ssa/views/produit.py
   checksum: eadd0e65dfa86ad93c0666ab7abafa1f6a0ed07908892e5852324b17ab35797a
+- filename: seves/settings.py
+  checksum: 29175afed1b25ca8075dbdeb1d839316d873b9e725b39066fedefa5fd0fbec96
+- filename: ssa/static/ssa/_etablissement_form.js
+  checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
+version: "1.0"

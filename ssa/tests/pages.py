@@ -69,19 +69,42 @@ class EvenementProduitCreationPage:
         self.page.locator(".fr-tag", has_text=numero).click()
 
     def add_etablissement_with_required_fields(self, etablissement: Etablissement):
-        self.page.locator("#add-etablissement").click()
-        modal = self.page.locator(".fr-modal__body").locator("visible=true")
-
+        modal = self.open_etablissement_modal()
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        modal.locator(".save-btn").click()
+        self.close_etablissement_modal()
+
+    def open_etablissement_modal(self):
+        self.page.locator("#add-etablissement").click()
+        return self.current_modal
+
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    @property
+    def current_modal_address_field(self):
+        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
+
+    @property
+    def current_modal_raison_sociale_field(self):
+        return self.current_modal.locator('[id$="raison_sociale"]')
+
+    def close_etablissement_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def force_etablissement_adresse(self, adresse):
+        self.current_modal_address_field.click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(adresse)
+        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
 
     def add_etablissement(self, etablissement: Etablissement):
-        self.page.locator("#add-etablissement").click()
-        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+        modal = self.open_etablissement_modal()
 
         modal.locator('[id$="siret"]').fill(etablissement.siret)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        modal.locator('[id$="_lieu_dit"]').fill(etablissement.adresse_lieu_dit)
+        self.force_etablissement_adresse(etablissement.adresse_lieu_dit)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
         modal.locator('[id$="-departement"]').select_option(etablissement.departement)
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
@@ -89,8 +112,8 @@ class EvenementProduitCreationPage:
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
         modal.locator('[id$="-quantite_en_stock"]').fill(str(etablissement.quantite_en_stock))
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
-        modal.locator(".save-btn").click()
-        modal.wait_for(state="hidden", timeout=2_000)
+
+        self.close_etablissement_modal()
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
