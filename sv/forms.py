@@ -10,9 +10,14 @@ from django.utils.translation import ngettext
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
-from core.forms import DSFRForm, VisibiliteUpdateBaseForm
+from core.form_mixins import DSFRForm
+from core.forms import VisibiliteUpdateBaseForm
 from core.models import Structure, Visibilite
-from sv.form_mixins import WithDataRequiredConversionMixin, WithFreeLinksMixin, WithLatestVersionLocking
+from sv.form_mixins import (
+    WithDataRequiredConversionMixin,
+    WithLatestVersionLocking,
+    WithEvenementFreeLinksMixin,
+)
 from sv.models import (
     FicheZoneDelimitee,
     ZoneInfestee,
@@ -508,7 +513,7 @@ class EvenementForm(DSFRForm, forms.ModelForm):
         return instance
 
 
-class EvenementUpdateForm(DSFRForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
+class EvenementUpdateForm(DSFRForm, WithEvenementFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     class Meta:
         model = Evenement
         fields = [

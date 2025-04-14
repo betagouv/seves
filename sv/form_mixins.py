@@ -1,9 +1,8 @@
+from django import forms
 from django.core.exceptions import ValidationError
 
-from core.fields import MultiModelChoiceField
-from core.models import LienLibre
+from core.form_mixins import WithFreeLinksMixin
 from sv.models import Evenement
-from django import forms
 
 
 class WithDataRequiredConversionMixin:
@@ -15,41 +14,17 @@ class WithDataRequiredConversionMixin:
                 field.field.required = False
 
 
-class WithFreeLinksMixin:
-    def save_free_links(self, instance):
-        links_ids_to_keep = []
-        for obj in self.cleaned_data["free_link"]:
-            link = LienLibre.objects.for_both_objects(obj, instance)
+class WithEvenementFreeLinksMixin(WithFreeLinksMixin):
+    model_label = "Événement"
 
-            if link:
-                links_ids_to_keep.append(link.id)
-            else:
-                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
-                links_ids_to_keep.append(link.id)
-
-        links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
-
-    def _add_free_links(self, model):
-        queryset = (
+    def get_queryset(self, model, user, instance):
+        return (
             model.objects.all()
             .order_by_numero()
-            .get_user_can_view(self.user)
-            .exclude(id=self.instance.id)
+            .get_user_can_view(user)
+            .exclude(id=instance.id)
             .exclude(etat=Evenement.Etat.BROUILLON)
         )
-        self.fields["free_link"] = MultiModelChoiceField(
-            required=False,
-            label="Sélectionner un objet",
-            model_choices=[
-                ("Événement", queryset),
-            ],
-        )
-
-    def clean_free_link(self):
-        if self.instance and self.instance in self.cleaned_data["free_link"]:
-            raise ValidationError("Vous ne pouvez pas lier un objet a lui-même.")
-        return self.cleaned_data["free_link"]
 
 
 class WithLatestVersionLocking(forms.Form):

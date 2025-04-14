@@ -2,7 +2,7 @@ import django_filters
 from django.forms import forms
 
 from .models import Document, Structure
-from .forms import DSFRForm
+from .form_mixins import DSFRForm
 
 
 class FilterForm(DSFRForm, forms.Form):
