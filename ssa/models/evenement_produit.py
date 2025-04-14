@@ -167,6 +167,11 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
 
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
+
     class Meta:
         constraints = [
             models.CheckConstraint(

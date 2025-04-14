@@ -108,7 +108,7 @@ class EvenementProduitDetailsPage:
         self.base_url = base_url
 
     def navigate(self, object):
-        self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
+        return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
 
     @property
     def title(self):
