@@ -1,6 +1,7 @@
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
+from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
@@ -208,3 +209,38 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, assert_model
 
     assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
     assert_models_are_equal(etablissements[1], etablissement_3, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_can_add_free_links(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory.build()
+    evenement_1, evenement_2 = EvenementProduitFactory.create_batch(2, etat=EvenementProduit.Etat.EN_COURS)
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(evenement_1.numero, choice_js_fill)
+    creation_page.add_free_link(evenement_2.numero, choice_js_fill)
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    evenement = EvenementProduit.objects.exclude(id__in=[evenement_1.id, evenement_2.id]).get()
+    assert LienLibre.objects.count() == 2
+
+    lien = LienLibre.objects.first()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == evenement_1
+
+    lien = LienLibre.objects.last()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == evenement_2
+
+
+def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
+    evenement = EvenementProduitFactory()
+    evenement_1 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    numero = "Événement produit : " + str(evenement_1.numero)
+    choice_js_cant_pick(creation_page.page, "#liens-libre .choices", numero, numero)

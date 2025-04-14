@@ -98,6 +98,9 @@ class EvenementProduitCreationPage:
     def delete_etablissement(self, index):
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
+    def add_free_link(self, numero, choice_js_fill):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), "Événement produit : " + str(numero))
+
 
 class EvenementProduitDetailsPage:
     def __init__(self, page: Page, base_url):

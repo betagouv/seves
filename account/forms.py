@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from core.fields import DSFRToogle
-from core.forms import DSFRForm
+from core.form_mixins import DSFRForm
 
 User = get_user_model()
 
