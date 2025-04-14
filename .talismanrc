@@ -5,3 +5,5 @@ fileignoreconfig:
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
 - filename: seves/settings.py
   checksum: 462c90d5f00940a51e6fa0f1c176daa4c1a23e0cb14dacb70e0d0a30caecfcf2
+- filename: ssa/views/produit.py
+  checksum: eadd0e65dfa86ad93c0666ab7abafa1f6a0ed07908892e5852324b17ab35797a

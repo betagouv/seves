@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect, Http404
 from django.views.generic import CreateView, DetailView
 
@@ -56,9 +57,12 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         return context
 
 
-class EvenementProduitDetailView(WithFreeLinksListInContextMixin, DetailView):
+class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTestMixin, DetailView):
     model = EvenementProduit
     template_name = "ssa/evenement_produit_detail.html"
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
         return EvenementProduit.objects.all().select_related("createur")

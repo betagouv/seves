@@ -1,8 +1,10 @@
 import json
-
+import pytest
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
 
 
@@ -88,3 +90,26 @@ def test_evenement_produit_detail_page_link_to_rappel_conso(live_server, page: P
         == "https://rappel.conso.gouv.fr/fiche-rappel/1234/Interne"
     )
     assert details_page.rappel_block.get_by_role("link", name="2025-03-0176").get_attribute("target") == "_blank"
+
+
+def test_evenement_produit_detail_page_access_createur(live_server, page: Page):
+    for etat in [EvenementProduit.Etat.BROUILLON, EvenementProduit.Etat.EN_COURS, EvenementProduit.Etat.CLOTURE]:
+        evenement = EvenementProduitFactory(etat=etat)
+        details_page = EvenementProduitDetailsPage(page, live_server.url)
+        response = details_page.navigate(evenement)
+        assert response.status == 200
+
+
+@pytest.mark.parametrize(
+    "etat,status_code",
+    [
+        (EvenementProduit.Etat.BROUILLON, 403),
+        (EvenementProduit.Etat.EN_COURS, 200),
+        (EvenementProduit.Etat.CLOTURE, 200),
+    ],
+)
+def test_evenement_produit_detail_page_access_other_structure(live_server, page: Page, etat, status_code):
+    evenement = EvenementProduitFactory(etat=etat, createur=StructureFactory())
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    response = details_page.navigate(evenement)
+    assert response.status == status_code
