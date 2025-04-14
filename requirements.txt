@@ -22,7 +22,7 @@ botocore==1.34.134
     # via
     #   boto3
     #   s3transfer
-celery==5.4.0
+celery==5.5.1
     # via -r requirements.in
 certifi==2025.1.31
     # via
@@ -113,7 +113,7 @@ jmespath==1.0.1
     #   botocore
 josepy==1.14.0
     # via mozilla-django-oidc
-kombu==5.4.2
+kombu==5.5.2
     # via celery
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
@@ -209,10 +209,8 @@ typing-extensions==4.11.0
     #   pyee
     #   pyopenssl
     #   testcontainers
-tzdata==2025.1
-    # via
-    #   celery
-    #   kombu
+tzdata==2025.2
+    # via kombu
 urllib3==2.3.0
     # via
     #   botocore
