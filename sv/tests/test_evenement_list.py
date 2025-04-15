@@ -36,3 +36,14 @@ def test_commune_column_without_lieu(live_server, page: Page):
     FicheDetectionFactory()
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
     expect(page.get_by_text("nc.", exact=True)).to_be_visible()
+
+
+def test_duplicate_commune_appears_only_once(live_server, page: Page):
+    fiche = FicheDetectionFactory()
+    LieuFactory(commune="La Rochelle", fiche_detection=fiche)
+    LieuFactory(commune="La Rochelle", fiche_detection=fiche)
+    LieuFactory(commune="Bordeaux", fiche_detection=fiche)
+
+    page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
+
+    expect(page.get_by_text("La Rochelle, Bordeaux", exact=True)).to_be_visible()
