@@ -81,7 +81,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.statut_evenement_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_evenement_input).to_have_value("")
     statuts_evenement = list(StatutEvenement.objects.values_list("libelle", flat=True))
-    check_select_options(page, "Statut évènement", statuts_evenement)
+    check_select_options(page, "id_statut_evenement", statuts_evenement)
 
     expect(form_elements.organisme_nuisible_label).to_be_visible()
     expect(form_elements.organisme_nuisible_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
@@ -91,14 +91,14 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
     expect(form_elements.statut_reglementaire_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_reglementaire_input).to_have_value("")
     statuts_reglementaire = list(StatutReglementaire.objects.values_list("libelle", flat=True))
-    check_select_options(page, "Statut réglementaire", statuts_reglementaire)
+    check_select_options(page, "id_statut_reglementaire", statuts_reglementaire)
 
     expect(form_elements.contexte_label).to_be_visible()
     expect(form_elements.contexte_input).to_be_visible()
     expect(form_elements.contexte_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.contexte_input).to_have_value("")
     contextes = list(Contexte.objects.values_list("nom", flat=True))
-    check_select_options(page, "Contexte", contextes)
+    check_select_options(page, "id_contexte", contextes)
 
     expect(form_elements.date_1er_signalement_label).to_be_visible()
     expect(form_elements.date_1er_signalement_input).to_be_visible()
