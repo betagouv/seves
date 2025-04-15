@@ -92,9 +92,12 @@ class EvenementListView(ListView):
             evenement.readable_etat = etat_data["readable_etat"]
 
             evenement.all_lieux_with_commune = []
+            communes_set = set()
             for detection in evenement.detections.all():
-                if hasattr(detection, "lieux_list_with_commune"):
-                    evenement.all_lieux_with_commune.extend(detection.lieux_list_with_commune)
+                lieux = getattr(detection, "lieux_list_with_commune", [])
+                evenement.all_lieux_with_commune.extend(lieux)
+                communes_set.update(lieu.commune for lieu in lieux if lieu.commune)
+            evenement.communes_uniques = communes_set
 
         return context
 
