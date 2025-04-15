@@ -256,7 +256,7 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     date_premier_signalement = forms.DateField(
         label="Date 1er signalement",
         required=False,
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"max": datetime.date.today(), "type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     statut_reglementaire = forms.ModelChoiceField(
         label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=True
@@ -286,6 +286,7 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self.fields["date_premier_signalement"].widget.attrs["max"] = datetime.date.today().isoformat()
 
         if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (
             self.instance.pk and self.instance.evenement
