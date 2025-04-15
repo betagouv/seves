@@ -13,3 +13,5 @@ fileignoreconfig:
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
   checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214
+- filename: sv/views.py
+  checksum: 62b3a8a26bcb7a4ee9f8c73e92241093690212cfce216acf640079bfb36dcdfc

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -91,10 +93,13 @@ class EvenementListView(ListView):
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
 
-            evenement.all_lieux_with_commune = []
+            communes_dict = OrderedDict()
             for detection in evenement.detections.all():
-                if hasattr(detection, "lieux_list_with_commune"):
-                    evenement.all_lieux_with_commune.extend(detection.lieux_list_with_commune)
+                lieux = getattr(detection, "lieux_list_with_commune", [])
+                for lieu in lieux:
+                    if lieu.commune and lieu.commune not in communes_dict:
+                        communes_dict[lieu.commune] = lieu.id
+            evenement.communes_uniques = [commune for commune, _ in sorted(communes_dict.items(), key=lambda x: x[1])]
 
         return context
 
