@@ -29,11 +29,11 @@ def prelevement_form_elements(page: Page):
     return PrelevementFormDomElements(page)
 
 
-def check_select_options(page, label, expected_options):
-    options = page.locator(f"label:has-text('{label}') ~ select option").element_handles()
+def check_select_options(page, select_id, expected_options):
+    options = page.locator(f"#{select_id} option").element_handles()
     option_texts = [option.inner_text() for option in options]
     assert option_texts == [settings.SELECT_EMPTY_CHOICE] + expected_options, (
-        f"Les options pour {label} ne correspondent pas aux options attendues"
+        f"Les options pour {select_id} ne correspondent pas aux options attendues"
     )
 
 

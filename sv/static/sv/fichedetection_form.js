@@ -5,7 +5,8 @@ function setUpOrganismeNuisible(){
         classNames: {
             containerInner: 'fr-select',
         },
-        itemSelectText: ''
+        itemSelectText: '',
+        position: 'bottom'
     });
 
     choices.passedElement.element.addEventListener("choice", (event)=> {

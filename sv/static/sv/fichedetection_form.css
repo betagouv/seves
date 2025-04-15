@@ -68,49 +68,9 @@ main {
 }
 
 /* Objet de l'évènement */
-#organisme-nuisible,
-#statut-reglementaire,
-#contexte,
-#date-1er-signalement,
-#organisme-nuisible-readonly,
-#statut-reglementaire-readonly {
-    display: flex;
-    align-items: center;
-}
-#organisme-nuisible label,
-#statut-reglementaire label,
-#contexte label {
-    flex: 0.85;
-}
-#organisme-nuisible select,
-#statut-reglementaire select,
-#contexte select {
-    flex: 1.15;
-}
-#date-1er-signalement label {
-    flex: 0.80;
-}
-#date-1er-signalement input {
-    flex: 1.20;
-}
 #id_commentaire {
     min-height: 10rem;
 }
-
-#organisme-nuisible .choices {
-    flex: 1.42;
-}
-#organisme-nuisible-readonly-label,
-#statut-reglementaire-readonly-label {
-    font-weight: bold;
-}
-#organisme-nuisible-readonly-label {
-    flex: 0.60;
-}
-#statut-reglementaire-readonly-label {
-    flex: 0.95;
-}
-
 
 /* Lieux */
 #lieux-header {
