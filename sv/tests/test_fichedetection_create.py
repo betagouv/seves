@@ -22,6 +22,7 @@ from ..factories import (
     DepartementFactory,
     PositionChaineDistributionFactory,
     StructurePreleveuseFactory,
+    FicheDetectionFactory,
 )
 from ..models import (
     FicheDetection,
@@ -132,6 +133,14 @@ def test_date_creation_field_is_current_day(live_server, page: Page, form_elemen
     """Test que la date de création soit egale à la date du jour"""
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
+
+
+def test_update_detection_form_show_date_creation(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements
+):
+    detection = FicheDetectionFactory()
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    expect(form_elements.date_creation_input).to_have_value(detection.date_creation.strftime("%d/%m/%Y"))
 
 
 @pytest.mark.django_db
