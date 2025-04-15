@@ -60,7 +60,7 @@
                     <div id="informations-content">
                         <div id="date-creation">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
-                            <input type="text" id="date-creation-input" class="fr-input" value="{% now 'd/m/Y' %}" disabled>
+                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
                         <div id="statut-evenement">
                             {{ form.statut_evenement.label_tag }} {{ form.statut_evenement }}
