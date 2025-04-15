@@ -3,8 +3,10 @@ from django.contrib.postgres.forms import SimpleArrayField
 from django_countries.fields import CountryField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton
-from core.forms import DSFRForm
+from core.form_mixins import DSFRForm
+from core.mixins import WithEtatMixin
 from ssa.fields import SelectWithAttributeField
+from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import EvenementProduit, TypeEvenement, Source, CerfaRecu, TemperatureConservation, ActionEngagees
 from ssa.models import (
     Etablissement,
@@ -15,7 +17,7 @@ from ssa.models.evenement_produit import PretAManger
 from ssa.widgets import PositionDossierWidget
 
 
-class EvenementProduitForm(DSFRForm, forms.ModelForm):
+class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.ModelForm):
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     numero_rasff = forms.CharField(
         required=False,
@@ -61,9 +63,18 @@ class EvenementProduitForm(DSFRForm, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self._add_free_links(model=EvenementProduit)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
+
+    def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+        self.instance.createur = self.user.agent.structure
+        instance = super().save(commit)
+        self.save_free_links(instance)
+        return instance
 
     class Meta:
         model = EvenementProduit

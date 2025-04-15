@@ -1,4 +1,6 @@
-document.documentElement.addEventListener('dsfr.ready', () => {
+import {setUpFreeLinks} from "/static/core/free_links.js";
+
+document.addEventListener('DOMContentLoaded', () => {
     function disableSourceOptions(typeEvenementInput, sourceInput) {
         const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
         sourceInput.querySelectorAll('option').forEach(option => {
@@ -15,4 +17,5 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         disableSourceOptions(typeEvenementInput, sourceInput)
     })
     disableSourceOptions(typeEvenementInput, sourceInput)
+    setUpFreeLinks(document.getElementById("id_free_link"), null)
 });

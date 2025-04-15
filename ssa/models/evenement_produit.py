@@ -7,6 +7,7 @@ from reversion.models import Version
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
+from ssa.managers import EvenementProduitManager
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
 
 
@@ -106,6 +107,8 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
     numeros_rappel_conso = ArrayField(
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
+
+    objects = EvenementProduitManager()
 
     SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS]
 

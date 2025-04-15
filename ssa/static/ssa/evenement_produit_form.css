@@ -51,3 +51,7 @@
 .modal-etablissement input, .modal-etablissement select{
     margin-top: 0.5rem;
 }
+
+#liens-libre input {
+    margin-bottom: 0rem;
+}

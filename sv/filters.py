@@ -3,7 +3,7 @@ import re
 import django_filters
 from django.db.models import OuterRef, Exists
 
-from core.forms import DSFRForm
+from core.form_mixins import DSFRForm
 from seves import settings
 from .models import FicheDetection, Region, OrganismeNuisible, Evenement
 from django.forms.widgets import DateInput, TextInput
