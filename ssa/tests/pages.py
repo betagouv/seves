@@ -90,6 +90,7 @@ class EvenementProduitCreationPage:
         modal.locator('[id$="-quantite_en_stock"]').fill(str(etablissement.quantite_en_stock))
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator(".save-btn").click()
+        modal.wait_for(state="hidden", timeout=2_000)
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
