@@ -26,9 +26,11 @@ def test_add_structure_form_hides_empty_emails(live_server, page):
     page.get_by_role("tab", name="Contacts").click()
     page.query_selector("#add-contact-structure-form .choices").click()
 
-    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 1")).to_be_visible()
-    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 2")).not_to_be_visible()
-    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 3")).to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 1", exact=True)).to_be_visible()
+    expect(
+        page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 2", exact=True)
+    ).not_to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 3", exact=True)).to_be_visible()
 
 
 @pytest.mark.django_db
@@ -41,10 +43,14 @@ def test_add_structure_form_hides_structure_without_active_user(live_server, pag
     page.query_selector("#add-contact-structure-form .choices").click()
 
     expect(
-        page.get_by_label("Ajouter une structure").get_by_role("option", name=str(visible_structure.structure))
+        page.get_by_label("Ajouter une structure").get_by_role(
+            "option", name=str(visible_structure.structure), exact=True
+        )
     ).to_be_visible()
     expect(
-        page.get_by_label("Ajouter une structure").get_by_role("option", name=str(unvisible_structure.structure))
+        page.get_by_label("Ajouter une structure").get_by_role(
+            "option", name=str(unvisible_structure.structure), exact=True
+        )
     ).not_to_be_visible()
 
 

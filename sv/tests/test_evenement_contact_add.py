@@ -67,12 +67,20 @@ def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     choice_js_fill(
-        page, "#add-contact-agent-form .choices", contact_agent_1.agent.nom, contact_agent_1.display_with_agent_unit
+        page,
+        "#add-contact-agent-form .choices",
+        contact_agent_1.agent.nom,
+        contact_agent_1.display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.get_by_role("tab", name="Contacts").click()
     page.wait_for_timeout(1000)
     choice_js_fill(
-        page, "#add-contact-agent-form .choices", contact_agent_2.agent.nom, contact_agent_2.display_with_agent_unit
+        page,
+        "#add-contact-agent-form .choices",
+        contact_agent_2.agent.nom,
+        contact_agent_2.display_with_agent_unit,
+        use_locator_as_parent_element=True,
     )
     page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
 
