@@ -3,3 +3,5 @@ fileignoreconfig:
   checksum: 4a3cc3b9d5ca2556fe92ff75c8aa339ef5e52aa3e885da682d754df49b0c3aef
 - filename: ssa/models/evenement_produit.py
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+- filename: ssa/views/produit.py
+  checksum: 5e8776712959bdcd869afe21805818203e4b62a2a7e1e2ddf765ba1bdcd21d8a

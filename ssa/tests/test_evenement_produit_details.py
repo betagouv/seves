@@ -1,6 +1,8 @@
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
 
 
@@ -64,3 +66,26 @@ def test_evenement_produit_detail_page_content_etablissement(live_server, page: 
     expect(details_page.etablissement_modal.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement)).to_be_visible()
+
+
+def test_evenement_produit_detail_page_access(live_server, page: Page):
+    for etat in [EvenementProduit.Etat.BROUILLON, EvenementProduit.Etat.EN_COURS, EvenementProduit.Etat.CLOTURE]:
+        evenement = EvenementProduitFactory(etat=etat)
+        details_page = EvenementProduitDetailsPage(page, live_server.url)
+        response = details_page.navigate(evenement)
+        assert response.status == 200
+
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON, createur=StructureFactory())
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    response = details_page.navigate(evenement)
+    assert response.status == 403
+
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    response = details_page.navigate(evenement)
+    assert response.status == 200
+
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.CLOTURE, createur=StructureFactory())
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    response = details_page.navigate(evenement)
+    assert response.status == 200
