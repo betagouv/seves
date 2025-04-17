@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 from django.urls import reverse
 
 from core.constants import MUS_STRUCTURE
@@ -217,6 +217,58 @@ def test_cant_forge_add_contact_agent_on_evenement_i_cant_see(client, mocked_aut
         "contacts_agents": [Contact.objects.get(agent=mocked_authentification_user.agent)],
     }
     response = client.post(reverse("agent-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0
+
+
+@pytest.mark.django_db
+def test_add_contact_agent_without_value_shows_front_error(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
+    validation_message = page.locator("#id_contacts_agents").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
+
+
+def test_cant_see_add_contact_form_if_evenement_is_cloturer(live_server, page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+
+    expect(page.locator("#add-contact-agent-form")).not_to_be_visible()
+    expect(page.locator("#add-contact-structure-form")).not_to_be_visible()
+
+
+def test_cant_forge_add_agent_if_evenement_is_cloturer(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_agents": [Contact.objects.get(agent=ContactAgentFactory().agent)],
+    }
+    response = client.post(reverse("agent-add"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 0
+
+
+def test_cant_forge_add_structure_if_evenement_is_cloturer(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+        "contacts_structures": [Contact.objects.get(structure=ContactStructureFactory().structure)],
+    }
+    response = client.post(reverse("structure-add"), data=payload)
 
     assert response.status_code == 403
     evenement.refresh_from_db()

@@ -2,11 +2,11 @@ import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 
 from core.models import Structure
 from sv.factories import FicheDetectionFactory
-from sv.models import FicheDetection
+from sv.models import FicheDetection, Evenement
 
 
 @pytest.mark.django_db
@@ -57,3 +57,25 @@ def test_can_delete_fiche_detection_and_create_new_one_after(live_server, page):
     page.get_by_role("link", name="Ajouter une détection").click()
     page.get_by_role("button", name="Enregistrer").click()
     assert FicheDetection.objects.count() == 1
+
+
+def test_cant_see_delete_detection_btn_if_evenement_is_cloture(live_server, page: Page):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Supprimer la détection")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_delete_detection_if_evenement_is_cloture(client):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    response = client.post(
+        reverse("soft-delete"),
+        data={
+            "content_type_id": ContentType.objects.get_for_model(fiche_detection).id,
+            "content_id": fiche_detection.pk,
+        },
+    )
+    assert response.status_code == 302
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.is_deleted is False

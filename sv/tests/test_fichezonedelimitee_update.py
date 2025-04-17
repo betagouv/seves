@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from core.models import Structure
 from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory, EvenementFactory
 from sv.models import ZoneInfestee, FicheZoneDelimitee, FicheDetection, Evenement
@@ -309,6 +310,14 @@ def test_fiche_zone_update_has_locking_protection(
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
 
 
+def test_cant_access_update_zone_delimitee_form_of_evenement_i_cant_see(client):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone, createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    assert client.get(fiche_zone.get_update_url()).status_code == 403
+
+
 def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
     fiche_zone = FicheZoneFactory()
     EvenementFactory(fiche_zone_delimitee=fiche_zone, createur=Structure.objects.create(libelle="A new structure"))
@@ -330,7 +339,7 @@ def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
         "zoneinfestee_set-MIN_NUM_FORMS": ["0"],
         "zoneinfestee_set-MAX_NUM_FORMS": ["1000"],
     }
-    response = client.post(reverse("fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
+    response = client.post(reverse("sv:fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
 
     assert response.status_code == 403
     fiche_zone.refresh_from_db()
@@ -439,3 +448,33 @@ def test_update_form_remove_from_detections_list_refresh_choices_for_other_lists
     detection_1.refresh_from_db()
     assert detection_1.zone_infestee is None
     assert detection_1.hors_zone_infestee == fiche_zone_delimitee
+
+
+def test_cant_see_update_fiche_zone_delimitee_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(fiche_zone_delimitee=FicheZoneFactory(), etat=Evenement.Etat.CLOTURE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
+
+    expect(page.get_by_role("button", name="Modifier")).not_to_be_visible()
+
+
+def test_cant_access_update_fiche_zone_delimitee_form_if_evenement_is_cloture(client):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.CLOTURE)
+
+    response = client.get(fiche_zone.get_update_url())
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_update_fiche_zone_delimitee_form_if_evenement_is_cloture(client):
+    fiche_zone = FicheZoneFactory()
+    EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(fiche_zone.get_update_url(), data={"commentaire": "AAAA"})
+
+    assert response.status_code == 403
+    fiche_zone.refresh_from_db()
+    assert fiche_zone.commentaire != "AAAA"

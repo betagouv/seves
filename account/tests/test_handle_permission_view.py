@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from playwright.sync_api import expect
@@ -25,6 +26,7 @@ def test_user_can_see_navigation_without_group(live_server, page, mocked_authent
 
 @pytest.mark.django_db
 def test_can_add_permissions(live_server, page, mocked_authentification_user):
+    Group.objects.get_or_create(name=settings.SV_GROUP)
     structure = mocked_authentification_user.agent.structure
     group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
@@ -53,6 +55,7 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
 
 @pytest.mark.django_db
 def test_can_remove_permissions(live_server, page, mocked_authentification_user):
+    Group.objects.get_or_create(name=settings.SV_GROUP)
     structure = mocked_authentification_user.agent.structure
     group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)

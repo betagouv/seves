@@ -5,5 +5,5 @@
         <p class="fr-badge ac-notified"><span class="fr-icon-notification-3-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span> Déclaré AC</p>
     {% endif %}
     <p class="fr-badge fr-badge--no-icon">{{ evenement.visibility_display }}</p>
-    <p class="fr-badge fr-badge--{{etat.etat|etat_evenement_color}} fr-badge--no-icon">{{ etat.readable_etat }}</p>
+    <p class="fr-badge fr-badge--{{etat.etat|etat_color}} fr-badge--no-icon">{{ etat.readable_etat }}</p>
 </div>

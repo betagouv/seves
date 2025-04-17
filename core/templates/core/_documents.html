@@ -8,13 +8,15 @@
 
         </div>
         <div class="fr-col-1 fr-col-xl-5"></div>
-        <div class="fr-col-3">
-            <div class="fr-btns-group--right fr-mt-3w">
-                <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-circle-line" data-testid="documents-add" data-fr-opened="false" aria-controls="fr-modal-add-doc">
-                    Ajouter un document
-                </button>
+        {% if can_add_document %}
+            <div class="fr-col-3">
+                <div class="fr-btns-group--right fr-mt-3w">
+                    <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-circle-line" data-testid="documents-add" data-fr-opened="false" aria-controls="fr-modal-add-doc">
+                        Ajouter un document
+                    </button>
+                </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% include "core/_modale_ajout_document.html" %}

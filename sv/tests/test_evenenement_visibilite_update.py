@@ -9,11 +9,37 @@ from sv.factories import EvenementFactory
 from sv.models import Evenement
 
 
-def test_users_cant_update_visibilite(live_server, page: Page, mocked_authentification_user):
+def test_users_not_from_ac_cant_update_visibilite(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_text("Modifier la visibilité")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_users_not_from_ac_cant_forge_update_visibilite(client):
+    evenement = EvenementFactory()
+
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LOCALE
+
+
+@pytest.mark.django_db
+def test_cant_forge_update_visibilite_of_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LOCALE
 
 
 @pytest.mark.parametrize("structure_ac", [MUS_STRUCTURE, BSV_STRUCTURE])
@@ -74,7 +100,7 @@ def test_users_from_ac_can_update_visibilite_backward(
 
 def test_user_not_from_ac_cant_load_structure_add_page(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     response = page.goto(f"{live_server.url}{url}")
 
     assert response.status == 403
@@ -99,7 +125,7 @@ def test_existing_allowed_structures_are_selected_on_structure_add_page(
     )
     mocked_authentification_user.agent.save()
 
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
     expect(page.get_by_label(str(selected_structure))).to_be_checked()
@@ -123,7 +149,7 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     mocked_authentification_user.agent.save()
 
     assert evenement.visibilite == Visibilite.LOCALE
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
     page.get_by_label(str(structure_1)).click(force=True)
     page.get_by_role("button", name="Valider").click()
@@ -166,7 +192,7 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
 
     evenement = EvenementFactory(createur=creator_structure)
 
-    url = reverse("structure-add-visibilite", kwargs={"pk": evenement.pk})
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
     # Vérifier que les structures AC sont cochées et désactivées
@@ -186,3 +212,48 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
     other_checkbox = page.get_by_label(str(other_structure))
     expect(other_checkbox).not_to_be_checked()
     expect(other_checkbox).not_to_be_disabled()
+
+
+def test_users_from_ac_cant_see_update_visibilite_btn_if_evenement_is_cloture(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.save()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    expect(page.get_by_text("Modifier la visibilité")).not_to_be_visible()
+
+
+def test_user_from_ac_cant_access_structure_add_visibilite_if_evenement_is_cloture(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.save()
+
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
+    response = page.goto(f"{live_server.url}{url}")
+
+    assert response.status == 403
+
+
+def test_user_from_ac_cant_update_visibilite_if_evenement_is_cloture(client, mocked_authentification_user):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.save()
+
+    url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
+    response = client.post(url, data={"visibilite": Visibilite.NATIONALE})
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LOCALE

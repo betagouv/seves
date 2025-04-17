@@ -71,22 +71,6 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Statut évènement")
 
     @property
-    def numero_europhyt_label(self) -> Locator:
-        return self.page.get_by_text("Numéro Europhyt")
-
-    @property
-    def numero_europhyt_input(self) -> Locator:
-        return self.page.get_by_label("Numéro Europhyt")
-
-    @property
-    def numero_rasff_label(self) -> Locator:
-        return self.page.get_by_text("Numéro Rasff")
-
-    @property
-    def numero_rasff_input(self) -> Locator:
-        return self.page.get_by_label("Numéro Rasff")
-
-    @property
     def organisme_nuisible_label(self) -> Locator:
         return self.page.get_by_text("Organisme nuisible", exact=True)
 
@@ -541,7 +525,7 @@ class FicheZoneDelimiteeFormPage:
             expect(self.detections_hors_zone_infestee.get_by_text(str(detection.numero))).to_be_visible()
 
     def goto_create_form_page(self, live_server, evenement):
-        self.page.goto(f"{live_server.url}{reverse('fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
+        self.page.goto(f"{live_server.url}{reverse('sv:fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
 
     def fill_zone_infestee_form(
         self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[Tuple[FicheDetection, ...]] = None

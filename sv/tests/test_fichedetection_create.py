@@ -5,26 +5,31 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.constants import AC_STRUCTURE
+from core.factories import StructureFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import LaboratoireFactory, EvenementFactory, LieuFactory, SiteInspectionFactory
+from ..factories import (
+    LaboratoireFactory,
+    EvenementFactory,
+    LieuFactory,
+    SiteInspectionFactory,
+    OrganismeNuisibleFactory,
+    StatutReglementaireFactory,
+    DepartementFactory,
+    PositionChaineDistributionFactory,
+    StructurePreleveuseFactory,
+)
 from ..models import (
     FicheDetection,
     StatutEvenement,
     StatutReglementaire,
     Contexte,
     OrganismeNuisible,
-    Lieu,
     Departement,
-    PositionChaineDistribution,
-    StructurePreleveuse,
-    SiteInspection,
     Laboratoire,
     Evenement,
     Prelevement,
@@ -51,13 +56,13 @@ def create_fixtures_if_needed(db):
 
 
 def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(page.get_by_role("heading", name="Création d'une fiche détection", exact=True)).to_be_visible()
 
 
 def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.informations_title).to_be_visible()
     expect(form_elements.objet_evenement_title).to_be_visible()
     expect(form_elements.lieux_title).to_be_visible()
@@ -72,10 +77,6 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
 
     expect(form_elements.statut_evenement_label).to_be_visible()
     expect(form_elements.statut_evenement_input).to_be_visible()
-    expect(form_elements.numero_europhyt_label).not_to_be_visible()
-    expect(form_elements.numero_europhyt_input).not_to_be_visible()
-    expect(form_elements.numero_rasff_label).not_to_be_visible()
-    expect(form_elements.numero_rasff_input).not_to_be_visible()
     expect(form_elements.statut_evenement_input).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(form_elements.statut_evenement_input).to_have_value("")
     statuts_evenement = list(StatutEvenement.objects.values_list("libelle", flat=True))
@@ -129,7 +130,7 @@ def test_new_fiche_detection_form_content(live_server, page: Page, form_elements
 
 def test_date_creation_field_is_current_day(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
     """Test que la date de création soit egale à la date du jour"""
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.date_creation_input).to_have_value(datetime.now().strftime("%d/%m/%Y"))
 
 
@@ -142,7 +143,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     statut_reglementaire = StatutReglementaire.objects.first()
     contexte = Contexte.objects.first()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
@@ -175,28 +176,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_create_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill, mocked_authentification_user
-):
-    structure = mocked_authentification_user.agent.structure
-    structure.niveau1 = AC_STRUCTURE
-    structure.save()
-    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(libelle_court="Mon ON", libelle_long="Mon ON")
-
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-    page.get_by_role("button", name="Enregistrer").click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == "11111111"
-    assert fiche_detection.numero_rasff == "222222222"
-
-
-@pytest.mark.django_db
 def test_create_fiche_detection_with_lieu(
     live_server,
     page: Page,
@@ -210,23 +189,17 @@ def test_create_fiche_detection_with_lieu(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    dept = baker.make(Departement)
-    site_inspection = baker.make(SiteInspection)
-    position = baker.make(PositionChaineDistribution)
-    lieu = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        siret_etablissement="12345678901234",
+    dept = DepartementFactory()
+    site_inspection = SiteInspectionFactory()
+    position = PositionChaineDistributionFactory()
+    lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
         site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
-        _fill_optional=True,
     )
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
@@ -267,7 +240,7 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.activite_etablissement == lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == lieu.raison_sociale_etablissement
-    assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement
+    assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement.replace("\n", " ")
     assert lieu_from_db.siret_etablissement == lieu.siret_etablissement
     assert lieu_from_db.code_inupp_etablissement == lieu.code_inupp_etablissement
     assert lieu_from_db.site_inspection == lieu.site_inspection
@@ -293,7 +266,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
         is_etablissement=False,
     )
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
@@ -341,7 +314,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
@@ -373,7 +346,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
@@ -396,7 +369,7 @@ def test_add_lieu_with_name_only_and_save(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -426,7 +399,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     organisme_nuisible.libelle_long = "Mon ON"
     organisme_nuisible.save()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     page.get_by_role("button", name="Enregistrer").click()
@@ -458,7 +431,7 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     organisme_nuisible_no_status.libelle_court = "Pas mon ON"
     organisme_nuisible_no_status.save()
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Pas mon ON", "Pas mon ON")
@@ -477,9 +450,9 @@ def test_prelevements_are_always_linked_to_lieu(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    structures = baker.make(StructurePreleveuse, _quantity=2)
+    structures = StructurePreleveuseFactory.create_batch(2)
     page.wait_for_timeout(600)
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -508,7 +481,7 @@ def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_role("button", name="Enregistrer").dblclick()
@@ -528,7 +501,7 @@ def test_laboratoire_disable_in_prelevement_confirmation(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
 
     # Ajouter un lieu
     form_elements.add_lieu_btn.click()
@@ -563,7 +536,7 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
 
     # Ajouter un lieu
     form_elements.add_lieu_btn.click()
@@ -604,7 +577,7 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
@@ -664,7 +637,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        page.goto(f"{live_server.url}{reverse('fiche-detection-creation')}")
+        page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
         mock_post.assert_called_once_with(
             "https://api.insee.fr/token",
             headers={"Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic Rk9POkJBUg=="},
@@ -701,3 +674,121 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.siret_etablissement == "12007901700030"
     assert lieu_from_db.pays_etablissement == "France"
     assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
+
+
+def test_fiche_detection_without_organisme_nuisible_shows_error(
+    live_server,
+    page: Page,
+):
+    statut_reglementaire = StatutReglementaire.objects.first()
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
+    page.get_by_role("button", name="Enregistrer").click()
+
+    validation_message = page.locator("#id_organisme_nuisible").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
+
+
+def test_can_create_evenement_if_last_evenement_is_deleted(
+    live_server, page: Page, mocked_authentification_user, choice_js_fill, form_elements: FicheDetectionFormDomElements
+):
+    EvenementFactory(numero_annee=2025, numero_evenement=1, is_deleted=True)
+    organisme_nuisible = OrganismeNuisibleFactory()
+    statut_reglementaire = StatutReglementaireFactory()
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    form_elements.statut_reglementaire_input.select_option(statut_reglementaire.libelle)
+    page.get_by_role("button", name="Enregistrer").click()
+
+    assert Evenement.objects.last().numero == "2025.2"
+
+
+def test_cant_access_fiche_detection_form_for_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    url = reverse("sv:fiche-detection-creation") + f"?evenement={evenement.id}"
+    assert client.get(url).status_code == 403
+
+
+def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
+    evenement = EvenementFactory(createur=StructureFactory())
+    assert client.get(evenement.get_absolute_url()).status_code == 403
+
+    prelevements = {}
+    lieux = {}
+    for i in range(0, 20):
+        prelevements.update(
+            {
+                f"prelevements-{i}-numero_rapport_inspection": [""],
+                f"prelevements-{i}-laboratoire": [""],
+                f"prelevements-{i}-numero_echantillon": [""],
+                f"prelevements-{i}-structure_preleveuse": [""],
+                f"prelevements-{i}-date_prelevement": [""],
+                f"prelevements-{i}-matrice_prelevee": [""],
+            }
+        )
+    for i in range(0, 10):
+        lieux.update(
+            {
+                f"lieux-{i}-nom": [""],
+                f"lieux-{i}-adresse_lieu_dit": [""],
+                f"lieux-{i}-commune": [""],
+                f"lieux-{i}-code_insee": [""],
+                f"lieux-{i}-departement": [""],
+                f"lieux-{i}-site_inspection": [""],
+                f"lieux-{i}-wgs84_longitude": [""],
+                f"lieux-{i}-wgs84_latitude": [""],
+                f"lieux-{i}-activite_etablissement": [""],
+                f"lieux-{i}-pays_etablissement": [""],
+                f"lieux-{i}-raison_sociale_etablissement": [""],
+                f"lieux-{i}-adresse_etablissement": [""],
+                f"lieux-{i}-siret_etablissement": [""],
+                f"lieux-{i}-code_inupp_etablissement": [""],
+                f"lieux-{i}-position_chaine_distribution_etablissement": [""],
+            }
+        )
+    payload = {
+        "evenement": evenement.id,
+        "latest_version": 0,
+        "lieux-TOTAL_FORMS": ["10"],
+        "lieux-INITIAL_FORMS": ["0"],
+        "lieux-MIN_NUM_FORMS": ["0"],
+        "lieux-MAX_NUM_FORMS": ["1000"],
+        **prelevements,
+        **lieux,
+    }
+    response = client.post(reverse("sv:fiche-detection-creation"), data=payload)
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.detections.count() == 0
+
+
+def test_cant_see_add_detection_btn_to_existing_evenement_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Ajouter une détection")).not_to_be_visible()
+
+
+def test_cant_access_add_detection_form_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.get(reverse("sv:fiche-detection-creation"), data={"evenement": evenement.id})
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_add_detection_to_existing_evenement_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    response = client.post(
+        reverse("sv:fiche-detection-creation"), data={"evenement": evenement.id, "latest_version": 0}
+    )
+    assert response.status_code == 403
+    assert evenement.detections.count() == 0

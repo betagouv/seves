@@ -6,8 +6,13 @@
 </div>
 <div class="fr-col-5"><a href="#" class="fr-link email message-panel" data-message-type="message" data-recipient="{{ contact.pk }}">{{ contact.email }}</a></div>
 <div class="fr-col-offset-1"></div>
-<div class="fr-col">
-    <a href="#" class="fr-icon-delete-line fr-btn fr-btn--sm fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-contact-{{ contact.pk }}"></a>
-</div>
 
-{% include "core/_modale_suppression_contact.html" %}
+{% if can_delete_contact %}
+    <div class="fr-col">
+        <a href="#" class="fr-icon-delete-line fr-btn fr-btn--sm fr-btn--tertiary" data-fr-opened="false" aria-controls="fr-modal-contact-{{ contact.pk }}"></a>
+    </div>
+{% endif %}
+
+{% if can_delete_contact %}
+    {% include "core/_modale_suppression_contact.html" %}
+{% endif %}

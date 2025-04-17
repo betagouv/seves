@@ -64,12 +64,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "sv.apps.SvConfig",
+    "ssa.apps.SsaConfig",
     "core.apps.CoreConfig",
     "account.apps.AccountConfig",
     "django_filters",
     "post_office",
     "reversion",
     "csp",
+    "django_countries",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -82,7 +84,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "seves.middlewares.LoginRequiredMiddleware",
+    "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
@@ -276,6 +278,8 @@ LOGGING = {
 }
 
 CAN_GIVE_ACCESS_GROUP = "access_admin"
+SV_GROUP = "sv_user"
+SSA_GROUP = "ssa_user"
 
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")

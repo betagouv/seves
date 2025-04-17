@@ -15,7 +15,7 @@
 {% block content %}
     <main class="main-container">
         {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
-        <form action="{% url 'evenement-update' evenement.id  %}" method="post">
+        <form action="{% url 'sv:evenement-update' evenement.id  %}" method="post">
             {% csrf_token %}
             {{ form.latest_version }}
 
@@ -51,6 +51,28 @@
                         </div>
                     </div>
                 </div>
+
+                {% if form.numero_europhyt and form.numero_rasff %}
+                    <div class="white-container fr-mt-2w">
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-4">
+                                {% if form.numero_europhyt %}
+                                    <div id="numero-europhyt">
+                                        {{ form.numero_europhyt.label_tag }} {{ form.numero_europhyt }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="fr-col-4 fr-ml-8w">
+                                {% if form.numero_rasff %}
+                                    <div id="numero-rasff">
+                                        {{ form.numero_rasff.label_tag }} {{ form.numero_rasff }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
             </div>
 
             <div id="liens-libre" class="white-container fr-mt-2w">
@@ -60,7 +82,6 @@
                     {{ form.free_link }}
                 </div>
             </div>
-
 
         </form>
     </main>

@@ -1,6 +1,20 @@
 {% extends "core/base.html" %}
 
 
-{% block product_title %}
-    Santé des végétaux
-{% endblock product_title %}
+{% block product %}
+    <a href="{% url 'sv:evenement-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
+        Santé des végétaux
+    </a>
+{% endblock product %}
+
+{% block product_nav %}
+    <li>
+        <button class="fr-btn fr-btn--header-blue fr-my-auto">
+            <span class="fr-icon-add-line" aria-hidden="true"></span>
+            <a href="{% url 'sv:fiche-detection-creation' %}">Créer une fiche</a>
+        </button>
+    </li>
+    <li class="{% block highlight_menu_evenements %}{% endblock %}">
+        <a class="fr-btn" href="{% url 'sv:evenement-liste' %}">Évènements</a>
+    </li>
+{% endblock product_nav %}

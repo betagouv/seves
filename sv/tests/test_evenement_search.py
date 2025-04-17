@@ -18,7 +18,7 @@ from ..models import (
 
 
 def get_fiche_detection_search_form_url() -> str:
-    return reverse("evenement-liste")
+    return reverse("sv:evenement-liste")
 
 
 def test_search_form_have_all_fields(live_server, page: Page) -> None:
@@ -165,7 +165,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
@@ -185,7 +185,7 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=evenement_1.numero)).to_be_visible()
@@ -337,3 +337,13 @@ def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero))).to_have_count(1)
+
+
+def test_filter_deleted_detection_in_count_column(live_server, page):
+    evenement = EvenementFactory()
+    FicheDetectionFactory(evenement=evenement)
+    FicheDetectionFactory(evenement=evenement, is_deleted=True)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+
+    assert page.locator(".evenements__list-row:nth-child(1) td:nth-child(9)").inner_text().strip() == "1"

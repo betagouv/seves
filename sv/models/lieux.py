@@ -138,7 +138,7 @@ class Lieu(models.Model):
         blank=True,
         null=True,
     )
-    code_inupp_etablissement = models.CharField(max_length=50, verbose_name="Code INUPP", blank=True)
+    code_inupp_etablissement = models.CharField(max_length=10, verbose_name="Code INUPP", blank=True)
 
     ETABLISSEMENT_FIELDS = [
         "activite_etablissement",

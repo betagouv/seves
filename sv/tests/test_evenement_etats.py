@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from core.factories import ContactStructureFactory
+from core.factories import ContactStructureFactory, StructureFactory
 from sv.factories import EvenementFactory, FicheDetectionFactory
 from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
@@ -40,7 +40,7 @@ def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page,
     expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
     expect(page.get_by_test_id("evenement-header").get_by_text("Fin de suivi", exact=True)).to_be_visible()
 
-    page.goto(f"{live_server.url}{reverse('evenement-liste')}")
+    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
     expect(page.get_by_role("cell", name="Fin de suivi")).to_be_visible()
 
 
@@ -98,8 +98,6 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
-    page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.CLOTURE
 
@@ -242,3 +240,41 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
         content_type=evenement_content_type,
         object_id=evenement.id,
     ).exists()
+
+
+@pytest.mark.django_db
+def test_cant_publish_evenement_i_cant_see(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=StructureFactory())
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    response = client.post(
+        reverse("publish"),
+        data={
+            "content_type_id": ContentType.objects.get_for_model(evenement).id,
+            "content_id": evenement.id,
+        },
+    )
+
+    assert response.status_code == 302
+    assert evenement.etat == Evenement.Etat.BROUILLON
+
+
+def test_cant_see_cloture_evenement_button_if_is_already_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
+
+
+def test_cant_cloture_evenement_if_already_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+
+    response = client.post(
+        reverse("sv:evenement-cloturer", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+    )
+
+    evenement.refresh_from_db()
+    assert response.status_code == 302
+    assert evenement.is_deleted is False

@@ -5,10 +5,9 @@ from pathlib import Path
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.factories import DocumentFactory
+from core.factories import DocumentFactory, StructureFactory
 from core.models import Structure, Document
 from django.contrib.auth import get_user_model
 
@@ -70,7 +69,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
     expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
     expect(
         page.get_by_text(
-            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz."
+            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, txt, eml."
         )
     ).to_be_visible()
 
@@ -180,11 +179,11 @@ def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
 def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     evenement = EvenementFactory()
     document_1 = DocumentFactory(nom="Test document", content_object=evenement, description="")
-    other_structure = baker.make(Structure)
+    other_structure = StructureFactory(libelle="Other structure")
     document_2 = DocumentFactory(
         nom="Ma carto", content_object=evenement, description="", created_by_structure=other_structure
     )
-    _structure_with_no_document = baker.make(Structure, libelle="Should not be in the list")
+    _structure_with_no_document = StructureFactory(libelle="Should not be in the list")
     evenement.documents.set([document_1, document_2])
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
@@ -192,9 +191,11 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
-    assert page.locator(".documents__filters #id_created_by_structure").all_inner_texts() == [
-        "\n".join(["---------", "Structure Test"])
-    ]
+    choices = page.locator(".documents__filters #id_created_by_structure").all_inner_texts()[0].split("\n")
+    assert len(choices) == 3
+    assert "---------" in choices
+    assert "Other structure" in choices
+    assert "Structure Test" in choices
     page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
     page.get_by_test_id("documents-filter").click()
 
@@ -559,3 +560,93 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
     page.get_by_test_id("documents-send").click()
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
+
+
+def test_cant_see_add_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id("documents-add")).not_to_be_visible()
+
+
+def test_cant_forge_upload_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    file = SimpleUploadedFile("file.png", b"file_content", content_type="image/png")
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "file": file,
+        "content_type": ContentType.objects.get_for_model(evenement).pk,
+        "object_id": evenement.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+
+    response = client.post(reverse("document-upload"), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
+
+
+def test_cant_see_update_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]')).not_to_be_visible()
+
+
+def test_cant_forge_update_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(nom="Test document", description="", content_object=evenement)
+    evenement.documents.set([document])
+
+    payload = {
+        "nom": "This is mine",
+        "document_type": "arrete_prefectoral_ministériel",
+        "description": "",
+        "pk": document.pk,
+        "next": f"/sv/evenement/{evenement.pk}/",
+    }
+    response = client.post(reverse("document-update", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    document.refresh_from_db()
+    assert document.nom != "This is mine"
+
+
+def test_cant_see_delete_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.get_by_test_id(f"documents-delete-{document.id}")).not_to_be_visible()
+
+
+def test_cant_forge_delete_document_if_evenement_is_cloture(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    payload = {"pk": document.pk, "next": f"/sv/evenement/{evenement.pk}/"}
+    response = client.post(reverse("document-delete", kwargs={"pk": document.pk}), data=payload)
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.documents.filter(is_deleted=True).count() == 0
+    assert evenement.documents.filter(is_deleted=False).count() == 1
+
+
+def test_cant_see_download_document_btn_if_evenement_is_cloture(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    document = DocumentFactory(content_object=evenement)
+    evenement.documents.set([document])
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()

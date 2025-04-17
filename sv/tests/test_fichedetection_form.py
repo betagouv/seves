@@ -20,7 +20,7 @@ def create_fixtures_if_needed(db):
 @pytest.fixture(autouse=True)
 def test_goto_fiche_detection_creation_url(live_server, page: Page, choice_js_fill):
     """Ouvre la page de création d'une fiche de détection"""
-    add_fiche_detection_form_url = reverse("fiche-detection-creation")
+    add_fiche_detection_form_url = reverse("sv:fiche-detection-creation")
     return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
 
 

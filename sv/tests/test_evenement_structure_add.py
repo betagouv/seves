@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 
 from core.factories import ContactStructureFactory
 from sv.factories import EvenementFactory
@@ -26,9 +26,9 @@ def test_add_structure_form_hides_empty_emails(live_server, page):
     page.get_by_role("tab", name="Contacts").click()
     page.query_selector("#add-contact-structure-form .choices").click()
 
-    expect(page.get_by_label("Contacts").get_by_role("option", name="Level 1")).to_be_visible()
-    expect(page.get_by_label("Contacts").get_by_role("option", name="Level 2")).not_to_be_visible()
-    expect(page.get_by_label("Contacts").get_by_role("option", name="Level 3")).to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 1")).to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 2")).not_to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 3")).to_be_visible()
 
 
 @pytest.mark.django_db
@@ -40,9 +40,11 @@ def test_add_structure_form_hides_structure_without_active_user(live_server, pag
     page.get_by_role("tab", name="Contacts").click()
     page.query_selector("#add-contact-structure-form .choices").click()
 
-    expect(page.get_by_label("Contacts").get_by_role("option", name=str(visible_structure.structure))).to_be_visible()
     expect(
-        page.get_by_label("Contacts").get_by_role("option", name=str(unvisible_structure.structure))
+        page.get_by_label("Ajouter une structure").get_by_role("option", name=str(visible_structure.structure))
+    ).to_be_visible()
+    expect(
+        page.get_by_label("Ajouter une structure").get_by_role("option", name=str(unvisible_structure.structure))
     ).not_to_be_visible()
 
 
@@ -64,8 +66,8 @@ def test_structure_niveau2_without_emails_are_not_visible(live_server, page):
     page.get_by_role("tab", name="Contacts").click()
     page.query_selector("#add-contact-structure-form .choices").click()
 
-    expect(page.get_by_label("Contacts").get_by_role("option", name="Foo")).to_be_visible()
-    expect(page.get_by_label("Contacts").get_by_role("option", name="Bar")).not_to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Foo")).to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Bar")).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -122,3 +124,16 @@ def test_cant_add_contact_structure_if_evenement_brouillon(client):
     assert len(messages) == 1
     assert messages[0].level_tag == "error"
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+@pytest.mark.django_db
+@pytest.mark.browser_context_args(timezone_id="Europe/Berlin", locale="de-DE")
+def test_add_contact_structure_without_value_shows_front_error(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
+
+    validation_message = page.locator("#id_contacts_structures").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]

@@ -1,7 +1,7 @@
 {% load static %}
 {% load etat_tags %}
 
-{% include "sv/_latest_revision.html" with latest_version=fichedetection.latest_version %}
+{% include "core/_latest_revision.html" with latest_version=fichedetection.latest_version %}
 <div class="fiche-detail">
     <div class="fr-container--fluid">
         <div class="fr-grid-row fr-mb-3w">
@@ -24,24 +24,11 @@
                         <div class="fr-col-6 fr-col-lg-4">
                             <div class="fr-container--fluid">
                                 <div class="fr-grid-row">
-                                    <p class="fr-col-6 descripteur-label">N° Europhyt</p>
-                                    <p class="fr-col-6">{{ fichedetection.numero_europhyt|default:"nc." }}</p>
-                                </div>
-                                <div class="fr-grid-row">
-                                    <p class="fr-col-6 descripteur-label">N° RASFF</p>
-                                    <p class="fr-col-6">{{ fichedetection.numero_rasff|default:"nc." }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="fr-col-6 fr-col-lg-4">
-                            <div class="fr-container--fluid">
-                                <div class="fr-grid-row">
                                     <p class="fr-col-6 descripteur-label">Statut</p>
                                     <p class="fr-col-6">{{ fichedetection.statut_evenement|default:"nc." }}</p>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>

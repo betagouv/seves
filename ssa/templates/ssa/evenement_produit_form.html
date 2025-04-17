@@ -1,0 +1,146 @@
+{% extends "ssa/base.html" %}
+{% load static %}
+{% load render_field %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
+    <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
+    <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'ssa/_etablissement_form.js' %}"></script>
+    <script type="text/javascript" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <form method="post" id="main-form">
+        {% csrf_token %}
+        <main class="main-container">
+
+            <div class="evenement-produit-form-header">
+                <h1>Création d'un événement</h1>
+                <div>
+                    <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
+                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">Enregistrer</button>
+                </div>
+            </div>
+
+            <div class="white-container--lite">
+                <h3>Informations</h3>
+                <div class="fr-container--fluid">
+                    <div class="fr-grid-row fr-grid-row--gutters ">
+                        <div class="fr-col-12 fr-col-lg-4 flex-column ">
+                            <div id="date-creation">
+                                <label class="fr-label" for="date-creation-input">Date de création</label>
+                                <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% now 'd/m/Y' %}" disabled>
+                            </div>
+                            {% if form.numero_rasff %}
+                                <div class="rasff">{% render_field form.numero_rasff %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4 flex-column">
+                            <div>{% render_field form.type_evenement %}</div>
+                            <div>{% render_field form.source %}</div>
+                            <div>{% render_field form.cerfa_recu %}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            {% render_field form.description %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fr-container--fluid fr-mt-4w">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="white-container--lite tall-column">
+                            <h3>Produit</h3>
+                            <div>
+                                {% render_field form.denomination %}
+                                {% render_field form.marque %}
+                                {% render_field form.lots %}
+                                {% render_field form.description_complementaire %}
+                                {{ form.temperature_conservation.label_tag }}
+                                <div class="radio-inline-container radio-inline-container--wrap">
+                                    {{ form.temperature_conservation }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="white-container--lite tall-column">
+                            <h3>Risque</h3>
+                            <div>
+                                <div class="fr-container--fluid fr-mt-4w">
+                                    <div class="fr-grid-row fr-grid-row--gutters">
+                                        <div class="fr-col-lg-9">
+                                            {% render_field form.quantification %}
+                                        </div>
+                                        <div class="fr-col-lg-3">
+                                            {% render_field form.quantification_unite %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% render_field form.evaluation %}
+                                <div class="radio-inline-container">
+                                    {{ form.produit_pret_a_manger.label_tag }}
+                                    <div class="radio-inline-container fr-ml-4w">
+                                        {{ form.produit_pret_a_manger }}
+                                    </div>
+                                </div>
+                                {% render_field form.reference_souches %}
+                                {% render_field form.reference_clusters %}
+                                <div class="fr-notice fr-notice--info">
+                                    <div class="fr-container">
+                                        <div class="fr-notice__body">
+                                            <p>
+                                                <span class="fr-notice__title">Déposez vos rapports d'analyse dans l'onglet document après publication de la fiche.</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container--lite fr-mt-4w">
+                <h3>Action engagées</h3>
+                <span class="helptext fr-hint-text fr-mb-1w">{{ form.actions_engagees.help_text }}</span>
+                <div class="fr-container--fluid">
+                    <div class="fr-grid-row fr-grid-row--gutters">
+                        <div class="fr-col-lg-5">
+                            {{ form.actions_engagees }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container--lite fr-mt-4w">
+                <div class="fr-container--fluid">
+                    <div class="fr-grid-row fr-grid-row--gutters ">
+                        <div class="fr-col-12 fr-col-lg-4">
+                            {{ form.numeros_rappel_conso }}
+                            <h3>Rappel conso</h3>
+                            <label>Numéro de fiche</label>
+                            <div class="rappel-conso-container">
+                                <input class="fr-input" type="text" id="rappel-1" pattern="^\d{4}$" placeholder="2025" title="Le nombre doit être exactement 4 chiffres">
+                                <input class="fr-input" type="text" id="rappel-2" pattern="^\d{2}$" placeholder="01" title="Le nombre doit être exactement 2 chiffres">
+                                <input class="fr-input" type="text" id="rappel-3" pattern="^\d{4}$" placeholder="0181" title="Le nombre doit être exactement 4 chiffres">
+                                <button class="fr-btn" id="rappel-submit" disabled>Ajouter</button>
+                            </div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-8">
+                            <p>Liste des fiches</p>
+                            <div id="rappel-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% include "ssa/_etablissement_block.html" %}
+        </main>
+    </form>
+
+{% endblock %}

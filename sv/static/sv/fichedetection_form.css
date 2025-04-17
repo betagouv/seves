@@ -18,7 +18,7 @@ main {
 }
 #lieux, #prelevements {
     overflow-y: auto;
-    max-height: 805px;
+    max-height: 690px;
 }
 
 
@@ -50,9 +50,7 @@ main {
     row-gap: 1rem;
 }
 #date-creation,
-#statut-evenement,
-#numero-europhyt,
-#numero-rasff {
+#statut-evenement {
     display: flex;
     align-items: center;
 }
@@ -62,22 +60,10 @@ main {
 #date-creation-input {
     flex: 1.35;
 }
-#numero-rasff label {
-    flex: 0.65;
-}
-#id_numero_rasff {
-    flex: 1.35;
-}
 #statut-evenement label {
     flex: 0.75;
 }
 #id_statut_evenement {
-    flex: 1.25;
-}
-#numero-europhyt label {
-    flex: 0.75;
-}
-#id_numero_europhyt {
     flex: 1.25;
 }
 
@@ -85,7 +71,9 @@ main {
 #organisme-nuisible,
 #statut-reglementaire,
 #contexte,
-#date-1er-signalement {
+#date-1er-signalement,
+#organisme-nuisible-readonly,
+#statut-reglementaire-readonly {
     display: flex;
     align-items: center;
 }
@@ -111,6 +99,16 @@ main {
 
 #organisme-nuisible .choices {
     flex: 1.42;
+}
+#organisme-nuisible-readonly-label,
+#statut-reglementaire-readonly-label {
+    font-weight: bold;
+}
+#organisme-nuisible-readonly-label {
+    flex: 0.60;
+}
+#statut-reglementaire-readonly-label {
+    flex: 0.95;
 }
 
 

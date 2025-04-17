@@ -2,24 +2,29 @@ import pytest
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
-from model_bakery import baker
 from playwright.sync_api import Page, expect
 
-from core.constants import AC_STRUCTURE
 from core.models import Structure
 from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import FicheDetectionFactory, LieuFactory, LaboratoireFactory, PrelevementFactory, EvenementFactory
+from ..factories import (
+    FicheDetectionFactory,
+    LieuFactory,
+    LaboratoireFactory,
+    PrelevementFactory,
+    EvenementFactory,
+    DepartementFactory,
+    SiteInspectionFactory,
+    PositionChaineDistributionFactory,
+)
 from ..models import (
     FicheDetection,
     Lieu,
     Prelevement,
     Departement,
-    PositionChaineDistribution,
-    OrganismeNuisible,
     StructurePreleveuse,
-    SiteInspection,
     Laboratoire,
+    Evenement,
 )
 from ..models import (
     Region,
@@ -126,8 +131,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     """Test que les modifications des informations, objet de l'évènement et mesures de gestion sont bien enregistrées en base de données apès modification."""
     fiche_detection = FicheDetectionFactory()
     new_fiche_detection = FicheDetectionFactory()
-    new_fiche_detection.organisme_nuisible = baker.make(OrganismeNuisible)
-    new_fiche_detection.save()
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
@@ -271,21 +274,14 @@ def test_update_lieu(
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
-    dept = baker.make(Departement)
-    site_inspection = baker.make(SiteInspection)
-    position = baker.make(PositionChaineDistribution)
-    new_lieu = baker.prepare(
-        Lieu,
-        wgs84_latitude=48.8566,
-        wgs84_longitude=2.3522,
-        code_insee="17000",
-        siret_etablissement="12345678901234",
+    dept = DepartementFactory()
+    site_inspection = SiteInspectionFactory()
+    position = PositionChaineDistributionFactory()
+    new_lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
         site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
-        _fill_optional=True,
-        _save_related=True,
     )
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
@@ -324,7 +320,7 @@ def test_update_lieu(
     assert lieu_from_db.activite_etablissement == new_lieu.activite_etablissement
     assert lieu_from_db.pays_etablissement == new_lieu.pays_etablissement
     assert lieu_from_db.raison_sociale_etablissement == new_lieu.raison_sociale_etablissement
-    assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement
+    assert lieu_from_db.adresse_etablissement == new_lieu.adresse_etablissement.replace("\n", " ")
     assert lieu_from_db.siret_etablissement == new_lieu.siret_etablissement
     assert lieu_from_db.site_inspection == new_lieu.site_inspection
     assert (
@@ -566,9 +562,10 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements: PrelevementFormDomElements,
     choice_js_fill,
 ):
-    """Test que l'ajout d'un nouveau prelevement non officiel est bien enregistré en base de données."""
     lieu = LieuFactory()
-    prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu, is_officiel=False)
+    prelevement = PrelevementFactory.build_with_some_related_objects_saved(
+        lieu=lieu, is_officiel=True, type_analyse=Prelevement.TypeAnalyse.CONFIRMATION
+    )
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     form_elements.add_prelevement_btn.click()
@@ -932,54 +929,6 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
 
 
 @pytest.mark.django_db
-def test_fiche_detection_update_as_ac_can_access_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    fiche_detection = FicheDetectionFactory()
-    structure = mocked_authentification_user.agent.structure
-    structure.niveau1 = AC_STRUCTURE
-    structure.save()
-
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
-    page.get_by_label("Numéro Rasff").fill("2" * 9)
-
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt == "11111111"
-    assert fiche_detection.numero_rasff == "222222222"
-
-
-@pytest.mark.django_db
-def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    fiche_detection = FicheDetectionFactory()
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.evaluate("""
-            const form = document.querySelector('main form');
-            const input1 = document.createElement('input');
-            input1.name = 'numero_europhyt';
-            input1.value = '11111111';
-            form.appendChild(input1);
-
-            const input2 = document.createElement('input');
-            input2.name = 'numero_rasff';
-            input2.placeholder = '222222222';
-            form.appendChild(input2);
-        """)
-
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    fiche_detection = FicheDetection.objects.get()
-    assert fiche_detection.numero_europhyt != "11111111"
-    assert fiche_detection.numero_rasff != "222222222"
-
-
-@pytest.mark.django_db
 def test_laboratoire_disable_in_prelevement_confirmation(
     live_server,
     page: Page,
@@ -1140,8 +1089,6 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
         "evenement": ["18585"],
         "action": ["Enregistrer les modifications"],
         "statut_evenement": [""],
-        "numero_europhyt": [""],
-        "numero_rasff": [""],
         "contexte": [""],
         "date_premier_signalement": [""],
         "vegetaux_infestes": [""],
@@ -1162,7 +1109,7 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
     response = client.get(fiche_detection.get_absolute_url())
     assert response.status_code == 403
 
-    response = client.post(reverse("fiche-detection-modification", kwargs={"pk": fiche_detection.pk}), data=payload)
+    response = client.post(reverse("sv:fiche-detection-modification", kwargs={"pk": fiche_detection.pk}), data=payload)
 
     assert response.status_code == 403
     fiche_detection.refresh_from_db()
@@ -1196,3 +1143,42 @@ def test_add_lieu_add_and_remove_commune(
     assert lieu_from_db.commune == ""
     assert lieu_from_db.code_insee == ""
     assert lieu_from_db.departement is None
+
+
+@pytest.mark.django_db
+def test_update_prelevement_from_officiel_to_non_officiel_empties_numero_RI(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    prelevement = PrelevementFactory(is_officiel=True, numero_rapport_inspection="12-123456")
+    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
+    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    prelevement_form_elements.prelevement_officiel_checkbox.click()
+
+    expect(prelevement_form_elements.numero_rapport_inspection_input).to_have_value("")
+    expect(prelevement_form_elements.numero_rapport_inspection_input).to_be_disabled()
+
+
+def test_cant_see_update_fiche_detection_btn_if_evenement_is_cloture(live_server, page: Page):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Détections")
+    expect(page.get_by_role("link", name="Modifier")).not_to_be_visible()
+
+
+def test_cant_access_update_detection_form_if_evenement_is_cloture(client):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    response = client.get(fiche_detection.get_update_url())
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_cant_update_detection_if_evenement_is_cloture(client):
+    fiche_detection = FicheDetectionFactory(evenement__etat=Evenement.Etat.CLOTURE)
+    response = client.post(fiche_detection.get_update_url(), data={"commentaire": ["AAAA"]})
+    assert response.status_code == 403
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.commentaire != "AAAA"

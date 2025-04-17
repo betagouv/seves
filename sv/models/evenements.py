@@ -15,6 +15,8 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
     EmailNotificationMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
 )
 from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
@@ -32,6 +34,8 @@ class Evenement(
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
     EmailNotificationMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -51,8 +55,10 @@ class Evenement(
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    fin_suivi = GenericRelation(FinSuiviContact)
+    numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
+    numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
 
+    fin_suivi = GenericRelation(FinSuiviContact)
     documents = GenericRelation(Document)
     messages = GenericRelation(Message)
     contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
@@ -70,7 +76,7 @@ class Evenement(
     def _get_annee_and_numero(self):
         annee_courante = datetime.datetime.now().year
         last_fiche = (
-            Evenement.objects.filter(numero_annee=annee_courante)
+            Evenement._base_manager.filter(numero_annee=annee_courante)
             .select_for_update()
             .order_by("-numero_evenement")
             .first()
@@ -92,19 +98,19 @@ class Evenement(
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("evenement-details", kwargs={"numero": self.numero})
+        return reverse("sv:evenement-details", kwargs={"numero": self.numero})
 
     def get_absolute_url_with_message(self, message_id: int):
         return f"{self.get_absolute_url()}?message={message_id}"
 
     def get_update_url(self):
-        return reverse("evenement-update", kwargs={"pk": self.pk})
+        return reverse("sv:evenement-update", kwargs={"pk": self.pk})
 
     def get_visibilite_update_url(self):
-        return reverse("evenement-visibilite-update", kwargs={"pk": self.pk})
+        return reverse("sv:evenement-visibilite-update", kwargs={"pk": self.pk})
 
     def can_update_visibilite(self, user):
-        return not self.is_draft and user.agent.structure.is_mus_or_bsv
+        return not self.is_draft and not self.is_cloture and user.agent.structure.is_mus_or_bsv
 
     def __str__(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
@@ -117,9 +123,15 @@ class Evenement(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and not self.is_cloture
+
     def soft_delete(self, user):
         if not self.can_user_delete(user):
             raise PermissionDenied
+
+        if self.is_cloture:
+            raise AttributeError("L'évènement ne peut pas être supprimé car il est clôturé")
 
         with transaction.atomic():
             for detection in self.detections.all():
@@ -151,7 +163,7 @@ class Evenement(
         return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
 
     def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if not self.is_cloture() and is_fin_de_suivi:
+        if not self.is_cloture and is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
@@ -189,3 +201,27 @@ class Evenement(
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def can_be_updated(self, user):
+        return self._user_can_interact(user)
+
+    def can_add_fiche_detection(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_fiche_detection(self):
+        return not self.is_cloture
+
+    def can_update_fiche_detection(self, user):
+        return self._user_can_interact(user)
+
+    def can_delete_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_deleted(user)
+
+    def can_update_fiche_zone_delimitee(self, user):
+        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
+
+    def can_add_fiche_zone_delimitee(self, user):
+        return self._user_can_interact(user)

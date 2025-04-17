@@ -7,7 +7,9 @@
 amqp==5.3.1
     # via kombu
 asgiref==3.8.1
-    # via django
+    # via
+    #   django
+    #   django-countries
 async-timeout==5.0.1
     # via -r requirements.in
 billiard==4.2.1
@@ -20,7 +22,7 @@ botocore==1.34.134
     # via
     #   boto3
     #   s3transfer
-celery==5.4.0
+celery==5.5.1
     # via -r requirements.in
 certifi==2025.1.31
     # via
@@ -49,11 +51,12 @@ cryptography==44.0.1
     #   josepy
     #   mozilla-django-oidc
     #   pyopenssl
+    #   testcontainers
 distlib==0.3.8
     # via virtualenv
 dj-static==0.0.6
     # via -r requirements.in
-django==5.1.7
+django==5.1.8
     # via
     #   -r requirements.in
     #   django-csp
@@ -62,12 +65,13 @@ django==5.1.7
     #   django-post-office
     #   django-reversion
     #   django-storages
-    #   model-bakery
     #   mozilla-django-oidc
     #   sentry-sdk
+django-countries==7.6.1
+    # via -r requirements.in
 django-csp==3.8
     # via -r requirements.in
-django-debug-toolbar==5.0.1
+django-debug-toolbar==5.1.0
     # via -r requirements.in
 django-environ==0.12.0
     # via -r requirements.in
@@ -77,10 +81,12 @@ django-post-office==3.9.1
     # via -r requirements.in
 django-reversion==5.1.0
     # via -r requirements.in
-django-storages[s3]==1.14.5
+django-storages[s3]==1.14.6
     # via -r requirements.in
 djhtml==3.0.7
     # via -r requirements.in
+docker==7.1.0
+    # via testcontainers
 execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
@@ -107,10 +113,8 @@ jmespath==1.0.1
     #   botocore
 josepy==1.14.0
     # via mozilla-django-oidc
-kombu==5.4.2
+kombu==5.5.2
     # via celery
-model-bakery==1.20.4
-    # via -r requirements.in
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
 nodeenv==1.8.0
@@ -127,7 +131,7 @@ playwright==1.51.0
     #   pytest-playwright
 pluggy==1.5.0
     # via pytest
-pre-commit==4.1.0
+pre-commit==4.2.0
     # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
@@ -148,7 +152,7 @@ pytest==8.3.3
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
-pytest-django==4.10.0
+pytest-django==4.11.1
     # via -r requirements.in
 pytest-env==1.1.5
     # via -r requirements.in
@@ -161,6 +165,8 @@ python-dateutil==2.9.0.post0
     #   botocore
     #   celery
     #   faker
+python-dotenv==1.0.1
+    # via testcontainers
 python-magic==0.4.27
     # via -r requirements.in
 python-slugify==8.0.4
@@ -171,13 +177,14 @@ redis==5.2.1
     # via -r requirements.in
 requests==2.32.3
     # via
+    #   docker
     #   mozilla-django-oidc
     #   pytest-base-url
-ruff==0.11.2
+ruff==0.11.5
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.23.1
+sentry-sdk[django]==2.26.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -189,24 +196,28 @@ sqlparse==0.5.3
     #   django-debug-toolbar
 static3==0.7.0
     # via dj-static
+testcontainers[sftp]==4.10.0
+    # via -r requirements.in
 text-unidecode==1.3
     # via python-slugify
 tinycss2==1.2.1
     # via bleach
 typing-extensions==4.11.0
     # via
+    #   django-countries
     #   faker
     #   pyee
     #   pyopenssl
-tzdata==2025.1
-    # via
-    #   celery
-    #   kombu
+    #   testcontainers
+tzdata==2025.2
+    # via kombu
 urllib3==2.3.0
     # via
     #   botocore
+    #   docker
     #   requests
     #   sentry-sdk
+    #   testcontainers
 vine==5.1.0
     # via
     #   amqp
@@ -220,6 +231,8 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
+wrapt==1.17.2
+    # via testcontainers
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

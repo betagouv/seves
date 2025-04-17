@@ -40,7 +40,7 @@
                 <table class="evenements__list-table">
                     <thead>
                         <tr class="evenements__table-header">
-                            <th scope="col" class="fr-col-1">Notifier AC</th>
+                            <th scope="col" class="fr-col-1">Notifié AC</th>
                             <th scope="col" class="fr-col-1">Évènement</th>
                             <th scope="col" class="fr-col-3">Organisme nuisible</th>
                             <th scope="col" class="fr-col-1">Création</th>
@@ -88,7 +88,7 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    <span class="fr-badge fr-badge--{{evenement.etat|etat_evenement_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
+                                    <span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
                                 </td>
                                 <td>
                                     <span class="fr-badge">{{ evenement.visibilite }}</span>
