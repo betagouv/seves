@@ -508,6 +508,7 @@ def test_add_new_prelevement_non_officiel(
     )
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
+    prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -523,6 +524,7 @@ def test_add_new_prelevement_non_officiel(
     assert prelevement_from_db.is_officiel is False
     assert prelevement_from_db.numero_rapport_inspection == ""
     assert prelevement_from_db.laboratoire is None
+    assert prelevement_from_db.date_rapport_analyse == prelevement.date_rapport_analyse
 
 
 @pytest.mark.django_db
@@ -585,6 +587,7 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.prelevement_officiel_checkbox.click()
     prelevement_form_elements.numero_rapport_inspection_input.fill(prelevement.numero_rapport_inspection)
     prelevement_form_elements.laboratoire_input.select_option(str(prelevement.laboratoire.id))
+    prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -600,6 +603,7 @@ def test_add_new_prelevement_officiel(
     assert prelevement_from_db.is_officiel is True
     assert prelevement_from_db.numero_rapport_inspection == prelevement.numero_rapport_inspection
     assert prelevement_from_db.laboratoire.id == prelevement.laboratoire.id
+    assert prelevement_from_db.date_rapport_analyse == prelevement.date_rapport_analyse
 
 
 @pytest.mark.django_db
@@ -679,6 +683,7 @@ def test_add_multiple_prelevements(
         )
         prelevement_form_elements.type_analyse_input("première intention").click()
         prelevement_form_elements.resultat_input(prelevement.resultat).click()
+        prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_update_btn.click()
@@ -693,6 +698,7 @@ def test_add_multiple_prelevements(
         assert prelevement_from_db.matrice_prelevee.id == prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == prelevement.espece_echantillon.id
         assert prelevement_from_db.resultat == prelevement.resultat
+        assert prelevement_from_db.date_rapport_analyse == prelevement.date_rapport_analyse
 
 
 @pytest.mark.django_db
@@ -722,6 +728,7 @@ def test_update_prelevement(
         new_prelevement.espece_echantillon.libelle,
     )
     prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
+    prelevement_form_elements.date_rapport_analyse_input.fill(new_prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
     page.wait_for_timeout(600)
     form_elements.save_update_btn.click()
@@ -735,6 +742,7 @@ def test_update_prelevement(
     assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
     assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
     assert prelevement_from_db.resultat == new_prelevement.resultat
+    assert prelevement_from_db.date_rapport_analyse == new_prelevement.date_rapport_analyse
 
 
 @pytest.mark.django_db
@@ -770,6 +778,9 @@ def test_update_multiple_prelevements(
             new_prelevement.espece_echantillon.libelle,
         )
         prelevement_form_elements.resultat_input(new_prelevement.resultat).click()
+        prelevement_form_elements.date_rapport_analyse_input.fill(
+            new_prelevement.date_rapport_analyse.strftime("%Y-%m-%d")
+        )
         prelevement_form_elements.save_btn.click()
 
     form_elements.save_update_btn.click()
@@ -788,6 +799,7 @@ def test_update_multiple_prelevements(
         assert prelevement_from_db.matrice_prelevee.id == new_prelevement.matrice_prelevee.id
         assert prelevement_from_db.espece_echantillon.id == new_prelevement.espece_echantillon.id
         assert prelevement_from_db.resultat == new_prelevement.resultat
+        assert prelevement_from_db.date_rapport_analyse == new_prelevement.date_rapport_analyse
 
 
 @pytest.mark.django_db

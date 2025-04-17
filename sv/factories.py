@@ -164,6 +164,7 @@ class PrelevementFactory(DjangoModelFactory):
     is_officiel = factory.Faker("boolean")
     resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
     type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
+    date_rapport_analyse = factory.Faker("date_this_decade")
 
     @factory.lazy_attribute
     def structure_preleveuse(self):
@@ -198,6 +199,7 @@ class PrelevementFactory(DjangoModelFactory):
             espece_echantillon=None,
             laboratoire=None,
             numero_rapport_inspection="",
+            date_rapport_analyse=None,
             **kwargs,
         )
 
