@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils import timezone
 from reversion.models import Version
 
 from core.mixins import (
@@ -22,6 +23,7 @@ from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
+from .models_mixins import WithDerniereMiseAJourMixin
 from ..managers import EvenementManager
 
 
@@ -36,6 +38,7 @@ class Evenement(
     EmailNotificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
+    WithDerniereMiseAJourMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -137,6 +140,7 @@ class Evenement(
             for detection in self.detections.all():
                 detection.soft_delete(user)
             self.is_deleted = True
+            self.date_derniere_mise_a_jour = timezone.now()
             self.save()
 
     @property

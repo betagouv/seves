@@ -29,6 +29,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11.1
+      - name: Install French locale
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y locales
+          sudo locale-gen fr_FR.UTF-8
       - name: Install dependencies
         run: pip install pip-tools && pip-sync && playwright install
       - name: Check no missing migrations

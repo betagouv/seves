@@ -711,3 +711,24 @@ def test_default_detection_order():
     detection_3 = FicheDetectionFactory(evenement=evenement, numero_detection="3")
 
     assert list(evenement.detections.all()) == [detection_2, detection_1, detection_3]
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_evenement_delete():
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+    evenement.is_deleted = True
+    evenement.save()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_detection_delete():
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+
+    fiche_detection.is_deleted = True
+    fiche_detection.save()
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
