@@ -70,6 +70,10 @@
                                 <div class="fr-col-8">        <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input"
                                                                       name="prelevements-{{ id }}-espece_echantillon"></select></div>
                             </div>
+                            <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
+                                <div class="fr-col-4">{{ form.date_rapport_analyse.label_tag }}</div>
+                                <div class="fr-col-8">{{ form.date_rapport_analyse }}</div>
+                            </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="resultat">
                                 <div class="fr-col-4"><label class="fr-label required-field">Conclusion</label></div>
                                 <div class="fr-col-8"><fieldset class="fr-fieldset" id="radio-inline"

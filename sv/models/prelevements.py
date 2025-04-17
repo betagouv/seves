@@ -145,6 +145,7 @@ class Prelevement(models.Model):
         blank=True,
         validators=[validate_numero_rapport_inspection],
     )
+    date_rapport_analyse = models.DateField(verbose_name="Date rapport d'analyse", blank=True, null=True)
 
     def __str__(self):
         return f"Prélèvement n° {self.id}"
