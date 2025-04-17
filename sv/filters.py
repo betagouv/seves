@@ -1,11 +1,11 @@
 import re
 
 import django_filters
-from django.db.models import OuterRef, Exists
 
+from core.constants import REGION_STRUCTURE_MAPPING
 from core.forms import DSFRForm
 from seves import settings
-from .models import FicheDetection, Region, OrganismeNuisible, Evenement
+from .models import Region, OrganismeNuisible, Evenement
 from django.forms.widgets import DateInput, TextInput
 
 
@@ -89,6 +89,21 @@ class EvenementFilter(django_filters.FilterSet):
         return queryset.filter(organisme_nuisible__libelle_court__startswith=value).distinct()
 
     def filter_region(self, queryset, name, value):
-        # Recherche des événements qui ont au moins une fiche de détection avec un lieu dans cette région
-        fiches_in_region = FicheDetection.objects.filter(evenement=OuterRef("pk"), lieux__departement__region=value)
-        return queryset.filter(Exists(fiches_in_region)).distinct()
+        """
+        Filtre les événements en fonction d'une région selon deux critères :
+        1. Premier niveau : événements ayant au moins une fiche détection avec un ou plusieurs lieux dans la région spécifiée
+        2. Deuxième niveau : événements n'ayant aucun lieu mais dont la structure créatrice appartient à la région spécifiée (selon un mapping prédéfini)
+        """
+        # Premier niveau
+        region_queryset = queryset.filter(detections__lieux__departement__region=value).distinct()
+
+        # Deuxième niveau
+        if region_structure := REGION_STRUCTURE_MAPPING.get(value.nom):
+            structure_queryset = (
+                queryset.filter(detections__createur__niveau2=region_structure)
+                .filter(detections__lieux__departement__region__isnull=True)
+                .distinct()
+            )
+            return region_queryset | structure_queryset
+
+        return region_queryset
