@@ -350,6 +350,10 @@ class PrelevementFormDomElements:
     def laboratoire_label(self) -> Locator:
         return self.page.get_by_text("Laboratoire")
 
+    @property
+    def date_rapport_analyse_input(self) -> Locator:
+        return self.page.get_by_label("Date rapport d'analyse").locator("visible=true")
+
 
 class FicheZoneDelimiteeFormPage:
     """Classe permettant de manipuler la page de création/modification d'une fiche zone délimitée"""

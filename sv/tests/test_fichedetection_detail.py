@@ -126,6 +126,7 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page):
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-matrice-prelevee")).to_contain_text("nc.")
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-espece-echantillon")).to_contain_text("nc.")
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-code-oepp")).to_contain_text("nc.")
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-rapport-analyse")).to_contain_text("nc.")
 
 
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page):
@@ -171,6 +172,9 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page):
     expect(page.get_by_test_id(f"prelevement-{prelevement2.pk}-code-oepp")).to_contain_text(
         prelevement2.espece_echantillon.code_oepp
     )
+    expect(page.get_by_test_id(f"prelevement-{prelevement2.pk}-date-rapport-analyse")).to_contain_text(
+        prelevement2.date_rapport_analyse.strftime("%d/%m/%Y")
+    )
     expect(page.get_by_test_id(f"prelevement-{prelevement2.pk}-resultat")).to_contain_text(
         prelevement2.get_resultat_display()
     )
@@ -215,6 +219,9 @@ def test_prelevement_details(live_server, page):
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-code-oepp")).to_contain_text(
         prelevement.espece_echantillon.code_oepp
+    )
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-rapport-analyse")).to_contain_text(
+        prelevement.date_rapport_analyse.strftime("%d/%m/%Y")
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-resultat")).to_contain_text(
         prelevement.get_resultat_display()
