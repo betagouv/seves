@@ -196,6 +196,7 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             ),
             "laboratoire": SelectWithAttributeField,
             "date_prelevement": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "date_rapport_analyse": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
     def __init__(self, *args, **kwargs):
