@@ -2,6 +2,9 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.constants import REGION_STRUCTURE_MAPPING
+from core.factories import StructureFactory
+from core.models import Visibilite
 from seves import settings
 from ..factories import (
     FicheDetectionFactory,
@@ -150,6 +153,44 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
 
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(other_lieu.fiche_detection.evenement.numero))).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_search_with_region_structure_mapping(live_server, page: Page) -> None:
+    """Test que le filtre région retourne aussi les événements créés par une structure de la région
+    lorsque les lieux n'ont pas de région spécifiée."""
+    nouvelle_aquitaine = "Nouvelle-Aquitaine"
+    region_nouvelle_aquitaine = RegionFactory(nom=nouvelle_aquitaine)
+    structure_nouvelle_aquitaine = StructureFactory(niveau2=REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine))
+    # événement 1: a un lieu dans la région
+    evenement_1 = LieuFactory(departement__region=region_nouvelle_aquitaine).fiche_detection.evenement
+    # événement 2: n'a pas de lieu avec région définie, mais créé par structure de la région
+    evenement_2 = FicheDetectionFactory(createur=structure_nouvelle_aquitaine).evenement
+    # événement 3: a un lieu avec une autre région
+    evenement_3 = LieuFactory().fiche_detection.evenement
+    # événement 4: n'a pas de lieu avec région définie et n'est pas créé par structure de la région
+    evenement_4 = FicheDetectionFactory(createur=StructureFactory()).evenement
+    # événement 5: a un lieu dans la région et créé par la structure de la région
+    evenement_5 = LieuFactory(
+        commune="La Rochelle",
+        departement__nom="Charente-Maritime",
+        fiche_detection__evenement__createur=structure_nouvelle_aquitaine,
+    ).fiche_detection.evenement
+    for evenement in [evenement_1, evenement_2, evenement_3, evenement_4, evenement_5]:
+        evenement.visibilite = Visibilite.NATIONALE
+        evenement.save()
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Région").select_option(str(region_nouvelle_aquitaine.id))
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name=str(evenement_1.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_3.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_4.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_5.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_5.numero))).to_have_count(1)
+    expect(page.locator("body")).to_contain_text("3 évènements au total")
 
 
 def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
