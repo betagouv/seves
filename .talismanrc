@@ -3,3 +3,5 @@ fileignoreconfig:
   checksum: 4a3cc3b9d5ca2556fe92ff75c8aa339ef5e52aa3e885da682d754df49b0c3aef
 - filename: ssa/models/evenement_produit.py
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+- filename: bin/fetch_contacts_agricoll_and_key.sh
+  checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214

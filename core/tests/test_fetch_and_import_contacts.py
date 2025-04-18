@@ -3,6 +3,7 @@ import csv
 import os
 import subprocess
 import time
+import zipfile
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -14,7 +15,7 @@ from core.tests.test_import_contacts import _reset_contacts
 from seves import settings
 
 
-def _create_csv_data_files():
+def _create_and_zip_csv_data_files():
     file_1_data = [
         ["Structure", "Prénom", "Nom", "Mail", "Fonction_hiérarchique", "Complément_fonction", "Téléphone", "Mobile"],
         ["AC/DAC/DGAL/SEVES", "John3", "Doe3", "test3@example3.com", "", "", "", ""],
@@ -35,8 +36,12 @@ def _create_csv_data_files():
         ["SD/DAAF/DAAF973/SG", "Prestataire", "TEMPORAIRE", "inconnu", "", "", "", ""],
     ]
     for i, data in enumerate([file_1_data, file_2_data], 1):
-        with open(f"test{i}.csv", "w", newline="") as f:
+        csv_filename = f"test{i}.csv"
+        with open(csv_filename, "w", newline="") as f:
             csv.writer(f).writerows(data)
+        with zipfile.ZipFile(f"test{i}.csv.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(csv_filename)
+        os.remove(csv_filename)
 
 
 def _generate_private_and_public_keys():
@@ -64,9 +69,9 @@ def _generate_encrypted_data_files():
                 "-salt",
                 "-pbkdf2",
                 "-in",
-                f"test{i}.csv",
+                f"test{i}.csv.zip",
                 "-out",
-                f"test{i}.csv.encrypted",
+                f"test{i}.csv.zip.encrypted",
                 "-pass",
                 f"file:symmetric{i}.key",
             ]
@@ -129,13 +134,13 @@ def update_env_vars(sftp_container: SFTPContainer):
 @pytest.mark.django_db
 def test_fetch_and_import_contacts_command():
     _reset_contacts()
-    _create_csv_data_files()
+    _create_and_zip_csv_data_files()
     _generate_private_and_public_keys()
     _generate_symmetric_keys()
     _generate_encrypted_data_files()
     _generate_encrypted_symmetric_keys()
-    os.remove("test1.csv")
-    os.remove("test2.csv")
+    os.remove("test1.csv.zip")
+    os.remove("test2.csv.zip")
     os.remove("private.key")
     os.remove("public.key")
     os.remove("symmetric1.key")
@@ -144,13 +149,13 @@ def test_fetch_and_import_contacts_command():
     with SFTPContainer() as sftp_container:
         sftp_container.start()
         update_env_vars(sftp_container)
-        upload_file_to_sftp_server("test1.csv.encrypted")
+        upload_file_to_sftp_server("test1.csv.zip.encrypted")
         upload_file_to_sftp_server("symmetric1.key.encrypted")
         time.sleep(2)  # S'assurer que les timestamps sont différents
-        upload_file_to_sftp_server("test2.csv.encrypted")
+        upload_file_to_sftp_server("test2.csv.zip.encrypted")
         upload_file_to_sftp_server("symmetric2.key.encrypted")
-        os.remove("test1.csv.encrypted")
-        os.remove("test2.csv.encrypted")
+        os.remove("test1.csv.zip.encrypted")
+        os.remove("test2.csv.zip.encrypted")
         os.remove("symmetric1.key.encrypted")
         os.remove("symmetric2.key.encrypted")
 
