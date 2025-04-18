@@ -20,7 +20,7 @@ function fetchEspecesEchantillon(query) {
 function addChoicesEspeceEchantillon(element){
     const choicesEspece = new Choices(element, {
         removeItemButton: true,
-        placeholderValue: 'Recherchez...',
+        placeholderValue: 'Tapez minimum 2 caractères',
         noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucun résultat trouvé',
         shouldSort: false,
@@ -31,7 +31,7 @@ function addChoicesEspeceEchantillon(element){
     });
     choicesEspece.input.element.addEventListener('input', function (event) {
         const query = choicesEspece.input.element.value
-        if (query.length > 2) {
+        if (query.length >= 2) {
             fetchEspecesEchantillon(query).then(results => {
                 choicesEspece.clearChoices()
                 choicesEspece.setChoices(results, 'value', 'label', true)
