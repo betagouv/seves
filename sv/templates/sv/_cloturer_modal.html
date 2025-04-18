@@ -11,31 +11,30 @@
                             <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
                             Clôturer un événement
                         </h1>
-                        {% if is_evenement_can_be_cloturer %}
-                            <p>Étes-vous sûr.e de vouloir clôturer l'événement {{ evenement.numero }} ?</p>
-                        {% else %}
-                            <p>Vous ne pouvez pas clôturer l'événement n°{{ evenement.numero }} car les structures suivantes n'ont pas signalé la fin de suivi : </p>
+                        {% if contacts_not_in_fin_suivi %}
+                            <p class="fr-mb-2w">Pour information, les structures suivantes n’ont pas signalé la fin de suivi : </p>
                             <ul data-testid="structures-not-in-fin-suivi">
                                 {% for contact in contacts_not_in_fin_suivi %}
                                     <li>{{ contact.structure }}</li>
                                 {% endfor %}
                             </ul>
+                            <p class="fr-mt-3w">Souhaitez-vous tout de même procéder à la clôture de l'événement {{ evenement.numero }} ?</p>
+                        {% else %}
+                            <p>Étes-vous sûr.e de vouloir clôturer l'événement {{ evenement.numero }} ?</p>
                         {% endif %}
                     </div>
-                    {% if is_evenement_can_be_cloturer %}
-                        <div class="fr-modal__footer">
-                            <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
-                                <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cloturer-evenement">
-                                    Annuler
-                                </button>
-                                <form method="post" action="{% url 'sv:evenement-cloturer' evenement.pk %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="content_type_id" value="{{ content_type.pk }}">
-                                    <button type="submit" class="fr-btn">Confirmer la clôture</button>
-                                </form>
-                            </div>
+                    <div class="fr-modal__footer">
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                            <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-cloturer-evenement">
+                                Annuler
+                            </button>
+                            <form method="post" action="{% url 'sv:evenement-cloturer' evenement.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type_id" value="{{ content_type.pk }}">
+                                <button type="submit" class="fr-btn">Clôturer</button>
+                            </form>
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
