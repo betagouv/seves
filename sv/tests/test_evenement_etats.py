@@ -94,7 +94,7 @@ def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
-    page.get_by_role("button", name="Confirmer la clôture").click()
+    page.get_by_role("button", name="Clôturer").click()
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
@@ -124,16 +124,16 @@ def test_can_cloturer_evenement_if_contacts_structures_in_fin_suivi(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
-    page.get_by_role("button", name="Confirmer la clôture").click()
+    page.get_by_role("button", name="Clôturer").click()
 
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.CLOTURE
 
 
-def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
+def test_can_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     live_server, page: Page, mocked_authentification_user, contact_ac: Contact
 ):
-    """Test qu'un agent de l'AC connecté ne peut pas cloturer un evenement si la structure du créateur de l'événement n'est pas en fin de suivi."""
+    """Test qu'un agent de l'AC connecté peut cloturer un evenement si la structure du créateur de l'événement n'est pas en fin de suivi."""
     evenement = EvenementFactory()
     mocked_authentification_user.agent.structure = contact_ac.structure
     evenement.contacts.add(contact_ac)
@@ -143,29 +143,32 @@ def test_cannot_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
 
-    cloturer_element = page.get_by_label("Clôturer un événement")
-    expect(cloturer_element.get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalé la fin de suivi :"
-    )
-    expect(page.get_by_test_id("structures-not-in-fin-suivi")).to_contain_text(contact_ac.structure.libelle)
+    expect(
+        page.get_by_label("Clôturer un événement").get_by_text(
+            "Pour information, les structures suivantes n’ont pas signalé la fin de suivi :"
+        )
+    ).to_be_visible()
+    expect(page.get_by_label("Clôturer un événement").get_by_text(contact_ac.structure.libelle)).to_be_visible()
+    expect(
+        page.get_by_label("Clôturer un événement").get_by_text(
+            f"Souhaitez-vous tout de même procéder à la clôture de l'événement {evenement.numero} ?"
+        )
+    ).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.EN_COURS
 
 
-def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suivi(
+def test_can_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suivi(
     live_server, page: Page, mocked_authentification_user, contact_ac: Contact
 ):
-    """Test qu'un agent de l'AC connecté ne peut pas cloturer un événement si une structure de la liste des contacts n'est pas en fin de suivi."""
+    """Test qu'un agent de l'AC connecté peut cloturer un événement si une structure de la liste des contacts n'est pas en fin de suivi."""
     evenement = EvenementFactory()
     mocked_authentification_user.agent.structure = contact_ac.structure
     contact2 = ContactStructureFactory()
-
     evenement.contacts.add(contact2)
     evenement.contacts.add(contact_ac)
-
-    content_type = ContentType.objects.get_for_model(evenement)
     FinSuiviContact.objects.create(
-        content_type=content_type,
+        content_type=ContentType.objects.get_for_model(evenement),
         object_id=evenement.id,
         contact=contact_ac,
     )
@@ -174,14 +177,21 @@ def test_cannot_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suiv
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
 
-    expect(page.get_by_label("Clôturer un événement").get_by_role("paragraph")).to_contain_text(
-        f"Vous ne pouvez pas clôturer l'événement n°{evenement.numero} car les structures suivantes n'ont pas signalé la fin de suivi :"
-    )
-    expect(page.get_by_label("Clôturer un événement").get_by_role("listitem")).to_contain_text(
-        contact2.structure.libelle
-    )
+    expect(
+        page.get_by_label("Clôturer un événement").get_by_text(
+            "Pour information, les structures suivantes n’ont pas signalé la fin de suivi :"
+        )
+    ).to_be_visible()
+    expect(page.get_by_label("Clôturer un événement").get_by_text(contact2.structure.libelle)).to_be_visible()
+    expect(
+        page.get_by_label("Clôturer un événement").get_by_text(
+            f"Souhaitez-vous tout de même procéder à la clôture de l'événement {evenement.numero} ?"
+        )
+    ).to_be_visible()
+    page.get_by_role("button", name="Clôturer").click()
+
     evenement.refresh_from_db()
-    assert evenement.etat == Evenement.Etat.EN_COURS
+    assert evenement.etat == Evenement.Etat.CLOTURE
 
 
 def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mocked_authentification_user):
@@ -199,12 +209,6 @@ def test_cannot_cloturer_evenement_if_user_is_not_ac(live_server, page: Page, mo
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.etat == Evenement.Etat.EN_COURS
-
-
-def test_show_cloture_tag(live_server, page: Page):
-    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("Clôturé")).to_be_visible()
 
 
 def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
@@ -226,7 +230,7 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
-    page.get_by_role("button", name="Confirmer la clôture").click()
+    page.get_by_role("button", name="Clôturer").click()
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
     evenement.refresh_from_db()
@@ -240,6 +244,12 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
         content_type=evenement_content_type,
         object_id=evenement.id,
     ).exists()
+
+
+def test_show_cloture_tag(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_text("Clôturé")).to_be_visible()
 
 
 @pytest.mark.django_db

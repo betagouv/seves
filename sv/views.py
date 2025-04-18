@@ -481,28 +481,19 @@ class EvenementCloturerView(View):
         evenement = content_type.model_class().objects.get(pk=pk)
         redirect_url = evenement.get_absolute_url()
 
-        if evenement.is_cloture:
-            messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")
+        can_cloturer, error_message = evenement.can_be_cloturer(request.user)
+        if not can_cloturer:
+            messages.error(request, error_message)
             return redirect(redirect_url)
 
-        if not evenement.can_be_cloturer_by(request.user):
-            messages.error(request, "Vous n'avez pas les droits pour clôturer cet événement.")
-            return redirect(redirect_url)
+        if evenement.is_the_only_remaining_structure(
+            self.request.user, evenement.get_contacts_structures_not_in_fin_suivi()
+        ):
+            evenement.add_fin_suivi(self.request.user)
 
-        contacts_not_in_fin_suivi = evenement.get_contacts_structures_not_in_fin_suivi()
-        if evenement.can_be_cloturer(self.request.user, contacts_not_in_fin_suivi):
-            if evenement.is_the_only_remaining_structure(self.request.user, contacts_not_in_fin_suivi):
-                evenement.add_fin_suivi(self.request.user)
-            evenement.cloturer()
-            messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
-            return redirect(redirect_url)
-
-        if len(contacts_not_in_fin_suivi) > 1:
-            messages.error(
-                request,
-                f"L'événement n°{evenement.numero} ne peut pas être clôturé car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
-            )
-            return redirect(redirect_url)
+        evenement.cloturer()
+        messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
+        return redirect(redirect_url)
 
 
 class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):

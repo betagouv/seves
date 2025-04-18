@@ -288,18 +288,14 @@ class WithEtatMixin(models.Model):
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
         return len(contacts_not_in_fin_suivi) == 1 and contacts_not_in_fin_suivi[0].structure == user.agent.structure
 
-    def can_be_cloturer(self, user, contacts_not_in_fin_suivi) -> bool:
-        if self.is_draft or self.is_cloture or not self.can_be_cloturer_by(user):
-            return False
-
-        if not contacts_not_in_fin_suivi:
-            return True
-
-        if self.is_the_only_remaining_structure(user, contacts_not_in_fin_suivi):
-            return True
-
-        # Plusieurs contacts sans fin de suivi
-        return False
+    def can_be_cloturer(self, user) -> tuple[bool, str]:
+        if self.is_draft:
+            return False, "L'événement est en brouillon et ne peut pas être clôturé."
+        if self.is_cloture:
+            return False, f"L'événement n°{self.numero} est déjà clôturé."
+        if not self.can_be_cloturer_by(user):
+            return False, "Vous n'avez pas les droits pour clôturer cet événement."
+        return True, ""
 
     def get_publish_success_message(self):
         return "Objet publié avec succès"
