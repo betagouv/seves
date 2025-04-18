@@ -104,11 +104,14 @@ main {
 #statut-reglementaire-readonly-label {
     font-weight: bold;
 }
-#organisme-nuisible-readonly-label {
-    flex: 0.60;
+
+#organisme-nuisible-readonly-label,
+#statut-reglementaire-readonly-label{
+    flex: 0.67;
 }
-#statut-reglementaire-readonly-label {
-    flex: 0.95;
+#organisme-nuisible-readonly-value,
+#statut-reglementaire-readonly-value{
+    flex: 1.10;
 }
 
 
