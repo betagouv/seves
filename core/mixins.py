@@ -12,7 +12,14 @@ from django.urls import reverse
 from requests import ConnectTimeout, ReadTimeout
 from django.views.generic import FormView
 
-from core.forms import DocumentUploadForm, DocumentEditForm
+from core.forms import (
+    DocumentUploadForm,
+    DocumentEditForm,
+    MessageForm,
+    MessageDocumentForm,
+    StructureAddForm,
+    AgentAddForm,
+)
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
 from core.models import (
@@ -30,6 +37,8 @@ from .redirect import safe_redirect
 from celery.exceptions import OperationalError
 import logging
 
+from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +53,8 @@ class WithDocumentUploadFormMixin:
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
         context["document_form"] = DocumentUploadForm(obj=obj, next=obj.get_absolute_url())
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         return context
 
 
@@ -75,6 +86,46 @@ class WithMessagesListInContextMixin:
                 "documents",
             )
         )
+        return context
+
+
+class WithBlocCommunPermission:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        context["can_add_document"] = obj.can_add_document(self.request.user)
+        context["can_update_document"] = obj.can_update_document(self.request.user)
+        context["can_delete_document"] = obj.can_delete_document(self.request.user)
+        context["can_download_document"] = obj.can_download_document(self.request.user)
+        context["can_add_agent"] = obj.can_add_agent(self.request.user)
+        context["can_add_structure"] = obj.can_add_structure(self.request.user)
+        context["can_delete_contact"] = obj.can_delete_contact(self.request.user)
+        return context
+
+
+class WithMessageFormInContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        context["message_form"] = MessageForm(
+            sender=self.request.user,
+            obj=obj,
+            next=obj.get_absolute_url(),
+        )
+        context["add_document_form"] = MessageDocumentForm()
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        return context
+
+
+class WithContactFormsInContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        content_type = ContentType.objects.get_for_model(obj)
+        initial_data = {"content_id": obj.id, "content_type_id": content_type.id}
+        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=obj)
+        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=obj)
         return context
 
 
@@ -390,6 +441,9 @@ class EmailNotificationMixin:
 
     def get_email_subject(self):
         raise NotImplementedError
+
+    def get_absolute_url_with_message(self, message_id: int):
+        return f"{self.get_absolute_url()}?message={message_id}"
 
 
 class WithSireneTokenMixin:

@@ -4,7 +4,16 @@ from django.db import models, transaction
 from django.urls import reverse
 from reversion.models import Version
 
-from core.mixins import WithEtatMixin, WithNumeroMixin, AllowsSoftDeleteMixin
+from core.mixins import (
+    WithEtatMixin,
+    WithNumeroMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    AllowsSoftDeleteMixin,
+)
+from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
@@ -121,7 +130,17 @@ class QuantificationUnite(models.TextChoices):
 
 
 @reversion.register()
-class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, models.Model):
+class EvenementProduit(
+    AllowsSoftDeleteMixin,
+    WithBlocCommunFieldsMixin,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    WithContactPermissionMixin,
+    WithEtatMixin,
+    WithNumeroMixin,
+    models.Model,
+):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_rasff = models.CharField(
@@ -246,6 +265,12 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
 
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.denomination} {self.numero}"
 
     class Meta:
         constraints = [

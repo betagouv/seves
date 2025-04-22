@@ -4,7 +4,17 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
+from core.mixins import (
+    WithFormErrorsAsMessagesMixin,
+    WithFreeLinksListInContextMixin,
+    WithMessagesListInContextMixin,
+    WithContactListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithDocumentListInContextMixin,
+    WithMessageFormInContextMixin,
+    WithContactFormsInContextMixin,
+    WithBlocCommunPermission,
+)
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit
@@ -63,7 +73,18 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         return context
 
 
-class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTestMixin, DetailView):
+class EvenementProduitDetailView(
+    WithBlocCommunPermission,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithMessageFormInContextMixin,
+    WithMessagesListInContextMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
+    UserPassesTestMixin,
+    DetailView,
+):
     model = EvenementProduit
     template_name = "ssa/evenement_produit_detail.html"
 
