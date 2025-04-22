@@ -18,7 +18,8 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     page.get_by_role("button", name="Actions").click()
-    page.get_by_role("button", name="Déclarer à l'AC").click()
+    page.get_by_role("link", name="Déclarer à l'AC").click()
+    page.get_by_role("button", name="Confirmer").click()
 
     expect(page.get_by_text("L'administration centrale a été notifiée avec succès")).to_be_visible()
 
@@ -30,7 +31,7 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
     assert page.text_content(cell_selector) == "Notification à l'administration centrale"
 
     page.get_by_role("button", name="Actions").click()
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
     evenement.refresh_from_db()
     assert evenement.is_ac_notified is True
@@ -44,16 +45,19 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox):
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
+    expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 
 def test_cant_notify_ac_if_user_is_from_ac(live_server, page, mocked_authentification_user):
     mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
         niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
     )
+    ContactStructureFactory(structure=mocked_authentification_user.agent.structure)
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
+    expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 
 def test_cant_notify_ac_if_user_is_from_ac_with_request(mocked_authentification_user, client):
@@ -103,7 +107,8 @@ def test_if_email_notification_fails_does_not_create_message_or_update_status(li
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
-    page.get_by_role("button", name="Déclarer à l'AC").click()
+    page.get_by_role("link", name="Déclarer à l'AC").click()
+    page.get_by_role("button", name="Confirmer").click()
 
     assert len(mailoutbox) == 0
     expect(page.get_by_text("Une erreur s'est produite lors de la notification")).to_be_visible()
@@ -119,7 +124,8 @@ def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
-    page.get_by_role("button", name="Déclarer à l'AC").click()
+    page.get_by_role("link", name="Déclarer à l'AC").click()
+    page.get_by_role("button", name="Confirmer").click()
 
     evenement.refresh_from_db()
     assert evenement.contacts.filter(structure__niveau2=MUS_STRUCTURE).exists()
@@ -153,7 +159,7 @@ def test_cant_see_notify_ac_btn_if_evenement_is_cloture(live_server, page: Page)
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
-    expect(page.get_by_role("button", name="Déclarer à l'AC")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 
 def test_cant_notify_ac_if_evenement_is_cloture(client):
