@@ -17,28 +17,29 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     assert details_page.title.text_content() == f"Événement {evenement.numero}"
     assert "Dernière mise à jour" in details_page.last_modification.text_content()
 
-    expect(details_page.information_block.get_by_text(str(evenement.createur))).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.numero_rasff)).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.get_type_evenement_display())).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.get_source_display())).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.get_cerfa_recu_display())).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.description)).to_be_visible()
+    expect(details_page.information_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
+    expect(details_page.information_block.get_by_text(evenement.numero_rasff, exact=True)).to_be_visible()
+    type_evenement = details_page.information_block.get_by_text(evenement.get_type_evenement_display(), exact=True)
+    expect(type_evenement).to_be_visible()
+    expect(details_page.information_block.get_by_text(evenement.get_source_display(), exact=True)).to_be_visible()
+    expect(details_page.information_block.get_by_text(evenement.get_cerfa_recu_display(), exact=True)).to_be_visible()
+    expect(details_page.information_block.get_by_text(evenement.description, exact=True)).to_be_visible()
 
-    expect(details_page.produit_block.get_by_text(evenement.denomination)).to_be_visible()
-    expect(details_page.produit_block.get_by_text(evenement.marque)).to_be_visible()
-    expect(details_page.produit_block.get_by_text(evenement.lots)).to_be_visible()
-    expect(details_page.produit_block.get_by_text(evenement.description_complementaire)).to_be_visible()
-    expect(details_page.produit_block.get_by_text(evenement.get_temperature_conservation_display())).to_be_visible()
+    expect(details_page.produit_block.get_by_text(evenement.denomination, exact=True)).to_be_visible()
+    expect(details_page.produit_block.get_by_text(evenement.marque, exact=True)).to_be_visible()
+    expect(details_page.produit_block.get_by_text(evenement.lots, exact=True)).to_be_visible()
+    expect(details_page.produit_block.get_by_text(evenement.description_complementaire, exact=True)).to_be_visible()
+    temperature = details_page.produit_block.get_by_text(evenement.get_temperature_conservation_display(), exact=True)
+    expect(temperature).to_be_visible()
 
-    expect(
-        details_page.risque_block.get_by_text(
-            f"{evenement.quantification} {evenement.get_quantification_unite_display()}"
-        )
-    ).to_be_visible()
-    expect(details_page.risque_block.get_by_text(evenement.evaluation)).to_be_visible()
-    expect(details_page.risque_block.get_by_text(evenement.get_produit_pret_a_manger_display())).to_be_visible()
-    expect(details_page.risque_block.get_by_text(evenement.reference_souches)).to_be_visible()
-    expect(details_page.risque_block.get_by_text(evenement.reference_clusters)).to_be_visible()
+    quantification_str = f"{evenement.quantification} {evenement.get_quantification_unite_display()}"
+    quantification = details_page.risque_block.get_by_text(quantification_str)
+    expect(quantification).to_be_visible()
+    expect(details_page.risque_block.get_by_text(evenement.evaluation, exact=True)).to_be_visible()
+    produit_pam = details_page.risque_block.get_by_text(evenement.get_produit_pret_a_manger_display(), exact=True)
+    expect(produit_pam).to_be_visible()
+    expect(details_page.risque_block.get_by_text(evenement.reference_souches, exact=True)).to_be_visible()
+    expect(details_page.risque_block.get_by_text(evenement.reference_clusters, exact=True)).to_be_visible()
 
     expect(details_page.actions_block.get_by_text(evenement.get_actions_engagees_display())).to_be_visible()
     expect(details_page.rappel_block.get_by_text("1999-01-0123")).to_be_visible()
