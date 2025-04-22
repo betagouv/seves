@@ -214,7 +214,6 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, assert_model
 def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     evenement = EvenementProduitFactory.build()
     evenement_1, evenement_2 = EvenementProduitFactory.create_batch(2, etat=EvenementProduit.Etat.EN_COURS)
-
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
@@ -226,13 +225,9 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     evenement = EvenementProduit.objects.exclude(id__in=[evenement_1.id, evenement_2.id]).get()
     assert LienLibre.objects.count() == 2
 
-    lien = LienLibre.objects.first()
-    assert lien.related_object_1 == evenement
-    assert lien.related_object_2 == evenement_1
-
-    lien = LienLibre.objects.last()
-    assert lien.related_object_1 == evenement
-    assert lien.related_object_2 == evenement_2
+    assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
+    expected = sorted([evenement_1.numero, evenement_2.numero])
+    assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
 
 
 def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
