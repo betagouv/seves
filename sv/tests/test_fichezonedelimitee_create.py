@@ -304,6 +304,7 @@ def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
 def test_cant_see_add_fiche_zone_delimitee_btn_if_evenement_is_cloture(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Zone").click()
     expect(page.get_by_role("button", name="Ajouter une fiche zone")).not_to_be_visible()
 
 
