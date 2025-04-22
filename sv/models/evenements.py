@@ -1,7 +1,6 @@
 import datetime
 
 import reversion
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
@@ -18,7 +17,8 @@ from core.mixins import (
     WithContactPermissionMixin,
 )
 from core.mixins import WithEtatMixin
-from core.models import Document, Message, Contact, Structure, FinSuiviContact
+from core.model_mixins import WithBlocCommunFieldsMixin
+from core.models import Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
 from .models_mixins import WithDerniereMiseAJourMixin
@@ -37,6 +37,7 @@ class Evenement(
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithDerniereMiseAJourMixin,
+    WithBlocCommunFieldsMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -58,11 +59,6 @@ class Evenement(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
-
-    fin_suivi = GenericRelation(FinSuiviContact)
-    documents = GenericRelation(Document)
-    messages = GenericRelation(Message)
-    contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
     objects = EvenementManager()
 
@@ -100,9 +96,6 @@ class Evenement(
 
     def get_absolute_url(self):
         return reverse("sv:evenement-details", kwargs={"numero": self.numero})
-
-    def get_absolute_url_with_message(self, message_id: int):
-        return f"{self.get_absolute_url()}?message={message_id}"
 
     def get_update_url(self):
         return reverse("sv:evenement-update", kwargs={"pk": self.pk})

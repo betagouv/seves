@@ -6,25 +6,25 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/evenement_details.css' %}">
-    <link rel="stylesheet" href="{% static 'sv/has_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_detail.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichezonedelimitee_detail.css' %}">
 {% endblock %}
 
 {% block scripts %}
     <script type="module" src="{% static 'sv/evenement_details.js' %}"></script>
-    <script type="module" src="{% static 'sv/sidebar.js' %}"></script>
+    <script type="module" src="{% static 'core/sidebar.js' %}"></script>
     <script type="module" src="{% static 'core/message_form.js' %}"></script>
     <script type="module" src="{% static 'core/document_form.js' %}"></script>
     <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
 {% endblock %}
 
 {% block aside %}
-    {% include "sv/_sidebar_message_form.html" %}
-    {% include "sv/_document_warning_modal.html" %}
+    {% include "core/_sidebar_message_form.html" with object=evenement %}
+    {% include "core/_document_warning_modal.html" %}
 
     {% for message in message_list %}
-        {% include "sv/_sidebar_message_details.html" %}
+        {% include "core/_sidebar_message_details.html" %}
     {% endfor %}
 {% endblock aside %}
 
@@ -181,7 +181,7 @@
         </div>
 
         {% if not evenement.is_draft %}
-            {% include "core/_fiche_bloc_commun.html" %}
+            {% include "core/_fiche_bloc_commun.html" with object=evenement %}
         {% endif %}
 
     </main>

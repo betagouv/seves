@@ -3,7 +3,7 @@
         <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
     </div>
     <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v"></h5>
-    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ evenement.add_message_url }}">
+    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ object.add_message_url }}">
         {% csrf_token %}
         <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v">
             Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement

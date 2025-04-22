@@ -3,10 +3,25 @@
 {% load etat_tags %}
 {% block extrahead %}
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
+  <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
 {% endblock %}
 {% block scripts %}
   <script type="text/javascript" src="{% static 'ssa/_rappel_conso_link.js' %}"></script>
+  <script type="module" src="{% static 'core/sidebar.js' %}"></script>
+  <script type="module" src="{% static 'core/message_form.js' %}"></script>
+  <script type="module" src="{% static 'core/document_form.js' %}"></script>
+  <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
 {% endblock %}
+
+{% block aside %}
+  {% include "core/_sidebar_message_form.html" with object=object %}
+  {% include "core/_document_warning_modal.html" %}
+
+  {% for message in message_list %}
+    {% include "core/_sidebar_message_details.html" %}
+  {% endfor %}
+{% endblock aside %}
+
 
 {% block content %}
   <main class="main-container">
@@ -148,8 +163,11 @@
             </div>
           </div>
         </div>
-        {% include "core/_list_free_links.html" with classes="fr-mt-4v" object=evenement title="Liaisons" object=object %}
+        {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Liaisons" object=object %}
       </div>
+      {% if not object.is_draft %}
+        {% include "core/_fiche_bloc_commun.html" with object=object %}
+      {% endif %}
     </div>
   </main>
 {% endblock content %}

@@ -20,7 +20,6 @@ from django.views.generic import (
 )
 from reversion.models import Version
 
-from core.forms import MessageForm, MessageDocumentForm, StructureAddForm, AgentAddForm
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
@@ -30,10 +29,12 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
     WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
+    WithMessageFormInContextMixin,
+    WithContactFormsInContextMixin,
+    WithBlocCommunPermission,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
-from core.validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -105,9 +106,12 @@ class EvenementListView(ListView):
 
 
 class EvenementDetailView(
+    WithBlocCommunPermission,
     WithDocumentListInContextMixin,
     WithDocumentUploadFormMixin,
+    WithMessageFormInContextMixin,
     WithMessagesListInContextMixin,
+    WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
@@ -177,20 +181,12 @@ class EvenementDetailView(
             "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
             "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
             "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
-            "can_add_agent": self.get_object().can_add_agent(user),
-            "can_add_structure": self.get_object().can_add_structure(user),
-            "can_delete_contact": self.get_object().can_delete_contact(user),
-            "can_add_document": self.get_object().can_add_document(user),
-            "can_update_document": self.get_object().can_update_document(user),
-            "can_delete_document": self.get_object().can_delete_document(user),
-            "can_download_document": self.get_object().can_download_document(user),
         }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_permission_context())
-        content_type = ContentType.objects.get_for_model(self.get_object())
-        context["content_type"] = content_type
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
@@ -202,13 +198,6 @@ class EvenementDetailView(
                 (zone_infestee, zone_infestee.fichedetection_set.all())
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
             ]
-        context["message_form"] = MessageForm(
-            sender=self.request.user,
-            obj=self.get_object(),
-            next=self.get_object().get_absolute_url(),
-        )
-        context["add_document_form"] = MessageDocumentForm()
-        context["allowed_extensions"] = AllowedExtensions.values
         contact = self.request.user.agent.structure.contact_set.get()
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["active_detection"] = (
@@ -216,10 +205,6 @@ class EvenementDetailView(
             if self.request.GET.get("detection")
             else getattr(self.object.detections.first(), "id", None)
         )
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
-        initial_data = {"content_id": self.get_object().id, "content_type_id": content_type.id}
-        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=self.get_object())
-        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=self.get_object())
         return context
 
 
