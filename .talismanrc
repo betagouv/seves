@@ -11,6 +11,5 @@ fileignoreconfig:
   checksum: 29175afed1b25ca8075dbdeb1d839316d873b9e725b39066fedefa5fd0fbec96
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
-version: "1.0"
 - filename: bin/fetch_contacts_agricoll_and_key.sh
   checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214

@@ -60,7 +60,70 @@ class ActionEngagees(models.TextChoices):
 
 
 class QuantificationUnite(models.TextChoices):
-    PAR_100G = "/100g", "/100g"
+    MG_KG = "mg/kg", "mg/kg"
+    UG_KG = "µg/kg", "µg/kg"
+    PRESENCE_25G = "présence/25 g", "présence/25 g"
+    UFC_10G = "UFC/10 g", "UFC/10 g"
+    UFC_25G = "UFC/25 g", "UFC/25 g"
+    NPP_100G = "NPP/100 g", "NPP/100 g"
+
+    CM = "cm", "cm"
+    MM = "mm", "mm"
+    DEG_C = "°C", "°C"
+    PH = "pH", "pH"
+    AW = "Aw", "Aw"
+    G = "g", "g"
+    MG = "mg", "mg"
+    MG_G = "mg/g", "mg/g"
+    MGEQ_G = "mgeq/g", "mgeq/g"
+    UG_G = "µg/g", "µg/g"
+    NG_G = "ng/g", "ng/g"
+    G_100G = "g/100 g", "g/100 g"
+    MG_100G = "mg/100 g", "mg/100 g"
+    G_KG = "g/kg", "g/kg"
+    NG_KG = "ng/kg", "ng/kg"
+    PG_KG = "pg/kg", "pg/kg"
+    PAR_1G = "/1 g", "/1 g"
+    PAR_10G = "/10 g", "/10 g"
+    PAR_25G = "/25 g", "/25 g"
+    PAR_100G = "/100 g", "/100 g"
+    PAR_KG = "/kg", "/kg"
+    UFC = "UFC", "UFC"
+    UFC_G = "UFC/g", "UFC/g"
+    UFC_ML = "UFC/mL", "UFC/mL"
+    ML = "mL", "mL"
+    MMOL_L = "mmol/L", "mmol/L"
+    UL_L = "µL/L", "µL/L"
+    ML_100ML = "mL/100 mL", "mL/100 mL"
+    PAR_ML = "/mL", "/mL"
+    PAR_100ML = "/100 mL", "/100 mL"
+    PAR_250ML = "/250 mL", "/250 mL"
+    UL_KG = "µL/kg", "µL/kg"
+    MMOL_KG = "mmol/kg", "mmol/kg"
+    ML_10G = "mL/10 g", "mL/10 g"
+    ML_100G = "mL/100 g", "mL/100 g"
+    UL_G = "µL/g", "µL/g"
+    G_ML = "g/mL", "g/mL"
+    G_L = "g/L", "g/L"
+    MG_L = "mg/L", "mg/L"
+    UG_L = "µg/L", "µg/L"
+    G_100ML = "g/100 mL", "g/100 mL"
+    MG_100ML = "mg/100 mL", "mg/100 mL"
+    POURCENT_25G = "%/25 g", "%/25 g"
+    POURCENT_100G = "%/100 g", "%/100 g"
+    POURCENT = "%", "%"
+    POUR_MILLE = "‰", "‰"
+    BQ_KG = "bq/kg", "bq/kg"
+    AUTRE = "autre unité : préciser", "autre unité : préciser"
+
+    @classmethod
+    def with_opt_group(cls):
+        most_used = [cls.MG_KG, cls.UG_KG, cls.PRESENCE_25G, cls.UFC_10G, cls.UFC_25G, cls.NPP_100G]
+        others = [c for c in cls if c not in most_used]
+        return [
+            ("Unités courantes", [(c.value, c.label) for c in most_used]),
+            ("Autres unités", [(c.value, c.label) for c in others]),
+        ]
 
 
 @reversion.register()

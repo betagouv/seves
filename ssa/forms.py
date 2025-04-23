@@ -13,7 +13,7 @@ from ssa.models import (
     TypeExploitant,
     PositionDossier,
 )
-from ssa.models.evenement_produit import PretAManger
+from ssa.models.evenement_produit import PretAManger, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
 
@@ -38,6 +38,12 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             }
         ),
         label="Description complémentaire",
+    )
+
+    quantification_unite = SEVESChoiceField(
+        required=False,
+        choices=QuantificationUnite.with_opt_group(),
+        label="Unité",
     )
     temperature_conservation = forms.ChoiceField(
         required=False,
