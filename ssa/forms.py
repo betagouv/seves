@@ -21,7 +21,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     numero_rasff = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={"pattern": "^(\d{4}\.\d{4}|AA\d{2}\.\d{4})$", "placeholder": "0000.0000"}),
+        widget=forms.TextInput(attrs={"pattern": "^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$", "placeholder": "0000.0000"}),
         label="N° RASFF/AAC",
     )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
