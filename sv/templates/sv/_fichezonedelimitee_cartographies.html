@@ -41,7 +41,12 @@
             </div>
         </div>
         <p id="notice-carto" class="fr-mt-2w fr-mb-0">
-            <span class="fr-icon-info-fill fr-mr-1w" aria-hidden="true"></span>Vous pouvez ajouter, supprimer ou modifier une cartographie dans l'onglet <a href="#tabpanel-documents-panel">documents</a>.
+            <span class="fr-icon-info-fill fr-mr-1w" aria-hidden="true"></span>
+            {% if evenement.is_draft %}
+                Vous pourrez ajouter, supprimer ou modifier des cartographies dans l'onglet documents après publication de l’événement.
+            {% else %}
+                Vous pouvez ajouter, supprimer ou modifier une cartographie dans l'onglet <a href="#tabpanel-documents-panel">documents</a>.
+            {% endif %}
         </p>
     </div>
 </div>
