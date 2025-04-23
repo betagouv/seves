@@ -97,6 +97,9 @@ def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, pag
     creation_page.numero_rasff.fill("2024.2222")
     creation_page.submit_as_draft()
 
+    evenement = EvenementProduit.objects.get()
+    assert evenement.numero_rasff == "2024.2222"
+
 
 def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
     creation_page = EvenementProduitCreationPage(page, live_server.url)
@@ -328,3 +331,18 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     assert etablissement.code_insee == ""
     assert etablissement.pays.name == ""
     assert etablissement.departement == ""
+
+
+def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_user, page: Page):
+    structure = mocked_authentification_user.agent.structure
+    structure.niveau1 = AC_STRUCTURE
+    structure.save()
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.numero_rasff.fill("123456")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementProduit.objects.get()
+    assert evenement.numero_rasff == "123456"
