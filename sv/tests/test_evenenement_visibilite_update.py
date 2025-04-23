@@ -257,3 +257,26 @@ def test_user_from_ac_cant_update_visibilite_if_evenement_is_cloture(client, moc
     assert response.status_code == 302
     evenement.refresh_from_db()
     assert evenement.visibilite == Visibilite.LOCALE
+
+
+def test_structure_are_added_in_contact_when_visibilite_limited(live_server, page: Page, mocked_authentification_user):
+    mus_structure, _ = Structure.objects.get_or_create(
+        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, defaults={"libelle": MUS_STRUCTURE}
+    )
+    ContactStructureFactory(structure=mus_structure)
+    mocked_authentification_user.agent.structure = mus_structure
+    mocked_authentification_user.agent.save()
+    contact_1, contact_2, contact_3 = ContactStructureFactory.create_batch(3, with_one_active_agent=True)
+    evenement = EvenementFactory()
+
+    url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+    page.get_by_text(str(contact_1.structure)).click()
+    page.get_by_text(str(contact_2.structure)).click()
+    page.get_by_text(str(contact_3.structure)).click()
+    page.get_by_role("button", name="Valider").click()
+
+    evenement.refresh_from_db()
+    assert evenement.visibilite == Visibilite.LIMITEE
+    assert evenement.contacts.count() == 3
+    assert set(evenement.contacts.all()) == {contact_1, contact_2, contact_3}
