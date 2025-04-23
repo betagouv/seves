@@ -31,7 +31,7 @@ from core.mixins import (
     WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
 )
-from core.models import Visibilite
+from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
 from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
 from sv.forms import (
@@ -749,11 +749,18 @@ class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        evenement = form.save()
-        evenement.visibilite = Visibilite.LIMITEE
-        evenement.save()
-        messages.success(self.request, "Les droits d'accès ont été modifiés")
-        return safe_redirect(self.object.get_absolute_url())
+        with transaction.atomic():
+            evenement = form.save()
+            evenement.visibilite = Visibilite.LIMITEE
+            evenement.save()
+
+            structure_contacts = Contact.objects.filter(
+                structure__in=form.cleaned_data["allowed_structures"], agent__isnull=True
+            ).exclude(email="")
+            evenement.contacts.add(*structure_contacts)
+
+            messages.success(self.request, "Les droits d'accès ont été modifiés")
+            return safe_redirect(self.object.get_absolute_url())
 
     def test_func(self):
         return self.get_object().can_update_visibilite(self.request.user)
