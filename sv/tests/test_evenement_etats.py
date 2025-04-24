@@ -144,13 +144,13 @@ def test_can_cloturer_evenement_if_creator_structure_not_in_fin_suivi(
     page.get_by_role("link", name="Clôturer l'événement").click()
 
     expect(
-        page.get_by_label("Clôturer un événement").get_by_text(
+        page.get_by_label("Clôturer l'événement").get_by_text(
             "Pour information, les structures suivantes n’ont pas signalé la fin de suivi :"
         )
     ).to_be_visible()
-    expect(page.get_by_label("Clôturer un événement").get_by_text(contact_ac.structure.libelle)).to_be_visible()
+    expect(page.get_by_label("Clôturer l'événement").get_by_text(contact_ac.structure.libelle)).to_be_visible()
     expect(
-        page.get_by_label("Clôturer un événement").get_by_text(
+        page.get_by_label("Clôturer l'événement").get_by_text(
             f"Souhaitez-vous tout de même procéder à la clôture de l'événement {evenement.numero} ?"
         )
     ).to_be_visible()
@@ -178,13 +178,13 @@ def test_can_cloturer_evenement_if_on_off_contacts_structures_not_in_fin_suivi(
     page.get_by_role("link", name="Clôturer l'événement").click()
 
     expect(
-        page.get_by_label("Clôturer un événement").get_by_text(
+        page.get_by_label("Clôturer l'événement").get_by_text(
             "Pour information, les structures suivantes n’ont pas signalé la fin de suivi :"
         )
     ).to_be_visible()
-    expect(page.get_by_label("Clôturer un événement").get_by_text(contact2.structure.libelle)).to_be_visible()
+    expect(page.get_by_label("Clôturer l'événement").get_by_text(contact2.structure.libelle)).to_be_visible()
     expect(
-        page.get_by_label("Clôturer un événement").get_by_text(
+        page.get_by_label("Clôturer l'événement").get_by_text(
             f"Souhaitez-vous tout de même procéder à la clôture de l'événement {evenement.numero} ?"
         )
     ).to_be_visible()
@@ -230,6 +230,7 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("link", name="Clôturer l'événement").click()
+    expect(page.get_by_text(f"Confirmez-vous la clôture de l’événement {evenement.numero}")).to_be_visible()
     page.get_by_role("button", name="Clôturer").click()
 
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
