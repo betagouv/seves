@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const choices = new Choices(document.getElementById('id_organisme_nuisible'), {
+    const choicesOrganismeNuisible = new Choices(document.getElementById('id_organisme_nuisible'), {
+        classNames: {
+            containerInner: 'fr-select',
+        },
+        itemSelectText: ''
+    });
+
+    const choicesAgentContact = new Choices(document.getElementById('id_agent_contact'), {
         classNames: {
             containerInner: 'fr-select',
         },
@@ -14,7 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
         this.elements['start_date'].value = '';
         this.elements['end_date'].value = '';
         this.elements['etat'].value = '';
-        choices.setChoiceByValue('');
+        choicesOrganismeNuisible.setChoiceByValue('');
+        this.elements['structure_contact'].value = '';
+        choicesAgentContact.setChoiceByValue('');
         e.target.closest("form").submit();
     });
 
