@@ -1,4 +1,6 @@
-document.documentElement.addEventListener('dsfr.ready', () => {
+import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+
+document.addEventListener('DOMContentLoaded', () => {
     function getNextIdToUse() {
         let num = 0
         while (document.getElementById(`id_etablissements-${num}-raison_sociale`)) {
@@ -28,6 +30,18 @@ document.documentElement.addEventListener('dsfr.ready', () => {
                 }
             });
         }, 10)
+
+        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
+        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
+            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
+            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
+            if (!!event.detail.customProperties.context)
+            {
+                modal.querySelector('[id$=pays]').value = "FR"
+                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
+            }
+        })
+
 
         modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
             event.preventDefault()

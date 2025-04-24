@@ -3,3 +3,15 @@ fileignoreconfig:
   checksum: 4a3cc3b9d5ca2556fe92ff75c8aa339ef5e52aa3e885da682d754df49b0c3aef
 - filename: ssa/models/evenement_produit.py
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+- filename: seves/settings.py
+  checksum: 063c3c28e61501ebfd8e8e6c45858d37789b10db143814368117bf01c87f9023
+- filename: ssa/views/produit.py
+  checksum: eadd0e65dfa86ad93c0666ab7abafa1f6a0ed07908892e5852324b17ab35797a
+- filename: seves/settings.py
+  checksum: 29175afed1b25ca8075dbdeb1d839316d873b9e725b39066fedefa5fd0fbec96
+- filename: ssa/static/ssa/_etablissement_form.js
+  checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
+- filename: bin/fetch_contacts_agricoll_and_key.sh
+  checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214
+- filename: sv/views.py
+  checksum: 62b3a8a26bcb7a4ee9f8c73e92241093690212cfce216acf640079bfb36dcdfc

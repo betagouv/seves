@@ -69,6 +69,11 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-offset-1"></div>
+                            <div class="fr-col-5 descripteur-label">Date rapport d'analyse</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-rapport-analyse">{{prelevement.date_rapport_analyse|date:"d/m/Y"|default:"nc."}}</div>
+                        </div>
+                        <div class="fr-grid-row fr-mb-2w">
+                            <div class="fr-col-offset-1"></div>
                             <div class="fr-col-5 descripteur-label">Conclusion</div>
                             <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|default:"nc."}}</div>
                         </div>

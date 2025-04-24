@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -29,7 +31,7 @@ from core.mixins import (
     WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
 )
-from core.models import Visibilite
+from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
 from core.validators import AUTHORIZED_EXTENSIONS, MAX_UPLOAD_SIZE_MEGABYTES
 from sv.forms import (
@@ -91,10 +93,13 @@ class EvenementListView(ListView):
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
 
-            evenement.all_lieux_with_commune = []
+            communes_dict = OrderedDict()
             for detection in evenement.detections.all():
-                if hasattr(detection, "lieux_list_with_commune"):
-                    evenement.all_lieux_with_commune.extend(detection.lieux_list_with_commune)
+                lieux = getattr(detection, "lieux_list_with_commune", [])
+                for lieu in lieux:
+                    if lieu.commune and lieu.commune not in communes_dict:
+                        communes_dict[lieu.commune] = lieu.id
+            evenement.communes_uniques = [commune for commune, _ in sorted(communes_dict.items(), key=lambda x: x[1])]
 
         return context
 
@@ -481,28 +486,19 @@ class EvenementCloturerView(View):
         evenement = content_type.model_class().objects.get(pk=pk)
         redirect_url = evenement.get_absolute_url()
 
-        if evenement.is_cloture:
-            messages.error(request, f"L'événement n°{evenement.numero} est déjà clôturé.")
+        can_cloturer, error_message = evenement.can_be_cloturer(request.user)
+        if not can_cloturer:
+            messages.error(request, error_message)
             return redirect(redirect_url)
 
-        if not evenement.can_be_cloturer_by(request.user):
-            messages.error(request, "Vous n'avez pas les droits pour clôturer cet événement.")
-            return redirect(redirect_url)
+        if evenement.is_the_only_remaining_structure(
+            self.request.user, evenement.get_contacts_structures_not_in_fin_suivi()
+        ):
+            evenement.add_fin_suivi(self.request.user)
 
-        contacts_not_in_fin_suivi = evenement.get_contacts_structures_not_in_fin_suivi()
-        if evenement.can_be_cloturer(self.request.user, contacts_not_in_fin_suivi):
-            if evenement.is_the_only_remaining_structure(self.request.user, contacts_not_in_fin_suivi):
-                evenement.add_fin_suivi(self.request.user)
-            evenement.cloturer()
-            messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
-            return redirect(redirect_url)
-
-        if len(contacts_not_in_fin_suivi) > 1:
-            messages.error(
-                request,
-                f"L'événement n°{evenement.numero} ne peut pas être clôturé car les structures suivantes n'ont pas signalées la fin de suivi : {', '.join([str(contact) for contact in contacts_not_in_fin_suivi])}",
-            )
-            return redirect(redirect_url)
+        evenement.cloturer()
+        messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
+        return redirect(redirect_url)
 
 
 class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -753,11 +749,18 @@ class VisibiliteStructureView(UserPassesTestMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        evenement = form.save()
-        evenement.visibilite = Visibilite.LIMITEE
-        evenement.save()
-        messages.success(self.request, "Les droits d'accès ont été modifiés")
-        return safe_redirect(self.object.get_absolute_url())
+        with transaction.atomic():
+            evenement = form.save()
+            evenement.visibilite = Visibilite.LIMITEE
+            evenement.save()
+
+            structure_contacts = Contact.objects.filter(
+                structure__in=form.cleaned_data["allowed_structures"], agent__isnull=True
+            ).exclude(email="")
+            evenement.contacts.add(*structure_contacts)
+
+            messages.success(self.request, "Les droits d'accès ont été modifiés")
+            return safe_redirect(self.object.get_absolute_url())
 
     def test_func(self):
         return self.get_object().can_update_visibilite(self.request.user)

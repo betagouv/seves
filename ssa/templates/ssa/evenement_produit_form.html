@@ -8,8 +8,8 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
-    <script type="text/javascript" src="{% static 'ssa/_etablissement_form.js' %}"></script>
-    <script type="text/javascript" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -140,6 +140,13 @@
             </div>
 
             {% include "ssa/_etablissement_block.html" %}
+            <div id="liens-libre" class="white-container fr-mt-2w">
+                <h3>Liens libres</h3>
+                <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
+                <div>
+                    {{ form.free_link }}
+                </div>
+            </div>
         </main>
     </form>
 

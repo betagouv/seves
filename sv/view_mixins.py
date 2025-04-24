@@ -115,12 +115,7 @@ class WithClotureContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         evenement = self.get_object()
-        context["contacts_not_in_fin_suivi"] = contacts_not_in_fin_suivi = (
-            evenement.get_contacts_structures_not_in_fin_suivi()
-        )
-        context["is_evenement_can_be_cloturer_by_user"] = evenement.can_be_cloturer_by(self.request.user)
-        context["is_evenement_can_be_cloturer"] = evenement.can_be_cloturer(
-            self.request.user, contacts_not_in_fin_suivi
-        )
-        context["is_cloture"] = evenement.is_cloture
+        user = self.request.user
+        context["contacts_not_in_fin_suivi"] = evenement.get_contacts_structures_not_in_fin_suivi()
+        context["is_evenement_can_be_cloturer"], _ = evenement.can_be_cloturer(user)
         return context

@@ -102,7 +102,7 @@
             </div>
         </div>
 
-        {% include "sv/_list_free_links.html" with classes="fr-mb-4v" object=evenement %}
+        {% include "core/_list_free_links.html" with classes="fr-mb-4v" object=evenement title="Événements en lien libre" %}
 
         <div id="detail-content">
             <div class="fr-tabs">
@@ -171,7 +171,9 @@
                     {% else %}
                         <div class="white-container fr-pb-6w">
                             <h3>Cet événement ne contient pas de zone</h3>
-                            <a href="{% url 'sv:fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button "><button class="fr-btn fr-btn--secondary fr-mr-2w fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button></a>
+                            {% if can_add_fiche_zone_delimitee %}
+                                <a href="{% url 'sv:fiche-zone-delimitee-creation' %}?evenement={{ evenement.pk }}" class="zone-button "><button class="fr-btn fr-btn--secondary fr-mr-2w fr-btn--icon-left fr-icon-add-line">Ajouter une zone</button></a>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>

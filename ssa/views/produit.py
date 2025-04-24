@@ -1,11 +1,12 @@
+from django.contrib import messages
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect, Http404
 from django.views.generic import CreateView, DetailView
 
-from core.mixins import WithEtatMixin, WithFormErrorsAsMessagesMixin
+from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
 from ssa.forms import EvenementProduitForm
-from ssa.models import EvenementProduit
-from django.contrib import messages
 from ssa.formsets import EtablissementFormSet
+from ssa.models import EvenementProduit
 
 
 class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
@@ -42,12 +43,7 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         return self.form_valid(form)
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        if self.request.POST.get("action") == "publish":
-            self.object.etat = WithEtatMixin.Etat.EN_COURS
-        self.object.createur = self.request.user.agent.structure
-        self.object.save()
-
+        self.object = form.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
 
@@ -61,9 +57,12 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         return context
 
 
-class EvenementProduitDetailView(DetailView):
+class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTestMixin, DetailView):
     model = EvenementProduit
     template_name = "ssa/evenement_produit_detail.html"
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
         return EvenementProduit.objects.all().select_related("createur")

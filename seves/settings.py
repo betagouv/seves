@@ -78,6 +78,7 @@ if ADMIN_ENABLED:
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -181,7 +182,7 @@ if SENTRY_DSN:
 STORAGES = {
     "default": {"BACKEND": env("STORAGE_ENGINE")},
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 AWS_S3_OBJECT_PARAMETERS = {
@@ -297,6 +298,8 @@ CSP_CONNECT_SRC = (
     "'self'",
     "geo.api.gouv.fr",
     "api.insee.fr",
+    "data.economie.gouv.fr",
+    "api-adresse.data.gouv.fr",
 )
 
 SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")

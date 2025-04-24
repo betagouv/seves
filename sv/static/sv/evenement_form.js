@@ -1,3 +1,5 @@
+import {setUpFreeLinks} from "/static/core/free_links.js";
+
 function setUpOrganismeNuisible(){
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('id_organisme_nuisible');
@@ -26,29 +28,8 @@ function setUpOrganismeNuisible(){
 }
 
 
-function setUpFreeLinks(){
-    const freeLinksChoices = new Choices(document.getElementById("id_free_link"), {
-        searchResultLimit: 500,
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        removeItemButton: true,
-        shouldSort: false,
-        itemSelectText: '',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucune fiche à sélectionner',
-        searchFields: ['label'],
-    });
-    const freeLinksIds = JSON.parse(document.getElementById('free-links-id').textContent);
-    if (!!freeLinksIds) {
-        freeLinksIds.forEach(value => {
-            freeLinksChoices.setChoiceByValue(value);
-        });
-    }
-}
-
 
 document.addEventListener('DOMContentLoaded', function() {
     setUpOrganismeNuisible()
-    setUpFreeLinks()
+    setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
 });

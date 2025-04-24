@@ -1,61 +1,17 @@
-from collections import defaultdict
 from copy import copy
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField
+from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.models import Document, Contact, Message, Visibilite, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
 
 User = get_user_model()
-
-
-class DSFRForm(forms.Form):
-    input_to_class = defaultdict(lambda: "fr-input")
-    input_to_class["ClearableFileInput"] = "fr-upload"
-    input_to_class["Select"] = "fr-select"
-    input_to_class["SelectMultiple"] = "fr-select"
-    input_to_class["SelectWithAttributeField"] = "fr-select"
-    input_to_class["DSFRRadioButton"] = ""
-    input_to_class["DSFRCheckboxSelectMultiple"] = ""
-    manual_render_fields = []
-
-    def get_context(self):
-        context = super().get_context()
-        context["manual_render_fields"] = self.manual_render_fields
-        return context
-
-    def as_dsfr_div(self):
-        return self.render("core/_dsfr_div.html")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.label_suffix = ""
-        for field in self.fields:
-            widget = self.fields[field].widget
-            class_to_add = self.input_to_class[type(widget).__name__]
-            widget.attrs["class"] = widget.attrs.get("class", "") + " " + class_to_add
-
-
-class WithNextUrlMixin:
-    def add_next_field(self, next):
-        if next:
-            self.fields["next"] = forms.CharField(widget=forms.HiddenInput())
-            self.initial["next"] = next
-
-
-class WithContentTypeMixin:
-    def add_content_type_fields(self, obj):
-        if obj:
-            self.fields["content_type"].widget = forms.HiddenInput()
-            self.fields["object_id"].widget = forms.HiddenInput()
-            self.initial["content_type"] = ContentType.objects.get_for_model(obj)
-            self.initial["object_id"] = obj.pk
 
 
 class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):

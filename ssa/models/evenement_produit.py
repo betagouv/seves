@@ -7,6 +7,7 @@ from reversion.models import Version
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
+from ssa.managers import EvenementProduitManager
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
 
 
@@ -107,6 +108,8 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
 
+    objects = EvenementProduitManager()
+
     SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS]
 
     def get_absolute_url(self):
@@ -163,6 +166,11 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
+
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
 
     class Meta:
         constraints = [
