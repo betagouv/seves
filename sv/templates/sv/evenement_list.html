@@ -1,6 +1,7 @@
 {% extends 'sv/base.html' %}
 {% load static %}
 {% load etat_tags %}
+{% load render_field %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
@@ -19,6 +20,14 @@
             <h2 class="fr-h3">Rechercher un évènement</h2>
             <div class="evenements__search-form">
                 {{ filter.form.as_dsfr_div }}
+            </div>
+            <div class="evenements__search-form">
+                <div class="fr-fieldset__element">
+                    {% render_field filter.form.structure_contact %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% render_field filter.form.agent_contact %}
+                </div>
             </div>
             <div class="fr-fieldset__element evenement__header--actions">
                 <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>

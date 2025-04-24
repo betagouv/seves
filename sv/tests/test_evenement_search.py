@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.factories import ContactStructureFactory, ContactAgentFactory
+from core.models import Contact
 from seves import settings
 from ..factories import (
     FicheDetectionFactory,
@@ -32,8 +34,10 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_label("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(page.get_by_text("Organisme", exact=True)).to_be_visible()
-    expect(page.locator(".choices__list--single .choices__placeholder")).to_be_visible()
-    expect(page.locator(".choices__list--single .choices__placeholder")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.locator("#id_organisme_nuisible ~ .choices__list--single .choices__placeholder")).to_be_visible()
+    expect(page.locator("#id_organisme_nuisible ~ .choices__list--single .choices__placeholder")).to_contain_text(
+        settings.SELECT_EMPTY_CHOICE
+    )
     expect(page.get_by_label("Période du")).to_be_visible()
     expect(page.get_by_label("Période du")).to_be_empty()
     expect(page.get_by_label("Au")).to_be_visible()
@@ -41,6 +45,13 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.locator("#search-form").get_by_text("État")).to_be_visible()
     expect(page.get_by_label("État")).to_be_visible()
     expect(page.get_by_label("État")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.get_by_label("Structure en contact")).to_be_visible()
+    expect(page.get_by_label("Structure en contact")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.get_by_text("Agent en contact", exact=True)).to_be_visible()
+    expect(page.locator("#id_agent_contact ~ .choices__list--single .choices__placeholder")).to_be_visible()
+    expect(page.locator("#id_agent_contact ~ .choices__list--single .choices__placeholder")).to_contain_text(
+        settings.SELECT_EMPTY_CHOICE
+    )
     expect(page.get_by_role("button", name="Effacer")).to_be_visible()
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
@@ -50,15 +61,19 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     RegionFactory.create_batch(5)
     OrganismeNuisibleFactory.create_batch(5)
+    contact_structure = Contact.objects.filter(structure__isnull=False).first()
+    contact_agent = Contact.objects.filter(agent__isnull=False).first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Numéro").fill("2024")
     page.get_by_label("Région").select_option(index=1)
     organisme = OrganismeNuisible.objects.first().libelle_court
-    choice_js_fill(page, ".choices__list--single", organisme, organisme)
+    choice_js_fill(page, "#id_organisme_nuisible ~ .choices__list--single", organisme, organisme)
     page.get_by_label("Période du").fill("2024-06-19")
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_label("État").select_option(index=1)
+    page.get_by_label("Structure en contact").select_option(str(contact_structure.id))
+    choice_js_fill(page, "#id_agent_contact ~ .choices__list--single", str(contact_agent), str(contact_agent))
     page.get_by_role("button", name="Effacer").click()
 
     expect(page.get_by_label("Numéro")).to_be_empty()
@@ -67,6 +82,8 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     expect(page.get_by_label("Période du")).to_be_empty()
     expect(page.get_by_label("Au")).to_be_empty()
     expect(page.get_by_label("État")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.locator("#id_structure_contact")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.locator("#id_agent_contact")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
 
 
 @pytest.mark.django_db
@@ -83,7 +100,7 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
     expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     assert (
         page.url
-        == f"{live_server.url}{get_fiche_detection_search_form_url()}?numero=&region=&organisme_nuisible=&start_date=&end_date=&etat="
+        == f"{live_server.url}{get_fiche_detection_search_form_url()}?numero=&region=&organisme_nuisible=&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
 
@@ -165,7 +182,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
@@ -180,12 +197,14 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
     evenement_3 = EvenementFactory()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    choice_js_fill(page, ".choices__list--single", organisme.libelle_court, organisme.libelle_court)
+    choice_js_fill(
+        page, "#id_organisme_nuisible ~.choices__list--single", organisme.libelle_court, organisme.libelle_court
+    )
     page.get_by_role("button", name="Rechercher").click()
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
     expect(page.get_by_role("cell", name=evenement_1.numero)).to_be_visible()
@@ -326,3 +345,33 @@ def test_filter_deleted_detection_in_count_column(live_server, page):
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     assert page.locator(".evenements__list-row:nth-child(1) td:nth-child(10)").inner_text().strip() == "1"
+
+
+def test_search_with_structure_contact(live_server, page: Page):
+    evenement_1 = EvenementFactory()
+    evenement_2 = EvenementFactory()
+    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    evenement_2.contacts.add(contact_structure)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Structure en contact").select_option(str(contact_structure.id))
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.locator(".evenements__list-row")).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(evenement_1.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
+
+
+def test_search_with_agent_contact(live_server, page: Page, choice_js_fill):
+    evenement_1 = EvenementFactory()
+    evenement_2 = EvenementFactory()
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    evenement_2.contacts.add(contact_agent)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    choice_js_fill(page, "#id_agent_contact ~ .choices__list--single", str(contact_agent), str(contact_agent))
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.locator(".evenements__list-row")).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(evenement_1.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
