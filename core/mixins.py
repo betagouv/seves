@@ -15,7 +15,16 @@ from django.views.generic import FormView
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact
+from core.models import (
+    Document,
+    LienLibre,
+    Contact,
+    Message,
+    Visibilite,
+    Structure,
+    FinSuiviContact,
+    user_is_referent_national,
+)
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
@@ -221,7 +230,7 @@ class WithVisibiliteMixin(models.Model):
             return True
         if user.agent.is_in_structure(self.createur):
             return True
-        if not self.is_draft and user.agent.structure.is_mus_or_bsv:
+        if not self.is_draft and (user.agent.structure.is_mus_or_bsv or user_is_referent_national(user)):
             return True
         if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures.all():
             return True

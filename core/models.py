@@ -11,11 +11,16 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from seves import settings
 from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
 from .storage import get_timestamped_filename
 from .validators import validate_upload_file, AllowedExtensions
 
 User = get_user_model()
+
+
+def user_is_referent_national(user: User):
+    return settings.REFERENT_NATIONAL_GROUP in user.groups.values_list("name", flat=True)
 
 
 class Agent(models.Model):

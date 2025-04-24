@@ -1,8 +1,10 @@
 import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
+from django.contrib.auth.models import Group
 
 from core.factories import StructureFactory, ContactStructureFactory
+from seves import settings
 from sv.factories import EvenementFactory, FicheDetectionFactory
 from core.models import Structure, Visibilite
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, AC_STRUCTURE
@@ -148,3 +150,34 @@ def test_agent_cant_see_visibilite_limitee_if_not_in_list(live_server, page: Pag
     mocked_authentification_user.agent.save()
     response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert response.status == 403
+
+
+def test_agent_with_referent_national_group_cannot_view_evenement_brouillon(
+    live_server, page: Page, mocked_authentification_user
+):
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    mocked_authentification_user.groups.add(referent_national_group)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=StructureFactory())
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 403
+
+
+@pytest.mark.parametrize("visibilite_libelle", [Visibilite.LOCALE, Visibilite.LIMITEE, Visibilite.NATIONALE])
+def test_agent_with_referent_national_group_can_view_evenement(
+    live_server, page: Page, mocked_authentification_user, visibilite_libelle
+):
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    mocked_authentification_user.groups.add(referent_national_group)
+    evenement = EvenementFactory(createur=StructureFactory())
+    if visibilite_libelle == Visibilite.LIMITEE:
+        evenement.allowed_structures.set([StructureFactory()])
+    evenement.visibilite = visibilite_libelle
+    evenement.save()
+    FicheDetectionFactory(evenement=evenement)
+
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    assert response.status == 200
+    expect(page.get_by_role("heading", name=f"Événement {str(evenement.numero)}")).to_be_visible()
+    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
+    expect(page.get_by_role("link", name=str(evenement.numero))).to_be_visible()

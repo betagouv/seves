@@ -2,9 +2,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Exists
 from django.db.models.functions import Cast, Greatest
+from core.models import Visibilite, FinSuiviContact, user_is_referent_national
+
 from django.db.models import IntegerField, Func, Value
 
-from core.models import Visibilite, FinSuiviContact
 from sv.managers_mixins import WithDerniereMiseAJourManagerMixin
 
 
@@ -132,7 +133,7 @@ class EvenementQueryset(models.QuerySet):
     def get_user_can_view(self, user):
         from sv.models import Evenement
 
-        if user.agent.structure.is_mus_or_bsv:
+        if user.agent.structure.is_mus_or_bsv or user_is_referent_national(user):
             return self.exclude(Q(etat=Evenement.Etat.BROUILLON) & ~Q(createur=user.agent.structure))
         return self.filter(
             Q(visibilite=Visibilite.NATIONALE)
