@@ -282,6 +282,7 @@ LOGGING = {
 CAN_GIVE_ACCESS_GROUP = "access_admin"
 SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
+REFERENT_NATIONAL_GROUP = "referent_national"
 
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")

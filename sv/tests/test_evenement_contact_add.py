@@ -1,11 +1,13 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Group
 from playwright.sync_api import expect, Page
 from django.urls import reverse
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact
+from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -281,3 +283,25 @@ def test_cant_forge_add_structure_if_evenement_is_cloturer(client):
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.contacts.count() == 0
+
+
+@pytest.mark.django_db
+def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server, page, choice_js_fill):
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    contact_agent.agent.user.groups.add(referent_national_group)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent.agent.nom, contact_agent.display_with_agent_unit
+    )
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
+    expect(
+        page.get_by_test_id("contacts-structures").get_by_text(str(contact_agent.agent.structure), exact=True)
+    ).not_to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.contacts.count() == 1
+    assert contact_agent.agent.structure not in evenement.contacts.all()
