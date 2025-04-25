@@ -62,6 +62,10 @@
                                 Publier l'événement</button>
                         </form>
                     {% endif %}
+                    {% if can_ouvrir %}
+                        <button class="fr-btn" data-fr-opened="false" aria-controls="fr-annuler-cloture-modal">Ouvrir l'évènement</button>
+                        {% include "core/_ouvrir_evenement_modal.html" %}
+                    {% endif %}
                     {% include "sv/_evenement_action_navigation.html" %}
                 </div>
             </div>
