@@ -18,7 +18,7 @@ def test_need_group_to_add_permission(live_server, page, mocked_authentification
 
 
 @pytest.mark.django_db
-def test_user_can_see_navigation_without_group(live_server, page, mocked_authentification_user):
+def test_user_cant_see_navigation_without_group(live_server, page, mocked_authentification_user):
     page.goto(f"{live_server.url}")
     page.get_by_role("button", name="test@example.com").click()
     page.wait_for_timeout(200)
@@ -31,7 +31,7 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
     ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group)
+    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group)
     agent_1 = AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
     agent_2 = AgentFactory(structure=structure, prenom="Ian", nom="Paice")
     agent_3 = AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
@@ -75,7 +75,7 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
     ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group)
+    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group)
     agent_1 = AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
     agent_2 = AgentFactory(structure=structure, prenom="Ian", nom="Paice")
     agent_3 = AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
@@ -119,3 +119,68 @@ def test_cant_remove_permissions_for_myself(live_server, page, mocked_authentifi
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
     expect(page.get_by_text("Doe John")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_sv_user_cant_manage_ssa_permissions(live_server, page, mocked_authentification_user):
+    sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
+    Group.objects.get_or_create(name=settings.SSA_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.add(access_admin_group, sv_group)
+    agent = AgentFactory(structure=structure, prenom="Test", nom="User")
+
+    page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
+
+    expect(page.get_by_text("SV")).to_be_visible()
+    expect(page.get_by_text("SSA")).not_to_be_visible()
+    expect(page.locator(f"input[id='sv_{agent.pk}']")).to_be_visible()
+    expect(page.locator(f"input[id='ssa_{agent.pk}']")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_ssa_user_cant_manage_sv_permissions(live_server, page, mocked_authentification_user):
+    Group.objects.get_or_create(name=settings.SV_GROUP)
+    ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.add(access_admin_group, ssa_group)
+    agent = AgentFactory(structure=structure, prenom="Test", nom="User")
+
+    page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
+
+    expect(page.get_by_text("SSA")).to_be_visible()
+    expect(page.get_by_text("SV")).not_to_be_visible()
+    expect(page.locator(f"input[id='ssa_{agent.pk}']")).to_be_visible()
+    expect(page.locator(f"input[id='sv_{agent.pk}']")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_group_name,permission_to_forge",
+    [
+        (settings.SV_GROUP, "ssa"),  # SV user trying to forge SSA permissions
+        (settings.SSA_GROUP, "sv"),  # SSA user trying to forge SV permissions
+    ],
+)
+def test_users_cant_forge_other_group_permissions(
+    client, mocked_authentification_user, user_group_name, permission_to_forge
+):
+    Group.objects.get_or_create(name=settings.SV_GROUP)
+    Group.objects.get_or_create(name=settings.SSA_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    user_group = Group.objects.get(name=user_group_name)
+    mocked_authentification_user.groups.add(access_admin_group, user_group)
+    agent = AgentFactory(prenom="Test", nom="User")
+    assert agent.user.groups.count() == 0
+    assert agent.user.is_active is False
+
+    client.post(
+        reverse("handle-permissions"),
+        data={f"{permission_to_forge}_{agent.pk}": "on", "next": reverse("sv:evenement-liste")},
+        follow=True,
+    )
+
+    agent.refresh_from_db()
+    assert agent.user.groups.count() == 0
+    assert agent.user.is_active is False
