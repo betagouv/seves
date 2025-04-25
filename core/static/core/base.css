@@ -4,6 +4,10 @@ body{
 header{
     border-bottom: 2px solid #000091;
 }
+header .fr-menu {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
 @media (min-width: 62em) {
     .fr-header__body-row {
         padding-left: 1.5rem !important;
