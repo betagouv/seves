@@ -11,6 +11,7 @@ from .views import (
     PublishView,
     StructureAddView,
     AgentAddView,
+    EvenementOuvrirView,
 )
 
 urlpatterns = [
@@ -73,5 +74,10 @@ urlpatterns = [
         "agents/ajout",
         AgentAddView.as_view(),
         name="agent-add",
+    ),
+    path(
+        "evenement/<int:pk>/ouvrir/",
+        EvenementOuvrirView.as_view(),
+        name="evenement-ouvrir",
     ),
 ]
