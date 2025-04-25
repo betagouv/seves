@@ -175,6 +175,7 @@ class EvenementDetailView(
             "can_be_ac_notified": self.get_object().can_notifiy(user),
             "can_be_updated": self.get_object().can_be_updated(user),
             "can_be_deleted": self.get_object().can_be_deleted(user),
+            "can_ouvrir": self.get_object().can_ouvrir(user),
             "can_add_fiche_detection": self.get_object().can_add_fiche_detection(user),
             "can_delete_fiche_detection": self.get_object().can_delete_fiche_detection(),
             "can_update_fiche_detection": self.get_object().can_update_fiche_detection(user),

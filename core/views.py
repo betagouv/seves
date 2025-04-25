@@ -431,3 +431,21 @@ class CloturerView(View):
         object.cloturer()
         messages.success(request, object.get_cloture_confirm_message())
         return redirect(redirect_url)
+
+
+class EvenementOuvrirView(View):
+    def post(self, request, pk):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data["content_type_id"])
+        obj = content_type.model_class().objects.get(pk=pk)
+        redirect_url = obj.get_absolute_url()
+        if not obj.can_ouvrir(request.user):
+            messages.error(request, "Vous ne pouvez pas ouvrir l'évènement.")
+            return redirect(redirect_url)
+        with transaction.atomic():
+            user_contact = self.request.user.agent.structure.contact_set.get()
+            if fin_suivi := obj.fin_suivi.filter(contact=user_contact):
+                fin_suivi.delete()
+            obj.publish()
+            messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
+            return redirect(redirect_url)

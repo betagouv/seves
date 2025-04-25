@@ -12,6 +12,7 @@ from .views import (
     StructureAddView,
     AgentAddView,
     CloturerView,
+    EvenementOuvrirView,
 )
 
 urlpatterns = [
@@ -79,5 +80,10 @@ urlpatterns = [
         "cloturer/<int:pk>",
         CloturerView.as_view(),
         name="cloturer",
+    ),
+    path(
+        "evenement/<int:pk>/ouvrir/",
+        EvenementOuvrirView.as_view(),
+        name="evenement-ouvrir",
     ),
 ]

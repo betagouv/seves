@@ -1,3 +1,5 @@
+import html
+
 import pytest
 from django.urls import reverse
 
@@ -7,7 +9,7 @@ from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.models import Contact, FinSuiviContact, Message
+from core.models import Contact, FinSuiviContact, Message, Visibilite
 
 
 @pytest.fixture
@@ -289,3 +291,76 @@ def test_cant_cloture_evenement_if_already_cloture(client):
     evenement.refresh_from_db()
     assert response.status_code == 302
     assert evenement.is_deleted is False
+
+
+@pytest.mark.django_db
+def test_can_ouvrir_evenement_if_cloture(live_server, page: Page, mocked_authentification_user, contact_ac):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    mocked_authentification_user.agent.structure = contact_ac.structure
+    FinSuiviContact.objects.create(
+        content_type=ContentType.objects.get_for_model(Evenement), object_id=evenement.id, contact=contact_ac
+    )
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Ouvrir l'évènement").click()
+    page.get_by_role("button", name="Confirmer", exact=True).click()
+
+    expect(page.get_by_text(f"L'événement {evenement.numero} a bien été ouvert de nouveau.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.EN_COURS
+    assert not evenement.fin_suivi.filter(contact=contact_ac).exists()
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_draft(live_server, page: Page, client):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.BROUILLON
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_en_cours(live_server, page: Page, client, mocked_authentification_user, contact_ac):
+    evenement = EvenementFactory(etat=Evenement.Etat.EN_COURS)
+    mocked_authentification_user.agent.structure = contact_ac.structure
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.EN_COURS
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_user_is_not_ac(live_server, page: Page, client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE, visibilite=Visibilite.NATIONALE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.CLOTURE
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
