@@ -6,8 +6,6 @@ register = template.Library()
 # https://www.systeme-de-design.gouv.fr/elements-d-interface/composants/badge
 ETATS_COLORS = {
     "en_cours": "success",  # Vert
-    "cloture": "error",  # Rouge
-    "fin de suivi": "warning",  # Orange
 }
 
 
