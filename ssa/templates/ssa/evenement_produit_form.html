@@ -19,7 +19,8 @@
 
             <div class="evenement-produit-form-header">
                 <h1>Création d'un événement</h1>
-                <div>
+                <div class="fr-mb-auto">
+                    <a href="{% url 'ssa:evenement-produit-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                     <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
                     <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">Enregistrer</button>
                 </div>
