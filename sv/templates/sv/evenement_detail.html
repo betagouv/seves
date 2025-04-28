@@ -31,7 +31,7 @@
 {% block content %}
     <main class="main-container">
         <div data-testid="evenement-header">
-            <div class="evenement-top-row">
+            <div class="details-top-row">
                 <h1 class="fr-mb-0-5v">Événement {% if evenement.numero %}{{ evenement.numero }}{%  endif %}</h1>
 
                 {% if not evenement.is_draft %}
@@ -51,7 +51,7 @@
                     </div>
                 {% endif %}
 
-                <div class="evenement-top-row--actions">
+                <div class="details-top-row--actions">
                     {% if can_publish %}
                         <form action="{% url 'publish' %}" method="post">
                             {% csrf_token %}

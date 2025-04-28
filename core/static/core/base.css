@@ -169,3 +169,44 @@ label:has(+ .choices select[data-required="true"])::after,
     content: "DEV";
     background-color: green;
 }
+
+.details-top-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.details-top-row--actions {
+    display: flex;
+    justify-content: space-between;
+    max-height: 2.5rem;
+}
+.details-top-row--actions .fr-translate__btn::before {
+    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
+    mask-image: url(../../../static/icons/system/add-line.svg);
+}
+.details-top-row--actions .fr-translate__btn{
+    height: 100%;
+}
+.details-top-row--actions {
+    margin-left: auto;
+}
+@media (min-width: 992px) {
+    .details-top-row--actions{
+        margin-left: unset;
+    }
+}
+@media (min-width: 992px) {
+    .details-top-row--actions .fr-nav__item {
+        height: 100%;
+    }
+}
+.details-top-row--actions .fr-nav__link{
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+@media (min-width: 992px) {
+    .details-top-row--actions .fr-nav__link{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}

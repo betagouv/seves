@@ -4,7 +4,7 @@ from django.db import models, transaction
 from django.urls import reverse
 from reversion.models import Version
 
-from core.mixins import WithEtatMixin, WithNumeroMixin
+from core.mixins import WithEtatMixin, WithNumeroMixin, AllowsSoftDeleteMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
@@ -127,7 +127,7 @@ class QuantificationUnite(models.TextChoices):
 
 
 @reversion.register()
-class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
+class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_rasff = models.CharField(
@@ -243,6 +243,12 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         if user.agent.is_in_structure(self.createur):
             return True
         return not self.is_draft
+
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_success_message(self):
+        return f"L'évènement {self.numero} a bien été supprimé"
 
     class Meta:
         constraints = [
