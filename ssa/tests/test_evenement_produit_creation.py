@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement
+from ssa.models import EvenementProduit, Etablissement, QuantificationUnite
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
 
@@ -346,3 +346,33 @@ def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_
 
     evenement = EvenementProduit.objects.get()
     assert evenement.numero_rasff == "123456"
+
+
+def test_cant_create_evenement_produit_with_quantification_only(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.quantification.fill("3.14")
+    creation_page.submit_as_draft()
+
+    assert EvenementProduit.objects.count() == 0
+    assert creation_page.error_messages == [
+        "Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides."
+    ]
+
+
+def test_cant_create_evenement_produit_with_quantification_unit_only(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.quantification_unite.select_option(QuantificationUnite.MG_KG)
+    creation_page.submit_as_draft()
+
+    assert EvenementProduit.objects.count() == 0
+    assert creation_page.error_messages == [
+        "Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides."
+    ]

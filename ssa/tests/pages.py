@@ -124,6 +124,10 @@ class EvenementProduitCreationPage:
     def add_free_link(self, numero, choice_js_fill):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), "Événement produit : " + str(numero))
 
+    @property
+    def error_messages(self):
+        return self.page.locator(".fr-alert__title").all_text_contents()
+
 
 class EvenementProduitDetailsPage:
     def submit_form(self):
