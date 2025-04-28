@@ -261,4 +261,12 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
                 ),
                 name="type_evenement_source_constraint",
             ),
+            models.CheckConstraint(
+                check=(
+                    (models.Q(quantification__isnull=True) & models.Q(quantification_unite=""))
+                    | (models.Q(quantification__isnull=False) & ~models.Q(quantification_unite=""))
+                ),
+                name="quantification_must_have_unit",
+                violation_error_message="Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides.",
+            ),
         ]

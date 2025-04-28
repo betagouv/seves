@@ -51,6 +51,10 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         messages.success(self.request, "La fiche produit a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 
+    def form_invalid(self, form):
+        self.object = None
+        return super().form_invalid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["empty_form"] = self.etablissement_formset.empty_form
