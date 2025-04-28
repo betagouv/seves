@@ -174,6 +174,11 @@ class EvenementProduitDetailsPage:
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
 
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()
+
 
 class EvenementProduitListPage:
     def __init__(self, page: Page, base_url):

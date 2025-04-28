@@ -131,7 +131,7 @@ def test_can_delete_evenement(live_server, page):
 
     page.get_by_role("button", name="Actions").click()
     page.get_by_text("Supprimer l'événement", exact=True).click()
-    page.get_by_test_id("submit-evenement-delete").click()
+    page.get_by_test_id("submit-delete-modal").click()
 
     expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
@@ -165,7 +165,7 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
 
     page.get_by_role("button", name="Actions").click()
     page.get_by_text("Supprimer l'événement", exact=True).click()
-    page.get_by_test_id("submit-evenement-delete").click()
+    page.get_by_test_id("submit-delete-modal").click()
 
     expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
