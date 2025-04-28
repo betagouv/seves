@@ -172,6 +172,12 @@ class Evenement(
     def get_soft_delete_attribute_error_message(self):
         return f"L'évènement {self.numero} ne peut pas être supprimé"
 
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'événement {self.numero}"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
+
     def add_fin_suivi(self, user):
         with transaction.atomic():
             fin_suivi_contact = FinSuiviContact(

@@ -118,3 +118,16 @@ def test_evenement_produit_detail_page_access_other_structure(live_server, page:
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     response = details_page.navigate(evenement)
     assert response.status == status_code
+
+
+def test_can_delete_evenement_produit(live_server, page):
+    evenement = EvenementProduitFactory()
+    assert EvenementProduit.objects.count() == 1
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.delete()
+    expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
+
+    assert EvenementProduit.objects.count() == 0
+    assert EvenementProduit._base_manager.get().pk == evenement.pk

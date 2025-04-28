@@ -140,6 +140,12 @@ class AllowsSoftDeleteMixin(models.Model):
     def get_soft_delete_attribute_error_message(self):
         return "Ce type d'objet ne peut pas être supprimé"
 
+    def get_soft_delete_confirm_title(self):
+        return "Supprimer cet objet"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet objet ?"
+
     class Meta:
         abstract = True
 

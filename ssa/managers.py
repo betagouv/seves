@@ -7,7 +7,7 @@ from core.models import FinSuiviContact, LienLibre
 
 class EvenementProduitManager(models.Manager):
     def get_queryset(self):
-        return EvenementProduitQueryset(self.model, using=self._db).all()
+        return EvenementProduitQueryset(self.model, using=self._db).filter(is_deleted=False)
 
 
 class EvenementProduitQueryset(models.QuerySet):
