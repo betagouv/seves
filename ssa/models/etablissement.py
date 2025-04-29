@@ -57,6 +57,9 @@ class Etablissement(models.Model):
             ),
         ],
     )
+    numero_agrement = models.CharField(
+        max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
+    )
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
 
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
@@ -81,10 +84,6 @@ class Etablissement(models.Model):
     )
     position_dossier = models.CharField(
         max_length=100, choices=PositionDossier.choices, verbose_name="Position dossier", blank=True
-    )
-    quantite_en_stock = models.CharField(max_length=255, verbose_name="Quantité en stock", blank=True)
-    numero_agrement = models.CharField(
-        max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
 
     def __str__(self):

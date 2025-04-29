@@ -103,6 +103,7 @@ class EvenementProduitCreationPage:
         modal = self.open_etablissement_modal()
 
         modal.locator('[id$="siret"]').fill(etablissement.siret)
+        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
@@ -110,8 +111,6 @@ class EvenementProduitCreationPage:
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
         modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
-        modal.locator('[id$="-quantite_en_stock"]').fill(str(etablissement.quantite_en_stock))
-        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
 
         self.close_etablissement_modal()
 
