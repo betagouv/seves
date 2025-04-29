@@ -66,7 +66,9 @@ class EvenementProduitCreationPage:
         self.numero_rappel_submit.click()
 
     def delete_rappel_conso(self, numero):
-        self.page.locator(".fr-tag", has_text=numero).click()
+        tag = self.page.locator(".fr-tag", has_text=numero)
+        box = tag.bounding_box()
+        self.page.mouse.click(box["x"] + box["width"] - 15, box["y"] - 5 + box["height"] / 2)
 
     def add_etablissement_with_required_fields(self, etablissement: Etablissement):
         modal = self.open_etablissement_modal()
