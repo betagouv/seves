@@ -99,7 +99,3 @@ class EtablissementFactory(DjangoModelFactory):
     type_exploitant = FuzzyChoice([choice[0] for choice in TypeExploitant.choices])
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     numero_agrement = factory.Faker("numerify", text="###.##.###")
-
-    @factory.lazy_attribute
-    def quantite_en_stock(self):
-        return f"{random.randint(1, 100)} {random.choices(['palettes', 'm3', 'paquets', 'cartons'])}"
