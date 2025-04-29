@@ -1033,3 +1033,28 @@ def test_document_cartographie_upload_disabled_when_invalid_file_added_for_other
     assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
+
+
+def test_can_send_message_with_document_confirmation_modal_reject(live_server, page: Page, choice_js_fill):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    message_submit_button = page.get_by_test_id("fildesuivi-add-submit")
+    message_submit_button.click()
+    page.locator("#fr-modal-document-confirmation").get_by_role("button", name="Fermer").click()
+    expect(message_submit_button).not_to_be_disabled()

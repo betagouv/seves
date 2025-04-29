@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const typeInput = document.getElementById('id_document_type');
     const inputDestination = document.getElementById("inputs-for-upload")
     const extensionsInfoSpan = document.getElementById("allowed-extensions-list");
+    const submitButton = document.getElementById("message-send-btn");
 
     typeInput.addEventListener("change", () => onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan));
     fileInput.addEventListener("change", () => onFileInputChange(fileInput, typeInput, messageAddDocumentButton));
@@ -212,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     })
 
-    document.getElementById("message-send-btn").addEventListener("click", event =>{
+    submitButton.addEventListener("click", event =>{
         event.preventDefault()
         const messageForm = document.getElementById("message-form")
 
@@ -241,5 +242,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("message-add-document").click()
         document.getElementById("message-form").submit()
     })
+    document.getElementById("fr-modal-document-confirmation").addEventListener("dsfr.disclose", event => {
+        submitButton.disabled = false;
+    });
 
 });
