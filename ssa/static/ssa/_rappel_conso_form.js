@@ -7,6 +7,7 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     const addRappelConsoBtn = document.getElementById("rappel-submit")
     const submitDraftBtn = document.getElementById("submit_draft")
     const submitPublishBtn = document.getElementById("submit_publish")
+    const toNextInput = document.querySelectorAll(".to-next-input")
 
     function addRappelConso() {
         const numero = `${rappelPart1Container.value}-${rappelPart2Container.value}-${rappelPart3Container.value}`
@@ -44,6 +45,12 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         addRappelConsoBtn.disabled = rappelContainer.some(input => input.value.trim() === '');
     }
 
+    function goToNextIfNeeded(element){
+        if (element.value.length == element.maxLength) {
+            element.nextElementSibling.focus()
+        }
+    }
+
     function addNumeroRappelConsoToHiddenFieldAndSubmit(event) {
         event.preventDefault()
         const form = event.target.closest("form")
@@ -77,4 +84,5 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     rappelContainer.forEach(input => input.addEventListener('input', handleDisabledRappelConsoBtn))
     submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
+    toNextInput.forEach(element => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
 })
