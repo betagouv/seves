@@ -107,3 +107,18 @@ def test_list_can_filter_by_date(live_server, mocked_authentification_user, page
     assert search_page.numero_cell().text_content() == "2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.3")).not_to_be_visible()
+
+
+def test_list_can_reset_form_after_search(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.numero_field.fill("2025")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text("2024.22")).not_to_be_visible()
+
+    search_page.reset_search()
+    search_page.page.wait_for_timeout(600)
+    expect(search_page.page.get_by_text("2024.22")).to_be_visible()
+    expect(search_page.numero_field).to_have_value("")

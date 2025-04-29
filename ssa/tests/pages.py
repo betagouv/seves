@@ -230,3 +230,6 @@ class EvenementProduitListPage:
 
     def submit_search(self):
         return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+
+    def reset_search(self):
+        return self.page.locator("#search-form").get_by_text("Effacer", exact=True).click()
