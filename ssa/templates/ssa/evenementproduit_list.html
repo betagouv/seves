@@ -4,6 +4,10 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_list.css' %}">
 {% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
+    <script type="text/javascript" src="{% static 'ssa/evenement_produit_list.js' %}"></script>
+{% endblock %}
 {% block content %}
     <form id="search-form" method="get" >
         <div class="fr-p-4v evenements_liste__header">
