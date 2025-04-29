@@ -48,6 +48,13 @@
 #rappel-3 {
     width: 8ch;
 }
+#rappel-container .fr-tag{
+    pointer-events: none;
+}
+#rappel-container .fr-tag:after{
+    pointer-events: auto;
+    cursor: pointer;
+}
 .modal-etablissement input, .modal-etablissement select{
     margin-top: 0.5rem;
 }
