@@ -39,7 +39,8 @@
 
         </div>
         <div class="message-send-btn fr-pr-1w fr-mb-8w">
-            <button type="submit" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+            <button type="submit" value="{{ message_status.BROUILLON }}" class="fr-btn fr-btn--secondary" id="draft-message-send-btn" data-testid="draft-fildesuivi-add-submit">Enregistrer comme brouillon</button>
+            <button type="submit" value="{{ message_status.FINALISE }}" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
         </div>
 
     </form>

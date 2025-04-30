@@ -238,6 +238,8 @@ class MessageCreateView(
                 messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
 
     def _mark_contact_as_fin_suivi(self, form):
+        if form.instance.status == Message.Status.BROUILLON:
+            return
         message_type = form.cleaned_data.get("message_type")
         if message_type == Message.FIN_SUIVI:
             content_type = form.cleaned_data.get("content_type")
@@ -270,7 +272,6 @@ class MessageCreateView(
                 self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
             )
             logger.error("Could not connect to Redis")
-
         else:
             messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response

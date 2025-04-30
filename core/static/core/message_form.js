@@ -177,6 +177,31 @@ function validateDocument(event, typeInput, fileInput, inputDestination){
     resetAddDocumentForm(typeInput, fileInput);
 }
 
+function onSubmitBtnClick(event, otherSubmitButton) {
+    event.preventDefault()
+    const messageForm = document.getElementById("message-form")
+    const messageStatusField = document.getElementById("id_status");
+
+    messageStatusField.value = event.target.getAttribute("value");
+    updateLimitedRecipientsValidation();
+    messageForm.reportValidity()
+
+    if (!messageForm.checkValidity()) {
+        return
+    }
+    event.target.disabled = true
+    otherSubmitButton.disabled = true
+
+    const isDocumentBlockVisible = !document.querySelector(".document-form").classList.contains("fr-hidden")
+    const hasFile = !!document.getElementById('id_file').files[0]
+
+    if (isDocumentBlockVisible && hasFile) {
+        dsfr(document.getElementById('fr-modal-document-confirmation')).modal.disclose();
+    } else {
+        messageForm.submit();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const addDocumentFormButton = document.querySelector(".add-document-form-btn")
     const messageAddDocumentButton = document.getElementById("message-add-document")
@@ -185,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputDestination = document.getElementById("inputs-for-upload")
     const extensionsInfoSpan = document.getElementById("allowed-extensions-list");
     const submitButton = document.getElementById("message-send-btn");
+    const draftSubmitButton = document.getElementById("draft-message-send-btn");
 
     typeInput.addEventListener("change", () => onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan));
     fileInput.addEventListener("change", () => onFileInputChange(fileInput, typeInput, messageAddDocumentButton));
@@ -213,28 +239,8 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     })
 
-    submitButton.addEventListener("click", event =>{
-        event.preventDefault()
-        const messageForm = document.getElementById("message-form")
-
-        updateLimitedRecipientsValidation();
-        messageForm.reportValidity()
-
-        if (!messageForm.checkValidity()) {
-            return
-        }
-        event.target.disabled = true
-
-        const isDocumentBlockVisible = !document.querySelector(".document-form").classList.contains("fr-hidden")
-        const hasFile = !!document.getElementById('id_file').files[0]
-
-        if (isDocumentBlockVisible && hasFile) {
-            dsfr(document.getElementById('fr-modal-document-confirmation')).modal.disclose();
-        } else {
-            event.target.closest("form").submit()
-        }
-    })
-
+    submitButton.addEventListener("click", event => onSubmitBtnClick(event, draftSubmitButton));
+    draftSubmitButton.addEventListener("click", event => onSubmitBtnClick(event, submitButton));
     document.getElementById("send-without-adding-document").addEventListener("click", event => {
         document.getElementById("message-form").submit()
     })
@@ -244,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })
     document.getElementById("fr-modal-document-confirmation").addEventListener("dsfr.disclose", event => {
         submitButton.disabled = false;
+        draftSubmitButton.disabled = false;
     });
 
 });
