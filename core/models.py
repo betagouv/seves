@@ -252,7 +252,12 @@ class Message(models.Model):
     TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 
+    class Status(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        FINALISE = "finalise", "Finalisé"
+
     message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.FINALISE, verbose_name="Statut")
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")

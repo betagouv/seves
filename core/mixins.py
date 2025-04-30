@@ -107,6 +107,7 @@ class WithMessageFormInContextMixin:
         context["add_document_form"] = MessageDocumentForm()
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["message_status"] = Message.Status
         return context
 
 

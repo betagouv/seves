@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
-from core.models import Message, Contact, Structure, Visibilite, Document
+from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
 from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -56,6 +56,8 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
 
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
+
+    assert evenement.messages.get().status == Message.Status.FINALISE
 
 
 def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js_fill):
@@ -114,6 +116,7 @@ def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js
         other_active_contact,
     ]
     assert message.message_type == Message.DEMANDE_INTERVENTION
+    assert message.status == Message.Status.FINALISE
 
 
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
@@ -281,6 +284,8 @@ def test_can_add_and_see_note_without_document(live_server, page: Page):
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
+    assert evenement.messages.get().status == Message.Status.FINALISE
+
 
 def test_can_add_and_see_compte_rendu(live_server, page: Page):
     evenement = EvenementFactory()
@@ -313,6 +318,8 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page):
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
     assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention"
+
+    assert evenement.messages.get().status == Message.Status.FINALISE
 
 
 def test_cant_add_compte_rendu_without_recipient(live_server, page: Page):
@@ -1194,3 +1201,170 @@ def test_message_with_national_referent_and_regular_agent_in_different_structure
     assert evenement.contacts.filter(agent=regular_agent.agent).exists()
     assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
     assert evenement.contacts.filter(structure=regular_agent.agent.structure).exists()
+
+
+def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutbox):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_message_with_document_confirmation_modal_reject(
+    live_server, page: Page, choice_js_fill, mailoutbox
+):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+    page.locator("#send-without-adding-document").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_message_with_document_confirmation_modal_confirm(
+    live_server, page: Page, choice_js_fill, mailoutbox
+):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+    page.locator("#send-with-adding-document").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_note(live_server, page: Page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Note").click()
+    page.locator("#id_title").fill("Title of the note")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Point de situation").click()
+    page.locator("#id_title").fill("Title of the point de situation")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_demande_intervention(live_server, page: Page, choice_js_fill, mailoutbox):
+    active_contact = ContactStructureFactory(with_one_active_agent=True)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients_structures_only"] ~ div.choices',
+        active_contact.display_with_agent_unit,
+        active_contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the demande d'intervention")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    Contact.objects.create(structure=structure, email="bar@example.com")
+    structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
+    Contact.objects.create(structure=structure, email="foo@example.com")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Compte rendu sur demande d'intervention", exact=True).click()
+    page.get_by_text("MUS", exact=True).click()
+    page.get_by_text("BSV", exact=True).click()
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_fin_suivi(live_server, page: Page, mailoutbox, mocked_authentification_user):
+    evenement = EvenementFactory()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    evenement.contacts.add(contact)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Fin de suivi").click()
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+    assert not FinSuiviContact.objects.filter(
+        content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact
+    ).exists()
