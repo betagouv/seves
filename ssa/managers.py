@@ -43,3 +43,18 @@ class EvenementProduitQueryset(models.QuerySet):
             .values("count")
         )
         return self.annotate(nb_liens_libre=Subquery(liens))
+
+    def search(self, query):
+        fields = [
+            "description",
+            "denomination",
+            "marque",
+            "etablissements__raison_sociale",
+            "evaluation",
+            "lots",
+            "description_complementaire",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+        return self.filter(query_object)

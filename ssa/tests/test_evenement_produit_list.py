@@ -2,7 +2,7 @@ from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory
+from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import TypeEvenement, EvenementProduit
 from ssa.tests.pages import EvenementProduitListPage
 
@@ -122,3 +122,31 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
     search_page.page.wait_for_timeout(600)
     expect(search_page.page.get_by_text("2024.22")).to_be_visible()
     expect(search_page.numero_field).to_have_value("")
+
+
+def test_list_can_filter_with_free_search(live_server, mocked_authentification_user, page: Page):
+    evenement_1 = EvenementProduitFactory(description="Morbier")
+    evenement_2 = EvenementProduitFactory(denomination="Morbier")
+    evenement_3 = EvenementProduitFactory(marque="Morbier")
+    evenement_4 = EvenementProduitFactory(evaluation="Morbier")
+    evenement_5 = EvenementProduitFactory(lots="Morbier")
+    evenement_6 = EvenementProduitFactory(description_complementaire="Morbier")
+    evenement_7 = EvenementProduitFactory()
+    EtablissementFactory(raison_sociale="Morbier", evenement_produit=evenement_7)
+    evenement_8 = EvenementProduitFactory()
+    evenement_9 = EvenementProduitFactory()
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.full_text_field.fill("Morbier")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_5.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_6.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_8.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_9.numero)).not_to_be_visible()
