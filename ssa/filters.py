@@ -26,6 +26,11 @@ class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
+    full_text_search = django_filters.CharFilter(
+        method="filter_full_text_search",
+        label="Recherche libre",
+        widget=TextInput(attrs={"placeholder": "Description, produit, établissement..."}),
+    )
 
     class Meta:
         model = EvenementProduit
@@ -35,5 +40,11 @@ class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
             "start_date",
             "end_date",
             "type_evenement",
+            "full_text_search",
         ]
         form = DSFRForm
+
+    def filter_full_text_search(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.search(value)
