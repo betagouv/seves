@@ -171,11 +171,11 @@ def test_card_etablissement_content(live_server, page: Page):
     creation_page.add_etablissement(etablissement)
 
     etablissement_card = creation_page.etablissement_card()
-    expect(etablissement_card.get_by_text(etablissement.raison_sociale)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.pays.name)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display(), exact=True)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display(), exact=True)).to_be_visible()
 
 
 def test_can_add_etablissement_with_required_fields_only(live_server, page: Page, assert_models_are_equal):
