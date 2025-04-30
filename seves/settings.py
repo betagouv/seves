@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "reversion",
     "csp",
     "django_countries",
+    "django.contrib.postgres",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")

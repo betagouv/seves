@@ -255,6 +255,10 @@ class EvenementProduitListPage:
     def end_date_field(self):
         return self.page.locator("#id_end_date")
 
+    @property
+    def full_text_field(self):
+        return self.page.locator("#id_full_text_search")
+
     def submit_search(self):
         return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
 
