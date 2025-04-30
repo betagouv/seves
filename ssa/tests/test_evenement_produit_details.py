@@ -53,22 +53,26 @@ def test_evenement_produit_detail_page_content_etablissement(live_server, page: 
     details_page.navigate(evenement)
 
     etablissement_card = details_page.etablissement_card()
-    expect(etablissement_card.get_by_text(etablissement.raison_sociale)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.pays.name)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display(), exact=True)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display(), exact=True)).to_be_visible()
 
     details_page.etablissement_open_modal()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.raison_sociale)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.siret)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.adresse_lieu_dit)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.commune)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.siret, exact=True)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.adresse_lieu_dit, exact=True)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.departement)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.pays.name)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
+    expect(
+        details_page.etablissement_modal.get_by_text(etablissement.get_type_exploitant_display(), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display(), exact=True)
+    ).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement, exact=True)).to_be_visible()
 
 
 def test_evenement_produit_detail_page_link_to_rappel_conso(live_server, page: Page):
