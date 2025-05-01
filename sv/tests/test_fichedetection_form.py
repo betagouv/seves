@@ -35,12 +35,11 @@ def _add_new_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill(f"nom lieu{extra_str}")
-    lieu_form_elements.adresse_input.click()
-    lieu_form_elements.adresse_input.fill(f"une adresse{extra_str}")
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, f"une adresse{extra_str}")
 
     page.wait_for_timeout(100)
 
-    page.locator(".fr-modal__content .choices__list--single").locator("visible=true").click()
+    page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
     page.wait_for_selector("input:focus", state="visible", timeout=2_000)
     page.locator("*:focus").fill("Lille")
     page.get_by_role("option", name="Lille (59)", exact=True).click()
@@ -313,7 +312,6 @@ def test_edit_lieu_form_have_all_fields(
 
     expect(lieu_form_elements.adresse_label).to_be_visible()
     expect(lieu_form_elements.adresse_label).to_have_text("Adresse ou lieu-dit")
-    expect(lieu_form_elements.adresse_input).to_be_visible()
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
 
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
@@ -371,6 +369,7 @@ def test_add_lieu_form_is_empty_after_edit(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     choice_js_fill,
+    fill_commune,
 ):
     """Test que le formulaire d'ajout d'un lieu est vide après la modification d'un lieu"""
     # ajout d'un lieu
@@ -379,8 +378,8 @@ def test_add_lieu_form_is_empty_after_edit(
     # modification du lieu
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
-    lieu_form_elements.adresse_input.fill("une adresse modifiée")
-    choice_js_fill(page, ".fr-modal__content .choices__list--single", "Paris", "Paris (75)")
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, "une adresse modifiée")
+    fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
     lieu_form_elements.save_btn.click()
