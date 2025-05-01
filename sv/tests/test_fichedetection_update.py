@@ -295,7 +295,7 @@ def test_update_lieu(
         if not lieu_form_elements.is_etablissement_checkbox.is_checked():
             lieu_form_elements.is_etablissement_checkbox.click(force=True)
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
-        lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
+        lieu_form_elements.pays_etablissement_input.select_option(new_lieu.pays_etablissement.code)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
         lieu_form_elements.adresse_etablissement_input.fill(new_lieu.adresse_etablissement)
         lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)

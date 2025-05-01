@@ -6,6 +6,7 @@ import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
+from django_countries import Countries
 
 from core.models import Visibilite, Structure
 from .constants import (
@@ -227,7 +228,7 @@ class LieuFactory(DjangoModelFactory):
     departement = factory.SubFactory("sv.factories.DepartementFactory")
     is_etablissement = factory.Faker("boolean")
     activite_etablissement = factory.Faker("job")
-    pays_etablissement = factory.Faker("country")
+    pays_etablissement = FuzzyChoice([c.code for c in Countries()])
     raison_sociale_etablissement = factory.Faker("company_suffix")
     adresse_etablissement = factory.Faker("address")
     siret_etablissement = factory.Faker("numerify", text="##############")

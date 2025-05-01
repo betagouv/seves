@@ -221,7 +221,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.is_etablissement_checkbox.click(force=True)
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
-    lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
+    lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
     lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
@@ -681,7 +681,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.nom == "Mon lieu"
     assert lieu_from_db.is_etablissement is True
     assert lieu_from_db.siret_etablissement == "12007901700030"
-    assert lieu_from_db.pays_etablissement == "France"
+    assert lieu_from_db.pays_etablissement == "FR"
     assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
 
 

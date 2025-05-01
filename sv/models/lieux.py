@@ -2,6 +2,7 @@ import reversion
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models, transaction
+from django_countries.fields import CountryField
 
 
 class PositionChaineDistribution(models.Model):
@@ -107,7 +108,7 @@ class Lieu(models.Model):
     )
     is_etablissement = models.BooleanField(verbose_name="Établissement", default=False)
     activite_etablissement = models.CharField(max_length=100, verbose_name="Activité établissement", blank=True)
-    pays_etablissement = models.CharField(max_length=100, verbose_name="Pays établissement", blank=True)
+    pays_etablissement = CountryField(verbose_name="Pays établissement", blank=True)
     raison_sociale_etablissement = models.CharField(
         max_length=100, verbose_name="Raison sociale établissement", blank=True
     )
