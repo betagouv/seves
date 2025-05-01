@@ -8,6 +8,9 @@ header .fr-menu {
     padding-top: 0px;
     padding-bottom: 0px;
 }
+header .fr-header__body-row {
+    margin: 0;
+}
 @media (min-width: 62em) {
     .fr-header__body-row {
         padding-left: 1.5rem !important;
