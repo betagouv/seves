@@ -37,7 +37,7 @@ def add_status_reglementaire_objects():
 @pytest.fixture
 def fill_commune(db, page: Page, choice_js_fill_from_element):
     def _fill_commune(page):
-        element = page.locator(".fr-modal__content").locator("visible=true").locator(".choices__list--single")
+        element = page.locator(".fr-modal__content").locator("visible=true").locator(".commune .choices__list--single")
         choice_js_fill_from_element(page, element, fill_content="Lille", exact_name="Lille (59)")
 
     return _fill_commune
