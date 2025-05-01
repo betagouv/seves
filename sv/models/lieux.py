@@ -113,6 +113,27 @@ class Lieu(models.Model):
         max_length=100, verbose_name="Raison sociale établissement", blank=True
     )
     adresse_etablissement = models.CharField(max_length=100, verbose_name="Adresse établissement", blank=True)
+    commune_etablissement = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    code_insee_etablissement = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE de la commune",
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{5}$",
+                message="Le code INSEE doit contenir exactement 5 chiffres",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    departement_etablissement = models.ForeignKey(
+        Departement,
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+        related_name="departement_etablissement",
+    )
     siret_etablissement = models.CharField(
         max_length=14,
         verbose_name="SIRET établissement",
