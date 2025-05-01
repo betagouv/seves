@@ -7,6 +7,7 @@ from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
 from django.utils.translation import ngettext
+from django_countries.fields import CountryField
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
@@ -56,6 +57,7 @@ class DepartementModelChoiceField(forms.ModelChoiceField):
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
+    adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = DepartementModelChoiceField(
@@ -105,6 +107,15 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
+    adresse_etablissement = forms.CharField(widget=forms.Select(), required=False, label="Adresse ou lieu-dit")
+    departement_etablissement = DepartementModelChoiceField(
+        queryset=Departement.objects.all(),
+        to_field_name="numero",
+        required=False,
+        label="Département",
+    )
+    code_insee_etablissement = forms.CharField(widget=forms.HiddenInput(), required=False)
+    pays_etablissement = CountryField(blank=True).formfield(label="Pays")
 
     class Meta:
         model = Lieu
@@ -112,8 +123,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         labels = {
             "is_etablissement": "Il s'agit d'un établissement",
             "raison_sociale_etablissement": "Raison sociale",
-            "adresse_etablissement": "Adresse",
-            "pays_etablissement": "Pays",
         }
 
     def clean_departement(self):

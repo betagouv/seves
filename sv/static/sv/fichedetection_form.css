@@ -108,7 +108,12 @@ main {
 [id^=lieu-form] p label, [id^=lieu-form] .commune label {
     flex: 0.75;
 }
-[id^=lieu-form] p input, [id^=lieu-form] p textarea, #lieu-form .commune .choices{
+[id^=lieu-form] p input,
+[id^=lieu-form] p textarea,
+#lieu-form .adresse-lieu .choices,
+#lieu-form .commune .choices,
+#lieu-form .adresse-etablissement .choices
+{
     flex: 1.25;
     margin-top: .5rem;
 }
