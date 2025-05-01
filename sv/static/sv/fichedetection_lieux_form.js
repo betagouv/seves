@@ -169,7 +169,7 @@ function configureSiretField(field){
         field.closest("dialog").querySelector('[id$=raison_sociale_etablissement]').value = event.detail.customProperties.raison
         field.closest("dialog").querySelector('[id$=adresse_lieu_dit]').value = event.detail.customProperties.streetData
         field.closest("dialog").querySelector('[id$=adresse_etablissement]').value = event.detail.customProperties.streetData
-        field.closest("dialog").querySelector('[id$=pays_etablissement]').value = "France"
+        field.closest("dialog").querySelector('[id$=pays_etablissement]').value = "FR"
 
         field.closest("dialog").querySelector('[id$=sirene-btn]').classList.remove("fr-hidden")
         field.closest("dialog").querySelector('.fr-search-bar').classList.add("fr-hidden")

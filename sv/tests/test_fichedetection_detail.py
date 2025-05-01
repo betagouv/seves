@@ -29,7 +29,9 @@ def test_lieu_details(live_server, page):
     )
     expect(page.get_by_text("Il s'agit d'un établissement", exact=True)).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-activite-etablissement")).to_contain_text(lieu.activite_etablissement)
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-pays-etablissement")).to_contain_text(lieu.pays_etablissement)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-pays-etablissement")).to_contain_text(
+        lieu.get_pays_etablissement_display()
+    )
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-raison-sociale-etablissement")).to_contain_text(
         lieu.raison_sociale_etablissement
     )
