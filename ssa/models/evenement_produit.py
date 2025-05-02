@@ -34,12 +34,6 @@ class Source(models.TextChoices):
     AUTRE = "autre", "Autre"
 
 
-class CerfaRecu(models.TextChoices):
-    OUI_PRODUIT = "oui_produit", "Oui produit"
-    OUI_ENVIRONNEMENT = "oui_environnement", "Oui environnement"
-    NON = "non", "Non"
-
-
 class PretAManger(models.TextChoices):
     OUI = "oui", "Oui"
     NON = "non", "Non"
@@ -137,9 +131,6 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
-    cerfa_recu = models.CharField(
-        max_length=100, choices=CerfaRecu.choices, verbose_name="Cerfa reçu du professionnel ?", blank=True
-    )
     description = models.TextField(verbose_name="Description de l'événement")
 
     # Informations liées au produit

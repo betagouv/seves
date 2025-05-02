@@ -22,7 +22,6 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     type_evenement = details_page.information_block.get_by_text(evenement.get_type_evenement_display(), exact=True)
     expect(type_evenement).to_be_visible()
     expect(details_page.information_block.get_by_text(evenement.get_source_display(), exact=True)).to_be_visible()
-    expect(details_page.information_block.get_by_text(evenement.get_cerfa_recu_display(), exact=True)).to_be_visible()
     expect(details_page.information_block.get_by_text(evenement.description, exact=True)).to_be_visible()
 
     expect(details_page.produit_block.get_by_text(evenement.denomination, exact=True)).to_be_visible()

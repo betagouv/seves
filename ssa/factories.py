@@ -9,7 +9,6 @@ from core.models import Structure
 from ssa.models import (
     EvenementProduit,
     TypeEvenement,
-    CerfaRecu,
     Source,
     TemperatureConservation,
     QuantificationUnite,
@@ -37,7 +36,6 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
-    cerfa_recu = FuzzyChoice([choice[0] for choice in CerfaRecu.choices])
     description = factory.Faker("paragraph")
 
     denomination = factory.Faker("sentence", nb_words=5)
