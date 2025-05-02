@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -170,10 +172,21 @@ class MessageCreateView(
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
 
     def _add_contacts_to_object(self, message):
+        """
+        Ajoute les destinataires du message dans les contacts (agent et leur structure)
+        N'ajoute pas la structure quand son seul représentant est un référent national.
+        """
+        structures_with_agents = defaultdict(list)
+
         for contact in message.recipients.all().union(message.recipients_copy.all()):
             self.obj.contacts.add(contact)
+            if contact.agent:
+                structures_with_agents[contact.agent.structure].append(contact)
 
-            if structure := contact.get_structure_contact():
+        for structure, contacts_agents in structures_with_agents.items():
+            all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
+            add_structure = not all_referents_nationaux
+            if add_structure and (structure := contacts_agents[0].get_structure_contact()):
                 self.obj.contacts.add(structure)
 
     def _is_internal_communication(self, structures):
