@@ -7,7 +7,7 @@ from core.form_mixins import DSFRForm
 from core.mixins import WithEtatMixin
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import EvenementProduit, TypeEvenement, Source, CerfaRecu, TemperatureConservation, ActionEngagees
+from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models import (
     Etablissement,
     TypeExploitant,
@@ -27,7 +27,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         label="N° RASFF/AAC",
     )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
-    cerfa_recu = SEVESChoiceField(choices=CerfaRecu.choices, required=False)
 
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
     description_complementaire = forms.CharField(

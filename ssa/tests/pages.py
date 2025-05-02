@@ -5,7 +5,7 @@ from ssa.models import Etablissement
 
 
 class EvenementProduitCreationPage:
-    info_fields = ["numero_rasff", "type_evenement", "source", "cerfa_recu", "description", "numero_rasff"]
+    info_fields = ["numero_rasff", "type_evenement", "source", "description", "numero_rasff"]
     produit_fields = [
         "denomination",
         "marque",
