@@ -668,3 +668,19 @@ def test_return_to_correct_detection_after_creation_or_update(live_server, page:
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
+
+
+def test_add_prelevement_en_attente_show_modal(
+    page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements, choice_js_fill
+):
+    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements = PrelevementFormDomElements(page)
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.EN_ATTENTE).click()
+    prelevement_form_elements.save_btn.click()
+
+    expect(page.locator("#modal-add-edit-prelevement-0")).to_be_hidden(timeout=500)
+    expect(page.locator("#fr-modal-prelevement-en-attente")).to_be_visible()
+    expect(page.get_by_role("heading", name="Prélèvement en attente"))

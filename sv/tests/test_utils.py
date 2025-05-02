@@ -327,6 +327,8 @@ class PrelevementFormDomElements:
                 return modal.get_by_text("Non détecté", exact=True)
             case Prelevement.Resultat.NON_CONCLUSIF:
                 return modal.get_by_text("Non conclusif", exact=True)
+            case Prelevement.Resultat.EN_ATTENTE:
+                return modal.get_by_text("En attente", exact=True)
 
     def type_analyse_input(self, resultat_value) -> Locator:
         modal = self.page.locator(".fr-modal__content").locator("visible=true")

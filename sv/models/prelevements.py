@@ -88,6 +88,7 @@ class Prelevement(models.Model):
         DETECTE = "detecte", "Détecté"
         NON_DETECTE = "non_detecte", "Non détecté"
         NON_CONCLUSIF = "non_conclusif", "Non conclusif"
+        EN_ATTENTE = "en_attente", "En attente"
 
     class TypeAnalyse(models.TextChoices):
         PREMIERE_INTENTION = "premiere_intention", "1ère intention"
