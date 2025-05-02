@@ -46,7 +46,7 @@
 .zone-button .fr-btn {
     height: 100%;
 }
-.fr-translate__btn{
+.main-container .fr-translate__btn{
     max-width: 200px !important;
     align-self: flex-end;
 }
