@@ -42,7 +42,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.set_pret_a_manger(input_data.produit_pret_a_manger)
 
     creation_page.quantification.fill(str(input_data.quantification))
-    creation_page.quantification_unite.select_option(input_data.quantification_unite)
+    creation_page.set_quantification_unite(input_data.quantification_unite)
     creation_page.evaluation.fill(input_data.evaluation)
     creation_page.reference_souches.fill(input_data.reference_souches)
     creation_page.reference_clusters.fill(input_data.reference_clusters)
@@ -368,7 +368,7 @@ def test_cant_create_evenement_produit_with_quantification_unit_only(
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
-    creation_page.quantification_unite.select_option(QuantificationUnite.MG_KG)
+    creation_page.set_quantification_unite(QuantificationUnite.MG_KG)
     creation_page.submit_as_draft()
 
     assert EvenementProduit.objects.count() == 0

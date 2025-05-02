@@ -18,4 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     disableSourceOptions(typeEvenementInput, sourceInput)
     setUpFreeLinks(document.getElementById("id_free_link"), null)
+    new Choices(document.getElementById("id_quantification_unite"), {
+        classNames: {
+            containerInner: 'fr-select',
+        },
+        itemSelectText: '',
+        position: 'bottom'
+    });
 });
