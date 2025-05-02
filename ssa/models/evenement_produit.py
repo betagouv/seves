@@ -63,13 +63,6 @@ class ActionEngagees(models.TextChoices):
 
 
 class QuantificationUnite(models.TextChoices):
-    MG_KG = "mg/kg", "mg/kg"
-    UG_KG = "µg/kg", "µg/kg"
-    PRESENCE_25G = "présence/25 g", "présence/25 g"
-    UFC_10G = "UFC/10 g", "UFC/10 g"
-    UFC_25G = "UFC/25 g", "UFC/25 g"
-    NPP_100G = "NPP/100 g", "NPP/100 g"
-
     CM = "cm", "cm"
     MM = "mm", "mm"
     DEG_C = "°C", "°C"
@@ -84,16 +77,22 @@ class QuantificationUnite(models.TextChoices):
     G_100G = "g/100 g", "g/100 g"
     MG_100G = "mg/100 g", "mg/100 g"
     G_KG = "g/kg", "g/kg"
+    MG_KG = "mg/kg", "mg/kg"
+    UG_KG = "µg/kg", "µg/kg"
     NG_KG = "ng/kg", "ng/kg"
     PG_KG = "pg/kg", "pg/kg"
     PAR_1G = "/1 g", "/1 g"
     PAR_10G = "/10 g", "/10 g"
     PAR_25G = "/25 g", "/25 g"
+    PRESENCE_25G = "présence/25 g", "présence/25 g"
     PAR_100G = "/100 g", "/100 g"
     PAR_KG = "/kg", "/kg"
     UFC = "UFC", "UFC"
     UFC_G = "UFC/g", "UFC/g"
+    UFC_10G = "UFC/10 g", "UFC/10 g"
+    UFC_25G = "UFC/25 g", "UFC/25 g"
     UFC_ML = "UFC/mL", "UFC/mL"
+    NPP_100G = "NPP/100 g", "NPP/100 g"
     ML = "mL", "mL"
     MMOL_L = "mmol/L", "mmol/L"
     UL_L = "µL/L", "µL/L"
@@ -122,10 +121,9 @@ class QuantificationUnite(models.TextChoices):
     @classmethod
     def with_opt_group(cls):
         most_used = [cls.MG_KG, cls.UG_KG, cls.PRESENCE_25G, cls.UFC_10G, cls.UFC_25G, cls.NPP_100G]
-        others = [c for c in cls if c not in most_used]
         return [
             ("Unités courantes", [(c.value, c.label) for c in most_used]),
-            ("Autres unités", [(c.value, c.label) for c in others]),
+            ("Autres unités", [(c.value, c.label) for c in cls]),
         ]
 
 

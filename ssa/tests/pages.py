@@ -52,6 +52,14 @@ class EvenementProduitCreationPage:
     def set_pret_a_manger(self, value):
         self.page.locator(f"input[type='radio'][name='produit_pret_a_manger'][value='{value}']").check(force=True)
 
+    def set_quantification_unite(self, value):
+        self.page.query_selector(".risk-column .choices").click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(value)
+        self.page.locator(".choices__list--dropdown .choices__list").get_by_role(
+            "treeitem", name=value, exact=True
+        ).nth(0).click()
+
     def submit_as_draft(self):
         self.page.locator("#submit_draft").click()
 
