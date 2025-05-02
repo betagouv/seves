@@ -119,6 +119,12 @@ function buildPrelevementCardFromModal(element){
     }
 }
 
+function showModalIfPrelevementEnAttente(resultat) {
+    if (resultat === "EN ATTENTE"){
+        dsfr(document.getElementById("fr-modal-prelevement-en-attente")).modal.disclose();
+    }
+}
+
 function savePrelevement(event){
     const id = event.target.dataset.id
     const modal = document.getElementById(`modal-add-edit-prelevement-${id}`)
@@ -136,6 +142,7 @@ function savePrelevement(event){
     displayPrelevementsCards()
     removeRequired(modal)
     dsfr(modal).modal.conceal();
+    showModalIfPrelevementEnAttente(data.resultat);
 }
 
 function saveModalWhenOpening(event){

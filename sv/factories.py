@@ -163,7 +163,9 @@ class PrelevementFactory(DjangoModelFactory):
     matrice_prelevee = factory.SubFactory("sv.factories.MatricePreleveeFactory")
     espece_echantillon = factory.SubFactory("sv.factories.EspeceEchantillonFactory")
     is_officiel = factory.Faker("boolean")
-    resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
+    resultat = FuzzyChoice(
+        [choice[0] for choice in Prelevement.Resultat.choices if choice[0] != Prelevement.Resultat.EN_ATTENTE]
+    )
     type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
     date_rapport_analyse = factory.Faker("date_this_decade")
 
