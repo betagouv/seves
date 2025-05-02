@@ -143,7 +143,7 @@ class EvenementProduitDetailsPage:
 
     @property
     def title(self):
-        return self.page.locator(".top-row h1")
+        return self.page.locator(".details-top-row h1").nth(0)
 
     @property
     def last_modification(self):
