@@ -32,7 +32,7 @@ class TypeEvenement(models.TextChoices):
 class Source(models.TextChoices):
     AUTOCONTROLE = "autocontrole", "Autocontrôle"
     PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
-    PRELEVEMENT_SIVEP = "prelevement_sivep", "Prélèvemeent SIVEP"
+    PRELEVEMENT_SIVEP = "prelevement_sivep", "Prélèvement SIVEP"
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
     AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
     SUSPICION_TIAC = "suspicion_tiac", "Suspicion de TIAC"
