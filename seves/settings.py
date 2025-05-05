@@ -86,6 +86,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
+    "seves.middlewares.HomeRedirectMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
