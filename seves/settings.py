@@ -105,6 +105,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "seves.context_processors.select_empty_choice",
                 "seves.context_processors.environment_class",
+                "seves.context_processors.domains",
             ],
         },
     },
@@ -281,6 +282,7 @@ LOGGING = {
 CAN_GIVE_ACCESS_GROUP = "access_admin"
 SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
+REFERENT_NATIONAL_GROUP = "referent_national"
 
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")

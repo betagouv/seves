@@ -10,6 +10,7 @@ from django.views import View
 from django.views.generic import DetailView
 from celery.exceptions import OperationalError
 from django.views.generic.edit import FormView, CreateView, UpdateView
+
 from sv.view_mixins import WithAddUserContactsMixin
 from .forms import (
     DocumentUploadForm,
@@ -20,7 +21,7 @@ from .forms import (
     AgentAddForm,
 )
 from .mixins import PreventActionIfVisibiliteBrouillonMixin
-from .models import Document, Message, Contact, FinSuiviContact, Visibilite
+from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
 from .notifications import notify_message
 from .redirect import safe_redirect
 import logging
@@ -384,7 +385,8 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
             contacts_agents = form.cleaned_data["contacts_agents"]
             for contact_agent in contacts_agents:
                 self.obj.contacts.add(contact_agent)
-                if contact_structure := contact_agent.get_structure_contact():
+                contact_structure = contact_agent.get_structure_contact()
+                if contact_structure and not user_is_referent_national(contact_agent.agent.user):
                     self.obj.contacts.add(contact_structure)
 
             message = ngettext(

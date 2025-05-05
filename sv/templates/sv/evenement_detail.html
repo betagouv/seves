@@ -31,7 +31,7 @@
 {% block content %}
     <main class="main-container">
         <div data-testid="evenement-header">
-            <div class="evenement-top-row">
+            <div class="details-top-row">
                 <h1 class="fr-mb-0-5v">Événement {% if evenement.numero %}{{ evenement.numero }}{%  endif %}</h1>
 
                 {% if not evenement.is_draft %}
@@ -40,7 +40,7 @@
                             <div class="fr-segmented__elements">
                                 <div class="fr-segmented__element">
                                     <input value="detail" checked type="radio" id="detail-btn" name="segmented-2215">
-                                    <label class="fr-label" for="detail-btn"><i class="ri-expand-vertical-fill fr-mr-1w"></i>Détail</label>
+                                    <label class="fr-label" for="detail-btn"><i class="ri-expand-vertical-fill fr-mr-1w"></i>Affichage détaillé</label>
                                 </div>
                                 <div class="fr-segmented__element">
                                     <input value="synthese" type="radio" id="synthese-btn" name="segmented-2215">
@@ -51,7 +51,7 @@
                     </div>
                 {% endif %}
 
-                <div class="evenement-top-row--actions">
+                <div class="details-top-row--actions">
                     {% if can_publish %}
                         <form action="{% url 'publish' %}" method="post">
                             {% csrf_token %}
@@ -66,7 +66,7 @@
                 </div>
             </div>
             {% include "sv/_evenement_badges.html" %}
-            {% include "core/_latest_revision.html" %}
+            {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=evenement.date_derniere_mise_a_jour %}
         </div>
 
         <div class="fr-container--fluid fr-mb-4v">

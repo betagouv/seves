@@ -1,12 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, ListView
 
 from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit
+from ssa.filters import EvenementProduitFilter
 
 
 class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
@@ -50,6 +52,10 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         messages.success(self.request, "La fiche produit a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 
+    def form_invalid(self, form):
+        self.object = None
+        return super().form_invalid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["empty_form"] = self.etablissement_formset.empty_form
@@ -74,8 +80,42 @@ class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTest
         if queryset is None:
             queryset = self.get_queryset()
         try:
-            annee, numero_evenement = self.kwargs["numero"].split("-")
+            annee, numero_evenement = self.kwargs["numero"].split(".")
             self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
             return self.object
         except (ValueError, EvenementProduit.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        return context
+
+
+class EvenementProduitListView(ListView):
+    model = EvenementProduit
+    paginate_by = 100
+
+    def get_queryset(self):
+        user = self.request.user
+        contact = user.agent.structure.contact_set.get()
+        queryset = (
+            EvenementProduit.objects.select_related("createur")
+            .get_user_can_view(user)
+            .with_fin_de_suivi(contact)
+            .with_nb_liens_libres()
+            .order_by_numero()
+        )
+        self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
+        return self.filter.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filter"] = self.filter
+
+        for evenement in context["object_list"]:
+            etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
+            evenement.etat = etat_data["etat"]
+            evenement.readable_etat = etat_data["readable_etat"]
+        return context

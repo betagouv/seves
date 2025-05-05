@@ -4,7 +4,7 @@ from django.db import models, transaction
 from django.urls import reverse
 from reversion.models import Version
 
-from core.mixins import WithEtatMixin, WithNumeroMixin
+from core.mixins import WithEtatMixin, WithNumeroMixin, AllowsSoftDeleteMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
@@ -60,11 +60,74 @@ class ActionEngagees(models.TextChoices):
 
 
 class QuantificationUnite(models.TextChoices):
-    PAR_100G = "/100g", "/100g"
+    MG_KG = "mg/kg", "mg/kg"
+    UG_KG = "µg/kg", "µg/kg"
+    PRESENCE_25G = "présence/25 g", "présence/25 g"
+    UFC_10G = "UFC/10 g", "UFC/10 g"
+    UFC_25G = "UFC/25 g", "UFC/25 g"
+    NPP_100G = "NPP/100 g", "NPP/100 g"
+
+    CM = "cm", "cm"
+    MM = "mm", "mm"
+    DEG_C = "°C", "°C"
+    PH = "pH", "pH"
+    AW = "Aw", "Aw"
+    G = "g", "g"
+    MG = "mg", "mg"
+    MG_G = "mg/g", "mg/g"
+    MGEQ_G = "mgeq/g", "mgeq/g"
+    UG_G = "µg/g", "µg/g"
+    NG_G = "ng/g", "ng/g"
+    G_100G = "g/100 g", "g/100 g"
+    MG_100G = "mg/100 g", "mg/100 g"
+    G_KG = "g/kg", "g/kg"
+    NG_KG = "ng/kg", "ng/kg"
+    PG_KG = "pg/kg", "pg/kg"
+    PAR_1G = "/1 g", "/1 g"
+    PAR_10G = "/10 g", "/10 g"
+    PAR_25G = "/25 g", "/25 g"
+    PAR_100G = "/100 g", "/100 g"
+    PAR_KG = "/kg", "/kg"
+    UFC = "UFC", "UFC"
+    UFC_G = "UFC/g", "UFC/g"
+    UFC_ML = "UFC/mL", "UFC/mL"
+    ML = "mL", "mL"
+    MMOL_L = "mmol/L", "mmol/L"
+    UL_L = "µL/L", "µL/L"
+    ML_100ML = "mL/100 mL", "mL/100 mL"
+    PAR_ML = "/mL", "/mL"
+    PAR_100ML = "/100 mL", "/100 mL"
+    PAR_250ML = "/250 mL", "/250 mL"
+    UL_KG = "µL/kg", "µL/kg"
+    MMOL_KG = "mmol/kg", "mmol/kg"
+    ML_10G = "mL/10 g", "mL/10 g"
+    ML_100G = "mL/100 g", "mL/100 g"
+    UL_G = "µL/g", "µL/g"
+    G_ML = "g/mL", "g/mL"
+    G_L = "g/L", "g/L"
+    MG_L = "mg/L", "mg/L"
+    UG_L = "µg/L", "µg/L"
+    G_100ML = "g/100 mL", "g/100 mL"
+    MG_100ML = "mg/100 mL", "mg/100 mL"
+    POURCENT_25G = "%/25 g", "%/25 g"
+    POURCENT_100G = "%/100 g", "%/100 g"
+    POURCENT = "%", "%"
+    POUR_MILLE = "‰", "‰"
+    BQ_KG = "bq/kg", "bq/kg"
+    AUTRE = "autre unité : préciser", "autre unité : préciser"
+
+    @classmethod
+    def with_opt_group(cls):
+        most_used = [cls.MG_KG, cls.UG_KG, cls.PRESENCE_25G, cls.UFC_10G, cls.UFC_25G, cls.NPP_100G]
+        others = [c for c in cls if c not in most_used]
+        return [
+            ("Unités courantes", [(c.value, c.label) for c in most_used]),
+            ("Autres unités", [(c.value, c.label) for c in others]),
+        ]
 
 
 @reversion.register()
-class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
+class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_rasff = models.CharField(
@@ -128,6 +191,15 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
         return self.numero
 
     @property
+    def product_description(self):
+        product_description = self.denomination
+        if self.marque:
+            product_description += f" {self.marque}"
+        if self.description_complementaire:
+            product_description += f" {self.description_complementaire}"
+        return product_description
+
+    @property
     def readable_product_fields(self):
         return {
             "Dénomination": self.denomination,
@@ -172,6 +244,18 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
             return True
         return not self.is_draft
 
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_success_message(self):
+        return f"L'évènement {self.numero} a bien été supprimé"
+
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'événement {self.numero}"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -188,5 +272,13 @@ class EvenementProduit(WithEtatMixin, WithNumeroMixin, models.Model):
                     )
                 ),
                 name="type_evenement_source_constraint",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (models.Q(quantification__isnull=True) & models.Q(quantification_unite=""))
+                    | (models.Q(quantification__isnull=False) & ~models.Q(quantification_unite=""))
+                ),
+                name="quantification_must_have_unit",
+                violation_error_message="Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides.",
             ),
         ]

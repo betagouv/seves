@@ -1,0 +1,60 @@
+{% extends "ssa/base.html" %}
+{% load static %}
+{% load etat_tags %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'ssa/evenement_produit_list.css' %}">
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
+    <script type="text/javascript" src="{% static 'ssa/evenement_produit_list.js' %}"></script>
+{% endblock %}
+{% block highlight_menu_evenements %}menu__item--active{% endblock %}
+{% block content %}
+    <form id="search-form" method="get" >
+        <div class="fr-p-4v evenements_liste__header">
+            <h2 class="fr-h3">Rechercher une fiche</h2>
+            <div class="evenements_liste__search-form">
+                {{ filter.form.as_dsfr_div }}
+            </div>
+            <div class="fr-fieldset__element evenements_liste__header--actions">
+                <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>
+                <button type="submit" class="fr-btn">Rechercher</button>
+            </div>
+        </div>
+    </form>
+    <main class="main-container">
+
+        <div>{{ page_obj.paginator.count }} fiches produit au total</div>
+        <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="fr-col-1" scope="col">N°</th>
+                        <th class="fr-col-1" scope="col">Création</th>
+                        <th class="fr-col-3" scope="col">Description de l'événement</th>
+                        <th class="fr-col-2" scope="col">Catégorie de produit</th>
+                        <th class="fr-col-2" scope="col">Catégorie de danger</th>
+                        <th class="fr-col-1" scope="col">Créateur</th>
+                        <th class="fr-col-1" scope="col">État</th>
+                        <th class="fr-col-1" scope="col">Liens</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evenement in evenementproduit_list %}
+                        <tr>
+                            <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
+                            <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
+                            <td class="ellipsis">{{ evenement.product_description }}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>{{ evenement.createur }}</td>
+                            <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
+                            <td>{{ evenement.nb_liens_libre }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "core/_pagination.html" %}
+    </main>
+{% endblock content %}

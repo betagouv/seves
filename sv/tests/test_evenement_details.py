@@ -1,15 +1,62 @@
 import re
+from zoneinfo import ZoneInfo
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.utils import timezone, formats
 from playwright.sync_api import expect, Page
+from reversion.models import Version
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import StructureFactory
 from core.models import Structure, Visibilite, Contact
-from sv.factories import EvenementFactory, FicheZoneFactory, FicheDetectionFactory
-from sv.models import Evenement, FicheDetection, Etat
+from seves import settings
+from sv.factories import (
+    EvenementFactory,
+    FicheZoneFactory,
+    FicheDetectionFactory,
+    LieuFactory,
+    PrelevementFactory,
+    ZoneInfesteeFactory,
+    OrganismeNuisibleFactory,
+)
+from sv.models import Evenement, FicheDetection, Etat, Prelevement, FicheZoneDelimitee
+
+
+def get_date_formated(date_derniere_mise_a_jour):
+    local_timezone = ZoneInfo(settings.TIME_ZONE)
+    local_date = timezone.localtime(date_derniere_mise_a_jour, local_timezone)
+    return formats.date_format(local_date, "j F Y H:i")
+
+
+@pytest.fixture
+def assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(page: Page):
+    """Fixture pour vérifier que la date de dernière mise à jour de la fiche zone est correctement affichée."""
+
+    def _assert_fiche_zone_derniere_mise_a_jour_visible(fiche_zone_delimitee: FicheZoneDelimitee):
+        last_update_text = (
+            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+        )
+        expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+        page.get_by_role("tab", name="Zone").click()
+        expect(page.get_by_label("Zone", exact=True).get_by_text(last_update_text)).to_be_visible()
+
+    return _assert_fiche_zone_derniere_mise_a_jour_visible
+
+
+@pytest.fixture
+def assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(page: Page):
+    """Fixture pour vérifier que la date de dernière mise à jour de la fiche détection est correctement affichée."""
+
+    def _assert_fiche_detection_derniere_mise_a_jour_visible(fiche_detection: FicheDetection):
+        last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+        expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+        page.get_by_role("tab", name="Détection").click()
+        page.get_by_role("tab", name=fiche_detection.numero_detection).click()
+        expect(page.locator("#tabpanel-detection-panel").get_by_text(last_update_text)).to_be_visible()
+
+    return _assert_fiche_detection_derniere_mise_a_jour_visible
 
 
 def test_can_add_zone(live_server, page: Page):
@@ -84,7 +131,7 @@ def test_can_delete_evenement(live_server, page):
 
     page.get_by_role("button", name="Actions").click()
     page.get_by_text("Supprimer l'événement", exact=True).click()
-    page.get_by_test_id("submit-evenement-delete").click()
+    page.get_by_test_id("submit-delete-modal").click()
 
     expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
@@ -118,7 +165,7 @@ def test_delete_evenement_will_delete_associated_detections(live_server, page):
 
     page.get_by_role("button", name="Actions").click()
     page.get_by_text("Supprimer l'événement", exact=True).click()
-    page.get_by_test_id("submit-evenement-delete").click()
+    page.get_by_test_id("submit-delete-modal").click()
 
     expect(page.get_by_text(f"L'évènement {evenement.numero} a bien été supprimé")).to_be_visible()
 
@@ -403,3 +450,319 @@ def test_documents_panel_is_visible_when_clicking_on_documents_link_twice(live_s
     page.get_by_test_id("contacts").click()
     page.get_by_role("link", name="documents").click()
     expect(page.get_by_label("Documents")).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_evenement_creation(live_server, page: Page):
+    evenement = EvenementFactory()
+    assert evenement.date_derniere_mise_a_jour is not None
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    last_update_text = f"Dernière mise à jour le {get_date_formated(evenement.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_evenement_update(live_server, page: Page):
+    evenement = EvenementFactory()
+    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+
+    evenement.organisme_nuisible = OrganismeNuisibleFactory()
+    evenement.save()
+
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    last_update_text = f"Dernière mise à jour le {get_date_formated(evenement.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_detection_creation(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    evenement = EvenementFactory()
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_detection_update(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+
+    fiche_detection.commentaire = "Nouveau commentaire"
+    fiche_detection.save()
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_lieu_creation(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+
+    LieuFactory(fiche_detection=fiche_detection)
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_lieu_update(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    lieu = LieuFactory()
+    date_derniere_mise_a_jour = lieu.fiche_detection.date_derniere_mise_a_jour
+
+    lieu.nom = "Nouveau nom"
+    lieu.save()
+
+    lieu.fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < lieu.fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{lieu.fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(lieu.fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_lieu_delete(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    lieu = LieuFactory()
+    date_derniere_mise_a_jour = lieu.fiche_detection.date_derniere_mise_a_jour
+
+    lieu.delete()
+
+    lieu.fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < lieu.fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{lieu.fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(lieu.fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_prelevement_creation(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_detection = FicheDetectionFactory()
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+
+    PrelevementFactory(lieu__fiche_detection=fiche_detection)
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_prelevement_update(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    prelevement = PrelevementFactory()
+    fiche_detection = prelevement.lieu.fiche_detection
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+    version = Version.objects.get_for_object(fiche_detection).first()
+
+    prelevement.resultat = Prelevement.Resultat.DETECTE
+    prelevement.save()
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+    assert Version.objects.get_for_object(fiche_detection).first().id == version.id
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_prelevement_delete(
+    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
+):
+    prelevement = PrelevementFactory()
+    fiche_detection = prelevement.lieu.fiche_detection
+    date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
+
+    prelevement.delete()
+
+    fiche_detection.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
+    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_creation(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    evenement = EvenementFactory()
+
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement.fiche_zone_delimitee = fiche_zone_delimitee
+    evenement.save()
+
+    assert fiche_zone_delimitee.date_derniere_mise_a_jour is not None
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_update(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = evenement.fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    fiche_zone_delimitee.commentaire = "Nouveau commentaire"
+    fiche_zone_delimitee.save()
+
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_delete(live_server, page: Page):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = evenement.fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    evenement.fiche_zone_delimitee.delete()
+
+    evenement.refresh_from_db()
+    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_zone_infestee_creation(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_zone_infestee_update(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    zone_infestee.nom = "Nouveau nom"
+    zone_infestee.save()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_zone_infestee_delete(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    zone_infestee.delete()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_add_detection_in_hors_zone_delimitee(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
+    fiche_detection.save()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_delete_detection_in_hors_zone_delimitee(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory(evenement=evenement, hors_zone_infestee=fiche_zone_delimitee)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    fiche_detection.hors_zone_infestee = None
+    fiche_detection.save()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_add_detection_in_zone_infestee(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    fiche_detection.zone_infestee = zone_infestee
+    fiche_detection.save()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+@pytest.mark.django_db
+def test_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee(
+    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
+    fiche_detection = FicheDetectionFactory(evenement=evenement, zone_infestee=zone_infestee)
+    date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
+
+    fiche_detection.zone_infestee = None
+    fiche_detection.save()
+
+    fiche_zone_delimitee.refresh_from_db()
+    assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)

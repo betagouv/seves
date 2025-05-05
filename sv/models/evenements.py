@@ -2,7 +2,6 @@ import datetime
 
 import reversion
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
@@ -22,6 +21,7 @@ from core.mixins import WithEtatMixin
 from core.models import Document, Message, Contact, Structure, FinSuiviContact
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
+from .models_mixins import WithDerniereMiseAJourMixin
 from ..managers import EvenementManager
 
 
@@ -36,6 +36,7 @@ class Evenement(
     EmailNotificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
+    WithDerniereMiseAJourMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -156,17 +157,6 @@ class Evenement(
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
 
-    def get_etat_data_for_contact(self, contact):
-        content_type = ContentType.objects.get_for_model(self)
-        is_fin_de_suivi = FinSuiviContact.objects.filter(content_type=content_type, object_id=self.pk)
-        is_fin_de_suivi = is_fin_de_suivi.filter(contact=contact).exists()
-        return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
-
-    def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if not self.is_cloture and is_fin_de_suivi:
-            return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
-        return {"etat": self.etat, "readable_etat": self.get_etat_display()}
-
     def get_publish_success_message(self):
         return f"Événement {self.numero} publié avec succès"
 
@@ -181,6 +171,12 @@ class Evenement(
 
     def get_soft_delete_attribute_error_message(self):
         return f"L'évènement {self.numero} ne peut pas être supprimé"
+
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'événement {self.numero}"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
 
     def add_fin_suivi(self, user):
         with transaction.atomic():

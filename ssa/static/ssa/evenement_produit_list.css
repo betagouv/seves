@@ -1,0 +1,23 @@
+.evenements_liste__header {
+    background-color: var(--background-open-blue-france);
+}
+.evenements_liste__header--actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.evenements_liste__search-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+.evenements_liste__search-form .fr-fieldset__element{
+    flex: 1 1 200px;
+    max-width: 300px;
+}
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

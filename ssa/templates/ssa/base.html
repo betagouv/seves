@@ -1,8 +1,13 @@
 {% extends "core/base.html" %}
 
-
-{% block product %}
-    <a href="{% url 'sv:evenement-liste' %}" class="fr-tag fr-icon-leaf-line fr-tag--icon-left">
-        Santé sanitaire des aliments
-    </a>
-{% endblock product %}
+{% block product_nav %}
+    <li>
+        <button class="fr-btn fr-btn--header-blue fr-my-auto">
+            <span class="fr-icon-add-line" aria-hidden="true"></span>
+            <a href="{% url 'ssa:evenement-produit-creation' %}">Créer un événement</a>
+        </button>
+    </li>
+    <li class="{% block highlight_menu_evenements %}{% endblock %}">
+        <a class="fr-btn" href="{% url 'ssa:evenement-produit-liste' %}">Liste des événements</a>
+    </li>
+{% endblock product_nav %}

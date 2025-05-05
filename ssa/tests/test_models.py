@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, TypeEvenement, Source
+from ssa.models import EvenementProduit, TypeEvenement, Source, QuantificationUnite
 
 
 @pytest.mark.django_db
@@ -78,3 +78,14 @@ def test_evenement_produit_latest_revision():
     etablissement.save()
     assert latest_version.pk != evenement.latest_version.pk
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+
+
+@pytest.mark.django_db
+def test_quantification_must_have_unit():
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(quantification=3.14, quantification_unite="")
+
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(quantification=None, quantification_unite=QuantificationUnite.MG_KG)
+
+    EvenementProduitFactory(quantification=3.14, quantification_unite=QuantificationUnite.MG_KG)

@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement
+from ssa.models import EvenementProduit, Etablissement, QuantificationUnite
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
 
@@ -97,6 +97,9 @@ def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, pag
     creation_page.numero_rasff.fill("2024.2222")
     creation_page.submit_as_draft()
 
+    evenement = EvenementProduit.objects.get()
+    assert evenement.numero_rasff == "2024.2222"
+
 
 def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
     creation_page = EvenementProduitCreationPage(page, live_server.url)
@@ -168,11 +171,11 @@ def test_card_etablissement_content(live_server, page: Page):
     creation_page.add_etablissement(etablissement)
 
     etablissement_card = creation_page.etablissement_card()
-    expect(etablissement_card.get_by_text(etablissement.raison_sociale)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.pays.name)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display(), exact=True)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display())).to_be_visible()
+    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display(), exact=True)).to_be_visible()
 
 
 def test_can_add_etablissement_with_required_fields_only(live_server, page: Page, assert_models_are_equal):
@@ -328,3 +331,48 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     assert etablissement.code_insee == ""
     assert etablissement.pays.name == ""
     assert etablissement.departement == ""
+
+
+def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_user, page: Page):
+    structure = mocked_authentification_user.agent.structure
+    structure.niveau1 = AC_STRUCTURE
+    structure.save()
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.numero_rasff.fill("123456")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementProduit.objects.get()
+    assert evenement.numero_rasff == "123456"
+
+
+def test_cant_create_evenement_produit_with_quantification_only(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.quantification.fill("3.14")
+    creation_page.submit_as_draft()
+
+    assert EvenementProduit.objects.count() == 0
+    assert creation_page.error_messages == [
+        "Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides."
+    ]
+
+
+def test_cant_create_evenement_produit_with_quantification_unit_only(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.quantification_unite.select_option(QuantificationUnite.MG_KG)
+    creation_page.submit_as_draft()
+
+    assert EvenementProduit.objects.count() == 0
+    assert creation_page.error_messages == [
+        "Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides."
+    ]

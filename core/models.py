@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -9,11 +11,16 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from seves import settings
 from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
 from .storage import get_timestamped_filename
-from .validators import validate_upload_file, AUTHORIZED_EXTENSIONS
+from .validators import validate_upload_file, AllowedExtensions
 
 User = get_user_model()
+
+
+def user_is_referent_national(user: User):
+    return settings.REFERENT_NATIONAL_GROUP in user.groups.values_list("name", flat=True)
 
 
 class Agent(models.Model):
@@ -157,12 +164,19 @@ class Document(models.Model):
         TRANSPORT = "document_de_transport", "Document de transport"
         TRACABILITE = "tracabilité", "Traçabilité"
 
+    ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
+        lambda: list(AllowedExtensions),
+        {
+            TypeDocument.CARTOGRAPHIE: [AllowedExtensions.PNG, AllowedExtensions.JPG, AllowedExtensions.JPEG],
+        },
+    )
+
     nom = models.CharField(max_length=256)
     description = models.TextField(blank=True)
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
         upload_to=get_timestamped_filename,
-        validators=[validate_upload_file, FileExtensionValidator(AUTHORIZED_EXTENSIONS)],
+        validators=[validate_upload_file, FileExtensionValidator(AllowedExtensions.values)],
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
@@ -190,6 +204,30 @@ class Document(models.Model):
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE
+
+    @classmethod
+    def validate_file_extention_for_document_type(cls, file, document_type):
+        if document_type not in Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE:
+            return
+        FileExtensionValidator(Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type])(file)
+
+    @classmethod
+    def get_accept_attribute_per_document_type(cls):
+        """Retourne un dictionnaire associant chaque type de document à une liste d'extensions formatées pour l'attribut HTML 'accept'."""
+        accept_allowed_extensions = {}
+        for document_type in cls.TypeDocument:
+            extensions = cls.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type]
+            extension_values = [ext.value for ext in extensions]
+            accept_allowed_extensions[document_type] = "." + ",.".join(extension_values)
+        return accept_allowed_extensions
+
+    def clean(self):
+        super().clean()
+        if self.file and self.document_type:
+            try:
+                self.validate_file_extention_for_document_type(self.file, self.document_type)
+            except ValidationError as e:
+                raise ValidationError(e.message)
 
 
 class Message(models.Model):

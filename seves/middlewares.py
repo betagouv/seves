@@ -31,6 +31,7 @@ class LoginAndGroupRequiredMiddleware:
 
         needed_group = self.apps_to_groups.get(match.app_name)
         if needed_group:
+            request.domain = match.app_name
             if needed_group in user.groups.values_list("name", flat=True):
                 return self.get_response(request)
             raise PermissionDenied()

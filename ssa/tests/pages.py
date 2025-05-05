@@ -66,7 +66,9 @@ class EvenementProduitCreationPage:
         self.numero_rappel_submit.click()
 
     def delete_rappel_conso(self, numero):
-        self.page.locator(".fr-tag", has_text=numero).click()
+        tag = self.page.locator(".fr-tag", has_text=numero)
+        box = tag.bounding_box()
+        self.page.mouse.click(box["x"] + box["width"] - 15, box["y"] - 5 + box["height"] / 2)
 
     def add_etablissement_with_required_fields(self, etablissement: Etablissement):
         modal = self.open_etablissement_modal()
@@ -103,6 +105,7 @@ class EvenementProduitCreationPage:
         modal = self.open_etablissement_modal()
 
         modal.locator('[id$="siret"]').fill(etablissement.siret)
+        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
@@ -110,8 +113,6 @@ class EvenementProduitCreationPage:
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
         modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
-        modal.locator('[id$="-quantite_en_stock"]').fill(str(etablissement.quantite_en_stock))
-        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
 
         self.close_etablissement_modal()
 
@@ -124,8 +125,15 @@ class EvenementProduitCreationPage:
     def add_free_link(self, numero, choice_js_fill):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), "Événement produit : " + str(numero))
 
+    @property
+    def error_messages(self):
+        return self.page.locator(".fr-alert__title").all_text_contents()
+
 
 class EvenementProduitDetailsPage:
+    def submit_form(self):
+        self.page.locator(".fiche-produit-form-header .fr-btn").click()
+
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -135,7 +143,7 @@ class EvenementProduitDetailsPage:
 
     @property
     def title(self):
-        return self.page.locator(".top-row h1")
+        return self.page.locator(".details-top-row h1").nth(0)
 
     @property
     def last_modification(self):
@@ -170,3 +178,64 @@ class EvenementProduitDetailsPage:
     @property
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()
+
+
+class EvenementProduitListPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-liste')}")
+
+    def _cell_content(self, line_index, cell_index):
+        return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
+
+    def numero_cell(self, line_index=1):
+        return self._cell_content(line_index, 1)
+
+    def date_creation_cell(self, line_index=1):
+        return self._cell_content(line_index, 2)
+
+    def description_cell(self, line_index=1):
+        return self._cell_content(line_index, 3)
+
+    def createur_cell(self, line_index=1):
+        return self._cell_content(line_index, 6)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 7)
+
+    def liens_cell(self, line_index=1):
+        return self._cell_content(line_index, 8)
+
+    @property
+    def numero_field(self):
+        return self.page.locator("#id_numero")
+
+    @property
+    def numero_rasff_field(self):
+        return self.page.locator("#id_numero_rasff")
+
+    @property
+    def type_evenement_select(self):
+        return self.page.locator("#id_type_evenement")
+
+    @property
+    def start_date_field(self):
+        return self.page.locator("#id_start_date")
+
+    @property
+    def end_date_field(self):
+        return self.page.locator("#id_end_date")
+
+    def submit_search(self):
+        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+
+    def reset_search(self):
+        return self.page.locator("#search-form").get_by_text("Effacer", exact=True).click()

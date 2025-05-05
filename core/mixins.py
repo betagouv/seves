@@ -15,7 +15,16 @@ from django.views.generic import FormView
 from core.forms import DocumentUploadForm, DocumentEditForm
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure
+from core.models import (
+    Document,
+    LienLibre,
+    Contact,
+    Message,
+    Visibilite,
+    Structure,
+    FinSuiviContact,
+    user_is_referent_national,
+)
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
@@ -131,6 +140,12 @@ class AllowsSoftDeleteMixin(models.Model):
     def get_soft_delete_attribute_error_message(self):
         return "Ce type d'objet ne peut pas être supprimé"
 
+    def get_soft_delete_confirm_title(self):
+        return "Supprimer cet objet"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet objet ?"
+
     class Meta:
         abstract = True
 
@@ -221,7 +236,7 @@ class WithVisibiliteMixin(models.Model):
             return True
         if user.agent.is_in_structure(self.createur):
             return True
-        if not self.is_draft and user.agent.structure.is_mus_or_bsv:
+        if not self.is_draft and (user.agent.structure.is_mus_or_bsv or user_is_referent_national(user)):
             return True
         if self.is_visibilite_limitee and not self.is_draft and user.agent.structure in self.allowed_structures.all():
             return True
@@ -302,6 +317,17 @@ class WithEtatMixin(models.Model):
 
     def get_publish_error_message(self):
         return "Cet objet ne peut pas être publié"
+
+    def get_etat_data_for_contact(self, contact):
+        content_type = ContentType.objects.get_for_model(self)
+        is_fin_de_suivi = FinSuiviContact.objects.filter(content_type=content_type, object_id=self.pk)
+        is_fin_de_suivi = is_fin_de_suivi.filter(contact=contact).exists()
+        return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
+
+    def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
+        if not self.is_cloture and is_fin_de_suivi:
+            return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
+        return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
 
 class WithFreeLinkIdsMixin:
@@ -421,7 +447,7 @@ class WithNumeroMixin(models.Model):
 
     @property
     def numero(self):
-        return f"{self.numero_annee}-{self.numero_evenement}"
+        return f"{self.numero_annee}.{self.numero_evenement}"
 
 
 class BasePermissionMixin:

@@ -4,6 +4,13 @@ body{
 header{
     border-bottom: 2px solid #000091;
 }
+header .fr-menu {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+header .fr-header__body-row {
+    margin: 0;
+}
 @media (min-width: 62em) {
     .fr-header__body-row {
         padding-left: 1.5rem !important;
@@ -29,6 +36,17 @@ header{
 .fr-header__body-row .fr-btns-group {
     margin-top: -1rem;
 }
+.product-switch .fr-menu .fr-nav__link{
+    padding: 0.25rem 0.5rem;
+}
+.product-switch .fr-menu__list{
+    background: transparent;
+}
+.product-switch .fr-translate .fr-translate__btn::before {
+    width: 0px;
+}
+
+
 .alert-container{
     margin: 2rem 1.5rem;
 }
@@ -164,4 +182,45 @@ label:has(+ .choices select[data-required="true"])::after,
 .environment-dev::before {
     content: "DEV";
     background-color: green;
+}
+
+.details-top-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.details-top-row--actions {
+    display: flex;
+    justify-content: space-between;
+    max-height: 2.5rem;
+}
+.details-top-row--actions .fr-translate__btn::before {
+    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
+    mask-image: url(../../../static/icons/system/add-line.svg);
+}
+.details-top-row--actions .fr-translate__btn{
+    height: 100%;
+}
+.details-top-row--actions {
+    margin-left: auto;
+}
+@media (min-width: 992px) {
+    .details-top-row--actions{
+        margin-left: unset;
+    }
+}
+@media (min-width: 992px) {
+    .details-top-row--actions .fr-nav__item {
+        height: 100%;
+    }
+}
+.details-top-row--actions .fr-nav__link{
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+@media (min-width: 992px) {
+    .details-top-row--actions .fr-nav__link{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
 }

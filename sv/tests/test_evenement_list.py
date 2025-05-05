@@ -47,3 +47,28 @@ def test_duplicate_commune_appears_only_once(live_server, page: Page):
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
 
     expect(page.get_by_text("La Rochelle, Bordeaux", exact=True)).to_be_visible()
+
+
+def test_list_ordered_by_most_recent_date_derniere_modification(live_server, page: Page):
+    fiche_detection_1, fiche_detection_2, fiche_detection_3 = FicheDetectionFactory.create_batch(3)
+    fiche_detection_2.commentaire = "commentaire"
+    fiche_detection_2.save()
+    fiche_detection_1.evenement.numero_europhyt = 12345
+    fiche_detection_1.evenement.save()
+    fiche_detection_3.commentaire = "un commentaire"
+    fiche_detection_3.save()
+
+    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
+
+    assert (
+        page.text_content(".evenements__list-row:nth-child(1) td:nth-child(2)").strip()
+        == fiche_detection_3.evenement.numero
+    )
+    assert (
+        page.text_content(".evenements__list-row:nth-child(2) td:nth-child(2)").strip()
+        == fiche_detection_1.evenement.numero
+    )
+    assert (
+        page.text_content(".evenements__list-row:nth-child(3) td:nth-child(2)").strip()
+        == fiche_detection_2.evenement.numero
+    )

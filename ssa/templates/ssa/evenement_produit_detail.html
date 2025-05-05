@@ -11,13 +11,18 @@
 {% block content %}
   <main class="main-container">
     <div>
-      <div class="top-row">
+      <div class="details-top-row">
         <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
-        <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
+
+        <div class="details-top-row--actions">
+          {% include "ssa/_evenement_produit_action_navigation.html" %}
+        </div>
+
       </div>
+      <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
 
-    {% include "core/_latest_revision.html" with latest_version=object.latest_version %}
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=latest_version.revision.date_created latest_version=object.latest_version %}
 
     <div id="detail-content">
       <div class="white-container">
