@@ -33,7 +33,7 @@ class LoginAndGroupRequiredMiddleware:
         needed_group = self.apps_to_groups.get(match.app_name)
         if needed_group:
             request.domain = match.app_name
-            if needed_group in user.groups.values_list("name", flat=True):
+            if needed_group in [g.name for g in user.groups.all()]:
                 response = self.get_response(request)
                 response.set_cookie("preferred_domain", match.app_name)
                 return response
@@ -48,7 +48,7 @@ class HomeRedirectMiddleware:
 
     def __call__(self, request):
         if request.user.is_authenticated and request.path == "/":
-            groups = request.user.groups.values_list("name", flat=True)
+            groups = [g.name for g in request.user.groups.all()]
             preferred_domain = request.COOKIES.get("preferred_domain")
             if preferred_domain == "ssa" and settings.SSA_GROUP in groups:
                 return redirect("ssa:evenement-produit-liste")

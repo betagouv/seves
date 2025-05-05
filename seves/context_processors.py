@@ -17,7 +17,7 @@ def environment_class(request):
 
 
 def domains(request):
-    user_groups = request.user.groups.values_list("name", flat=True)
+    user_groups = [g.name for g in request.user.groups.all()]
     sv_domain = {"icon": "fr-icon-leaf-line", "nom": "Santé des végétaux", "url": reverse_lazy("sv:evenement-liste")}
     ssa_domain = {
         "icon": "fr-icon-restaurant-line ",

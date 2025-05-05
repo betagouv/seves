@@ -210,7 +210,7 @@ if all(
 elif environ.Env(TEMP_STORAGE=(bool, False)):
     STORAGES["default"]["OPTIONS"] = {"location": tempfile.mkdtemp()}
 
-AUTHENTICATION_BACKENDS = ("mozilla_django_oidc.auth.OIDCAuthenticationBackend",)
+AUTHENTICATION_BACKENDS = ("seves.auth.CustomOIDCBackend",)
 LOGIN_URL = reverse_lazy("login")
 OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID")
 OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET")
