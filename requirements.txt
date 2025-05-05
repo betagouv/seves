@@ -123,7 +123,7 @@ packaging==24.0
     #   pytest
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.51.0
+playwright==1.52.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -137,7 +137,7 @@ psycopg2-binary==2.9.10
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyee==12.1.1
+pyee==13.0.0
     # via playwright
 pyopenssl==25.0.0
     # via josepy
