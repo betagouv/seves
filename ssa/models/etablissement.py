@@ -76,7 +76,7 @@ class Etablissement(models.Model):
             ),
         ],
     )
-    departement = models.CharField(choices=Departement.choices, blank=True)
+    departement = models.CharField(choices=Departement.choices, verbose_name="Département", blank=True)
     pays = CountryField(null=True)
 
     type_exploitant = models.CharField(
