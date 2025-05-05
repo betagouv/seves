@@ -246,6 +246,7 @@ def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_
 
 def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page, choice_js_fill_from_element):
     evenement = EvenementProduitFactory.build()
+    call_count = {"count": 0}
 
     def handle(route):
         response = {
@@ -263,12 +264,13 @@ def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page
             ],
         }
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
 
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
 
@@ -277,6 +279,7 @@ def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page
     choice_js_fill_from_element(
         page, creation_page.current_modal_address_field, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
     )
+    assert call_count["count"] == 1
     creation_page.close_etablissement_modal()
     creation_page.submit_as_draft()
     creation_page.page.wait_for_timeout(600)
@@ -291,6 +294,7 @@ def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page
 
 def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Page, choice_js_fill_from_element):
     evenement = EvenementProduitFactory.build()
+    call_count = {"count": 0}
 
     def handle(route):
         response = {
@@ -308,18 +312,20 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
             ],
         }
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
 
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api-adresse.data.gouv.fr/search/?q=Mon%20addresse%20qui%20n%27existe%20pas&limit=15",
         handle,
     )
 
     creation_page.open_etablissement_modal()
     creation_page.current_modal_raison_sociale_field.fill("Foo")
     creation_page.force_etablissement_adresse("Mon addresse qui n'existe pas")
+    assert call_count["count"] == 1
     creation_page.close_etablissement_modal()
     creation_page.submit_as_draft()
     creation_page.page.wait_for_timeout(600)

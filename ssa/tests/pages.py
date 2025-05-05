@@ -1,3 +1,6 @@
+import json
+from urllib.parse import quote
+
 from django.urls import reverse
 from playwright.sync_api import Page
 
@@ -103,7 +106,17 @@ class EvenementProduitCreationPage:
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
 
-    def force_etablissement_adresse(self, adresse):
+    def force_etablissement_adresse(self, adresse, mock_call=False):
+        if mock_call:
+
+            def handle(route):
+                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
+
+            self.page.route(
+                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                handle,
+            )
+
         self.current_modal_address_field.click()
         self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         self.page.locator("*:focus").fill(adresse)
@@ -115,7 +128,7 @@ class EvenementProduitCreationPage:
         modal.locator('[id$="siret"]').fill(etablissement.siret)
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        self.force_etablissement_adresse(etablissement.adresse_lieu_dit)
+        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
         modal.locator('[id$="-departement"]').select_option(etablissement.departement)
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
