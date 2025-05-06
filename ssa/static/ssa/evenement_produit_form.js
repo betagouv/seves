@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             containerInner: 'fr-select',
         },
         itemSelectText: '',
-        position: 'bottom'
+        position: 'bottom',
+        shouldSort: false,
     });
 });
