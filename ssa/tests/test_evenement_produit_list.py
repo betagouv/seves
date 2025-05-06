@@ -122,3 +122,13 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
     search_page.page.wait_for_timeout(600)
     expect(search_page.page.get_by_text("2024.22")).to_be_visible()
     expect(search_page.numero_field).to_have_value("")
+
+
+def test_compteur_fiche(live_server, page: Page):
+    nb_evenements = 101
+    EvenementProduitFactory.create_batch(nb_evenements)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    expect(page.get_by_text(f"100 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    page.get_by_role("link", name="Dernière page").click()
+    expect(page.get_by_text(f"1 sur un total de {nb_evenements}", exact=True)).to_be_visible()
