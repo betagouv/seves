@@ -10,7 +10,6 @@ from playwright.sync_api import Page, expect
 from core.factories import StructureFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
-from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
     LaboratoireFactory,
@@ -61,7 +60,9 @@ def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDo
     expect(page.get_by_role("heading", name="Création d'une fiche détection", exact=True)).to_be_visible()
 
 
-def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+def test_new_fiche_detection_form_content(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, check_select_options
+):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.informations_title).to_be_visible()

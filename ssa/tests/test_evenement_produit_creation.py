@@ -123,21 +123,20 @@ def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentifica
     assert evenement_produit.numeros_rappel_conso == ["2025-01-1234", "2025-02-1234", "2025-04-1234"]
 
 
-def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page: Page):
+def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page: Page, check_select_options):
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.type_evenement.select_option(label=TypeEvenement.ALERTE_PRODUIT_NATIONALE.label)
-
-    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
-        expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_disabled()
+    creation_page.source.click()
+    excluded_values = {s.value for s in EvenementProduit.SOURCES_FOR_HUMAN_CASE}
+    expected = [s.label for s in Source if s.value not in excluded_values]
+    check_select_options(creation_page.page, "id_source", expected)
 
     creation_page.type_evenement.select_option(label=TypeEvenement.INVESTIGATION_CAS_HUMAINS.label)
-    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
-        expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_enabled()
-
-    for source in Source:
-        if source not in EvenementProduit.SOURCES_FOR_HUMAN_CASE and source != Source.AUTRE:
-            expect(creation_page.source.locator(f'option[value="{source.value}"]')).to_be_disabled()
+    wanted_values = {s.value for s in EvenementProduit.SOURCES_FOR_HUMAN_CASE}
+    expected = [s.label for s in Source if s.value in wanted_values]
+    expected.append("Autre")
+    check_select_options(creation_page.page, "id_source", expected, with_default_value=False)
 
 
 def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal):

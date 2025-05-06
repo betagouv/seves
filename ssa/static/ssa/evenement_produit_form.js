@@ -5,7 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
         sourceInput.querySelectorAll('option').forEach(option => {
             if (option.value !== "autre") {
-                option.disabled = (option.getAttribute('data-for-human-case') === 'true') !== isHumanCase;
+                if ((option.getAttribute('data-for-human-case') === 'true') !== isHumanCase){
+                    option.style.display = 'none'
+                } else {
+                    option.style.display = ''
+                }
             }
         });
         sourceInput.selectedIndex = 0;

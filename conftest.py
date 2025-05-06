@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import resolve
 from playwright.sync_api import expect
@@ -101,3 +102,23 @@ def choice_js_option_disabled(db, page):
         expect(element.get_by_role("option", name=exact_name, exact=True))
 
     return _choice_js_cant_pick
+
+
+@pytest.fixture
+def check_select_options():
+    def _check_select_options(page, select_id, expected_options, with_default_value=True):
+        options = page.locator(f"#{select_id} option").element_handles()
+        visible_texts = []
+        for option in options:
+            style = option.get_attribute("style") or ""
+            if "display: none" not in style:
+                visible_texts.append(option.inner_text())
+
+        if with_default_value:
+            expected_options = [settings.SELECT_EMPTY_CHOICE] + expected_options
+
+        assert visible_texts == expected_options, (
+            f"Les options pour {select_id} ne correspondent pas aux options attendues"
+        )
+
+    return _check_select_options

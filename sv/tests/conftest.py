@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
 
@@ -27,14 +26,6 @@ def lieu_form_elements(page: Page):
 @pytest.fixture
 def prelevement_form_elements(page: Page):
     return PrelevementFormDomElements(page)
-
-
-def check_select_options(page, select_id, expected_options):
-    options = page.locator(f"#{select_id} option").element_handles()
-    option_texts = [option.inner_text() for option in options]
-    assert option_texts == [settings.SELECT_EMPTY_CHOICE] + expected_options, (
-        f"Les options pour {select_id} ne correspondent pas aux options attendues"
-    )
 
 
 @pytest.fixture(autouse=True)
