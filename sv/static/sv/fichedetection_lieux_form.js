@@ -189,12 +189,7 @@ function configureSiretField(field){
 
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
-    document.querySelectorAll("[id^=commune-select-]").forEach(communeSelect =>{
-        const communeField = communeSelect.parentNode.parentNode.querySelector('[id$="-commune"]')
-        if (!!communeField.value){
-            setUpCommune(communeSelect)
-        }
-    })
+    document.querySelectorAll("[id^=commune-select-]").forEach(communeSelect => setUpCommune(communeSelect));
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))

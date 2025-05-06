@@ -1194,3 +1194,22 @@ def test_cant_update_detection_if_evenement_is_cloture(client):
     assert response.status_code == 403
     fiche_detection.refresh_from_db()
     assert fiche_detection.commentaire != "AAAA"
+
+
+@pytest.mark.django_db
+def test_can_add_commune_to_existing_lieu(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    fill_commune,
+):
+    lieu = LieuFactory(commune="")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
+    page.get_by_role("button", name="Modifier le lieu").click()
+    fill_commune(page)
+    lieu_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    lieu.refresh_from_db()
+    assert lieu.commune == "Lille"
