@@ -11,7 +11,6 @@ from django.views.generic import DetailView
 from celery.exceptions import OperationalError
 from django.views.generic.edit import FormView, CreateView, UpdateView
 
-from sv.view_mixins import WithAddUserContactsMixin
 from .forms import (
     DocumentUploadForm,
     MessageForm,
@@ -20,7 +19,7 @@ from .forms import (
     StructureAddForm,
     AgentAddForm,
 )
-from .mixins import PreventActionIfVisibiliteBrouillonMixin
+from .mixins import PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
 from .notifications import notify_message
 from .redirect import safe_redirect

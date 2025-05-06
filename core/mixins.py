@@ -532,3 +532,17 @@ class WithContactPermissionMixin(BasePermissionMixin):
 
     def can_delete_contact(self, user):
         return self._user_can_interact(user)
+
+
+class WithAddUserContactsMixin:
+    """Mixin pour ajouter automatiquement l'utilisateur courant et sa structure comme contacts."""
+
+    def add_user_contacts(self, obj):
+        """Ajoute l'utilisateur courant et sa structure comme contacts de l'objet."""
+        agent = self.request.user.agent
+
+        agent_contact = Contact.objects.get(agent=agent)
+        obj.contacts.add(agent_contact)
+
+        if structure_contact := agent_contact.get_structure_contact():
+            obj.contacts.add(structure_contact)
