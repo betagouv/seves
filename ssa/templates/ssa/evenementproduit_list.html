@@ -24,7 +24,7 @@
     </form>
     <main class="main-container">
 
-        <div>{{ page_obj.paginator.count }} fiches produit au total</div>
+        <div>{{ object_list.count }} sur un total de {{ page_obj.paginator.count }}</div>
         <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
             <table>
                 <thead>

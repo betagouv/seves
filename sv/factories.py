@@ -348,7 +348,6 @@ class EvenementFactory(DjangoModelFactory):
     visibilite = Visibilite.LOCALE
     etat = Evenement.Etat.EN_COURS
     numero_annee = factory.Faker("year")
-    numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
     numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
 
@@ -364,3 +363,7 @@ class EvenementFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1

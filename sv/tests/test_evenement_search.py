@@ -241,7 +241,7 @@ def test_search_with_crossed_dates(live_server, page: Page, mocked_authentificat
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.locator("body")).to_contain_text("0 évènement au total")
+    expect(page.get_by_text("0 sur un total de 0")).to_be_visible()
 
 
 def test_search_with_state(live_server, page: Page) -> None:
@@ -290,7 +290,7 @@ def test_search_without_filters(live_server, page: Page) -> None:
 
     expect(page.get_by_role("cell", name=str(fiche_1.evenement.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero))).to_be_visible()
-    expect(page.locator("body")).to_contain_text("2 évènements au total")
+    expect(page.get_by_text("2 sur un total de 2")).to_be_visible()
 
 
 def test_zone_column(live_server, page: Page):

@@ -33,7 +33,6 @@ class EvenementProduitFactory(DjangoModelFactory):
 
     date_creation = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
-    numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     description = factory.Faker("paragraph")
@@ -77,6 +76,10 @@ class EvenementProduitFactory(DjangoModelFactory):
 
         other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS}
         return random.choice(list(other_sources))
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1
 
 
 class EtablissementFactory(DjangoModelFactory):
