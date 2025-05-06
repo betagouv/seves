@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("ssa", "0010_remove_etablissement_quantite_en_stock"),
+        ("ssa", "00011_evenementproduit_is_deleted"),
     ]
 
     operations = [
