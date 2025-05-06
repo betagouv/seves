@@ -30,7 +30,9 @@ class TypeEvenement(models.TextChoices):
 
 
 class Source(models.TextChoices):
-    AUTOCONTROLE = "autocontrole", "Autocontrôle"
+    AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
+    AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
+    AUTOCONTROLE_NON_NOTIFIE = "autocontrole_non_notifie", "Autocontrôle non notifié"
     PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
     PRELEVEMENT_SIVEP = "prelevement_sivep", "Prélèvement SIVEP"
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
@@ -84,7 +86,6 @@ class QuantificationUnite(models.TextChoices):
     PAR_1G = "/1 g", "/1 g"
     PAR_10G = "/10 g", "/10 g"
     PAR_25G = "/25 g", "/25 g"
-    PRESENCE_25G = "présence/25 g", "présence/25 g"
     PAR_100G = "/100 g", "/100 g"
     PAR_KG = "/kg", "/kg"
     UFC = "UFC", "UFC"
@@ -120,7 +121,7 @@ class QuantificationUnite(models.TextChoices):
 
     @classmethod
     def with_opt_group(cls):
-        most_used = [cls.MG_KG, cls.UG_KG, cls.PRESENCE_25G, cls.UFC_10G, cls.UFC_25G, cls.NPP_100G]
+        most_used = [cls.MG_KG, cls.UG_KG, cls.UFC_G, cls.PAR_10G, cls.PAR_25G, cls.NPP_100G]
         return [
             ("Unités courantes", [(c.value, c.label) for c in most_used]),
             ("Autres unités", [(c.value, c.label) for c in cls]),
@@ -181,7 +182,7 @@ class EvenementProduit(
 
     objects = EvenementProduitManager()
 
-    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS]
+    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
         return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})

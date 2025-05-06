@@ -35,7 +35,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             attrs={
                 "cols": 30,
                 "rows": 4,
-                "placeholder": "Conditionnement, quantité, mentions d'étiquetage, importateur...",
+                "placeholder": "Conditionnement, quantité, mentions d'étiquetage...",
             }
         ),
         label="Description complémentaire",

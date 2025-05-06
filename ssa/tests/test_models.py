@@ -31,7 +31,7 @@ def test_type_evenement_source_constraint():
     EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source="")
 
     # Non human case can have sources, but not any of SOURCES_FOR_HUMAN_CASE
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.AUTOCONTROLE)
+    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.PRELEVEMENT_PSPC)
     for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
         with pytest.raises(IntegrityError):
             EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=source)
@@ -41,7 +41,7 @@ def test_type_evenement_source_constraint():
         EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=source)
 
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTOCONTROLE)
+        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.PRELEVEMENT_PSPC)
 
 
 @pytest.mark.django_db
