@@ -32,6 +32,7 @@ from core.mixins import (
     WithMessageFormInContextMixin,
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
+    WithAddUserContactsMixin,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
@@ -61,7 +62,6 @@ from .models import (
 from .view_mixins import (
     WithPrelevementHandlingMixin,
     WithStatusToOrganismeNuisibleMixin,
-    WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     WithClotureContextMixin,
 )

@@ -14,6 +14,7 @@ from core.mixins import (
     WithMessageFormInContextMixin,
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
+    WithAddUserContactsMixin,
 )
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
@@ -21,7 +22,7 @@ from ssa.models import EvenementProduit
 from ssa.filters import EvenementProduitFilter
 
 
-class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
+class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, CreateView):
     form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
 
@@ -58,6 +59,7 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         self.object = form.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
+        self.add_user_contacts(self.object)
 
         messages.success(self.request, "La fiche produit a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
