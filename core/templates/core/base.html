@@ -50,30 +50,32 @@
                             </div>
                             <div class="product-switch">
                                 {% block product %}
-                                    {% if other_domains|length == 0 %}
-                                        <a href="{{ current_domain.url }}" class="fr-tag {{ current_domain.icon }} fr-tag--icon-left">
-                                            {{ current_domain.nom }}
-                                        </a>
-                                    {% else %}
-                                        <nav role="navigation" class="fr-translate fr-nav">
-                                            <div class="fr-nav__item">
-                                                <button class="fr-translate__btn fr-btn fr-btn--tertiary fr-tag fr-tag--icon-left"
-                                                        aria-controls="domain-picker" aria-expanded="false"
-                                                        title="Sélectionner un produit">
-                                                    <span class="{{ current_domain.icon }} fr-icon--sm fr-pr-1w" ></span>
-                                                    {{ current_domain.nom }}</button>
-                                                <div class="fr-collapse fr-translate__menu fr-menu" id="domain-picker">
-                                                    <ul class="fr-menu__list">
-                                                        {% for domain in other_domains %}
-                                                            <li class="fr-mt-1w">
-                                                                <a class="fr-translate__language fr-nav__link fr-tag" href="{{ domain.url }}" >
-                                                                    <span class="{{ domain.icon }} fr-icon--sm fr-pr-1w" ></span>
-                                                                    {{ domain.nom }}</a></li>
-                                                        {% endfor %}
-                                                    </ul>
+                                    {% if current_domain %}
+                                        {% if other_domains|length == 0 %}
+                                            <a href="{{ current_domain.url }}" class="fr-tag {{ current_domain.icon }} fr-tag--icon-left">
+                                                {{ current_domain.nom }}
+                                            </a>
+                                        {% else %}
+                                            <nav role="navigation" class="fr-translate fr-nav">
+                                                <div class="fr-nav__item">
+                                                    <button class="fr-translate__btn fr-btn fr-btn--tertiary fr-tag fr-tag--icon-left"
+                                                            aria-controls="domain-picker" aria-expanded="false"
+                                                            title="Sélectionner un produit">
+                                                        <span class="{{ current_domain.icon }} fr-icon--sm fr-pr-1w" ></span>
+                                                        {{ current_domain.nom }}</button>
+                                                    <div class="fr-collapse fr-translate__menu fr-menu" id="domain-picker">
+                                                        <ul class="fr-menu__list">
+                                                            {% for domain in other_domains %}
+                                                                <li class="fr-mt-1w">
+                                                                    <a class="fr-translate__language fr-nav__link fr-tag" href="{{ domain.url }}" >
+                                                                        <span class="{{ domain.icon }} fr-icon--sm fr-pr-1w" ></span>
+                                                                        {{ domain.nom }}</a></li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </nav>
+                                            </nav>
+                                        {% endif %}
                                     {% endif %}
 
 
