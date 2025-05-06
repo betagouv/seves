@@ -1,21 +1,19 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
-from django.urls import reverse_lazy
 from django.views.generic import FormView
 
 from account.forms import UserPermissionForm
+from core.redirect import safe_redirect
 from seves import settings
 
 User = get_user_model()
 
 
-class HandlePermissionsView(SuccessMessageMixin, FormView):
+class HandlePermissionsView(FormView):
     form_class = UserPermissionForm
     template_name = "user_permissions.html"
-    success_url = reverse_lazy("handle-permissions")
-    success_message = "Modification de droits enregistrées sur Sèves Santé des végétaux"
 
     def dispatch(self, request, *args, **kwargs):
         user_groups = request.user.groups.values_list("name", flat=True)
@@ -60,4 +58,5 @@ class HandlePermissionsView(SuccessMessageMixin, FormView):
             user.is_active = value
             user.save()
             user.groups.add(sv_group)
-        return super().form_valid(form)
+        messages.success(self.request, "Modification de droits enregistrées sur Sèves Santé des végétaux")
+        return safe_redirect(self.request.POST.get("next"))

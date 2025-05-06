@@ -4,7 +4,9 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'account/base.css' %}">
 {% endblock %}
-
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'account/permissions.js' %}"></script>
+{% endblock %}
 
 {% block content %}
     <div class="fr-container fr-pt-4w">
@@ -20,6 +22,8 @@
                 </div>
                 {% csrf_token %}
                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-2w">
+                    <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
+                    <button id="cancel-link" class="fr-btn fr-btn--secondary">Annuler</button>
                     <button class="fr-btn" type="submit">Enregistrer les modifications</button>
                 </div>
             </form>
