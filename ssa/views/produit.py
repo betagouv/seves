@@ -59,6 +59,9 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
 
+        self.object.contacts.add(self.request.user.agent.contact_set.get())
+        self.object.contacts.add(self.request.user.agent.structure.contact_set.get())
+
         messages.success(self.request, "La fiche produit a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 
