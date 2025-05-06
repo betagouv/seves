@@ -1086,6 +1086,44 @@ def test_message_with_national_referent_does_not_add_structure(live_server, page
     assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
 
 
+def test_message_with_two_national_referents_in_same_structure_does_not_add_structure(
+    live_server, page: Page, choice_js_fill
+):
+    contact_structure = ContactStructureFactory()
+    national_referent1 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    national_referent2 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent1.agent.user.groups.add(referent_national_group)
+    national_referent2.agent.user.groups.add(referent_national_group)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent1.agent.nom,
+        national_referent1.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent2.agent.nom,
+        national_referent2.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour deux référents nationaux")
+    page.locator("#id_content").fill("Test avec deux référents nationaux")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent1.agent).exists()
+    assert evenement.contacts.filter(agent=national_referent2.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent1.agent.structure).exists()
+    assert not evenement.contacts.filter(structure=national_referent2.agent.structure).exists()
+
+
 def test_message_with_national_referent_and_regular_agent_add_structure(live_server, page: Page, choice_js_fill):
     national_referent = ContactAgentFactory(with_active_agent=True)
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)

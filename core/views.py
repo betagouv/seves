@@ -185,11 +185,9 @@ class MessageCreateView(
                 structures_with_agents[contact.agent.structure].append(contact)
 
         for structure, contacts_agents in structures_with_agents.items():
-            first_contact_agent = contacts_agents[0]
-            add_structure = not (
-                len(contacts_agents) == 1 and user_is_referent_national(first_contact_agent.agent.user)
-            )
-            if add_structure and (structure := first_contact_agent.get_structure_contact()):
+            all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
+            add_structure = not all_referents_nationaux
+            if add_structure and (structure := contacts_agents[0].get_structure_contact()):
                 self.obj.contacts.add(structure)
 
     def _is_internal_communication(self, structures):
