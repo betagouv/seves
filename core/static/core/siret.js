@@ -21,8 +21,9 @@ export function fetchSiret(value, token) {
             }
             data["etablissements"].forEach((etablissement) => {
                 let address = etablissement["adresseEtablissement"]
-                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
-                let resultEtablissement = `${etablissement["siret"]} - ${streetData}`
+                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]}`
+                let fullStreetData = `${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
+                let resultEtablissement = `${etablissement["siret"]} - ${fullStreetData}`
                 const uniteLegale = etablissement["uniteLegale"]
                 let resultUnite = `${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["prenom1UniteLegale"]?? ""} ${uniteLegale["nomUniteLegale"]?? ""}`
                 results.push({
@@ -30,8 +31,11 @@ export function fetchSiret(value, token) {
                     label: resultUnite + " " + resultEtablissement ,
                     customProperties: {
                         "streetData": streetData,
+                        "fullStreetData": fullStreetData,
                         "siret": etablissement["siret"],
-                        "raison": uniteLegale["denominationUniteLegale"]
+                        "raison": uniteLegale["denominationUniteLegale"],
+                        "commune": address["libelleCommuneEtablissement"],
+                        "code_commune": address["codeCommuneEtablissement"],
                     }
                 })
             });
@@ -39,7 +43,7 @@ export function fetchSiret(value, token) {
         });
 }
 
-export function setUpSiretChoices(element){
+export function setUpSiretChoices(element, position){
     const choicesSIRET = new Choices(element, {
         removeItemButton: true,
         placeholderValue: 'N° SIRET',
@@ -49,7 +53,7 @@ export function setUpSiretChoices(element){
         searchResultLimit: 20,
         classNames: {containerInner: 'fr-select'},
         itemSelectText: '',
-        position: 'top',
+        position: position,
     });
 
     choicesSIRET.input.element.addEventListener('input', debounce((event) => {

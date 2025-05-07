@@ -1,4 +1,5 @@
 import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+import {setUpSiretChoices} from "/static/core/siret.js";
 
 let modalEtablissementHTMLContent = {}
 
@@ -9,6 +10,62 @@ document.addEventListener('DOMContentLoaded', () => {
             num++
         }
         return num
+    }
+
+    function setupAdresseField(modal){
+        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
+        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
+            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
+            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
+            if (!!event.detail.customProperties.context)
+            {
+                modal.querySelector('[id$=pays]').value = "FR"
+                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
+            }
+        })
+        return addressChoices
+    }
+
+    function configureSiretField(field, addressChoices){
+        const choicesSIRET = setUpSiretChoices(field, 'bottom')
+        choicesSIRET.passedElement.element.addEventListener("choice", (event)=> {
+            field.closest("dialog").querySelector('[id$=siret]').value = event.detail.customProperties.siret
+            field.closest("dialog").querySelector('[id$=raison_sociale]').value = event.detail.customProperties.raison
+            field.closest("dialog").querySelector('[id$=commune]').value = event.detail.customProperties.commune
+            field.closest("dialog").querySelector('[id$=code_insee]').value = event.detail.customProperties.code_commune
+            let result = [{"value": event.detail.customProperties.streetData, "label": event.detail.customProperties.streetData, selected:true }]
+            addressChoices.setChoices(result, 'value', 'label', true)
+            field.closest("dialog").querySelector('[id$=pays]').value = "FR"
+            fetch(`/ssa/api/find-numero-agrement/?siret=${event.detail.customProperties.siret}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!!data["numero_agrement"]){
+                        field.closest("dialog").querySelector('[id$=agrement]').value = data["numero_agrement"]
+                    }
+                });
+
+            field.closest("dialog").querySelector('[id$=sirene-btn]').classList.remove("fr-hidden")
+            field.closest("dialog").querySelector('.fr-search-bar').classList.add("fr-hidden")
+            field.closest("dialog").querySelector('.fr-search-bar select').innerHTML = ""
+            choicesSIRET.destroy()
+        })
+    }
+
+    function setupSiretBlock(modal, addressChoices){
+        const siretLookupBtn = modal.querySelector("#sirene-btn")
+        const siretInput = modal.querySelector("#search-siret-input")
+        if (!siretInput.dataset.token){
+            siretLookupBtn.classList.add("fr-hidden")
+            return
+        }
+
+        siretLookupBtn.addEventListener("click", event =>{
+            event.preventDefault()
+            siretLookupBtn.classList.add("fr-hidden")
+            configureSiretField(siretInput, addressChoices)
+            siretLookupBtn.nextElementSibling.classList.remove("fr-hidden")
+        })
+
     }
 
     function showEtablissementModal() {
@@ -33,22 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, 10)
 
-        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
-        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
-            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
-            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
-            if (!!event.detail.customProperties.context)
-            {
-                modal.querySelector('[id$=pays]').value = "FR"
-                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
-            }
-        })
+        let addressChoices = setupAdresseField(modal)
+        setupSiretBlock(modal, addressChoices)
 
 
         modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
             event.preventDefault()
             submitFormAndAddEtablissementCard(event)
         })
+
+
+
     }
 
     function getSelectedLabel(element) {

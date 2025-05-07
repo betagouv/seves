@@ -16,6 +16,7 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
+    WithSireneTokenMixin,
 )
 from ssa.filters import EvenementProduitFilter
 from ssa.forms import EvenementProduitForm
@@ -23,7 +24,9 @@ from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit
 
 
-class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, CreateView):
+class EvenementProduitCreateView(
+    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, WithSireneTokenMixin, CreateView
+):
     form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
 
