@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
@@ -399,3 +399,21 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
 
         messages.error(request, "Erreur lors de l'ajout de l'agent.")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+
+class EvenementOuvrirView(View):
+    def post(self, request, pk):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data["content_type_id"])
+        obj = content_type.model_class().objects.get(pk=pk)
+        redirect_url = obj.get_absolute_url()
+        if not obj.can_ouvrir(request.user):
+            messages.error(request, "Vous ne pouvez pas ouvrir l'évènement.")
+            return redirect(redirect_url)
+        with transaction.atomic():
+            user_contact = self.request.user.agent.structure.contact_set.get()
+            if fin_suivi := obj.fin_suivi.filter(contact=user_contact):
+                fin_suivi.delete()
+            obj.publish()
+            messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
+            return redirect(redirect_url)

@@ -22,16 +22,8 @@ from core.forms import (
 )
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import (
-    Document,
-    LienLibre,
-    Contact,
-    Message,
-    Visibilite,
-    Structure,
-    FinSuiviContact,
-    user_is_referent_national,
-)
+from core.models import user_is_referent_national
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
@@ -362,6 +354,12 @@ class WithEtatMixin(models.Model):
         if not self.can_be_cloturer_by(user):
             return False, "Vous n'avez pas les droits pour clôturer cet événement."
         return True, ""
+
+    def can_ouvrir(self, user: User):
+        """Vérifie si l'évènement peut être ouvert (repasser dans l'état EN COURS)"""
+        if self.is_cloture:
+            return user.agent.structure.is_ac
+        return False
 
     def get_publish_success_message(self):
         return "Objet publié avec succès"
