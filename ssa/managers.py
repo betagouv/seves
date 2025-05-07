@@ -1,8 +1,11 @@
+from functools import reduce
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Exists, OuterRef, Func, F, Subquery
-
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from core.models import FinSuiviContact, LienLibre
+import operator
 
 
 class EvenementProduitManager(models.Manager):
@@ -43,3 +46,20 @@ class EvenementProduitQueryset(models.QuerySet):
             .values("count")
         )
         return self.annotate(nb_liens_libre=Subquery(liens))
+
+    def search(self, query):
+        config = {
+            "description": "A",
+            "denomination": "B",
+            "marque": "B",
+            "etablissements__raison_sociale": "C",
+            "evaluation": "C",
+            "lots": "C",
+            "description_complementaire": "C",
+        }
+        vector = reduce(
+            operator.add,
+            [SearchVector(field, weight=weight, config="french_unaccent") for field, weight in config.items()],
+        )
+        rank = SearchRank(vector, SearchQuery(query, config="french_unaccent"), weights=[0.2, 0.6, 0.8, 1])
+        return self.annotate(rank=rank).filter(rank__gte=0.3).order_by("-rank")
