@@ -33,7 +33,7 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
 )
-from core.models import Visibilite, Contact
+from core.models import Visibilite, Contact, Message
 from core.redirect import safe_redirect
 from sv.forms import (
     FicheZoneDelimiteeForm,
@@ -205,6 +205,7 @@ class EvenementDetailView(
             if self.request.GET.get("detection")
             else getattr(self.object.detections.first(), "id", None)
         )
+        context["message_status"] = Message.Status
         return context
 
 
