@@ -282,7 +282,7 @@ def test_cant_cloture_evenement_if_already_cloture(client):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     response = client.post(
-        reverse("sv:evenement-cloturer", kwargs={"pk": evenement.id}),
+        reverse("cloturer", kwargs={"pk": evenement.id}),
         data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
     )
 
