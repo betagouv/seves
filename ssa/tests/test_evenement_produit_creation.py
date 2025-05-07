@@ -3,7 +3,7 @@ import json
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import LienLibre
+from core.models import LienLibre, Contact
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement, QuantificationUnite
 from ssa.models import TypeEvenement, Source
@@ -380,3 +380,20 @@ def test_cant_create_evenement_produit_with_quantification_unit_only(
     assert creation_page.error_messages == [
         "Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides."
     ]
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    assert evenement_produit.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in evenement_produit.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in evenement_produit.contacts.all()
