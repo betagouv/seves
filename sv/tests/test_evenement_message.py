@@ -6,10 +6,12 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.contrib.auth.models import Group
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
 from core.models import Message, Contact, Structure, Visibilite, Document
+from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -1058,3 +1060,137 @@ def test_can_send_message_with_document_confirmation_modal_reject(live_server, p
     message_submit_button.click()
     page.locator("#fr-modal-document-confirmation").get_by_role("button", name="Fermer").click()
     expect(message_submit_button).not_to_be_disabled()
+
+
+def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour référent national")
+    page.locator("#id_content").fill("Test avec référent national")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+
+
+def test_message_with_two_national_referents_in_same_structure_does_not_add_structure(
+    live_server, page: Page, choice_js_fill
+):
+    contact_structure = ContactStructureFactory()
+    national_referent1 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    national_referent2 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent1.agent.user.groups.add(referent_national_group)
+    national_referent2.agent.user.groups.add(referent_national_group)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent1.agent.nom,
+        national_referent1.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent2.agent.nom,
+        national_referent2.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour deux référents nationaux")
+    page.locator("#id_content").fill("Test avec deux référents nationaux")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent1.agent).exists()
+    assert evenement.contacts.filter(agent=national_referent2.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent1.agent.structure).exists()
+    assert not evenement.contacts.filter(structure=national_referent2.agent.structure).exists()
+
+
+def test_message_with_national_referent_and_regular_agent_add_structure(live_server, page: Page, choice_js_fill):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+    regular_agent = ContactAgentFactory(with_active_agent=True, agent__structure=national_referent.agent.structure)
+    ContactStructureFactory(structure=national_referent.agent.structure)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        regular_agent.agent.nom,
+        regular_agent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour référent national et agent normal")
+    page.locator("#id_content").fill("Test avec deux destinataires")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert evenement.contacts.filter(agent=regular_agent.agent).exists()
+    assert evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+
+
+def test_message_with_national_referent_and_regular_agent_in_different_structures_adds_only_regular_agent_structure(
+    live_server, page: Page, choice_js_fill
+):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    ContactStructureFactory(structure=national_referent.agent.structure)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+    regular_agent = ContactAgentFactory(with_active_agent=True)
+    ContactStructureFactory(structure=regular_agent.agent.structure)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        regular_agent.agent.nom,
+        regular_agent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour agents de structures différentes")
+    page.locator("#id_content").fill("Test avec deux destinataires de structures différentes")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert evenement.contacts.filter(agent=regular_agent.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+    assert evenement.contacts.filter(structure=regular_agent.agent.structure).exists()
