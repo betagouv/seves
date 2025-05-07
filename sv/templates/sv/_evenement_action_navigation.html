@@ -34,7 +34,7 @@
     {% include "sv/_update_visibilite_modale.html" %}
 {% endif %}
 {% if is_evenement_can_be_cloturer%}
-    {% include "sv/_cloturer_modal.html" %}
+    {% include "core/_cloturer_modal.html" %}
 {% endif %}
 {% if can_be_deleted %}
     {% url 'sv:evenement-liste' as next_url %}

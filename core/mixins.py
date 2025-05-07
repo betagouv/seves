@@ -380,6 +380,9 @@ class WithEtatMixin(models.Model):
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
+    def get_cloture_confirm_message(self):
+        return "L'objet a bien été cloturé."
+
 
 class WithFreeLinkIdsMixin:
     @property
@@ -546,3 +549,22 @@ class WithAddUserContactsMixin:
 
         if structure_contact := agent_contact.get_structure_contact():
             obj.contacts.add(structure_contact)
+
+
+class WithClotureContextMixin:
+    """
+    Mixin qui ajoute au contexte les informations relatives à la clôture d'un objet.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        object = self.get_object()
+        user = self.request.user
+        context["contacts_not_in_fin_suivi"] = contacts_structures_not_in_fin_suivi = (
+            object.get_contacts_structures_not_in_fin_suivi()
+        )
+        context["is_evenement_can_be_cloturer"], _ = object.can_be_cloturer(user)
+        context["is_the_only_remaining_structure"] = object.is_the_only_remaining_structure(
+            user, contacts_structures_not_in_fin_suivi
+        )
+        return context

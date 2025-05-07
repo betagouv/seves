@@ -33,6 +33,7 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
+    WithClotureContextMixin,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
@@ -63,7 +64,6 @@ from .view_mixins import (
     WithPrelevementHandlingMixin,
     WithStatusToOrganismeNuisibleMixin,
     WithPrelevementResultatsMixin,
-    WithClotureContextMixin,
 )
 
 
@@ -462,28 +462,6 @@ class FicheDetectionExportView(View):
         FicheDetectionExport().export(stream=response, user=request.user)
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
-
-
-class EvenementCloturerView(View):
-    def post(self, request, pk):
-        data = self.request.POST
-        content_type = ContentType.objects.get(pk=data["content_type_id"])
-        evenement = content_type.model_class().objects.get(pk=pk)
-        redirect_url = evenement.get_absolute_url()
-
-        can_cloturer, error_message = evenement.can_be_cloturer(request.user)
-        if not can_cloturer:
-            messages.error(request, error_message)
-            return redirect(redirect_url)
-
-        if evenement.is_the_only_remaining_structure(
-            self.request.user, evenement.get_contacts_structures_not_in_fin_suivi()
-        ):
-            evenement.add_fin_suivi(self.request.user)
-
-        evenement.cloturer()
-        messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
-        return redirect(redirect_url)
 
 
 class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):

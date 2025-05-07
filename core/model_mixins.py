@@ -12,3 +12,8 @@ class WithBlocCommunFieldsMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_contacts_structures_not_in_fin_suivi(self):
+        contacts_structure = self.contacts.exclude(structure__isnull=True).select_related("structure")
+        fin_suivi_contacts_ids = self.fin_suivi.values_list("contact", flat=True)
+        return contacts_structure.exclude(id__in=fin_suivi_contacts_ids)

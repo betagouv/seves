@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
 from django.views.generic import CreateView, DetailView, ListView
 
+from core.mixins import WithClotureContextMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -16,10 +17,10 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
+from ssa.filters import EvenementProduitFilter
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit
-from ssa.filters import EvenementProduitFilter
 
 
 class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, CreateView):
@@ -84,6 +85,7 @@ class EvenementProduitDetailView(
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
     UserPassesTestMixin,
     DetailView,
 ):
