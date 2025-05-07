@@ -109,11 +109,6 @@ class Evenement(
     def __str__(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
 
-    def get_contacts_structures_not_in_fin_suivi(self):
-        contacts_structure = self.contacts.exclude(structure__isnull=True).select_related("structure")
-        fin_suivi_contacts_ids = self.fin_suivi.values_list("contact", flat=True)
-        return contacts_structure.exclude(id__in=fin_suivi_contacts_ids)
-
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
@@ -170,6 +165,9 @@ class Evenement(
 
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
+
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
 
     def add_fin_suivi(self, user):
         with transaction.atomic():
