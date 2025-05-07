@@ -163,12 +163,12 @@ function setupCharacterCounter(element) {
 
 
 function configureSiretField(field){
-    const choicesSIRET = setUpSiretChoices(field)
+    const choicesSIRET = setUpSiretChoices(field, 'top')
     choicesSIRET.passedElement.element.addEventListener("choice", (event)=> {
         field.closest("dialog").querySelector('[id$=siret_etablissement]').value = event.detail.customProperties.siret
         field.closest("dialog").querySelector('[id$=raison_sociale_etablissement]').value = event.detail.customProperties.raison
-        field.closest("dialog").querySelector('[id$=adresse_lieu_dit]').value = event.detail.customProperties.streetData
-        field.closest("dialog").querySelector('[id$=adresse_etablissement]').value = event.detail.customProperties.streetData
+        field.closest("dialog").querySelector('[id$=adresse_lieu_dit]').value = event.detail.customProperties.fullStreetData
+        field.closest("dialog").querySelector('[id$=adresse_etablissement]').value = event.detail.customProperties.fullStreetData
         field.closest("dialog").querySelector('[id$=pays_etablissement]').value = "FR"
 
         field.closest("dialog").querySelector('[id$=sirene-btn]').classList.remove("fr-hidden")

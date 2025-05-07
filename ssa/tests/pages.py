@@ -90,6 +90,10 @@ class EvenementProduitCreationPage:
         self.page.locator("#add-etablissement").click()
         return self.current_modal
 
+    def add_etablissement_siren(self, value, full_value, choice_js_fill):
+        self.current_modal.locator("#sirene-btn").click()
+        choice_js_fill(self.page, "#header-search .choices", value, full_value)
+
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")

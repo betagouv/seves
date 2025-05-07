@@ -1,4 +1,6 @@
 import json
+from unittest import mock
+
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -413,3 +415,79 @@ def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_mo
     page.keyboard.press("Escape")
     creation_page.open_edit_etablissement()
     expect(creation_page.current_modal_raison_sociale_field).to_have_value(etablissement.raison_sociale)
+
+
+@mock.patch("ssa.views.api.requests.get")
+@mock.patch("ssa.views.api.csv.reader")
+def test_can_create_etablissement_with_sirene_autocomplete(
+    mock_csv_reader, mock_requests_get, live_server, page: Page, choice_js_fill, settings
+):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    evenement = EvenementProduitFactory.build()
+
+    mock_requests_get.return_value.text = "mocked content"
+    mock_csv_reader.return_value = iter(
+        [
+            ["Numero de département", "Numéro agrément/Approval number", "SIRET", "Other columns"],
+            ["1", "03.223.432", "12007901700030", "Other data"],
+        ]
+    )
+
+    call_count = {"count": 0}
+
+    def handle(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": "12007901700030",
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75115",
+                    },
+                }
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        creation_page.navigate()
+        mock_post.assert_called_once()
+
+    creation_page.fill_required_fields(evenement)
+
+    creation_page.open_etablissement_modal()
+    expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
+    creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill)
+    assert call_count["count"] == 1
+    creation_page.page.wait_for_timeout(1000)
+    assert mock_requests_get.call_count == 1
+    creation_page.close_etablissement_modal()
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
+    assert etablissement.commune == "PARIS"
+    assert etablissement.code_insee == "75115"
+    assert etablissement.pays.name == "France"
+    assert etablissement.numero_agrement == "03.223.432"
+    assert etablissement.siret == "12007901700030"

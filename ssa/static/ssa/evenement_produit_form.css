@@ -62,3 +62,10 @@
 #liens-libre input {
     margin-bottom: 0rem;
 }
+
+.fr-search-bar .choices{
+    flex: 1.25;
+}
+.etablissement-fields--lookup {
+    text-align: center;
+}
