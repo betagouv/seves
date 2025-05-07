@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
@@ -398,3 +398,23 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
 
         messages.error(request, "Erreur lors de l'ajout de l'agent.")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+
+
+class CloturerView(View):
+    def post(self, request, pk):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data["content_type_id"])
+        object = content_type.model_class().objects.get(pk=pk)
+        redirect_url = object.get_absolute_url()
+
+        can_cloturer, error_message = object.can_be_cloturer(request.user)
+        if not can_cloturer:
+            messages.error(request, error_message)
+            return redirect(redirect_url)
+
+        if object.is_the_only_remaining_structure(self.request.user, object.get_contacts_structures_not_in_fin_suivi()):
+            object.add_fin_suivi(self.request.user)
+
+        object.cloturer()
+        messages.success(request, object.get_cloture_confirm_message())
+        return redirect(redirect_url)

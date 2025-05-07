@@ -205,6 +205,11 @@ class EvenementProduitDetailsPage:
         self.page.get_by_text("Supprimer l'événement", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
 
+    def cloturer(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Clôturer l'événement").click()
+        self.page.get_by_role("button", name="Clôturer").click()
+
 
 class EvenementProduitListPage:
     def __init__(self, page: Page, base_url):

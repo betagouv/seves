@@ -11,6 +11,7 @@ from .views import (
     PublishView,
     StructureAddView,
     AgentAddView,
+    CloturerView,
 )
 
 urlpatterns = [
@@ -73,5 +74,10 @@ urlpatterns = [
         "agents/ajout",
         AgentAddView.as_view(),
         name="agent-add",
+    ),
+    path(
+        "cloturer/<int:pk>",
+        CloturerView.as_view(),
+        name="cloturer",
     ),
 ]

@@ -271,6 +271,9 @@ class EvenementProduit(
     def get_email_subject(self):
         return f"{self.get_type_evenement_display()} {self.denomination} {self.numero}"
 
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
     class Meta:
         constraints = [
             models.CheckConstraint(
