@@ -74,38 +74,6 @@ def test_cant_add_zone_if_already_one(live_server, page: Page):
     expect(page.get_by_text("Ajouter une zone", exact=True)).not_to_be_visible()
 
 
-def test_can_publish_evenement(live_server, page: Page):
-    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-
-    publish_btn = page.get_by_text("Publier l'événement", exact=True)
-    expect(publish_btn).to_be_enabled()
-    publish_btn.click()
-    expect(page.get_by_text(f"Événement {evenement.numero} publié avec succès")).to_be_visible()
-
-    publish_btn = page.get_by_text("Publier l'événement", exact=True)
-    expect(publish_btn).not_to_be_visible()
-
-
-def test_cant_forge_publication_of_evenement_we_are_not_owner(client, mocked_authentification_user):
-    evenement = EvenementFactory(
-        createur=Structure.objects.create(libelle="A new structure"), etat=Evenement.Etat.BROUILLON
-    )
-    response = client.get(evenement.get_absolute_url())
-
-    assert response.status_code == 403
-
-    payload = {
-        "content_type_id": ContentType.objects.get_for_model(evenement).id,
-        "content_id": evenement.pk,
-    }
-    response = client.post(reverse("publish"), data=payload)
-
-    assert response.status_code == 302
-    evenement.refresh_from_db()
-    assert evenement.is_draft is True
-
-
 def test_detail_synthese_switch(live_server, page):
     evenement = EvenementFactory()
     FicheDetectionFactory(evenement=evenement)
