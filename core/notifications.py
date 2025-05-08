@@ -63,3 +63,62 @@ def notify_message(message_obj: Message):
 
     if recipients and content:
         _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
+
+
+def notify_new_permission(contact_agent: Contact):
+    send(
+        recipients=f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>",
+        subject="Sèves Santé des végétaux - Ouverture de vos droits d'accès",
+        message="""
+    Bonjour,
+    Nous vous informons que vos droits d’accès ont été ouverts avec succès.
+    Vous pouvez désormais accéder à Sèves Santé des végétaux en utilisant vos identifiants Agricoll habituels : https://seves.beta.gouv.fr
+    Si vous rencontrez des difficultés ou si vous avez des questions, n’hésitez pas à nous contacter.
+    Bien cordialement,
+    L’équipe Sèves
+        """,
+        html_message="""
+    <!DOCTYPE html>
+    <html>
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bonjour,</p>
+        <p>Nous vous informons que vos droits d’accès ont été ouverts avec succès.</p>
+        <p>
+            Vous pouvez désormais accéder à Sèves Santé des végétaux en utilisant vos identifiants Agricoll habituels :
+            <a href="https://seves.beta.gouv.fr">Sèves</a>
+        </p>
+        <p>Si vous rencontrez des difficultés ou si vous avez des questions, n’hésitez pas à nous contacter.</p>
+        <p>Bien cordialement,</p>
+        <p>L’équipe Sèves</p>
+    </div>
+    </html>
+        """,
+    )
+
+
+def notify_remove_permission(contact_agent: Contact):
+    send(
+        recipients=f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>",
+        subject="Sèves Santé des végétaux - Suppression de vos droits d'accès",
+        message="""
+    Bonjour,
+    Nous vous informons que vos droits d’accès ont été supprimés.
+    Vous ne pouvez donc désormais plus accéder à Sèves Santé des végétaux.
+    S’il s’agit d’une erreur, veuillez nous nous contacter.
+    Bien cordialement,
+    L’équipe Sèves
+        """,
+        html_message="""
+    <!DOCTYPE html>
+    <html>
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bonjour,</p>
+        <p>Nous vous informons que vos droits d’accès ont été supprimés.</p>
+        <p>Vous ne pouvez donc désormais plus accéder à Sèves Santé des végétaux.</p>
+        <p>S’il s’agit d’une erreur, veuillez nous nous contacter.</p>
+        <p>Bien cordialement,</p>
+        <p>L’équipe Sèves</p>
+    </div>
+    </html>
+        """,
+    )
