@@ -15,3 +15,5 @@ fileignoreconfig:
   checksum: 62b3a8a26bcb7a4ee9f8c73e92241093690212cfce216acf640079bfb36dcdfc
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
+- filename: core/views.py
+  checksum: b54379a22a0229e85ae27aeaf50d2b6931289fb8dbe521b0d3b68e88fc21b2b2

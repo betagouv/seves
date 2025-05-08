@@ -336,6 +336,10 @@ class WithEtatMixin(models.Model):
     def is_cloture(self):
         return self.etat == self.Etat.CLOTURE
 
+    @property
+    def is_published(self):
+        return self.etat == self.Etat.EN_COURS
+
     def can_publish(self, user):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
@@ -566,3 +570,31 @@ class WithClotureContextMixin:
             user, contacts_structures_not_in_fin_suivi
         )
         return context
+
+
+class WithPublishMixin:
+    def publish(self, obj, request):
+        if not obj.can_publish(request.user):
+            messages.error(request, obj.get_publish_error_message())
+            return False
+        try:
+            obj.publish()
+            messages.success(request, obj.get_publish_success_message())
+            return True
+        except AttributeError:
+            messages.error(request, obj.get_publish_error_message())
+            return False
+
+
+class WithACNotificationMixin:
+    def notify_ac(self, obj, request):
+        try:
+            obj.notify_ac(user=request.user)
+            messages.success(request, "L'administration centrale a été notifiée avec succès")
+            return True
+        except AttributeError:
+            messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
+            return False
+        except ValidationError as e:
+            messages.error(request, e.message)
+            return False

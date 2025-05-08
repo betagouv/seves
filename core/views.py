@@ -21,7 +21,12 @@ from .forms import (
     StructureAddForm,
     AgentAddForm,
 )
-from .mixins import PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin
+from .mixins import (
+    PreventActionIfVisibiliteBrouillonMixin,
+    WithAddUserContactsMixin,
+    WithPublishMixin,
+    WithACNotificationMixin,
+)
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
 from .notifications import notify_message
 from .redirect import safe_redirect
@@ -305,7 +310,7 @@ class SoftDeleteView(View):
         return safe_redirect(request.POST.get("next"))
 
 
-class PublishView(View):
+class PublishView(WithPublishMixin, View):
     def post(self, request):
         content_type_id = request.POST.get("content_type_id")
         content_id = request.POST.get("content_id")
@@ -313,15 +318,11 @@ class PublishView(View):
         content_type = ContentType.objects.get(pk=content_type_id).model_class()
         obj = content_type.objects.get(pk=content_id)
 
-        if obj.can_publish(request.user):
-            obj.publish()
-            messages.success(request, obj.get_publish_success_message())
-        else:
-            messages.error(request, obj.get_publish_error_message())
+        self.publish(obj, request)
         return safe_redirect(request.POST.get("next"))
 
 
-class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
+class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, WithACNotificationMixin, View):
     def test_func(self):
         return self.obj.can_user_access(self.request.user)
 
@@ -333,14 +334,19 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return self.obj
 
     def post(self, request):
-        try:
-            self.obj.notify_ac(user=self.request.user)
-            messages.success(request, "L'administration centrale a été notifiée avec succès")
-        except AttributeError:
-            messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
-        except ValidationError as e:
-            messages.error(request, e.message)
+        self.notify_ac(self.obj, request)
+        return safe_redirect(request.POST.get("next"))
 
+
+class PublishAndACNotificationView(WithPublishMixin, WithACNotificationMixin, View):
+    def post(self, request):
+        content_type_id = request.POST.get("content_type_id")
+        content_id = request.POST.get("content_id")
+        content_type = ContentType.objects.get(pk=content_type_id).model_class()
+        obj = content_type.objects.get(pk=content_id)
+        if not self.publish(obj, request):
+            return safe_redirect(request.POST.get("next"))
+        self.notify_ac(obj, request)
         return safe_redirect(request.POST.get("next"))
 
 
