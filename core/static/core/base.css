@@ -190,8 +190,6 @@ label:has(+ .choices select[data-required="true"])::after,
     flex-wrap: wrap;
 }
 .details-top-row--actions {
-    display: flex;
-    justify-content: space-between;
     max-height: 2.5rem;
 }
 .details-top-row--actions .fr-translate__btn::before {
