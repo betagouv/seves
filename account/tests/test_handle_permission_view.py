@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from playwright.sync_api import expect
 from django.urls import reverse
 
-from core.factories import AgentFactory
+from core.factories import ContactAgentFactory
 
 User = get_user_model()
 
@@ -30,27 +30,27 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
     structure = mocked_authentification_user.agent.structure
     group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
-    AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
-    AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
-    AgentFactory(structure=structure, prenom="Ian", nom="Paice")
-    AgentFactory(prenom="John", nom="Lennon")
+    contact_agent_1 = ContactAgentFactory(agent__structure=structure)
+    contact_agent_2 = ContactAgentFactory(agent__structure=structure)
+    contact_agent_3 = ContactAgentFactory(agent__structure=structure)
+    contact_agent_4 = ContactAgentFactory()
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=False)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
 
-    expect(page.get_by_text("Gillan Ian")).to_be_visible()
-    expect(page.get_by_text("Blackmore Ritchie")).to_be_visible()
-    expect(page.get_by_text("Paice Ian")).to_be_visible()
-    expect(page.get_by_text("Paice Lennon")).not_to_be_visible()
+    expect(page.get_by_text(str(contact_agent_1))).to_be_visible()
+    expect(page.get_by_text(str(contact_agent_2))).to_be_visible()
+    expect(page.get_by_text(str(contact_agent_3))).to_be_visible()
+    expect(page.get_by_text(str(contact_agent_4))).not_to_be_visible()
 
-    page.get_by_text("Gillan Ian").click()
-    page.get_by_text("Paice Ian").click()
-
+    page.get_by_text(str(contact_agent_1)).click()
+    page.get_by_text(str(contact_agent_2)).click()
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
-    assert User.objects.filter(agent__prenom="Ian", is_active=True).count() == 2
-    assert User.objects.get(agent__nom="Blackmore").is_active is False
-    assert User.objects.get(agent__nom="Lennon").is_active is False
+    assert User.objects.get(agent__contact=contact_agent_1).is_active is True
+    assert User.objects.get(agent__contact=contact_agent_2).is_active is True
+    assert User.objects.get(agent__contact=contact_agent_3).is_active is False
+    assert User.objects.get(agent__contact=contact_agent_4).is_active is False
 
 
 @pytest.mark.django_db
@@ -59,18 +59,17 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
     structure = mocked_authentification_user.agent.structure
     group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
-    AgentFactory(structure=structure, prenom="Ian", nom="Gillan")
-    AgentFactory(structure=structure, prenom="Ritchie", nom="Blackmore")
+    contact_agent_1 = ContactAgentFactory(agent__structure=structure)
+    contact_agent_2 = ContactAgentFactory(agent__structure=structure)
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=True)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
-    page.get_by_text("Gillan Ian").click()
-    page.get_by_text("Blackmore Ritchie").click()
-
+    page.get_by_text(str(contact_agent_1)).click()
+    page.get_by_text(str(contact_agent_2)).click()
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
-    assert User.objects.get(agent__nom="Blackmore").is_active is False
-    assert User.objects.get(agent__nom="Gillan").is_active is False
+    assert User.objects.get(agent__contact=contact_agent_1).is_active is False
+    assert User.objects.get(agent__contact=contact_agent_2).is_active is False
 
 
 @pytest.mark.django_db

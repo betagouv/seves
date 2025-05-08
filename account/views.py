@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.generic import FormView
 
 from account.forms import UserPermissionForm
+from core.notifications import notify_new_permission, notify_remove_permission
 from core.redirect import safe_redirect
 from seves import settings
 
@@ -58,5 +59,7 @@ class HandlePermissionsView(FormView):
             user.is_active = value
             user.save()
             user.groups.add(sv_group)
+            contact_user = user.agent.contact_set.get()
+            notify_new_permission(contact_user) if value else notify_remove_permission(contact_user)
         messages.success(self.request, "Modification de droits enregistrées sur Sèves Santé des végétaux")
         return safe_redirect(self.request.POST.get("next"))
