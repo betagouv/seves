@@ -12,6 +12,7 @@ from .views import (
     StructureAddView,
     AgentAddView,
     CloturerView,
+    PublishAndACNotificationView,
     EvenementOuvrirView,
 )
 
@@ -60,6 +61,11 @@ urlpatterns = [
         "publication/",
         PublishView.as_view(),
         name="publish",
+    ),
+    path(
+        "publier-notifier-ac/",
+        PublishAndACNotificationView.as_view(),
+        name="publish-and-ac-notification",
     ),
     path(
         "notify-ac/",
