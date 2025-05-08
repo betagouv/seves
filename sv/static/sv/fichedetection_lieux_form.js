@@ -1,5 +1,6 @@
 import {setUpSiretChoices} from "/static/core/siret.js";
 import {setUpCommuneChoices} from "/static/core/commune.js";
+import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
 
 document.lieuxCards = []
 modalHTMLContent = {}
@@ -56,7 +57,6 @@ function showLieuModal(event){
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     dsfr(currentModal).modal.disclose()
     dataRequiredToRequired(currentModal)
-    setUpCommune(currentModal.querySelector("[id^=commune-select-]"))
 }
 
 function buildLieuCardFromModal(element){
@@ -123,8 +123,39 @@ function setUpCommune(element) {
         inseeInput.value = ""
         departementInput.value = ""
     })
+
+    return choicesCommunes;
 }
 
+function onAdresseLieuChoice(event, modal, communeChoice) {
+    communeChoice.setValue([event.detail.customProperties.city]);
+    modal.querySelector('[id$=commune]').value = event.detail.customProperties.city;
+    modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode;
+    if (!!event.detail.customProperties.context) {
+        modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[0].trim();
+    }
+}
+
+function setUpAdresseLieu(modal, communeChoice) {
+    const adresseLieuElement = modal.querySelector("[id$=adresse_lieu_dit]");
+    const choicesAdresseLieu = setUpAddressChoices(adresseLieuElement);
+    choicesAdresseLieu.passedElement.element.addEventListener("choice", (event) => onAdresseLieuChoice(event, modal, communeChoice));
+}
+
+function onAdresseEtablissementChoice(event, modal) {
+    modal.querySelector('[id$=commune_etablissement]').value = event.detail.customProperties.city;
+    modal.querySelector('[id$=code_insee_etablissement]').value = event.detail.customProperties.inseeCode;
+    if (!!event.detail.customProperties.context) {
+        modal.querySelector('[id$=pays_etablissement]').value = "FR";
+        modal.querySelector('[id$=departement_etablissement]').value = event.detail.customProperties.context.split(",")[0].trim();
+    }
+}
+
+function setUpAdresseEtablissement(modal) {
+    const adresseEtablissementElement = modal.querySelector("[id$=adresse_etablissement]");
+    const choicesAdresseEtablissement = setUpAddressChoices(adresseEtablissementElement);
+    choicesAdresseEtablissement.passedElement.element.addEventListener("choice", (event) => onAdresseEtablissementChoice(event, modal));
+}
 
 function saveModalWhenOpening(event){
     const modalId = event.target.getAttribute("id").split("-").pop()
@@ -189,7 +220,12 @@ function configureSiretField(field){
 
     document.querySelector("#add-lieu-bouton").addEventListener("click", showLieuModal)
     document.querySelectorAll(".lieu-save-btn").forEach(button => button.addEventListener("click", saveLieu))
-    document.querySelectorAll("[id^=commune-select-]").forEach(communeSelect => setUpCommune(communeSelect));
+    document.querySelectorAll("[id^=commune-select-]").forEach(communeSelect => {
+        const modal = communeSelect.closest("dialog")
+        const communeChoice = setUpCommune(communeSelect);
+        setUpAdresseLieu(modal, communeChoice);
+        setUpAdresseEtablissement(modal);
+    });
     document.getElementById("delete-lieu-confirm-btn").addEventListener("click", deleteLieu)
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => modal.addEventListener('dsfr.disclose', saveModalWhenOpening))
     document.querySelectorAll("[id^=modal-add-lieu-] .fr-btn--close").forEach(element => element.addEventListener("click", closeDSFRModal))

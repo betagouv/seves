@@ -33,6 +33,7 @@ from ..models import (
     Laboratoire,
     Evenement,
     Prelevement,
+    Lieu,
 )
 
 
@@ -216,7 +217,7 @@ def test_create_fiche_detection_with_lieu(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -224,7 +225,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
-    lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_choicesjs, lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
     lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
     lieu_form_elements.lieu_site_inspection_input.select_option(str(lieu.site_inspection.id))
@@ -283,7 +284,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.lieu_site_inspection_input.select_option(str(site_inspection.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -802,3 +803,109 @@ def test_cant_add_detection_to_existing_evenement_cloture(client):
     )
     assert response.status_code == 403
     assert evenement.detections.count() == 0
+
+
+def test_can_add_lieu_with_adresse_auto_complete(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_fill_from_element,
+):
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+
+    form_elements.page.route(
+        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    choice_js_fill_from_element(
+        page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
+    )
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.adresse_lieu_dit == "251 Rue de Vaugirard"
+    assert lieu.commune == "Paris"
+    assert lieu.code_insee == "75115"
+    assert lieu.departement.nom == "Paris"
+
+
+def test_can_add_lieu_with_adresse_etablissement_autocomplete(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_fill_from_element,
+):
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+
+    form_elements.page.route(
+        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    choice_js_fill_from_element(
+        page, lieu_form_elements.adresse_etablissement_input, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
+    )
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.adresse_etablissement == "251 Rue de Vaugirard"
+    assert lieu.commune_etablissement == "Paris"
+    assert lieu.code_insee_etablissement == "75115"
+    assert lieu.departement_etablissement.nom == "Paris"
+    assert lieu.pays_etablissement == "FR"

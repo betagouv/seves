@@ -1,3 +1,5 @@
+{% load render_field %}
+
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
 <button type="button" data-fr-opened="false" class="fr-hidden" aria-controls="modal-add-lieu-{{ id }}"></button>
 <dialog aria-labelledby="modal-add-edit-lieu-title-{{ id }}" id="modal-add-lieu-{{ id }}" data-id={{ id }} class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
@@ -21,7 +23,7 @@
                                 <label class="fr-label" for="id_lieux-{{ id }}-nom">Nom du lieu</label>
                                 {{ form.nom }}
                             </p>
-                            <p>
+                            <p class="adresse-lieu">
                                 <label class="fr-label" for="id_lieux-{{ id }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
                                 {{ form.adresse_lieu_dit }}
                             </p>
@@ -55,28 +57,21 @@
                                         <button class="fr-btn" title="Rechercher">Rechercher</button>
                                     </div>
                                 </div>
+                                <p>{% render_field form.siret_etablissement %}</p>
+                                <p>{% render_field form.raison_sociale_etablissement %}</p>
+                                <p class="adresse-etablissement">{% render_field form.adresse_etablissement %}</p>
+                                <p>{% render_field form.commune_etablissement %}</p>
                                 <p>
-                                    {{ form.raison_sociale_etablissement.label_tag }}{{ form.raison_sociale_etablissement }}
+                                    {% render_field form.departement_etablissement %}
+                                    {{ form.code_insee_etablissement }}
                                 </p>
-                                <p>
-                                    {{ form.siret_etablissement.label_tag }}{{ form.siret_etablissement }}
-                                </p>
-                                <p>
-                                    {{ form.adresse_etablissement.label_tag }}{{ form.adresse_etablissement }}
-                                </p>
-                                <p>
-                                    {{ form.pays_etablissement.label_tag }}{{ form.pays_etablissement }}
-                                </p>
-                                <p>
-                                    {{ form.code_inupp_etablissement.label_tag }}{{ form.code_inupp_etablissement }}
-                                </p>
+                                <p>{% render_field form.pays_etablissement %}</p>
+                                <p>{% render_field form.code_inupp_etablissement %}</p>
                                 <p class="fr-mb-0">
-                                    {{ form.activite_etablissement.label_tag }}{{ form.activite_etablissement }}
+                                    {% render_field form.activite_etablissement %}
                                     <div class="fr-hint-text character-counter"></div>
                                 </p>
-                                <p>
-                                    {{ form.position_chaine_distribution_etablissement.label_tag }}{{ form.position_chaine_distribution_etablissement }}
-                                </p>
+                                <p>{% render_field form.position_chaine_distribution_etablissement %}</p>
                             </div>
                         </div>
 

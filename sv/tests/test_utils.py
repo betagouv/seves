@@ -157,6 +157,12 @@ class LieuFormDomElements:
     def __init__(self, page: Page):
         self.page = page
 
+    def force_adresse(self, element, adresse: str, extra_str: str = ""):
+        element.click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
+        self.page.get_by_role("option", name=f"{adresse}{extra_str} (Forcer la valeur)", exact=True).click()
+
     @property
     def close_btn(self) -> Locator:
         return self.page.get_by_role("button", name="Fermer")
@@ -187,7 +193,15 @@ class LieuFormDomElements:
 
     @property
     def adresse_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="-adresse_lieu_dit"]').locator("visible=true")
+        return (
+            self.page.locator(".fr-modal__content")
+            .locator("visible=true")
+            .locator('[id^="id_lieux-"][id$="adresse_lieu_dit"]')
+        )
+
+    @property
+    def adresse_choicesjs(self) -> Locator:
+        return self.page.locator(".adresse-lieu .choices__list--single").locator("visible=true").locator("..")
 
     @property
     def commune_label(self) -> Locator:
@@ -247,7 +261,7 @@ class LieuFormDomElements:
 
     @property
     def adresse_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="adresse_etablissement"]').locator("visible=true")
+        return self.page.locator(".adresse-etablissement .choices__list--single").locator("visible=true").locator("..")
 
     @property
     def siret_etablissement_input(self) -> Locator:
