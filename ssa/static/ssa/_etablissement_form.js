@@ -1,5 +1,7 @@
 import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
 
+let modalEtablissementHTMLContent = {}
+
 document.addEventListener('DOMContentLoaded', () => {
     function getNextIdToUse() {
         let num = 0
@@ -24,9 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dsfr(modal).modal.disclose()
             dsfr(modal).modal.node.addEventListener('dsfr.conceal', event => {
                 removeRequired(modal)
-                const originalTarget = event.explicitOriginalTarget
-                if (!originalTarget.classList.contains("save-btn")) {
-                    resetForm(modal)
+                if (!event.target.classList.contains("save-btn") && !!modalEtablissementHTMLContent[nextIdToUse]) {
+                    event.target.querySelector(".fr-modal__content").replaceWith(modalEtablissementHTMLContent[nextIdToUse])
+                    modalEtablissementHTMLContent[nextIdToUse] = null
                 }
             });
         }, 10)
@@ -112,6 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = getEtablissementCard(clone, currentModal, etablissementId)
             card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
             card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
+            card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
+                modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement${etablissementId} .fr-modal__content`).cloneNode(true)
+            })
             document.getElementById("etablissement-card-container").appendChild(card);
         } else {
             existingCard.replaceWith(getEtablissementCard(existingCard, currentModal, etablissementId))

@@ -137,6 +137,9 @@ class EvenementProduitCreationPage:
 
         self.close_etablissement_modal()
 
+    def open_edit_etablissement(self):
+        self.page.locator(".etablissement-edit-btn").click()
+
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
 
