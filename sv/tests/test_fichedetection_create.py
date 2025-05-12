@@ -611,6 +611,8 @@ def test_create_fiche_detection_with_lieu_using_siret(
     choice_js_fill,
     settings,
 ):
+    call_count = {"count": 0}
+
     def handle(route):
         data = {
             "etablissements": [
@@ -632,6 +634,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
             ]
         }
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
 
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
@@ -672,6 +675,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
             "120 079 017",
             "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
         )
+        assert call_count["count"] == 1
 
         lieu_form_elements.save_btn.click()
         form_elements.publish_btn.click()
