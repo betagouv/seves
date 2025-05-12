@@ -2,17 +2,19 @@ from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
 from django_countries.fields import CountryField
 
-from core.fields import SEVESChoiceField, DSFRRadioButton
+from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
+from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
+from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models import (
     Etablissement,
     TypeExploitant,
     PositionDossier,
 )
+from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
@@ -112,3 +114,34 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Etablissement
         exclude = []
+
+
+class MessageForm(BaseMessageForm):
+    recipients_limited_recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.get_ssa_structures(), label="Destinataires"
+    )
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+        "recipients_limited_recipients",
+    ]
+
+    class Meta(BaseMessageForm.Meta):
+        fields = [
+            "recipients",
+            "recipients_structures_only",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "recipients_limited_recipients",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]

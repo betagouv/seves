@@ -75,6 +75,10 @@ function addShortcut(classToWatch, elements){
     })
 }
 
+function isLimitedRecipientsASelect(){
+    return document.getElementById("id_recipients_limited_recipients").type === "select-multiple"
+}
+
 function getMessageConfig(){
     const helpElement = document.getElementById("point-situation-help")
     const destinatairesElement = document.querySelector('label[for="id_recipients"]').parentNode
@@ -83,7 +87,13 @@ function getMessageConfig(){
     const destinatairesStructureInput = document.getElementById("id_recipients_structures_only")
     const copieElement = document.querySelector('label[for="id_recipients_copy"]').parentNode
     const copieStructuresElement = document.querySelector('label[for="id_recipients_copy_structures_only"]').parentNode
-    const limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode
+
+    let limitedRecipientsElement = null
+    if (isLimitedRecipientsASelect()) {
+        limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode.parentNode.parentNode
+    } else {
+        limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode
+    }
     const allElements = [destinatairesElement, copieElement, destinatairesStructureElement, copieStructuresElement, limitedRecipientsElement, helpElement]
     const allRequiredInputs = [destinatairesInput, destinatairesStructureInput]
     const configuration = {
@@ -183,7 +193,9 @@ function onSubmitBtnClick(event, otherSubmitButton) {
     const messageStatusField = document.getElementById("id_status");
 
     messageStatusField.value = event.target.getAttribute("value");
-    updateLimitedRecipientsValidation();
+    if (!isLimitedRecipientsASelect()) {
+        updateLimitedRecipientsValidation();
+    }
     messageForm.reportValidity()
 
     if (!messageForm.checkValidity()) {
@@ -226,7 +238,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const choicesCopy = initializeChoices(document.getElementById('id_recipients_copy'))
     const choicesStructuresRecipients = initializeChoices(document.getElementById('id_recipients_structures_only'))
     const choicesStructuresCopy = initializeChoices(document.getElementById('id_recipients_copy_structures_only'))
-
+    if (isLimitedRecipientsASelect()) {
+        initializeChoices(document.getElementById("id_recipients_limited_recipients"))
+    }
 
     addShortcut(".destinataires-shortcut", [choicesRecipients, choicesStructuresRecipients]);
     addShortcut(".copie-shortcut", [choicesCopy, choicesStructuresCopy]);

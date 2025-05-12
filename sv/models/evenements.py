@@ -212,3 +212,8 @@ class Evenement(
 
     def can_add_fiche_zone_delimitee(self, user):
         return self._user_can_interact(user)
+
+    def get_message_form(self):
+        from ..forms import MessageForm
+
+        return MessageForm

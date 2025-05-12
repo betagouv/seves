@@ -217,6 +217,44 @@ class EvenementProduitDetailsPage:
         self.page.get_by_role("link", name="Clôturer l'événement").click()
         self.page.get_by_role("button", name="Clôturer").click()
 
+    def open_compte_rendu_di(self):
+        self.page.get_by_test_id("element-actions").click()
+        self.page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
+
+    @property
+    def message_form_title(self):
+        return self.page.locator("#message-type-title")
+
+    def add_limited_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients_limited_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_message_content_and_send(self):
+        self.page.locator("#id_title").fill("Title of the message")
+        self.page.locator("#id_content").fill("My content \n with a line return")
+        self.page.get_by_test_id("fildesuivi-add-submit").click()
+
+    @property
+    def fil_de_suivi_sender(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
+
+    @property
+    def fil_de_suivi_recipients(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
+
+    @property
+    def fil_de_suivi_title(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
+
+    @property
+    def fil_de_suivi_type(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
+
 
 class EvenementProduitListPage:
     def __init__(self, page: Page, base_url):

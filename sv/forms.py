@@ -1,4 +1,5 @@
 import datetime
+from copy import copy
 
 from django import forms
 from django.conf import settings
@@ -12,8 +13,8 @@ from django_countries.fields import CountryField
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.form_mixins import DSFRForm
-from core.forms import VisibiliteUpdateBaseForm
-from core.models import Structure, Visibilite
+from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
+from core.models import Structure, Visibilite, Message, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithLatestVersionLocking,
@@ -572,3 +573,47 @@ class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
         disabled_pks = [structure.pk for structure in structures_disabled]
         self.fields["allowed_structures"].widget.disabled_choices = disabled_pks
         self.fields["allowed_structures"].widget.checked_choices = disabled_pks
+
+
+class MessageForm(BaseMessageForm):
+    recipients_limited_recipients = forms.MultipleChoiceField(
+        choices=[("mus", "MUS"), ("bsv", "BSV")],
+        label="Destinataires",
+        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+    )
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+        "recipients_limited_recipients",
+    ]
+
+    class Meta(BaseMessageForm.Meta):
+        fields = [
+            "recipients",
+            "recipients_structures_only",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "recipients_limited_recipients",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
+
+    def _convert_checkboxes_to_contacts(self):
+        try:
+            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
+        except KeyError:
+            raise ValidationError("Au moins un destinataire doit être sélectionné.")
+        self.cleaned_data["recipients"] = []
+        if "mus" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
+        if "bsv" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self._convert_checkboxes_to_contacts()
