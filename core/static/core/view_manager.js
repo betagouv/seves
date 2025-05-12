@@ -2,13 +2,14 @@ export class ViewManager {
     #config;
     #elements = {};
 
-    constructor(config) {
+    constructor(config, prefix) {
         this.#validateConfig(config);
         this.#config = { ...config };
+        this.#config.storageKeyPrefix = prefix
     }
 
     #validateConfig(config) {
-        const requiredFields = ['storageKeyPrefix', 'modes', 'selectors'];
+        const requiredFields = ['modes', 'selectors'];
         requiredFields.forEach(field => {
             if (!config[field]) {
                 throw new Error(`Missing required config field: ${field}`);
@@ -22,9 +23,9 @@ export class ViewManager {
 
     #getElements() {
         this.#elements = {
-            detailBtn: document.getElementById(this.#config.selectors.DETAIL_BTN),
-            syntheseBtn: document.getElementById(this.#config.selectors.SYNTHESE_BTN),
-            detailContent: document.getElementById(this.#config.selectors.DETAIL_CONTENT),
+            detailBtn: document.querySelector(this.#config.selectors.DETAIL_BTN),
+            syntheseBtn: document.querySelector(this.#config.selectors.SYNTHESE_BTN),
+            detailElements: document.querySelectorAll(this.#config.selectors.DETAIL_ELEMENTS),
             ficheContainer: document.querySelector('[data-fiche-id]')
         };
     }
@@ -43,7 +44,9 @@ export class ViewManager {
 
     #toggleView(mode) {
         this.#save(mode, this.#getFicheId());
-        this.#elements.detailContent.classList.toggle('fr-hidden', mode === this.#config.modes.SYNTHESE);
+        this.#elements.detailElements.forEach(element =>{
+            element.classList.toggle('fr-hidden', mode === this.#config.modes.SYNTHESE)
+        })
     }
 
     #initViewState() {
@@ -52,7 +55,9 @@ export class ViewManager {
 
         this.#elements.detailBtn.checked = !isSynthese;
         this.#elements.syntheseBtn.checked = isSynthese;
-        this.#elements.detailContent.classList.toggle('fr-hidden', isSynthese);
+        this.#elements.detailElements.forEach(element =>{
+            element.classList.toggle('fr-hidden', isSynthese)
+        })
     }
 
     #initViewModeButtons() {
@@ -81,8 +86,8 @@ export const evenementViewModeConfig = {
         SYNTHESE: 'synthese'
     },
     selectors: {
-        DETAIL_BTN: 'detail-btn',
-        SYNTHESE_BTN: 'synthese-btn',
-        DETAIL_CONTENT: 'detail-content'
+        DETAIL_BTN: '#detail-btn',
+        SYNTHESE_BTN: '#synthese-btn',
+        DETAIL_ELEMENTS: '.detail-content'
     }
 };

@@ -81,7 +81,7 @@ def test_detail_synthese_switch(live_server, page):
 
     detail_radio = page.locator("#detail-btn")
     expect(detail_radio).to_be_checked()
-    detail_content = page.locator("#detail-content")
+    detail_content = page.locator(".detail-content")
     expect(detail_content).to_be_visible()
 
     synthese_radio = page.locator("#synthese-btn")
@@ -185,7 +185,7 @@ def test_view_mode_default_is_detail(live_server, page):
     fiche_detection = FicheDetectionFactory()
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
     expect(page.locator("#detail-btn")).to_be_checked()
-    expect(page.locator("#detail-content")).to_be_visible()
+    expect(page.locator(".detail-content")).to_be_visible()
 
 
 def test_view_mode_persistence_per_fiche(live_server, page):
@@ -196,7 +196,7 @@ def test_view_mode_persistence_per_fiche(live_server, page):
 
     # Changer en mode synthèse pour le premier événement
     page.goto(f"{live_server.url}{evenement1.get_absolute_url()}")
-    detail_content1 = page.locator("#detail-content")
+    detail_content1 = page.locator(".detail-content")
     synthese_radio1 = page.locator("#synthese-btn")
     synthese_radio1.click(force=True)
     expect(detail_content1).to_be_hidden()
@@ -204,13 +204,13 @@ def test_view_mode_persistence_per_fiche(live_server, page):
     # Vérifier que le second événement n'est pas impacté
     page.goto(f"{live_server.url}{evenement2.get_absolute_url()}")
     detail_radio2 = page.locator("#detail-btn")
-    detail_content2 = page.locator("#detail-content")
+    detail_content2 = page.locator(".detail-content")
     expect(detail_radio2).to_be_checked()
     expect(detail_content2).to_be_visible()
 
     # Revenir au premier événement et vérifier la persistance
     page.goto(f"{live_server.url}{evenement1.get_absolute_url()}")
-    detail_content1 = page.locator("#detail-content")
+    detail_content1 = page.locator(".detail-content")
     synthese_radio1 = page.locator("#synthese-btn")
     expect(synthese_radio1).to_be_checked()
     expect(detail_content1).to_be_hidden()

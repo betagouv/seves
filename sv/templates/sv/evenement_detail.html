@@ -35,20 +35,7 @@
                 <h1 class="fr-mb-0-5v">Événement {% if evenement.numero %}{{ evenement.numero }}{%  endif %}</h1>
 
                 {% if not evenement.is_draft %}
-                    <div data-fiche-id="{{ evenement.pk }}">
-                        <fieldset class="fr-segmented">
-                            <div class="fr-segmented__elements">
-                                <div class="fr-segmented__element">
-                                    <input value="detail" checked type="radio" id="detail-btn" name="segmented-2215">
-                                    <label class="fr-label" for="detail-btn"><i class="ri-expand-vertical-fill fr-mr-1w"></i>Affichage détaillé</label>
-                                </div>
-                                <div class="fr-segmented__element">
-                                    <input value="synthese" type="radio" id="synthese-btn" name="segmented-2215">
-                                    <label class="fr-label" for="synthese-btn"><i class="ri-collapse-vertical-fill fr-mr-1w"></i>Synthèse</label>
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
+                    {% include "core/_details_toogle.html" with pk=evenement.pk %}
                 {% endif %}
 
                 <ul class="fr-btns-group fr-btns-group--inline-md">
@@ -108,7 +95,7 @@
 
         {% include "core/_list_free_links.html" with classes="fr-mb-4v" object=evenement title="Événements en lien libre" %}
 
-        <div id="detail-content">
+        <div class="detail-content">
             <div class="fr-tabs">
                 <ul class="fr-tabs__list" role="tablist" aria-label="Navigation entre zone et détections">
                     <li role="presentation">
