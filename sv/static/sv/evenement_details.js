@@ -1,4 +1,4 @@
-import {ViewManager, evenementViewModeConfig} from './view_manager.js';
+import {ViewManager, evenementViewModeConfig} from '/static/core/view_manager.js';
 
 function showOnlyActionsForDetection(detectionId){
     document.querySelectorAll('[id^="detection-actions-"]').forEach(element =>{
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectZoneTab();
     }, 500);
 
-    const viewManager = new ViewManager(evenementViewModeConfig);
+    const viewManager = new ViewManager(evenementViewModeConfig, "evenementViewMode");
     viewManager.initialize();
 
     document.querySelectorAll(".no-tab-look .fr-tabs__panel").forEach(element =>{
