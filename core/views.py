@@ -15,7 +15,6 @@ from django.views.generic.edit import FormView, CreateView, UpdateView
 
 from .forms import (
     DocumentUploadForm,
-    MessageForm,
     MessageDocumentForm,
     DocumentEditForm,
     StructureAddForm,
@@ -142,8 +141,10 @@ class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, CreateView
 ):
     model = Message
-    form_class = MessageForm
     http_method_names = ["post"]
+
+    def get_form_class(self):
+        return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()

@@ -19,3 +19,7 @@ fileignoreconfig:
   checksum: b54379a22a0229e85ae27aeaf50d2b6931289fb8dbe521b0d3b68e88fc21b2b2
 - filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
+- filename: core/templates/core/_tableau_fil_de_suivi.html
+  checksum: 3f44e693b99c4888008d386912072ab74f14ca5010791b1a957b71a6f99bdc46
+- filename: ssa/tests/pages.py
+  checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09

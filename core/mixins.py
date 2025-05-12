@@ -15,7 +15,6 @@ from django.views.generic import FormView
 from core.forms import (
     DocumentUploadForm,
     DocumentEditForm,
-    MessageForm,
     MessageDocumentForm,
     StructureAddForm,
     AgentAddForm,
@@ -96,10 +95,13 @@ class WithBlocCommunPermission:
 
 
 class WithMessageFormInContextMixin:
+    def get_message_form_class(self):
+        raise NotImplementedError
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
-        context["message_form"] = MessageForm(
+        context["message_form"] = obj.get_message_form()(
             sender=self.request.user,
             obj=obj,
             next=obj.get_absolute_url(),

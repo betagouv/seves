@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager
 
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME, SSA_STRUCTURES
 
 
 class DocumentManager(Manager):
@@ -51,6 +51,9 @@ class ContactQueryset(QuerySet):
 
     def exclude_empty_emails(self):
         return self.exclude(email="")
+
+    def get_ssa_structures(self):
+        return self.filter(structure__libelle__in=SSA_STRUCTURES).prefetch_related("structure")
 
     def can_be_emailed(self):
         return self.exclude_empty_emails().with_active_agent() | self.exclude_empty_emails().structures_only()

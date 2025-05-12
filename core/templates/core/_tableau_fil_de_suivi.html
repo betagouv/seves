@@ -23,7 +23,7 @@
     </thead>
     <tbody>
         {% for message in message_list %}
-            <tr id="table-sm-row-key-1" data-row-key="1">
+            <tr id="table-sm-row-key-{{ forloop.counter }}" data-row-key="{{ forloop.counter }}">
                 <td>
                     <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.date_creation }}</a>
                 </td>

@@ -1,12 +1,10 @@
-from copy import copy
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
-from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
+from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
 from core.models import Document, Contact, Message, Visibilite, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -64,7 +62,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
     recipients_structures_only = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), label="Destinataires*"
@@ -73,11 +71,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     recipients_copy_structures_only = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), required=False, label="Copie"
     )
-    recipients_limited_recipients = forms.MultipleChoiceField(
-        choices=[("mus", "MUS"), ("bsv", "BSV")],
-        label="Destinataires",
-        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
-    )
+
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
     status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
@@ -85,7 +79,6 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     manual_render_fields = [
         "recipients_structures_only",
         "recipients_copy_structures_only",
-        "recipients_limited_recipients",
     ]
 
     class Meta:
@@ -95,7 +88,6 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             "recipients_structures_only",
             "recipients_copy",
             "recipients_copy_structures_only",
-            "recipients_limited_recipients",
             "message_type",
             "title",
             "content",
@@ -180,21 +172,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
                 self.fields.pop("recipients_structures_only")
                 self.fields.pop("recipients_copy_structures_only")
 
-    def _convert_checkboxes_to_contacts(self):
-        try:
-            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
-        except KeyError:
-            raise ValidationError("Au moins un destinataire doit être sélectionné.")
-        self.cleaned_data["recipients"] = []
-        if "mus" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
-        if "bsv" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
-
     def clean(self):
         super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self._convert_checkboxes_to_contacts()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_STRUCTURES_ONLY:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_structures_only"]
             self.cleaned_data["recipients_copy"] = self.cleaned_data["recipients_copy_structures_only"]
