@@ -1,5 +1,4 @@
 import json
-
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -397,3 +396,20 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     assert user_contact_structure in evenement_produit.contacts.all()
+
+
+def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_models_are_equal):
+    evenement = EvenementProduitFactory()
+
+    etablissement = EtablissementFactory(evenement_produit=evenement)
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement)
+    creation_page.open_edit_etablissement()
+    expect(creation_page.current_modal_raison_sociale_field).to_have_value(etablissement.raison_sociale)
+
+    page.keyboard.press("Escape")
+    creation_page.open_edit_etablissement()
+    expect(creation_page.current_modal_raison_sociale_field).to_have_value(etablissement.raison_sociale)
