@@ -253,3 +253,14 @@ def generic_test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authen
         content_type=ContentType.objects.get_for_model(object), object_id=object.id, contact=contact
     ).exists()
     assert len(mailoutbox) == 1
+
+
+def generic_test_can_only_see_own_document_types_in_message_form(
+    live_server, page: Page, check_select_options_from_element, object
+):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+
+    expected = [t.label for t in object.get_allowed_document_types()]
+    check_select_options_from_element(message_page.document_type_input, expected, False)

@@ -106,22 +106,27 @@ def choice_js_option_disabled(db, page):
     return _choice_js_cant_pick
 
 
+def _check_select_options_on_element(element, expected_options, with_default_value):
+    options = element.locator("option").element_handles()
+    visible_texts = []
+    for option in options:
+        style = option.get_attribute("style") or ""
+        if "display: none" not in style:
+            visible_texts.append(option.inner_text())
+
+    if with_default_value:
+        expected_options = [settings.SELECT_EMPTY_CHOICE] + expected_options
+
+    assert visible_texts == expected_options, (
+        f"Les options pour {element.get_attribute('id')} ne correspondent pas aux options attendues"
+    )
+
+
 @pytest.fixture
 def check_select_options():
     def _check_select_options(page, select_id, expected_options, with_default_value=True):
-        options = page.locator(f"#{select_id} option").element_handles()
-        visible_texts = []
-        for option in options:
-            style = option.get_attribute("style") or ""
-            if "display: none" not in style:
-                visible_texts.append(option.inner_text())
-
-        if with_default_value:
-            expected_options = [settings.SELECT_EMPTY_CHOICE] + expected_options
-
-        assert visible_texts == expected_options, (
-            f"Les options pour {select_id} ne correspondent pas aux options attendues"
-        )
+        element = page.locator(f"#{select_id}")
+        _check_select_options_on_element(element, expected_options, with_default_value)
 
     return _check_select_options
 
@@ -149,3 +154,8 @@ def assert_events_order():
             )
 
     return _assert_events_order
+
+
+@pytest.fixture
+def check_select_options_from_element():
+    return _check_select_options_on_element
