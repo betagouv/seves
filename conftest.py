@@ -7,7 +7,8 @@ from django.contrib.auth import get_user_model
 from django.urls import resolve
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory, UserFactory
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE
+from core.factories import StructureFactory, UserFactory, ContactStructureFactory
 from core.models import Agent, Contact
 
 User = get_user_model()
@@ -122,3 +123,10 @@ def check_select_options():
         )
 
     return _check_select_options
+
+
+@pytest.fixture
+def mus_contact():
+    return ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )

@@ -3,18 +3,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory, StructureFactory
-from core.models import Structure, Contact, Message
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
+from core.factories import StructureFactory
+from core.models import Message, Structure, Contact
+from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
 from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import Evenement
 
 
-def test_can_notify_ac(live_server, page: Page, mailoutbox):
+def test_can_notify_ac(live_server, page: Page, mailoutbox, mus_contact, bsv_contact):
     evenement = EvenementFactory()
     FicheDetectionFactory(evenement=evenement)
-    Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
-    Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     page.get_by_role("button", name="Actions").click()
@@ -49,21 +47,16 @@ def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentificatio
     expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 
-def test_cant_notify_ac_if_user_is_from_ac(live_server, page, mocked_authentification_user):
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
-    )
-    ContactStructureFactory(structure=mocked_authentification_user.agent.structure)
+def test_cant_notify_ac_if_user_is_from_ac(live_server, page, mocked_authentification_user, mus_contact):
+    mocked_authentification_user.agent.structure = mus_contact.structure
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 
-def test_cant_notify_ac_if_user_is_from_ac_with_request(mocked_authentification_user, client):
-    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
-    ContactStructureFactory(structure=structure)
-    mocked_authentification_user.agent.structure = structure
+def test_cant_notify_ac_if_user_is_from_ac_with_request(mocked_authentification_user, client, mus_contact):
+    mocked_authentification_user.agent.structure = mus_contact.structure
     evenement = EvenementFactory()
     response = client.post(
         reverse("notify-ac"),
@@ -100,10 +93,11 @@ def test_cant_notify_ac_if_draft_with_request(mocked_authentification_user, clie
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_if_email_notification_fails_does_not_create_message_or_update_status(live_server, page: Page, mailoutbox):
+def test_if_email_notification_fails_does_not_create_message_or_update_status(
+    live_server, page: Page, mailoutbox, bsv_contact
+):
     evenement = EvenementFactory()
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE))
-    Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
@@ -117,10 +111,8 @@ def test_if_email_notification_fails_does_not_create_message_or_update_status(li
     assert evenement.is_ac_notified is False
 
 
-def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page):
+def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page, mus_contact, bsv_contact):
     evenement = EvenementFactory()
-    Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE), email="foo@bar.com")
-    Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
@@ -133,13 +125,10 @@ def test_bsv_and_mus_are_added_to_contact_when_notify_ac(live_server, page: Page
 
 
 @pytest.mark.django_db
-def test_cant_forge_notify_ac_of_evenement_i_cant_see(client):
+def test_cant_forge_notify_ac_of_evenement_i_cant_see(client, mus_contact, bsv_contact):
     evenement = EvenementFactory(createur=StructureFactory())
     response = client.get(evenement.get_absolute_url())
     assert response.status_code == 403
-
-    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
-    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
 
     response = client.post(
         reverse("notify-ac"),
