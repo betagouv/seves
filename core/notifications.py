@@ -63,3 +63,35 @@ def notify_message(message_obj: Message):
 
     if recipients and content:
         _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
+
+
+def get_notify_contact_agent_email_subject(obj):
+    subject = f"[Sèves {obj._meta.app_label.upper()}] "
+    if hasattr(obj, "organisme_nuisible"):
+        subject += f"{obj.organisme_nuisible.code_oepp} "
+    subject += f"{obj.numero}"
+    return subject
+
+
+def notify_contact_agent(contact_agent: Contact, obj):
+    send(
+        recipients=f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>",
+        subject=get_notify_contact_agent_email_subject(obj),
+        message=f"""
+Ajout en contact d’une fiche
+Bonjour,
+Vous avez été ajouté en contact de la fiche n° {obj.numero}.
+Vous pouvez y accéder avec le lien suivant : https://seves.beta.gouv.fr/{obj.get_absolute_url()}
+        """,
+        html_message=f"""
+<!DOCTYPE html>
+<html>
+<div style="font-family: Arial, sans-serif;">
+    <p style="font-weight: bold;">Ajout en contact d’une fiche</p>
+    <p>Bonjour,</p>
+    <p>Vous avez été ajouté en contact de la fiche n° {obj.numero}.</p>
+    <p>Vous pouvez y accéder avec le lien suivant : <a href="https://seves.beta.gouv.fr{obj.get_absolute_url()}">https://seves.beta.gouv.fr{obj.get_absolute_url()}</a></p>
+</div>
+</html>
+        """,
+    )

@@ -234,6 +234,7 @@ if DEBUG:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INTERNAL_IPS = ["127.0.0.1"]
 
+DEFAULT_FROM_EMAIL = "Sèves <no-reply@beta.gouv.fr>"
 POST_OFFICE = {
     "BACKENDS": {
         "default": env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"),

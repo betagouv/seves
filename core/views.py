@@ -28,7 +28,7 @@ from .mixins import (
     WithACNotificationMixin,
 )
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
-from .notifications import notify_message
+from .notifications import notify_message, notify_contact_agent
 from .redirect import safe_redirect
 import logging
 
@@ -406,6 +406,7 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
                 contact_structure = contact_agent.get_structure_contact()
                 if contact_structure and not user_is_referent_national(contact_agent.agent.user):
                     self.obj.contacts.add(contact_structure)
+                notify_contact_agent(contact_agent, self.obj)
 
             message = ngettext(
                 "L'agent a été ajouté avec succès.",

@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group
@@ -314,3 +316,37 @@ def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server
     evenement.refresh_from_db()
     assert evenement.contacts.count() == 1
     assert contact_agent.agent.structure not in evenement.contacts.all()
+
+
+def test_notification_is_send_when_adding_contact_agent(live_server, page, choice_js_fill, goto_contacts, mailoutbox):
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    goto_contacts(page)
+    choice_js_fill(
+        page, "#add-contact-agent-form .choices", contact_agent.agent.nom, contact_agent.display_with_agent_unit
+    )
+    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
+    expected_content = f"""
+<!DOCTYPE html>
+<html>
+<div style="font-family: Arial, sans-serif;">
+    <p style="font-weight: bold;">Ajout en contact d’une fiche</p>
+    <p>Bonjour,</p>
+    <p>Vous avez été ajouté en contact de la fiche n° {evenement.numero}.</p>
+    <p>Vous pouvez y accéder avec le lien suivant : <a href="https://seves.beta.gouv.fr{evenement.get_absolute_url()}">https://seves.beta.gouv.fr{evenement.get_absolute_url()}</a></p>
+</div>
+</html>
+    """
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    content, _ = mail.alternatives[0]
+    pattern = r"\s+"
+    normalized_content = re.sub(pattern, "", content)
+    normalized_expected = re.sub(pattern, "", expected_content)
+    assert normalized_expected == normalized_content
+    assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
+    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.subject == f"[Sèves SV] {evenement.organisme_nuisible.code_oepp} {evenement.numero}"
