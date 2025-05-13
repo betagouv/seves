@@ -274,6 +274,11 @@ class EvenementProduit(
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
 
+    def get_message_form(self):
+        from ssa.forms import MessageForm
+
+        return MessageForm
+
     class Meta:
         constraints = [
             models.CheckConstraint(

@@ -15,3 +15,7 @@ fileignoreconfig:
   checksum: 62b3a8a26bcb7a4ee9f8c73e92241093690212cfce216acf640079bfb36dcdfc
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
+- filename: core/templates/core/_tableau_fil_de_suivi.html
+  checksum: 3f44e693b99c4888008d386912072ab74f14ca5010791b1a957b71a6f99bdc46
+- filename: ssa/tests/pages.py
+  checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09
