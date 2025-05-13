@@ -31,6 +31,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_element_suivi,
     generic_test_can_finaliser_draft_note,
     generic_test_can_send_draft_fin_suivi,
+    generic_test_can_only_see_own_document_types_in_message_form,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1544,4 +1545,10 @@ def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentificati
 def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_send_draft_fin_suivi(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
+    generic_test_can_only_see_own_document_types_in_message_form(
+        live_server, page, check_select_options_from_element, EvenementFactory()
     )

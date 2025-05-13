@@ -29,9 +29,10 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         fields = ["nom", "document_type", "description", "file", "content_type", "object_id"]
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         next = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
         self.add_content_type_fields(obj)
         self.add_next_field(next)
 
@@ -240,6 +241,11 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["document_type", "file"]
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("object")
+        super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
 
 
 class VisibiliteUpdateBaseForm(DSFRForm):

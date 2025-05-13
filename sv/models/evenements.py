@@ -18,7 +18,7 @@ from core.mixins import (
 )
 from core.mixins import WithEtatMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Message, Contact, Structure, FinSuiviContact
+from core.models import Message, Contact, Structure, FinSuiviContact, Document
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
 from .models_mixins import WithDerniereMiseAJourMixin
@@ -217,3 +217,22 @@ class Evenement(
         from ..forms import MessageForm
 
         return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.ARRETE,
+            Document.TypeDocument.AUTRE,
+            Document.TypeDocument.CARTOGRAPHIE,
+            Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE,
+            Document.TypeDocument.COMPTE_RENDU_REUNION,
+            Document.TypeDocument.COURRIER_OFFICIEL,
+            Document.TypeDocument.DSCE,
+            Document.TypeDocument.FACTURE,
+            Document.TypeDocument.IMAGE,
+            Document.TypeDocument.PASSEPORT_PHYTOSANITAIRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.RAPPORT_INSPECTION,
+            Document.TypeDocument.REGLEMENTATION,
+            Document.TypeDocument.TRANSPORT,
+            Document.TypeDocument.TRACABILITE,
+        ]

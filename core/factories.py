@@ -104,7 +104,6 @@ class DocumentFactory(DjangoModelFactory):
 
     nom = factory.Faker("sentence", nb_words=2)
     description = factory.Faker("paragraph")
-    document_type = FuzzyChoice([choice[0] for choice in Document.TypeDocument.choices])
 
     @factory.lazy_attribute
     def created_by(self):
@@ -119,6 +118,12 @@ class DocumentFactory(DjangoModelFactory):
         ext_by_type = Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[self.document_type]
         ext = random.choice(ext_by_type).value.lower()
         return SimpleUploadedFile(f"test.{ext}", b"dummy content")
+
+    @factory.lazy_attribute
+    def document_type(self):
+        if self.content_object and hasattr(self.content_object, "get_allowed_document_types"):
+            return random.choice(self.content_object.get_allowed_document_types())
+        return random.choice([c[0] for c in Document.TypeDocument.choices])
 
 
 class MessageFactory(DjangoModelFactory):

@@ -166,6 +166,22 @@ class Document(models.Model):
         TRANSPORT = "document_de_transport", "Document de transport"
         TRACABILITE = "tracabilité", "Traçabilité"
 
+        SIGNALEMENT_CERFA = "cerfa", "Signalement/notification : Cerfa"
+        SIGNALEMENT_RASFF = "fiche_rasff", "Signalement/notification : Fiche RASFF"
+        SIGNALEMENT_AUTRE = "signalement_autre", "Signalement/notification : Autre"
+        ANALYSE_RISQUE = "analyse_risque", "Analyse de risque"
+        TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
+        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
+        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
+        TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
+        DSCE_CHED = "dsce_ched", "DSCE/CHED"
+        ETIQUETAGE = "etiquetage", "Étiquetage"
+        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
+        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
+        CERTIFICAT_SANITAIRE = "certificat_sanitaire", "Certificat sanitaire"
+        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
+        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
+
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
         {
@@ -225,6 +241,10 @@ class Document(models.Model):
 
     def clean(self):
         super().clean()
+        if self.document_type not in self.content_object.get_allowed_document_types():
+            raise ValidationError(
+                {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
+            )
         if self.file and self.document_type:
             try:
                 self.validate_file_extention_for_document_type(self.file, self.document_type)
@@ -305,6 +325,9 @@ class Message(models.Model):
 
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})
+
+    def get_allowed_document_types(self):
+        return self.content_object.get_allowed_document_types()
 
 
 class LienLibre(models.Model):
