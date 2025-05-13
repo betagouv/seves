@@ -13,6 +13,7 @@ from core.models import Structure, Document, Message
 from django.contrib.auth import get_user_model
 
 from core.pages import WithDocumentsPage
+from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
 from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -810,3 +811,8 @@ def test_cant_see_document_from_message_with_brouillon_status(live_server, page:
     DocumentFactory(nom="Test document", content_object=message)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
     expect(page.locator("#tabpanel-documents-panel").get_by_text("Test document")).not_to_be_visible()
+
+
+def test_cant_see_document_type_from_other_app(live_server, page: Page, check_select_options_from_element):
+    evenement = EvenementFactory()
+    generic_test_cant_see_document_type_from_other_app(live_server, page, check_select_options_from_element, evenement)

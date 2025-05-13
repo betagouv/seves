@@ -106,6 +106,14 @@ class BaseMessagePage(ABC):
     def message_content_in_sidebar(self):
         return self.page.locator(".sidebar.open").get_by_test_id("message-content")
 
+    @property
+    def add_document_button(self):
+        return self.page.get_by_role("button", name="Ajouter un document")
+
+    @property
+    def document_type_input(self):
+        return self.page.locator(".sidebar #id_document_type")
+
 
 class CreateMessagePage(BaseMessagePage):
     container_id = "#sidebar"
@@ -130,6 +138,14 @@ class WithDocumentsPage:
 
     def document_title(self, id):
         return self.page.get_by_test_id(f"document-title-{id}")
+
+    def open_add_document(self):
+        self.page.get_by_test_id("documents-add").click()
+        expect(self.page.locator("#fr-modal-add-doc")).to_be_visible()
+
+    @property
+    def add_document_types(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true").locator("#id_document_type")
 
     def open_edit_document(self, id):
         self.page.locator(f'a[aria-controls="fr-modal-edit-{id}"]').click()
