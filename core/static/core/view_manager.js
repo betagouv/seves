@@ -26,6 +26,7 @@ export class ViewManager {
             detailBtn: document.querySelector(this.#config.selectors.DETAIL_BTN),
             syntheseBtn: document.querySelector(this.#config.selectors.SYNTHESE_BTN),
             detailElements: document.querySelectorAll(this.#config.selectors.DETAIL_ELEMENTS),
+            syntheseElements: document.querySelectorAll(this.#config.selectors.SYNTHESE_ELEMENTS),
             ficheContainer: document.querySelector('[data-fiche-id]')
         };
     }
@@ -42,11 +43,18 @@ export class ViewManager {
         return localStorage.getItem(this.#getStorageKey(id));
     }
 
-    #toggleView(mode) {
-        this.#save(mode, this.#getFicheId());
+    #showAndHideElements(mode){
         this.#elements.detailElements.forEach(element =>{
             element.classList.toggle('fr-hidden', mode === this.#config.modes.SYNTHESE)
         })
+        this.#elements.syntheseElements.forEach(element =>{
+            element.classList.toggle('fr-hidden', mode !== this.#config.modes.SYNTHESE)
+        })
+    }
+
+    #toggleView(mode) {
+        this.#save(mode, this.#getFicheId());
+        this.#showAndHideElements(mode);
     }
 
     #initViewState() {
@@ -55,9 +63,7 @@ export class ViewManager {
 
         this.#elements.detailBtn.checked = !isSynthese;
         this.#elements.syntheseBtn.checked = isSynthese;
-        this.#elements.detailElements.forEach(element =>{
-            element.classList.toggle('fr-hidden', isSynthese)
-        })
+        this.#showAndHideElements(savedViewMode);
     }
 
     #initViewModeButtons() {
@@ -88,6 +94,7 @@ export const evenementViewModeConfig = {
     selectors: {
         DETAIL_BTN: '#detail-btn',
         SYNTHESE_BTN: '#synthese-btn',
-        DETAIL_ELEMENTS: '.detail-content'
+        DETAIL_ELEMENTS: '.detail-content',
+        SYNTHESE_ELEMENTS: '.synthese-content'
     }
 };
