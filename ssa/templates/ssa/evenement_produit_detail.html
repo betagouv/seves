@@ -45,57 +45,16 @@
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
 
     <div id="detail-content">
-      <div class="white-container">
-        <h2 class="fr-h6">Informations</h2>
-        <div class="fr-container--fluid">
-          <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-3">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">Créateur</div>
-                  <div class="fr-col-5">{{ object.createur }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">Date de création</div>
-                  <div class="fr-col-5">{{ object.date_creation|date }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">N° RASFF/AAC</div>
-                  <div class="fr-col-5">{{ object.numero_rasff|default:"nc."  }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="fr-col-4">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-5 bold">Type d'événement</div>
-                  <div class="fr-col-7">{{ object.get_type_evenement_display|default:"nc."  }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters detail-content">
-                  <div class="fr-col-5 bold">Source</div>
-                  <div class="fr-col-7">{{ object.get_source_display|default:"nc."  }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="fr-col-5">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-3 bold">Description de l'événement</div>
-                  <div class="fr-col-9">{{ object.description }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% include "ssa/_evenement_produit_informations.html" %}
+      {% include "ssa/_evenement_produit_informations_synthese.html" %}
 
-      <div class="fr-container--fluid fr-mt-2w">
+      <div class="fr-container--fluid fr-mt-2w detail-content">
         <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-6 ">
             <div class="white-container">
               <h2 class="fr-h6">Produit</h2>
               <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters detail-content">
+                <div class="fr-grid-row fr-grid-row--gutters">
                   {% for key, value in object.readable_product_fields.items %}
                     <div class="fr-col-4 bold">{{ key }}</div>
                     <div class="fr-col-8">{{ value|default:"nc." }}</div>
@@ -108,7 +67,7 @@
             <div class="white-container">
               <h2 class="fr-h6">Risque</h2>
               <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters detail-content">
+                <div class="fr-grid-row fr-grid-row--gutters">
                   {% for key, value in object.readable_risk_fields.items %}
                     <div class="fr-col-4 bold">{{ key }}</div>
                     <div class="fr-col-8">{{ value|default:"nc." }}</div>
@@ -118,7 +77,7 @@
             </div>
           </div>
         </div>
-        <div class="fr-grid-row fr-grid-row--gutters detail-content">
+        <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-12">
             <div class="white-container">
               <h2 class="fr-h6">Actions engagées</h2>
@@ -138,7 +97,7 @@
             </div>
           </div>
         </div>
-        <div class="fr-grid-row fr-grid-row--gutters detail-content">
+        <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-12">
             <div class="white-container">
               <h2 class="fr-h6">Établissements</h2>
