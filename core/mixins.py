@@ -601,3 +601,54 @@ class WithACNotificationMixin:
         except ValidationError as e:
             messages.error(request, e.message)
             return False
+
+
+class WithOrderingMixin:
+    ORDER_DIR_ASC = "asc"
+    ORDER_DIR_DESC = "desc"
+
+    def get_ordering_fields(self):
+        raise NotImplementedError
+
+    def get_default_order_by(self):
+        raise NotImplementedError
+
+    def get_default_order_dir(self):
+        return self.ORDER_DIR_DESC
+
+    def setup_ordering(self):
+        ordering_fields = self.get_ordering_fields()
+        default_order_dir = self.get_default_order_dir()
+        default_order_by = self.get_default_order_by()
+        order_dir_param = self.request.GET.get("order_dir", default_order_dir)
+        order_by_param = self.request.GET.get("order_by", default_order_by)
+        self.order_dir = (
+            order_dir_param if order_dir_param in [self.ORDER_DIR_ASC, self.ORDER_DIR_DESC] else default_order_dir
+        )
+        self.order_by = order_by_param if order_by_param in ordering_fields else default_order_by
+
+    def get_ordering_prefix(self):
+        return "-" if self.order_dir == self.ORDER_DIR_DESC else ""
+
+    def get_ordering(self):
+        self.setup_ordering()
+        ordering_fields = self.get_ordering_fields()
+        order_by_field = ordering_fields.get(self.order_by)
+        prefix = self.get_ordering_prefix()
+        if isinstance(order_by_field, tuple):
+            return tuple([prefix + field for field in order_by_field])
+        return prefix + order_by_field
+
+    def apply_ordering(self, queryset):
+        ordering = self.get_ordering()
+        if isinstance(ordering, str):
+            ordering = (ordering,)
+        return queryset.order_by(*ordering)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self, "order_by"):
+            context["current_order_by"] = self.order_by
+        if hasattr(self, "order_dir"):
+            context["current_order_dir"] = self.order_dir
+        return context

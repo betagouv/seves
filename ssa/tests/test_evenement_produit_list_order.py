@@ -1,0 +1,159 @@
+from datetime import datetime
+
+import pytest
+from django.contrib.contenttypes.models import ContentType
+
+from playwright.sync_api import Page
+from django.utils import timezone
+
+from core.factories import StructureFactory
+from core.mixins import WithEtatMixin
+from core.models import LienLibre
+from ssa.factories import EvenementProduitFactory
+from ssa.models import EvenementProduit
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_3", "evenement_1", "evenement_2"]),
+        ("desc", ["evenement_2", "evenement_1", "evenement_3"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_numero_evenement(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(numero_annee=2025, numero_evenement=2),
+        "evenement_2": EvenementProduitFactory(numero_annee=2025, numero_evenement=3),
+        "evenement_3": EvenementProduitFactory(numero_annee=2025, numero_evenement=1),
+    }
+    page.goto(url_builder_for_list_ordering("numero_evenement", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="N°", exact=True).click()
+    assert_events_order(page, evenements, expected_order, 1)
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_1", "evenement_3", "evenement_2"]),
+        ("desc", ["evenement_2", "evenement_3", "evenement_1"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_date_creation(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 1, 1))),
+        "evenement_2": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 3, 1))),
+        "evenement_3": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 2, 1))),
+    }
+    page.goto(url_builder_for_list_ordering("creation", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="Création").click()
+    assert_events_order(page, evenements, expected_order, 1)
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_1", "evenement_3", "evenement_2"]),
+        ("desc", ["evenement_2", "evenement_3", "evenement_1"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_organisme_nuisible(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(description="A"),
+        "evenement_2": EvenementProduitFactory(description="C"),
+        "evenement_3": EvenementProduitFactory(description="B"),
+    }
+    page.goto(url_builder_for_list_ordering("description", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="Description de l'événement ").click()
+    assert_events_order(page, evenements, expected_order, 1)
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_1", "evenement_3", "evenement_2"]),
+        ("desc", ["evenement_2", "evenement_3", "evenement_1"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_createur(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(
+            createur=StructureFactory(libelle="A"), etat=WithEtatMixin.Etat.EN_COURS
+        ),
+        "evenement_2": EvenementProduitFactory(
+            createur=StructureFactory(libelle="C"), etat=WithEtatMixin.Etat.EN_COURS
+        ),
+        "evenement_3": EvenementProduitFactory(
+            createur=StructureFactory(libelle="B"), etat=WithEtatMixin.Etat.EN_COURS
+        ),
+    }
+    page.goto(url_builder_for_list_ordering("createur", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="Créateur").click()
+    assert_events_order(page, evenements, expected_order, 1)
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_2", "evenement_3", "evenement_1"]),
+        ("desc", ["evenement_1", "evenement_3", "evenement_2"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_etat(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(etat=WithEtatMixin.Etat.EN_COURS),
+        "evenement_2": EvenementProduitFactory(etat=WithEtatMixin.Etat.BROUILLON),
+        "evenement_3": EvenementProduitFactory(etat=WithEtatMixin.Etat.CLOTURE),
+    }
+    page.goto(url_builder_for_list_ordering("etat", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="État").click()
+    assert_events_order(page, evenements, expected_order, 1)
+
+
+@pytest.mark.parametrize(
+    "direction,expected_order",
+    [
+        ("asc", ["evenement_4", "evenement_3", "evenement_1", "evenement_2"]),
+        ("desc", ["evenement_2", "evenement_3", "evenement_1", "evenement_4"]),
+    ],
+    ids=["asc", "desc"],
+)
+def test_order_by_liens(
+    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
+):
+    evenements = {
+        "evenement_1": EvenementProduitFactory(),
+        "evenement_2": EvenementProduitFactory(),
+        "evenement_3": EvenementProduitFactory(),
+        "evenement_4": EvenementProduitFactory(),
+    }
+    content_type = ContentType.objects.get_for_model(EvenementProduit)
+    LienLibre.objects.create(
+        content_type_1=content_type,
+        object_id_1=evenements["evenement_2"].id,
+        content_type_2=content_type,
+        object_id_2=evenements["evenement_1"].id,
+    )
+    LienLibre.objects.create(
+        content_type_1=content_type,
+        object_id_1=evenements["evenement_2"].id,
+        content_type_2=content_type,
+        object_id_2=evenements["evenement_3"].id,
+    )
+    page.goto(url_builder_for_list_ordering("liens", direction, "ssa:evenement-produit-liste"))
+    page.get_by_role("link", name="Liens").click()
+    assert_events_order(page, evenements, expected_order, 1)
