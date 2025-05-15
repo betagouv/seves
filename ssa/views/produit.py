@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithClotureContextMixin
+from core.mixins import WithClotureContextMixin, WithOrderingMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -127,9 +127,22 @@ class EvenementProduitDetailView(
         return context
 
 
-class EvenementProduitListView(ListView):
+class EvenementProduitListView(WithOrderingMixin, ListView):
     model = EvenementProduit
     paginate_by = 100
+
+    def get_ordering_fields(self):
+        return {
+            "numero_evenement": ("numero_annee", "numero_evenement"),
+            "creation": "date_creation",
+            "description": "description",
+            "createur": "createur__libelle",
+            "etat": "etat",
+            "liens": "nb_liens_libre",
+        }
+
+    def get_default_order_by(self):
+        return "numero_evenement"
 
     def get_queryset(self):
         user = self.request.user
@@ -139,8 +152,8 @@ class EvenementProduitListView(ListView):
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
             .with_nb_liens_libres()
-            .order_by_numero()
         )
+        queryset = self.apply_ordering(queryset)
         self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 

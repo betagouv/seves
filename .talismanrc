@@ -12,7 +12,7 @@ fileignoreconfig:
 - filename: bin/fetch_contacts_agricoll_and_key.sh
   checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214
 - filename: sv/views.py
-  checksum: 62b3a8a26bcb7a4ee9f8c73e92241093690212cfce216acf640079bfb36dcdfc
+  checksum: 4ceb0a98828aa09751d33b14f8183c8ac6872bd6bc6e32bc0c605533286e55e6
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
 - filename: core/views.py
@@ -23,3 +23,11 @@ fileignoreconfig:
   checksum: 3f44e693b99c4888008d386912072ab74f14ca5010791b1a957b71a6f99bdc46
 - filename: ssa/tests/pages.py
   checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09
+- filename: sv/templates/sv/_evenement_sort_link.html
+  checksum: 2d2d55ba063f2c815925d845ef860354398ad2830f36e0e5429163fd0131c101
+- filename: sv/tests/test_evenement_list_order.py
+  checksum: 8f9ff88f349a3e8be0d00903d6a9ccaa81db3c8c825a4feaccbb45042b641542
+- filename: core/mixins.py
+  checksum: 9717807f321037aee25f9711e052e85b2b9e2df83bcce796d1931e04ab2f53fb
+- filename: conftest.py
+  checksum: a17ce992990a59928baab025a092e3d561dd5f5bdee013ec86ceafcb21d07359
