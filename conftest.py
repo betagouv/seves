@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import resolve
+from django.urls.base import reverse
 from playwright.sync_api import expect
 
 from core.factories import StructureFactory, UserFactory
@@ -122,3 +123,28 @@ def check_select_options():
         )
 
     return _check_select_options
+
+
+@pytest.fixture
+def url_builder_for_list_ordering(live_server):
+    def _get_url(order_by_key_name, direction, route):
+        base_url = f"{live_server.url}{reverse(route)}"
+        if direction == "desc":
+            base_url += f"?order_by={order_by_key_name}&order_dir=asc"
+        return base_url
+
+    return _get_url
+
+
+@pytest.fixture
+def assert_events_order():
+    def _assert_events_order(page, evenements, expected_order, column=2):
+        for row_index, event_key in enumerate(expected_order, start=1):
+            cell_content = page.text_content(
+                f".evenements__list-row:nth-child({row_index}) td:nth-child({column})"
+            ).strip()
+            assert cell_content == evenements[event_key].numero, (
+                f"L'événement à la ligne {row_index} devrait être {evenements[event_key].numero} mais est {cell_content}"
+            )
+
+    return _assert_events_order

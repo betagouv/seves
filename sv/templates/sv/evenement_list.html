@@ -48,17 +48,17 @@
                 <table class="evenements__list-table">
                     <thead>
                         <tr class="evenements__table-header">
-                            <th scope="col" class="fr-col-1">Notifié AC</th>
-                            <th scope="col" class="fr-col-1">Évènement</th>
-                            <th scope="col" class="fr-col-3">Organisme nuisible</th>
-                            <th scope="col" class="fr-col-1">Création</th>
-                            <th scope="col" class="fr-col-1">Dernière MAJ descripteurs</th>
-                            <th scope="col">Créateur</th>
+                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='ac_notified' display_name='Notifié AC' %}</th>
+                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
+                            <th scope="col" class="fr-col-3">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
+                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Création' %}</th>
+                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Dernière MAJ descripteurs' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
                             <th scope="col">Commune</th>
-                            <th scope="col">État</th>
-                            <th scope="col">Visibilité</th>
-                            <th scope="col">Détections</th>
-                            <th scope="col">Zone</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='visibilite' display_name='Visibilité' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='detections' display_name='Détections' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='zone' display_name='Zone' %}</th>
                         </tr>
                     </thead>
                     <tbody>

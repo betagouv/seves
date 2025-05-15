@@ -110,7 +110,7 @@ class EvenementQueryset(models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero_annee", "-numero_evenement")
 
-    def with_date_derniere_mise_a_jour_and_order(self):
+    def with_date_derniere_mise_a_jour(self):
         """
         Calcule la date la plus récente de modification parmi l'événement,
         ses détections et sa fiche zone délimitée, puis trie le queryset par cette date.
@@ -128,7 +128,7 @@ class EvenementQueryset(models.QuerySet):
                 "date_derniere_mise_a_jour_zone",
                 output_field=models.DateTimeField(),
             ),
-        ).order_by("-date_derniere_mise_a_jour_globale")
+        )
 
     def get_user_can_view(self, user):
         from sv.models import Evenement
