@@ -20,7 +20,7 @@ from ssa.models import (
 import factory
 
 from ssa.models.departements import Departement
-from ssa.models.evenement_produit import PretAManger
+from ssa.models.evenement_produit import PretAManger, CategorieProduit
 
 
 def generate_rappel_conso():
@@ -37,6 +37,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     description = factory.Faker("paragraph")
 
+    categorie_produit = FuzzyChoice(CategorieProduit.values)
     denomination = factory.Faker("sentence", nb_words=5)
     marque = factory.Faker("sentence", nb_words=5)
     lots = factory.Faker("paragraph")

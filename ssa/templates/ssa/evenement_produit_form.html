@@ -4,8 +4,10 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.umd.js"></script>
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_numero_agrement.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
@@ -16,6 +18,7 @@
 {% block content %}
     <form method="post" id="main-form">
         {% csrf_token %}
+        <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <main class="main-container">
 
             <div class="evenement-produit-form-header">
@@ -58,6 +61,8 @@
                         <div class="white-container--lite tall-column">
                             <h3>Produit</h3>
                             <div>
+                                <div id="categorie-produit"></div>
+                                {{ form.categorie_produit  }}
                                 {% render_field form.denomination %}
                                 {% render_field form.marque %}
                                 {% render_field form.lots %}

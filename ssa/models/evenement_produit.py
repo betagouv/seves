@@ -17,6 +17,7 @@ from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
+from .categorie_produit import CategorieProduit
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
 
 
@@ -152,6 +153,9 @@ class EvenementProduit(
     description = models.TextField(verbose_name="Description de l'événement")
 
     # Informations liées au produit
+    categorie_produit = models.CharField(
+        max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
+    )
     denomination = models.CharField(max_length=255, verbose_name="Dénomination")
     marque = models.CharField(max_length=255, verbose_name="Marque", blank=True)
     lots = models.TextField(blank=True, verbose_name="Lots, DLC/DDM")
@@ -211,6 +215,7 @@ class EvenementProduit(
     @property
     def readable_product_fields(self):
         return {
+            "Catégorie": self.get_categorie_produit_display(),
             "Dénomination": self.denomination,
             "Marque": self.marque,
             "Lots, DLC/DDM": self.lots,
