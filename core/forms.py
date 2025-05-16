@@ -16,7 +16,9 @@ User = get_user_model()
 
 class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
     nom = forms.CharField(
-        help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
+        help_text="Nommer le document de manière claire et compréhensible pour tous",
+        label="Intitulé du document",
+        widget=forms.TextInput(attrs={"maxlength": 256}),
     )
     document_type = SEVESChoiceField(choices=Document.TypeDocument.choices, label="Type de document")
     description = forms.CharField(
@@ -48,7 +50,9 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
     nom = forms.CharField(
-        help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
+        help_text="Nommer le document de manière claire et compréhensible pour tous",
+        label="Intitulé du document",
+        widget=forms.TextInput(attrs={"maxlength": 256}),
     )
     document_type = forms.ChoiceField(choices=Document.TypeDocument, label="Type de document")
     description = forms.CharField(

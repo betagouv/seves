@@ -760,3 +760,31 @@ def test_cant_upload_document_with_incompatible_extension_for_cartographie(live_
     assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
+
+
+def test_document_name_length_validation(live_server, page: Page, mocked_authentification_user: User):
+    evenement = EvenementFactory()
+    long_name = "a" * 257
+
+    # Test pour le formulaire d'ajout
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill(long_name)
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description test")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
+    page.get_by_test_id("documents-send").click()
+
+    assert evenement.documents.count() == 1
+    document = evenement.documents.get()
+    assert len(document.nom) == 256
+
+    # Test pour le formulaire de mise à jour
+    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
+    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill(long_name)
+    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    document.refresh_from_db()
+    assert len(document.nom) == 256
