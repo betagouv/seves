@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
 
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE
+from core.factories import ContactStructureFactory
 from sv.models import (
     StatutReglementaire,
     Region,
@@ -50,3 +52,8 @@ def create_departement_if_needed(db):
     for numero, nom, region_nom in DEPARTEMENTS:
         region = Region.objects.get(nom=region_nom)
         Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
+
+
+@pytest.fixture
+def bsv_contact():
+    return ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
