@@ -347,7 +347,7 @@ class EvenementFactory(DjangoModelFactory):
     statut_reglementaire = factory.SubFactory("sv.factories.StatutReglementaireFactory")
     visibilite = Visibilite.LOCALE
     etat = Evenement.Etat.EN_COURS
-    numero_annee = factory.Faker("year")
+    numero_annee = factory.LazyFunction(lambda: datetime.now().year)
     numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
     numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
 
