@@ -7,3 +7,4 @@ from .evenement_produit import QuantificationUnite as QuantificationUnite
 from .etablissement import Etablissement as Etablissement
 from .etablissement import TypeExploitant as TypeExploitant
 from .etablissement import PositionDossier as PositionDossier
+from .categorie_produit import CategorieProduit as CategorieProduit

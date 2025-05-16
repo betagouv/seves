@@ -69,3 +69,43 @@
 .etablissement-fields--lookup {
     text-align: center;
 }
+
+.treeselect-list__group-container {
+    background-color: var(--background-contrast-grey);
+
+}
+
+.treeselect-list__item-icon {
+    fill : var(--text-action-high-blue-france);
+}
+
+.treeselect-list__item {
+    flex-direction: row-reverse;
+    height: 40px !important;
+}
+
+.treeselect-list__item-label{
+    font-size: 16px !important;
+}
+
+.treeselect-list__item[level="0"] {
+    color: var(--text-action-high-blue-france);
+}
+
+.treeselect-list__item[level="1"]{
+    border-bottom: 1px solid #BBBBBB;
+}
+
+
+.treeselect-list__item[level="2"] {
+    background-color: #DDDDDD;
+    padding-left: 40px !important;
+}
+
+.treeselect-input {
+    background-color: var(--background-contrast-grey) !important;
+}
+
+.treeselect-list__group-container .treeselect-list__item--focused {
+    background-color : #FFF !important
+}

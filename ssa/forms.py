@@ -15,7 +15,7 @@ from ssa.models import (
     PositionDossier,
 )
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
-from ssa.models.evenement_produit import PretAManger, QuantificationUnite
+from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
 
 
@@ -30,6 +30,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
 
+    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
     description_complementaire = forms.CharField(
         required=False,

@@ -49,6 +49,15 @@ class EvenementProduitCreationPage:
         self.description.fill(evenement_produit.description)
         self.denomination.fill(evenement_produit.denomination)
 
+    def set_categorie_produit(self, evenement_produit):
+        label = evenement_produit.get_categorie_produit_display()
+        self.page.locator("#categorie-produit .treeselect-input__edit").click()
+        for part in label.split(">"):
+            if part == label.split(">")[-1]:
+                self.page.get_by_title(part.strip(), exact=True).click()
+            else:
+                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
+
     def set_temperature_conservation(self, value):
         self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
 

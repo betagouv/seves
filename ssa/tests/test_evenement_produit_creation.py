@@ -36,6 +36,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.fill_required_fields(input_data)
     creation_page.source.select_option(input_data.source)
 
+    creation_page.set_categorie_produit(input_data)
     creation_page.marque.fill(input_data.marque)
     creation_page.lots.fill(input_data.lots)
     creation_page.description_complementaire.fill(input_data.description_complementaire)

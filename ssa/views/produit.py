@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -22,6 +24,7 @@ from ssa.filters import EvenementProduitFilter
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit
+from ssa.models.evenement_produit import CategorieProduit
 
 
 class EvenementProduitCreateView(
@@ -76,6 +79,7 @@ class EvenementProduitCreateView(
         context = super().get_context_data(**kwargs)
         context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         return context
 
 
