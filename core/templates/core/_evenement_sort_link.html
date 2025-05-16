@@ -1,0 +1,6 @@
+<a href="?order_by={{ field }}{% if field == current_order_by and current_order_dir == 'asc' %}&order_dir=desc{% else %}&order_dir=asc{% endif %}{% for key, value in request.GET.items %}{% if key != 'order_by' and key != 'order_dir' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="evenements__sort-link">
+    {{ display_name }}
+    {% if field == current_order_by %}
+        <span class="fr-icon--sm {% if current_order_dir == 'asc' %}fr-icon-arrow-up-line{% else %}fr-icon-arrow-down-line{% endif %}" aria-hidden="true"></span>
+    {% endif %}
+</a>
