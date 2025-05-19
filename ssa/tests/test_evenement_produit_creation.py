@@ -43,6 +43,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.set_temperature_conservation(input_data.temperature_conservation)
     creation_page.set_pret_a_manger(input_data.produit_pret_a_manger)
 
+    creation_page.set_categorie_danger(input_data)
     creation_page.quantification.fill(str(input_data.quantification))
     creation_page.set_quantification_unite(input_data.quantification_unite)
     creation_page.evaluation.fill(input_data.evaluation)
@@ -492,3 +493,21 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.pays.name == "France"
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
+
+
+def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.page.locator("#categorie-danger .treeselect-input__edit").click()
+    creation_page.page.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+    creation_page.page.locator("#categorie-danger .shortcut", has_text="Escherichia coli (non STEC - EHEC)").locator(
+        ".."
+    ).click()
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    assert evenement_produit.categorie_danger == "Escherichia coli (non STEC - EHEC)"

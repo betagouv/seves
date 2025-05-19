@@ -23,7 +23,7 @@ from core.mixins import (
 from ssa.filters import EvenementProduitFilter
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit
+from ssa.models import EvenementProduit, CategorieDanger
 from ssa.models.evenement_produit import CategorieProduit
 
 
@@ -80,6 +80,8 @@ class EvenementProduitCreateView(
         context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
+        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
         return context
 
 

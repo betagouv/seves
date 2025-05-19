@@ -19,6 +19,7 @@ from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
 from .categorie_produit import CategorieProduit
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
+from .categorie_danger import CategorieDanger
 
 
 class TypeEvenement(models.TextChoices):
@@ -165,6 +166,9 @@ class EvenementProduit(
     )
 
     # Informations liées au risque
+    categorie_danger = models.CharField(
+        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
+    )
     quantification = models.FloatField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
@@ -226,6 +230,7 @@ class EvenementProduit(
     @property
     def readable_risk_fields(self):
         return {
+            "Catégorie de danger": self.get_categorie_danger_display(),
             "Quantification": f"{self.quantification} {self.get_quantification_unite_display()}",
             "Évaluation": self.evaluation,
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
@@ -252,6 +257,15 @@ class EvenementProduit(
         if not versions:
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
+
+    @classmethod
+    def danger_plus_courants(self):
+        return [
+            CategorieDanger.LISTERIA_MONOCYTOGENES,
+            CategorieDanger.SALMONELLA,
+            CategorieDanger.E_COLI_NON_STEC,
+            CategorieDanger.PESTICIDE_RESIDU,
+        ]
 
     def can_user_access(self, user):
         if user.agent.is_in_structure(self.createur):

@@ -46,7 +46,7 @@
                             <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
                             <td class="ellipsis">{{ evenement.product_description }}</td>
                             <td>{{ evenement.get_categorie_produit_display }}</td>
-                            <td>-</td>
+                            <td>{{ evenement.get_categorie_danger_display }}</td>
                             <td>{{ evenement.createur }}</td>
                             <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             <td>{{ evenement.nb_liens_libre }}</td>

@@ -16,6 +16,7 @@ from ssa.models import (
     Etablissement,
     TypeExploitant,
     PositionDossier,
+    CategorieDanger,
 )
 import factory
 
@@ -45,6 +46,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     temperature_conservation = FuzzyChoice([choice[0] for choice in TemperatureConservation.choices])
     produit_pret_a_manger = FuzzyChoice([choice[0] for choice in PretAManger.choices])
 
+    categorie_danger = FuzzyChoice(CategorieDanger.values)
     quantification = FuzzyFloat(low=0, precision=2)
     quantification_unite = FuzzyChoice([choice[0] for choice in QuantificationUnite.choices])
     evaluation = factory.Faker("paragraph")
