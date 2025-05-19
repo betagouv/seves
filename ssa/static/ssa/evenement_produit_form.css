@@ -94,6 +94,7 @@
 
 .treeselect-list__item[level="1"]{
     border-bottom: 1px solid #BBBBBB;
+    padding-left: 20px !important;
 }
 
 

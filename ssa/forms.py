@@ -9,11 +9,7 @@ from core.mixins import WithEtatMixin
 from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import (
-    Etablissement,
-    TypeExploitant,
-    PositionDossier,
-)
+from ssa.models import Etablissement, TypeExploitant, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
@@ -44,6 +40,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         label="Description complémentaire",
     )
 
+    categorie_danger = SEVESChoiceField(required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput)
     quantification_unite = SEVESChoiceField(
         required=False,
         choices=QuantificationUnite.with_opt_group(),

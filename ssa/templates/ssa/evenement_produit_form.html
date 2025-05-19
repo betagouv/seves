@@ -19,6 +19,17 @@
     <form method="post" id="main-form">
         {% csrf_token %}
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
+        <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
+        <div class="fr-hidden" id="categorie-danger-header">
+            <div>Danger les plus courant</div>
+            {% for danger in danger_plus_courant %}
+                <div class="treeselect-list__item" level="0" group="false">
+                    <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
+                </div>
+            {% endfor %}
+            <div>Liste complètes des dangers</div>
+        </div>
+
         <main class="main-container">
 
             <div class="evenement-produit-form-header">
@@ -61,15 +72,18 @@
                         <div class="white-container--lite tall-column">
                             <h3>Produit</h3>
                             <div>
+                                <label>Catégorie de produit</label>
                                 <div id="categorie-produit"></div>
-                                {{ form.categorie_produit  }}
-                                {% render_field form.denomination %}
-                                {% render_field form.marque %}
-                                {% render_field form.lots %}
-                                {% render_field form.description_complementaire %}
-                                {{ form.temperature_conservation.label_tag }}
-                                <div class="radio-inline-container radio-inline-container--wrap">
-                                    {{ form.temperature_conservation }}
+                                <div class="fr-mt-2w">
+                                    {{ form.categorie_produit  }}
+                                    {% render_field form.denomination %}
+                                    {% render_field form.marque %}
+                                    {% render_field form.lots %}
+                                    {% render_field form.description_complementaire %}
+                                    {{ form.temperature_conservation.label_tag }}
+                                    <div class="radio-inline-container radio-inline-container--wrap">
+                                        {{ form.temperature_conservation }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +92,10 @@
                         <div class="white-container--lite tall-column risk-column">
                             <h3>Risque</h3>
                             <div>
-                                <div class="fr-mt-4w">
+                                <label>Catégorie de danger</label>
+                                <div id="categorie-danger"></div>
+                                {{ form.categorie_danger  }}
+                                <div class="fr-mt-2w">
                                     <div class="fr-grid-row fr-grid-row--gutters">
                                         <div class="fr-col-lg-8">
                                             {% render_field form.quantification %}

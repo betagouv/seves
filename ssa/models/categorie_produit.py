@@ -1,7 +1,8 @@
 from django.db import models
+from .mixins import WithChoicesToJS
 
 
-class CategorieProduit(models.TextChoices):
+class CategorieProduit(WithChoicesToJS, models.TextChoices):
     DE_BOUCHERIE = "Produit carné de boucherie", "Produit carné > De boucherie"
     VIANDE_OS_ABAT_ROUGE = (
         "Viande, os et abat rouge de boucherie",
