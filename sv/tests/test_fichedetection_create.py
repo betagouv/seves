@@ -877,6 +877,8 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     choice_js_fill,
     choice_js_fill_from_element,
 ):
+    call_count = {"count": 0}
+
     def handle(route):
         response = {
             "type": "FeatureCollection",
@@ -893,6 +895,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
             ],
         }
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
 
     form_elements.page.route(
         "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
@@ -912,6 +915,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     choice_js_fill_from_element(
         page, lieu_form_elements.adresse_etablissement_input, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
     )
+    assert call_count["count"] == 1
     lieu_form_elements.save_btn.click()
     form_elements.publish_btn.click()
 
