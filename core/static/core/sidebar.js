@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const messageId = element.dataset.messagePk
         bindClickToSidebar(element, document.getElementById(`sidebar-message-details-${messageId}`))
     })
-    document.querySelectorAll(".message-panel").forEach(element => {
+    document.querySelectorAll(".open-sidebar").forEach(element => {
         bindClickToSidebar(element, document.getElementById('sidebar'))
     })
     bindAllCloseSidebar()

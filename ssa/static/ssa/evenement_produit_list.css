@@ -1,9 +1,25 @@
 .evenements_liste__header {
     background-color: var(--background-open-blue-france);
 }
+.evenements_liste__header--title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.evenements_liste__header--title h2{
+    margin-bottom: 0;
+}
 .evenements_liste__header--actions {
     display: flex;
     justify-content: flex-end;
+}
+.more-filters-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+.more-filters-title h4{
+    margin-bottom: 0;
 }
 
 .evenements_liste__search-form {

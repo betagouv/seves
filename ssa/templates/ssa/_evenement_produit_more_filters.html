@@ -1,0 +1,20 @@
+{% load render_field %}
+<aside id="sidebar" class="sidebar white-container--lite">
+    <div class="more-filters-title">
+        <h4 class="fr-h4">Filtres avancés</h4>
+        <a href="#" class="fr-link close-sidebar fr-mb-2v">Fermer</a>
+    </div>
+    <div>
+        {% for field in filter.form %}
+            {% if field.name in filter.form.manual_render_fields %}
+                <div class="fr-fieldset__element">
+                    {% render_field field %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+            <button class="fr-btn fr-btn--secondary clear-btn">Effacer</button>
+            <button class="fr-btn add-btn">Ajouter</button>
+        </div>
+    </div>
+</aside>

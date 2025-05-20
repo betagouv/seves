@@ -4,7 +4,7 @@
         <span class="fr-badge fr-badge--sm fr-badge--new fr-badge--no-icon">Fin de suivi</span>
     {% endif %}
 </div>
-<div class="fr-col-5"><a href="#" class="fr-link email message-panel" data-message-type="message" data-recipient="{{ contact.pk }}">{{ contact.email }}</a></div>
+<div class="fr-col-5"><a href="#" class="fr-link email open-sidebar" data-message-type="message" data-recipient="{{ contact.pk }}">{{ contact.email }}</a></div>
 <div class="fr-col-offset-1"></div>
 
 {% if can_delete_contact %}

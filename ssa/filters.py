@@ -4,6 +4,29 @@ from django.forms import DateInput, TextInput
 from core.filters_mixins import WithNumeroFilterMixin
 from core.forms import DSFRForm
 from ssa.models import EvenementProduit
+from ssa.models.departements import Departement
+from django_countries import Countries
+from django_filters.filters import BaseInFilter, CharFilter
+
+
+class StrInFilter(BaseInFilter, CharFilter):
+    pass
+
+
+class EvenementProduitFilterForm(DSFRForm):
+    manual_render_fields = [
+        "etat",
+        "temperature_conservation",
+        "produit_pret_a_manger",
+        "reference_souches",
+        "reference_clusters",
+        "actions_engagees",
+        "numeros_rappel_conso",
+        "numero_agrement",
+        "commune",
+        "departement",
+        "pays",
+    ]
 
 
 class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
@@ -32,6 +55,21 @@ class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
         widget=TextInput(attrs={"placeholder": "Description, produit, établissement..."}),
     )
 
+    numeros_rappel_conso = StrInFilter(
+        field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
+    )
+
+    numero_agrement = django_filters.CharFilter(
+        field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
+    )
+    commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
+    departement = django_filters.ChoiceFilter(
+        choices=Departement, field_name="etablissements__departement", distinct=True, label="Département"
+    )
+    pays = django_filters.ChoiceFilter(
+        choices=Countries, field_name="etablissements__pays", distinct=True, label="Pays"
+    )
+
     class Meta:
         model = EvenementProduit
         fields = [
@@ -41,8 +79,19 @@ class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
             "end_date",
             "type_evenement",
             "full_text_search",
+            "etat",
+            "temperature_conservation",
+            "produit_pret_a_manger",
+            "reference_souches",
+            "reference_clusters",
+            "actions_engagees",
+            "numeros_rappel_conso",
+            "numero_agrement",
+            "commune",
+            "departement",
+            "pays",
         ]
-        form = DSFRForm
+        form = EvenementProduitFilterForm
 
     def filter_full_text_search(self, queryset, name, value):
         if not value:
