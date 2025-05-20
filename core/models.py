@@ -4,6 +4,7 @@ from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -14,7 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
 from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
-from .storage import get_timestamped_filename
+from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import validate_upload_file, AllowedExtensions
 
 User = get_user_model()
@@ -365,3 +366,11 @@ class Visibilite(models.TextChoices):
     def get_masculine_label(cls, value):
         masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
         return masculine_labels.get(value)
+
+
+class Export(models.Model):
+    object_ids = ArrayField(models.BigIntegerField())
+    task_done = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    file = models.FileField(upload_to=get_timestamped_filename_export)
+    user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="exports")

@@ -28,6 +28,11 @@
     margin-bottom: 0;
 }
 
+.evenements_liste__table--header {
+    display: flex;
+    justify-content: space-between;
+}
+
 .evenements_liste__search-form {
     display: flex;
     flex-wrap: wrap;

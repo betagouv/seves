@@ -2,7 +2,7 @@ from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact
+from core.models import Message, Contact, Export
 from django.conf import settings
 
 
@@ -93,6 +93,30 @@ Vous pouvez y accéder avec le lien suivant : https://seves.beta.gouv.fr/{obj.ge
     <p>Bonjour,</p>
     <p>Vous avez été ajouté en contact de la fiche n° {obj.numero}.</p>
     <p>Vous pouvez y accéder avec le lien suivant : <a href="https://seves.beta.gouv.fr{obj.get_absolute_url()}">https://seves.beta.gouv.fr{obj.get_absolute_url()}</a></p>
+</div>
+</html>
+        """,
+    )
+
+
+def notify_export_is_ready(export: Export):
+    send(
+        recipients=[export.user.email],
+        subject="Votre export est prêt",
+        message=f"""
+Bonjour,
+
+L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url}.
+
+Attention, le lien n'est valable que durant 1 heure.
+        """,
+        html_message=f"""
+<!DOCTYPE html>
+<html>
+<div style="font-family: Arial, sans-serif;">
+    <p>Bonjour,</p>
+    <p>L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url}.</p>
+    <p>Attention, le lien n'est valable que durant 1 heure.</p>
 </div>
 </html>
         """,
