@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact
+from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact, Export
 
 
 admin.site.register(Document)
@@ -20,5 +20,10 @@ class ContactAdmin(admin.ModelAdmin):
     search_fields = ("email", "agent__nom", "agent__prenom")
 
 
+class ExportAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(Contact, ContactAdmin)
+admin.site.register(Export, ExportAdmin)
 admin.site.register(FinSuiviContact)

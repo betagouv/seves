@@ -1,12 +1,15 @@
 import json
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
+from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithClotureContextMixin, WithOrderingMixin
+from core.mixins import WithClotureContextMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -20,11 +23,13 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithSireneTokenMixin,
 )
-from ssa.filters import EvenementProduitFilter
+from core.models import Export
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, CategorieDanger
 from ssa.models.evenement_produit import CategorieProduit
+from ssa.tasks import export_task
+from ssa.views.mixins import WithFilteredListMixin
 
 
 class EvenementProduitCreateView(
@@ -127,34 +132,9 @@ class EvenementProduitDetailView(
         return context
 
 
-class EvenementProduitListView(WithOrderingMixin, ListView):
+class EvenementProduitListView(WithFilteredListMixin, ListView):
     model = EvenementProduit
     paginate_by = 100
-
-    def get_ordering_fields(self):
-        return {
-            "numero_evenement": ("numero_annee", "numero_evenement"),
-            "creation": "date_creation",
-            "createur": "createur__libelle",
-            "etat": "etat",
-            "liens": "nb_liens_libre",
-        }
-
-    def get_default_order_by(self):
-        return "numero_evenement"
-
-    def get_queryset(self):
-        user = self.request.user
-        contact = user.agent.structure.contact_set.get()
-        queryset = (
-            EvenementProduit.objects.select_related("createur")
-            .get_user_can_view(user)
-            .with_fin_de_suivi(contact)
-            .with_nb_liens_libres()
-        )
-        queryset = self.apply_ordering(queryset)
-        self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
-        return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -165,3 +145,18 @@ class EvenementProduitListView(WithOrderingMixin, ListView):
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
         return context
+
+
+class EvenementProduitExportView(WithFilteredListMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        ids = list(self.get_queryset().values_list("id", flat=True))
+        task = Export.objects.create(object_ids=ids, user=request.user)
+        export_task.delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")

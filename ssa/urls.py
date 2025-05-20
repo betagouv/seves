@@ -6,6 +6,7 @@ from .views import (
     EvenementProduitListView,
     FindNumeroAgrementView,
 )
+from .views.produit import EvenementProduitExportView
 
 app_name = "ssa"
 urlpatterns = [
@@ -23,6 +24,11 @@ urlpatterns = [
         "evenement-produit/",
         EvenementProduitListView.as_view(),
         name="evenement-produit-liste",
+    ),
+    path(
+        "export/evenement-produit/",
+        EvenementProduitExportView.as_view(),
+        name="export-evenement-produit",
     ),
     path(
         "api/find-numero-agrement/",
