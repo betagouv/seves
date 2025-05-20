@@ -2,10 +2,10 @@
     <div class="close-sidebar-container">
         <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
     </div>
-    <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v"></h5>
+    <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v fr-ml-2v"></h5>
     <form method="post" id="message-form" enctype="multipart/form-data" action="{{ object.add_message_url }}">
         {% csrf_token %}
-        <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v">
+        <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v fr-ml-2v">
             Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement
         </div>
         <div class=" fr-fieldset__element fr-hidden">
@@ -38,10 +38,13 @@
             </div>
 
         </div>
-        <div class="message-send-btn fr-pr-1w fr-mb-8w">
-            <button type="submit" value="{{ message_status.BROUILLON }}" class="fr-btn fr-btn--secondary" id="draft-message-send-btn" data-testid="draft-fildesuivi-add-submit">Enregistrer comme brouillon</button>
-            <button type="submit" value="{{ message_status.FINALISE }}" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
-        </div>
-
+        <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--center">
+            <li>
+                <button type="submit" value="{{ message_status.BROUILLON }}" class="fr-btn fr-btn--secondary" id="draft-message-send-btn" data-testid="draft-fildesuivi-add-submit">Enregistrer comme brouillon</button>
+            </li>
+            <li>
+                <button type="submit" value="{{ message_status.FINALISE }}" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+            </li>
+        </ul>
     </form>
 </aside>
