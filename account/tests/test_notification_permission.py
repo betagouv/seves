@@ -31,7 +31,7 @@ def test_notification_is_send_when_add_permission(live_server, page: Page, mailo
     <div style="font-family: Arial, sans-serif;">
         <p style="font-weight: bold;">Droits d’accès Sèves</p>
         <p>Bonjour,</p>
-        <p>Les droits d’accès vous ont été attribués pour {SV_DOMAIN}.</p>
+        <p>Les droits d’accès vous ont été attribués pour Sèves {SV_DOMAIN}.</p>
         <p>Vous pouvez désormais accéder à Sèves au lien suivant : <a href="https://seves.beta.gouv.fr">Sèves</a></p>
     </div>
     </html>
@@ -68,7 +68,7 @@ def test_notification_is_send_when_add_permission_for_several_groups(
     <div style="font-family: Arial, sans-serif;">
         <p style="font-weight: bold;">Droits d’accès Sèves</p>
         <p>Bonjour,</p>
-        <p>Les droits d’accès vous ont été attribués pour {SV_DOMAIN} et {SSA_DOMAIN}.</p>
+        <p>Les droits d’accès vous ont été attribués pour Sèves {SV_DOMAIN} et {SSA_DOMAIN}.</p>
         <p>Vous pouvez désormais accéder à Sèves au lien suivant : <a href="https://seves.beta.gouv.fr">Sèves</a></p>
     </div>
     </html>
@@ -105,7 +105,7 @@ def test_notification_is_send_when_remove_permission(live_server, page: Page, ma
     <div style="font-family: Arial, sans-serif;">
         <p style="font-weight: bold;">Droits d’accès Sèves</p>
         <p>Bonjour,</p>
-        <p>Les droits d’accès vous ont été retirés pour {SV_DOMAIN}</p>
+        <p>Les droits d’accès vous ont été retirés pour Sèves {SV_DOMAIN}.</p>
         <p>Vous ne pouvez désormais plus accéder à Sèves.</p>
         <p>S’il s’agit d’une erreur, merci de contacter : <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a></p>
     </div>
@@ -146,7 +146,7 @@ def test_notification_is_send_when_remove_permission_for_several_groups(
     <div style="font-family: Arial, sans-serif;">
         <p style="font-weight: bold;">Droits d’accès Sèves</p>
         <p>Bonjour,</p>
-        <p>Les droits d’accès vous ont été retirés pour {SV_DOMAIN} et {SSA_DOMAIN}</p>
+        <p>Les droits d’accès vous ont été retirés pour Sèves {SV_DOMAIN} et {SSA_DOMAIN}.</p>
         <p>Vous ne pouvez désormais plus accéder à Sèves.</p>
         <p>S’il s’agit d’une erreur, merci de contacter : <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a></p>
     </div>
