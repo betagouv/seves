@@ -109,6 +109,8 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
 
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
+        if isinstance(self.document.content_object, Message):
+            return self.document.content_object.content_object
         return self.document.content_object
 
     def get_success_url(self):

@@ -8,8 +8,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import DocumentFactory, StructureFactory
-from core.models import Structure, Document
+from core.factories import DocumentFactory, StructureFactory, MessageFactory
+from core.models import Structure, Document, Message
 from django.contrib.auth import get_user_model
 
 from core.validators import MAX_UPLOAD_SIZE_BYTES
@@ -788,3 +788,20 @@ def test_document_name_length_validation(live_server, page: Page, mocked_authent
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
     document.refresh_from_db()
     assert len(document.nom) == 256
+
+
+def test_can_edit_document_from_message(live_server, page: Page):
+    evenement = EvenementFactory()
+    message = MessageFactory(content_object=evenement, message_type=Message.MESSAGE)
+    document = DocumentFactory(nom="Test document", description="", content_object=message)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill("New name")
+    page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("un commentaire")
+    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+
+    document.refresh_from_db()
+    assert document.nom == "New name"
+    assert document.description == "un commentaire"
