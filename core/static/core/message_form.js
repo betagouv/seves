@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     addShortcut(".destinataires-shortcut", [choicesRecipients, choicesStructuresRecipients]);
     addShortcut(".copie-shortcut", [choicesCopy, choicesStructuresCopy]);
-    document.querySelectorAll(".message-panel").forEach(element =>{
+    document.querySelectorAll(".open-sidebar").forEach(element =>{
         element.addEventListener("click", event =>{
             changeFormBasedOnMessageType(event.target.dataset.messageType)
             if (!!event.target.dataset.recipient){

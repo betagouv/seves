@@ -280,6 +280,15 @@ class EvenementProduitListPage:
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-liste')}")
 
+    def open_sidebar(self):
+        self.page.locator(".open-sidebar").click()
+
+    def close_sidebar(self):
+        self.page.locator(".close-sidebar").click()
+
+    def reset_more_filters(self):
+        self.page.locator(".clear-btn").click()
+
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
 
@@ -322,6 +331,50 @@ class EvenementProduitListPage:
         return self.page.locator("#id_end_date")
 
     @property
+    def etat(self):
+        return self.page.locator("#id_etat")
+
+    @property
+    def temperature_conservation(self):
+        return self.page.locator("#id_temperature_conservation")
+
+    @property
+    def pret_a_manger(self):
+        return self.page.locator("#id_produit_pret_a_manger")
+
+    @property
+    def reference_souches(self):
+        return self.page.locator("#id_reference_souches")
+
+    @property
+    def reference_clusters(self):
+        return self.page.locator("#id_reference_clusters")
+
+    @property
+    def actions_engagees(self):
+        return self.page.locator("#id_actions_engagees")
+
+    @property
+    def numeros_rappel_conso(self):
+        return self.page.locator("#id_numeros_rappel_conso")
+
+    @property
+    def numero_agrement(self):
+        return self.page.locator("#id_numero_agrement")
+
+    @property
+    def commune(self):
+        return self.page.locator("#id_commune")
+
+    @property
+    def departement(self):
+        return self.page.locator("#id_departement")
+
+    @property
+    def pays(self):
+        return self.page.locator("#id_pays")
+
+    @property
     def full_text_field(self):
         return self.page.locator("#id_full_text_search")
 
@@ -329,4 +382,11 @@ class EvenementProduitListPage:
         return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
 
     def reset_search(self):
-        return self.page.locator("#search-form").get_by_text("Effacer", exact=True).click()
+        return self.page.locator("#reset-btn").click()
+
+    def add_filters(self):
+        return self.page.locator(".add-btn").click()
+
+    @property
+    def filter_counter(self):
+        return self.page.locator("#more-filters-btn-counter")

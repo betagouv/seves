@@ -254,6 +254,7 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
+FILTERS_EMPTY_CHOICE_LABEL = "Choisir dans la liste"
 
 BYPASS_ANTIVIRUS = env("BYPASS_ANTIVIRUS", default=False)
 CLAMAV_CONFIG_FILE = env("CLAMAV_CONFIG_FILE", default="/etc/clamav/clamd.conf")

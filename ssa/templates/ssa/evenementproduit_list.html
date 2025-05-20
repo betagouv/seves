@@ -3,21 +3,30 @@
 {% load etat_tags %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_list.css' %}">
+    <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
+    <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/evenement_produit_list.js' %}"></script>
 {% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}
     <form id="search-form" method="get" >
+        {% include "ssa/_evenement_produit_more_filters.html" %}
         <div class="fr-p-4v evenements_liste__header">
-            <h2 class="fr-h3">Rechercher une fiche</h2>
+            <div class="evenements_liste__header--title">
+                <h2 class="fr-h3">Rechercher un événement</h2>
+                <button  class="open-sidebar fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-filter-line">
+                    Filtres avancés
+                    <p id="more-filters-btn-counter" class="fr-tag fr-tag--sm fr-hidden fr-ml-2v"></p>
+                </button>
+            </div>
             <div class="evenements_liste__search-form">
                 {{ filter.form.as_dsfr_div }}
             </div>
             <div class="fr-fieldset__element evenements_liste__header--actions">
-                <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>
+                <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn">Effacer</button>
                 <button type="submit" class="fr-btn">Rechercher</button>
             </div>
         </div>
@@ -25,36 +34,39 @@
     <main class="main-container">
 
         <div>{{ object_list.count }} sur un total de {{ page_obj.paginator.count }}</div>
-        <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
-                        <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Création' %}</th>
-                        <th class="fr-col-3" scope="col">Description de l'événement</th>
-                        <th class="fr-col-2" scope="col">Catégorie de produit</th>
-                        <th class="fr-col-2" scope="col">Catégorie de danger</th>
-                        <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
-                        <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
-                        <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='liens' display_name='Liens' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for evenement in evenementproduit_list %}
-                        <tr class="evenements__list-row">
-                            <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
-                            <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                            <td class="ellipsis">{{ evenement.product_description }}</td>
-                            <td>{{ evenement.get_categorie_produit_display }}</td>
-                            <td>{{ evenement.get_categorie_danger_display }}</td>
-                            <td>{{ evenement.createur }}</td>
-                            <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
-                            <td>{{ evenement.nb_liens_libre }}</td>
+        {% if object_list.count %}
+            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Création' %}</th>
+                            <th class="fr-col-3" scope="col">Description de l'événement</th>
+                            <th class="fr-col-2" scope="col">Catégorie de produit</th>
+                            <th class="fr-col-2" scope="col">Catégorie de danger</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='liens' display_name='Liens' %}</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        {% for evenement in evenementproduit_list %}
+                            <tr class="evenements__list-row">
+                                <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
+                                <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
+                                <td class="ellipsis">{{ evenement.product_description }}</td>
+                                <td>{{ evenement.get_categorie_produit_display }}</td>
+                                <td>{{ evenement.get_categorie_danger_display }}</td>
+                                <td>{{ evenement.createur }}</td>
+                                <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
+                                <td>{{ evenement.nb_liens_libre }}</td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
         {% include "core/_pagination.html" %}
     </main>
 {% endblock content %}

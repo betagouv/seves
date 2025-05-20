@@ -6,7 +6,7 @@
     {% endif %}
 </div>
 <div class="fr-col-4">
-    <a href="#" class="fr-link email message-panel" data-message-type="message" data-recipient="{{ contact.pk }}">{{ contact.email }}</a>
+    <a href="#" class="fr-link email open-sidebar" data-message-type="message" data-recipient="{{ contact.pk }}">{{ contact.email }}</a>
 </div>
 <div class="fr-col-3 phone">{{ contact.agent.telephone }}</div>
 {% if can_delete_contact %}
