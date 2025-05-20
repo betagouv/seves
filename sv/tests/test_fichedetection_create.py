@@ -221,7 +221,7 @@ def test_create_fiche_detection_with_lieu(
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    lieu_form_elements.is_etablissement_checkbox.click()
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)

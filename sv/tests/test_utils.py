@@ -237,7 +237,7 @@ class LieuFormDomElements:
 
     @property
     def is_etablissement_checkbox(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').locator("visible=true")
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[for$="is_etablissement"]')
 
     @property
     def is_etablissement_checkbox_checked(self) -> bool:
