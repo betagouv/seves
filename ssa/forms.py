@@ -59,7 +59,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         label="Produit Prêt à manger (PAM)",
     )
 
-    actions_engagees = forms.ChoiceField(
+    actions_engagees = SEVESChoiceField(
         required=False,
         choices=ActionEngagees.choices,
         help_text="En cas de multiples mesures, indiquer la plus contraigrante ou la dernière en date",
