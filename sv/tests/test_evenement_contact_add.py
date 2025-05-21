@@ -20,15 +20,6 @@ def contact(db):
 
 
 @pytest.fixture
-def goto_contacts(db):
-    def _goto_contacts(page):
-        page.get_by_role("tab", name="Contacts").click()
-        page.get_by_role("tab", name="Contacts").evaluate("el => el.scrollIntoView()")
-
-    return _goto_contacts
-
-
-@pytest.fixture
 def contacts(db):
     ContactAgentFactory.create_batch(2)
 

@@ -23,6 +23,7 @@ from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
 from core.models import user_is_referent_national
 from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
+from .managers import ContactQueryset
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
@@ -296,6 +297,16 @@ class WithVisibiliteMixin(models.Model):
                 return ", ".join(str(s) for s in self.allowed_structures.all()) + f", {MUS_STRUCTURE}, {BSV_STRUCTURE}"
             case Visibilite.NATIONALE:
                 return "Toutes les structures"
+
+    def update_allowed_structures_and_visibility(self, contacts: ContactQueryset):
+        if not contacts:
+            return
+        if not self.is_visibilite_nationale:
+            structures = [contact.structure if contact.structure else contact.agent.structure for contact in contacts]
+            self.allowed_structures.add(*structures)
+            if self.is_visibilite_locale:
+                self.visibilite = Visibilite.LIMITEE
+                self.save()
 
     @property
     def visibility_display(self) -> str:
