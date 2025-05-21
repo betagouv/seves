@@ -470,3 +470,13 @@ def test_cant_publish_and_notifier_ac_evenement_i_cant_see(client, mailoutbox):
     assert evenement.is_draft is True
     assert evenement.is_ac_notified is False
     assert len(mailoutbox) == 0
+
+
+def test_show_only_publish_btn_for_ac_users(live_server, page: Page, mocked_authentification_user, contact_ac):
+    contact_structure_mus = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    mocked_authentification_user.agent.structure = contact_structure_mus.structure
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=contact_structure_mus.structure)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Publier", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name="Publier sans déclarer à l'AC")).not_to_be_visible()
+    expect(page.get_by_role("button", name="Publier et déclarer à l'AC")).not_to_be_visible()
