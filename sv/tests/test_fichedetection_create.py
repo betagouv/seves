@@ -669,7 +669,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
         form_elements.add_lieu_btn.click()
         page.wait_for_timeout(200)
         lieu_form_elements.nom_input.fill("Mon lieu")
-        lieu_form_elements.is_etablissement_checkbox.click(force=True)
+        lieu_form_elements.is_etablissement_checkbox.click()
         lieu_form_elements.sirene_btn.click()
         choice_js_fill(
             page,
