@@ -41,11 +41,15 @@
                 <ul class="fr-btns-group fr-btns-group--inline-md">
                     {% if can_publish %}
                         <li>
-                            <button class="fr-btn fr-btn--secondary fr-mr-1w" data-fr-opened="false" aria-controls="fr-modal-publier-without-notifier-ac">Publier sans déclarer à l'AC</button>
+                            <button class="fr-btn fr-btn--secondary fr-mr-1w" data-fr-opened="false" aria-controls="fr-modal-publier-without-notifier-ac">
+                                {% if request.user.agent.structure.is_ac %}Publier{% else %}Publier sans déclarer à l'AC{% endif %}
+                            </button>
                         </li>
-                        <li>
-                            <button class="fr-btn fr-btn--secondary" data-fr-opened="false" aria-controls="fr-modal-publier-and-notifier-ac">Publier et déclarer à l'AC</button>
-                        </li>
+                        {% if not request.user.agent.structure.is_ac %}
+                            <li>
+                                <button class="fr-btn fr-btn--secondary" data-fr-opened="false" aria-controls="fr-modal-publier-and-notifier-ac">Publier et déclarer à l'AC</button>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     <li>
                         <div class="details-top-row--actions">{% include "sv/_evenement_action_navigation.html" %}</div>
