@@ -12,7 +12,7 @@ def add_on_contmu(apps, schema_editor):
 
 def reverse_add_on_contmu(apps, schema_editor):
     OrganismeNuisible = apps.get_model("sv", "OrganismeNuisible")
-    organisme = OrganismeNuisible.objects.get(code_oepp="ON_CONTMU")
+    organisme = OrganismeNuisible.objects.get(code_oepp="CONTMU")
     organisme.delete()
 
 
