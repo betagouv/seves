@@ -160,6 +160,8 @@ class EvenementProduitListView(WithOrderingMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options())
 
         for evenement in context["object_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)

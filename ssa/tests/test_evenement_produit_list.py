@@ -376,3 +376,48 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_produit(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_produit("Produit carné > De boucherie > Abat blanc de boucherie")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_produit("Produit carné > De boucherie")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_danger(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_danger="Salmonella dublin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_danger="Listeria")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_danger="Staphylococcus")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_danger("Bactérie > Salmonella > Salmonella dublin")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()

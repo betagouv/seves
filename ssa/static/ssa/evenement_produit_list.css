@@ -12,6 +12,8 @@
 .evenements_liste__header--actions {
     display: flex;
     justify-content: flex-end;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 .more-filters-title {
     display: flex;
@@ -28,8 +30,12 @@
     align-items: flex-end;
     gap: 0.5rem;
 }
+.fr-fieldset__element:has([id=id_categorie_produit]), .fr-fieldset__element:has([id=id_categorie_danger]) {
+    display: None;
+}
+
 .evenements_liste__search-form .fr-fieldset__element{
-    flex: 1 1 200px;
+    flex: 1 1 250px;
     max-width: 300px;
 }
 .ellipsis {

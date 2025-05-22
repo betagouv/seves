@@ -1,16 +1,23 @@
 import django_filters
 from django.forms import DateInput, TextInput
+from django_countries import Countries
+from django_filters.filters import BaseInFilter, CharFilter
 
-from core.filters_mixins import WithNumeroFilterMixin
+from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
 from core.forms import DSFRForm
 from ssa.models import EvenementProduit
 from ssa.models.departements import Departement
-from django_countries import Countries
-from django_filters.filters import BaseInFilter, CharFilter
 
 
 class StrInFilter(BaseInFilter, CharFilter):
     pass
+
+
+class CharInFilter(CharFilter):
+    def filter(self, qs, value):
+        if isinstance(value, str):
+            value = [v.strip() for v in value.split("||") if v.strip()]
+        return super().filter(qs, value)
 
 
 class EvenementProduitFilterForm(DSFRForm):
@@ -29,7 +36,9 @@ class EvenementProduitFilterForm(DSFRForm):
     ]
 
 
-class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
+class EvenementProduitFilter(
+    WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin, django_filters.FilterSet
+):
     numero_rasff = django_filters.CharFilter(
         label="Numéro RASFF/AAC",
         widget=TextInput(
@@ -69,15 +78,21 @@ class EvenementProduitFilter(WithNumeroFilterMixin, django_filters.FilterSet):
     pays = django_filters.ChoiceFilter(
         choices=Countries, field_name="etablissements__pays", distinct=True, label="Pays"
     )
+    categorie_produit = CharInFilter(field_name="categorie_produit", lookup_expr="in")
+    categorie_danger = CharInFilter(field_name="categorie_danger", lookup_expr="in")
 
     class Meta:
         model = EvenementProduit
         fields = [
             "numero",
             "numero_rasff",
+            "categorie_produit",
+            "categorie_danger",
+            "structure_contact",
+            "agent_contact",
+            "type_evenement",
             "start_date",
             "end_date",
-            "type_evenement",
             "full_text_search",
             "etat",
             "temperature_conservation",
