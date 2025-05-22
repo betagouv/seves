@@ -135,7 +135,6 @@ class EvenementProduitListView(WithOrderingMixin, ListView):
         return {
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "creation": "date_creation",
-            "description": "description",
             "createur": "createur__libelle",
             "etat": "etat",
             "liens": "nb_liens_libre",

@@ -63,27 +63,6 @@ def test_order_by_date_creation(
     ],
     ids=["asc", "desc"],
 )
-def test_order_by_organisme_nuisible(
-    live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
-):
-    evenements = {
-        "evenement_1": EvenementProduitFactory(description="A"),
-        "evenement_2": EvenementProduitFactory(description="C"),
-        "evenement_3": EvenementProduitFactory(description="B"),
-    }
-    page.goto(url_builder_for_list_ordering("description", direction, "ssa:evenement-produit-liste"))
-    page.get_by_role("link", name="Description de l'événement ").click()
-    assert_events_order(page, evenements, expected_order, 1)
-
-
-@pytest.mark.parametrize(
-    "direction,expected_order",
-    [
-        ("asc", ["evenement_1", "evenement_3", "evenement_2"]),
-        ("desc", ["evenement_2", "evenement_3", "evenement_1"]),
-    ],
-    ids=["asc", "desc"],
-)
 def test_order_by_createur(
     live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
 ):
