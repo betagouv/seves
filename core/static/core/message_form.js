@@ -63,15 +63,15 @@ function onFileInputChange(fileInput, typeInput, messageAddDocumentButton) {
     }
 }
 
-function addStructuresToRecipients(event, choiceElements){
+function addStructuresToRecipients(event, choiceElements, dataAttribute){
     event.preventDefault()
-    choiceElements.forEach(element =>{element.setChoiceByValue(event.target.getAttribute("data-structures").split(","))})
+    choiceElements.forEach(element =>{element.setChoiceByValue(event.target.getAttribute(dataAttribute).split(","))})
 }
 
-function addShortcut(classToWatch, elements){
+function addShortcut(classToWatch, elements, dataAttribute){
     const destinatairesShortcutElement = document.querySelectorAll(classToWatch)
     destinatairesShortcutElement.forEach(shortcut => {
-        shortcut.addEventListener("click", event => addStructuresToRecipients(event, elements))
+        shortcut.addEventListener("click", event => addStructuresToRecipients(event, elements, dataAttribute))
     })
 }
 
@@ -247,8 +247,10 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeChoices(document.getElementById("id_recipients_limited_recipients"))
     }
 
-    addShortcut(".destinataires-shortcut", [choicesRecipients, choicesStructuresRecipients]);
-    addShortcut(".copie-shortcut", [choicesCopy, choicesStructuresCopy]);
+    addShortcut(".destinataires-shortcut", [choicesRecipients, choicesStructuresRecipients], "data-structures");
+    addShortcut(".copie-shortcut", [choicesCopy, choicesStructuresCopy], "data-structures");
+    addShortcut(".destinataires-contacts-shortcut", [choicesRecipients], "data-contacts");
+    addShortcut(".copie-contacts-shortcut", [choicesCopy], "data-contacts");
     document.querySelectorAll(".open-sidebar").forEach(element =>{
         element.addEventListener("click", event =>{
             changeFormBasedOnMessageType(event.target.dataset.messageType)
