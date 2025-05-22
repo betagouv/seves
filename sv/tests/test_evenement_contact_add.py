@@ -29,7 +29,8 @@ def contacts(db):
 
 
 def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, goto_contacts):
-    contact = ContactAgentFactory(with_active_agent=True)
+    contact_structure = ContactStructureFactory()
+    contact = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -65,7 +66,10 @@ def test_cant_add_inactive_structure_to_an_evenement(live_server, page, choice_j
 
 
 def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, goto_contacts):
-    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(2, with_active_agent=True)
+    contact_structure = ContactStructureFactory()
+    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
+        2, with_active_agent=True, agent__structure=contact_structure.structure
+    )
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -310,7 +314,8 @@ def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server
 
 
 def test_notification_is_send_when_adding_contact_agent(live_server, page, choice_js_fill, goto_contacts, mailoutbox):
-    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_structure = ContactStructureFactory()
+    contact_agent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")

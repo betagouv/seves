@@ -34,4 +34,6 @@ class Migration(migrations.Migration):
         ("sv", "0098_add_on_crtzbr"),
     ]
 
-    operations = []
+    operations = [
+        migrations.RunPython(add_existing_contacts_to_allowed_structures, migrations.RunPython.noop),
+    ]
