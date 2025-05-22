@@ -7,7 +7,19 @@ from playwright.sync_api import Page
 from ssa.models import Etablissement
 
 
-class EvenementProduitCreationPage:
+class WithTreeSelect:
+    def _set_treeselect_option(self, container_id, label):
+        self.page.locator(f"#{container_id} .treeselect-input__edit").click()
+        for part in label.split(">"):
+            if part == label.split(">")[-1]:
+                self.page.get_by_text(part.strip(), exact=True).locator("..").locator(
+                    ".treeselect-list__item-checkbox-icon"
+                ).click(force=True)
+            else:
+                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
+
+
+class EvenementProduitCreationPage(WithTreeSelect):
     info_fields = ["numero_rasff", "type_evenement", "source", "description", "numero_rasff"]
     produit_fields = [
         "denomination",
@@ -48,16 +60,6 @@ class EvenementProduitCreationPage:
         self.type_evenement.select_option(evenement_produit.type_evenement)
         self.description.fill(evenement_produit.description)
         self.denomination.fill(evenement_produit.denomination)
-
-    def _set_treeselect_option(self, container_id, label):
-        self.page.locator(f"#{container_id} .treeselect-input__edit").click()
-        for part in label.split(">"):
-            if part == label.split(">")[-1]:
-                self.page.get_by_text(part.strip(), exact=True).locator("..").locator(
-                    ".treeselect-list__item-checkbox-icon"
-                ).click(force=True)
-            else:
-                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
 
     def set_categorie_produit(self, evenement_produit):
         label = evenement_produit.get_categorie_produit_display()
@@ -275,7 +277,7 @@ class EvenementProduitDetailsPage:
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
 
 
-class EvenementProduitListPage:
+class EvenementProduitListPage(WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -376,6 +378,12 @@ class EvenementProduitListPage:
     @property
     def pays(self):
         return self.page.locator("#id_pays")
+
+    def set_categorie_produit(self, term):
+        self._set_treeselect_option("categorie-produit", term)
+
+    def set_categorie_danger(self, term):
+        self._set_treeselect_option("categorie-danger", term)
 
     @property
     def full_text_field(self):

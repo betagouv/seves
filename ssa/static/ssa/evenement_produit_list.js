@@ -1,21 +1,76 @@
+import {patchItems, addLevel2CategoryIfAllChildrenAreSelected} from "/static/ssa/_custom_tree_select.js"
+
 document.addEventListener('DOMContentLoaded', function() {
-    const searchForm = document.getElementById('search-form')
-    searchForm.addEventListener('reset', function (e) {
-        e.preventDefault()
+    function resetAndSubmit(event){
+        const searchForm = document.getElementById('search-form')
+        event.preventDefault()
         resetForm(searchForm)
         searchForm.submit()
-    });
+    }
 
-    document.querySelector(".clear-btn").addEventListener("click", (event)=>{
+    function clearSidebarFilters(event) {
         event.preventDefault()
         resetForm(document.getElementById("sidebar"))
-    })
+    }
 
-    document.querySelector(".add-btn").addEventListener("click", (event)=>{
+    function addSidebarFilters(event) {
         event.preventDefault()
         event.target.closest(".sidebar").classList.toggle('open');
         document.querySelector('.main-container').classList.toggle('open')
-    })
+    }
+    function setupCategorieProduit(){
+        const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
+        const parentContainer = document.getElementById("categorie-produit")
+        const selectedValues = parentContainer.dataset.selected.split("||").map(v => v.trim())
+        const treeselect = new Treeselect({
+            parentHtmlContainer: parentContainer,
+            value: selectedValues,
+            options: options,
+            showTags: false,
+            placeholder: "Choisir",
+            openCallback() {
+                patchItems(treeselect.srcElement)
+            },
+        })
+        document.querySelector("#categorie-produit .treeselect-input").classList.add("fr-input")
+        patchItems(treeselect.srcElement)
+        treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
+
+        treeselect.srcElement.addEventListener('input', (e) => {
+            const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
+            document.getElementById("id_categorie_produit").value = values.join("||")
+        })
+    }
+
+    function setupCategorieDanger(){
+        const options = JSON.parse(document.getElementById("categorie-danger-data").textContent)
+        const parentContainer = document.getElementById("categorie-danger")
+        const selectedValues = parentContainer.dataset.selected.split("||").map(v => v.trim())
+        const treeselect = new Treeselect({
+            parentHtmlContainer: parentContainer,
+            value: selectedValues,
+            options: options,
+            showTags: false,
+            placeholder: "Choisir",
+            openCallback() {
+                patchItems(treeselect.srcElement)
+            },
+        })
+        document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
+        patchItems(treeselect.srcElement)
+        treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
+
+        treeselect.srcElement.addEventListener('input', (e) => {
+            const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
+            document.getElementById("id_categorie_danger").value = values.join("||")
+        })
+    }
+
+    document.getElementById('search-form').addEventListener('reset', resetAndSubmit)
+    document.querySelector(".clear-btn").addEventListener("click", clearSidebarFilters)
+    document.querySelector(".add-btn").addEventListener("click", addSidebarFilters)
+    setupCategorieProduit()
+    setupCategorieDanger()
 
     const sidebarClosingObserver = new MutationObserver((mutations) => {
         mutations.forEach(mutation => {

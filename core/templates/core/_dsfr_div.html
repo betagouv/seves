@@ -14,10 +14,10 @@
         {% if field.help_text %}
           <span class="helptext fr-hint-text"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>
         {% endif %}
-        {% if forloop.last %}
-          {% for field in hidden_fields %}{{ field }}{% endfor %}
-        {% endif %}
       </div>
+    {% endif %}
+    {% if forloop.last %}
+      {% for field in hidden_fields %}{{ field }}{% endfor %}
     {% endif %}
   {% endfor %}
   {% if not fields and not errors %}
