@@ -116,17 +116,47 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         self._structures = self._structures.select_related("structure")
         return self._structures
 
+    def _get_contacts(self, obj):
+        if hasattr(self, "_contacts"):
+            return self._contacts
+        self._contacts = obj.contacts.exclude(structure=self.sender.agent.structure).exclude(agent=self.sender.agent)
+        self._contacts = self._contacts.select_related("agent__structure")
+        return self._contacts
+
+    def _build_label_with_shortcuts(
+        self, label_text, structure_ids, contact_ids=None, css_class_prefix="destinataires"
+    ):
+        html_parts = [f"{label_text}"]
+        if contact_ids:
+            html_parts.append(
+                f"<p class='fr-mb-1v'>"
+                f"<a href='#' class='fr-link {css_class_prefix}-contacts-shortcut' "
+                f"data-contacts='{contact_ids}'>Ajouter tous les contacts de la fiche</a></p>"
+            )
+        html_parts.append(
+            f"<p class='fr-mb-2v'>"
+            f"<a href='#' class='fr-link {css_class_prefix}-shortcut' "
+            f"data-structures='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
+        )
+        return mark_safe("\n".join(html_parts))
+
     def _get_recipients_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return mark_safe(
-            f"Destinataires*<a href='#' class='fr-link destinataires-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
-        )
+        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, contact_ids, "destinataires")
 
     def _get_recipients_copy_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return mark_safe(
-            f"Copie <a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
-        )
+        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
+        return self._build_label_with_shortcuts("Copie", structure_ids, contact_ids, "copie")
+
+    def _get_recipients_structures_only_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, css_class_prefix="destinataires")
+
+    def _get_recipients_copy_structures_only_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return self._build_label_with_shortcuts("Copie", structure_ids, css_class_prefix="copie")
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
@@ -144,9 +174,9 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
 
         if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_label(obj)
-            self.fields["recipients_structures_only"].label = self._get_recipients_label(obj)
+            self.fields["recipients_structures_only"].label = self._get_recipients_structures_only_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
-            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_label(obj)
+            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_structures_only_label(obj)
 
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))

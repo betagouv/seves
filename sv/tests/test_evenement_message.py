@@ -340,6 +340,7 @@ def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
     page.get_by_role("link", name="Message").click()
 
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Ajouter tous les contacts de la fiche")).not_to_be_visible()
 
 
 def test_cant_click_on_shortcut_when_only_our_structure(live_server, page: Page, mocked_authentification_user):
@@ -351,8 +352,10 @@ def test_cant_click_on_shortcut_when_only_our_structure(live_server, page: Page,
     page.get_by_role("link", name="Message").click()
 
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Ajouter tous les contacts de la fiche")).not_to_be_visible()
 
 
+@pytest.mark.django_db
 def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
@@ -376,6 +379,34 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 
     evenement.refresh_from_db()
     assert evenement.messages.get().recipients.get() == contact
+
+
+@pytest.mark.django_db
+def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contacts = [
+        contact_structure,
+        contact_agent,
+        mocked_authentification_user.agent.structure.contact_set.get(),
+        mocked_authentification_user.agent.contact_set.get(),
+    ]
+    evenement.contacts.add(*contacts)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.locator(".destinataires-contacts-shortcut").locator("visible=true").click()
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    evenement.refresh_from_db()
+    assert set(evenement.messages.get().recipients.all()) == {contact_structure, contact_agent}
 
 
 def test_formatting_contacts_messages_details_page(live_server, page: Page):
