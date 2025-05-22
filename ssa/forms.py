@@ -116,7 +116,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
 
 class MessageForm(BaseMessageForm):
     recipients_limited_recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.get_ssa_structures(), label="Destinataires"
+        queryset=Contact.objects.get_ssa_structures(), label="Destinataires", required=False
     )
     manual_render_fields = [
         "recipients_structures_only",

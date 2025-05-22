@@ -31,3 +31,5 @@ fileignoreconfig:
   checksum: 9717807f321037aee25f9711e052e85b2b9e2df83bcce796d1931e04ab2f53fb
 - filename: conftest.py
   checksum: a17ce992990a59928baab025a092e3d561dd5f5bdee013ec86ceafcb21d07359
+- filename: core/pages.py
+  checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204

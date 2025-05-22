@@ -2,6 +2,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactStructureFactory
+from core.tests.generic_tests.messages import generic_test_can_add_and_see_message_without_document
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
@@ -26,3 +27,8 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page, choice_js_fill):
     assert details_page.fil_de_suivi_recipients == "MUS"
     assert details_page.fil_de_suivi_title == "Title of the message"
     assert details_page.fil_de_suivi_type == "Compte rendu sur demande d'intervention"
+
+
+def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
