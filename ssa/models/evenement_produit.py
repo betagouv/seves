@@ -229,9 +229,12 @@ class EvenementProduit(
 
     @property
     def readable_risk_fields(self):
+        quantification = None
+        if self.quantification:
+            quantification = f"{self.quantification} {self.get_quantification_unite_display()}"
         return {
             "Catégorie de danger": self.get_categorie_danger_display(),
-            "Quantification": f"{self.quantification} {self.get_quantification_unite_display()}",
+            "Quantification": quantification,
             "Évaluation": self.evaluation,
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
             "Référence souche": self.reference_souches,
