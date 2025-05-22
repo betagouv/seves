@@ -89,8 +89,10 @@ function getMessageConfig(){
     const copieStructuresElement = document.querySelector('label[for="id_recipients_copy_structures_only"]').parentNode
 
     let limitedRecipientsElement = null
+    let limitedRecipientsInput = null
     if (isLimitedRecipientsASelect()) {
         limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode.parentNode.parentNode
+        limitedRecipientsInput =  document.getElementById("id_recipients_limited_recipients")
     } else {
         limitedRecipientsElement = document.getElementById("id_recipients_limited_recipients").parentNode
     }
@@ -113,6 +115,9 @@ function getMessageConfig(){
             toShow: [helpElement],
             required: []
         }
+    }
+    if (isLimitedRecipientsASelect()) {
+        configuration["compte rendu sur demande d'intervention"].required = [limitedRecipientsInput]
     }
     return [configuration, allElements, allRequiredInputs]
 }
