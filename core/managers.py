@@ -25,7 +25,7 @@ class DocumentQueryset(QuerySet):
     def extract_from_fiche_messages(self, fiche):
         from core.models import Message
 
-        message_ids = fiche.messages.all().values_list("id", flat=True)
+        message_ids = fiche.messages.exclude(status=Message.Status.BROUILLON).values_list("id", flat=True)
         message_type = ContentType.objects.get_for_model(Message)
         return self.filter(content_type=message_type, object_id__in=message_ids)
 

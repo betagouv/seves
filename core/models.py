@@ -276,7 +276,7 @@ class Message(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
-        ordering = ["-date_creation"]
+        ordering = ["status", "-date_creation"]
 
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
@@ -293,6 +293,10 @@ class Message(models.Model):
                 return "CR sur DI"
             case _:
                 return self.get_message_type_display()
+
+    @property
+    def is_draft(self):
+        return self.status == self.Status.BROUILLON
 
 
 class LienLibre(models.Model):
