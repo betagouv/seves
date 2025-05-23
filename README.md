@@ -142,6 +142,14 @@ Pour travailler avec un broker et Celery en local, il faut:
 - Pour les tâches de mail les mails sont directement affichés dans la console du worker
 
 
+# Reconstruire la librairie treeselectJS personalisée
+
+A défaut d'avoir un vrai build côté front pour permettre ce genre de chose:
+- Cloner  ` https://github.com/Anto59290/treeselectjs`  (seul le dernier commit est réellement important)
+- `npm install` et `npm run build`
+- Copier le fichier treeselectjs.umd.js obtenu en sortie de build et le coller dans le projet
+
+
 # Tests
 ## E2E
 Les tests E2E sont réalisés avec la bibliothèque [Playwright](https://playwright.dev/python/) ([installé précédemment](#Installation-des-dépendances-Python)).
