@@ -7,12 +7,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.umd.js"></script>
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
-    <script type="text/javascript" src="{% static 'ssa/_numero_agrement.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 
 {% block content %}

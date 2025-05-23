@@ -33,3 +33,5 @@ fileignoreconfig:
   checksum: a17ce992990a59928baab025a092e3d561dd5f5bdee013ec86ceafcb21d07359
 - filename: core/pages.py
   checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
+- filename: ssa/static/ssa/treeselectjs.umd.js
+  checksum: 51c1b202eb0400ca7694cf33aba8576e0e86e75238b25a1fd5b21125dea83580
