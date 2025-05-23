@@ -13,6 +13,7 @@ function findPath(value, options, path = []) {
   return null;
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
   function disableSourceOptions(typeEvenementInput, sourceInput) {
     const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
@@ -28,6 +29,33 @@ document.addEventListener('DOMContentLoaded', () => {
     sourceInput.selectedIndex = 0;
   }
 
+  function patchItems(element){
+    setTimeout(() => {
+      element.querySelectorAll('.treeselect-list__item').forEach(itemElement => {
+
+      // Show checkbox / radio is the element can be selected
+        if (!itemElement.classList.contains("treeselect-list__item--non-selectable-group")){
+          const checkboxContainer = itemElement.querySelector(".treeselect-list__item-checkbox-container")
+          if (!!checkboxContainer){
+            checkboxContainer.style.display = "initial"
+          }
+        }
+
+        const iconElement =  itemElement.querySelector(".treeselect-list__item-icon")
+        if (!iconElement) {
+          return
+        }
+
+      // If element has children hide the label (which triggers on click the selection of the element)
+      // and copy the text from the label next to the icon (which triggers on click the opening/closing of the group)
+        const label = itemElement.querySelector(".treeselect-list__item-label")
+        label.style.display = "none"
+        if (iconElement.innerHTML.includes(label.innerText)) return;
+        iconElement.innerHTML += label.innerText
+      });
+    }, 0);
+  }
+
   function setupCategorieProduit(){
     const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
     const treeselect = new Treeselect({
@@ -37,10 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
       isSingleSelect: true,
       showTags: false,
       placeholder: "Choisir",
+      openCallback() {
+        patchItems(treeselect.srcElement)
+      },
     })
+    patchItems(treeselect.srcElement)
+    treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
     document.querySelector("#categorie-produit .treeselect-input").classList.add("fr-input")
 
     treeselect.srcElement.addEventListener('input', (e) => {
+      if (!e.detail) return
       const result = findPath(e.detail, options)
       document.getElementById("id_categorie_produit").value = e.detail
       document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
@@ -57,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showTags: false,
       placeholder: "Choisir",
       openCallback() {
+        patchItems(treeselect.srcElement)
         if (this._customHeaderAdded) return;
         const list = document.querySelector("#categorie-danger .treeselect-list")
         if (list) {
@@ -81,8 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
+    treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
 
     treeselect.srcElement.addEventListener('input', (e) => {
+      if (!e.detail) return
       const result = findPath(e.detail, options)
       document.getElementById("id_categorie_danger").value = e.detail
       document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
