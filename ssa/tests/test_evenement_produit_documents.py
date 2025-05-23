@@ -1,0 +1,34 @@
+from playwright.sync_api import Page, expect
+
+from core.factories import DocumentFactory
+from core.pages import WithDocumentsPage
+from ssa.factories import EvenementProduitFactory
+from ssa.models import EvenementProduit
+
+
+def test_can_edit_document_on_evenement(live_server, page: Page):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    document = DocumentFactory(content_object=evenement, nom="Test document", description="My description")
+    evenement.documents.set([document])
+    assert evenement.documents.count() == 1
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    expect(document_page.document_title(document.pk)).to_be_visible()
+    assert "Test document" in document_page.document_title(document.pk).text_content()
+
+    document_page.open_edit_document(document.id)
+    document_page.document_edit_title(document.id).fill("New name")
+    document_page.document_edit_description(document.id).fill("")
+    document_page.document_edit_save(document.id)
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+
+    document = evenement.documents.get()
+    assert document.nom == "New name"
+    assert document.description == ""
+
+    document_page.open_document_tab()
+    expect(document_page.document_title(document.pk)).to_be_visible()
+    expect(document_page.document_title(document.pk)).to_have_text("New name")

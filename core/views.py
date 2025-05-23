@@ -114,7 +114,7 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return self.document.content_object
 
     def get_success_url(self):
-        return self.request.POST.get("next") + "#tabpanel-documents-panel"
+        return self.get_fiche_object().get_absolute_url() + "#tabpanel-documents-panel"
 
     def form_valid(self, form):
         response = super().form_valid(form)
