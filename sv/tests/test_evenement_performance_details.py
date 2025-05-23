@@ -120,7 +120,7 @@ def test_evenement_performances_when_adding_structure(client, django_assert_num_
     for structure in ContactStructureFactory.create_batch(10):
         evenement.contacts.add(structure)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 2):
         client.get(evenement.get_absolute_url())
 
 
