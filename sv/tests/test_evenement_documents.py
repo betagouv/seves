@@ -806,3 +806,11 @@ def test_can_edit_document_from_message(live_server, page: Page):
     document.refresh_from_db()
     assert document.nom == "New name"
     assert document.description == "un commentaire"
+
+
+def test_cant_see_document_from_message_with_brouillon_status(live_server, page: Page):
+    evenement = EvenementFactory()
+    message = MessageFactory(content_object=evenement, message_type=Message.MESSAGE, status=Message.Status.BROUILLON)
+    DocumentFactory(nom="Test document", content_object=message)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    expect(page.locator("#tabpanel-documents-panel").get_by_text("Test document")).not_to_be_visible()

@@ -37,3 +37,7 @@ label[for=id_recipients], label[for=id_recipients_copy], label[for=id_recipients
     display: flex;
     justify-content: space-between;
 }
+.message-draft, .message-draft .fr-tag {
+    font-style: italic;
+    color: var(--text-disabled-grey);
+}
