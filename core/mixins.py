@@ -297,6 +297,15 @@ class WithVisibiliteMixin(models.Model):
             case Visibilite.NATIONALE:
                 return "Toutes les structures"
 
+    def update_allowed_structures_and_visibility(self, contacts_structures: list[Contact]):
+        if not contacts_structures or self.is_visibilite_nationale:
+            return
+        structures = [contact.structure for contact in contacts_structures]
+        self.allowed_structures.add(*structures)
+        if self.is_visibilite_locale:
+            self.visibilite = Visibilite.LIMITEE
+            self.save()
+
     @property
     def visibility_display(self) -> str:
         return Visibilite.get_masculine_label(self.visibilite)

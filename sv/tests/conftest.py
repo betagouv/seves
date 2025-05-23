@@ -50,3 +50,12 @@ def create_departement_if_needed(db):
     for numero, nom, region_nom in DEPARTEMENTS:
         region = Region.objects.get(nom=region_nom)
         Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
+
+
+@pytest.fixture
+def goto_contacts(db):
+    def _goto_contacts(page):
+        page.get_by_role("tab", name="Contacts").click()
+        page.get_by_role("tab", name="Contacts").evaluate("el => el.scrollIntoView()")
+
+    return _goto_contacts

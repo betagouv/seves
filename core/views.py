@@ -372,8 +372,10 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         if form.is_valid():
             self.obj = self.get_fiche_object()
             contacts_structures = form.cleaned_data["contacts_structures"]
-            for structure in contacts_structures:
-                self.obj.contacts.add(structure)
+            with transaction.atomic():
+                for contact_structure in contacts_structures:
+                    self.obj.contacts.add(contact_structure)
+                self.obj.update_allowed_structures_and_visibility(contacts_structures)
 
             message = ngettext(
                 "La structure a été ajoutée avec succès.",
@@ -405,11 +407,15 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         if form.is_valid():
             self.obj = self.get_fiche_object()
             contacts_agents = form.cleaned_data["contacts_agents"]
-            for contact_agent in contacts_agents:
-                self.obj.contacts.add(contact_agent)
-                contact_structure = contact_agent.get_structure_contact()
-                if contact_structure and not user_is_referent_national(contact_agent.agent.user):
-                    self.obj.contacts.add(contact_structure)
+            allowed_contacts_structures_to_add = []
+            with transaction.atomic():
+                for contact_agent in contacts_agents:
+                    self.obj.contacts.add(contact_agent)
+                    if not user_is_referent_national(contact_agent.agent.user):
+                        contact_structure = contact_agent.get_structure_contact()
+                        self.obj.contacts.add(contact_structure)
+                        allowed_contacts_structures_to_add.append(contact_structure)
+                self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
                 notify_contact_agent(contact_agent, self.obj)
 
             message = ngettext(
