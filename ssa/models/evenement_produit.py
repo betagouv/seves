@@ -50,7 +50,7 @@ class Source(models.TextChoices):
 class PretAManger(models.TextChoices):
     OUI = "oui", "Oui"
     NON = "non", "Non"
-    NON_APPLICABLE = "non_applicable", "Non applicable"
+    SANS_OBJET = "sans_objet", "Sans objet"
 
 
 class TemperatureConservation(models.TextChoices):
@@ -119,7 +119,7 @@ class QuantificationUnite(models.TextChoices):
     POURCENT = "%", "%"
     POUR_MILLE = "‰", "‰"
     BQ_KG = "bq/kg", "bq/kg"
-    AUTRE = "autre unité : préciser", "autre unité : préciser"
+    AUTRE = "autre unite", "autre unité"
 
     @classmethod
     def with_opt_group(cls):

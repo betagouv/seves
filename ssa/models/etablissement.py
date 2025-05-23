@@ -23,7 +23,7 @@ class TypeExploitant(models.TextChoices):
     EXPEDITEUR_FOURNISSEUR_HORS_UE = "expediteur_fournisseur_hors_ue", "F - Expéditeur / fournisseur hors UE"
     IMPORTATEUR_UE_DE_PAYS_TIERS = "importateur_ue_de_pays_tiers", "F - Importateur UE de pays tiers"
     EXPORTATEUR_UE_VERS_PAYS_TIERS = "exportateur_ue_vers_pays_tiers", "F - Exportateur UE vers pays tiers"
-    AUTRE = "autre_preciser", "Y - Autre : préciser"
+    AUTRE = "autre", "Y - Autre"
     SANS_OBJET = "sans_objet", "Z - Sans objet"
 
 
@@ -38,7 +38,7 @@ class PositionDossier(models.TextChoices):
         "autre_maillon_chaine_distribution",
         "Autre maillon de la chaîne de distribution",
     )
-    AUTRE_PRECISER = "autre_preciser", "Autre : préciser"
+    AUTRE = "autre", "Autre"
 
 
 @reversion.register()

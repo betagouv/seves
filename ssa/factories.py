@@ -47,7 +47,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     produit_pret_a_manger = FuzzyChoice([choice[0] for choice in PretAManger.choices])
 
     categorie_danger = FuzzyChoice(CategorieDanger.values)
-    quantification = FuzzyFloat(low=0, precision=2)
+    quantification = FuzzyFloat(low=0.1, precision=2)
     quantification_unite = FuzzyChoice([choice[0] for choice in QuantificationUnite.choices])
     evaluation = factory.Faker("paragraph")
     reference_souches = factory.Faker("sentence", nb_words=5)
