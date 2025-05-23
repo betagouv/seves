@@ -1,15 +1,23 @@
 import os
 import re
 import tempfile
+from datetime import datetime
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.contrib.auth.models import Group
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
+from core.factories import (
+    ContactAgentFactory,
+    ContactStructureFactory,
+    StructureFactory,
+    DocumentFactory,
+    MessageFactory,
+)
 from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
 from core.tests.generic_tests.messages import generic_test_can_add_and_see_message_without_document
 from seves import settings
@@ -1186,6 +1194,10 @@ def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutb
     page.get_by_role("button", name="Ajouter un document").click()
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the message"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Message [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
@@ -1256,6 +1268,10 @@ def test_can_add_draft_note(live_server, page: Page, choice_js_fill, mailoutbox)
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the note"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Note [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
@@ -1270,6 +1286,10 @@ def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill,
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the point de situation"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Point de situation [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
@@ -1292,6 +1312,10 @@ def test_can_add_draft_demande_intervention(live_server, page: Page, choice_js_f
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the demande d'intervention"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Demande d'intervention [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
@@ -1312,6 +1336,10 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the message"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
@@ -1327,8 +1355,60 @@ def test_can_add_draft_fin_suivi(live_server, page: Page, mailoutbox, mocked_aut
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Fin de suivi"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Fin de suivi [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
     assert not FinSuiviContact.objects.filter(
         content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact
     ).exists()
+
+
+def test_draft_messages_always_displayed_first_in_messages_list(live_server, page: Page, mocked_authentification_user):
+    """Test que les brouillons sont toujours affichés en premier dans la liste des messages,
+    triés par date décroissante, suivis des messages finalisés également triés par date décroissante"""
+    evenement = EvenementFactory()
+    finalise_oldest = MessageFactory(
+        content_object=evenement,
+        title="finalisé le plus ancien",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
+    )
+    brouillon_older = MessageFactory(
+        content_object=evenement,
+        title="Brouillon ancien",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
+    )
+    finalise_recent = MessageFactory(
+        content_object=evenement,
+        title="finalisé récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
+    )
+    brouillon_newest = MessageFactory(
+        content_object=evenement,
+        title="Brouillon le plus récent",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
+    )
+    finalise_newest = MessageFactory(
+        content_object=evenement,
+        title="finalisé le plus récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
+    )
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.locator("#table-sm-row-key-1 td:nth-child(4) a")).to_contain_text(
+        f"[BROUILLON] {brouillon_newest.title}"
+    )
+    expect(page.locator("#table-sm-row-key-2 td:nth-child(4) a")).to_contain_text(
+        f"[BROUILLON] {brouillon_older.title}"
+    )
+    expect(page.locator("#table-sm-row-key-3 td:nth-child(4) a")).to_contain_text(finalise_newest.title)
+    expect(page.locator("#table-sm-row-key-4 td:nth-child(4) a")).to_contain_text(finalise_recent.title)
+    expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)

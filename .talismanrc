@@ -20,7 +20,7 @@ fileignoreconfig:
 - filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html
-  checksum: 3f44e693b99c4888008d386912072ab74f14ca5010791b1a957b71a6f99bdc46
+  checksum: a2e29ecc50a1417f69a383adb1228a8c26d35980fa3ee3d2dfb7f0f416f14186
 - filename: ssa/tests/pages.py
   checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09
 - filename: sv/templates/sv/_evenement_sort_link.html
@@ -35,3 +35,6 @@ fileignoreconfig:
   checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 51c1b202eb0400ca7694cf33aba8576e0e86e75238b25a1fd5b21125dea83580
+- filename: sv/tests/test_evenement_message.py
+  checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
+- filename: core/templates/core/_tableau_fil_de_suivi.html
