@@ -95,12 +95,12 @@ class Etablissement(models.Model):
 
     @classmethod
     def get_position_dossier_css_class(self, value):
-        RED_CASES = [
+        IMPORTANT_CASES = [
             PositionDossier.SURVENUE_NON_CONFORMITE,
             PositionDossier.DETECTION_NON_CONFORMITE,
             PositionDossier.DETECTION_ET_SURVENUE_NON_CONFORMITE,
         ]
-        return "fr-badge--error" if value in RED_CASES else "fr-badge--info"
+        return "fr-badge--info" if value in IMPORTANT_CASES else ""
 
     @property
     def position_dossier_css_class(self):

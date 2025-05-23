@@ -15,3 +15,6 @@
 .raison-sociale {
     font-weight: bold;
 }
+.position-dossier::before {
+    content: none;
+}
