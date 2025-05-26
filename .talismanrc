@@ -37,4 +37,5 @@ fileignoreconfig:
   checksum: 51c1b202eb0400ca7694cf33aba8576e0e86e75238b25a1fd5b21125dea83580
 - filename: sv/tests/test_evenement_message.py
   checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
-- filename: core/templates/core/_tableau_fil_de_suivi.html
+- filename: ssa/forms.py
+  checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a

@@ -164,6 +164,30 @@ def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal
     assert_models_are_equal(etablissements[2], etablissement_3, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
+def test_can_edit_etablissement_multiple_times(live_server, page: Page, assert_models_are_equal):
+    evenement = EvenementProduitFactory()
+
+    etablissement = EtablissementFactory.build(evenement_produit=evenement)
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement)
+    creation_page.open_edit_etablissement()
+    creation_page.current_modal.locator('[id$="-departement"]').select_option("Ain")
+    creation_page.close_etablissement_modal()
+
+    creation_page.open_edit_etablissement()
+    creation_page.current_modal.locator('[id$="-departement"]').select_option("Aisne")
+    creation_page.close_etablissement_modal()
+
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.departement == "Aisne"
+
+
 def test_card_etablissement_content(live_server, page: Page):
     etablissement = EtablissementFactory()
 
