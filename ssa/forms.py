@@ -11,6 +11,7 @@ from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import Etablissement, TypeExploitant, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
+from ssa.models.departements import Departement
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
 
@@ -108,10 +109,24 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     position_dossier = SEVESChoiceField(
         choices=PositionDossier.choices, label="Position dossier", required=False, widget=PositionDossierWidget
     )
+    departement = SEVESChoiceField(
+        choices=sorted(Departement.choices, key=lambda c: c[1]), required=False, label="Département"
+    )
 
     class Meta:
         model = Etablissement
-        exclude = []
+        fields = [
+            "siret",
+            "numero_agrement",
+            "raison_sociale",
+            "adresse_lieu_dit",
+            "commune",
+            "code_insee",
+            "departement",
+            "pays",
+            "type_exploitant",
+            "position_dossier",
+        ]
 
 
 class MessageForm(BaseMessageForm):

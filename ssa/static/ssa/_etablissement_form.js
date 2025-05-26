@@ -82,8 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             dsfr(modal).modal.disclose()
             dsfr(modal).modal.node.addEventListener('dsfr.conceal', event => {
+                if (modal.dataset.needsRestoreBackup === "false"){
+                    modal.dataset.needsRestoreBackup = ""
+                    removeRequired(modal)
+                    return
+                }
                 removeRequired(modal)
-                if (!event.target.classList.contains("save-btn") && !!modalEtablissementHTMLContent[nextIdToUse]) {
+                if (!!modalEtablissementHTMLContent[nextIdToUse]) {
                     event.target.querySelector(".fr-modal__content").replaceWith(modalEtablissementHTMLContent[nextIdToUse])
                     modalEtablissementHTMLContent[nextIdToUse] = null
                 }
@@ -98,9 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault()
             submitFormAndAddEtablissementCard(event)
         })
-
-
-
     }
 
     function getSelectedLabel(element) {
@@ -132,8 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const structure = `Département : ${currentModal.querySelector('[id$=departement]').value || 'nc.'}`
         baseCard.querySelector('.structure').textContent = structure
 
-        const numeroAgrement = `N° d'agrément : ${currentModal.querySelector('[id$=numero_agrement]').value || 'nc.'}`
-        baseCard.querySelector('.numero-agrement').textContent = numeroAgrement
+        const numeroAgrementValue = currentModal.querySelector('[id$=numero_agrement]').value
+        if (!!numeroAgrementValue) {
+            baseCard.querySelector('.numero-agrement').textContent = `N° d'agrément : ${numeroAgrementValue}`
+            baseCard.querySelector('.numero-agrement').classList.remove("fr-hidden")
+        } else {
+            baseCard.querySelector('.numero-agrement').classList.add("fr-hidden")
+        }
+
 
         const positionDossierInput = currentModal.querySelector('[id$=position_dossier]')
         const positionDossier = getSelectedLabel(positionDossierInput)
@@ -177,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dsfr(currentModal).modal.conceal()
+        currentModal.dataset.needsRestoreBackup = "false"
         removeRequired(currentModal)
     }
 
