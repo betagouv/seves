@@ -172,7 +172,7 @@ def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
+def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, check_select_options):
     evenement = EvenementFactory()
     document_1 = DocumentFactory(nom="Test document", content_object=evenement, description="")
     other_structure = StructureFactory(libelle="Other structure")
@@ -187,11 +187,7 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
-    choices = page.locator(".documents__filters #id_created_by_structure").all_inner_texts()[0].split("\n")
-    assert len(choices) == 3
-    assert "---------" in choices
-    assert "Other structure" in choices
-    assert "Structure Test" in choices
+    check_select_options(page, "id_created_by_structure", ["Structure Test", "Other structure"])
     page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
     page.get_by_test_id("documents-filter").click()
 
