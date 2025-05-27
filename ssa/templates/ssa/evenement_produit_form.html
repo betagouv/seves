@@ -21,13 +21,13 @@
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
         <div class="fr-hidden" id="categorie-danger-header">
-            <div>Danger les plus courant</div>
+            <div class="fr-ml-1v">Danger les plus courants</div>
             {% for danger in danger_plus_courant %}
                 <div class="treeselect-list__item" level="0" group="false">
                     <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
                 </div>
             {% endfor %}
-            <div>Liste complètes des dangers</div>
+            <div class="fr-ml-1v">Liste complètes des dangers</div>
         </div>
 
         <main class="main-container">
