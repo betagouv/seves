@@ -127,6 +127,10 @@ class EvenementProduitCreationPage(WithTreeSelect):
     def current_modal_raison_sociale_field(self):
         return self.current_modal.locator('[id$="raison_sociale"]')
 
+    @property
+    def current_modal_numero_agrement_field(self):
+        return self.current_modal.locator('[id$="numero_agrement"]')
+
     def close_etablissement_modal(self):
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)

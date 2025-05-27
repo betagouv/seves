@@ -102,6 +102,11 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             }
         ),
     )
+    numero_agrement = forms.CharField(
+        required=False,
+        label="Numéro d'agrément",
+        widget=forms.TextInput(attrs={"pattern": "^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
+    )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
     pays = CountryField(blank=True).formfield()
