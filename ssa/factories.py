@@ -1,9 +1,10 @@
 import random
 from datetime import datetime
 
+import factory
 from django_countries import Countries
 from factory.django import DjangoModelFactory
-from factory.fuzzy import FuzzyChoice, FuzzyFloat
+from factory.fuzzy import FuzzyChoice
 
 from core.models import Structure
 from ssa.models import (
@@ -18,8 +19,6 @@ from ssa.models import (
     PositionDossier,
     CategorieDanger,
 )
-import factory
-
 from ssa.models.departements import Departement
 from ssa.models.evenement_produit import PretAManger, CategorieProduit
 
@@ -47,7 +46,8 @@ class EvenementProduitFactory(DjangoModelFactory):
     produit_pret_a_manger = FuzzyChoice([choice[0] for choice in PretAManger.choices])
 
     categorie_danger = FuzzyChoice(CategorieDanger.values)
-    quantification = FuzzyFloat(low=0.1, precision=2)
+    precision_danger = factory.Faker("sentence", nb_words=3)
+    quantification = factory.Faker("sentence", nb_words=1)
     quantification_unite = FuzzyChoice([choice[0] for choice in QuantificationUnite.choices])
     evaluation = factory.Faker("paragraph")
     reference_souches = factory.Faker("sentence", nb_words=5)

@@ -167,7 +167,8 @@ class EvenementProduit(
     categorie_danger = models.CharField(
         max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
     )
-    quantification = models.FloatField(
+    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
+    quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
     quantification_unite = models.CharField(
@@ -232,6 +233,7 @@ class EvenementProduit(
             quantification = f"{self.quantification} {self.get_quantification_unite_display()}"
         return {
             "Catégorie de danger": self.get_categorie_danger_display(),
+            "Précision danger": self.precision_danger,
             "Quantification": quantification,
             "Évaluation": self.evaluation,
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
@@ -321,13 +323,5 @@ class EvenementProduit(
                     )
                 ),
                 name="type_evenement_source_constraint",
-            ),
-            models.CheckConstraint(
-                check=(
-                    (models.Q(quantification__isnull=True) & models.Q(quantification_unite=""))
-                    | (models.Q(quantification__isnull=False) & ~models.Q(quantification_unite=""))
-                ),
-                name="quantification_must_have_unit",
-                violation_error_message="Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides.",
-            ),
+            )
         ]

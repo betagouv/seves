@@ -35,6 +35,7 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     expect(temperature).to_be_visible()
 
     expect(details_page.risque_block.get_by_text(evenement.get_categorie_danger_display(), exact=True)).to_be_visible()
+    expect(details_page.risque_block.get_by_text(evenement.precision_danger, exact=True)).to_be_visible()
     quantification_str = f"{evenement.quantification} {evenement.get_quantification_unite_display()}"
     quantification = details_page.risque_block.get_by_text(quantification_str)
     expect(quantification).to_be_visible()
