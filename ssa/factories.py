@@ -75,9 +75,9 @@ class EvenementProduitFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def source(self):
         if self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
 
-        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS}
+        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
         return random.choice(list(other_sources))
 
     @factory.sequence
