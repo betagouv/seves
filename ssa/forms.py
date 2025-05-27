@@ -101,14 +101,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     siret = forms.CharField(
         required=False,
         max_length=14,
-        label="N° SIRET",
-        widget=forms.TextInput(
-            attrs={
-                "pattern": "[0-9]{14}",
-                "placeholder": "110 070 018 00012",
-                "title": "Le Siret doit contenir exactement 14 chiffres",
-            }
-        ),
+        widget=forms.HiddenInput,
     )
     numero_agrement = forms.CharField(
         required=False,

@@ -89,6 +89,7 @@ def choice_js_cant_pick(db, page):
         page.query_selector(locator).click()
         page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         page.locator("*:focus").fill(fill_content)
+        page.wait_for_timeout(1000)
         expect(page.get_by_role("option", name=exact_name, exact=True)).not_to_be_visible()
 
     return _choice_js_cant_pick

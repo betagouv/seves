@@ -66,9 +66,6 @@
 .fr-search-bar .choices{
     flex: 1.25;
 }
-.etablissement-fields--lookup {
-    text-align: center;
-}
 
 .treeselect-list__item-checkbox-container {
     border-radius: 40px !important;

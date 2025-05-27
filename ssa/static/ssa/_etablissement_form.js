@@ -33,9 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
             field.closest("dialog").querySelector('[id$=raison_sociale]').value = event.detail.customProperties.raison
             field.closest("dialog").querySelector('[id$=commune]').value = event.detail.customProperties.commune
             field.closest("dialog").querySelector('[id$=code_insee]').value = event.detail.customProperties.code_commune
-            let result = [{"value": event.detail.customProperties.streetData, "label": event.detail.customProperties.streetData, selected:true }]
-            addressChoices.setChoices(result, 'value', 'label', true)
             field.closest("dialog").querySelector('[id$=pays]').value = "FR"
+
+            if (!!event.detail.customProperties.streetData){
+                let result = [{"value": event.detail.customProperties.streetData, "label": event.detail.customProperties.streetData, selected:true }]
+                addressChoices.setChoices(result, 'value', 'label', true)
+            }
+
             fetch(`/ssa/api/find-numero-agrement/?siret=${event.detail.customProperties.siret}`)
                 .then(response => response.json())
                 .then(data => {
@@ -43,29 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         field.closest("dialog").querySelector('[id$=agrement]').value = data["numero_agrement"]
                     }
                 });
-
-            field.closest("dialog").querySelector('[id$=sirene-btn]').classList.remove("fr-hidden")
-            field.closest("dialog").querySelector('.fr-search-bar').classList.add("fr-hidden")
-            field.closest("dialog").querySelector('.fr-search-bar select').innerHTML = ""
-            choicesSIRET.destroy()
         })
     }
 
     function setupSiretBlock(modal, addressChoices){
-        const siretLookupBtn = modal.querySelector("#sirene-btn")
-        const siretInput = modal.querySelector("#search-siret-input")
-        if (!siretInput.dataset.token){
-            siretLookupBtn.classList.add("fr-hidden")
+        const siretSelect = modal.querySelector("[id^=search-siret-input-]")
+        if (!siretSelect.dataset.token){
             return
         }
 
-        siretLookupBtn.addEventListener("click", event =>{
-            event.preventDefault()
-            siretLookupBtn.classList.add("fr-hidden")
-            configureSiretField(siretInput, addressChoices)
-            siretLookupBtn.nextElementSibling.classList.remove("fr-hidden")
-        })
-
+        configureSiretField(siretSelect, addressChoices)
     }
 
     function showEtablissementModal() {
