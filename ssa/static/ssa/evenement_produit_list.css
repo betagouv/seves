@@ -38,6 +38,10 @@
     flex: 1 1 250px;
     max-width: 300px;
 }
+
+.evenements_liste__search-form .fr-checkbox-group {
+    top: 40px
+}
 .ellipsis {
     white-space: nowrap;
     overflow: hidden;

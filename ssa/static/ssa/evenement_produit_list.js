@@ -66,9 +66,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
     }
 
+    function disableCheckboxIfNeeded(){
+        document.querySelector("#id_with_free_links").disabled = !document.querySelector("#id_numero").value
+    }
+
     document.getElementById('search-form').addEventListener('reset', resetAndSubmit)
     document.querySelector(".clear-btn").addEventListener("click", clearSidebarFilters)
     document.querySelector(".add-btn").addEventListener("click", addSidebarFilters)
+    document.querySelector("#id_numero").addEventListener("input", disableCheckboxIfNeeded)
+    disableCheckboxIfNeeded()
     setupCategorieProduit()
     setupCategorieDanger()
 

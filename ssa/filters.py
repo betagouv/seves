@@ -1,10 +1,14 @@
 import django_filters
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.forms import DateInput, TextInput
 from django_countries import Countries
 from django_filters.filters import BaseInFilter, CharFilter
 
+from core.fields import DSFRCheckboxInput
 from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
 from core.forms import DSFRForm
+from core.models import LienLibre
 from ssa.models import EvenementProduit
 from ssa.models.departements import Departement
 
@@ -39,6 +43,9 @@ class EvenementProduitFilterForm(DSFRForm):
 class EvenementProduitFilter(
     WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin, django_filters.FilterSet
 ):
+    with_free_links = django_filters.BooleanFilter(
+        label="", method="filter_with_free_links", widget=DSFRCheckboxInput(label="Inclure les liaisons")
+    )
     numero_rasff = django_filters.CharFilter(
         label="Numéro RASFF/AAC",
         widget=TextInput(
@@ -85,6 +92,7 @@ class EvenementProduitFilter(
         model = EvenementProduit
         fields = [
             "numero",
+            "with_free_links",
             "numero_rasff",
             "categorie_produit",
             "categorie_danger",
@@ -112,3 +120,24 @@ class EvenementProduitFilter(
         if not value:
             return queryset
         return queryset.search(value)
+
+    def filter_with_free_links(self, queryset, name, value):
+        return queryset
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        if self.form.cleaned_data["with_free_links"] is True:
+            ids = queryset.values_list("id", flat=True)
+
+            content_type = ContentType.objects.get_for_model(EvenementProduit)
+            objects_from_free_links_1 = LienLibre.objects.filter(
+                content_type_2=content_type, content_type_1=content_type, object_id_1__in=ids
+            ).values_list("object_id_2", flat=True)
+            objects_from_free_links_2 = LienLibre.objects.filter(
+                content_type_1=content_type, content_type_2=content_type, object_id_2__in=ids
+            ).values_list("object_id_1", flat=True)
+            queryset = self.queryset.filter(
+                Q(id__in=ids) | Q(id__in=objects_from_free_links_1) | Q(id__in=objects_from_free_links_2)
+            ).distinct()
+
+        return queryset

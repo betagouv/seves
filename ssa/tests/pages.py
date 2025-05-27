@@ -323,6 +323,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_numero")
 
     @property
+    def with_links(self):
+        return self.page.locator('label[for="id_with_free_links"]')
+
+    @property
     def numero_rasff_field(self):
         return self.page.locator("#id_numero_rasff")
 
