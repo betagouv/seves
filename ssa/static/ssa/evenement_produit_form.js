@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isSingleSelect: true,
       showTags: false,
       placeholder: "Choisir",
+      emptyText: "Pas de résultat",
       openCallback() {
         patchItems(treeselect.srcElement)
         if (this._customHeaderAdded) return;
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const result = findPath(value, options)
               document.getElementById("id_categorie_danger").value = value
               document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
+              document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
             }
           });
 
@@ -76,13 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
+    document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
     treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
 
     treeselect.srcElement.addEventListener('input', (e) => {
-      if (!e.detail) return
-      const result = findPath(e.detail, options)
-      document.getElementById("id_categorie_danger").value = e.detail
-      document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
+      if (!!e.detail){
+        const result = findPath(e.detail, options)
+        document.getElementById("id_categorie_danger").value = e.detail
+        document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
+        document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
+      } else {
+        document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
+      }
     })
   }
 

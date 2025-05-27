@@ -17,6 +17,7 @@
 
 .treeselect-list__item[level="0"] {
     color: var(--text-action-high-blue-france);
+    padding-left: 10px !important;
 }
 
 .treeselect-list__item[level="1"]{
@@ -36,7 +37,7 @@
 }
 
 .treeselect-list__group-container .treeselect-list__item--focused {
-    background-color : #FFF !important
+    background-color : #dfdfdf !important
 }
 
 
