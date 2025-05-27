@@ -421,3 +421,31 @@ def test_can_filter_by_categorie_danger(live_server, mocked_authentification_use
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_with_free_links(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
+    linked_evenement = EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    LienLibre.objects.create(related_object_1=linked_evenement, related_object_2=to_be_found)
+
+    not_to_be_found_1 = EvenementProduitFactory(numero_annee=2024, numero_evenement=2)
+    not_to_be_found_2 = EvenementProduitFactory(numero_annee=2024, numero_evenement=1)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.numero_field.fill("2025.2")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+    search_page.numero_field.fill("2025.2")
+    search_page.with_links.check()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
