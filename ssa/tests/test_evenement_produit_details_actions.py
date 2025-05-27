@@ -37,3 +37,16 @@ def test_can_cloturer_evenement_produit(live_server, page: Page, mocked_authenti
     assert evenement.etat == EvenementProduit.Etat.CLOTURE
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
+
+
+def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.publish()
+
+    evenement.refresh_from_db()
+    assert evenement.etat == EvenementProduit.Etat.EN_COURS
+    expect(page.get_by_text("En cours", exact=True)).to_be_visible()
+    expect(page.get_by_text("Événement produit publié avec succès")).to_be_visible()

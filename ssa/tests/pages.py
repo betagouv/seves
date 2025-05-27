@@ -236,6 +236,9 @@ class EvenementProduitDetailsPage:
         self.page.get_by_role("link", name="Clôturer l'événement").click()
         self.page.get_by_role("button", name="Clôturer").click()
 
+    def publish(self):
+        self.page.get_by_role("button", name="Publier").click()
+
     def open_compte_rendu_di(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
