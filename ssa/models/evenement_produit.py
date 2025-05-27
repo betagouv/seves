@@ -36,14 +36,12 @@ class Source(models.TextChoices):
     AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
     AUTOCONTROLE_NON_NOTIFIE = "autocontrole_non_notifie", "Autocontrôle non notifié"
     PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
-    PRELEVEMENT_SIVEP = "prelevement_sivep", "Prélèvement SIVEP"
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
     AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
-    SUSPICION_TIAC = "suspicion_tiac", "Suspicion de TIAC"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas humains"
     DO_LISTERIOSE = "do_listeriose", "DO Listériose"
     CAS_GROUPES = "cas_groupes", "Cas groupés"
-    TIACS = "tiacs", "TIACS"
+    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
     AUTRE = "autre", "Autre"
 
 
@@ -315,11 +313,11 @@ class EvenementProduit(
                     | models.Q(source="")
                     | (
                         models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
                     )
                     | (
                         ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
                     )
                 ),
                 name="type_evenement_source_constraint",
