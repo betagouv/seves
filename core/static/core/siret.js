@@ -6,8 +6,32 @@ function debounce(func, wait) {
     };
 }
 
+function improveResults(value, results) {
+    const filteredResults = results.filter(item =>
+        item.customProperties?.siret?.startsWith(value)
+    )
+
+    if (value.length === 14) {
+        return [{
+            value: value,
+            label: `${value} (Forcer la valeur)`,
+            customProperties: {
+                "streetData": null,
+                "fullStreetData": null,
+                "siret": value,
+                "raison": null,
+                "commune": null,
+                "code_commune": null,
+            }
+        }, ...filteredResults]
+    }
+    return filteredResults
+}
+
 export function fetchSiret(value, token) {
-    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + value.replaceAll(" ", "")+ '* AND -periode(etatAdministratifEtablissement:F)';
+    const cleanedValue =  value.replaceAll(" ", "")
+    const siren =  cleanedValue.substring(0, 9);
+    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + siren + '* AND -periode(etatAdministratifEtablissement:F)';
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -17,7 +41,7 @@ export function fetchSiret(value, token) {
         .then(response => response.json())
         .then(data => {
             if (!data["etablissements"]){
-                return []
+                return improveResults(cleanedValue, [])
             }
             data["etablissements"].forEach((etablissement) => {
                 let address = etablissement["adresseEtablissement"]
@@ -39,7 +63,7 @@ export function fetchSiret(value, token) {
                     }
                 })
             });
-            return results
+            return improveResults(cleanedValue, results)
         });
 }
 

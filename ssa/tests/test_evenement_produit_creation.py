@@ -1,6 +1,7 @@
 import json
 from unittest import mock
 
+from django.http import JsonResponse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -9,6 +10,7 @@ from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement, QuantificationUnite
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitCreationPage
+from ssa.views import FindNumeroAgrementView
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id"]
 
@@ -443,23 +445,12 @@ def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_mo
     expect(creation_page.current_modal_raison_sociale_field).to_have_value(etablissement.raison_sociale)
 
 
-@mock.patch("ssa.views.api.requests.get")
-@mock.patch("ssa.views.api.csv.reader")
 def test_can_create_etablissement_with_sirene_autocomplete(
-    mock_csv_reader, mock_requests_get, live_server, page: Page, choice_js_fill, settings
+    live_server, page: Page, choice_js_fill_from_element, settings
 ):
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
     evenement = EvenementProduitFactory.build()
-
-    mock_requests_get.return_value.text = "mocked content"
-    mock_csv_reader.return_value = iter(
-        [
-            ["Numero de département", "Numéro agrément/Approval number", "SIRET", "Other columns"],
-            ["1", "03.223.432", "12007901700030", "Other data"],
-        ]
-    )
-
     call_count = {"count": 0}
 
     def handle(route):
@@ -493,22 +484,30 @@ def test_can_create_etablissement_with_sirene_autocomplete(
 
     creation_page = EvenementProduitCreationPage(page, live_server.url)
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
+    mocked_view = mock.Mock()
+    mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
+
+    with (
+        mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view),
+        mock.patch("core.mixins.requests.post") as mock_post,
+    ):
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+
         creation_page.navigate()
         mock_post.assert_called_once()
 
-    creation_page.fill_required_fields(evenement)
+        creation_page.fill_required_fields(evenement)
 
-    creation_page.open_etablissement_modal()
-    expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
-    creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill)
-    assert call_count["count"] == 1
-    creation_page.page.wait_for_timeout(1000)
-    assert mock_requests_get.call_count == 1
-    creation_page.close_etablissement_modal()
-    creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
+        creation_page.open_etablissement_modal()
+        expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
+        creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill_from_element)
+        assert call_count["count"] == 1
+        creation_page.page.wait_for_timeout(1000)
+        mocked_view.assert_called_once()
+        assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
+        creation_page.close_etablissement_modal()
+        creation_page.submit_as_draft()
+        creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
@@ -517,6 +516,132 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.pays.name == "France"
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
+
+
+@mock.patch("ssa.views.api.requests.get")
+@mock.patch("ssa.views.api.csv.reader")
+def test_can_create_etablissement_with_force_siret_value(
+    mock_csv_reader, mock_requests_get, live_server, page: Page, choice_js_fill_from_element, settings
+):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    evenement = EvenementProduitFactory.build()
+
+    mock_requests_get.return_value.text = "mocked content"
+    mock_csv_reader.return_value = None
+    call_count = {"count": 0}
+
+    def handle(route):
+        data = {"message": "Aucun élément trouvé"}
+        route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        creation_page.navigate()
+        mock_post.assert_called_once()
+
+    creation_page.fill_required_fields(evenement)
+
+    creation_page.open_etablissement_modal()
+    expected_value = "12312312312312 (Forcer la valeur)"
+    creation_page.add_etablissement_siren("12312312312312", expected_value, choice_js_fill_from_element)
+    assert call_count["count"] == 1
+    creation_page.page.wait_for_timeout(1000)
+    assert mock_requests_get.call_count >= 1
+    creation_page.current_modal_raison_sociale_field.fill("Foo")
+    creation_page.close_etablissement_modal()
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.siret == "12312312312312"
+
+
+@mock.patch("ssa.views.api.requests.get")
+@mock.patch("ssa.views.api.csv.reader")
+def test_can_create_etablissement_with_full_siren_will_filter_results(
+    mock_csv_reader, mock_requests_get, live_server, page: Page, choice_js_cant_pick, choice_js_fill, settings
+):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    evenement = EvenementProduitFactory.build()
+
+    mock_requests_get.return_value.text = "mocked content"
+    mock_csv_reader.return_value = None
+    call_count = {"count": 0}
+
+    def handle(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": "12312312311111",
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75115",
+                    },
+                },
+                {
+                    "siret": "12312312322222",
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75115",
+                    },
+                },
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(
+        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        handle,
+    )
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        creation_page.navigate()
+        mock_post.assert_called_once()
+
+    creation_page.fill_required_fields(evenement)
+
+    creation_page.open_etablissement_modal()
+    expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12312312311111 - 175 RUE DU CHEVALERET - 75013 PARIS"
+    choice_js_cant_pick(
+        creation_page.page, 'label[for="search-siret-input-"] ~ div.choices', "12312312322222", expected_value
+    )
+    creation_page.page.keyboard.press("Escape")
+    expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12312312322222 - 175 RUE DU CHEVALERET - 75013 PARIS"
+    choice_js_fill(
+        creation_page.page, 'label[for="search-siret-input-"] ~ div.choices', "12312312322222", expected_value
+    )
 
 
 def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(

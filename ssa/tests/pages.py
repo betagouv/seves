@@ -55,6 +55,14 @@ class EvenementProduitCreationPage(WithTreeSelect):
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
+        self.page.evaluate("""
+            () => {
+              const element = document.getElementById('etablissement-template').content.querySelector('[data-token=""]');
+              if (element) {
+                element.setAttribute('data-token', 'FAKE');
+              }
+            }
+        """)
 
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
@@ -111,9 +119,9 @@ class EvenementProduitCreationPage(WithTreeSelect):
         self.page.locator("#add-etablissement").click()
         return self.current_modal
 
-    def add_etablissement_siren(self, value, full_value, choice_js_fill):
-        self.current_modal.locator("#sirene-btn").click()
-        choice_js_fill(self.page, "#header-search .choices", value, full_value)
+    def add_etablissement_siren(self, value, full_value, choice_js_fill_from_element):
+        element = self.current_modal.locator("[id^='search-siret-input-']").locator("..")
+        choice_js_fill_from_element(self.page, element, value, full_value)
 
     @property
     def current_modal(self):
@@ -147,10 +155,28 @@ class EvenementProduitCreationPage(WithTreeSelect):
         self.page.locator("*:focus").fill(adresse)
         self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
 
+    def force_siret(self, siret):
+        call_count = {"count": 0}
+
+        def handle(route):
+            data = {"message": "Aucun élément trouvé"}
+            route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
+            call_count["count"] += 1
+
+        self.page.route(
+            f"https://api.insee.fr/entreprises/sirene/siret?q=siren%3A{siret[:9]}*%20AND%20-periode(etatAdministratifEtablissement:F)",
+            handle,
+        )
+
+        self.current_modal.locator('label[for="search-siret-input-"] ~ div.choices').click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(siret)
+        self.page.get_by_role("option", name=f"{siret} (Forcer la valeur)", exact=True).click()
+        assert call_count["count"] == 1
+
     def add_etablissement(self, etablissement: Etablissement):
         modal = self.open_etablissement_modal()
-
-        modal.locator('[id$="siret"]').fill(etablissement.siret)
+        self.force_siret(etablissement.siret)
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
