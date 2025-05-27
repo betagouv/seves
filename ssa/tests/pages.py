@@ -28,6 +28,7 @@ class EvenementProduitCreationPage(WithTreeSelect):
         "description_complementaire",
     ]
     risque_fields = [
+        "precision_danger",
         "quantification",
         "quantification_unite",
         "evaluation",

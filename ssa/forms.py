@@ -42,6 +42,14 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     )
 
     categorie_danger = SEVESChoiceField(required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput)
+    precision_danger = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Sérotype, molécule...",
+            }
+        ),
+    )
     quantification_unite = SEVESChoiceField(
         required=False,
         choices=QuantificationUnite.with_opt_group(),
