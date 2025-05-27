@@ -123,6 +123,7 @@ class EvenementProduitDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 

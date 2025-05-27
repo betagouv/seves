@@ -287,6 +287,12 @@ class EvenementProduit(
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
 
+    def get_publish_success_message(self):
+        return "Événement produit publié avec succès"
+
+    def get_publish_error_message(self):
+        return "Cet événement produit ne peut pas être publié"
+
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
