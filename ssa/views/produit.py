@@ -51,6 +51,14 @@ class EvenementProduitCreateView(
             self.request,
             "Erreurs dans le(s) formulaire(s) Etablissement",
         )
+        for i, form in enumerate(self.etablissement_formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(
+                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
+                        )
+
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):

@@ -535,3 +535,17 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
 
     evenement_produit = EvenementProduit.objects.get()
     assert evenement_produit.categorie_danger == "Escherichia coli (non STEC - EHEC)"
+
+
+def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page: Page):
+    evenement = EvenementProduitFactory()
+
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.open_etablissement_modal()
+    creation_page.current_modal_raison_sociale_field.fill("Foo")
+    creation_page.current_modal_numero_agrement_field.fill("11111111")
+    creation_page.current_modal.locator(".save-btn").click()
+
+    assert not creation_page.current_modal_numero_agrement_field.evaluate("el => el.validity.valid")
