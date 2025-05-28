@@ -3,7 +3,8 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, TypeEvenement, Source
+from ssa.models import EvenementProduit, TypeEvenement, Source, CategorieDanger
+from ssa.models.evenement_produit import PretAManger
 
 
 @pytest.mark.django_db
@@ -78,3 +79,23 @@ def test_evenement_produit_latest_revision():
     etablissement.save()
     assert latest_version.pk != evenement.latest_version.pk
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
+
+
+@pytest.mark.django_db
+def test_pam_requires_danger_bacterien_constraint():
+    EvenementProduitFactory(produit_pret_a_manger="", categorie_danger=CategorieDanger.OGM_PLANTES)
+
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.OGM_PLANTES)
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.OGM_PLANTES)
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(
+            produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.OGM_PLANTES
+        )
+
+    EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.SALMONELLA)
+    EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.STAPHYLOCOCCUS)
+    EvenementProduitFactory(
+        produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.VIBRIO_VULNIFICUS
+    )

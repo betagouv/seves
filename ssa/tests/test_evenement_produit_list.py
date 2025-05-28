@@ -222,9 +222,9 @@ def test_can_filter_by_temperature_conservation(live_server, mocked_authentifica
 
 
 def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI)
-    not_to_be_found_1 = EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON)
-    not_to_be_found_2 = EvenementProduitFactory(produit_pret_a_manger=PretAManger.SANS_OBJET)
+    to_be_found = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
+    not_to_be_found_1 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
+    not_to_be_found_2 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.SANS_OBJET)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()

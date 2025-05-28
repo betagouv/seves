@@ -350,3 +350,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     )
 
     INDETERMINE = "Indéterminé", "Indéterminé > Indéterminé"
+
+    @classmethod
+    def dangers_bacteriens(cls):
+        return [choice.value for choice in cls if choice.label.startswith("Bactérie >")]

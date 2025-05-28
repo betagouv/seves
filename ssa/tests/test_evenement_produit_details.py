@@ -9,7 +9,7 @@ from ssa.tests.pages import EvenementProduitDetailsPage
 
 
 def test_evenement_produit_detail_page_content(live_server, page: Page):
-    evenement = EvenementProduitFactory(numeros_rappel_conso=["1999-01-0123"])
+    evenement = EvenementProduitFactory(bacterie=True, numeros_rappel_conso=["1999-01-0123"])
 
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

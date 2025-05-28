@@ -41,6 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   }
 
+  function handleValueChangeCategorieDanger(value, options){
+    const fullPath = findPath(value, options).map(n => n.name).join(' > ')
+
+    document.getElementById("id_categorie_danger").value = value
+    document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = fullPath
+    document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
+    if(fullPath.includes("Bactérie >")){
+      document.getElementById("pam-container").classList.remove("fr-hidden")
+    } else {
+      document.getElementById("pam-container").classList.add("fr-hidden")
+    }
+  }
+
   function setupCategorieDanger(){
     const options = JSON.parse(document.getElementById("categorie-danger-data").textContent)
     const treeselect = new Treeselect({
@@ -67,10 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const value = event.target.firstElementChild.textContent.trim()
               treeselect.updateValue(value)
               treeselect.toggleOpenClose();
-              const result = findPath(value, options)
-              document.getElementById("id_categorie_danger").value = value
-              document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
-              document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
+              handleValueChangeCategorieDanger(value, options)
             }
           });
 
@@ -80,15 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
     document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
     treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
-
     treeselect.srcElement.addEventListener('input', (e) => {
       if (!!e.detail){
-        const result = findPath(e.detail, options)
-        document.getElementById("id_categorie_danger").value = e.detail
-        document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
-        document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
+        handleValueChangeCategorieDanger(e.detail, options)
       } else {
         document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
+        document.getElementById("pam-container").classList.add("fr-hidden")
       }
     })
   }
