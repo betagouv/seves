@@ -13,11 +13,14 @@
 
 .treeselect-list__item-label{
     font-size: 16px !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
 }
 
 .treeselect-list__item[level="0"] {
     color: var(--text-action-high-blue-france);
     padding-left: 10px !important;
+    background-color: var(--background-contrast-grey) !important;
 }
 
 .treeselect-list__item[level="1"]{

@@ -293,7 +293,7 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Alimentation animale > Matière première végétale pour animaux",
     )
     ALIMENT_ANIMAL_PETFOOD = "Petfood", "Alimentation animale > Petfood"
-    ALIMENT_ANIMAL_AUTRE = "Autre aliment pour animaux", "Alimentation animale"
+    ALIMENT_ANIMAL_AUTRE = "Autre aliment pour animaux", "Alimentation animale > Autre aliment pour animaux"
 
     HERBORISTERIE = "Herbes et huiles essentielles", "Herbes et huiles essentielles"
     COMPLEMENT_ALIMENTAIRE = "Complément alimentaire", "Complément alimentaire"
