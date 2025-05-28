@@ -325,5 +325,12 @@ class EvenementProduit(
                     )
                 ),
                 name="type_evenement_source_constraint",
-            )
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(produit_pret_a_manger="")
+                    | models.Q(categorie_danger__in=CategorieDanger.dangers_bacteriens())
+                ),
+                name="pam_requires_danger_bacterien",
+            ),
         ]

@@ -29,7 +29,7 @@ def test_can_create_evenement_produit_with_required_fields_only(live_server, moc
 
 
 def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementProduitFactory.build()
+    input_data = EvenementProduitFactory.build(not_bacterie=True)
     creation_page = EvenementProduitCreationPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
@@ -41,7 +41,6 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.lots.fill(input_data.lots)
     creation_page.description_complementaire.fill(input_data.description_complementaire)
     creation_page.set_temperature_conservation(input_data.temperature_conservation)
-    creation_page.set_pret_a_manger(input_data.produit_pret_a_manger)
 
     creation_page.set_categorie_danger(input_data)
     creation_page.precision_danger.fill(input_data.precision_danger)
@@ -69,8 +68,21 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     ]
     evenement_produit_data = {k: v for k, v in evenement_produit.__dict__.items() if k not in fields_to_exclude}
     input_data = {k: v for k, v in input_data.__dict__.items() if k not in fields_to_exclude}
-
     assert evenement_produit_data == input_data
+
+
+def test_can_create_evenement_produit_with_pam_if_bacterie(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build(bacterie=True)
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+
+    creation_page.set_categorie_danger(input_data)
+    creation_page.set_pret_a_manger(input_data.produit_pret_a_manger)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    assert evenement_produit.produit_pret_a_manger == input_data.produit_pret_a_manger
 
 
 def test_can_publish_evenement_produit(live_server, mocked_authentification_user, page: Page):

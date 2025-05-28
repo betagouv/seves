@@ -43,7 +43,6 @@ class EvenementProduitFactory(DjangoModelFactory):
     lots = factory.Faker("paragraph")
     description_complementaire = factory.Faker("paragraph")
     temperature_conservation = FuzzyChoice([choice[0] for choice in TemperatureConservation.choices])
-    produit_pret_a_manger = FuzzyChoice([choice[0] for choice in PretAManger.choices])
 
     categorie_danger = FuzzyChoice(CategorieDanger.values)
     precision_danger = factory.Faker("sentence", nb_words=3)
@@ -80,9 +79,31 @@ class EvenementProduitFactory(DjangoModelFactory):
         other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
         return random.choice(list(other_sources))
 
+    @factory.lazy_attribute
+    def produit_pret_a_manger(self):
+        if self.categorie_danger in CategorieDanger.dangers_bacteriens():
+            return random.choice(PretAManger.values)
+        return ""
+
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+    class Params:
+        not_bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] not in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )
+        bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )
 
 
 class EtablissementFactory(DjangoModelFactory):
