@@ -60,7 +60,6 @@ class EvenementProduitCreationPage(WithTreeSelect):
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
         self.description.fill(evenement_produit.description)
-        self.denomination.fill(evenement_produit.denomination)
 
     def set_categorie_produit(self, evenement_produit):
         label = evenement_produit.get_categorie_produit_display()

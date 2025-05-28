@@ -24,7 +24,6 @@ def test_can_create_evenement_produit_with_required_fields_only(live_server, moc
     assert evenement_produit.createur == mocked_authentification_user.agent.structure
     assert evenement_produit.type_evenement == input_data.type_evenement
     assert evenement_produit.description == input_data.description
-    assert evenement_produit.denomination == input_data.denomination
     assert evenement_produit.numero is not None
     assert evenement_produit.is_draft is True
 
@@ -37,6 +36,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.source.select_option(input_data.source)
 
     creation_page.set_categorie_produit(input_data)
+    creation_page.denomination.fill(input_data.denomination)
     creation_page.marque.fill(input_data.marque)
     creation_page.lots.fill(input_data.lots)
     creation_page.description_complementaire.fill(input_data.description_complementaire)
@@ -84,7 +84,6 @@ def test_can_publish_evenement_produit(live_server, mocked_authentification_user
     assert evenement_produit.createur == mocked_authentification_user.agent.structure
     assert evenement_produit.type_evenement == input_data.type_evenement
     assert evenement_produit.description == input_data.description
-    assert evenement_produit.denomination == input_data.denomination
     assert evenement_produit.numero is not None
     assert evenement_produit.is_draft is False
 

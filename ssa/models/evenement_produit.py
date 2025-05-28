@@ -155,7 +155,7 @@ class EvenementProduit(
     categorie_produit = models.CharField(
         max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
     )
-    denomination = models.CharField(max_length=255, verbose_name="Dénomination")
+    denomination = models.CharField(max_length=255, verbose_name="Dénomination", blank=True)
     marque = models.CharField(max_length=255, verbose_name="Marque", blank=True)
     lots = models.TextField(blank=True, verbose_name="Lots, DLC/DDM")
     description_complementaire = models.TextField(blank=True, verbose_name="Description complémentaire")
@@ -208,12 +208,14 @@ class EvenementProduit(
 
     @property
     def product_description(self):
-        product_description = self.denomination
+        product_description = ""
+        if self.denomination:
+            product_description = f"{self.denomination} "
         if self.marque:
-            product_description += f" {self.marque}"
+            product_description += f"{self.marque} "
         if self.description_complementaire:
-            product_description += f" {self.description_complementaire}"
-        return product_description
+            product_description += f"{self.description_complementaire}"
+        return product_description.strip()
 
     @property
     def readable_product_fields(self):
@@ -297,7 +299,7 @@ class EvenementProduit(
         return not self.is_cloture and self.can_user_access(user)
 
     def get_email_subject(self):
-        return f"{self.get_type_evenement_display()} {self.denomination} {self.numero}"
+        return f"{self.get_type_evenement_display()} {self.numero}"
 
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
