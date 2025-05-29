@@ -1,16 +1,13 @@
 from datetime import datetime
 
 import pytest
-from django.contrib.contenttypes.models import ContentType
-
-from playwright.sync_api import Page
 from django.utils import timezone
+from playwright.sync_api import Page
 
 from core.factories import StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit
 
 
 @pytest.mark.parametrize(
@@ -120,19 +117,8 @@ def test_order_by_liens(
         "evenement_3": EvenementProduitFactory(),
         "evenement_4": EvenementProduitFactory(),
     }
-    content_type = ContentType.objects.get_for_model(EvenementProduit)
-    LienLibre.objects.create(
-        content_type_1=content_type,
-        object_id_1=evenements["evenement_2"].id,
-        content_type_2=content_type,
-        object_id_2=evenements["evenement_1"].id,
-    )
-    LienLibre.objects.create(
-        content_type_1=content_type,
-        object_id_1=evenements["evenement_2"].id,
-        content_type_2=content_type,
-        object_id_2=evenements["evenement_3"].id,
-    )
+    LienLibre.objects.create(related_object_1=evenements["evenement_2"], related_object_2=evenements["evenement_1"])
+    LienLibre.objects.create(related_object_1=evenements["evenement_2"], related_object_2=evenements["evenement_3"])
     page.goto(url_builder_for_list_ordering("liens", direction, "ssa:evenement-produit-liste"))
     page.get_by_role("link", name="Liens").click()
     assert_events_order(page, evenements, expected_order, 1)
