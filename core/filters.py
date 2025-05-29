@@ -15,7 +15,7 @@ class DocumentFilter(django_filters.FilterSet):
         label="Type de Document",
     )
     created_by_structure = django_filters.ModelChoiceFilter(
-        queryset=Structure.objects.all(),
+        queryset=Structure.objects.none(),
         field_name="created_by_structure",
         label="Structure",
     )
@@ -35,7 +35,6 @@ class DocumentFilter(django_filters.FilterSet):
             (k, v) for (k, v) in Document.TypeDocument.choices if k in actual_document_types
         ]
 
-        structure_queryset = Structure.objects.filter(
-            id__in=self.queryset.values_list("created_by_structure", flat=True).distinct()
-        )
+        ids = self.queryset.values_list("created_by_structure", flat=True).distinct()
+        structure_queryset = Structure.objects.filter(id__in=ids).order_by("libelle")
         self.filters["created_by_structure"].queryset = structure_queryset

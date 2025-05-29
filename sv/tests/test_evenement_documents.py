@@ -188,7 +188,7 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, chec
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
-    check_select_options(page, "id_created_by_structure", ["Structure Test", "Other structure"])
+    check_select_options(page, "id_created_by_structure", ["Other structure", "Structure Test"])
     page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
     page.get_by_test_id("documents-filter").click()
 
