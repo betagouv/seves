@@ -652,7 +652,7 @@ class WithOrderingMixin:
         ordering = self.get_ordering()
         if isinstance(ordering, str):
             ordering = (ordering,)
-        return queryset.order_by(*ordering)
+        return queryset.order_by(*ordering, "-pk")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

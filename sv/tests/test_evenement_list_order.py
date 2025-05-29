@@ -14,8 +14,8 @@ from sv.models import Evenement, Etat
 @pytest.mark.parametrize(
     "direction,expected_order",
     [
-        ("asc", ["evenement_2", "evenement_1", "evenement_3"]),
-        ("desc", ["evenement_1", "evenement_3", "evenement_2"]),
+        ("asc", ["evenement_2", "evenement_3", "evenement_1"]),
+        ("desc", ["evenement_3", "evenement_1", "evenement_2"]),
     ],
     ids=["asc", "desc"],
 )
