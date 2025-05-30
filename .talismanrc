@@ -16,7 +16,7 @@ fileignoreconfig:
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
 - filename: core/views.py
-  checksum: b54379a22a0229e85ae27aeaf50d2b6931289fb8dbe521b0d3b68e88fc21b2b2
+  checksum: e55806f08fc497ac39c0f6e585fa53977678756e4213c117118b75fac2a70c66
 - filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html

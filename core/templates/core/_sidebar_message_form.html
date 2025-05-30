@@ -1,22 +1,22 @@
-<aside id="sidebar" class="sidebar white-container--lite">
+<aside id="{{ id }}" class="sidebar white-container--lite">
     <div class="close-sidebar-container">
         <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
     </div>
     <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v fr-ml-2v"></h5>
-    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ object.add_message_url }}">
+    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ action }}">
         {% csrf_token %}
         <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v fr-ml-2v">
             Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_limited_recipients %}fr-hidden{% endif %}">
             <label class="required-field">{{ message_form.recipients_limited_recipients.label_tag }}</label>
             {{ message_form.recipients_limited_recipients }}
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_structures_only %}fr-hidden{% endif %}">
             {{ message_form.recipients_structures_only.label_tag }}
             {{ message_form.recipients_structures_only }}
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_copy_structures_only %}fr-hidden{% endif %}">
             {{ message_form.recipients_copy_structures_only.label_tag }}
             {{ message_form.recipients_copy_structures_only }}
         </div>
