@@ -192,10 +192,9 @@ function validateDocument(event, typeInput, fileInput, inputDestination){
     resetAddDocumentForm(typeInput, fileInput);
 }
 
-function onSubmitBtnClick(event, otherSubmitButton) {
+function onSubmitBtnClick(event, otherSubmitButton, messageForm) {
     event.preventDefault()
-    const messageForm = document.getElementById("message-form")
-    const messageStatusField = document.getElementById("id_status");
+    const messageStatusField = messageForm.querySelector("#id_status");
 
     messageStatusField.value = event.target.getAttribute("value");
     if (!isLimitedRecipientsASelect()) {
@@ -220,6 +219,7 @@ function onSubmitBtnClick(event, otherSubmitButton) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    const addMessageForm = document.getElementById("message-form");
     const addDocumentFormButton = document.querySelector(".add-document-form-btn")
     const messageAddDocumentButton = document.getElementById("message-add-document")
     const fileInput = document.getElementById('id_file');
@@ -260,18 +260,65 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     })
 
-    submitButton.addEventListener("click", event => onSubmitBtnClick(event, draftSubmitButton));
-    draftSubmitButton.addEventListener("click", event => onSubmitBtnClick(event, submitButton));
+    submitButton.addEventListener("click", event => onSubmitBtnClick(event, draftSubmitButton, addMessageForm));
+    draftSubmitButton.addEventListener("click", event => onSubmitBtnClick(event, submitButton, addMessageForm));
     document.getElementById("send-without-adding-document").addEventListener("click", event => {
-        document.getElementById("message-form").submit()
+        addMessageForm.submit()
     })
     document.getElementById("send-with-adding-document").addEventListener("click", event => {
         document.getElementById("message-add-document").click()
-        document.getElementById("message-form").submit()
+        addMessageForm.submit()
     })
     document.getElementById("fr-modal-document-confirmation").addEventListener("dsfr.disclose", event => {
         submitButton.disabled = false;
         draftSubmitButton.disabled = false;
+    });
+
+    document.querySelectorAll('[id^="sidebar-message-update-form-"]').forEach(messageUpdateFormContainer => {
+        const messageUpdateForm = messageUpdateFormContainer.querySelector("form");
+        const recipientsElement = messageUpdateForm.querySelector('[id="id_recipients"]');
+        const copyElement = messageUpdateForm.querySelector('[id="id_recipients_copy"]');
+        const structuresRecipientsElement = messageUpdateForm.querySelector('[id="id_recipients_structures_only"]');
+        const structuresCopyElement = messageUpdateForm.querySelector('[id="id_recipients_copy_structures_only"]');
+
+        const choicesRecipients = recipientsElement ? initializeChoices(recipientsElement) : null;
+        const choicesCopy = copyElement ? initializeChoices(copyElement) : null;
+        const choicesStructuresRecipients = structuresRecipientsElement ? initializeChoices(structuresRecipientsElement) : null;
+        const choicesStructuresCopy = structuresCopyElement ? initializeChoices(structuresCopyElement) : null;
+
+        const addListener = (selector, choices, dataType) => {
+            messageUpdateForm
+                .querySelector(selector)
+            ?.addEventListener("click", event =>
+                addStructuresToRecipients(event, [choices], dataType)
+            );
+        };
+
+        if (choicesRecipients) {
+            addListener(".destinataires-contacts-shortcut", choicesRecipients, "data-contacts");
+            addListener(".destinataires-shortcut", choicesRecipients, "data-structures");
+        }
+        if (choicesCopy) {
+            addListener(".copie-contacts-shortcut", choicesCopy, "data-contacts");
+            addListener(".copie-shortcut", choicesCopy, "data-structures");
+        }
+        if (choicesStructuresRecipients) {
+            addListener(".destinataires-shortcut", choicesStructuresRecipients, "data-structures");
+        }
+        if (choicesStructuresCopy) {
+            addListener(".copie-shortcut", choicesStructuresCopy, "data-structures");
+        }
+
+        messageUpdateForm
+            .querySelector("#draft-message-send-btn")
+            .addEventListener("click", event =>
+                onSubmitBtnClick(event, draftSubmitButton, messageUpdateForm)
+            );
+        messageUpdateForm
+            .querySelector("#message-send-btn")
+            .addEventListener("click", event =>
+                onSubmitBtnClick(event, submitButton, messageUpdateForm)
+            );
     });
 
 });

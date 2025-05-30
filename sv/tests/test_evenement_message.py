@@ -19,7 +19,18 @@ from core.factories import (
     MessageFactory,
 )
 from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
-from core.tests.generic_tests.messages import generic_test_can_add_and_see_message_without_document
+from core.tests.generic_tests.messages import (
+    generic_test_can_add_and_see_message_without_document,
+    generic_test_can_update_draft_message,
+    generic_test_can_update_draft_note,
+    generic_test_can_update_draft_point_situation,
+    generic_test_can_update_draft_demande_intervention,
+    generic_test_can_update_draft_compte_rendu_demande_intervention,
+    generic_test_can_update_draft_fin_suivi,
+    generic_test_can_send_draft_element_suivi,
+    generic_test_can_finaliser_draft_note,
+    generic_test_can_send_draft_fin_suivi,
+)
 from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -1443,3 +1454,66 @@ def test_draft_messages_always_displayed_first_in_messages_list(live_server, pag
     expect(page.locator("#table-sm-row-key-3 td:nth-child(4) a")).to_contain_text(finalise_newest.title)
     expect(page.locator("#table-sm-row-key-4 td:nth-child(4) a")).to_contain_text(finalise_recent.title)
     expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)
+
+
+def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_message(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
+
+
+def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_demande_intervention(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_demande_intervention(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_compte_rendu_demande_intervention(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_compte_rendu_demande_intervention(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+@pytest.mark.parametrize(
+    "message_type",
+    [
+        Message.MESSAGE,
+        Message.POINT_DE_SITUATION,
+        Message.DEMANDE_INTERVENTION,
+        Message.COMPTE_RENDU,
+    ],
+)
+def test_can_send_draft_element_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox, message_type):
+    generic_test_can_send_draft_element_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox, message_type
+    )
+
+
+def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
+    generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, EvenementFactory())
+
+
+def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )

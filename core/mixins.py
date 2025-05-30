@@ -98,6 +98,20 @@ class WithMessageFormInContextMixin:
     def get_message_form_class(self):
         raise NotImplementedError
 
+    def _get_message_update_forms(self, message_list):
+        obj = self.get_object()
+        message_update_forms = []
+        for message in message_list:
+            if message.can_be_updated(self.request.user):
+                form = obj.get_message_form()(
+                    instance=message,
+                    sender=self.request.user,
+                    obj=obj,
+                    next=obj.get_absolute_url(),
+                )
+                message_update_forms.append(form)
+        return message_update_forms
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
@@ -110,6 +124,7 @@ class WithMessageFormInContextMixin:
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
+        context["message_update_forms"] = self._get_message_update_forms(context.get("message_list", []))
         return context
 
 
@@ -661,3 +676,21 @@ class WithOrderingMixin:
         if hasattr(self, "order_dir"):
             context["current_order_dir"] = self.order_dir
         return context
+
+
+class MessageFinSuiviMixin:
+    def _mark_contact_as_fin_suivi(self, form):
+        if form.instance.status == Message.Status.BROUILLON:
+            return
+        message_type = form.cleaned_data.get("message_type")
+        if message_type == Message.FIN_SUIVI:
+            content_type = form.cleaned_data.get("content_type")
+            object_id = form.cleaned_data.get("object_id")
+
+            fin_suivi_contact = FinSuiviContact(
+                content_type=content_type,
+                object_id=object_id,
+                contact=Contact.objects.get(structure=self.request.user.agent.structure),
+            )
+            fin_suivi_contact.full_clean()
+            fin_suivi_contact.save()

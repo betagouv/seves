@@ -14,6 +14,7 @@ from .views import (
     CloturerView,
     PublishAndACNotificationView,
     EvenementOuvrirView,
+    MessageUpdateView,
 )
 
 urlpatterns = [
@@ -51,6 +52,11 @@ urlpatterns = [
         "message-add/<int:obj_type_pk>/<int:obj_pk>/",
         MessageCreateView.as_view(),
         name="message-add",
+    ),
+    path(
+        "message/<int:pk>/update/",
+        MessageUpdateView.as_view(),
+        name="message-update",
     ),
     path(
         "suppression/",
