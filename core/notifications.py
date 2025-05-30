@@ -40,7 +40,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
 
 
 def notify_message(message_obj: Message):
-    if message_obj.status == Message.Status.BROUILLON:
+    if message_obj.is_draft:
         return
     recipients, copy = [], []
     content = message_obj.content

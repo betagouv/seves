@@ -32,8 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.querySelectorAll(".fil-de-suivi-sidebar").forEach(element => {
-        const messageId = element.dataset.messagePk
-        bindClickToSidebar(element, document.getElementById(`sidebar-message-details-${messageId}`))
+        const messageId = element.dataset.messagePk;
+        const isDraft = element.closest('tr')?.classList.contains('message-draft');
+        const sidebarType = isDraft ? 'update-form' : 'details';
+        const sidebar = document.getElementById(`sidebar-message-${sidebarType}-${messageId}`);
+        bindClickToSidebar(element, sidebar);
     })
     document.querySelectorAll(".open-sidebar").forEach(element => {
         bindClickToSidebar(element, document.getElementById('sidebar'))

@@ -186,6 +186,12 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
 
         if kwargs.get("data"):
             message_type = kwargs.get("data")["message_type"]
+        elif self.instance and self.instance.pk:
+            message_type = self.instance.message_type
+        else:
+            message_type = None
+
+        if message_type:
             if (
                 message_type in Message.TYPES_WITHOUT_RECIPIENTS
                 or message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS

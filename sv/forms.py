@@ -602,6 +602,14 @@ class MessageForm(BaseMessageForm):
             "status",
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance and instance.pk and "recipients_limited_recipients" in self.fields:
+            self.fields["recipients_limited_recipients"].widget.attrs["id"] = (
+                f"id_recipients_limited_recipients_{instance.pk}"
+            )
+
     def _convert_checkboxes_to_contacts(self):
         try:
             checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])

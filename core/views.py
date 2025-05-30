@@ -25,6 +25,7 @@ from .mixins import (
     WithAddUserContactsMixin,
     WithPublishMixin,
     WithACNotificationMixin,
+    MessageFinSuiviMixin,
 )
 from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
 from .notifications import notify_message, notify_contact_agent
@@ -140,7 +141,11 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
 
 
 class MessageCreateView(
-    PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, CreateView
+    PreventActionIfVisibiliteBrouillonMixin,
+    WithAddUserContactsMixin,
+    UserPassesTestMixin,
+    MessageFinSuiviMixin,
+    CreateView,
 ):
     model = Message
     http_method_names = ["post"]
@@ -284,6 +289,59 @@ class MessageCreateView(
             for error in errors:
                 messages.error(self.request, error)
         return HttpResponseRedirect(self.obj.get_absolute_url())
+
+
+class MessageUpdateView(
+    PreventActionIfVisibiliteBrouillonMixin,
+    WithAddUserContactsMixin,
+    UserPassesTestMixin,
+    MessageFinSuiviMixin,
+    UpdateView,
+):
+    model = Message
+    http_method_names = ["post"]
+
+    def get_form_class(self):
+        return self.content_object.get_message_form()
+
+    def dispatch(self, request, *args, **kwargs):
+        self.content_object = self.get_object().content_object
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.get_object().can_be_updated(self.request.user)
+
+    def get_fiche_object(self):
+        return self.content_object
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["sender"] = self.request.user.agent.contact_set.get()
+        kwargs["obj"] = self.content_object
+        kwargs["next"] = self.content_object.get_absolute_url()
+        return kwargs
+
+    def get_success_url(self):
+        return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
+
+    def form_valid(self, form):
+        try:
+            self._mark_contact_as_fin_suivi(form)
+        except ValidationError as e:
+            for message in e.messages:
+                messages.error(self.request, message)
+            return HttpResponseRedirect(self.content_object.get_absolute_url())
+        try:
+            notify_message(form.instance)
+        except OperationalError:
+            messages.error(
+                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
+            )
+            logger.error("Could not connect to Redis")
+        else:
+            message = "Le message a bien été modifié." if form.instance.is_draft else "Le message a bien été envoyé."
+            messages.success(self.request, message, extra_tags="core messages")
+        return super().form_valid(form)
 
 
 class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):

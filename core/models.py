@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q, CheckConstraint
+from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
@@ -297,6 +298,12 @@ class Message(models.Model):
     @property
     def is_draft(self):
         return self.status == self.Status.BROUILLON
+
+    def can_be_updated(self, user):
+        return self.sender == user.agent.contact_set.get() and self.status == self.Status.BROUILLON
+
+    def get_update_url(self):
+        return reverse("message-update", kwargs={"pk": self.pk})
 
 
 class LienLibre(models.Model):
