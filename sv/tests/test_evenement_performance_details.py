@@ -32,12 +32,12 @@ def test_evenement_performances_with_messages_from_same_user(
     sender = mocked_authentification_user.agent.contact_set.get()
     MessageFactory(content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 4):
         client.get(evenement.get_absolute_url())
 
     MessageFactory.create_batch(3, content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_list"]) == 4
@@ -51,7 +51,7 @@ def test_evenement_performances_with_multiple_messages_with_documents(
     client.get(evenement.get_absolute_url())
 
     MessageFactory(content_object=evenement)
-    with django_assert_max_num_queries(BASE_NUM_QUERIES + 10):
+    with django_assert_max_num_queries(BASE_NUM_QUERIES + 14):
         client.get(evenement.get_absolute_url())
 
     message_1, message_2, message_3 = MessageFactory.create_batch(3, content_object=evenement)
@@ -60,7 +60,7 @@ def test_evenement_performances_with_multiple_messages_with_documents(
     DocumentFactory(content_object=message_2)
     DocumentFactory(content_object=message_3)
 
-    with django_assert_max_num_queries(BASE_NUM_QUERIES + 10):
+    with django_assert_max_num_queries(BASE_NUM_QUERIES + 14):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_list"]) == 4

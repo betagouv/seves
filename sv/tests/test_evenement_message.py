@@ -11,6 +11,7 @@ from django.contrib.auth.models import Group
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
 from core.factories import (
     ContactAgentFactory,
     ContactStructureFactory,
@@ -19,7 +20,18 @@ from core.factories import (
     MessageFactory,
 )
 from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
-from core.tests.generic_tests.messages import generic_test_can_add_and_see_message_without_document
+from core.pages import UpdateMessagePage
+from core.tests.generic_tests.messages import (
+    generic_test_can_add_and_see_message_without_document,
+    generic_test_can_update_draft_message,
+    generic_test_can_update_draft_note,
+    generic_test_can_update_draft_point_situation,
+    generic_test_can_update_draft_demande_intervention,
+    generic_test_can_update_draft_fin_suivi,
+    generic_test_can_send_draft_element_suivi,
+    generic_test_can_finaliser_draft_note,
+    generic_test_can_send_draft_fin_suivi,
+)
 from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -1443,3 +1455,93 @@ def test_draft_messages_always_displayed_first_in_messages_list(live_server, pag
     expect(page.locator("#table-sm-row-key-3 td:nth-child(4) a")).to_contain_text(finalise_newest.title)
     expect(page.locator("#table-sm-row-key-4 td:nth-child(4) a")).to_contain_text(finalise_recent.title)
     expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)
+
+
+def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_message(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
+
+
+def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_demande_intervention(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_demande_intervention(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_compte_rendu_demande_intervention(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    object = EvenementFactory()
+    contact_mus = ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )
+    contact_bsv = ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
+    )
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.COMPTE_RENDU,
+        recipients=[contact_mus],
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    message_page.open_message()
+    page.locator(message_page.container_id).get_by_text("BSV").click()
+    message_page.message_title.fill("Titre mis à jour")
+    message_page.message_content.fill("Contenu mis à jour")
+    message_page.save_as_draft_message()
+
+    message.refresh_from_db()
+    assert message.message_type == Message.COMPTE_RENDU
+    assert message.recipients.count() == 2
+    assert set(message.recipients.all()) == {contact_mus, contact_bsv}
+    assert message.status == Message.Status.BROUILLON
+    assert message.title == "Titre mis à jour"
+    assert message.content == "Contenu mis à jour"
+    assert len(mailoutbox) == 0
+
+
+def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+@pytest.mark.parametrize(
+    "message_type",
+    [
+        Message.MESSAGE,
+        Message.POINT_DE_SITUATION,
+        Message.DEMANDE_INTERVENTION,
+    ],
+)
+def test_can_send_draft_element_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox, message_type):
+    generic_test_can_send_draft_element_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox, message_type
+    )
+
+
+def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
+    generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, EvenementFactory())
+
+
+def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )

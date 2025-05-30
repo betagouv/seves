@@ -164,6 +164,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         self.sender = sender
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+        self.fields["status"].widget = forms.HiddenInput()
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
@@ -181,11 +182,25 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
 
+        if self.instance.pk:
+            if self.instance.message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
+                self.initial["recipients_structures_only"] = self.instance.recipients.all()
+                self.initial["recipients_copy_structures_only"] = self.instance.recipients_copy.all()
+
+            if self.instance.message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+                self.initial["recipients_limited_recipients"] = self.instance.recipients.all()
+
         self.add_content_type_fields(obj)
         self.add_next_field(next_url)
 
         if kwargs.get("data"):
             message_type = kwargs.get("data")["message_type"]
+        elif self.instance and self.instance.pk:
+            message_type = self.instance.message_type
+        else:
+            message_type = None
+
+        if message_type:
             if (
                 message_type in Message.TYPES_WITHOUT_RECIPIENTS
                 or message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS
