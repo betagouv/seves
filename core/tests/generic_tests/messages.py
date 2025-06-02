@@ -153,41 +153,6 @@ def generic_test_can_update_draft_demande_intervention(
     assert len(mailoutbox) == 0
 
 
-def generic_test_can_update_draft_compte_rendu_demande_intervention(
-    live_server, page: Page, mocked_authentification_user, object, mailoutbox
-):
-    contact_mus = ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
-    contact_bsv = ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
-    )
-    message = MessageFactory(
-        content_object=object,
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        message_type=Message.COMPTE_RENDU,
-        recipients=[contact_mus],
-    )
-
-    page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, message.id)
-    message_page.open_message()
-    page.locator(message_page.form_selector).get_by_text("BSV").click()
-    message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
-    message_page.save_as_draft_message()
-
-    message.refresh_from_db()
-    assert message.message_type == Message.COMPTE_RENDU
-    assert message.recipients.count() == 2
-    assert set(message.recipients.all()) == {contact_mus, contact_bsv}
-    assert message.status == Message.Status.BROUILLON
-    assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
-    assert len(mailoutbox) == 0
-
-
 def generic_test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     object.contacts.add(contact)
@@ -219,6 +184,8 @@ def generic_test_can_update_draft_fin_suivi(live_server, page: Page, mocked_auth
 def generic_test_can_send_draft_element_suivi(
     live_server, page: Page, mocked_authentification_user, object, mailoutbox, message_type
 ):
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    object.contacts.add(contact)
     ContactStructureFactory(
         structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
     )

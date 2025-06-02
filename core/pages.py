@@ -13,7 +13,8 @@ class BaseMessagePage(ABC):
         self.page = page
 
     @property
-    def form_selector(self):
+    @abstractmethod
+    def container_id(self):
         return ""
 
     def new_message(self):
@@ -23,7 +24,7 @@ class BaseMessagePage(ABC):
     def pick_recipient(self, contact, choice_js_fill):
         choice_js_fill(
             self.page,
-            f'{self.form_selector} label[for="id_recipients"] ~ div.choices',
+            f'{self.container_id} label[for="id_recipients"] ~ div.choices',
             contact.nom,
             contact.contact_set.get().display_with_agent_unit,
             use_locator_as_parent_element=True,
@@ -32,7 +33,7 @@ class BaseMessagePage(ABC):
     def pick_recipient_structure_only(self, structure, choice_js_fill):
         choice_js_fill(
             self.page,
-            f'{self.form_selector} label[for="id_recipients_structures_only"] ~ div.choices',
+            f'{self.container_id} label[for="id_recipients_structures_only"] ~ div.choices',
             structure.libelle,
             structure.libelle,
             use_locator_as_parent_element=True,
@@ -41,7 +42,7 @@ class BaseMessagePage(ABC):
     def pick_recipient_copy(self, contact, choice_js_fill):
         choice_js_fill(
             self.page,
-            f'{self.form_selector} label[for="id_recipients_copy"] ~ div.choices',
+            f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
             contact.nom,
             contact.contact_set.get().display_with_agent_unit,
             use_locator_as_parent_element=True,
@@ -50,7 +51,7 @@ class BaseMessagePage(ABC):
     def pick_recipient_copy_structure_only(self, structure, choice_js_fill):
         choice_js_fill(
             self.page,
-            f'{self.form_selector} label[for="id_recipients_copy_structures_only"] ~ div.choices',
+            f'{self.container_id} label[for="id_recipients_copy_structures_only"] ~ div.choices',
             structure.libelle,
             structure.libelle,
             use_locator_as_parent_element=True,
@@ -61,24 +62,20 @@ class BaseMessagePage(ABC):
         return self.page.locator("#message-type-title")
 
     @property
-    @abstractmethod
     def message_title(self):
-        pass
+        return self.page.locator(f"{self.container_id}").locator(f"{self.TITLE_ID}")
 
     @property
-    @abstractmethod
     def message_content(self):
-        pass
+        return self.page.locator(f"{self.container_id} {self.CONTENT_ID}")
 
     @property
-    @abstractmethod
     def submit_button(self):
-        pass
+        return self.page.locator(self.container_id).get_by_test_id(self.SUBMIT_BTN_TEST_ID)
 
     @property
-    @abstractmethod
     def save_as_draft_button(self):
-        pass
+        return self.page.locator(self.container_id).get_by_test_id(self.DRAFT_BTN_TEST_ID)
 
     def submit_message(self):
         self.submit_button.click()
@@ -111,21 +108,7 @@ class BaseMessagePage(ABC):
 
 
 class CreateMessagePage(BaseMessagePage):
-    @property
-    def message_title(self):
-        return self.page.locator(self.TITLE_ID)
-
-    @property
-    def message_content(self):
-        return self.page.locator(self.CONTENT_ID)
-
-    @property
-    def submit_button(self):
-        return self.page.get_by_test_id(self.SUBMIT_BTN_TEST_ID)
-
-    @property
-    def save_as_draft_button(self):
-        return self.page.locator("#message-add-form").get_by_test_id(self.DRAFT_BTN_TEST_ID)
+    container_id = "#sidebar"
 
 
 class UpdateMessagePage(BaseMessagePage):
@@ -134,24 +117,8 @@ class UpdateMessagePage(BaseMessagePage):
         self.message_id = message_id
 
     @property
-    def form_selector(self) -> str:
-        return f"#sidebar-message-update-form-{self.message_id}"
-
-    @property
-    def message_title(self):
-        return self.page.locator(f"{self.form_selector}").locator(f"{self.TITLE_ID}")
-
-    @property
-    def message_content(self):
-        return self.page.locator(f"{self.form_selector} {self.CONTENT_ID}")
-
-    @property
-    def submit_button(self):
-        return self.page.locator(self.form_selector).get_by_test_id(self.SUBMIT_BTN_TEST_ID)
-
-    @property
-    def save_as_draft_button(self):
-        return self.page.locator(self.form_selector).get_by_test_id(self.DRAFT_BTN_TEST_ID)
+    def container_id(self) -> str:
+        return f"#sidebar-message-{self.message_id}"
 
 
 class WithDocumentsPage:

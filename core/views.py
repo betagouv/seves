@@ -1,16 +1,16 @@
-from collections import defaultdict
+import logging
 
+from celery.exceptions import OperationalError
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
-from celery.exceptions import OperationalError
 from django.views.generic.edit import FormView, CreateView, UpdateView
 
 from .forms import (
@@ -25,12 +25,11 @@ from .mixins import (
     WithAddUserContactsMixin,
     WithPublishMixin,
     WithACNotificationMixin,
-    MessageFinSuiviMixin,
+    MessageHandlingMixin,
 )
-from .models import Document, Message, Contact, FinSuiviContact, Visibilite, user_is_referent_national
-from .notifications import notify_message, notify_contact_agent
+from .models import Document, Message, Contact, user_is_referent_national
+from .notifications import notify_contact_agent
 from .redirect import safe_redirect
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +141,8 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
 
 class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin,
-    WithAddUserContactsMixin,
     UserPassesTestMixin,
-    MessageFinSuiviMixin,
+    MessageHandlingMixin,
     CreateView,
 ):
     model = Message
@@ -184,105 +182,8 @@ class MessageCreateView(
     def get_success_url(self):
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
 
-    def _add_contacts_to_object(self, message):
-        """
-        Ajoute les destinataires du message dans les contacts (agent et leur structure)
-        N'ajoute pas la structure quand son seul représentant est un référent national.
-        """
-        structures_with_agents = defaultdict(list)
-
-        for contact in message.recipients.all().union(message.recipients_copy.all()):
-            self.obj.contacts.add(contact)
-            if contact.agent:
-                structures_with_agents[contact.agent.structure].append(contact)
-
-        for structure, contacts_agents in structures_with_agents.items():
-            all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
-            add_structure = not all_referents_nationaux
-            if add_structure and (structure := contacts_agents[0].get_structure_contact()):
-                self.obj.contacts.add(structure)
-
-    def _is_internal_communication(self, structures):
-        """
-        Returns True if all contacts involved are part of the same structure
-        """
-        return len(structures) <= 1
-
-    def _handle_visibilite_if_needed(self, message):
-        if not hasattr(self.obj, "visibilite"):
-            return
-
-        structures = [c.structure for c in self.obj.contacts.structures_only()]
-
-        if self._is_internal_communication(structures):
-            return
-        if self.obj.visibilite == Visibilite.LOCALE:
-            with transaction.atomic():
-                self.obj.allowed_structures.set(structures)
-                self.obj.visibilite = Visibilite.LIMITEE
-                self.obj.save()
-        if self.obj.visibilite == Visibilite.LIMITEE:
-            self.obj.allowed_structures.set(structures)
-
-    def _create_documents(self, form):
-        message = form.instance
-        content_type = ContentType.objects.get_for_model(message)
-        document_numbers = [
-            s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
-        ]
-        for i in document_numbers:
-            try:
-                Document.objects.create(
-                    file=form.cleaned_data[f"document_{i}"],
-                    nom=form.cleaned_data[f"document_{i}"]._name,
-                    document_type=form.cleaned_data[f"document_type_{i}"],
-                    content_type=content_type,
-                    object_id=message.pk,
-                    created_by=self.request.user.agent,
-                    created_by_structure=self.request.user.agent.structure,
-                )
-            except OperationalError:
-                logger.error("Could not connect to Redis")
-                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
-
-    def _mark_contact_as_fin_suivi(self, form):
-        if form.instance.status == Message.Status.BROUILLON:
-            return
-        message_type = form.cleaned_data.get("message_type")
-        if message_type == Message.FIN_SUIVI:
-            content_type = form.cleaned_data.get("content_type")
-            object_id = form.cleaned_data.get("object_id")
-
-            fin_suivi_contact = FinSuiviContact(
-                content_type=content_type,
-                object_id=object_id,
-                contact=Contact.objects.get(structure=self.request.user.agent.structure),
-            )
-            fin_suivi_contact.full_clean()
-            fin_suivi_contact.save()
-
     def form_valid(self, form):
-        try:
-            self._mark_contact_as_fin_suivi(form)
-        except ValidationError as e:
-            for message in e.messages:
-                messages.error(self.request, message)
-            return HttpResponseRedirect(self.obj.get_absolute_url())
-        response = super().form_valid(form)
-        self._add_contacts_to_object(form.instance)
-        self.add_user_contacts(self.obj)
-        self._handle_visibilite_if_needed(form.instance)
-        self._create_documents(form)
-        try:
-            notify_message(form.instance)
-        except OperationalError:
-            messages.error(
-                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
-            )
-            logger.error("Could not connect to Redis")
-        else:
-            messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
-        return response
+        return self.handle_message_form(form)
 
     def form_invalid(self, form):
         for _, errors in form.errors.items():
@@ -293,9 +194,8 @@ class MessageCreateView(
 
 class MessageUpdateView(
     PreventActionIfVisibiliteBrouillonMixin,
-    WithAddUserContactsMixin,
     UserPassesTestMixin,
-    MessageFinSuiviMixin,
+    MessageHandlingMixin,
     UpdateView,
 ):
     model = Message
@@ -306,6 +206,7 @@ class MessageUpdateView(
 
     def dispatch(self, request, *args, **kwargs):
         self.content_object = self.get_object().content_object
+        self.obj = self.content_object
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -325,23 +226,7 @@ class MessageUpdateView(
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
-        try:
-            self._mark_contact_as_fin_suivi(form)
-        except ValidationError as e:
-            for message in e.messages:
-                messages.error(self.request, message)
-            return HttpResponseRedirect(self.content_object.get_absolute_url())
-        try:
-            notify_message(form.instance)
-        except OperationalError:
-            messages.error(
-                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
-            )
-            logger.error("Could not connect to Redis")
-        else:
-            message = "Le message a bien été modifié." if form.instance.is_draft else "Le message a bien été envoyé."
-            messages.success(self.request, message, extra_tags="core messages")
-        return super().form_valid(form)
+        return self.handle_message_form(form)
 
 
 class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):

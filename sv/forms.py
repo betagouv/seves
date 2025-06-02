@@ -609,6 +609,10 @@ class MessageForm(BaseMessageForm):
             self.fields["recipients_limited_recipients"].widget.attrs["id"] = (
                 f"id_recipients_limited_recipients_{instance.pk}"
             )
+            recipients = self.instance.recipients.values_list("structure__libelle", flat=True)
+            if recipients:
+                initial = [r.lower() for r in recipients if r]
+                self.initial["recipients_limited_recipients"] = initial
 
     def _convert_checkboxes_to_contacts(self):
         try:

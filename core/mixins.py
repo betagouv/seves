@@ -1,5 +1,6 @@
 import base64
 import datetime
+from collections import defaultdict
 
 import requests
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from requests import ConnectTimeout, ReadTimeout
@@ -60,26 +62,6 @@ class WithDocumentListInContextMixin:
         return context
 
 
-class WithMessagesListInContextMixin:
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["message_list"] = (
-            self.get_object()
-            .messages.all()
-            .select_related("sender__agent__structure")
-            .prefetch_related(
-                "recipients__agent",
-                "recipients__structure",
-                "recipients__agent__structure",
-                "recipients_copy__agent",
-                "recipients_copy__structure",
-                "recipients_copy__agent__structure",
-                "documents",
-            )
-        )
-        return context
-
-
 class WithBlocCommunPermission:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -94,7 +76,7 @@ class WithBlocCommunPermission:
         return context
 
 
-class WithMessageFormInContextMixin:
+class WithMessageMixin:
     def get_message_form_class(self):
         raise NotImplementedError
 
@@ -124,7 +106,21 @@ class WithMessageFormInContextMixin:
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
-        context["message_update_forms"] = self._get_message_update_forms(context.get("message_list", []))
+        message_list = (
+            obj.messages.all()
+            .select_related("sender__agent__structure")
+            .prefetch_related(
+                "recipients__agent",
+                "recipients__structure",
+                "recipients__agent__structure",
+                "recipients_copy__agent",
+                "recipients_copy__structure",
+                "recipients_copy__agent__structure",
+                "documents",
+            )
+        )
+        context["message_list"] = message_list
+        context["message_update_forms"] = self._get_message_update_forms(message_list)
         return context
 
 
@@ -678,7 +674,7 @@ class WithOrderingMixin:
         return context
 
 
-class MessageFinSuiviMixin:
+class MessageHandlingMixin(WithAddUserContactsMixin):
     def _mark_contact_as_fin_suivi(self, form):
         if form.instance.status == Message.Status.BROUILLON:
             return
@@ -694,3 +690,91 @@ class MessageFinSuiviMixin:
             )
             fin_suivi_contact.full_clean()
             fin_suivi_contact.save()
+
+    def _is_internal_communication(self, structures):
+        """
+        Returns True if all contacts involved are part of the same structure
+        """
+        return len(structures) <= 1
+
+    def _handle_visibilite_if_needed(self, message):
+        if not hasattr(self.obj, "visibilite"):
+            return
+
+        structures = [c.structure for c in self.obj.contacts.structures_only()]
+
+        if self._is_internal_communication(structures):
+            return
+        if self.obj.visibilite == Visibilite.LOCALE:
+            with transaction.atomic():
+                self.obj.allowed_structures.set(structures)
+                self.obj.visibilite = Visibilite.LIMITEE
+                self.obj.save()
+        if self.obj.visibilite == Visibilite.LIMITEE:
+            self.obj.allowed_structures.set(structures)
+
+    def _add_contacts_to_object(self, message):
+        """
+        Ajoute les destinataires du message dans les contacts (agent et leur structure)
+        N'ajoute pas la structure quand son seul représentant est un référent national.
+        """
+        structures_with_agents = defaultdict(list)
+
+        for contact in message.recipients.all().union(message.recipients_copy.all()):
+            self.obj.contacts.add(contact)
+            if contact.agent:
+                structures_with_agents[contact.agent.structure].append(contact)
+
+        for structure, contacts_agents in structures_with_agents.items():
+            all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
+            add_structure = not all_referents_nationaux
+            if add_structure and (structure := contacts_agents[0].get_structure_contact()):
+                self.obj.contacts.add(structure)
+
+    def _create_documents(self, form):
+        message = form.instance
+        content_type = ContentType.objects.get_for_model(message)
+        document_numbers = [
+            s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
+        ]
+        for i in document_numbers:
+            try:
+                Document.objects.create(
+                    file=form.cleaned_data[f"document_{i}"],
+                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    document_type=form.cleaned_data[f"document_type_{i}"],
+                    content_type=content_type,
+                    object_id=message.pk,
+                    created_by=self.request.user.agent,
+                    created_by_structure=self.request.user.agent.structure,
+                )
+            except OperationalError:
+                logger.error("Could not connect to Redis")
+                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
+
+    def handle_message_form(self, form):
+        try:
+            self._mark_contact_as_fin_suivi(form)
+        except ValidationError as e:
+            for message in e.messages:
+                messages.error(self.request, message)
+            return HttpResponseRedirect(self.obj.get_absolute_url())
+        response = super().form_valid(form)
+        self._add_contacts_to_object(form.instance)
+        self.add_user_contacts(self.obj)
+        self._handle_visibilite_if_needed(form.instance)
+        self._create_documents(form)
+        try:
+            transaction.on_commit(lambda: notify_message(form.instance))
+        except OperationalError:
+            messages.error(
+                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
+            )
+            logger.error("Could not connect to Redis")
+        else:
+            messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
+        return response
+
+
+# TODO tester toute la logique d'ajout uniquement si pas draft puis apres draft ?
+# TODO tester documents ?
