@@ -1,5 +1,9 @@
-.evenements_liste__header {
+#search-form {
     background-color: var(--background-open-blue-france);
+}
+.evenements_liste__header {
+    padding: 20px;
+    margin: 0rem 1.5rem;
 }
 .evenements_liste__header--title {
     display: flex;
@@ -11,7 +15,7 @@
 }
 .evenements_liste__header--actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     margin-top: auto;
     margin-bottom: auto;
 }
