@@ -460,7 +460,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         call_count["count"] += 1
 
     page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
         handle,
     )
 
@@ -519,7 +519,7 @@ def test_can_create_etablissement_with_force_siret_value(
         call_count["count"] += 1
 
     page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
         handle,
     )
 
@@ -601,7 +601,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
         call_count["count"] += 1
 
     page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
         handle,
     )
 

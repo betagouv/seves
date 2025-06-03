@@ -646,7 +646,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
     )
 
     page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
         handle,
     )
 
