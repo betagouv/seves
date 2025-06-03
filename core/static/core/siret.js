@@ -31,7 +31,7 @@ function improveResults(value, results) {
 export function fetchSiret(value, token) {
     const cleanedValue =  value.replaceAll(" ", "")
     const siren =  cleanedValue.substring(0, 9);
-    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + siren + '* AND -periode(etatAdministratifEtablissement:F)';
+    const url = `https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A${siren}* AND -periode(etatAdministratifEtablissement:F)`;
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

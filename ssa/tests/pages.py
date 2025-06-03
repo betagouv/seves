@@ -169,7 +169,7 @@ class EvenementProduitCreationPage(WithTreeSelect):
             call_count["count"] += 1
 
         self.page.route(
-            f"https://api.insee.fr/entreprises/sirene/siret?q=siren%3A{siret[:9]}*%20AND%20-periode(etatAdministratifEtablissement:F)",
+            f"https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A{siret[:9]}*%20AND%20-periode(etatAdministratifEtablissement:F)",
             handle,
         )
 
