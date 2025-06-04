@@ -930,14 +930,20 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
 
 @pytest.mark.django_db
 def test_can_clone_prelevement_from_existing(
-    live_server, page: Page, prelevement_form_elements: PrelevementFormDomElements
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
 ):
     detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
     EspeceEchantillonFactory.create_batch(10)
+    prelevements = detection.lieux.first().prelevements
 
-    page.goto(f"{live_server.url}{detection.get_update_url()}", timeout=800000)
-    page.get_by_role("button", name="Dupliquer le prélèvement").click(timeout=8000000)
-    prelevement = detection.lieux.first().prelevements.first()
+    assert prelevements.count() == 1
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Dupliquer le prélèvement").click()
+    prelevement = prelevements.first()
     assert (
         prelevement_form_elements.numero_rapport_inspection_input.input_value() == prelevement.numero_rapport_inspection
     )
@@ -948,3 +954,9 @@ def test_can_clone_prelevement_from_existing(
     assert prelevement_form_elements.date_prelevement_input.input_value() == f"{prelevement.date_prelevement}"
     assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
     assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    assert prelevements.count() == 2

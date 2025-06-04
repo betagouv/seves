@@ -37,8 +37,14 @@ header .fr-header__body-row {
     margin-top: -1rem;
 }
 
-.fr-icon-content-copy-line::before {
-    mask-image: url("/static/icons/fr-icon-content-copy-line.svg");
+/* Enbables using Remix icons with DSFr styles */
+.fr-icon-ri[class*=" ri-"]:after,
+.fr-icon-ri[class*=" ri-"]:before,
+.fr-icon-ri[class^=ri-]:after,
+.fr-icon-ri[class^=ri-]:before {
+    background-color: transparent;
+    font-size: var(--icon-size);
+    align-self: baseline;
 }
 
 .product-switch .fr-menu .fr-nav__link{

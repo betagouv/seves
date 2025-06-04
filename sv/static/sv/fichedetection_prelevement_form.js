@@ -98,9 +98,11 @@ function displayPrelevementsCards() {
             document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)
         })
         if(card.type === "premiere_intention") {
-            clone.querySelector("#action-btns").insertAdjacentHTML(
-                "beforeend", document.querySelector("#prelevement-duplicate-btn").innerHTML
-            );
+            if(clone.querySelector(".prelevement-duplicate-btn") === null) {
+                clone.querySelector("#action-btns").insertAdjacentHTML(
+                    "beforeend", document.querySelector("#prelevement-duplicate-btn-tpl").innerHTML
+                );
+            }
 
             const el = clone.querySelector('.prelevement-copy-btn')
             el.setAttribute("data-id", card.id)
@@ -108,6 +110,8 @@ function displayPrelevementsCards() {
             el.setAttribute("aria-controls", `modal-duplicate-prelevement-${card.id}`)
             el.addEventListener("click", duplicatePrelevement)
             clone.querySelector('.duplicate-tooltip').setAttribute("id", `tooltip-duplicate-prelevement-${card.id}`)
+        } else {
+            clone.querySelectorAll(".prelevement-duplicate-btn").forEach(it => it.remove())
         }
         prelevementListElement.appendChild(clone);
     })
