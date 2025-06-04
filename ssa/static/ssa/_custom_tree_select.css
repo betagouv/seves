@@ -62,3 +62,7 @@
 .treeselect-list__item-checkbox-container {
     margin-right: 10px;
 }
+
+.treeselect-input__edit {
+    padding: .5rem 1rem !important;
+}
