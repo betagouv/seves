@@ -37,7 +37,7 @@ header .fr-header__body-row {
     margin-top: -1rem;
 }
 
-/* Enbables using Remix icons with DSFr styles */
+/* Enbables using Remix icons with DSFR styles */
 .fr-icon-ri[class*=" ri-"]:after,
 .fr-icon-ri[class*=" ri-"]:before,
 .fr-icon-ri[class^=ri-]:after,

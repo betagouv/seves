@@ -929,6 +929,24 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
 
 
 @pytest.mark.django_db
+def test_prelevement_espece_echantillon_is_preserved_in_template(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+    prelevement = detection.lieux.first().prelevements.first()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Modifier le prélèvement").click()
+
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+
+
+@pytest.mark.django_db
 def test_can_clone_prelevement_from_existing(
     live_server,
     page: Page,
