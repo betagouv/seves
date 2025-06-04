@@ -22,6 +22,7 @@ from ..factories import (
     PositionChaineDistributionFactory,
     StructurePreleveuseFactory,
     FicheDetectionFactory,
+    EspeceEchantillonFactory,
 )
 from ..models import (
     FicheDetection,
@@ -925,3 +926,25 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     assert lieu.code_insee_etablissement == "75115"
     assert lieu.departement_etablissement.nom == "Paris"
     assert lieu.pays_etablissement == "FR"
+
+
+@pytest.mark.django_db
+def test_can_clone_prelevement_from_existing(
+    live_server, page: Page, prelevement_form_elements: PrelevementFormDomElements
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}", timeout=800000)
+    page.get_by_role("button", name="Dupliquer le prélèvement").click(timeout=8000000)
+    prelevement = detection.lieux.first().prelevements.first()
+    assert (
+        prelevement_form_elements.numero_rapport_inspection_input.input_value() == prelevement.numero_rapport_inspection
+    )
+    assert prelevement_form_elements.numero_echantillon_input.input_value() == prelevement.numero_echantillon
+    assert prelevement_form_elements.lieu_input.input_value() == prelevement.lieu.nom
+    assert prelevement_form_elements.structure_input.input_value() == f"{prelevement.structure_preleveuse.pk}"
+    assert prelevement_form_elements.matrice_prelevee_input.input_value() == f"{prelevement.matrice_prelevee.pk}"
+    assert prelevement_form_elements.date_prelevement_input.input_value() == f"{prelevement.date_prelevement}"
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()

@@ -36,6 +36,11 @@ header .fr-header__body-row {
 .fr-header__body-row .fr-btns-group {
     margin-top: -1rem;
 }
+
+.fr-icon-content-copy-line::before {
+    mask-image: url("/static/icons/fr-icon-content-copy-line.svg");
+}
+
 .product-switch .fr-menu .fr-nav__link{
     padding: 0.25rem 0.5rem;
 }
