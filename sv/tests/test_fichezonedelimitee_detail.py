@@ -4,9 +4,11 @@ from sv.factories import EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
 
 
 def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, page: Page, mocked_authentification_user):
-    fiche_zone_delimitee = FicheZoneFactory()
+    fiche_zone_delimitee = FicheZoneFactory(surface_tampon_totale=42, rayon_zone_tampon=2)
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
-    zone_infestee_1 = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+    zone_infestee_1 = ZoneInfesteeFactory(
+        fiche_zone_delimitee=fiche_zone_delimitee, surface_infestee_totale=17.5, rayon=3
+    )
     fiche_detection_fiche_zone_delimitee = FicheDetectionFactory(hors_zone_infestee=fiche_zone_delimitee)
     fiche_detection_zone_infestee_1 = FicheDetectionFactory(zone_infestee=zone_infestee_1)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
