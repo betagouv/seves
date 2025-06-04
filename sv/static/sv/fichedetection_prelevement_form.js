@@ -41,6 +41,33 @@ function addChoicesEspeceEchantillon(element){
     return choicesEspece
 }
 
+/** @param {MouseEvent} evt */
+function duplicatePrelevement (evt) {
+    evt.preventDefault()
+    evt.stopPropagation()
+    const elToClone = document.querySelector(`#modal-add-edit-prelevement-${evt.target.dataset.id}`)
+    const currentModal = getNextAvailablePrelevementModal();
+    [
+        "numero_rapport_inspection",
+        "numero_echantillon",
+        "lieu",
+        "structure_preleveuse",
+        "matrice_prelevee",
+        "date_prelevement",
+    ].forEach(it => {
+        const src = elToClone.querySelector(`[name$="${it}"]`)
+        currentModal.querySelector(`[name$="${it}"]`).value = src.value
+    });
+    // espece_echantillon form element is a bit special; its options are populated via HTTP query
+    // so we have not choice but to entirely clone the field here
+    currentModal.querySelector("#espece-echantillon").innerHTML = (
+        elToClone.querySelector("#espece-echantillon").innerHTML
+    );
+    modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
+    populateLieuSelect(currentModal.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`))
+    dataRequiredToRequired(currentModal)
+    dsfr(currentModal).modal.disclose();
+}
 
 function deletePrelevement(event) {
     const id = event.target.dataset.id
@@ -70,6 +97,22 @@ function displayPrelevementsCards() {
             dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
             document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)
         })
+        if(card.type === "premiere_intention") {
+            if(clone.querySelector(".prelevement-duplicate-btn") === null) {
+                clone.querySelector("#action-btns").insertAdjacentHTML(
+                    "beforeend", document.querySelector("#prelevement-duplicate-btn-tpl").innerHTML
+                );
+            }
+
+            const el = clone.querySelector('.prelevement-copy-btn')
+            el.setAttribute("data-id", card.id)
+            el.setAttribute("aria-describedby", `tooltip-duplicate-prelevement-${card.id}`)
+            el.setAttribute("aria-controls", `modal-duplicate-prelevement-${card.id}`)
+            el.addEventListener("click", duplicatePrelevement)
+            clone.querySelector('.duplicate-tooltip').setAttribute("id", `tooltip-duplicate-prelevement-${card.id}`)
+        } else {
+            clone.querySelectorAll(".prelevement-duplicate-btn").forEach(it => it.remove())
+        }
         prelevementListElement.appendChild(clone);
     })
     showOrHidePrelevementUI()
@@ -105,6 +148,7 @@ function showAddPrelevementmodal(event) {
 }
 
 function buildPrelevementCardFromModal(element){
+    const typeElement = element.querySelector(`[id^="id_prelevements-"][id*="-type_analyse"]:checked`)
     const structureElement = element.querySelector(`[id^="id_prelevements-"][id$="-structure_preleveuse"]`)
     const lieuElement = element.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`)
     const officielElement = element.querySelector(`[id^="id_prelevements-"][id$="-is_officiel"]`)
@@ -112,6 +156,7 @@ function buildPrelevementCardFromModal(element){
     const resultats = JSON.parse(document.getElementById("prelevement-resultats").textContent);
     return {
         "id": element.dataset.id,
+        "type": typeElement.value,
         "structure":structureElement.options[structureElement.selectedIndex].text,
         "lieu": lieuElement.options[lieuElement.selectedIndex].text,
         "officiel":  officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",

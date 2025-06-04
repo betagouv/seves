@@ -66,9 +66,27 @@
                                 <div class="fr-col-8">{{ form.matrice_prelevee }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="espece-echantillon">
-                                <div class="fr-col-4"><label class="fr-label" for="id_prelevements-{{ id }}-espece-echantillon">Espèce échantillon</label></div>
-                                <div class="fr-col-8">        <select id="id_prelevements-{{ id }}-espece-echantillon" class="fr-input"
-                                                                      name="prelevements-{{ id }}-espece_echantillon"></select></div>
+                                <div class="fr-col-4">
+                                    <label
+                                        class="fr-label"
+                                        for="id_prelevements-{{ id }}-espece-echantillon"
+                                    >
+                                        Espèce échantillon
+                                    </label>
+                                </div>
+                                <div class="fr-col-8">
+                                    <select
+                                        id="id_prelevements-{{ id }}-espece-echantillon"
+                                        class="fr-input"
+                                        name="prelevements-{{ id }}-espece_echantillon"
+                                    >
+                                        {% if form.instance.espece_echantillon %}
+                                            <option value="{{ form.instance.espece_echantillon.pk }}" selected>
+                                                {{ form.instance.espece_echantillon.libelle }}
+                                            </option>
+                                        {% endif %}
+                                    </select>
+                                </div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
                                 <div class="fr-col-4">{{ form.date_rapport_analyse.label_tag }}</div>

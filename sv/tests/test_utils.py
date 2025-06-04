@@ -330,6 +330,10 @@ class PrelevementFormDomElements:
             .locator("#espece-echantillon .choices__list--single")
         )
 
+    @property
+    def espece_echantillon_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[name$="espece_echantillon"]')
+
     def resultat_input(self, resultat_value: Union[str, Prelevement.Resultat]) -> Locator | None:
         modal = self.page.locator(".fr-modal__content").locator("visible=true")
         if isinstance(resultat_value, str):

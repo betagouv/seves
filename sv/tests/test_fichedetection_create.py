@@ -22,6 +22,7 @@ from ..factories import (
     PositionChaineDistributionFactory,
     StructurePreleveuseFactory,
     FicheDetectionFactory,
+    EspeceEchantillonFactory,
 )
 from ..models import (
     FicheDetection,
@@ -925,3 +926,55 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     assert lieu.code_insee_etablissement == "75115"
     assert lieu.departement_etablissement.nom == "Paris"
     assert lieu.pays_etablissement == "FR"
+
+
+@pytest.mark.django_db
+def test_prelevement_espece_echantillon_is_preserved_in_template(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+    prelevement = detection.lieux.first().prelevements.first()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Modifier le prélèvement").click()
+
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+
+
+@pytest.mark.django_db
+def test_can_clone_prelevement_from_existing(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+    prelevements = detection.lieux.first().prelevements
+
+    assert prelevements.count() == 1
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Dupliquer le prélèvement").click()
+    prelevement = prelevements.first()
+    assert (
+        prelevement_form_elements.numero_rapport_inspection_input.input_value() == prelevement.numero_rapport_inspection
+    )
+    assert prelevement_form_elements.numero_echantillon_input.input_value() == prelevement.numero_echantillon
+    assert prelevement_form_elements.lieu_input.input_value() == prelevement.lieu.nom
+    assert prelevement_form_elements.structure_input.input_value() == f"{prelevement.structure_preleveuse.pk}"
+    assert prelevement_form_elements.matrice_prelevee_input.input_value() == f"{prelevement.matrice_prelevee.pk}"
+    assert prelevement_form_elements.date_prelevement_input.input_value() == f"{prelevement.date_prelevement}"
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    assert prelevements.count() == 2

@@ -1,6 +1,7 @@
 function setUpOrganismeNuisible(){
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('id_organisme_nuisible');
+    if(!(element instanceof HTMLElement)) return;
     const choices = new Choices(element, {
         classNames: {
             containerInner: 'fr-select',
