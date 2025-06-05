@@ -80,8 +80,13 @@ class EvenementProduitCreationPage(WithTreeSelect):
     def set_pret_a_manger(self, value):
         self.page.locator(f"input[type='radio'][name='produit_pret_a_manger'][value='{value}']").check(force=True)
 
+    def display_and_get_categorie_danger(self):
+        result = self.page.locator("#categorie-danger")
+        result.evaluate("el => el.scrollIntoView()")
+        return result
+
     def set_categorie_danger(self, evenement_produit):
-        self.page.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+        self.display_and_get_categorie_danger()
         label = evenement_produit.get_categorie_danger_display()
         self._set_treeselect_option("categorie-danger", label)
 
