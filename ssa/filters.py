@@ -33,6 +33,7 @@ class EvenementProduitFilterForm(DSFRForm):
         "reference_clusters",
         "actions_engagees",
         "numeros_rappel_conso",
+        "siret",
         "numero_agrement",
         "commune",
         "departement",
@@ -74,7 +75,9 @@ class EvenementProduitFilter(
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
-
+    siret = django_filters.CharFilter(
+        field_name="etablissements__siret", lookup_expr="contains", distinct=True, label="Siren/Siret"
+    )
     numero_agrement = django_filters.CharFilter(
         field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
     )
@@ -109,6 +112,7 @@ class EvenementProduitFilter(
             "reference_clusters",
             "actions_engagees",
             "numeros_rappel_conso",
+            "siret",
             "numero_agrement",
             "commune",
             "departement",
