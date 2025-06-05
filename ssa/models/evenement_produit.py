@@ -233,7 +233,8 @@ class EvenementProduit(
         quantification = None
         if self.quantification:
             quantification = f"{self.quantification} {self.get_quantification_unite_display()}"
-        return {
+
+        risk_fields = {
             "Catégorie de danger": self.get_categorie_danger_display(),
             "Précision danger": self.precision_danger,
             "Quantification": quantification,
@@ -242,6 +243,10 @@ class EvenementProduit(
             "Référence souche": self.reference_souches,
             "Référence cluster": self.reference_clusters,
         }
+
+        if not self.categorie_danger or self.categorie_danger not in CategorieDanger.dangers_bacteriens():
+            risk_fields.pop("Produit prêt à manger (PAM)")
+        return risk_fields
 
     @property
     def latest_version(self):
