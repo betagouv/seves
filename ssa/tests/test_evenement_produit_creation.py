@@ -656,3 +656,16 @@ def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page
     creation_page.current_modal.locator(".save-btn").click()
 
     assert not creation_page.current_modal_numero_agrement_field.evaluate("el => el.validity.valid")
+
+
+def test_categorie_danger_dont_show(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page.navigate()
+    dropdown = creation_page.display_and_get_categorie_danger()
+    # Force open the dropdown by clicking it
+    dropdown.get_by_placeholder("Choisir").click()
+    expect(dropdown.locator(".categorie-danger-header")).to_be_visible()
+    assert "Danger les plus courants" in dropdown.inner_text()
+    page.keyboard.type("Sal")
+    expect(dropdown.locator(".categorie-danger-header")).to_be_hidden()
+    assert "Danger les plus courants" not in dropdown.inner_text()

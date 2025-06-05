@@ -66,12 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
       emptyText: "Pas de résultat",
       openCallback() {
         patchItems(treeselect.srcElement)
-        if (this._customHeaderAdded) return;
+        if (this._customHeaderAdded) {
+          treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
+          })
+          return;
+        }
         const list = document.querySelector("#categorie-danger .treeselect-list")
         if (list) {
           const clone = document.getElementById('categorie-danger-header').cloneNode(true);
           clone.id = ''
           clone.classList.remove('fr-hidden')
+          clone.classList.add("categorie-danger-header")
           list.prepend(clone);
           this._customHeaderAdded = true
 
@@ -83,9 +90,21 @@ document.addEventListener('DOMContentLoaded', () => {
               handleValueChangeCategorieDanger(value, options)
             }
           });
-
         }
-      }
+      },
+      searchCallback(item) {
+        if(item.length === 0) {
+          treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
+          })
+        } else {
+          treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
+            el.setAttribute("hidden", "hidden");
+            el.setAttribute("aria-hidden", "true");
+          })
+        }
+      },
     })
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
     document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
