@@ -49,6 +49,14 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     expect(details_page.rappel_block.get_by_text("1999-01-0123")).to_be_visible()
 
 
+def test_evenement_produit_detail_wont_show_pam_if_not_danger_bacterien(live_server, page: Page):
+    evenement = EvenementProduitFactory(bacterie=False)
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    expect(details_page.page.get_by_text("Produit prêt à manger (PAM)", exact=True)).not_to_be_visible()
+
+
 def test_evenement_produit_detail_page_content_etablissement(live_server, page: Page):
     evenement = EvenementProduitFactory()
     etablissement = EtablissementFactory(evenement_produit=evenement)
