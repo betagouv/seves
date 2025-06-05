@@ -134,7 +134,10 @@ class MessageFactory(DjangoModelFactory):
             return
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
-            self.recipients.add(factory_class())
+            if factory_class is ContactAgentFactory:
+                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+            else:
+                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
 
     @factory.post_generation
     def recipients_copy(self, create, extracted, **kwargs):
@@ -145,4 +148,7 @@ class MessageFactory(DjangoModelFactory):
             return
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
-            self.recipients_copy.add(factory_class())
+            if factory_class is ContactAgentFactory:
+                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+            else:
+                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
