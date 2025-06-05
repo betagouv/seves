@@ -344,6 +344,23 @@ def test_can_filter_by_commune(live_server, mocked_authentification_user, page: 
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
+def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(siret="12345678912345")
+    not_to_be_found_1 = EtablissementFactory(siret="")
+    not_to_be_found_2 = EtablissementFactory(siret="9" * 14)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.siret.fill("12345678")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
 def test_can_filter_by_departement(live_server, mocked_authentification_user, page: Page):
     to_be_found = EtablissementFactory(departement="Cantal")
     not_to_be_found_1 = EtablissementFactory(departement="Aveyron")

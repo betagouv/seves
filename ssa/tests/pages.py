@@ -407,6 +407,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_numeros_rappel_conso")
 
     @property
+    def siret(self):
+        return self.page.locator("#id_siret")
+
+    @property
     def numero_agrement(self):
         return self.page.locator("#id_numero_agrement")
 
