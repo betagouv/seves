@@ -54,7 +54,7 @@ jobs:
       - name: Run DjHTML
         run: ./bin/check_html_format.sh
       - name: Run tests
-        run: pytest --tracing=retain-on-failure
+        run: pytest --tracing=retain-on-failure --showlocals
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions

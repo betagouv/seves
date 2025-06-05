@@ -715,11 +715,13 @@ def test_default_detection_order():
 
 @pytest.mark.django_db
 def test_date_derniere_mise_a_jour_after_evenement_delete():
-    evenement = EvenementFactory()
-    date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
-    evenement.is_deleted = True
-    evenement.save()
-    assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
+    for _ in range(0, 20):
+        evenement = EvenementFactory()
+        date_derniere_mise_a_jour = evenement.date_derniere_mise_a_jour
+        evenement.is_deleted = True
+        evenement.save()
+        my_debug = evenement.__dict__  # noqa: F841
+        assert date_derniere_mise_a_jour < evenement.date_derniere_mise_a_jour
 
 
 @pytest.mark.django_db
