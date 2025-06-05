@@ -36,9 +36,13 @@ def assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(page: Page):
 
     def _assert_fiche_zone_derniere_mise_a_jour_visible(fiche_zone_delimitee: FicheZoneDelimitee):
         last_update_text = (
-            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.evenement.date_derniere_mise_a_jour)}"
         )
         expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+
+        last_update_text = (
+            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+        )
         page.get_by_role("tab", name="Zone").click()
         expect(page.get_by_label("Zone", exact=True).get_by_text(last_update_text)).to_be_visible()
 
@@ -50,10 +54,14 @@ def assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(page: Pag
     """Fixture pour vérifier que la date de dernière mise à jour de la fiche détection est correctement affichée."""
 
     def _assert_fiche_detection_derniere_mise_a_jour_visible(fiche_detection: FicheDetection):
-        last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+        last_update_text = (
+            f"Dernière mise à jour le {get_date_formated(fiche_detection.evenement.date_derniere_mise_a_jour)}"
+        )
         expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
+
         page.get_by_role("tab", name="Détection").click()
         page.get_by_role("tab", name=fiche_detection.numero_detection).click()
+        last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
         expect(page.locator("#tabpanel-detection-panel").get_by_text(last_update_text)).to_be_visible()
 
     return _assert_fiche_detection_derniere_mise_a_jour_visible
