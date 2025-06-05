@@ -204,6 +204,9 @@ def generic_test_can_send_draft_element_suivi(
     message_page.open_message()
     message_page.submit_message()
 
+    # Wait for the page to confirm message was sent
+    expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
+
     message.refresh_from_db()
     assert message.status == Message.Status.FINALISE
     assert len(mailoutbox) == 1
