@@ -106,12 +106,14 @@ def test_order_by_date_creation(
 def test_order_by_date_derniere_mise_a_jour(
     live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
 ):
-    Evenement._meta.get_field("date_derniere_mise_a_jour").auto_now = False
-    evenements = {
-        "evenement_1": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 1, 1))),
-        "evenement_2": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 3, 1))),
-        "evenement_3": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 2, 1))),
-    }
+    evenements = {f"evenement_{i}": EvenementFactory() for i in range(1, 4)}
+    evenement_1_date = timezone.make_aware(datetime(2025, 1, 1))
+    Evenement.objects.filter(pk=evenements["evenement_1"].pk).update(date_derniere_mise_a_jour=evenement_1_date)
+    evenement_2_date = timezone.make_aware(datetime(2025, 3, 1))
+    Evenement.objects.filter(pk=evenements["evenement_2"].pk).update(date_derniere_mise_a_jour=evenement_2_date)
+    evenement_3_date = timezone.make_aware(datetime(2025, 2, 1))
+    Evenement.objects.filter(pk=evenements["evenement_3"].pk).update(date_derniere_mise_a_jour=evenement_3_date)
+
     page.goto(url_builder_for_list_ordering("maj", direction, "sv:evenement-liste"))
     page.get_by_role("link", name="Dernière MAJ descripteurs").click()
     assert_events_order(page, evenements, expected_order)
@@ -229,15 +231,17 @@ def test_order_by_zone(
     assert_events_order(page, evenements, expected_order)
 
 
-def test_order_by_with_bad_parameters_order_by_date_derniere_mise_a_jour_desc(
+def test_order_by_with_bad_parameters_defaults_to_date_derniere_mise_a_jour_desc(
     live_server, page: Page, assert_events_order
 ):
-    Evenement._meta.get_field("date_derniere_mise_a_jour").auto_now = False
-    evenements = {
-        "evenement_1": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 2, 1))),
-        "evenement_2": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 3, 1))),
-        "evenement_3": EvenementFactory(date_derniere_mise_a_jour=timezone.make_aware(datetime(2025, 1, 1))),
-    }
+    evenements = {f"evenement_{i}": EvenementFactory() for i in range(1, 4)}
+    evenement_1_date = timezone.make_aware(datetime(2025, 2, 1))
+    Evenement.objects.filter(pk=evenements["evenement_1"].pk).update(date_derniere_mise_a_jour=evenement_1_date)
+    evenement_2_date = timezone.make_aware(datetime(2025, 3, 1))
+    Evenement.objects.filter(pk=evenements["evenement_2"].pk).update(date_derniere_mise_a_jour=evenement_2_date)
+    evenement_3_date = timezone.make_aware(datetime(2025, 1, 1))
+    Evenement.objects.filter(pk=evenements["evenement_3"].pk).update(date_derniere_mise_a_jour=evenement_3_date)
+
     expected_order = ["evenement_2", "evenement_1", "evenement_3"]
     page.goto(
         f"{live_server.url}{reverse('sv:evenement-liste')}?order_by=bad_order_by_value&order_dir=bad_order_dir_value"
