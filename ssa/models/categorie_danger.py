@@ -28,6 +28,8 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     CRONOBACTER_SAKAZAKII = "Cronobacter sakazakii", "Bactérie > Cronobacter > Cronobacter sakazakii"
     CRONOBACTER_MALONATICUS = "Cronobacter malonaticus", "Bactérie > Cronobacter > Cronobacter malonaticus"
 
+    COLIFORMES = "Coliformes", "Bactérie > Coliformes"
+
     E_COLI = "Escherichia coli", "Bactérie > Escherichia Coli"
     E_COLI_NON_STEC = (
         "Escherichia coli (non STEC - EHEC)",
@@ -38,6 +40,10 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
         "Bactérie > Escherichia Coli > Escherichia coli shigatoxinogène (STEC - EHEC)",
     )
 
+    ENTEROBACTERIES = "Entérobactéries", "Bactérie > Entérobactéries"
+
+    LEPTOSPIRA = "Leptospira", "Bactérie > Leptospira"
+
     LISTERIA = "Listeria", "Bactérie > Listeria"
     LISTERIA_MONOCYTOGENES = "Listeria monocytogenes", "Bactérie > Listeria > Listeria monocytogenes"
 
@@ -45,6 +51,8 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     MYCOBACTERIUM_TUBERCULOSIS = "Mycobacterium tuberculosis", "Bactérie > Mycobacterium > Mycobacterium tuberculosis"
     MYCOBACTERIUM_BOVIS = "Mycobacterium bovis", "Bactérie > Mycobacterium > Mycobacterium bovis"
     MYCOBACTERIUM_SUIS = "Mycobacterium suis", "Bactérie > Mycobacterium > Mycobacterium suis"
+
+    PSEUDOMONAS = "Pseudomonas", "Bactérie > Pseudomonas"
 
     SALMONELLA = "Salmonella", "Bactérie > Salmonella"
     SALMONELLA_AUTRE = "Salmonella, autre (à préciser)", "Bactérie > Salmonella > Salmonella, autre (à préciser)"
@@ -56,6 +64,8 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     SALMONELLA_MAMBAKA = "Salmonella mambaka", "Bactérie > Salmonella > Salmonella mambaka"
     SALMONELLA_TYPHIMURIUM = "Salmonella typhimurium", "Bactérie > Salmonella > Salmonella typhimurium"
     SALMONELLA_VIRCHOW = "Salmonella virchow", "Bactérie > Salmonella > Salmonella virchow"
+
+    SALMONELLA_SHIGELLA = "Shigella", "Bactérie > Shigella"
 
     STAPHYLOCOCCUS = "Staphylococcus", "Bactérie > Staphylococcus"
     STAPHYLOCOCCUS_AUREUS = (
@@ -258,6 +268,39 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     RUPTURE_FROID = "Rupture de la chaîne du froid", "Perte de maîtrise procédé > Rupture de la chaîne du froid"
     CONDITIONS_HYGIENE = "Mauvaises conditions d'hygiène", "Perte de maîtrise procédé > Mauvaises conditions d'hygiène"
     DEFAUT_TRACABILITE = "Défaut de traçabilité", "Perte de maîtrise procédé > Défaut de traçabilité"
+
+    MCDA_COBALT = "Cobalt", "MCDA > Cobalt"
+    MCDA_FORMALDEHYDE = "Formaldéhyde", "MCDA > Formaldéhyde"
+    MCDA_MELAMINE = "Mélamine", "MCDA > Mélamine"
+    MCDA_PERTURBATEUR_ENDOCRINIEN = "Perturbateur endocrinien (autre)", "MCDA > Perturbateur endocrinien (autre)"
+    MCDA_PHTALATES = "Phtalates", "MCDA > Phtalates"
+    MCDA_BISPHENOL_A = "Bisphénol A", "MCDA > Bisphénol A"
+    MCDA_AUTRE = "MCDA (autre contaminant)", "MCDA > MCDA (autre contaminant)"
+
+    CONTAMINANT_3MCPD = (
+        "3MCPD et esters d'acides gras de 3-MCPD",
+        "Contaminant des procédés > 3MCPD et esters d'acides gras de 3-MCPD",
+    )
+    CONTAMINANT_ACRYLAMIDE = "3MCPD Acrylamide", "Contaminant des procédés > Acrylamide"
+    CONTAMINANT_GLYCIDOL = (
+        "Esters d'acides gras de glycidol",
+        "Contaminant des procédés > Esters d'acides gras de glycidol",
+    )
+    CONTAMINANT_HAP = "HAP", "Contaminant des procédés > HAP"
+    CONTAMINANT_AAH = "AAH", "Contaminant des procédés > AAH"
+    CONTAMINANT_HYDROCARBURES = (
+        "Hydrocarbures d'huile minérale (MOAH et MOSH)",
+        "Contaminant des procédés > Hydrocarbures d'huile minérale (MOAH et MOSH)",
+    )
+    CONTAMINANT_FURANE = (
+        "Furane et dérivés méthylés du furane",
+        "Contaminant des procédés > Furane et dérivés méthylés du furane",
+    )
+    CONTAMINANT_NITROSAMINES = "Nitrosamines", "Contaminant des procédés > Nitrosamines"
+    CONTAMINANT_AUTRES = (
+        "Contaminant des procédés (autre sauf pesticide biocide)",
+        "Contaminant des procédés > Autre sauf pesticide/biocide",
+    )
 
     METAL_PLOMB = "Plomb (Pb)", "Elément trace métallique / inorganique > Plomb (Pb)"
     METAL_CADMIUM = "Cadmium (Cd)", "Elément trace métallique / inorganique > Cadmium (Cd)"
