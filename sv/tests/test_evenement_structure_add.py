@@ -4,6 +4,7 @@ from django.urls import reverse
 from playwright.sync_api import expect, Page
 
 from core.factories import ContactStructureFactory
+from core.tests.generic_tests.contacts import generic_test_add_contact_structure_to_an_evenement
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -76,21 +77,9 @@ def test_structure_niveau2_without_emails_are_not_visible(live_server, page):
     expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Bar")).not_to_be_visible()
 
 
-@pytest.mark.django_db
-def test_add_structure_to_an_evenement(live_server, page, choice_js_fill):
-    contact = ContactStructureFactory(with_one_active_agent=True)
+def test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill):
     evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Contacts").click()
-    choice_js_fill(page, "#add-contact-structure-form .choices", str(contact), str(contact))
-    page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
-    page.get_by_role("tab", name="Contacts").click()
-
-    expect(page.get_by_text("La structure a été ajoutée avec succès.")).to_be_visible()
-    expect(page.get_by_test_id("contacts-structures")).to_be_visible()
-    assert page.get_by_test_id("contacts-structures").count() == 1
-    assert Evenement.objects.filter(pk=evenement.pk, contacts=contact).exists()
+    generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, evenement)
 
 
 @pytest.mark.django_db
