@@ -26,6 +26,7 @@ from .mixins import (
     WithPublishMixin,
     WithACNotificationMixin,
     MessageHandlingMixin,
+    WithFormErrorsAsMessagesMixin,
 )
 from .models import Document, Message, Contact, user_is_referent_national
 from .notifications import notify_contact_agent
@@ -99,7 +100,9 @@ class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return safe_redirect(request.POST.get("next") + "#tabpanel-documents-panel")
 
 
-class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, UpdateView):
+class DocumentUpdateView(
+    PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
+):
     model = Document
     form_class = DocumentEditForm
     http_method_names = ["post"]
@@ -120,6 +123,10 @@ class DocumentUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         response = super().form_valid(form)
         messages.success(self.request, "Le document a bien été mis à jour.", extra_tags="core documents")
         return response
+
+    def form_invalid(self, form):
+        super().form_invalid(form)
+        return safe_redirect(self.get_success_url())
 
 
 class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
