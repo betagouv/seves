@@ -158,6 +158,12 @@ class LieuFormDomElements:
         self.page = page
 
     def force_adresse(self, element, adresse: str, extra_str: str = ""):
+        self.page.route(
+            "https://api-adresse.data.gouv.fr/search/?*",
+            lambda route: route.fulfill(
+                status=200, content_type="application/json", body="""{"type": "FeatureCollection","features": []}"""
+            ),
+        )
         element.click()
         self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
