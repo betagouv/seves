@@ -18,11 +18,17 @@ def environment_class(request):
 
 def domains(request):
     user_groups = [g.name for g in request.user.groups.all()]
-    sv_domain = {"icon": "fr-icon-leaf-line", "nom": "Santé des végétaux", "url": reverse_lazy("sv:evenement-liste")}
+    sv_domain = {
+        "icon": "fr-icon-leaf-line",
+        "nom": "Santé des végétaux",
+        "url": reverse_lazy("sv:evenement-liste"),
+        "help_url": "https://doc-sv.seves.beta.gouv.fr",
+    }
     ssa_domain = {
         "icon": "fr-icon-restaurant-line ",
         "nom": "Sécurité sanitaire des aliments",
         "url": reverse_lazy("ssa:evenement-produit-liste"),
+        "help_url": "https://doc-ssa.seves.beta.gouv.fr",
     }
 
     current_domain = {}

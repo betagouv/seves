@@ -88,9 +88,11 @@
                                     <ul class="fr-btns-group">
                                         {% block product_nav %}
                                         {% endblock product_nav %}
-                                        <li>
-                                            <a class="fr-btn" href="https://doc.seves.beta.gouv.fr" target="_blank">Aide</a>
-                                        </li>
+                                        {% if current_domain.help_url %}
+                                            <li>
+                                                <a class="fr-btn" href="{{ current_domain.help_url }}" target="_blank">Aide</a>
+                                            </li>
+                                        {% endif %}
                                         <li class="fr-nav__item">
                                             {% if user.is_authenticated %}
                                                 <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-777"><span class="fr-icon-account-circle-line"></span>{{ user.email }}</button>

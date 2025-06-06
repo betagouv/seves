@@ -21,11 +21,13 @@ def test_domains_context_processor_all_domains(django_user_model, settings):
     request.domain = "sv"
     context = domains(request)
     assert context["current_domain"]["nom"] == "Santé des végétaux"
+    assert context["current_domain"]["help_url"] == "https://doc-sv.seves.beta.gouv.fr"
     assert context["other_domains"] == [
         {
             "icon": "fr-icon-restaurant-line ",
             "nom": "Sécurité sanitaire des aliments",
             "url": reverse("ssa:evenement-produit-liste"),
+            "help_url": "https://doc-ssa.seves.beta.gouv.fr",
         },
     ]
 
@@ -37,5 +39,6 @@ def test_domains_context_processor_all_domains(django_user_model, settings):
             "icon": "fr-icon-leaf-line",
             "nom": "Santé des végétaux",
             "url": reverse("sv:evenement-liste"),
+            "help_url": "https://doc-sv.seves.beta.gouv.fr",
         }
     ]
