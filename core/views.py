@@ -319,23 +319,24 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
 
     def post(self, request, *args, **kwargs):
         form = StructureAddForm(request.POST)
-        if form.is_valid():
-            self.obj = self.get_fiche_object()
-            contacts_structures = form.cleaned_data["contacts_structures"]
-            with transaction.atomic():
-                for contact_structure in contacts_structures:
-                    self.obj.contacts.add(contact_structure)
-                self.obj.update_allowed_structures_and_visibility(contacts_structures)
-
-            message = ngettext(
-                "La structure a été ajoutée avec succès.",
-                "Les %(count)d structures ont été ajoutées avec succès.",
-                len(contacts_structures),
-            ) % {"count": len(contacts_structures)}
-            messages.success(request, message, extra_tags="core contacts")
+        if not form.is_valid():
+            messages.error(request, "Erreur lors de l'ajout de la structure.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        messages.error(request, "Erreur lors de l'ajout de la structure.")
+        self.obj = self.get_fiche_object()
+        contacts_structures = form.cleaned_data["contacts_structures"]
+        with transaction.atomic():
+            for contact_structure in contacts_structures:
+                self.obj.contacts.add(contact_structure)
+            if hasattr(self.obj, "update_allowed_structures_and_visibility"):
+                self.obj.update_allowed_structures_and_visibility(contacts_structures)
+
+        message = ngettext(
+            "La structure a été ajoutée avec succès.",
+            "Les %(count)d structures ont été ajoutées avec succès.",
+            len(contacts_structures),
+        ) % {"count": len(contacts_structures)}
+        messages.success(request, message, extra_tags="core contacts")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
@@ -354,29 +355,30 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
 
     def post(self, request, *args, **kwargs):
         form = AgentAddForm(request.POST)
-        if form.is_valid():
-            self.obj = self.get_fiche_object()
-            contacts_agents = form.cleaned_data["contacts_agents"]
-            allowed_contacts_structures_to_add = []
-            with transaction.atomic():
-                for contact_agent in contacts_agents:
-                    self.obj.contacts.add(contact_agent)
-                    if not user_is_referent_national(contact_agent.agent.user):
-                        contact_structure = contact_agent.get_structure_contact()
-                        self.obj.contacts.add(contact_structure)
-                        allowed_contacts_structures_to_add.append(contact_structure)
-                self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
-                notify_contact_agent(contact_agent, self.obj)
-
-            message = ngettext(
-                "L'agent a été ajouté avec succès.",
-                "Les %(count)d agents ont été ajoutés avec succès.",
-                len(contacts_agents),
-            ) % {"count": len(contacts_agents)}
-            messages.success(request, message, extra_tags="core contacts")
+        if not form.is_valid():
+            messages.error(request, "Erreur lors de l'ajout de l'agent.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        messages.error(request, "Erreur lors de l'ajout de l'agent.")
+        self.obj = self.get_fiche_object()
+        contacts_agents = form.cleaned_data["contacts_agents"]
+        allowed_contacts_structures_to_add = []
+        with transaction.atomic():
+            for contact_agent in contacts_agents:
+                self.obj.contacts.add(contact_agent)
+                if not user_is_referent_national(contact_agent.agent.user):
+                    contact_structure = contact_agent.get_structure_contact()
+                    self.obj.contacts.add(contact_structure)
+                    allowed_contacts_structures_to_add.append(contact_structure)
+            if hasattr(self.obj, "update_allowed_structures_and_visibility"):
+                self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
+            notify_contact_agent(contact_agent, self.obj)
+
+        message = ngettext(
+            "L'agent a été ajouté avec succès.",
+            "Les %(count)d agents ont été ajoutés avec succès.",
+            len(contacts_agents),
+        ) % {"count": len(contacts_agents)}
+        messages.success(request, message, extra_tags="core contacts")
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
 

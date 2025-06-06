@@ -9,6 +9,9 @@ from django.urls import reverse
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact
+from core.tests.generic_tests.contacts import (
+    generic_test_add_contact_agent_to_an_evenement,
+)
 from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -28,21 +31,9 @@ def contacts(db):
     return ContactAgentFactory.create_batch(2, agent__structure=structure, with_active_agent=True)
 
 
-def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, goto_contacts):
-    contact_structure = ContactStructureFactory()
-    contact = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill):
     evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    goto_contacts(page)
-    choice_js_fill(page, "#add-contact-agent-form .choices", contact.agent.nom, contact.display_with_agent_unit)
-    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
-    goto_contacts(page)
-
-    expect(page.get_by_text("L'agent a été ajouté avec succès.")).to_be_visible()
-    expect(page.get_by_test_id("contacts-agents")).to_be_visible()
-    assert page.get_by_test_id("contacts-agents").count() == 1
-    assert Evenement.objects.filter(pk=evenement.pk, contacts=contact).exists()
+    generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, evenement)
 
 
 def test_cant_add_inactive_agent_to_an_evenement(live_server, page, choice_js_cant_pick, goto_contacts):
