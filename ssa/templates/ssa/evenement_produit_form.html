@@ -101,9 +101,11 @@
                                 <div class="fr-mt-2w">
                                     <div class="fr-grid-row fr-grid-row--gutters">
                                         <div class="fr-col-lg-8">
-                                            {% render_field form.quantification %}
+                                            {{ form.quantification.label_tag }}
+                                            <span class="fr-hint-text">Résultat le plus défavorable à l'origine de l'événement</span>
+                                            {{ form.quantification }}
                                         </div>
-                                        <div class="fr-col-lg-4">
+                                        <div class="fr-col-lg-4 fr-my-auto">
                                             {% render_field form.quantification_unite %}
                                         </div>
                                     </div>
