@@ -50,7 +50,7 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
 
 
 def test_evenement_produit_detail_wont_show_pam_if_not_danger_bacterien(live_server, page: Page):
-    evenement = EvenementProduitFactory(bacterie=False)
+    evenement = EvenementProduitFactory(not_bacterie=True)
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
 
