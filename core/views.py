@@ -48,7 +48,8 @@ class DocumentUploadView(
         return self.get_fiche_object().can_add_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        form = DocumentUploadForm(request.POST, request.FILES)
+        fiche = self.get_fiche_object()
+        form = DocumentUploadForm(request.POST, request.FILES, obj=fiche)
         if form.is_valid():
             document = form.save(commit=False)
             agent = request.user.agent
@@ -63,7 +64,6 @@ class DocumentUploadView(
                 logger.error("Could not connect to Redis")
                 return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
 
-            fiche = self.get_fiche_object()
             self.add_user_contacts(fiche)
 
             messages.success(
@@ -176,7 +176,7 @@ class MessageCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = MessageDocumentForm()
+        context["add_document_form"] = MessageDocumentForm(object=self.obj)
         return context
 
     def get_success_url(self):

@@ -104,7 +104,6 @@ class DocumentFactory(DjangoModelFactory):
     nom = factory.Faker("sentence", nb_words=2)
     description = factory.Faker("paragraph")
     file = factory.django.FileField(filename="test.csv")
-    document_type = FuzzyChoice([choice[0] for choice in Document.TypeDocument.choices])
 
     @factory.lazy_attribute
     def created_by(self):
@@ -113,6 +112,12 @@ class DocumentFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def created_by_structure(self):
         return Structure.objects.get(libelle="Structure Test")
+
+    @factory.lazy_attribute
+    def document_type(self):
+        if self.content_object and hasattr(self.content_object, "get_allowed_document_types"):
+            return random.choice(self.content_object.get_allowed_document_types())
+        return random.choice([c[0] for c in Document.TypeDocument.choices])
 
 
 class MessageFactory(DjangoModelFactory):

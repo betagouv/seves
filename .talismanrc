@@ -39,3 +39,5 @@ fileignoreconfig:
   checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
 - filename: ssa/forms.py
   checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a
+- filename: core/migrations/0034_alter_document_document_type.py
+  checksum: ad80322fb2dab542fe667054b83761da8e386ce7357b123b2e30a0fea28f1f10

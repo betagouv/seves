@@ -14,7 +14,7 @@ from core.mixins import (
     AllowsSoftDeleteMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure
+from core.models import Structure, Document
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
 from .categorie_produit import CategorieProduit
@@ -313,6 +313,27 @@ class EvenementProduit(
         from ssa.forms import MessageForm
 
         return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.AUTRE,
+        ]
 
     class Meta:
         constraints = [

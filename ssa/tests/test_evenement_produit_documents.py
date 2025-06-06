@@ -1,7 +1,9 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
+from playwright.sync_api import expect
 
 from core.factories import DocumentFactory
 from core.pages import WithDocumentsPage
+from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 
@@ -32,3 +34,8 @@ def test_can_edit_document_on_evenement(live_server, page: Page):
     document_page.open_document_tab()
     expect(document_page.document_title(document.pk)).to_be_visible()
     expect(document_page.document_title(document.pk)).to_have_text("New name")
+
+
+def test_cant_see_document_type_from_other_app(live_server, page: Page, check_select_options_from_element):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_cant_see_document_type_from_other_app(live_server, page, check_select_options_from_element, evenement)

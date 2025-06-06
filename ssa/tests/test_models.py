@@ -2,6 +2,8 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
+from core.factories import DocumentFactory
+from core.models import Document
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, TypeEvenement, Source, CategorieDanger
 from ssa.models.evenement_produit import PretAManger
@@ -98,4 +100,11 @@ def test_pam_requires_danger_bacterien_constraint():
     EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.STAPHYLOCOCCUS)
     EvenementProduitFactory(
         produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.VIBRIO_VULNIFICUS
+    )
+
+
+@pytest.mark.django_db
+def test_cant_create_document_with_invalid_document_type():
+    DocumentFactory(
+        content_object=EvenementProduitFactory(), document_type=Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE
     )

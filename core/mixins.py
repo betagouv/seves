@@ -102,7 +102,7 @@ class WithMessageMixin:
             obj=obj,
             next=obj.get_absolute_url(),
         )
-        context["add_document_form"] = MessageDocumentForm()
+        context["add_document_form"] = MessageDocumentForm(object=obj)
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
