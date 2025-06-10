@@ -1,6 +1,17 @@
+.treeselect-input {
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+}
+
+.treeselect-input input::placeholder {
+    color: var(--text-mention-grey) !important;
+    font-style: italic !important;
+    opacity: 1 !important;
+}
+
 .treeselect-list__group-container {
     background-color: var(--background-contrast-grey);
-
 }
 
 .treeselect-list__item-icon {

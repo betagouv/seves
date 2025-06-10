@@ -1,5 +1,6 @@
 #search-form {
     background-color: var(--background-open-blue-france);
+    --background-disabled-grey: var(--grey-625-425);
 }
 .evenements_liste__header {
     padding: 20px;
@@ -48,9 +49,15 @@
     max-width: 300px;
 }
 
-.evenements_liste__search-form .fr-checkbox-group {
-    top: 40px
+.evenements_liste__search-form .single-checkbox-no-legend,
+.evenements_liste__search-form .single-checkbox-no-legend .fr-fieldset__element {
+    margin: 0;
 }
+
+.evenements_liste__search-form .single-checkbox-no-legend  .fr-checkbox-group {
+    margin: 2rem 0 .5rem 0;
+}
+
 .ellipsis {
     white-space: nowrap;
     overflow: hidden;

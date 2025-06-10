@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: options,
             showTags: false,
             placeholder: "Choisir",
+            clearable: false,
             openCallback() {
                 patchItems(treeselect.srcElement)
             },
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: options,
             showTags: false,
             placeholder: "Choisir",
+            clearable: false,
             openCallback() {
                 patchItems(treeselect.srcElement)
             },
