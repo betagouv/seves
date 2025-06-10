@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import environ
 import tempfile
@@ -178,7 +179,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Sentry
 SENTRY_DSN = env("SENTRY_DSN", default=None)
-if SENTRY_DSN:
+if SENTRY_DSN and ENVIRONMENT != "test":
     sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()], traces_sample_rate=1.0, environment=ENVIRONMENT)
 
 
@@ -229,7 +230,7 @@ OIDC_RP_SIGN_ALGO = "RS256"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-if DEBUG:
+if DEBUG and ENVIRONMENT != "test":
     INSTALLED_APPS.append("debug_toolbar")
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INTERNAL_IPS = ["127.0.0.1"]
@@ -309,8 +310,12 @@ CSP_CONNECT_SRC = (
     "fichiers-publics.agriculture.gouv.fr",
 )
 
-SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
-CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={ENVIRONMENT}"
+if ENVIRONMENT != "test":
+    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+    if SENTRY_REPORT_URL:
+        query_param = f"sentry_environment={ENVIRONMENT}"
+        last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
+        CSP_REPORT_URI = f"{SENTRY_REPORT_URL}{last_token}"
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")
