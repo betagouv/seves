@@ -3,7 +3,7 @@ import {setUpCommuneChoices} from "/static/core/commune.js";
 import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
 
 document.lieuxCards = []
-modalHTMLContent = {}
+const modalHTMLContent = {}
 document.choicesInstances = {};
 
 function deleteLieu(event) {

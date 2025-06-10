@@ -1,29 +1,41 @@
-export function fetchAddress(query) {
-    return fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=15`)
+/**
+ * @typedef {Object} AddressResult
+ * @property {string} value
+ * @property {string} label
+ * @property {Object} customProperties
+ * @property {String} customProperties.inseeCode
+ * @property {String} customProperties.city
+ * @property {String} customProperties.context
+ */
+/**
+ * @param query
+ * @param {AbortController=} abortController
+ * @returns {Promise<AddressResult[]|undefined>}
+ */
+export function fetchAddress(query, {abortController = undefined} = {}) {
+    const init = {};
+    if (abortController !== undefined) {
+        init.signal = abortController.signal
+    }
+    return fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=15`, init)
         .then(response => response.json())
         .then(data => {
-            const results = data["features"].map(item => ({
-                value: item.properties.name,
-                label: item.properties.label,
-                customProperties: {
-                    "inseeCode": item.properties.citycode,
-                    "city": item.properties.city,
-                    "context": item.properties.context
+            return data["features"].map(item => (
+                {
+                    value: item.properties.name,
+                    label: item.properties.label,
+                    customProperties: {
+                        "inseeCode": item.properties.citycode,
+                        "city": item.properties.city,
+                        "context": item.properties.context
+                    }
                 }
-            }))
-            return [{
-                value: query,
-                label: `${query} (Forcer la valeur)`,
-                customProperties: {
-                    "inseeCode": null,
-                    "city": null,
-                    "context": null,
-                }
-            }, ...results];
+            ))
         })
         .catch(error => {
+            if (error.name === "AbortError") return undefined;
             console.error('Erreur lors de la récupération des données:', error);
-            return []
+            return undefined;
         });
 }
 
@@ -38,12 +50,42 @@ export function setUpAddressChoices(element) {
         classNames: {containerInner: 'fr-select'},
         itemSelectText: '',
     });
+    addressCommunes.abortController = new AbortController();
+    addressCommunes.abort = () => {
+        addressCommunes.abortController.abort();
+        addressCommunes.abortController = new AbortController();
+    };
+
     addressCommunes.input.element.addEventListener('input', function (event) {
         const query = addressCommunes.input.element.value
-        if (query.length > 5) {
-            fetchAddress(query).then(results => {
-                addressCommunes.clearChoices()
-                addressCommunes.setChoices(results, 'value', 'label', true)
+        addressCommunes.clearChoices();
+        if (query.length === 0) {
+            // Just abort any previous request so we don't fill the dropdown with outdated values
+            addressCommunes.abort();
+            return addressCommunes;
+        }
+
+        const defaultChoices = [
+            {
+                value: query,
+                label: `${query} (Forcer la valeur)`,
+                customProperties: {
+                    "inseeCode": null,
+                    "city": null,
+                    "context": null,
+                }
+            }
+        ];
+
+        // Prevent populating dropdown with outdated data and just display default choice
+        addressCommunes.abort();
+        addressCommunes.setChoices(defaultChoices, 'value', 'label', true);
+
+        if (query.length >= 5) {
+            fetchAddress(query, {abortController: addressCommunes.abortController}).then(results => {
+                if (Array.isArray(results)) {
+                    addressCommunes.setChoices([...defaultChoices, ...results], 'value', 'label', true)
+                }
             })
         }
     })
