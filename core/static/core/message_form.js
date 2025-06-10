@@ -23,19 +23,25 @@ function cloneDocumentTypeInput(input, currentID, destination){
     destination.appendChild(newTypeInput)
 }
 
-function addDocumentCard(currentID, fileInput){
+function addDocumentCard(fileName, container){
     const toShow = `<div class="fr-p-1w fr-mb-2w document-to-add" id="document_card_${currentID}">`
-    + `<span>${fileInput.files[0].name}</span><a href="#" id="document_remove_${currentID}" data-document-id="${currentID}">`
+    + `<span>${fileName}</span><a href="#" id="document_remove_${currentID}" data-document-id="${currentID}">`
     + `<span class="fr-icon-close-circle-line" aria-hidden="true"></span></a></div>`
 
-    document.getElementById("documents-to-upload").insertAdjacentHTML("beforeend", toShow);
+    container.querySelector("#documents-to-upload").insertAdjacentHTML("beforeend", toShow);
     const deleteButton = document.getElementById(`document_remove_${currentID}`)
     deleteButton.addEventListener("click", (event)=>{
         const documentID= event.target.parentNode.dataset.documentId
         document.getElementById(`document_card_${documentID}`).remove()
-        document.getElementById(`document_type_${documentID}`).remove()
-        document.getElementById(`document_file_${documentID}`).remove()
+
+        if (!!document.getElementById(`document_type_${documentID}`)){
+            document.getElementById(`document_type_${documentID}`).remove()
+            document.getElementById(`document_file_${documentID}`).remove()
+        } else {
+            container.querySelector(`[name="existing_document_name_${deleteButton.dataset.pk}"]`).remove()
+        }
     });
+    return deleteButton
 }
 
 function onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan) {
@@ -173,23 +179,24 @@ function addEmptyOptionInDocumentTypeSelect(typeInput) {
     typeInput.insertBefore(emptyOption, typeInput.firstChild);
 }
 
-function resetAddDocumentForm(typeInput, fileInput) {
+function resetAddDocumentForm(typeInput, fileInput, container) {
     addEmptyOptionInDocumentTypeSelect(typeInput);
     typeInput.selectedIndex = 0;
     fileInput.value = null;
     fileInput.setAttribute("disabled", "true");
-    document.getElementById("message-add-document").setAttribute("disabled", "true");
+    container.querySelector("#message-add-document").setAttribute("disabled", "true");
     currentID += 1;
-    document.querySelector(".add-document-form-btn").classList.remove("fr-hidden");
-    document.querySelector(".document-form").classList.add("fr-hidden");
+    container.querySelector(".add-document-form-btn").classList.remove("fr-hidden");
+    container.querySelector(".document-form").classList.add("fr-hidden");
 }
 
-function validateDocument(event, typeInput, fileInput, inputDestination){
+function validateDocument(event, typeInput, fileInput, inputDestination, container){
     event.preventDefault();
     cloneDocumentInput(fileInput, currentID, inputDestination)
     cloneDocumentTypeInput(typeInput, currentID, inputDestination)
-    addDocumentCard(currentID, fileInput)
-    resetAddDocumentForm(typeInput, fileInput);
+    const fileName = fileInput.files[0].name
+    addDocumentCard(fileName, container)
+    resetAddDocumentForm(typeInput, fileInput, container);
 }
 
 function onSubmitBtnClick(event, messageForm) {
@@ -267,6 +274,19 @@ function initUpdateMessageForm(messageUpdateForm){
         .addEventListener("click", event =>
             onSubmitBtnClick(event, messageUpdateForm)
         );
+    messageUpdateForm.querySelector(".add-document-form-btn").addEventListener("click", event =>{
+        event.preventDefault();
+        messageUpdateForm.querySelector(".document-form").classList.remove("fr-hidden")
+        messageUpdateForm.querySelector(".add-document-form-btn").classList.add("fr-hidden")
+    })
+    const fileInput = messageUpdateForm.querySelector('#id_file');
+    const typeInput = messageUpdateForm.querySelector(' #id_document_type');
+    const messageAddDocumentButton = messageUpdateForm.querySelector("#message-add-document")
+    const extensionsInfoSpan = messageUpdateForm.querySelector("#allowed-extensions-list");
+    typeInput.addEventListener("change", () => onDocumentTypeChange(typeInput, fileInput, messageAddDocumentButton, extensionsInfoSpan));
+    fileInput.addEventListener("change", () => onFileInputChange(fileInput, typeInput, messageAddDocumentButton));
+    const inputDestination = messageUpdateForm.querySelector("#inputs-for-upload")
+    messageAddDocumentButton.addEventListener("click", event => {validateDocument(event, typeInput, fileInput, inputDestination, messageUpdateForm)})
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -289,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addDocumentFormButton.classList.add("fr-hidden")
     })
 
-    messageAddDocumentButton.addEventListener("click", event => {validateDocument(event, typeInput, fileInput,inputDestination)})
+    messageAddDocumentButton.addEventListener("click", event => {validateDocument(event, typeInput, fileInput,inputDestination, addMessageForm)})
     const choicesRecipients = initializeChoices(document.getElementById('id_recipients'))
     const choicesCopy = initializeChoices(document.getElementById('id_recipients_copy'))
     const choicesStructuresRecipients = initializeChoices(document.getElementById('id_recipients_structures_only'))
@@ -333,5 +353,12 @@ document.addEventListener('DOMContentLoaded', function () {
         initUpdateMessageForm(messageUpdateForm)
 
     });
+    document.querySelectorAll(".existing-document-form").forEach(existingDocumentForm => {
+        let filename = existingDocumentForm.querySelector('[name^="existing_document_name"]').value
+        filename = filename.split("/").pop()
+        const deleteButton = addDocumentCard(filename, existingDocumentForm.closest("form"))
+        deleteButton.dataset.pk = existingDocumentForm.querySelector('[name^="existing_document_name"]').dataset.pk
+        currentID += 1
+    })
 
 });
