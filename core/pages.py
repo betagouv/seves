@@ -98,6 +98,15 @@ class BaseMessagePage(ABC):
     def open_message(self, index=1):
         self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
 
+    def add_document(self):
+        self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
+        self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
+        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files("static/images/login.jpeg")
+        self.page.locator(f"{self.container_id} #message-add-document").click()
+
+    def remove_document(self, index):
+        self.page.locator(f"{self.container_id} #document_remove_{index}").click()
+
     @property
     def message_title_in_sidebar(self):
         return self.page.locator(".sidebar.open h5")
@@ -113,6 +122,12 @@ class BaseMessagePage(ABC):
     @property
     def document_type_input(self):
         return self.page.locator(".sidebar #id_document_type")
+
+    @property
+    def get_existing_documents_title(self):
+        cards = self.page.locator(self.container_id).locator("[id^='document_card_'] span")
+        texts = [cards.nth(i).inner_text() for i in range(cards.count())]
+        return [t for t in texts if t]
 
 
 class CreateMessagePage(BaseMessagePage):

@@ -1,8 +1,10 @@
+import os
+
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
-from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory
+from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
 from core.models import Message, FinSuiviContact
 from core.pages import CreateMessagePage, UpdateMessagePage
 
@@ -264,3 +266,43 @@ def generic_test_can_only_see_own_document_types_in_message_form(
 
     expected = [t.label for t in object.get_allowed_document_types()]
     check_select_options_from_element(message_page.document_type_input, expected, False)
+
+
+def generic_test_can_see_and_delete_documents_from_draft_message(
+    live_server, page, object, mocked_authentification_user, mailoutbox
+):
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.MESSAGE,
+    )
+    document_to_remove = DocumentFactory(content_object=message)
+    document_to_keep = DocumentFactory(content_object=message)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    message_page.open_message()
+    assert len(message_page.get_existing_documents_title) == 2
+    assert os.path.basename(document_to_remove.file.name) in message_page.get_existing_documents_title
+    assert os.path.basename(document_to_keep.file.name) in message_page.get_existing_documents_title
+
+    # Add new document
+    message_page.add_document()
+    assert len(message_page.get_existing_documents_title) == 3
+
+    # Remove previous document
+    message_page.remove_document(index=0)
+    assert len(message_page.get_existing_documents_title) == 2
+
+    message_page.submit_message()
+
+    # Wait for the page to confirm message was sent
+    expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
+
+    message.refresh_from_db()
+    assert message.status == Message.Status.FINALISE
+    assert message.documents.count() == 2
+    assert document_to_keep in message.documents.all()
+    assert document_to_remove not in message.documents.all()
+    assert len(mailoutbox) == 1
