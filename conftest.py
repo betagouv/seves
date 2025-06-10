@@ -1,3 +1,4 @@
+import contextlib
 import os
 from unittest.mock import patch
 
@@ -17,6 +18,8 @@ User = get_user_model()
 @pytest.fixture
 def page(page):
     timeout = 4_000
+    with contextlib.suppress(TypeError, ValueError):
+        timeout = int(os.getenv("PLAYWRIGHT_TIMEOUT"))
     page.set_default_navigation_timeout(timeout)
     page.set_default_timeout(timeout)
     yield page
