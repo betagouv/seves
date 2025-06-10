@@ -36,7 +36,14 @@
                     <button class="fr-btn fr-btn--tertiary btn-full" id="message-add-document" disabled>Valider l'ajout du document</button>
                 </div>
             </div>
-
+        </div>
+        <div class="fr-hidden">
+            {% for existing_document_form in message_form.documents_forms %}
+                <div class="existing-document-form">
+                    {{ existing_document_form }}
+                    <input type="hidden" name="existing_document_name_{{ existing_document_form.instance.pk }}" data-pk="{{ existing_document_form.instance.pk }}" value="{{ existing_document_form.instance.file.name}}">
+                </div>
+            {% endfor %}
         </div>
         <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--center">
             <li>
