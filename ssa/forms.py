@@ -89,7 +89,9 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
-        self.instance.createur = self.user.agent.structure
+
+        if not self.instance.pk:
+            self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
         self.save_free_links(instance)
         return instance

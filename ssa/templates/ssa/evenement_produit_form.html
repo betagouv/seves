@@ -33,11 +33,19 @@
         <main class="main-container">
 
             <div class="evenement-produit-form-header">
-                <h1>Création d'un événement</h1>
+                <h1>{% if form.instance.pk %}Modification de l'événement {{ form.instance.numero }}{% else %}Création d'un événement{% endif %}</h1>
                 <div class="fr-mb-auto">
                     <a href="{% url 'ssa:evenement-produit-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
-                    <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
-                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">Publier</button>
+                    {% if form.instance and form.instance.is_draft %}
+                        <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
+                    {% endif %}
+                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+                        {% if form.instance.pk %}
+                            Enregistrer
+                        {% else %}
+                            Publier
+                        {% endif %}
+                    </button>
                 </div>
             </div>
 
@@ -48,7 +56,7 @@
                         <div class="fr-col-12 fr-col-lg-4 flex-column ">
                             <div id="date-creation">
                                 <label class="fr-label" for="date-creation-input">Date de création</label>
-                                <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% now 'd/m/Y' %}" disabled>
+                                <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                             </div>
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
@@ -171,6 +179,7 @@
             {% include "ssa/_etablissement_block.html" %}
             <div id="liens-libre" class="white-container fr-mt-2w">
                 <h3>Liens libres</h3>
+                {{ form.instance.free_link_ids|json_script:"free-links-id" }}
                 <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
                 <div>
                     {{ form.free_link }}

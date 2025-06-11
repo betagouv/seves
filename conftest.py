@@ -133,6 +133,18 @@ def choice_js_option_disabled(db, page):
     return _choice_js_cant_pick
 
 
+@pytest.fixture
+def choice_js_get_values(db, page):
+    def _choice_js_get_values(page, locator):
+        selected_options = page.locator(f'{locator} ~ div [aria-selected="true"]')
+        texts = []
+        for i in range(selected_options.count()):
+            texts.append(selected_options.nth(i).inner_text())
+        return texts
+
+    return _choice_js_get_values
+
+
 def _check_select_options_on_element(element, expected_options, with_default_value):
     options = element.locator("option").element_handles()
     visible_texts = []

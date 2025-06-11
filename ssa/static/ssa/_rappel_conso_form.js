@@ -18,6 +18,12 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         handleDisabledRappelConsoBtn()
     }
 
+    function initExistingRappelConso(){
+        if (!document.getElementById("id_numeros_rappel_conso").value) return;
+        rappelConso = document.getElementById("id_numeros_rappel_conso").value.split(",")
+        showRappelConso()
+    }
+
     function showRappelConso() {
         const rappelContainer = document.getElementById("rappel-container")
         let innerHtml = ""
@@ -85,4 +91,5 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     toNextInput.forEach(element => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
+    initExistingRappelConso()
 })
