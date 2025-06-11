@@ -5,6 +5,7 @@ from .views import (
     EvenementProduitCreateView,
     EvenementProduitListView,
     FindNumeroAgrementView,
+    EvenementUpdateView,
 )
 from .views.produit import EvenementProduitExportView
 
@@ -19,6 +20,11 @@ urlpatterns = [
         "evenement-produit/<str:numero>/",
         EvenementProduitDetailView.as_view(),
         name="evenement-produit-details",
+    ),
+    path(
+        "evenement-produit/<int:pk>/modification",
+        EvenementUpdateView.as_view(),
+        name="evenement-produit-update",
     ),
     path(
         "evenement-produit/",

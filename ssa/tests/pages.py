@@ -9,6 +9,7 @@ from ssa.models import Etablissement
 
 class WithTreeSelect:
     def _set_treeselect_option(self, container_id, label):
+        self.page.locator(f"#{container_id} .treeselect-input__clear").click()
         self.page.locator(f"#{container_id} .treeselect-input__edit").click()
         for part in label.split(">"):
             if part == label.split(">")[-1]:
@@ -18,8 +19,12 @@ class WithTreeSelect:
             else:
                 self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
 
+    def get_treeselect_options(self, container_id):
+        elements = self.page.locator(f"#{container_id} .treeselect-input__tags-count")
+        return [elements.nth(i).inner_text() for i in range(elements.count())]
 
-class EvenementProduitCreationPage(WithTreeSelect):
+
+class EvenementProduitFormPage(WithTreeSelect):
     info_fields = ["numero_rasff", "type_evenement", "source", "description", "numero_rasff"]
     produit_fields = [
         "denomination",
@@ -56,6 +61,17 @@ class EvenementProduitCreationPage(WithTreeSelect):
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
+        self.page.evaluate("""
+            () => {
+              const element = document.getElementById('etablissement-template').content.querySelector('[data-token=""]');
+              if (element) {
+                element.setAttribute('data-token', 'FAKE');
+              }
+            }
+        """)
+
+    def navigate_update_page(self, evenement):
+        self.page.goto(f"{self.base_url}{evenement.get_update_url()}")
         self.page.evaluate("""
             () => {
               const element = document.getElementById('etablissement-template').content.querySelector('[data-token=""]');
@@ -113,6 +129,7 @@ class EvenementProduitCreationPage(WithTreeSelect):
 
     def delete_rappel_conso(self, numero):
         tag = self.page.locator(".fr-tag", has_text=numero)
+        tag.evaluate("el => el.scrollIntoView()")
         box = tag.bounding_box()
         self.page.mouse.click(box["x"] + box["width"] - 15, box["y"] - 5 + box["height"] / 2)
 
@@ -128,6 +145,10 @@ class EvenementProduitCreationPage(WithTreeSelect):
     def add_etablissement_siren(self, value, full_value, choice_js_fill_from_element):
         element = self.current_modal.locator("[id^='search-siret-input-']").locator("..")
         choice_js_fill_from_element(self.page, element, value, full_value)
+
+    @property
+    def date_creation(self):
+        return self.page.locator("#date-creation-input")
 
     @property
     def current_modal(self):

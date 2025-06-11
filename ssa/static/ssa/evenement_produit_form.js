@@ -2,7 +2,7 @@ import {setUpFreeLinks} from "/static/core/free_links.js";
 import {patchItems, findPath} from "/static/ssa/_custom_tree_select.js"
 
 document.addEventListener('DOMContentLoaded', () => {
-  function disableSourceOptions(typeEvenementInput, sourceInput) {
+  function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
     const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
     sourceInput.querySelectorAll('option').forEach(option => {
       if (option.value !== "autre") {
@@ -13,14 +13,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
-    sourceInput.selectedIndex = 0;
+    if (reset===true){
+      sourceInput.selectedIndex = 0;
+    }
   }
 
   function setupCategorieProduit(){
     const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
+    const selectedValue = document.getElementById("id_categorie_produit").value
     const treeselect = new Treeselect({
       parentHtmlContainer: document.getElementById("categorie-produit"),
-      value: null,
+      value: selectedValue,
       options: options,
       isSingleSelect: true,
       showTags: false,
@@ -56,9 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setupCategorieDanger(){
     const options = JSON.parse(document.getElementById("categorie-danger-data").textContent)
+    const selectedValue = document.getElementById("id_categorie_danger").value
     const treeselect = new Treeselect({
       parentHtmlContainer: document.getElementById("categorie-danger"),
-      value: null,
+      value: selectedValue,
       options: options,
       isSingleSelect: true,
       showTags: false,
@@ -107,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
       },
     })
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
-    document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
+    if (!selectedValue){
+      document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
+    }
     treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
     treeselect.srcElement.addEventListener('input', (e) => {
       if (!!e.detail){
@@ -124,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
   typeEvenementInput.addEventListener("change", () => {
     disableSourceOptions(typeEvenementInput, sourceInput)
   })
-  disableSourceOptions(typeEvenementInput, sourceInput)
-  setUpFreeLinks(document.getElementById("id_free_link"), null)
+  disableSourceOptions(typeEvenementInput, sourceInput, false)
+  setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
   new Choices(document.getElementById("id_quantification_unite"), {
     classNames: {
       containerInner: 'fr-select',

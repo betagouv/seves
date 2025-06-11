@@ -4,10 +4,11 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from core.mixins import WithClotureContextMixin
 from core.mixins import (
@@ -137,6 +138,41 @@ class EvenementProduitDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
+
+
+class EvenementUpdateView(
+    UserPassesTestMixin,
+    WithAddUserContactsMixin,
+    WithFormErrorsAsMessagesMixin,
+    SuccessMessageMixin,
+    UpdateView,
+):
+    form_class = EvenementProduitForm
+    template_name = "ssa/evenement_produit_form.html"
+    success_message = "L'événement produit a bien été modifié."
+
+    def get_queryset(self):
+        return EvenementProduit.objects.all()
+
+    def test_func(self) -> bool | None:
+        return self.get_object().can_be_updated(self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
+        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.add_user_contacts(form.instance)
+        return response
 
 
 class EvenementProduitListView(WithFilteredListMixin, ListView):

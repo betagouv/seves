@@ -12,6 +12,7 @@ from core.mixins import (
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     AllowsSoftDeleteMixin,
+    WithFreeLinkIdsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, Document
@@ -138,6 +139,7 @@ class EvenementProduit(
     WithContactPermissionMixin,
     WithEtatMixin,
     WithNumeroMixin,
+    WithFreeLinkIdsMixin,
     models.Model,
 ):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
@@ -193,6 +195,9 @@ class EvenementProduit(
 
     def get_absolute_url(self):
         return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})
+
+    def get_update_url(self):
+        return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
@@ -281,6 +286,9 @@ class EvenementProduit(
         if user.agent.is_in_structure(self.createur):
             return True
         return not self.is_draft
+
+    def can_be_updated(self, user):
+        return self._user_can_interact(user)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)

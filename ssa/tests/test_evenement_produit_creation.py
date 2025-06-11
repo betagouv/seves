@@ -9,7 +9,7 @@ from core.models import LienLibre, Contact
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
-from ssa.tests.pages import EvenementProduitCreationPage
+from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id"]
@@ -17,7 +17,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produ
 
 def test_can_create_evenement_produit_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
@@ -32,7 +32,7 @@ def test_can_create_evenement_produit_with_required_fields_only(live_server, moc
 
 def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build(not_bacterie=True)
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.source.select_option(input_data.source)
@@ -75,7 +75,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
 
 def test_can_create_evenement_produit_with_pam_if_bacterie(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build(bacterie=True)
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
 
@@ -89,7 +89,7 @@ def test_can_create_evenement_produit_with_pam_if_bacterie(live_server, mocked_a
 
 def test_can_publish_evenement_produit(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.publish()
@@ -107,7 +107,7 @@ def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, pag
     structure.niveau1 = AC_STRUCTURE
     structure.save()
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.numero_rasff.fill("2024.2222")
@@ -118,14 +118,14 @@ def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, pag
 
 
 def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     expect(creation_page.numero_rasff).not_to_be_visible()
 
 
 def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.add_rappel_conso("2025-01-1234")
@@ -141,7 +141,7 @@ def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentifica
 
 
 def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page: Page, check_select_options):
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.type_evenement.select_option(label=TypeEvenement.ALERTE_PRODUIT_NATIONALE.label)
     creation_page.source.click()
@@ -161,7 +161,7 @@ def test_can_add_etablissements(live_server, page: Page, assert_models_are_equal
 
     etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(3, evenement_produit=evenement)
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement_1)
@@ -183,7 +183,7 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, assert_m
 
     etablissement = EtablissementFactory.build(evenement_produit=evenement)
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement)
@@ -205,7 +205,7 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, assert_m
 def test_card_etablissement_content(live_server, page: Page):
     etablissement = EtablissementFactory()
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.add_etablissement(etablissement)
 
@@ -221,7 +221,7 @@ def test_can_add_etablissement_with_required_fields_only(live_server, page: Page
     evenement = EvenementProduitFactory()
 
     etablissement = EtablissementFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement_with_required_fields(etablissement)
@@ -237,7 +237,7 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, assert_model
 
     etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(3, evenement_produit=evenement)
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement_1)
@@ -257,7 +257,7 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, assert_model
 def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     evenement = EvenementProduitFactory.build()
     evenement_1, evenement_2 = EvenementProduitFactory.create_batch(2, etat=EvenementProduit.Etat.EN_COURS)
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_free_link(evenement_1.numero, choice_js_fill)
@@ -277,7 +277,7 @@ def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_
     evenement = EvenementProduitFactory()
     evenement_1 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     numero = "Événement produit : " + str(evenement_1.numero)
@@ -306,7 +306,7 @@ def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
         call_count["count"] += 1
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
@@ -354,7 +354,7 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
         call_count["count"] += 1
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
@@ -383,7 +383,7 @@ def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_
     structure.niveau1 = AC_STRUCTURE
     structure.save()
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.numero_rasff.fill("123456")
@@ -395,7 +395,7 @@ def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_
 
 def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
@@ -415,7 +415,7 @@ def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_mo
 
     etablissement = EtablissementFactory(evenement_produit=evenement)
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement)
@@ -464,7 +464,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         handle,
     )
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
 
     mocked_view = mock.Mock()
     mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
@@ -523,7 +523,7 @@ def test_can_create_etablissement_with_force_siret_value(
         handle,
     )
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
@@ -605,7 +605,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
         handle,
     )
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
@@ -630,7 +630,7 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
     live_server, mocked_authentification_user, page: Page
 ):
     input_data = EvenementProduitFactory.build()
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.page.locator("#categorie-danger .treeselect-input__edit").click()
@@ -647,7 +647,7 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
 def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page: Page):
     evenement = EvenementProduitFactory()
 
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.open_etablissement_modal()
@@ -659,7 +659,7 @@ def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page
 
 
 def test_categorie_danger_dont_show(live_server, mocked_authentification_user, page: Page):
-    creation_page = EvenementProduitCreationPage(page, live_server.url)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     dropdown = creation_page.display_and_get_categorie_danger()
     # Force open the dropdown by clicking it
