@@ -41,3 +41,5 @@ fileignoreconfig:
   checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a
 - filename: core/migrations/0034_alter_document_document_type.py
   checksum: ad80322fb2dab542fe667054b83761da8e386ce7357b123b2e30a0fea28f1f10
+- filename: .github/workflows/django.yml
+  checksum: a4958b535bcef8735290a7af3d0e857222a36b4513e07056167daf363c4a4d76
