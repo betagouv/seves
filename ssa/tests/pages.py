@@ -42,10 +42,16 @@ class EvenementProduitCreationPage(WithTreeSelect):
     fields = info_fields + produit_fields + risque_fields + action_fields
 
     def __init__(self, page: Page, base_url):
+        self._console_logs = ""
         self.page = page
         self.base_url = base_url
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
+
+        def on_console(msg):
+            self._console_logs += "\n" + msg.text
+
+        self.page.on("console", on_console)
 
         self.temperature_conservation = page.get_by_label("Temperature conservation")
         self.produit_pret_a_manger = page.get_by_label("Produit pret a manger")
@@ -72,7 +78,10 @@ class EvenementProduitCreationPage(WithTreeSelect):
     def set_categorie_produit(self, evenement_produit):
         label = evenement_produit.get_categorie_produit_display()
         self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", label)
+        try:
+            self._set_treeselect_option("categorie-produit", label)
+        except TimeoutError as e:
+            raise Exception(self._console_logs) from e
 
     def set_temperature_conservation(self, value):
         self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
