@@ -1,5 +1,5 @@
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 
 from core.models import Document, Message, Contact, FinSuiviContact
 
@@ -20,3 +20,18 @@ class WithBlocCommunFieldsMixin(models.Model):
 
     def get_message_form(self):
         raise NotImplementedError
+
+    def add_fin_suivi(self, user):
+        with transaction.atomic():
+            FinSuiviContact.objects.create(
+                content_object=self,
+                contact=Contact.objects.get(structure=user.agent.structure),
+            )
+
+            Message.objects.create(
+                title="Fin de suivi",
+                content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
+                sender=user.agent.contact_set.get(),
+                message_type=Message.FIN_SUIVI,
+                content_object=self,
+            )
