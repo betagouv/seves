@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isSingleSelect: true,
       showTags: false,
       placeholder: "Choisir",
+      direction: "bottom",
       openCallback() {
         patchItems(treeselect.srcElement)
       },
@@ -64,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showTags: false,
       placeholder: "Choisir",
       emptyText: "Pas de résultat",
+      direction: "bottom",
       openCallback() {
         patchItems(treeselect.srcElement)
         if (this._customHeaderAdded) {
