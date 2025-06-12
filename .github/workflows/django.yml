@@ -94,6 +94,9 @@ jobs:
           --tracing=retain-on-failure
           --splits ${{ strategy.job-total }}
           --group ${{ matrix.group }}
+          --reruns 1
+          --reruns-delay 5
+          --only-rerun E2ETestNetworkError
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
