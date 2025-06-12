@@ -140,8 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
             baseCard.querySelector('.position-dossier').innerText = positionDossier
             baseCard.querySelector('.position-dossier').classList.remove("fr-hidden")
             const extraClass = positionDossierInput.options[positionDossierInput.selectedIndex].dataset.extraClass
+            const basePositionDossier = baseCard.querySelector('.position-dossier')
             if (!!extraClass){
-                baseCard.querySelector('.position-dossier').classList.add(extraClass)
+                basePositionDossier.classList.add(extraClass)
+            } else {
+                basePositionDossier.classList.value = basePositionDossier.dataset.resetClasses
             }
         }
         return baseCard
