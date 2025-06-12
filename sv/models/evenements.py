@@ -18,7 +18,7 @@ from core.mixins import (
 )
 from core.mixins import WithEtatMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Message, Contact, Structure, FinSuiviContact, Document
+from core.models import Structure, Document
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
 from .models_mixins import WithDerniereMiseAJourMixin
@@ -168,23 +168,6 @@ class Evenement(
 
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
-
-    def add_fin_suivi(self, user):
-        with transaction.atomic():
-            fin_suivi_contact = FinSuiviContact(
-                content_object=self,
-                contact=Contact.objects.get(structure=user.agent.structure),
-            )
-            fin_suivi_contact.full_clean()
-            fin_suivi_contact.save()
-
-            Message.objects.create(
-                title="Fin de suivi",
-                content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
-                sender=user.agent.contact_set.get(),
-                message_type=Message.FIN_SUIVI,
-                content_object=self,
-            )
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
