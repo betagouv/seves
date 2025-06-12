@@ -121,6 +121,7 @@ packaging==24.0
     # via
     #   gunicorn
     #   pytest
+    #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
 playwright==1.52.0
@@ -147,6 +148,8 @@ pytest==8.3.3
     #   pytest-django
     #   pytest-env
     #   pytest-playwright
+    #   pytest-rerunfailures
+    #   pytest-split
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
@@ -155,6 +158,8 @@ pytest-django==4.11.1
 pytest-env==1.1.5
     # via -r requirements.in
 pytest-playwright==0.7.0
+    # via -r requirements.in
+pytest-rerunfailures==15.1
     # via -r requirements.in
 pytest-split==0.10.0
     # via -r requirements.in

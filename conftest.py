@@ -1,13 +1,16 @@
 import contextlib
 import os
+from typing import Dict
 from unittest.mock import patch
 
 import pytest
+from pytest import StashKey, CollectReport
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import resolve
 from django.urls.base import reverse
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 
 from core.factories import StructureFactory, UserFactory
 from core.models import Agent, Contact
@@ -15,14 +18,35 @@ from core.models import Agent, Contact
 User = get_user_model()
 
 
+class E2ETestNetworkError(Exception):
+    pass
+
+
+phase_report_key = StashKey[Dict[str, CollectReport]]()
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    rep = yield
+    item.stash.setdefault(phase_report_key, {})[rep.when] = rep
+    return rep
+
+
 @pytest.fixture
-def page(page):
+def page(page: Page, request):
     timeout = 4_000
     with contextlib.suppress(TypeError, ValueError):
         timeout = int(os.getenv("PLAYWRIGHT_TIMEOUT"))
     page.set_default_navigation_timeout(timeout)
     page.set_default_timeout(timeout)
+
+    logs = []
+    page.on("console", lambda msg: logs.append(msg.text))
     yield page
+
+    report = request.node.stash[phase_report_key]
+    if getattr(report.get("call", None), "failed", False) and "ERR_NETWORK_CHANGED" in " ".join(logs):
+        raise E2ETestNetworkError
 
 
 @pytest.fixture(autouse=True)
