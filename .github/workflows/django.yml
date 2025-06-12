@@ -44,6 +44,7 @@ jobs:
         run: ruff format --check .
       - name: Run DjHTML
         run: ./bin/check_html_format.sh
+
   test:
     needs: [build]
     runs-on: ubuntu-latest
@@ -88,12 +89,21 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
       - name: Install Playwright dependencies
         run: playwright install
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: test-durations
+          key: test-durations
+      - name: Merge test_durations
+        run: ./manage.py merge_test_durations 'test-durations*' test-durations-group-${{ matrix.group }}
       - name: Run tests
         run: >-
           pytest
           --tracing=retain-on-failure
           --splits ${{ strategy.job-total }}
           --group ${{ matrix.group }}
+          --store-durations
+          --durations-path test-durations-group-${{ matrix.group }}
           --reruns 1
           --reruns-delay 5
           --only-rerun E2ETestNetworkError
@@ -106,3 +116,31 @@ jobs:
         with:
           name: playwright-traces-${{ matrix.group }}
           path: test-results/
+      - uses: actions/upload-artifact@v4
+        if: ${{ success() }}
+        with:
+          name: test-durations-group-${{ matrix.group }}
+          path: test-durations-group-${{ matrix.group }}
+          if-no-files-found: error
+
+  merge-test-durations:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11.1
+          cache: pip
+      - name: Install dependencies
+        run: pip install pip-tools && pip-sync
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-durations-group-*
+      - name: Merge test_durations
+        run: ./manage.py merge_test_durations 'test-durations*' test-durations
+      - uses: actions/cache/save@v4
+        id: cache
+        with:
+          path: test-durations
+          key: test-durations

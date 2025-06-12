@@ -42,4 +42,6 @@ fileignoreconfig:
 - filename: core/migrations/0034_alter_document_document_type.py
   checksum: ad80322fb2dab542fe667054b83761da8e386ce7357b123b2e30a0fea28f1f10
 - filename: .github/workflows/django.yml
-  checksum: bb2812e864802e3e55d05b28f6da146973a78b382dad3d94d1de8d4f10430657
+  checksum: 16d12e6f5efbda3d60a39399e7275ee1809714086f1fd573f8ec9a4eb9995289
+- filename: core/management/commands/merge_test_durations.py
+  checksum: ec6bfe3fabd274427fdbc703e5a6cebe64eda271105612d1c3dfb001015a205a
