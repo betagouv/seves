@@ -1,10 +1,8 @@
 import contextlib
 import os
-from typing import Dict
 from unittest.mock import patch
 
 import pytest
-from pytest import StashKey, CollectReport
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,16 +20,6 @@ class E2ETestNetworkError(Exception):
     pass
 
 
-phase_report_key = StashKey[Dict[str, CollectReport]]()
-
-
-@pytest.hookimpl(wrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    rep = yield
-    item.stash.setdefault(phase_report_key, {})[rep.when] = rep
-    return rep
-
-
 @pytest.fixture
 def page(page: Page, request):
     timeout = 4_000
@@ -40,13 +28,18 @@ def page(page: Page, request):
     page.set_default_navigation_timeout(timeout)
     page.set_default_timeout(timeout)
 
-    logs = []
-    page.on("console", lambda msg: logs.append(msg.text))
-    yield page
+    _original_goto = page.goto
 
-    report = request.node.stash[phase_report_key]
-    if getattr(report.get("call", None), "failed", False) and "ERR_NETWORK_CHANGED" in " ".join(logs):
-        raise E2ETestNetworkError
+    def custom_goto(url, *args, **kwargs):
+        logs = []
+        page.on("console", lambda msg: logs.append(msg.text))
+        result = _original_goto(url, *args, **kwargs)
+        if "ERR_NETWORK_CHANGED" in " ".join(logs):
+            raise E2ETestNetworkError
+        return result
+
+    page.goto = custom_goto
+    yield page
 
 
 @pytest.fixture(autouse=True)
