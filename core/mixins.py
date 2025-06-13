@@ -91,6 +91,9 @@ class WithMessageMixin:
                     obj=obj,
                     next=obj.get_absolute_url(),
                 )
+                form.documents_forms = [
+                    MessageDocumentForm(instance=d, object=message) for d in message.documents.all()
+                ]
                 message_update_forms.append(form)
         return message_update_forms
 
@@ -752,6 +755,15 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
                 logger.error("Could not connect to Redis")
                 messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
 
+    def _delete_documents_if_needed(self, form):
+        prefix = "existing_document_name_"
+        pks_to_keeps = [s.replace(prefix, "") for s in self.request.POST.keys() if s.startswith(prefix)]
+        content_type = ContentType.objects.get_for_model(form.instance)
+        Document.objects.filter(
+            content_type=content_type,
+            object_id=form.instance.pk,
+        ).exclude(pk__in=pks_to_keeps).delete()
+
     def handle_message_form(self, form):
         try:
             self._mark_contact_as_fin_suivi(form)
@@ -763,6 +775,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.obj)
         self._handle_visibilite_if_needed(form.instance)
+        self._delete_documents_if_needed(form)
         self._create_documents(form)
         try:
             transaction.on_commit(lambda: notify_message(form.instance))
