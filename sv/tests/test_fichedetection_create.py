@@ -158,7 +158,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Xylella", organisme_nuisible.libelle_court)
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
