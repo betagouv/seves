@@ -59,8 +59,8 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     for field in select_fields:
         getattr(update_page, field).select_option(getattr(wanted_values, field))
 
-    update_page.set_categorie_produit(wanted_values)
-    update_page.set_categorie_danger(wanted_values)
+    update_page.set_categorie_produit(wanted_values, clear_input=True)
+    update_page.set_categorie_danger(wanted_values, clear_input=True)
 
     update_page.delete_rappel_conso("2000-01-1111")
     update_page.add_rappel_conso("2025-12-1212")

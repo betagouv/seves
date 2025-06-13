@@ -8,8 +8,9 @@ from ssa.models import Etablissement
 
 
 class WithTreeSelect:
-    def _set_treeselect_option(self, container_id, label):
-        self.page.locator(f"#{container_id} .treeselect-input__clear").click()
+    def _set_treeselect_option(self, container_id, label, clear_input=False):
+        if clear_input:
+            self.page.locator(f"#{container_id} .treeselect-input__clear").click()
         self.page.locator(f"#{container_id} .treeselect-input__edit").click()
         for part in label.split(">"):
             if part == label.split(">")[-1]:
@@ -85,10 +86,10 @@ class EvenementProduitFormPage(WithTreeSelect):
         self.type_evenement.select_option(evenement_produit.type_evenement)
         self.description.fill(evenement_produit.description)
 
-    def set_categorie_produit(self, evenement_produit):
+    def set_categorie_produit(self, evenement_produit, clear_input=False):
         label = evenement_produit.get_categorie_produit_display()
         self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", label)
+        self._set_treeselect_option("categorie-produit", label, clear_input)
 
     def set_temperature_conservation(self, value):
         self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
@@ -101,10 +102,10 @@ class EvenementProduitFormPage(WithTreeSelect):
         result.evaluate("el => el.scrollIntoView()")
         return result
 
-    def set_categorie_danger(self, evenement_produit):
+    def set_categorie_danger(self, evenement_produit, clear_input=False):
         self.display_and_get_categorie_danger()
         label = evenement_produit.get_categorie_danger_display()
-        self._set_treeselect_option("categorie-danger", label)
+        self._set_treeselect_option("categorie-danger", label, clear_input)
 
     def set_quantification_unite(self, value):
         self.page.query_selector(".risk-column .choices").click()
