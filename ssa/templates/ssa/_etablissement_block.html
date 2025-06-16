@@ -2,39 +2,20 @@
     <h3>Établissements</h3>
     {{ formset.management_form }}
     <button type="button" id="add-etablissement" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w">Ajouter</button>
+
+    {% for etablissement_form in formset %}
+        {% if etablissement_form.instance.pk %}
+            {{ etablissement_form.id }}
+            {% include "ssa/_etablissement_modal.html" with form=etablissement_form extra_str=forloop.counter0 data_etablissement_id=forloop.counter0 sirene_token=sirene_token  with_delete=True %}
+        {% endif %}
+    {% endfor %}
+
     <div class="fr-mt-2w" id="etablissement-card-container">
     </div>
 </div>
 
 <template id="etablissement-template">
-    <button class="fr-btn fr-hidden"  data-fr-opened="false" aria-controls="fr-modal-etablissement__prefix__" ></button>
-    <dialog aria-labelledby="fr-modal-title-modal-etablissement__prefix__" role="dialog" id="fr-modal-etablissement__prefix__" class="fr-modal modal-etablissement">
-        <div class="fr-container fr-container--fluid fr-container-md">
-            <div class="fr-grid-row fr-grid-row--center">
-                <div class="fr-col-12 fr-col-md-8">
-                    <div class="fr-modal__body">
-                        <div class="fr-modal__header">
-                            <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-etablissement__prefix__" type="button">Fermer</button>
-                        </div>
-                        <div class="fr-modal__content">
-                            <h1 id="fr-modal-title-modal--etablissement__prefix__" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un établissement</h1>
-                            <div class="fr-fieldset__element">
-                                <label for="search-siret-input-{{ id }}">N° SIRET</label>
-                                <select class="fr-input" type="search" id="search-siret-input-{{ id }}" name="search-{{ id }}-input" data-token="{{ sirene_token }}"></select>
-                            </div>
-                            {{ empty_form.as_dsfr_div }}
-                        </div>
-                        <div class="fr-modal__footer">
-                            <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
-                                <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-etablissement__prefix__" type="button">Annuler</button>
-                                <button type="submit" class="fr-btn save-btn" id="etablissement-save-btn-__prefix__">Enregistrer</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </dialog>
+    {% include "ssa/_etablissement_modal.html" with form=empty_form extra_str="__prefix__" sirene_token=sirene_token %}
 </template>
 
 <template id="etablissement-card-template">

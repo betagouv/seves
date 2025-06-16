@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages.views import SuccessMessageMixin
+from django.db import transaction
 from django.http import HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.views import View
@@ -26,7 +26,7 @@ from core.mixins import (
 from core.models import Export
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit, CategorieDanger
+from ssa.models import EvenementProduit, CategorieDanger, Etablissement
 from ssa.models.evenement_produit import CategorieProduit
 from ssa.tasks import export_task
 from ssa.views.mixins import WithFilteredListMixin
@@ -144,12 +144,11 @@ class EvenementUpdateView(
     UserPassesTestMixin,
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
-    SuccessMessageMixin,
+    WithSireneTokenMixin,
     UpdateView,
 ):
     form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
-    success_message = "L'événement produit a bien été modifié."
 
     def get_queryset(self):
         return EvenementProduit.objects.all()
@@ -167,12 +166,39 @@ class EvenementUpdateView(
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
         context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
+        queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
+        formset = EtablissementFormSet(instance=self.get_object(), queryset=queryset)
+        context["empty_form"] = formset.empty_form
+        context["formset"] = formset
         return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
         self.add_user_contacts(form.instance)
         return response
+
+    def post(self, request, pk):
+        self.object = self.get_object()
+        form = self.get_form()
+        queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
+        formset = EtablissementFormSet(request.POST, instance=self.get_object(), queryset=queryset)
+
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        if not formset.is_valid():
+            for form in formset.forms:
+                for _, errors in form.errors.as_data().items():
+                    for error in errors:
+                        messages.error(self.request, f"Erreur dans un formulaire d'établissement : {error.message}")
+            return self.render_to_response(self.get_context_data(formset=formset))
+
+        with transaction.atomic():
+            self.object = form.save()
+            formset.save()
+            self.add_user_contacts(self.object)
+        messages.success(self.request, "L'événement produit a bien été modifié.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class EvenementProduitListView(WithFilteredListMixin, ListView):

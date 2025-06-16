@@ -88,7 +88,9 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     })
 
     rappelContainer.forEach(input => input.addEventListener('input', handleDisabledRappelConsoBtn))
-    submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
+    if (!!submitDraftBtn){
+        submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
+    }
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     toNextInput.forEach(element => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
     initExistingRappelConso()
