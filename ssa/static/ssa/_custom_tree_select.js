@@ -53,3 +53,11 @@ export function addLevel2CategoryIfAllChildrenAreSelected(options, selectedOptio
     });
     return result
 }
+
+export const tsDefaultOptions = {
+    showTags: false,
+    clearable: false,
+    placeholder: "Choisir",
+    emptyText: "Pas de résultat",
+    direction: "bottom",
+}

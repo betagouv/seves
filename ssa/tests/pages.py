@@ -10,7 +10,7 @@ from ssa.models import Etablissement
 class WithTreeSelect:
     def _set_treeselect_option(self, container_id, label, clear_input=False):
         if clear_input:
-            self.page.locator(f"#{container_id} .treeselect-input__clear").click()
+            self.clear_treeselect(container_id)
         self.page.locator(f"#{container_id} .treeselect-input__edit").click()
         for part in label.split(">"):
             if part == label.split(">")[-1]:
@@ -23,6 +23,21 @@ class WithTreeSelect:
     def get_treeselect_options(self, container_id):
         elements = self.page.locator(f"#{container_id} .treeselect-input__tags-count")
         return [elements.nth(i).inner_text() for i in range(elements.count())]
+
+    def clear_treeselect(self, container_id):
+        current_input = self.page.locator(f"#{container_id} .treeselect-input__tags").inner_text().strip()
+        while current_input:
+            el = self.page.locator(f"#{container_id} .treeselect-input__edit")
+            el.focus()
+            # Erase one result
+            el.press("Backspace")
+            new_input = el.inner_text().strip()
+            self.page.wait_for_function(
+                # language=js
+                "([id, len]) => document.querySelector(`#${id} .treeselect-input__edit`).textContent.length < len",
+                arg=(container_id, len(current_input)),
+            )
+            current_input = new_input
 
 
 class EvenementProduitFormPage(WithTreeSelect):

@@ -1,4 +1,4 @@
-import {patchItems, addLevel2CategoryIfAllChildrenAreSelected} from "/static/ssa/_custom_tree_select.js"
+import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
 
 document.addEventListener('DOMContentLoaded', function() {
     function resetAndSubmit(event){
@@ -26,12 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
             parentHtmlContainer: parentContainer,
             value: selectedValues,
             options: options,
-            showTags: false,
-            placeholder: "Choisir",
-            clearable: false,
             openCallback() {
                 patchItems(treeselect.srcElement)
             },
+            ...tsDefaultOptions
         })
         document.querySelector("#categorie-produit .treeselect-input").classList.add("fr-input")
         patchItems(treeselect.srcElement)
@@ -51,12 +49,10 @@ document.addEventListener('DOMContentLoaded', function() {
             parentHtmlContainer: parentContainer,
             value: selectedValues,
             options: options,
-            showTags: false,
-            placeholder: "Choisir",
-            clearable: false,
             openCallback() {
                 patchItems(treeselect.srcElement)
             },
+            ...tsDefaultOptions
         })
         document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
         patchItems(treeselect.srcElement)

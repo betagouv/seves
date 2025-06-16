@@ -1,5 +1,5 @@
 import {setUpFreeLinks} from "/static/core/free_links.js";
-import {patchItems, findPath} from "/static/ssa/_custom_tree_select.js"
+import {patchItems, findPath, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
 
 document.addEventListener('DOMContentLoaded', () => {
   function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
@@ -26,12 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
       value: selectedValue,
       options: options,
       isSingleSelect: true,
-      showTags: false,
-      placeholder: "Choisir",
-      direction: "bottom",
       openCallback() {
         patchItems(treeselect.srcElement)
       },
+      ...tsDefaultOptions
     })
     patchItems(treeselect.srcElement)
     treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
@@ -50,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById("id_categorie_danger").value = value
     document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = fullPath
-    document.querySelector("#categorie-danger .treeselect-input__clear").classList.remove("fr-hidden")
     if(fullPath.includes("Bactérie >")){
       document.getElementById("pam-container").classList.remove("fr-hidden")
     } else {
@@ -66,10 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
       value: selectedValue,
       options: options,
       isSingleSelect: true,
-      showTags: false,
-      placeholder: "Choisir",
-      emptyText: "Pas de résultat",
-      direction: "bottom",
       openCallback() {
         patchItems(treeselect.srcElement)
         if (this._customHeaderAdded) {
@@ -99,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       },
       searchCallback(item) {
-        if(item.length === 0) {
+        if (item.length === 0) {
           treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
             el.removeAttribute("hidden");
             el.removeAttribute("aria-hidden");
@@ -111,17 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         }
       },
+      ...tsDefaultOptions
     })
     document.querySelector("#categorie-danger .treeselect-input").classList.add("fr-input")
-    if (!selectedValue){
-      document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
-    }
     treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
     treeselect.srcElement.addEventListener('input', (e) => {
       if (!!e.detail){
         handleValueChangeCategorieDanger(e.detail, options)
       } else {
-        document.querySelector("#categorie-danger .treeselect-input__clear").classList.add("fr-hidden")
         document.getElementById("pam-container").classList.add("fr-hidden")
       }
     })
