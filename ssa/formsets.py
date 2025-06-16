@@ -5,5 +5,5 @@ from ssa.models import EvenementProduit
 from ssa.models.etablissement import Etablissement
 
 EtablissementFormSet = inlineformset_factory(
-    EvenementProduit, Etablissement, form=EtablissementForm, extra=10, can_delete=False
+    EvenementProduit, Etablissement, form=EtablissementForm, extra=10, can_delete=True
 )

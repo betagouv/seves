@@ -57,7 +57,9 @@ def test_evenement_produit_detail_wont_show_pam_if_not_danger_bacterien(live_ser
     expect(details_page.page.get_by_text("Produit prêt à manger (PAM)", exact=True)).not_to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_etablissement(live_server, page: Page):
+def test_evenement_produit_detail_page_content_etablissement(
+    live_server, page: Page, assert_etablissement_card_is_correct
+):
     evenement = EvenementProduitFactory()
     etablissement = EtablissementFactory(evenement_produit=evenement)
 
@@ -65,13 +67,7 @@ def test_evenement_produit_detail_page_content_etablissement(live_server, page: 
     details_page.navigate(evenement)
 
     etablissement_card = details_page.etablissement_card()
-    expect(etablissement_card.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display(), exact=True)).to_be_visible()
-    expect(
-        etablissement_card.get_by_text(f"Département : {etablissement.departement.get_num_name_display()}", exact=True)
-    ).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display(), exact=True)).to_be_visible()
+    assert_etablissement_card_is_correct(etablissement_card, etablissement)
 
     details_page.etablissement_open_modal()
     expect(details_page.etablissement_modal.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()

@@ -105,6 +105,12 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
 
 
+class AdresseLieuDitField(forms.ChoiceField):
+    def validate(self, value):
+        # Autorise n'importe quelle valeur
+        return
+
+
 class EtablissementForm(DSFRForm, forms.ModelForm):
     siret = forms.CharField(
         required=False,
@@ -117,7 +123,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
-    adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
+    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
     type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
     position_dossier = SEVESChoiceField(
@@ -132,6 +138,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         required=False,
         label="Département",
     )
+    manual_render_fields = ["DELETE"]
 
     class Meta:
         model = Etablissement
@@ -147,6 +154,16 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "type_exploitant",
             "position_dossier",
         ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
+            self.fields["adresse_lieu_dit"].choices = [(self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)]
+
+        departement_obj = self.instance.departement
+        if departement_obj:
+            self.initial["departement"] = departement_obj.numero
 
 
 class MessageForm(BaseMessageForm):
