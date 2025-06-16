@@ -10,7 +10,7 @@ from ssa.tests.pages import EvenementProduitFormPage
 def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     live_server, page, choice_js_get_values, choice_js_fill
 ):
-    evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"])
+    evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
     wanted_values = EvenementProduitFactory.build()
     for_free_link = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     for_other_free_link = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
@@ -86,7 +86,7 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
 
 
 def test_can_update_evenement_produit_descripteur_and_publish(live_server, page):
-    evenement: EvenementProduit = EvenementProduitFactory()
+    evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
     update_page.description.fill("New value")
@@ -100,7 +100,9 @@ def test_can_update_evenement_produit_descripteur_and_publish(live_server, page)
 
 def test_update_evenement_produit_will_not_change_createur(live_server, page):
     createur = StructureFactory()
-    evenement: EvenementProduit = EvenementProduitFactory(createur=createur, etat=EvenementProduit.Etat.EN_COURS)
+    evenement: EvenementProduit = EvenementProduitFactory(
+        createur=createur, not_bacterie=True, etat=EvenementProduit.Etat.EN_COURS
+    )
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
     update_page.description.fill("New value")
@@ -113,7 +115,9 @@ def test_update_evenement_produit_will_not_change_createur(live_server, page):
 
 def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_authentification_user):
     createur = StructureFactory()
-    evenement: EvenementProduit = EvenementProduitFactory(createur=createur, etat=EvenementProduit.Etat.EN_COURS)
+    evenement: EvenementProduit = EvenementProduitFactory(
+        createur=createur, not_bacterie=True, etat=EvenementProduit.Etat.EN_COURS
+    )
     assert evenement.contacts.count() == 0
 
     update_page = EvenementProduitFormPage(page, live_server.url)
