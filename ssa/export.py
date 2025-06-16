@@ -1,5 +1,6 @@
 import csv
 import tempfile
+from datetime import datetime
 
 from django.core.files import File
 
@@ -10,8 +11,8 @@ from ssa.models import EvenementProduit
 
 class EvenementProduitExport:
     evenement_produit_fields = [
-        ("numero_annee", "Année"),
-        ("numero_evenement", "Numéro"),
+        ("numero", "Numéro de fiche"),
+        ("etat", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
         ("numero_rasff", "Numéro RASFF"),
@@ -33,6 +34,7 @@ class EvenementProduitExport:
         ("reference_clusters", "Référence clusters"),
         ("actions_engagees", "Actions engagées"),
         ("numeros_rappel_conso", "Numéro de rappels conso"),
+        ("list_of_linked_objects_as_str", "Numéros des objets liés"),
     ]
     etablissement_fields = [
         ("siret", "Numéro SIRET"),
@@ -59,6 +61,8 @@ class EvenementProduitExport:
             value = getattr(instance, attr, None)
             if isinstance(value, list):
                 return ",".join(value) if value else None
+            if isinstance(value, datetime):
+                return value.strftime("%d/%m/%Y %Hh%M")
             return value
 
     def add_data(self, result, instance, fields):

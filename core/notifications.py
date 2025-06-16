@@ -102,21 +102,28 @@ Vous pouvez y accéder avec le lien suivant : https://seves.beta.gouv.fr/{obj.ge
 def notify_export_is_ready(export: Export):
     send(
         recipients=[export.user.email],
-        subject="Votre export est prêt",
+        subject="Sèves - Votre export est prêt",
         message=f"""
 Bonjour,
 
-L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url}.
+L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url} .
 
 Attention, le lien n'est valable que durant 1 heure.
+Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email support@seves.beta.gouv.fr.
+Merci de ne pas répondre directement à ce message.
+Cordialement,
+L’équipe Sèves
+
         """,
         html_message=f"""
 <!DOCTYPE html>
 <html>
 <div style="font-family: Arial, sans-serif;">
     <p>Bonjour,</p>
-    <p>L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url}.</p>
+    <p>L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est&nbsp;: <a href="{export.file.url}">{export.file.url}</a>.</p>
     <p>Attention, le lien n'est valable que durant 1 heure.</p>
+    <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.
+Merci de ne pas répondre directement à ce message. </p>
 </div>
 </html>
         """,
