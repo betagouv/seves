@@ -763,7 +763,13 @@ def test_update_multiple_prelevements(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(0)
         page.locator(".prelevement-edit-btn").nth(index).click()
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(1)
         prelevement_form_elements.numero_rapport_inspection_input.fill(new_prelevement.numero_rapport_inspection)
         prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveuse.id))
@@ -782,6 +788,9 @@ def test_update_multiple_prelevements(
             new_prelevement.date_rapport_analyse.strftime("%Y-%m-%d")
         )
         prelevement_form_elements.save_btn.click()
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(0)
 
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
