@@ -7,6 +7,7 @@ function setUpOrganismeNuisible(){
             containerInner: 'fr-select',
         },
         itemSelectText: '',
+        searchResultLimit: -1,
         position: 'bottom'
     });
 
