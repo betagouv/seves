@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isSingleSelect: true,
       showTags: false,
       placeholder: "Choisir",
+      emptyText: "Pas de résultat",
       direction: "bottom",
       openCallback() {
         patchItems(treeselect.srcElement)
