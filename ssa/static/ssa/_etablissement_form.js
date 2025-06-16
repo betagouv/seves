@@ -60,6 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         configureSiretField(siretSelect, addressChoices)
     }
 
+    function setupEtablisementModal(modal){
+        let addressChoices = setupAdresseField(modal)
+        setupSiretBlock(modal, addressChoices)
+
+        modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
+            event.preventDefault()
+            submitFormAndAddEtablissementCard(event)
+        })
+    }
+
     function showEtablissementModal() {
         const nextIdToUse = getNextIdToUse()
 
@@ -68,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("main-form").insertAdjacentHTML('beforeend', template)
 
         const modal = document.getElementById("fr-modal-etablissement" + nextIdToUse.toString())
-        modal.setAttribute("data-etablissement-id", nextIdToUse.toString())
         modal.querySelector('[id$=raison_sociale]').required = true
-        modal.querySelector(".save-btn").setAttribute("data-etablissement-id", nextIdToUse)
+        modal.querySelector('.save-btn').dataset.etablissementId = nextIdToUse
+
         setTimeout(() => {
             dsfr(modal).modal.disclose()
             dsfr(modal).modal.node.addEventListener('dsfr.conceal', event => {
@@ -87,14 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, 10)
 
-        let addressChoices = setupAdresseField(modal)
-        setupSiretBlock(modal, addressChoices)
-
-
-        modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
-            event.preventDefault()
-            submitFormAndAddEtablissementCard(event)
-        })
+        setupEtablisementModal(modal)
     }
 
     function getSelectedLabel(element) {
@@ -157,9 +160,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function deleteEtablissement(etablissementID){
+        const etablissementModal = document.getElementById(`fr-modal-etablissement${etablissementID}`)
+        const exitingEtablissement = !!etablissementModal.querySelector('[id$=DELETE]')
+        if(exitingEtablissement){
+            etablissementModal.querySelector('[id$=DELETE]').checked = true
+        } else {
+            etablissementModal.remove()
+        }
         document.getElementById(`etablissement-card-${etablissementID}`).remove()
-        document.getElementById(`fr-modal-etablissement${etablissementID}`).remove()
         document.querySelector(`[aria-controls="fr-modal-etablissement${etablissementID}"]`).remove()
+    }
+
+
+    function initExistingEtablissements(){
+        document.querySelectorAll('[id^="fr-modal-etablissement"]').forEach(element =>{
+            const etablissementId = element.id.replace("fr-modal-etablissement", "")
+            getAndAddCardToList(element, etablissementId)
+            setupEtablisementModal(element)
+            element.querySelector('[id$=raison_sociale]').required = true
+        })
+    }
+
+    function getAndAddCardToList(currentModal, etablissementId){
+        const clone = document.getElementById('etablissement-card-template').content.cloneNode(true);
+        const card = getEtablissementCard(clone, currentModal, etablissementId)
+        card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
+        card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
+        card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
+            modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement${etablissementId} .fr-modal__content`).cloneNode(true)
+        })
+        document.getElementById("etablissement-card-container").appendChild(card);
+
     }
 
     function submitFormAndAddEtablissementCard(event) {
@@ -172,14 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingCard = document.getElementById(`etablissement-card-${etablissementId}`)
 
         if(!existingCard){
-            const clone = document.getElementById('etablissement-card-template').content.cloneNode(true);
-            const card = getEtablissementCard(clone, currentModal, etablissementId)
-            card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
-            card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
-            card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
-                modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement${etablissementId} .fr-modal__content`).cloneNode(true)
-            })
-            document.getElementById("etablissement-card-container").appendChild(card);
+            getAndAddCardToList(currentModal, etablissementId)
         } else {
             existingCard.replaceWith(getEtablissementCard(existingCard, currentModal, etablissementId))
         }
@@ -193,4 +217,5 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault()
         showEtablissementModal()
     })
+    initExistingEtablissements()
 });

@@ -1,10 +1,13 @@
+from unittest import mock
+
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, DepartementFactory
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit, CategorieDanger
+from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.models import EvenementProduit, Etablissement, CategorieDanger
 from ssa.tests.pages import EvenementProduitFormPage
+from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 
 
 def test_can_update_evenement_produit_descripteur_and_save_as_draft(
@@ -98,6 +101,22 @@ def test_can_update_evenement_produit_descripteur_and_publish(live_server, page)
     assert evenement.description == "New value"
 
 
+def test_contact_added_to_evenement_when_edit(live_server, page, mocked_authentification_user):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        createur=StructureFactory(), etat=EvenementProduit.Etat.EN_COURS, not_bacterie=True
+    )
+    assert evenement.contacts.count() == 0
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.description.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    assert evenement.contacts.count() == 2
+    assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
+    assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
+
+
 def test_update_evenement_produit_will_not_change_createur(live_server, page):
     createur = StructureFactory()
     evenement: EvenementProduit = EvenementProduitFactory(
@@ -145,3 +164,94 @@ def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_serv
     evenement.refresh_from_db()
     assert evenement.categorie_danger == CategorieDanger.PESTICIDE_RESIDU
     assert evenement.produit_pret_a_manger == ""
+
+
+def test_can_see_and_edit_etablissement_on_evenement_produit_update(
+    live_server, page, settings, assert_models_are_equal, assert_etablissement_card_is_correct
+):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
+    etablissement_1 = EtablissementFactory(evenement_produit=evenement)
+    etablissement_2 = EtablissementFactory(evenement_produit=evenement)
+
+    departement = DepartementFactory()
+    wanted_values = EtablissementFactory.build(departement=departement)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        update_page = EvenementProduitFormPage(page, live_server.url)
+        update_page.navigate_update_page(evenement)
+
+    etablissement_card = update_page.etablissement_card()
+    assert_etablissement_card_is_correct(etablissement_card, etablissement_1)
+
+    etablissement_card = update_page.etablissement_card(index=1)
+    assert_etablissement_card_is_correct(etablissement_card, etablissement_2)
+
+    update_page.edit_etablissement_with_new_values(index=0, wanted_values=wanted_values)
+
+    etablissement_card = update_page.etablissement_card()
+    assert_etablissement_card_is_correct(etablissement_card, wanted_values)
+
+    update_page.publish()
+
+    assert evenement.etablissements.count() == 2
+    assert evenement.etablissements.last() == etablissement_2
+    assert_models_are_equal(evenement.etablissements.first(), wanted_values, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_can_add_etablissement_on_evenement_produit_update(live_server, page, settings, assert_models_are_equal):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
+    EtablissementFactory(evenement_produit=evenement)
+    departement = DepartementFactory()
+    wanted_values = EtablissementFactory.build(departement=departement)
+
+    with mock.patch("core.mixins.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+        update_page = EvenementProduitFormPage(page, live_server.url)
+        update_page.navigate_update_page(evenement)
+
+    update_page.add_etablissement(wanted_values)
+    update_page.publish()
+
+    assert evenement.etablissements.count() == 2
+    assert_models_are_equal(evenement.etablissements.last(), wanted_values, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_can_delete_etablissement_on_evenement_produit_update(live_server, page, assert_models_are_equal):
+    evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
+    to_keep = EtablissementFactory(evenement_produit=evenement)
+    _to_delete = EtablissementFactory(evenement_produit=evenement)
+
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+
+    update_page.delete_etablissement(index=1)
+    update_page.publish()
+
+    assert evenement.etablissements.count() == 1
+    assert_models_are_equal(evenement.etablissements.last(), to_keep, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_can_udpate_etablissement_with_error_show_message(live_server, page, assert_models_are_equal):
+    evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
+    etablissement = EtablissementFactory(evenement_produit=evenement)
+
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.page.evaluate("""() => {
+        const agrementInput = document.querySelector('#id_etablissements-0-numero_agrement');
+        agrementInput.removeAttribute('pattern');
+        agrementInput.value = "22"
+    }""")
+    update_page.publish()
+    expect(
+        update_page.page.get_by_text(
+            "Erreur dans le formulaire établissement #1 : 'numero_agrement': 22 n'est pas un format valide.", exact=True
+        )
+    ).to_be_visible()
+
+    assert Etablissement.objects.get().numero_agrement == etablissement.numero_agrement

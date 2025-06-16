@@ -226,8 +226,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         self.page.get_by_role("option", name=f"{siret} (Forcer la valeur)", exact=True).click()
         assert call_count["count"] == 1
 
-    def add_etablissement(self, etablissement: Etablissement):
-        modal = self.open_etablissement_modal()
+    def _fill_etablissement(self, modal, etablissement: Etablissement):
         self.force_siret(etablissement.siret)
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
@@ -238,10 +237,19 @@ class EvenementProduitFormPage(WithTreeSelect):
         modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
 
+    def add_etablissement(self, etablissement: Etablissement):
+        modal = self.open_etablissement_modal()
+        self._fill_etablissement(modal, etablissement)
         self.close_etablissement_modal()
 
-    def open_edit_etablissement(self):
-        self.page.locator(".etablissement-edit-btn").click()
+    def open_edit_etablissement(self, index=0):
+        self.page.locator(".etablissement-edit-btn").nth(index).click()
+
+    def edit_etablissement_with_new_values(self, index, wanted_values: Etablissement):
+        self.open_edit_etablissement(index=index)
+        modal = self.current_modal
+        self._fill_etablissement(modal, wanted_values)
+        self.close_etablissement_modal()
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
