@@ -21,7 +21,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     numero_rasff = forms.CharField(
         required=False,
         widget=forms.TextInput(
-            attrs={"pattern": "^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$", "placeholder": "0000.0000 ou 000000"}
+            attrs={"pattern": r"^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$", "placeholder": "0000.0000 ou 000000"}
         ),
         label="N° RASFF/AAC",
     )
@@ -110,7 +110,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     numero_agrement = forms.CharField(
         required=False,
         label="Numéro d'agrément",
-        widget=forms.TextInput(attrs={"pattern": "^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
+        widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
