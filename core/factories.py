@@ -6,7 +6,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
-from core.models import Structure, Agent, Contact, Document, Message
+from core.constants import REGIONS, DEPARTEMENTS
+from core.models import Structure, Agent, Contact, Document, Message, Region, Departement
 
 
 class StructureFactory(DjangoModelFactory):
@@ -163,3 +164,27 @@ class MessageFactory(DjangoModelFactory):
                 self.recipients.add(ContactAgentFactory(with_active_agent=True))
             else:
                 self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
+
+
+class RegionFactory(DjangoModelFactory):
+    class Meta:
+        model = Region
+        django_get_or_create = ("nom",)
+
+    nom = factory.fuzzy.FuzzyChoice(REGIONS)
+
+
+class DepartementFactory(DjangoModelFactory):
+    class Meta:
+        model = Departement
+        django_get_or_create = ("nom",)
+
+    region = factory.SubFactory("core.factories.RegionFactory")
+
+    @factory.lazy_attribute
+    def numero(self):
+        return random.choice([d[0] for d in DEPARTEMENTS if self.region.nom == d[2]])
+
+    @factory.lazy_attribute
+    def nom(self):
+        return [d[1] for d in DEPARTEMENTS if self.numero == d[0]][0]

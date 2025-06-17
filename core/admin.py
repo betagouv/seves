@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact, Export
+from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact, Export, Region, Departement
 
 
 admin.site.register(Document)
@@ -27,3 +27,5 @@ class ExportAdmin(admin.ModelAdmin):
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Export, ExportAdmin)
 admin.site.register(FinSuiviContact)
+admin.site.register(Departement)
+admin.site.register(Region)

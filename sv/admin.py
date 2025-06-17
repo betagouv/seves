@@ -5,8 +5,6 @@ from .models import (
     OrganismeNuisible,
     StatutReglementaire,
     Contexte,
-    Departement,
-    Region,
     Lieu,
     StatutEtablissement,
     PositionChaineDistribution,
@@ -48,8 +46,6 @@ class VersionFicheZoneDelimiteeAdmin(VersionAdmin):
 admin.site.register(OrganismeNuisible)
 admin.site.register(StatutReglementaire)
 admin.site.register(Contexte)
-admin.site.register(Departement)
-admin.site.register(Region)
 admin.site.register(Lieu)
 admin.site.register(StatutEtablissement)
 admin.site.register(PositionChaineDistribution)

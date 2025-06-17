@@ -16,15 +16,12 @@ from .constants import (
     STATUTS_EVENEMENT,
     CONTEXTES,
     SITES_INSPECTION,
-    DEPARTEMENTS,
-    REGIONS,
     POSITION_CHAINE_DISTRIBUTION,
 )
 from .models import (
     Prelevement,
     Lieu,
     FicheDetection,
-    Departement,
     OrganismeNuisible,
     FicheZoneDelimitee,
     StatutReglementaire,
@@ -37,7 +34,6 @@ from .models import (
     StatutEvenement,
     Contexte,
     SiteInspection,
-    Region,
     PositionChaineDistribution,
 )
 
@@ -52,30 +48,6 @@ class OrganismeNuisibleFactory(DjangoModelFactory):
     code_oepp = factory.Faker("lexify", text="??????")
     libelle_court = factory.Faker("lexify", text="??????")
     libelle_long = factory.Faker("sentence", nb_words=5)
-
-
-class RegionFactory(DjangoModelFactory):
-    class Meta:
-        model = Region
-        django_get_or_create = ("nom",)
-
-    nom = factory.fuzzy.FuzzyChoice(REGIONS)
-
-
-class DepartementFactory(DjangoModelFactory):
-    class Meta:
-        model = Departement
-        django_get_or_create = ("nom",)
-
-    region = factory.SubFactory("sv.factories.RegionFactory")
-
-    @factory.lazy_attribute
-    def numero(self):
-        return random.choice([d[0] for d in DEPARTEMENTS if self.region.nom == d[2]])
-
-    @factory.lazy_attribute
-    def nom(self):
-        return [d[1] for d in DEPARTEMENTS if self.numero == d[0]][0]
 
 
 class StatutReglementaireFactory(DjangoModelFactory):
@@ -227,7 +199,7 @@ class LieuFactory(DjangoModelFactory):
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
-    departement = factory.SubFactory("sv.factories.DepartementFactory")
+    departement = factory.SubFactory("core.factories.DepartementFactory")
     is_etablissement = factory.Faker("boolean")
     activite_etablissement = factory.Faker("job")
     pays_etablissement = FuzzyChoice([c.code for c in Countries()])

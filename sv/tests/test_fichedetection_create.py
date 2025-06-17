@@ -7,7 +7,7 @@ from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, DepartementFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
@@ -18,7 +18,6 @@ from ..factories import (
     SiteInspectionFactory,
     OrganismeNuisibleFactory,
     StatutReglementaireFactory,
-    DepartementFactory,
     PositionChaineDistributionFactory,
     StructurePreleveuseFactory,
     FicheDetectionFactory,
