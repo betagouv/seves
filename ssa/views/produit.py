@@ -137,6 +137,7 @@ class EvenementProduitDetailView(
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_be_updated"] = self.get_object().can_be_updated(self.request.user)
         return context
 
 
