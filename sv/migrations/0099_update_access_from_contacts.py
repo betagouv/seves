@@ -31,6 +31,7 @@ def add_existing_contacts_to_allowed_structures(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
+        ("core", "0029_create_referent_national_group"),
         ("sv", "0098_add_on_crtzbr"),
     ]
 

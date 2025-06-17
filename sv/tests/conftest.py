@@ -2,13 +2,11 @@ import pytest
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
 
-from sv.models import (
-    StatutReglementaire,
-    Region,
-    Departement,
-)
+from core.tests.conftest import create_departement_if_needed  # noqa F403
+
+from sv.models import StatutReglementaire
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..constants import DEPARTEMENTS, REGIONS, STATUTS_REGLEMENTAIRES
+from ..constants import STATUTS_REGLEMENTAIRES
 
 User = get_user_model()
 
@@ -41,15 +39,6 @@ def fill_commune(db, page: Page, choice_js_fill_from_element):
         choice_js_fill_from_element(page, element, fill_content="Lille", exact_name="Lille (59)")
 
     return _fill_commune
-
-
-@pytest.fixture(autouse=True)
-def create_departement_if_needed(db):
-    for nom in REGIONS:
-        Region.objects.get_or_create(nom=nom)
-    for numero, nom, region_nom in DEPARTEMENTS:
-        region = Region.objects.get(nom=region_nom)
-        Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory, ContactAgentFactory
+from core.factories import ContactStructureFactory, ContactAgentFactory, RegionFactory
 from core.models import Contact
 from core.constants import REGION_STRUCTURE_MAPPING
 from core.factories import StructureFactory
@@ -14,7 +14,6 @@ from ..factories import (
     FicheZoneFactory,
     EvenementFactory,
     OrganismeNuisibleFactory,
-    RegionFactory,
 )
 from ..models import (
     OrganismeNuisible,
