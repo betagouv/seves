@@ -56,9 +56,15 @@ class DepartementModelChoiceField(forms.ModelChoiceField):
         return super().prepare_value(value)
 
 
+class AdresseLieuDitField(forms.ChoiceField):
+    def validate(self, value):
+        # Autorise n'importe quelle valeur
+        return
+
+
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
-    adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
+    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = DepartementModelChoiceField(
@@ -108,7 +114,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
-    adresse_etablissement = forms.CharField(widget=forms.Select(), required=False, label="Adresse ou lieu-dit")
+    adresse_etablissement = AdresseLieuDitField(choices=[], required=False, label="Adresse ou lieu-dit")
     departement_etablissement = DepartementModelChoiceField(
         queryset=Departement.objects.all(),
         to_field_name="numero",
@@ -134,6 +140,14 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
+
+        if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
+            if self.instance.adresse_lieu_dit:
+                choice = (self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)
+                self.fields["adresse_lieu_dit"].choices = [choice]
+            if self.instance.adresse_etablissement:
+                choice = (self.instance.adresse_etablissement, self.instance.adresse_etablissement)
+                self.fields["adresse_etablissement"].choices = [choice]
 
         if convert_required_to_data_required:
             self._convert_required_to_data_required()
