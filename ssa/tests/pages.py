@@ -311,6 +311,10 @@ class EvenementProduitDetailsPage:
         self.page.get_by_role("link", name="Clôturer l'événement").click()
         self.page.get_by_role("button", name="Clôturer").click()
 
+    def edit(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Modifier l'événement").click()
+
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
 

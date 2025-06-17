@@ -69,3 +69,12 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
     assert evenement.etat == EvenementProduit.Etat.EN_COURS
     expect(page.get_by_text("En cours", exact=True)).to_be_visible()
     expect(page.get_by_text("Événement produit publié avec succès")).to_be_visible()
+
+
+def test_can_edit_evenement_produit(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementProduitFactory()
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.edit()
+    page.wait_for_url(f"**{evenement.get_update_url()}")
