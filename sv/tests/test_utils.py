@@ -266,6 +266,14 @@ class LieuFormDomElements:
         return self.page.locator('[id^="id_lieux-"][id$="raison_sociale_etablissement"]').locator("visible=true")
 
     @property
+    def adresse_etablissement_hidden_input(self) -> Locator:
+        return (
+            self.page.locator(".fr-modal__content")
+            .locator("visible=true")
+            .locator('[id^="id_lieux-"][id$="adresse_etablissement"]')
+        )
+
+    @property
     def adresse_etablissement_input(self) -> Locator:
         return self.page.locator(".adresse-etablissement .choices__list--single").locator("visible=true").locator("..")
 

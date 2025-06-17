@@ -86,7 +86,76 @@ def test_fiche_detection_update_page_content(live_server, page: Page, form_eleme
         fiche_detection.mesures_surveillance_specifique
     )
 
-    # TODO: ajouter les tests pour les lieux et les prélèvements
+    # TODO: ajouter les tests pour les prélèvements
+
+
+def test_fiche_detection_update_lieu_modal_content(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_get_values,
+):
+    fiche_detection = FicheDetectionFactory()
+    lieu = LieuFactory(fiche_detection=fiche_detection, is_etablissement=True)
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+
+    # modification du lieu
+    page.get_by_role("button", name="Modifier le lieu").click()
+
+    expect(lieu_form_elements.close_btn).to_be_visible()
+    expect(lieu_form_elements.close_btn).to_have_text("Fermer")
+
+    expect(page.get_by_role("heading", name="Ajouter un lieu")).to_be_visible()
+    expect(lieu_form_elements.title).to_have_text("Ajouter un lieu")
+
+    expect(lieu_form_elements.nom_label).to_be_visible()
+    expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
+    expect(lieu_form_elements.nom_input).to_be_visible()
+    expect(lieu_form_elements.nom_input).to_have_value(lieu.nom)
+
+    expect(lieu_form_elements.adresse_input).to_have_value(lieu.adresse_lieu_dit)
+    expected_value = f"{lieu.adresse_lieu_dit}\nRemove item"
+    assert choice_js_get_values(page, '[id^="id_lieux-"][id$="adresse_lieu_dit"]')[0].replace(
+        "\n", " "
+    ) == expected_value.replace("\n", " ")
+
+    expect(lieu_form_elements.commune_hidden_input).to_have_value(lieu.commune)
+    expect(lieu_form_elements.code_insee_hidden_input).to_have_value(lieu.code_insee)
+    expect(page.get_by_text(f"{lieu.commune} ({lieu.departement.numero})Remove item")).to_be_visible()
+    expect(lieu_form_elements.departement_hidden_input).to_have_value(lieu.departement.numero)
+
+    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
+    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
+    expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_visible()
+    expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value(str(lieu.wgs84_latitude))
+    expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_visible()
+    expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value(str(lieu.wgs84_longitude))
+
+    expect(lieu_form_elements.is_etablissement_checkbox).to_be_checked()
+
+    expect(lieu_form_elements.siret_etablissement_input).to_be_visible()
+    expect(lieu_form_elements.siret_etablissement_input).to_have_value(lieu.siret_etablissement)
+
+    expect(lieu_form_elements.adresse_etablissement_input).to_be_visible()
+
+    expect(lieu_form_elements.adresse_etablissement_hidden_input).to_have_value(lieu.adresse_etablissement)
+    expected_value = f"{lieu.adresse_etablissement}\nRemove item"
+    assert choice_js_get_values(page, '[id^="id_lieux-"][id$="adresse_etablissement"]')[0].replace(
+        "\n", " "
+    ) == expected_value.replace("\n", " ")
+
+    expect(lieu_form_elements.pays_etablissement_input).to_be_visible()
+    expect(lieu_form_elements.pays_etablissement_input).to_have_value(lieu.pays_etablissement.code)
+
+    expect(lieu_form_elements.code_inupp_etablissement_input).to_be_visible()
+    expect(lieu_form_elements.code_inupp_etablissement_input).to_have_value(str(lieu.code_inupp_etablissement))
+
+    expect(lieu_form_elements.position_etablissement_input).to_be_visible()
+    expect(lieu_form_elements.position_etablissement_input).to_have_value(
+        str(lieu.position_chaine_distribution_etablissement.id)
+    )
 
 
 def test_fiche_detection_update_page_content_with_no_data(
