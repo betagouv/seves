@@ -3,8 +3,9 @@ import django_filters
 from core.constants import REGION_STRUCTURE_MAPPING
 from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
 from core.forms import DSFRForm
+from core.models import Region
 from seves import settings
-from .models import Region, OrganismeNuisible, Evenement
+from .models import OrganismeNuisible, Evenement
 from django.forms.widgets import DateInput
 
 

@@ -4,6 +4,8 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django_countries.fields import CountryField
 
+from core.models import Departement, Region  # noqa F403
+
 
 class PositionChaineDistribution(models.Model):
     class Meta:
@@ -17,18 +19,6 @@ class PositionChaineDistribution(models.Model):
         return self.libelle
 
 
-class Region(models.Model):
-    class Meta:
-        verbose_name = "Région"
-        verbose_name_plural = "Régions"
-        ordering = ["nom"]
-
-    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
-
-    def __str__(self):
-        return self.nom
-
-
 class SiteInspection(models.Model):
     class Meta:
         verbose_name = "Site d'inspection"
@@ -39,21 +29,6 @@ class SiteInspection(models.Model):
 
     def __str__(self):
         return self.nom
-
-
-class Departement(models.Model):
-    class Meta:
-        verbose_name = "Département"
-        verbose_name_plural = "Départements"
-        ordering = ["numero"]
-        constraints = [models.UniqueConstraint(fields=["numero", "nom"], name="unique_departement_numero_nom")]
-
-    numero = models.CharField(max_length=3, verbose_name="Numéro", unique=True)
-    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
-    region = models.ForeignKey(Region, on_delete=models.PROTECT, verbose_name="Région")
-
-    def __str__(self):
-        return f"{self.numero} - {self.nom}"
 
 
 def validate_wgs84_longitude(value):

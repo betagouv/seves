@@ -4,8 +4,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.constants import REGIONS, DEPARTEMENTS
+from core.factories import DepartementFactory
 from core.models import Structure
-from sv.constants import REGIONS, DEPARTEMENTS, STRUCTURE_EXPLOITANT
+from sv.constants import STRUCTURE_EXPLOITANT
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
     FicheDetectionFactory,
@@ -13,7 +15,6 @@ from ..factories import (
     LaboratoireFactory,
     PrelevementFactory,
     EvenementFactory,
-    DepartementFactory,
     SiteInspectionFactory,
     PositionChaineDistributionFactory,
 )
