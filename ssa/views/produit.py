@@ -118,7 +118,7 @@ class EvenementProduitDetailView(
         return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
-        return EvenementProduit.objects.all().select_related("createur")
+        return EvenementProduit.objects.with_departement_prefetched().all().select_related("createur")
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):

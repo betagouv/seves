@@ -104,7 +104,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     evenement = EtablissementFactory().evenement_produit
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
-    with django_assert_num_queries(NB_QUERIES):
+    with django_assert_num_queries(NB_QUERIES + 2):
         EvenementProduitExport().export(task.id)
 
     task.refresh_from_db()
@@ -115,7 +115,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     EtablissementFactory(evenement_produit=evenement)
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
-    with django_assert_num_queries(NB_QUERIES + 2):
+    with django_assert_num_queries(NB_QUERIES + 4):
         EvenementProduitExport().export(task.id)
 
     task.refresh_from_db()
@@ -138,7 +138,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.raison_sociale,
         etablissement_1.adresse_lieu_dit,
         etablissement_1.commune,
-        etablissement_1.departement,
+        str(etablissement_1.departement),
         str(etablissement_1.pays.name),
         etablissement_1.get_type_exploitant_display(),
         etablissement_1.get_position_dossier_display(),
@@ -150,7 +150,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.raison_sociale,
         etablissement_2.adresse_lieu_dit,
         etablissement_2.commune,
-        etablissement_2.departement,
+        str(etablissement_2.departement),
         str(etablissement_2.pays.name),
         etablissement_2.get_type_exploitant_display(),
         etablissement_2.get_position_dossier_display(),
