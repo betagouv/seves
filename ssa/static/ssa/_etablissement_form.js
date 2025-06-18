@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!!event.detail.customProperties.context)
             {
                 modal.querySelector('[id$=pays]').value = "FR"
-                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
+                const [num, dept, reg, ...rest] = event.detail.customProperties.context.split(/\s*,\s*/)
+                modal.querySelector('[id$=departement]').value = num
             }
         })
         return addressChoices
@@ -122,8 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
             baseCard.querySelector('.pays').classList.remove("fr-hidden")
         }
 
-        const structure = `Département : ${currentModal.querySelector('[id$=departement]').value || 'nc.'}`
-        baseCard.querySelector('.structure').textContent = structure
+        try {
+            const select = currentModal.querySelector('[id$=departement]');
+            const option = select.options[select.selectedIndex];
+            baseCard.querySelector('.structure').textContent = `Département : ${option.value} - ${option.innerText}`;
+        } catch {
+            baseCard.querySelector('.structure').textContent = '<span class="empty-value">Vide</span>';
+        }
 
         const numeroAgrementValue = currentModal.querySelector('[id$=numero_agrement]').value
         if (!!numeroAgrementValue) {

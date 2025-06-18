@@ -1,4 +1,5 @@
 import django_filters
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import DateInput, TextInput
@@ -8,9 +9,8 @@ from django_filters.filters import BaseInFilter, CharFilter
 from core.fields import DSFRCheckboxInput
 from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
 from core.forms import DSFRForm
-from core.models import LienLibre
+from core.models import LienLibre, Departement
 from ssa.models import EvenementProduit
-from ssa.models.departements import Departement
 
 
 class StrInFilter(BaseInFilter, CharFilter):
@@ -82,8 +82,12 @@ class EvenementProduitFilter(
         field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
     )
     commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
-    departement = django_filters.ChoiceFilter(
-        choices=Departement, field_name="etablissements__departement", distinct=True, label="Département"
+    departement = django_filters.ModelChoiceFilter(
+        label="Département",
+        queryset=Departement.objects.all(),
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        field_name="etablissements__departement",
+        distinct=True,
     )
     pays = django_filters.ChoiceFilter(
         choices=Countries, field_name="etablissements__pays", distinct=True, label="Pays"
