@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.core.files import File
 
-from core.models import Export
+from core.models import Export, Departement
 from core.notifications import notify_export_is_ready
 from ssa.models import EvenementProduit
 
@@ -63,6 +63,8 @@ class EvenementProduitExport:
                 return ",".join(value) if value else None
             if isinstance(value, datetime):
                 return value.strftime("%d/%m/%Y %Hh%M")
+            if isinstance(value, Departement):
+                return str(value)
             return value
 
     def add_data(self, result, instance, fields):
@@ -96,7 +98,8 @@ class EvenementProduitExport:
             return
 
         queryset = (
-            EvenementProduit.objects.filter(id__in=task.object_ids)
+            EvenementProduit.objects.with_departement_prefetched()
+            .filter(id__in=task.object_ids)
             .select_related("createur")
             .prefetch_related("etablissements")
         )

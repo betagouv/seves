@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre
+from core.models import LienLibre, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import PretAManger, ActionEngagees
@@ -379,10 +379,11 @@ def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Pa
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
-def test_can_filter_by_departement(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EtablissementFactory(departement="Cantal")
-    not_to_be_found_1 = EtablissementFactory(departement="Aveyron")
-    not_to_be_found_2 = EtablissementFactory(departement="")
+def test_can_filter_by_departement(live_server, ensure_departements, mocked_authentification_user, page: Page):
+    ensure_departements("Cantal", "Aveyron")
+    to_be_found = EtablissementFactory(departement=Departement.objects.get(nom="Cantal"))
+    not_to_be_found_1 = EtablissementFactory(departement=Departement.objects.get(nom="Aveyron"))
+    not_to_be_found_2 = EtablissementFactory(departement=None)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()

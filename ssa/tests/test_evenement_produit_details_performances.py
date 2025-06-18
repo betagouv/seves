@@ -1,7 +1,7 @@
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 
-NUMBER_BASE_QUERIES = 21
+NUMBER_BASE_QUERIES = 19
 
 
 def test_evenement_produit_performances(client, django_assert_num_queries):
@@ -13,12 +13,12 @@ def test_evenement_produit_performances(client, django_assert_num_queries):
 
     EtablissementFactory(evenement_produit=evenement)
 
-    with django_assert_num_queries(NUMBER_BASE_QUERIES + 2):
+    with django_assert_num_queries(NUMBER_BASE_QUERIES + 4):
         client.get(evenement.get_absolute_url())
 
     EtablissementFactory.create_batch(3, evenement_produit=evenement)
 
-    with django_assert_num_queries(NUMBER_BASE_QUERIES + 2):
+    with django_assert_num_queries(NUMBER_BASE_QUERIES + 4):
         client.get(evenement.get_absolute_url())
 
 

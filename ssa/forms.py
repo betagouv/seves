@@ -6,12 +6,11 @@ from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleC
 from core.form_mixins import DSFRForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message
+from core.models import Contact, Message, Departement
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import Etablissement, TypeExploitant, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
-from ssa.models.departements import Departement
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
 
@@ -122,8 +121,11 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         required=False,
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
-    departement = SEVESChoiceField(
-        choices=sorted(Departement.choices, key=lambda c: c[1]), required=False, label="Département"
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("nom").all(),
+        to_field_name="numero",
+        required=False,
+        label="Département",
     )
 
     class Meta:

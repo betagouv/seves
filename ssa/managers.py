@@ -9,6 +9,13 @@ class EvenementProduitManager(models.Manager):
     def get_queryset(self):
         return EvenementProduitQueryset(self.model, using=self._db).filter(is_deleted=False)
 
+    def with_departement_prefetched(self):
+        return (
+            self.get_queryset()
+            .prefetch_related("etablissements__departement")
+            .prefetch_related("etablissements__departement__region")
+        )
+
 
 class EvenementProduitQueryset(models.QuerySet):
     def order_by_numero(self):
