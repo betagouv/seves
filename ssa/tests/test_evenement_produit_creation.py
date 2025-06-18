@@ -5,14 +5,14 @@ from django.http import JsonResponse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import LienLibre, Contact
+from core.models import LienLibre, Contact, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
 
-FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id"]
+FIELD_TO_EXCLUDE_ETABLISSEMENT = ["_state", "id", "code_insee", "evenement_produit_id", "departement_id"]
 
 
 def test_can_create_evenement_produit_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
@@ -199,7 +199,7 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, assert_m
     creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
-    assert etablissement.departement == "Aisne"
+    assert str(etablissement.departement) == "Aisne"
 
 
 def test_card_etablissement_content(live_server, page: Page):
@@ -213,7 +213,7 @@ def test_card_etablissement_content(live_server, page: Page):
     expect(etablissement_card.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.get_type_exploitant_display(), exact=True)).to_be_visible()
-    expect(etablissement_card.get_by_text(etablissement.departement)).to_be_visible()
+    expect(etablissement_card.get_by_text(f"{etablissement.departement.get_num_name_display()}")).to_be_visible()
     expect(etablissement_card.get_by_text(etablissement.get_position_dossier_display(), exact=True)).to_be_visible()
 
 
@@ -329,7 +329,7 @@ def test_can_create_etablissement_with_ban_auto_complete(live_server, page: Page
     assert etablissement.commune == "Paris"
     assert etablissement.code_insee == "75115"
     assert etablissement.pays.name == "France"
-    assert etablissement.departement == "Paris"
+    assert etablissement.departement == Departement.objects.get(nom="Paris")
 
 
 def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Page, choice_js_fill_from_element):
@@ -375,7 +375,7 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     assert etablissement.commune == ""
     assert etablissement.code_insee == ""
     assert etablissement.pays.name == ""
-    assert etablissement.departement == ""
+    assert etablissement.departement is None
 
 
 def test_ac_can_fill_rasff_number_6_digits(live_server, mocked_authentification_user, page: Page):

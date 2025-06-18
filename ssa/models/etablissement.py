@@ -4,8 +4,8 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django_countries.fields import CountryField
 
+from core.models import Departement
 from ssa.models import EvenementProduit
-from ssa.models.departements import Departement
 from ssa.models.validators import validate_numero_agrement
 
 
@@ -76,7 +76,14 @@ class Etablissement(models.Model):
             ),
         ],
     )
-    departement = models.CharField(choices=Departement.choices, verbose_name="Département", blank=True)
+    departement = models.ForeignKey(
+        Departement,
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        related_name="etablissements",
+        blank=True,
+        null=True,
+    )
     pays = CountryField(null=True)
 
     type_exploitant = models.CharField(

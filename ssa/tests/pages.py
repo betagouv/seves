@@ -228,7 +228,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
-        modal.locator('[id$="-departement"]').select_option(etablissement.departement)
+        modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
         modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)

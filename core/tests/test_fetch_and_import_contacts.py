@@ -10,7 +10,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from docker.errors import DockerException
-from testcontainers.sftp import SFTPContainer
 
 from core.models import Agent, Structure, Contact
 from core.tests.test_import_contacts import _reset_contacts
@@ -98,7 +97,7 @@ def _generate_encrypted_symmetric_keys():
         )
 
 
-def generate_known_hosts(sftp_container: SFTPContainer):
+def generate_known_hosts(sftp_container):
     host_ip = sftp_container.get_container_host_ip()
     known_hosts_result = subprocess.run(
         ["ssh-keyscan", "-p", str(sftp_container.get_exposed_sftp_port()), host_ip], capture_output=True, text=True
@@ -124,7 +123,7 @@ def upload_file_to_sftp_server(filename: str):
     )
 
 
-def update_env_vars(sftp_container: SFTPContainer):
+def update_env_vars(sftp_container):
     os.environ["SFTP_HOST"] = sftp_container.get_container_host_ip()
     os.environ["SFTP_PORT"] = str(sftp_container.get_exposed_sftp_port())
     os.environ["SFTP_USERNAME"] = sftp_container.users[0].name
@@ -161,6 +160,8 @@ def test_fetch_and_import_contacts_command():
     os.remove("symmetric2.key")
 
     try:
+        from testcontainers.sftp import SFTPContainer
+
         with SFTPContainer() as sftp_container:
             sftp_container.start()
             update_env_vars(sftp_container)

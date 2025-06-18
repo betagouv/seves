@@ -19,7 +19,6 @@ from ssa.models import (
     PositionDossier,
     CategorieDanger,
 )
-from ssa.models.departements import Departement
 from ssa.models.evenement_produit import PretAManger, CategorieProduit
 
 
@@ -118,7 +117,7 @@ class EtablissementFactory(DjangoModelFactory):
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
-    departement = FuzzyChoice([choice[0] for choice in Departement.choices])
+    departement = factory.SubFactory("core.factories.DepartementFactory")
     pays = FuzzyChoice([c.code for c in Countries()])
 
     type_exploitant = FuzzyChoice([choice[0] for choice in TypeExploitant.choices])
