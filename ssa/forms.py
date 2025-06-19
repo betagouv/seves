@@ -114,10 +114,13 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
-    pays = CountryField(blank=True).formfield()
+    pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
     type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
     position_dossier = SEVESChoiceField(
-        choices=PositionDossier.choices, label="Position dossier", required=False, widget=PositionDossierWidget
+        choices=PositionDossier.choices,
+        label="Position dossier",
+        required=False,
+        widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
     departement = SEVESChoiceField(
         choices=sorted(Departement.choices, key=lambda c: c[1]), required=False, label="Département"
