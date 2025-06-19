@@ -63,3 +63,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.etablissment-filters {
+    background-color: var(--background-alt-grey);
+}
