@@ -1,0 +1,5 @@
+{% for message_update_form in message_update_forms %}
+    {% with pk_str=message_update_form.instance.pk|stringformat:"s" %}
+        {% include "core/_sidebar_message_form.html" with object=object message_form=message_update_form id="sidebar-message-"|add:pk_str action=message_update_form.instance.get_update_url %}
+    {% endwith %}
+{% endfor %}

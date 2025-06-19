@@ -20,20 +20,23 @@ from django.views.generic import (
 )
 from reversion.models import Version
 
-from core.forms import MessageForm, MessageDocumentForm, StructureAddForm, AgentAddForm
 from core.mixins import (
     WithDocumentUploadFormMixin,
     WithDocumentListInContextMixin,
-    WithMessagesListInContextMixin,
+    WithMessageMixin,
     WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
     WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
+    WithContactFormsInContextMixin,
+    WithBlocCommunPermission,
+    WithAddUserContactsMixin,
+    WithClotureContextMixin,
+    WithOrderingMixin,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
-from core.validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -60,15 +63,30 @@ from .models import (
 from .view_mixins import (
     WithPrelevementHandlingMixin,
     WithStatusToOrganismeNuisibleMixin,
-    WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
-    WithClotureContextMixin,
 )
 
 
-class EvenementListView(ListView):
+class EvenementListView(WithOrderingMixin, ListView):
     model = Evenement
     paginate_by = 100
+
+    def get_ordering_fields(self):
+        return {
+            "ac_notified": "is_ac_notified",
+            "numero_evenement": ("numero_annee", "numero_evenement"),
+            "organisme": "organisme_nuisible__libelle_court",
+            "creation": "date_creation",
+            "maj": "date_derniere_mise_a_jour_globale",
+            "createur": "createur__libelle",
+            "etat": "etat",
+            "visibilite": "visibilite",
+            "detections": "nb_fiches_detection",
+            "zone": "fiche_zone_delimitee__id",
+        }
+
+    def get_default_order_by(self):
+        return "maj"
 
     def get_queryset(self):
         contact = self.request.user.agent.structure.contact_set.get()
@@ -79,8 +97,9 @@ class EvenementListView(ListView):
             .with_fin_de_suivi(contact)
             .with_nb_fiches_detection()
             .optimized_for_list()
-            .with_date_derniere_mise_a_jour_and_order()
+            .with_date_derniere_mise_a_jour()
         )
+        queryset = self.apply_ordering(queryset)
         self.filter = EvenementFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
@@ -105,9 +124,11 @@ class EvenementListView(ListView):
 
 
 class EvenementDetailView(
+    WithBlocCommunPermission,
     WithDocumentListInContextMixin,
     WithDocumentUploadFormMixin,
-    WithMessagesListInContextMixin,
+    WithMessageMixin,
+    WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
@@ -171,26 +192,19 @@ class EvenementDetailView(
             "can_be_ac_notified": self.get_object().can_notifiy(user),
             "can_be_updated": self.get_object().can_be_updated(user),
             "can_be_deleted": self.get_object().can_be_deleted(user),
+            "can_ouvrir": self.get_object().can_ouvrir(user),
             "can_add_fiche_detection": self.get_object().can_add_fiche_detection(user),
             "can_delete_fiche_detection": self.get_object().can_delete_fiche_detection(),
             "can_update_fiche_detection": self.get_object().can_update_fiche_detection(user),
             "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
             "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
             "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
-            "can_add_agent": self.get_object().can_add_agent(user),
-            "can_add_structure": self.get_object().can_add_structure(user),
-            "can_delete_contact": self.get_object().can_delete_contact(user),
-            "can_add_document": self.get_object().can_add_document(user),
-            "can_update_document": self.get_object().can_update_document(user),
-            "can_delete_document": self.get_object().can_delete_document(user),
-            "can_download_document": self.get_object().can_download_document(user),
         }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_permission_context())
-        content_type = ContentType.objects.get_for_model(self.get_object())
-        context["content_type"] = content_type
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["fiche_detection_content_type"] = ContentType.objects.get_for_model(FicheDetection)
         context["fiche_zone_content_type"] = ContentType.objects.get_for_model(FicheZoneDelimitee)
         context["visibilite_form"] = EvenementVisibiliteUpdateForm(obj=self.get_object())
@@ -202,13 +216,6 @@ class EvenementDetailView(
                 (zone_infestee, zone_infestee.fichedetection_set.all())
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
             ]
-        context["message_form"] = MessageForm(
-            sender=self.request.user,
-            obj=self.get_object(),
-            next=self.get_object().get_absolute_url(),
-        )
-        context["add_document_form"] = MessageDocumentForm()
-        context["allowed_extensions"] = AllowedExtensions.values
         contact = self.request.user.agent.structure.contact_set.get()
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["active_detection"] = (
@@ -216,10 +223,6 @@ class EvenementDetailView(
             if self.request.GET.get("detection")
             else getattr(self.object.detections.first(), "id", None)
         )
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
-        initial_data = {"content_id": self.get_object().id, "content_type_id": content_type.id}
-        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=self.get_object())
-        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=self.get_object())
         return context
 
 
@@ -477,28 +480,6 @@ class FicheDetectionExportView(View):
         FicheDetectionExport().export(stream=response, user=request.user)
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
-
-
-class EvenementCloturerView(View):
-    def post(self, request, pk):
-        data = self.request.POST
-        content_type = ContentType.objects.get(pk=data["content_type_id"])
-        evenement = content_type.model_class().objects.get(pk=pk)
-        redirect_url = evenement.get_absolute_url()
-
-        can_cloturer, error_message = evenement.can_be_cloturer(request.user)
-        if not can_cloturer:
-            messages.error(request, error_message)
-            return redirect(redirect_url)
-
-        if evenement.is_the_only_remaining_structure(
-            self.request.user, evenement.get_contacts_structures_not_in_fin_suivi()
-        ):
-            evenement.add_fin_suivi(self.request.user)
-
-        evenement.cloturer()
-        messages.success(request, f"L'événement n°{evenement.numero} a bien été clôturé.")
-        return redirect(redirect_url)
 
 
 class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMessageMixin, UpdateView):

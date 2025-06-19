@@ -1,22 +1,22 @@
-<aside id="sidebar" class="sidebar white-container--lite">
+<aside id="{{ id }}" class="sidebar white-container--lite">
     <div class="close-sidebar-container">
         <a href="#" class="fr-link close-sidebar fr-mb-2v">Annuler et fermer</a>
     </div>
-    <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v"></h5>
-    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ evenement.add_message_url }}">
+    <h5 id="message-type-title" class="fr-h5 fr-mb-0-5v fr-ml-2v"></h5>
+    <form method="post" id="message-form" enctype="multipart/form-data" action="{{ action }}">
         {% csrf_token %}
-        <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v">
+        <div id="point-situation-help" class="fr-hidden fr-hint-text fr-mb-2v fr-ml-2v">
             Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_limited_recipients %}fr-hidden{% endif %}">
             <label class="required-field">{{ message_form.recipients_limited_recipients.label_tag }}</label>
             {{ message_form.recipients_limited_recipients }}
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_structures_only %}fr-hidden{% endif %}">
             {{ message_form.recipients_structures_only.label_tag }}
             {{ message_form.recipients_structures_only }}
         </div>
-        <div class=" fr-fieldset__element fr-hidden">
+        <div class=" fr-fieldset__element {% if not message_form.recipients_copy_structures_only %}fr-hidden{% endif %}">
             {{ message_form.recipients_copy_structures_only.label_tag }}
             {{ message_form.recipients_copy_structures_only }}
         </div>
@@ -36,11 +36,22 @@
                     <button class="fr-btn fr-btn--tertiary btn-full" id="message-add-document" disabled>Valider l'ajout du document</button>
                 </div>
             </div>
-
         </div>
-        <div class="message-send-btn fr-pr-1w fr-mb-8w">
-            <button type="submit" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+        <div class="fr-hidden">
+            {% for existing_document_form in message_form.documents_forms %}
+                <div class="existing-document-form">
+                    {{ existing_document_form }}
+                    <input type="hidden" name="existing_document_name_{{ existing_document_form.instance.pk }}" data-pk="{{ existing_document_form.instance.pk }}" value="{{ existing_document_form.instance.file.name}}">
+                </div>
+            {% endfor %}
         </div>
-
+        <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--center">
+            <li>
+                <button type="submit" value="{{ message_status.BROUILLON }}" class="fr-btn fr-btn--secondary" id="draft-message-send-btn" data-testid="draft-fildesuivi-add-submit">Enregistrer comme brouillon</button>
+            </li>
+            <li>
+                <button type="submit" value="{{ message_status.FINALISE }}" class="fr-btn " id="message-send-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+            </li>
+        </ul>
     </form>
 </aside>

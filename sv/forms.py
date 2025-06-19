@@ -1,4 +1,5 @@
 import datetime
+from copy import copy
 
 from django import forms
 from django.conf import settings
@@ -7,12 +8,13 @@ from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import now
 from django.utils.translation import ngettext
+from django_countries.fields import CountryField
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.form_mixins import DSFRForm
-from core.forms import VisibiliteUpdateBaseForm
-from core.models import Structure, Visibilite
+from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
+from core.models import Structure, Visibilite, Message, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithLatestVersionLocking,
@@ -56,6 +58,7 @@ class DepartementModelChoiceField(forms.ModelChoiceField):
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
+    adresse_lieu_dit = forms.CharField(widget=forms.Select(), required=False)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = DepartementModelChoiceField(
@@ -105,6 +108,15 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
+    adresse_etablissement = forms.CharField(widget=forms.Select(), required=False, label="Adresse ou lieu-dit")
+    departement_etablissement = DepartementModelChoiceField(
+        queryset=Departement.objects.all(),
+        to_field_name="numero",
+        required=False,
+        label="Département",
+    )
+    code_insee_etablissement = forms.CharField(widget=forms.HiddenInput(), required=False)
+    pays_etablissement = CountryField(blank=True).formfield(label="Pays")
 
     class Meta:
         model = Lieu
@@ -112,8 +124,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         labels = {
             "is_etablissement": "Il s'agit d'un établissement",
             "raison_sociale_etablissement": "Raison sociale",
-            "adresse_etablissement": "Adresse",
-            "pays_etablissement": "Pays",
         }
 
     def clean_departement(self):
@@ -563,3 +573,59 @@ class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
         disabled_pks = [structure.pk for structure in structures_disabled]
         self.fields["allowed_structures"].widget.disabled_choices = disabled_pks
         self.fields["allowed_structures"].widget.checked_choices = disabled_pks
+
+
+class MessageForm(BaseMessageForm):
+    recipients_limited_recipients = forms.MultipleChoiceField(
+        choices=[("mus", "MUS"), ("bsv", "BSV")],
+        label="Destinataires",
+        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+    )
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+        "recipients_limited_recipients",
+    ]
+
+    class Meta(BaseMessageForm.Meta):
+        fields = [
+            "recipients",
+            "recipients_structures_only",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "recipients_limited_recipients",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance and instance.pk and "recipients_limited_recipients" in self.fields:
+            self.fields["recipients_limited_recipients"].widget.attrs["id"] = (
+                f"id_recipients_limited_recipients_{instance.pk}"
+            )
+            recipients = self.instance.recipients.values_list("structure__libelle", flat=True)
+            if recipients:
+                initial = [r.lower() for r in recipients if r]
+                self.initial["recipients_limited_recipients"] = initial
+
+    def _convert_checkboxes_to_contacts(self):
+        try:
+            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
+        except KeyError:
+            raise ValidationError("Au moins un destinataire doit être sélectionné.")
+        self.cleaned_data["recipients"] = []
+        if "mus" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
+        if "bsv" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self._convert_checkboxes_to_contacts()

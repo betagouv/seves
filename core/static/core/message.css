@@ -32,8 +32,7 @@ label[for=id_recipients]::after, label[for=id_recipients_structures_only]::after
     display: flex;
     justify-content: end;
 }
-label[for=id_recipients], label[for=id_recipients_copy], label[for=id_recipients_structures_only], label[for=id_recipients_copy_structures_only]
-{
-    display: flex;
-    justify-content: space-between;
+.message-draft, .message-draft .fr-tag {
+    font-style: italic;
+    color: var(--text-disabled-grey);
 }

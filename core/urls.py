@@ -11,6 +11,10 @@ from .views import (
     PublishView,
     StructureAddView,
     AgentAddView,
+    CloturerView,
+    PublishAndACNotificationView,
+    EvenementOuvrirView,
+    MessageUpdateView,
 )
 
 urlpatterns = [
@@ -50,6 +54,11 @@ urlpatterns = [
         name="message-add",
     ),
     path(
+        "message/<int:pk>/update/",
+        MessageUpdateView.as_view(),
+        name="message-update",
+    ),
+    path(
         "suppression/",
         SoftDeleteView.as_view(),
         name="soft-delete",
@@ -58,6 +67,11 @@ urlpatterns = [
         "publication/",
         PublishView.as_view(),
         name="publish",
+    ),
+    path(
+        "publier-notifier-ac/",
+        PublishAndACNotificationView.as_view(),
+        name="publish-and-ac-notification",
     ),
     path(
         "notify-ac/",
@@ -73,5 +87,15 @@ urlpatterns = [
         "agents/ajout",
         AgentAddView.as_view(),
         name="agent-add",
+    ),
+    path(
+        "cloturer/<int:pk>",
+        CloturerView.as_view(),
+        name="cloturer",
+    ),
+    path(
+        "evenement/<int:pk>/ouvrir/",
+        EvenementOuvrirView.as_view(),
+        name="evenement-ouvrir",
     ),
 ]

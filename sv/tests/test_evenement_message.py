@@ -1,15 +1,40 @@
 import os
 import re
 import tempfile
+from datetime import datetime
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.contrib.auth.models import Group
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory, DocumentFactory
-from core.models import Message, Contact, Structure, Visibilite, Document
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.factories import (
+    ContactAgentFactory,
+    ContactStructureFactory,
+    StructureFactory,
+    DocumentFactory,
+    MessageFactory,
+)
+from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
+from core.pages import UpdateMessagePage
+from core.tests.generic_tests.messages import (
+    generic_test_can_add_and_see_message_without_document,
+    generic_test_can_update_draft_message,
+    generic_test_can_update_draft_note,
+    generic_test_can_update_draft_point_situation,
+    generic_test_can_update_draft_demande_intervention,
+    generic_test_can_update_draft_fin_suivi,
+    generic_test_can_send_draft_element_suivi,
+    generic_test_can_finaliser_draft_note,
+    generic_test_can_send_draft_fin_suivi,
+    generic_test_can_only_see_own_document_types_in_message_form,
+    generic_test_can_see_and_delete_documents_from_draft_message,
+)
+from seves import settings
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -17,43 +42,8 @@ User = get_user_model()
 
 
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-
-    choice_js_fill(
-        page,
-        'label[for="id_recipients"] ~ div.choices',
-        active_contact.nom,
-        active_contact.contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    expect(page.locator("#message-type-title")).to_have_text("message")
-    page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
-    page.get_by_test_id("fildesuivi-add-submit").click()
-
-    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
-    assert page.text_content(cell_selector) == "Structure Test"
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
-    assert page.text_content(cell_selector).strip() == str(active_contact)
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
-    assert page.text_content(cell_selector) == "Title of the message"
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
-    assert page.text_content(cell_selector) == "Message"
-
-    page.locator(cell_selector).click()
-
-    expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
-    assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
+    generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
 
 
 def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js_fill):
@@ -112,6 +102,7 @@ def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js
         other_active_contact,
     ]
     assert message.message_type == Message.DEMANDE_INTERVENTION
+    assert message.status == Message.Status.FINALISE
 
 
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
@@ -279,6 +270,8 @@ def test_can_add_and_see_note_without_document(live_server, page: Page):
     expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
     assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
 
+    assert evenement.messages.get().status == Message.Status.FINALISE
+
 
 def test_can_add_and_see_compte_rendu(live_server, page: Page):
     evenement = EvenementFactory()
@@ -311,6 +304,8 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page):
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
     assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention"
+
+    assert evenement.messages.get().status == Message.Status.FINALISE
 
 
 def test_cant_add_compte_rendu_without_recipient(live_server, page: Page):
@@ -359,6 +354,7 @@ def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
     page.get_by_role("link", name="Message").click()
 
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Ajouter tous les contacts de la fiche")).not_to_be_visible()
 
 
 def test_cant_click_on_shortcut_when_only_our_structure(live_server, page: Page, mocked_authentification_user):
@@ -370,8 +366,10 @@ def test_cant_click_on_shortcut_when_only_our_structure(live_server, page: Page,
     page.get_by_role("link", name="Message").click()
 
     expect(page.get_by_role("link", name="Ajouter toutes les structures de la fiche")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Ajouter tous les contacts de la fiche")).not_to_be_visible()
 
 
+@pytest.mark.django_db
 def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
@@ -395,6 +393,34 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 
     evenement.refresh_from_db()
     assert evenement.messages.get().recipients.get() == contact
+
+
+@pytest.mark.django_db
+def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contacts = [
+        contact_structure,
+        contact_agent,
+        mocked_authentification_user.agent.structure.contact_set.get(),
+        mocked_authentification_user.agent.contact_set.get(),
+    ]
+    evenement.contacts.add(*contacts)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    page.locator(".destinataires-contacts-shortcut").locator("visible=true").click()
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    evenement.refresh_from_db()
+    assert set(evenement.messages.get().recipients.all()) == {contact_structure, contact_agent}
 
 
 def test_formatting_contacts_messages_details_page(live_server, page: Page):
@@ -1058,3 +1084,484 @@ def test_can_send_message_with_document_confirmation_modal_reject(live_server, p
     message_submit_button.click()
     page.locator("#fr-modal-document-confirmation").get_by_role("button", name="Fermer").click()
     expect(message_submit_button).not_to_be_disabled()
+
+
+def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour référent national")
+    page.locator("#id_content").fill("Test avec référent national")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+
+
+def test_message_with_two_national_referents_in_same_structure_does_not_add_structure(
+    live_server, page: Page, choice_js_fill
+):
+    contact_structure = ContactStructureFactory()
+    national_referent1 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    national_referent2 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent1.agent.user.groups.add(referent_national_group)
+    national_referent2.agent.user.groups.add(referent_national_group)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent1.agent.nom,
+        national_referent1.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent2.agent.nom,
+        national_referent2.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour deux référents nationaux")
+    page.locator("#id_content").fill("Test avec deux référents nationaux")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent1.agent).exists()
+    assert evenement.contacts.filter(agent=national_referent2.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent1.agent.structure).exists()
+    assert not evenement.contacts.filter(structure=national_referent2.agent.structure).exists()
+
+
+def test_message_with_national_referent_and_regular_agent_add_structure(live_server, page: Page, choice_js_fill):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+    regular_agent = ContactAgentFactory(with_active_agent=True, agent__structure=national_referent.agent.structure)
+    ContactStructureFactory(structure=national_referent.agent.structure)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        regular_agent.agent.nom,
+        regular_agent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour référent national et agent normal")
+    page.locator("#id_content").fill("Test avec deux destinataires")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert evenement.contacts.filter(agent=regular_agent.agent).exists()
+    assert evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+
+
+def test_message_with_national_referent_and_regular_agent_in_different_structures_adds_only_regular_agent_structure(
+    live_server, page: Page, choice_js_fill
+):
+    national_referent = ContactAgentFactory(with_active_agent=True)
+    ContactStructureFactory(structure=national_referent.agent.structure)
+    referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
+    national_referent.agent.user.groups.add(referent_national_group)
+    regular_agent = ContactAgentFactory(with_active_agent=True)
+    ContactStructureFactory(structure=regular_agent.agent.structure)
+
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        national_referent.agent.nom,
+        national_referent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        regular_agent.agent.nom,
+        regular_agent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Message pour agents de structures différentes")
+    page.locator("#id_content").fill("Test avec deux destinataires de structures différentes")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    assert evenement.contacts.filter(agent=national_referent.agent).exists()
+    assert evenement.contacts.filter(agent=regular_agent.agent).exists()
+    assert not evenement.contacts.filter(structure=national_referent.agent.structure).exists()
+    assert evenement.contacts.filter(structure=regular_agent.agent.structure).exists()
+
+
+def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutbox):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the message"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Message [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_message_with_document_confirmation_modal_reject(
+    live_server, page: Page, choice_js_fill, mailoutbox
+):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+    page.locator("#send-without-adding-document").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_message_with_document_confirmation_modal_confirm(
+    live_server, page: Page, choice_js_fill, mailoutbox
+):
+    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message").click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients"] ~ div.choices',
+        active_contact.nom,
+        active_contact.contact_set.get().display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Ajouter un document").click()
+    page.locator(".sidebar #id_document_type").select_option("Autre document")
+    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+    page.locator("#send-with-adding-document").click()
+
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_note(live_server, page: Page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Note").click()
+    page.locator("#id_title").fill("Title of the note")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the note"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Note [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Point de situation").click()
+    page.locator("#id_title").fill("Title of the point de situation")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the point de situation"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Point de situation [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_demande_intervention(live_server, page: Page, choice_js_fill, mailoutbox):
+    active_contact = ContactStructureFactory(with_one_active_agent=True)
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+    choice_js_fill(
+        page,
+        'label[for="id_recipients_structures_only"] ~ div.choices',
+        active_contact.display_with_agent_unit,
+        active_contact.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    page.locator("#id_title").fill("Title of the demande d'intervention")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the demande d'intervention"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Demande d'intervention [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    Contact.objects.create(structure=structure, email="bar@example.com")
+    structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
+    Contact.objects.create(structure=structure, email="foo@example.com")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Compte rendu sur demande d'intervention", exact=True).click()
+    page.get_by_text("MUS", exact=True).click()
+    page.get_by_text("BSV", exact=True).click()
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Title of the message"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+
+
+def test_can_add_draft_fin_suivi(live_server, page: Page, mailoutbox, mocked_authentification_user):
+    evenement = EvenementFactory()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    evenement.contacts.add(contact)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Fin de suivi").click()
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_role("button", name="Enregistrer comme brouillon").click()
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "[BROUILLON] Fin de suivi"
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Fin de suivi [BROUILLON]"
+    assert evenement.messages.get().status == Message.Status.BROUILLON
+    assert len(mailoutbox) == 0
+    assert not FinSuiviContact.objects.filter(
+        content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact
+    ).exists()
+
+
+def test_draft_messages_always_displayed_first_in_messages_list(live_server, page: Page, mocked_authentification_user):
+    """Test que les brouillons sont toujours affichés en premier dans la liste des messages,
+    triés par date décroissante, suivis des messages finalisés également triés par date décroissante"""
+    evenement = EvenementFactory()
+    finalise_oldest = MessageFactory(
+        content_object=evenement,
+        title="finalisé le plus ancien",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
+    )
+    brouillon_older = MessageFactory(
+        content_object=evenement,
+        title="Brouillon ancien",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
+    )
+    finalise_recent = MessageFactory(
+        content_object=evenement,
+        title="finalisé récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
+    )
+    brouillon_newest = MessageFactory(
+        content_object=evenement,
+        title="Brouillon le plus récent",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
+    )
+    finalise_newest = MessageFactory(
+        content_object=evenement,
+        title="finalisé le plus récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
+    )
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    expect(page.locator("#table-sm-row-key-1 td:nth-child(4) a")).to_contain_text(
+        f"[BROUILLON] {brouillon_newest.title}"
+    )
+    expect(page.locator("#table-sm-row-key-2 td:nth-child(4) a")).to_contain_text(
+        f"[BROUILLON] {brouillon_older.title}"
+    )
+    expect(page.locator("#table-sm-row-key-3 td:nth-child(4) a")).to_contain_text(finalise_newest.title)
+    expect(page.locator("#table-sm-row-key-4 td:nth-child(4) a")).to_contain_text(finalise_recent.title)
+    expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)
+
+
+def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_message(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
+
+
+def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_demande_intervention(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_demande_intervention(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_update_draft_compte_rendu_demande_intervention(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    object = EvenementFactory()
+    contact_mus = ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )
+    contact_bsv = ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
+    )
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.COMPTE_RENDU,
+        recipients=[contact_mus],
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    message_page.open_message()
+    page.locator(message_page.container_id).get_by_text("BSV").click()
+    message_page.message_title.fill("Titre mis à jour")
+    message_page.message_content.fill("Contenu mis à jour")
+    message_page.save_as_draft_message()
+
+    message.refresh_from_db()
+    assert message.message_type == Message.COMPTE_RENDU
+    assert message.recipients.count() == 2
+    assert set(message.recipients.all()) == {contact_mus, contact_bsv}
+    assert message.status == Message.Status.BROUILLON
+    assert message.title == "Titre mis à jour"
+    assert message.content == "Contenu mis à jour"
+    assert len(mailoutbox) == 0
+
+
+def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+@pytest.mark.parametrize(
+    "message_type",
+    [
+        Message.MESSAGE,
+        Message.POINT_DE_SITUATION,
+        Message.DEMANDE_INTERVENTION,
+    ],
+)
+def test_can_send_draft_element_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox, message_type):
+    generic_test_can_send_draft_element_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox, message_type
+    )
+
+
+def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
+    generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, EvenementFactory())
+
+
+def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_fin_suivi(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
+    generic_test_can_only_see_own_document_types_in_message_form(
+        live_server, page, check_select_options_from_element, EvenementFactory()
+    )
+
+
+def test_can_see_and_delete_documents_from_draft_message(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_see_and_delete_documents_from_draft_message(
+        live_server,
+        page,
+        EvenementFactory(),
+        mocked_authentification_user,
+        mailoutbox,
+    )

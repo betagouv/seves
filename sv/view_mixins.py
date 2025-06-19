@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 from collections import defaultdict
 
-from core.models import Contact
 from sv.forms import (
     PrelevementForm,
 )
@@ -86,41 +85,8 @@ class WithPrelevementHandlingMixin:
                 raise ValidationError(error_msg)
 
 
-class WithAddUserContactsMixin:
-    """Mixin pour ajouter automatiquement l'utilisateur courant et sa structure comme contacts."""
-
-    def add_user_contacts(self, obj):
-        """Ajoute l'utilisateur courant et sa structure comme contacts de l'objet."""
-        agent = self.request.user.agent
-
-        agent_contact = Contact.objects.get(agent=agent)
-        obj.contacts.add(agent_contact)
-
-        if structure_contact := agent_contact.get_structure_contact():
-            obj.contacts.add(structure_contact)
-
-
 class WithPrelevementResultatsMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["prelevement_resultats"] = dict(Prelevement.Resultat.choices)
-        return context
-
-
-class WithClotureContextMixin:
-    """
-    Mixin qui ajoute au contexte les informations relatives à la clôture d'un événement.
-    """
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        evenement = self.get_object()
-        user = self.request.user
-        context["contacts_not_in_fin_suivi"] = contacts_structures_not_in_fin_suivi = (
-            evenement.get_contacts_structures_not_in_fin_suivi()
-        )
-        context["is_evenement_can_be_cloturer"], _ = evenement.can_be_cloturer(user)
-        context["is_the_only_remaining_structure"] = evenement.is_the_only_remaining_structure(
-            user, contacts_structures_not_in_fin_suivi
-        )
         return context

@@ -8,10 +8,12 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import DocumentFactory, StructureFactory
-from core.models import Structure, Document
+from core.factories import DocumentFactory, StructureFactory, MessageFactory
+from core.models import Structure, Document, Message
 from django.contrib.auth import get_user_model
 
+from core.pages import WithDocumentsPage
+from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
 from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -128,16 +130,15 @@ def test_can_edit_document_on_evenement(live_server, page: Page):
     assert evenement.documents.count() == 1
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    expect(document_page.document_title(document.pk)).to_be_visible()
+    assert "Test document" in document_page.document_title(document.pk).text_content()
 
-    expect(page.get_by_text("Test document Information")).to_be_visible()
-
-    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
-    expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
-
-    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill("New name")
-    page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("")
-    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+    document_page.open_edit_document(document.id)
+    document_page.document_edit_title(document.id).fill("New name")
+    document_page.document_edit_description(document.id).fill("")
+    document_page.document_edit_save(document.id)
 
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
 
@@ -145,8 +146,9 @@ def test_can_edit_document_on_evenement(live_server, page: Page):
     assert document.nom == "New name"
     assert document.description == ""
 
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("New name", exact=True)).to_be_visible()
+    document_page.open_document_tab()
+    expect(document_page.document_title(document.pk)).to_be_visible()
+    expect(document_page.document_title(document.pk)).to_have_text("New name")
 
 
 def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
@@ -172,7 +174,7 @@ def test_can_filter_documents_by_type_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Ma carto", exact=True)).not_to_be_visible()
 
 
-def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
+def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page, check_select_options):
     evenement = EvenementFactory()
     document_1 = DocumentFactory(nom="Test document", content_object=evenement, description="")
     other_structure = StructureFactory(libelle="Other structure")
@@ -187,11 +189,7 @@ def test_can_filter_documents_by_unit_on_evenement(live_server, page: Page):
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
     expect(page.get_by_text("Ma carto", exact=True)).to_be_visible()
 
-    choices = page.locator(".documents__filters #id_created_by_structure").all_inner_texts()[0].split("\n")
-    assert len(choices) == 3
-    assert "---------" in choices
-    assert "Other structure" in choices
-    assert "Structure Test" in choices
+    check_select_options(page, "id_created_by_structure", ["Other structure", "Structure Test"])
     page.locator(".documents__filters #id_created_by_structure").select_option("Structure Test")
     page.get_by_test_id("documents-filter").click()
 
@@ -760,3 +758,61 @@ def test_cant_upload_document_with_incompatible_extension_for_cartographie(live_
     assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
+
+
+def test_document_name_length_validation(live_server, page: Page, mocked_authentification_user: User):
+    evenement = EvenementFactory()
+    long_name = "a" * 257
+
+    # Test pour le formulaire d'ajout
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_test_id("documents").click()
+    page.get_by_test_id("documents-add").click()
+    page.locator("#id_nom").fill(long_name)
+    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
+    page.locator("#id_description").fill("Description test")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
+    page.get_by_test_id("documents-send").click()
+
+    assert evenement.documents.count() == 1
+    document = evenement.documents.get()
+    assert len(document.nom) == 256
+
+    # Test pour le formulaire de mise à jour
+    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
+    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill(long_name)
+    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    document.refresh_from_db()
+    assert len(document.nom) == 256
+
+
+def test_can_edit_document_from_message(live_server, page: Page):
+    evenement = EvenementFactory()
+    message = MessageFactory(content_object=evenement, message_type=Message.MESSAGE)
+    document = DocumentFactory(nom="Test document", description="", content_object=message)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill("New name")
+    page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("un commentaire")
+    page.get_by_test_id(f"documents-edit-{document.pk}").click()
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+
+    document.refresh_from_db()
+    assert document.nom == "New name"
+    assert document.description == "un commentaire"
+
+
+def test_cant_see_document_from_message_with_brouillon_status(live_server, page: Page):
+    evenement = EvenementFactory()
+    message = MessageFactory(content_object=evenement, message_type=Message.MESSAGE, status=Message.Status.BROUILLON)
+    DocumentFactory(nom="Test document", content_object=message)
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
+    expect(page.locator("#tabpanel-documents-panel").get_by_text("Test document")).not_to_be_visible()
+
+
+def test_cant_see_document_type_from_other_app(live_server, page: Page, check_select_options_from_element):
+    evenement = EvenementFactory()
+    generic_test_cant_see_document_type_from_other_app(live_server, page, check_select_options_from_element, evenement)

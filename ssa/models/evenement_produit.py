@@ -4,11 +4,23 @@ from django.db import models, transaction
 from django.urls import reverse
 from reversion.models import Version
 
-from core.mixins import WithEtatMixin, WithNumeroMixin, AllowsSoftDeleteMixin
-from core.models import Structure
+from core.mixins import (
+    WithEtatMixin,
+    WithNumeroMixin,
+    WithDocumentPermissionMixin,
+    WithContactPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    AllowsSoftDeleteMixin,
+    WithFreeLinkIdsMixin,
+)
+from core.model_mixins import WithBlocCommunFieldsMixin
+from core.models import Structure, Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
+from .categorie_produit import CategorieProduit
 from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
+from .categorie_danger import CategorieDanger
 
 
 class TypeEvenement(models.TextChoices):
@@ -21,29 +33,23 @@ class TypeEvenement(models.TextChoices):
 
 
 class Source(models.TextChoices):
-    AUTOCONTROLE = "autocontrole", "Autocontrôle"
+    AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
+    AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
+    AUTOCONTROLE_NON_NOTIFIE = "autocontrole_non_notifie", "Autocontrôle non notifié"
     PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
-    PRELEVEMENT_SIVEP = "prelevement_sivep", "Prélèvemeent SIVEP"
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
     AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
-    SUSPICION_TIAC = "suspicion_tiac", "Suspicion de TIAC"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas humains"
     DO_LISTERIOSE = "do_listeriose", "DO Listériose"
     CAS_GROUPES = "cas_groupes", "Cas groupés"
-    TIACS = "tiacs", "TIACS"
+    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
     AUTRE = "autre", "Autre"
-
-
-class CerfaRecu(models.TextChoices):
-    OUI_PRODUIT = "oui_produit", "Oui produit"
-    OUI_ENVIRONNEMENT = "oui_environnement", "Oui environnement"
-    NON = "non", "Non"
 
 
 class PretAManger(models.TextChoices):
     OUI = "oui", "Oui"
     NON = "non", "Non"
-    NON_APPLICABLE = "non_applicable", "Non applicable"
+    SANS_OBJET = "sans_objet", "Sans objet"
 
 
 class TemperatureConservation(models.TextChoices):
@@ -60,13 +66,6 @@ class ActionEngagees(models.TextChoices):
 
 
 class QuantificationUnite(models.TextChoices):
-    MG_KG = "mg/kg", "mg/kg"
-    UG_KG = "µg/kg", "µg/kg"
-    PRESENCE_25G = "présence/25 g", "présence/25 g"
-    UFC_10G = "UFC/10 g", "UFC/10 g"
-    UFC_25G = "UFC/25 g", "UFC/25 g"
-    NPP_100G = "NPP/100 g", "NPP/100 g"
-
     CM = "cm", "cm"
     MM = "mm", "mm"
     DEG_C = "°C", "°C"
@@ -81,6 +80,8 @@ class QuantificationUnite(models.TextChoices):
     G_100G = "g/100 g", "g/100 g"
     MG_100G = "mg/100 g", "mg/100 g"
     G_KG = "g/kg", "g/kg"
+    MG_KG = "mg/kg", "mg/kg"
+    UG_KG = "µg/kg", "µg/kg"
     NG_KG = "ng/kg", "ng/kg"
     PG_KG = "pg/kg", "pg/kg"
     PAR_1G = "/1 g", "/1 g"
@@ -90,7 +91,10 @@ class QuantificationUnite(models.TextChoices):
     PAR_KG = "/kg", "/kg"
     UFC = "UFC", "UFC"
     UFC_G = "UFC/g", "UFC/g"
+    UFC_10G = "UFC/10 g", "UFC/10 g"
+    UFC_25G = "UFC/25 g", "UFC/25 g"
     UFC_ML = "UFC/mL", "UFC/mL"
+    NPP_100G = "NPP/100 g", "NPP/100 g"
     ML = "mL", "mL"
     MMOL_L = "mmol/L", "mmol/L"
     UL_L = "µL/L", "µL/L"
@@ -114,20 +118,30 @@ class QuantificationUnite(models.TextChoices):
     POURCENT = "%", "%"
     POUR_MILLE = "‰", "‰"
     BQ_KG = "bq/kg", "bq/kg"
-    AUTRE = "autre unité : préciser", "autre unité : préciser"
+    AUTRE = "autre unite", "autre unité"
 
     @classmethod
     def with_opt_group(cls):
-        most_used = [cls.MG_KG, cls.UG_KG, cls.PRESENCE_25G, cls.UFC_10G, cls.UFC_25G, cls.NPP_100G]
-        others = [c for c in cls if c not in most_used]
+        most_used = [cls.MG_KG, cls.UG_KG, cls.UFC_G, cls.PAR_10G, cls.PAR_25G, cls.NPP_100G]
         return [
             ("Unités courantes", [(c.value, c.label) for c in most_used]),
-            ("Autres unités", [(c.value, c.label) for c in others]),
+            ("Autres unités", [(c.value, c.label) for c in cls]),
         ]
 
 
 @reversion.register()
-class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, models.Model):
+class EvenementProduit(
+    AllowsSoftDeleteMixin,
+    WithBlocCommunFieldsMixin,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    WithContactPermissionMixin,
+    WithEtatMixin,
+    WithNumeroMixin,
+    WithFreeLinkIdsMixin,
+    models.Model,
+):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_rasff = models.CharField(
@@ -137,13 +151,13 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
-    cerfa_recu = models.CharField(
-        max_length=100, choices=CerfaRecu.choices, verbose_name="Cerfa reçu du professionnel ?", blank=True
-    )
     description = models.TextField(verbose_name="Description de l'événement")
 
     # Informations liées au produit
-    denomination = models.CharField(max_length=255, verbose_name="Dénomination")
+    categorie_produit = models.CharField(
+        max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
+    )
+    denomination = models.CharField(max_length=255, verbose_name="Dénomination", blank=True)
     marque = models.CharField(max_length=255, verbose_name="Marque", blank=True)
     lots = models.TextField(blank=True, verbose_name="Lots, DLC/DDM")
     description_complementaire = models.TextField(blank=True, verbose_name="Description complémentaire")
@@ -152,7 +166,11 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
     )
 
     # Informations liées au risque
-    quantification = models.FloatField(
+    categorie_danger = models.CharField(
+        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
+    )
+    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
+    quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
     quantification_unite = models.CharField(
@@ -173,10 +191,13 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
 
     objects = EvenementProduitManager()
 
-    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS]
+    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
         return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})
+
+    def get_update_url(self):
+        return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
@@ -192,16 +213,19 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
 
     @property
     def product_description(self):
-        product_description = self.denomination
+        product_description = ""
+        if self.denomination:
+            product_description = f"{self.denomination} "
         if self.marque:
-            product_description += f" {self.marque}"
+            product_description += f"{self.marque} "
         if self.description_complementaire:
-            product_description += f" {self.description_complementaire}"
-        return product_description
+            product_description += f"{self.description_complementaire}"
+        return product_description.strip()
 
     @property
     def readable_product_fields(self):
         return {
+            "Catégorie": self.get_categorie_produit_display(),
             "Dénomination": self.denomination,
             "Marque": self.marque,
             "Lots, DLC/DDM": self.lots,
@@ -211,13 +235,23 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
 
     @property
     def readable_risk_fields(self):
-        return {
-            "Quantification": f"{self.quantification} {self.get_quantification_unite_display()}",
+        quantification = None
+        if self.quantification:
+            quantification = f"{self.quantification} {self.get_quantification_unite_display()}"
+
+        risk_fields = {
+            "Catégorie de danger": self.get_categorie_danger_display(),
+            "Précision danger": self.precision_danger,
+            "Quantification": quantification,
             "Évaluation": self.evaluation,
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
             "Référence souche": self.reference_souches,
             "Référence cluster": self.reference_clusters,
         }
+
+        if not self.categorie_danger or self.categorie_danger not in CategorieDanger.dangers_bacteriens():
+            risk_fields.pop("Produit prêt à manger (PAM)")
+        return risk_fields
 
     @property
     def latest_version(self):
@@ -239,10 +273,28 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
 
+    @classmethod
+    def danger_plus_courants(self):
+        return [
+            CategorieDanger.LISTERIA_MONOCYTOGENES,
+            CategorieDanger.SALMONELLA,
+            CategorieDanger.E_COLI_NON_STEC,
+            CategorieDanger.PESTICIDE_RESIDU,
+        ]
+
+    @property
+    def list_of_linked_objects_as_str(self):
+        links = LienLibre.objects.for_object(self)
+        objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
+        return [str(o) for o in objects if not o.is_deleted]
+
     def can_user_access(self, user):
         if user.agent.is_in_structure(self.createur):
             return True
         return not self.is_draft
+
+    def can_be_updated(self, user):
+        return self._user_can_interact(user)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
@@ -256,6 +308,47 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
 
+    def get_publish_success_message(self):
+        return "Événement produit publié avec succès"
+
+    def get_publish_error_message(self):
+        return "Cet événement produit ne peut pas être publié"
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
+    def get_message_form(self):
+        from ssa.forms import MessageForm
+
+        return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.AUTRE,
+        ]
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -264,21 +357,20 @@ class EvenementProduit(AllowsSoftDeleteMixin, WithEtatMixin, WithNumeroMixin, mo
                     | models.Q(source="")
                     | (
                         models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
                     )
                     | (
                         ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
                     )
                 ),
                 name="type_evenement_source_constraint",
             ),
             models.CheckConstraint(
                 check=(
-                    (models.Q(quantification__isnull=True) & models.Q(quantification_unite=""))
-                    | (models.Q(quantification__isnull=False) & ~models.Q(quantification_unite=""))
+                    models.Q(produit_pret_a_manger="")
+                    | models.Q(categorie_danger__in=CategorieDanger.dangers_bacteriens())
                 ),
-                name="quantification_must_have_unit",
-                violation_error_message="Quantification et unité de quantification doivent être tous les deux renseignés ou tous les deux vides.",
+                name="pam_requires_danger_bacterien",
             ),
         ]

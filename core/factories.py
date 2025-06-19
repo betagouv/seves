@@ -2,6 +2,7 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
@@ -103,8 +104,6 @@ class DocumentFactory(DjangoModelFactory):
 
     nom = factory.Faker("sentence", nb_words=2)
     description = factory.Faker("paragraph")
-    file = factory.django.FileField(filename="test.csv")
-    document_type = FuzzyChoice([choice[0] for choice in Document.TypeDocument.choices])
 
     @factory.lazy_attribute
     def created_by(self):
@@ -113,6 +112,18 @@ class DocumentFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def created_by_structure(self):
         return Structure.objects.get(libelle="Structure Test")
+
+    @factory.lazy_attribute
+    def file(self):
+        ext_by_type = Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[self.document_type]
+        ext = random.choice(ext_by_type).value.lower()
+        return SimpleUploadedFile(f"test.{ext}", b"dummy content")
+
+    @factory.lazy_attribute
+    def document_type(self):
+        if self.content_object and hasattr(self.content_object, "get_allowed_document_types"):
+            return random.choice(self.content_object.get_allowed_document_types())
+        return random.choice([c[0] for c in Document.TypeDocument.choices])
 
 
 class MessageFactory(DjangoModelFactory):
@@ -134,7 +145,10 @@ class MessageFactory(DjangoModelFactory):
             return
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
-            self.recipients.add(factory_class())
+            if factory_class is ContactAgentFactory:
+                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+            else:
+                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
 
     @factory.post_generation
     def recipients_copy(self, create, extracted, **kwargs):
@@ -145,4 +159,7 @@ class MessageFactory(DjangoModelFactory):
             return
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
-            self.recipients_copy.add(factory_class())
+            if factory_class is ContactAgentFactory:
+                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+            else:
+                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))

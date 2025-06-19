@@ -27,3 +27,5 @@ django-csp
 django-countries
 testcontainers[sftp]
 whitenoise
+pytest-split
+pytest-rerunfailures

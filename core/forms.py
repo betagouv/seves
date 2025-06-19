@@ -1,12 +1,10 @@
-from copy import copy
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
-from core.fields import DSFRCheckboxSelectMultiple, DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
+from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
 from core.models import Document, Contact, Message, Visibilite, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -16,7 +14,9 @@ User = get_user_model()
 
 class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
     nom = forms.CharField(
-        help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
+        help_text="Nommer le document de manière claire et compréhensible pour tous",
+        label="Intitulé du document",
+        widget=forms.TextInput(attrs={"maxlength": 256}),
     )
     document_type = SEVESChoiceField(choices=Document.TypeDocument.choices, label="Type de document")
     description = forms.CharField(
@@ -29,9 +29,10 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         fields = ["nom", "document_type", "description", "file", "content_type", "object_id"]
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         next = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
         self.add_content_type_fields(obj)
         self.add_next_field(next)
 
@@ -48,7 +49,9 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
     nom = forms.CharField(
-        help_text="Nommer le document de manière claire et compréhensible pour tous", label="Intitulé du document"
+        help_text="Nommer le document de manière claire et compréhensible pour tous",
+        label="Intitulé du document",
+        widget=forms.TextInput(attrs={"maxlength": 256}),
     )
     document_type = forms.ChoiceField(choices=Document.TypeDocument, label="Type de document")
     description = forms.CharField(
@@ -60,7 +63,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
     recipients_structures_only = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), label="Destinataires*"
@@ -69,18 +72,14 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
     recipients_copy_structures_only = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(), required=False, label="Copie"
     )
-    recipients_limited_recipients = forms.MultipleChoiceField(
-        choices=[("mus", "MUS"), ("bsv", "BSV")],
-        label="Destinataires",
-        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
-    )
+
     message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
 
     manual_render_fields = [
         "recipients_structures_only",
         "recipients_copy_structures_only",
-        "recipients_limited_recipients",
     ]
 
     class Meta:
@@ -90,12 +89,12 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
             "recipients_structures_only",
             "recipients_copy",
             "recipients_copy_structures_only",
-            "recipients_limited_recipients",
             "message_type",
             "title",
             "content",
             "content_type",
             "object_id",
+            "status",
         ]
 
     def _add_files_inputs(self, data, files):
@@ -118,17 +117,47 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self._structures = self._structures.select_related("structure")
         return self._structures
 
+    def _get_contacts(self, obj):
+        if hasattr(self, "_contacts"):
+            return self._contacts
+        self._contacts = obj.contacts.exclude(structure=self.sender.agent.structure).exclude(agent=self.sender.agent)
+        self._contacts = self._contacts.select_related("agent__structure")
+        return self._contacts
+
+    def _build_label_with_shortcuts(
+        self, label_text, structure_ids, contact_ids=None, css_class_prefix="destinataires"
+    ):
+        html_parts = [f"{label_text}"]
+        if contact_ids:
+            html_parts.append(
+                f"<p class='fr-mb-1v'>"
+                f"<a href='#' class='fr-link {css_class_prefix}-contacts-shortcut' "
+                f"data-contacts='{contact_ids}'>Ajouter tous les contacts de la fiche</a></p>"
+            )
+        html_parts.append(
+            f"<p class='fr-mb-2v'>"
+            f"<a href='#' class='fr-link {css_class_prefix}-shortcut' "
+            f"data-structures='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
+        )
+        return mark_safe("\n".join(html_parts))
+
     def _get_recipients_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return mark_safe(
-            f"Destinataires*<a href='#' class='fr-link destinataires-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
-        )
+        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, contact_ids, "destinataires")
 
     def _get_recipients_copy_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return mark_safe(
-            f"Copie <a href='#' class='fr-link copie-shortcut' data-structures='{structure_ids}'>Ajouter toutes les structures de la fiche</a>"
-        )
+        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
+        return self._build_label_with_shortcuts("Copie", structure_ids, contact_ids, "copie")
+
+    def _get_recipients_structures_only_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, css_class_prefix="destinataires")
+
+    def _get_recipients_copy_structures_only_label(self, obj):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
+        return self._build_label_with_shortcuts("Copie", structure_ids, css_class_prefix="copie")
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
@@ -136,6 +165,7 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
         self.sender = sender
         next_url = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
+        self.fields["status"].widget = forms.HiddenInput()
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
@@ -146,18 +176,32 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
 
         if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_label(obj)
-            self.fields["recipients_structures_only"].label = self._get_recipients_label(obj)
+            self.fields["recipients_structures_only"].label = self._get_recipients_structures_only_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
-            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_label(obj)
+            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_structures_only_label(obj)
 
         if kwargs.get("data") and kwargs.get("files"):
             self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        if self.instance.pk:
+            if self.instance.message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
+                self.initial["recipients_structures_only"] = self.instance.recipients.all()
+                self.initial["recipients_copy_structures_only"] = self.instance.recipients_copy.all()
+
+            if self.instance.message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+                self.initial["recipients_limited_recipients"] = self.instance.recipients.all()
 
         self.add_content_type_fields(obj)
         self.add_next_field(next_url)
 
         if kwargs.get("data"):
             message_type = kwargs.get("data")["message_type"]
+        elif self.instance and self.instance.pk:
+            message_type = self.instance.message_type
+        else:
+            message_type = None
+
+        if message_type:
             if (
                 message_type in Message.TYPES_WITHOUT_RECIPIENTS
                 or message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS
@@ -174,21 +218,8 @@ class MessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelF
                 self.fields.pop("recipients_structures_only")
                 self.fields.pop("recipients_copy_structures_only")
 
-    def _convert_checkboxes_to_contacts(self):
-        try:
-            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
-        except KeyError:
-            raise ValidationError("Au moins un destinataire doit être sélectionné.")
-        self.cleaned_data["recipients"] = []
-        if "mus" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
-        if "bsv" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
-
     def clean(self):
         super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self._convert_checkboxes_to_contacts()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_STRUCTURES_ONLY:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_structures_only"]
             self.cleaned_data["recipients_copy"] = self.cleaned_data["recipients_copy_structures_only"]
@@ -210,6 +241,11 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
     class Meta:
         model = Document
         fields = ["document_type", "file"]
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("object")
+        super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
 
 
 class VisibiliteUpdateBaseForm(DSFRForm):

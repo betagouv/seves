@@ -4,16 +4,18 @@ from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q, CheckConstraint
+from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
 from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
-from .storage import get_timestamped_filename
+from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import validate_upload_file, AllowedExtensions
 
 User = get_user_model()
@@ -164,6 +166,22 @@ class Document(models.Model):
         TRANSPORT = "document_de_transport", "Document de transport"
         TRACABILITE = "tracabilité", "Traçabilité"
 
+        SIGNALEMENT_CERFA = "cerfa", "Signalement/notification : Cerfa"
+        SIGNALEMENT_RASFF = "fiche_rasff", "Signalement/notification : Fiche RASFF"
+        SIGNALEMENT_AUTRE = "signalement_autre", "Signalement/notification : Autre"
+        ANALYSE_RISQUE = "analyse_risque", "Analyse de risque"
+        TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
+        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
+        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
+        TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
+        DSCE_CHED = "dsce_ched", "DSCE/CHED"
+        ETIQUETAGE = "etiquetage", "Étiquetage"
+        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
+        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
+        CERTIFICAT_SANITAIRE = "certificat_sanitaire", "Certificat sanitaire"
+        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
+        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
+
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
         {
@@ -223,6 +241,10 @@ class Document(models.Model):
 
     def clean(self):
         super().clean()
+        if self.document_type not in self.content_object.get_allowed_document_types():
+            raise ValidationError(
+                {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
+            )
         if self.file and self.document_type:
             try:
                 self.validate_file_extention_for_document_type(self.file, self.document_type)
@@ -252,7 +274,12 @@ class Message(models.Model):
     TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 
+    class Status(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        FINALISE = "finalise", "Finalisé"
+
     message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.FINALISE, verbose_name="Statut")
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
@@ -271,7 +298,7 @@ class Message(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
-        ordering = ["-date_creation"]
+        ordering = ["status", "-date_creation"]
 
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
@@ -288,6 +315,19 @@ class Message(models.Model):
                 return "CR sur DI"
             case _:
                 return self.get_message_type_display()
+
+    @property
+    def is_draft(self):
+        return self.status == self.Status.BROUILLON
+
+    def can_be_updated(self, user):
+        return self.sender == user.agent.contact_set.get() and self.status == self.Status.BROUILLON
+
+    def get_update_url(self):
+        return reverse("message-update", kwargs={"pk": self.pk})
+
+    def get_allowed_document_types(self):
+        return self.content_object.get_allowed_document_types()
 
 
 class LienLibre(models.Model):
@@ -349,3 +389,11 @@ class Visibilite(models.TextChoices):
     def get_masculine_label(cls, value):
         masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
         return masculine_labels.get(value)
+
+
+class Export(models.Model):
+    object_ids = ArrayField(models.BigIntegerField())
+    task_done = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    file = models.FileField(upload_to=get_timestamped_filename_export)
+    user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="exports")

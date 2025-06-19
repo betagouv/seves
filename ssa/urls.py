@@ -1,6 +1,13 @@
 from django.urls import path
 
-from .views.produit import EvenementProduitDetailView, EvenementProduitCreateView, EvenementProduitListView
+from .views import (
+    EvenementProduitDetailView,
+    EvenementProduitCreateView,
+    EvenementProduitListView,
+    FindNumeroAgrementView,
+    EvenementUpdateView,
+)
+from .views.produit import EvenementProduitExportView
 
 app_name = "ssa"
 urlpatterns = [
@@ -15,8 +22,23 @@ urlpatterns = [
         name="evenement-produit-details",
     ),
     path(
+        "evenement-produit/<int:pk>/modification",
+        EvenementUpdateView.as_view(),
+        name="evenement-produit-update",
+    ),
+    path(
         "evenement-produit/",
         EvenementProduitListView.as_view(),
         name="evenement-produit-liste",
+    ),
+    path(
+        "export/evenement-produit/",
+        EvenementProduitExportView.as_view(),
+        name="export-evenement-produit",
+    ),
+    path(
+        "api/find-numero-agrement/",
+        FindNumeroAgrementView.as_view(),
+        name="find-numero-agrement",
     ),
 ]

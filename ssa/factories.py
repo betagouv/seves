@@ -1,15 +1,15 @@
 import random
 from datetime import datetime
 
+import factory
 from django_countries import Countries
 from factory.django import DjangoModelFactory
-from factory.fuzzy import FuzzyChoice, FuzzyFloat
+from factory.fuzzy import FuzzyChoice
 
 from core.models import Structure
 from ssa.models import (
     EvenementProduit,
     TypeEvenement,
-    CerfaRecu,
     Source,
     TemperatureConservation,
     QuantificationUnite,
@@ -17,11 +17,10 @@ from ssa.models import (
     Etablissement,
     TypeExploitant,
     PositionDossier,
+    CategorieDanger,
 )
-import factory
-
 from ssa.models.departements import Departement
-from ssa.models.evenement_produit import PretAManger
+from ssa.models.evenement_produit import PretAManger, CategorieProduit
 
 
 def generate_rappel_conso():
@@ -34,20 +33,20 @@ class EvenementProduitFactory(DjangoModelFactory):
 
     date_creation = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
-    numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
-    cerfa_recu = FuzzyChoice([choice[0] for choice in CerfaRecu.choices])
     description = factory.Faker("paragraph")
 
+    categorie_produit = FuzzyChoice(CategorieProduit.values)
     denomination = factory.Faker("sentence", nb_words=5)
     marque = factory.Faker("sentence", nb_words=5)
     lots = factory.Faker("paragraph")
     description_complementaire = factory.Faker("paragraph")
     temperature_conservation = FuzzyChoice([choice[0] for choice in TemperatureConservation.choices])
-    produit_pret_a_manger = FuzzyChoice([choice[0] for choice in PretAManger.choices])
 
-    quantification = FuzzyFloat(low=0, precision=2)
+    categorie_danger = FuzzyChoice(CategorieDanger.values)
+    precision_danger = factory.Faker("sentence", nb_words=3)
+    quantification = factory.Faker("sentence", nb_words=1)
     quantification_unite = FuzzyChoice([choice[0] for choice in QuantificationUnite.choices])
     evaluation = factory.Faker("paragraph")
     reference_souches = factory.Faker("sentence", nb_words=5)
@@ -75,10 +74,36 @@ class EvenementProduitFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def source(self):
         if self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS])
+            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
 
-        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES, Source.TIACS}
+        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
         return random.choice(list(other_sources))
+
+    @factory.lazy_attribute
+    def produit_pret_a_manger(self):
+        if self.categorie_danger in CategorieDanger.dangers_bacteriens():
+            return random.choice(PretAManger.values)
+        return ""
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1
+
+    class Params:
+        not_bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] not in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )
+        bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )
 
 
 class EtablissementFactory(DjangoModelFactory):

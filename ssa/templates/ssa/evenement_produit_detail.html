@@ -3,10 +3,28 @@
 {% load etat_tags %}
 {% block extrahead %}
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
+  <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
 {% endblock %}
 {% block scripts %}
   <script type="text/javascript" src="{% static 'ssa/_rappel_conso_link.js' %}"></script>
+  <script type="module" src="{% static 'ssa/evenement_produit_detail.js' %}"></script>
+  <script type="module" src="{% static 'core/sidebar.js' %}"></script>
+  <script type="module" src="{% static 'core/message_form.js' %}"></script>
+  <script type="module" src="{% static 'core/document_form.js' %}"></script>
+  <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
 {% endblock %}
+
+{% block aside %}
+  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url %}
+  {% include "core/_document_warning_modal.html" %}
+  {% include "core/_message_update_forms.html" with object=object %}
+  {% for message in message_list %}
+    {% if not message.is_draft %}
+      {% include "core/_sidebar_message_details.html" %}
+    {% endif %}
+  {% endfor %}
+{% endblock aside %}
+
 
 {% block content %}
   <main class="main-container">
@@ -14,68 +32,42 @@
       <div class="details-top-row">
         <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
 
+        {% if not object.is_draft %}
+          {% include "core/_details_toogle.html" with pk=object.pk %}
+        {% endif %}
+
         <div class="details-top-row--actions">
-          {% include "ssa/_evenement_produit_action_navigation.html" %}
+          <ul class="fr-btns-group fr-btns-group--inline-md">
+            {% if can_publish %}
+              <li>
+                <form action="{% url 'publish' %}" method="post">
+                  {% csrf_token %}
+                  <input type="hidden" value="{{ object.get_absolute_url }}" name="next">
+                  <input type="hidden" value="{{ content_type.id }}" name="content_type_id">
+                  <input type="hidden" value="{{ object.pk }}" name="content_id">
+                  <input type="submit" class="fr-btn fr-btn--secondary" value="Publier"/>
+                </form>
+              </li>
+            {% endif %}
+            <li>
+              {% include "ssa/_evenement_produit_action_navigation.html" %}
+            </li>
+          </ul>
         </div>
 
       </div>
       <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
 
-    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=latest_version.revision.date_created latest_version=object.latest_version %}
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
 
     <div id="detail-content">
-      <div class="white-container">
-        <h2 class="fr-h6">Informations</h2>
-        <div class="fr-container--fluid">
-          <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-3">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">Créateur</div>
-                  <div class="fr-col-5">{{ object.createur }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">Date de création</div>
-                  <div class="fr-col-5">{{ object.date_creation|date }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-7 bold">N° RASFF AAC</div>
-                  <div class="fr-col-5">{{ object.numero_rasff|default:"nc."  }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="fr-col-4">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-5 bold">Type d'événement</div>
-                  <div class="fr-col-7">{{ object.get_type_evenement_display|default:"nc."  }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-5 bold">Source</div>
-                  <div class="fr-col-7">{{ object.get_source_display|default:"nc."  }}</div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-5 bold">Cerfa reçu du professionnel</div>
-                  <div class="fr-col-7">{{ object.get_cerfa_recu_display|default:"nc."  }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="fr-col-5">
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  <div class="fr-col-3 bold">Description de l'événement</div>
-                  <div class="fr-col-9">{{ object.description }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% include "ssa/_evenement_produit_informations.html" %}
+      {% include "ssa/_evenement_produit_informations_synthese.html" %}
 
-      <div class="fr-container--fluid fr-mt-2w">
+      <div class="fr-container--fluid fr-mt-2w detail-content">
         <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-6">
+          <div class="fr-col-6 ">
             <div class="white-container">
               <h2 class="fr-h6">Produit</h2>
               <div class="fr-container--fluid">
@@ -141,7 +133,7 @@
                     </div>
                     {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.get_type_exploitant_display }}</p>{% endif %}
                     {% if etablissement.pays %}<p class="pays fr-tag fr-mb-2v">{{ etablissement.get_pays_display }}</p>{% endif %}
-                    <div class="structure">Département :{{ etablissement.departement|default:"nc." }}</div>
+                    <div class="structure">Département : {{ etablissement.departement|default:"nc." }}</div>
                     <div class="numero-agrement">N° d'agrément : {{ etablissement.numero_agrement|default:"nc." }}</div>
                     {% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% endif %}
                   </div>
@@ -152,8 +144,11 @@
             </div>
           </div>
         </div>
-        {% include "core/_list_free_links.html" with classes="fr-mt-4v" object=evenement title="Liaisons" object=object %}
+        {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Liaisons" object=object %}
       </div>
+      {% if not object.is_draft %}
+        {% include "core/_fiche_bloc_commun.html" with object=object %}
+      {% endif %}
     </div>
   </main>
 {% endblock content %}

@@ -2,7 +2,7 @@ from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact
+from core.models import Message, Contact, Export
 from django.conf import settings
 
 
@@ -40,6 +40,8 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
 
 
 def notify_message(message_obj: Message):
+    if message_obj.is_draft:
+        return
     recipients, copy = [], []
     content = message_obj.content
 
@@ -63,3 +65,66 @@ def notify_message(message_obj: Message):
 
     if recipients and content:
         _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
+
+
+def get_notify_contact_agent_email_subject(obj):
+    subject = f"[Sèves {obj._meta.app_label.upper()}] "
+    if hasattr(obj, "organisme_nuisible"):
+        subject += f"{obj.organisme_nuisible.code_oepp} "
+    subject += f"{obj.numero}"
+    return subject
+
+
+def notify_contact_agent(contact_agent: Contact, obj):
+    send(
+        recipients=f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>",
+        subject=get_notify_contact_agent_email_subject(obj),
+        message=f"""
+Ajout en contact d’une fiche
+Bonjour,
+Vous avez été ajouté en contact de la fiche n° {obj.numero}.
+Vous pouvez y accéder avec le lien suivant : https://seves.beta.gouv.fr/{obj.get_absolute_url()}
+        """,
+        html_message=f"""
+<!DOCTYPE html>
+<html>
+<div style="font-family: Arial, sans-serif;">
+    <p style="font-weight: bold;">Ajout en contact d’une fiche</p>
+    <p>Bonjour,</p>
+    <p>Vous avez été ajouté en contact de la fiche n° {obj.numero}.</p>
+    <p>Vous pouvez y accéder avec le lien suivant : <a href="https://seves.beta.gouv.fr{obj.get_absolute_url()}">https://seves.beta.gouv.fr{obj.get_absolute_url()}</a></p>
+</div>
+</html>
+        """,
+    )
+
+
+def notify_export_is_ready(export: Export):
+    send(
+        recipients=[export.user.email],
+        subject="Sèves - Votre export est prêt",
+        message=f"""
+Bonjour,
+
+L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url} .
+
+Attention, le lien n'est valable que durant 1 heure.
+Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email support@seves.beta.gouv.fr.
+Merci de ne pas répondre directement à ce message.
+Cordialement,
+L’équipe Sèves
+
+        """,
+        html_message=f"""
+<!DOCTYPE html>
+<html>
+<div style="font-family: Arial, sans-serif;">
+    <p>Bonjour,</p>
+    <p>L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est&nbsp;: <a href="{export.file.url}">{export.file.url}</a>.</p>
+    <p>Attention, le lien n'est valable que durant 1 heure.</p>
+    <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.
+Merci de ne pas répondre directement à ce message. </p>
+</div>
+</html>
+        """,
+    )

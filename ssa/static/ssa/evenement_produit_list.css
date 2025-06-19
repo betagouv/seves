@@ -1,9 +1,37 @@
-.evenements_liste__header {
+#search-form {
     background-color: var(--background-open-blue-france);
+    --background-disabled-grey: var(--grey-625-425);
+}
+.evenements_liste__header {
+    padding: 20px;
+    margin: 0rem 1.5rem;
+}
+.evenements_liste__header--title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.evenements_liste__header--title h2{
+    margin-bottom: 0;
 }
 .evenements_liste__header--actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.more-filters-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+.more-filters-title h4{
+    margin-bottom: 0;
+}
+
+.evenements_liste__table--header {
+    display: flex;
+    justify-content: space-between;
 }
 
 .evenements_liste__search-form {
@@ -12,10 +40,24 @@
     align-items: flex-end;
     gap: 0.5rem;
 }
+.fr-fieldset__element:has([id=id_categorie_produit]), .fr-fieldset__element:has([id=id_categorie_danger]) {
+    display: None;
+}
+
 .evenements_liste__search-form .fr-fieldset__element{
-    flex: 1 1 200px;
+    flex: 1 1 250px;
     max-width: 300px;
 }
+
+.evenements_liste__search-form .single-checkbox-no-legend,
+.evenements_liste__search-form .single-checkbox-no-legend .fr-fieldset__element {
+    margin: 0;
+}
+
+.evenements_liste__search-form .single-checkbox-no-legend  .fr-checkbox-group {
+    margin: 2rem 0 .5rem 0;
+}
+
 .ellipsis {
     white-space: nowrap;
     overflow: hidden;

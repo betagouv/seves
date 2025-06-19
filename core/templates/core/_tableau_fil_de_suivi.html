@@ -23,7 +23,7 @@
     </thead>
     <tbody>
         {% for message in message_list %}
-            <tr id="table-sm-row-key-1" data-row-key="1">
+            <tr id="table-sm-row-key-{{ forloop.counter }}" class="{% if message.is_draft %}message-draft{% endif %}" data-row-key="{{ forloop.counter }}">
                 <td>
                     <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.date_creation }}</a>
                 </td>
@@ -49,7 +49,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.title|truncatechars:100 }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
                 </td>
                 <td>
                     {% if message.documents.exists %}
@@ -57,7 +57,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.get_message_type_display|capfirst }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
                 </td>
             </tr>
         {% endfor %}

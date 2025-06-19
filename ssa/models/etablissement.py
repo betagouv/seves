@@ -23,7 +23,7 @@ class TypeExploitant(models.TextChoices):
     EXPEDITEUR_FOURNISSEUR_HORS_UE = "expediteur_fournisseur_hors_ue", "F - Expéditeur / fournisseur hors UE"
     IMPORTATEUR_UE_DE_PAYS_TIERS = "importateur_ue_de_pays_tiers", "F - Importateur UE de pays tiers"
     EXPORTATEUR_UE_VERS_PAYS_TIERS = "exportateur_ue_vers_pays_tiers", "F - Exportateur UE vers pays tiers"
-    AUTRE = "autre_preciser", "Y - Autre : préciser"
+    AUTRE = "autre", "Y - Autre"
     SANS_OBJET = "sans_objet", "Z - Sans objet"
 
 
@@ -38,7 +38,7 @@ class PositionDossier(models.TextChoices):
         "autre_maillon_chaine_distribution",
         "Autre maillon de la chaîne de distribution",
     )
-    AUTRE_PRECISER = "autre_preciser", "Autre : préciser"
+    AUTRE = "autre", "Autre"
 
 
 @reversion.register()
@@ -76,7 +76,7 @@ class Etablissement(models.Model):
             ),
         ],
     )
-    departement = models.CharField(choices=Departement.choices, blank=True)
+    departement = models.CharField(choices=Departement.choices, verbose_name="Département", blank=True)
     pays = CountryField(null=True)
 
     type_exploitant = models.CharField(
@@ -95,12 +95,12 @@ class Etablissement(models.Model):
 
     @classmethod
     def get_position_dossier_css_class(self, value):
-        RED_CASES = [
+        IMPORTANT_CASES = [
             PositionDossier.SURVENUE_NON_CONFORMITE,
             PositionDossier.DETECTION_NON_CONFORMITE,
             PositionDossier.DETECTION_ET_SURVENUE_NON_CONFORMITE,
         ]
-        return "fr-badge--error" if value in RED_CASES else "fr-badge--info"
+        return "fr-badge--info" if value in IMPORTANT_CASES else ""
 
     @property
     def position_dossier_css_class(self):

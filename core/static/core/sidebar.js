@@ -27,15 +27,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const urlParams = new URLSearchParams(window.location.search);
         const messageId = urlParams.get('message');
         if (messageId) {
-            openSidebar(document.getElementById(`sidebar-message-details-${messageId}`));
+            openSidebar(document.getElementById(`sidebar-message-${messageId}`));
         }
     }
 
     document.querySelectorAll(".fil-de-suivi-sidebar").forEach(element => {
-        const messageId = element.dataset.messagePk
-        bindClickToSidebar(element, document.getElementById(`sidebar-message-details-${messageId}`))
+        bindClickToSidebar(element, document.getElementById(`sidebar-message-${element.dataset.messagePk}`));
     })
-    document.querySelectorAll(".message-panel").forEach(element => {
+    document.querySelectorAll(".open-sidebar").forEach(element => {
         bindClickToSidebar(element, document.getElementById('sidebar'))
     })
     bindAllCloseSidebar()

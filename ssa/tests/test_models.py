@@ -2,8 +2,11 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
+from core.factories import DocumentFactory
+from core.models import Document
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, TypeEvenement, Source, QuantificationUnite
+from ssa.models import EvenementProduit, TypeEvenement, Source, CategorieDanger
+from ssa.models.evenement_produit import PretAManger
 
 
 @pytest.mark.django_db
@@ -31,7 +34,7 @@ def test_type_evenement_source_constraint():
     EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source="")
 
     # Non human case can have sources, but not any of SOURCES_FOR_HUMAN_CASE
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.AUTOCONTROLE)
+    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.PRELEVEMENT_PSPC)
     for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
         with pytest.raises(IntegrityError):
             EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=source)
@@ -41,7 +44,7 @@ def test_type_evenement_source_constraint():
         EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=source)
 
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTOCONTROLE)
+        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.PRELEVEMENT_PSPC)
 
 
 @pytest.mark.django_db
@@ -81,11 +84,27 @@ def test_evenement_produit_latest_revision():
 
 
 @pytest.mark.django_db
-def test_quantification_must_have_unit():
-    with pytest.raises(IntegrityError):
-        EvenementProduitFactory(quantification=3.14, quantification_unite="")
+def test_pam_requires_danger_bacterien_constraint():
+    EvenementProduitFactory(produit_pret_a_manger="", categorie_danger=CategorieDanger.OGM_PLANTES)
 
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(quantification=None, quantification_unite=QuantificationUnite.MG_KG)
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.OGM_PLANTES)
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.OGM_PLANTES)
+    with pytest.raises(IntegrityError):
+        EvenementProduitFactory(
+            produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.OGM_PLANTES
+        )
 
-    EvenementProduitFactory(quantification=3.14, quantification_unite=QuantificationUnite.MG_KG)
+    EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.SALMONELLA)
+    EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.STAPHYLOCOCCUS)
+    EvenementProduitFactory(
+        produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.VIBRIO_VULNIFICUS
+    )
+
+
+@pytest.mark.django_db
+def test_cant_create_document_with_invalid_document_type():
+    DocumentFactory(
+        content_object=EvenementProduitFactory(), document_type=Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE
+    )

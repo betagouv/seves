@@ -4,8 +4,8 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from reversion.models import Version
 
-from core.factories import StructureFactory
-from core.models import Visibilite
+from core.factories import StructureFactory, DocumentFactory
+from core.models import Visibilite, Document
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import (
     FicheDetectionFactory,
@@ -732,3 +732,8 @@ def test_date_derniere_mise_a_jour_after_fiche_detection_delete():
 
     fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
+
+
+@pytest.mark.django_db
+def test_cant_create_document_with_invalid_document_type():
+    DocumentFactory(content_object=EvenementFactory(), document_type=Document.TypeDocument.ETIQUETAGE)

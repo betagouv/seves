@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import environ
 import tempfile
@@ -44,7 +45,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "127.0.0.1:8000", "localhost"])
 
 # Django admin URL
 ADMIN_ENABLED = env("DJANGO_ADMIN_ENABLED")
@@ -72,6 +73,7 @@ INSTALLED_APPS = [
     "reversion",
     "csp",
     "django_countries",
+    "django.contrib.postgres",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -86,6 +88,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
+    "seves.middlewares.HomeRedirectMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
@@ -176,7 +179,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Sentry
 SENTRY_DSN = env("SENTRY_DSN", default=None)
-if SENTRY_DSN:
+if SENTRY_DSN and ENVIRONMENT != "test":
     sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()], traces_sample_rate=1.0, environment=ENVIRONMENT)
 
 
@@ -209,7 +212,7 @@ if all(
 elif environ.Env(TEMP_STORAGE=(bool, False)):
     STORAGES["default"]["OPTIONS"] = {"location": tempfile.mkdtemp()}
 
-AUTHENTICATION_BACKENDS = ("mozilla_django_oidc.auth.OIDCAuthenticationBackend",)
+AUTHENTICATION_BACKENDS = ("seves.auth.CustomOIDCBackend",)
 LOGIN_URL = reverse_lazy("login")
 OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID")
 OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET")
@@ -227,11 +230,12 @@ OIDC_RP_SIGN_ALGO = "RS256"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-if DEBUG:
+if DEBUG and ENVIRONMENT != "test":
     INSTALLED_APPS.append("debug_toolbar")
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INTERNAL_IPS = ["127.0.0.1"]
 
+DEFAULT_FROM_EMAIL = "Sèves <no-reply@beta.gouv.fr>"
 POST_OFFICE = {
     "BACKENDS": {
         "default": env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"),
@@ -251,6 +255,7 @@ if env("EMAIL_HOST", default=None):
 ROOT_URL = env("ROOT_URL", default=None)
 
 SELECT_EMPTY_CHOICE = "Choisir dans la liste"
+FILTERS_EMPTY_CHOICE_LABEL = "Choisir dans la liste"
 
 BYPASS_ANTIVIRUS = env("BYPASS_ANTIVIRUS", default=False)
 CLAMAV_CONFIG_FILE = env("CLAMAV_CONFIG_FILE", default="/etc/clamav/clamd.conf")
@@ -302,10 +307,15 @@ CSP_CONNECT_SRC = (
     "api.insee.fr",
     "data.economie.gouv.fr",
     "api-adresse.data.gouv.fr",
+    "fichiers-publics.agriculture.gouv.fr",
 )
 
-SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
-CSP_REPORT_URI = f"{SENTRY_REPORT_URL}&sentry_environment={ENVIRONMENT}"
+if ENVIRONMENT != "test":
+    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+    if SENTRY_REPORT_URL:
+        query_param = f"sentry_environment={ENVIRONMENT}"
+        last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
+        CSP_REPORT_URI = f"{SENTRY_REPORT_URL}{last_token}"
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")

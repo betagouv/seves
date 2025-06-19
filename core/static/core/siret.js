@@ -6,8 +6,32 @@ function debounce(func, wait) {
     };
 }
 
+function improveResults(value, results) {
+    const filteredResults = results.filter(item =>
+        item.customProperties?.siret?.startsWith(value)
+    )
+
+    if (value.length === 14) {
+        return [{
+            value: value,
+            label: `${value} (Forcer la valeur)`,
+            customProperties: {
+                "streetData": null,
+                "fullStreetData": null,
+                "siret": value,
+                "raison": null,
+                "commune": null,
+                "code_commune": null,
+            }
+        }, ...filteredResults]
+    }
+    return filteredResults
+}
+
 export function fetchSiret(value, token) {
-    const url = 'https://api.insee.fr/entreprises/sirene/siret?q=siren%3A' + value.replaceAll(" ", "")+ '* AND -periode(etatAdministratifEtablissement:F)';
+    const cleanedValue =  value.replaceAll(" ", "")
+    const siren =  cleanedValue.substring(0, 9);
+    const url = `https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A${siren}* AND -periode(etatAdministratifEtablissement:F)`;
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -17,12 +41,13 @@ export function fetchSiret(value, token) {
         .then(response => response.json())
         .then(data => {
             if (!data["etablissements"]){
-                return []
+                return improveResults(cleanedValue, [])
             }
             data["etablissements"].forEach((etablissement) => {
                 let address = etablissement["adresseEtablissement"]
-                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
-                let resultEtablissement = `${etablissement["siret"]} - ${streetData}`
+                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]}`
+                let fullStreetData = `${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
+                let resultEtablissement = `${etablissement["siret"]} - ${fullStreetData}`
                 const uniteLegale = etablissement["uniteLegale"]
                 let resultUnite = `${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["prenom1UniteLegale"]?? ""} ${uniteLegale["nomUniteLegale"]?? ""}`
                 results.push({
@@ -30,16 +55,19 @@ export function fetchSiret(value, token) {
                     label: resultUnite + " " + resultEtablissement ,
                     customProperties: {
                         "streetData": streetData,
+                        "fullStreetData": fullStreetData,
                         "siret": etablissement["siret"],
-                        "raison": uniteLegale["denominationUniteLegale"]
+                        "raison": uniteLegale["denominationUniteLegale"],
+                        "commune": address["libelleCommuneEtablissement"],
+                        "code_commune": address["codeCommuneEtablissement"],
                     }
                 })
             });
-            return results
+            return improveResults(cleanedValue, results)
         });
 }
 
-export function setUpSiretChoices(element){
+export function setUpSiretChoices(element, position){
     const choicesSIRET = new Choices(element, {
         removeItemButton: true,
         placeholderValue: 'N° SIRET',
@@ -49,7 +77,7 @@ export function setUpSiretChoices(element){
         searchResultLimit: 20,
         classNames: {containerInner: 'fr-select'},
         itemSelectText: '',
-        position: 'top',
+        position: position,
     });
 
     choicesSIRET.input.element.addEventListener('input', debounce((event) => {

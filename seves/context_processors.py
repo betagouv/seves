@@ -12,17 +12,25 @@ def environment_class(request):
             return {"environment_class": "environment-banner environment-recette"}
         case "dev":
             return {"environment_class": "environment-banner environment-dev"}
+        case "test":
+            return {"environment_class": "environment-banner environment-test"}
         case _:
             return {"environment_class": ""}
 
 
 def domains(request):
-    user_groups = request.user.groups.values_list("name", flat=True)
-    sv_domain = {"icon": "fr-icon-leaf-line", "nom": "Santé des végétaux", "url": reverse_lazy("sv:evenement-liste")}
+    user_groups = [g.name for g in request.user.groups.all()]
+    sv_domain = {
+        "icon": "fr-icon-leaf-line",
+        "nom": "Santé des végétaux",
+        "url": reverse_lazy("sv:evenement-liste"),
+        "help_url": "https://doc-sv.seves.beta.gouv.fr",
+    }
     ssa_domain = {
         "icon": "fr-icon-restaurant-line ",
         "nom": "Sécurité sanitaire des aliments",
         "url": reverse_lazy("ssa:evenement-produit-liste"),
+        "help_url": "https://doc-ssa.seves.beta.gouv.fr",
     }
 
     current_domain = {}

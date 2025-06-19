@@ -201,7 +201,7 @@ def test_add_new_lieu(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -240,7 +240,7 @@ def test_add_multiple_lieux(
     for lieu in lieux:
         form_elements.add_lieu_btn.click()
         lieu_form_elements.nom_input.fill(lieu.nom)
-        lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
         fill_commune(page)
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -287,17 +287,17 @@ def test_update_lieu(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
-    lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
     if new_lieu.is_etablissement:
         if not lieu_form_elements.is_etablissement_checkbox.is_checked():
-            lieu_form_elements.is_etablissement_checkbox.click(force=True)
+            lieu_form_elements.is_etablissement_checkbox.click()
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
-        lieu_form_elements.pays_etablissement_input.fill(new_lieu.pays_etablissement)
+        lieu_form_elements.pays_etablissement_input.select_option(new_lieu.pays_etablissement.code)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
-        lieu_form_elements.adresse_etablissement_input.fill(new_lieu.adresse_etablissement)
+        lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, new_lieu.adresse_etablissement)
         lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
         lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection.id))
         lieu_form_elements.position_etablissement_input.select_option(
@@ -348,18 +348,18 @@ def test_update_two_lieux(
         else:
             page.get_by_role("button", name="Modifier le lieu").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
-        lieu_form_elements.adresse_input.fill(new_lieu.adresse_lieu_dit)
+        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
         if index == 0:
             choice_js_fill(
                 page,
-                f"#modal-add-lieu-{fiche_detection.lieux.first().id} .fr-modal__content .choices__list--single",
+                f"#modal-add-lieu-{fiche_detection.lieux.first().id} .fr-modal__content .commune .choices__list--single",
                 "Lille",
                 "Lille (59)",
             )
         else:
             choice_js_fill(
                 page,
-                f"#modal-add-lieu-{fiche_detection.lieux.last().id} .fr-modal__content .choices__list--single",
+                f"#modal-add-lieu-{fiche_detection.lieux.last().id} .fr-modal__content .commune .choices__list--single",
                 "Paris",
                 "Paris (75)",
             )
@@ -763,7 +763,13 @@ def test_update_multiple_prelevements(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(0)
         page.locator(".prelevement-edit-btn").nth(index).click()
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(1)
         prelevement_form_elements.numero_rapport_inspection_input.fill(new_prelevement.numero_rapport_inspection)
         prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
         prelevement_form_elements.structure_input.select_option(value=str(new_prelevement.structure_preleveuse.id))
@@ -782,6 +788,9 @@ def test_update_multiple_prelevements(
             new_prelevement.date_rapport_analyse.strftime("%Y-%m-%d")
         )
         prelevement_form_elements.save_btn.click()
+        expect(
+            page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
+        ).to_have_count(0)
 
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -1194,3 +1203,22 @@ def test_cant_update_detection_if_evenement_is_cloture(client):
     assert response.status_code == 403
     fiche_detection.refresh_from_db()
     assert fiche_detection.commentaire != "AAAA"
+
+
+@pytest.mark.django_db
+def test_can_add_commune_to_existing_lieu(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    fill_commune,
+):
+    lieu = LieuFactory(commune="")
+    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
+    page.get_by_role("button", name="Modifier le lieu").click()
+    fill_commune(page)
+    lieu_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    lieu.refresh_from_db()
+    assert lieu.commune == "Lille"

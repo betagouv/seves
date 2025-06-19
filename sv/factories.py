@@ -6,6 +6,7 @@ import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
+from django_countries import Countries
 
 from core.models import Visibilite, Structure
 from .constants import (
@@ -162,7 +163,9 @@ class PrelevementFactory(DjangoModelFactory):
     matrice_prelevee = factory.SubFactory("sv.factories.MatricePreleveeFactory")
     espece_echantillon = factory.SubFactory("sv.factories.EspeceEchantillonFactory")
     is_officiel = factory.Faker("boolean")
-    resultat = FuzzyChoice([choice[0] for choice in Prelevement.Resultat.choices])
+    resultat = FuzzyChoice(
+        [choice[0] for choice in Prelevement.Resultat.choices if choice[0] != Prelevement.Resultat.EN_ATTENTE]
+    )
     type_analyse = Prelevement.TypeAnalyse.PREMIERE_INTENTION
     date_rapport_analyse = factory.Faker("date_this_decade")
 
@@ -227,7 +230,7 @@ class LieuFactory(DjangoModelFactory):
     departement = factory.SubFactory("sv.factories.DepartementFactory")
     is_etablissement = factory.Faker("boolean")
     activite_etablissement = factory.Faker("job")
-    pays_etablissement = factory.Faker("country")
+    pays_etablissement = FuzzyChoice([c.code for c in Countries()])
     raison_sociale_etablissement = factory.Faker("company_suffix")
     adresse_etablissement = factory.Faker("address")
     siret_etablissement = factory.Faker("numerify", text="##############")
@@ -345,7 +348,6 @@ class EvenementFactory(DjangoModelFactory):
     visibilite = Visibilite.LOCALE
     etat = Evenement.Etat.EN_COURS
     numero_annee = factory.Faker("year")
-    numero_evenement = factory.Faker("pyint", min_value=0, max_value=1000)
     numero_europhyt = factory.Faker("bothify", text="#?#?#?#?")
     numero_rasff = factory.Faker("bothify", text="#?#?#?#?#")
 
@@ -361,3 +363,7 @@ class EvenementFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1

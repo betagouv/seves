@@ -8,6 +8,9 @@
                     {% if can_be_deleted %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
                     {% endif %}
+                    {%  if is_evenement_can_be_cloturer %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -17,4 +20,7 @@
 {% if can_be_deleted %}
     {% url 'ssa:evenement-produit-liste' as next_url %}
     {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+{% endif %}
+{% if is_evenement_can_be_cloturer%}
+    {% include "core/_cloturer_modal.html" with evenement=object %}
 {% endif %}

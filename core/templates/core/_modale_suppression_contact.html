@@ -16,10 +16,10 @@
                             <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-contact-{{ contact.pk }}">Annuler</button>
                             <form action="{% url 'contact-delete' %}" method="POST">
                                 {% csrf_token %}
-                                <input type="hidden" value="{{ evenement.pk }}" name="fiche_pk">
+                                <input type="hidden" value="{{ object.pk }}" name="fiche_pk">
                                 <input type="hidden" value="{{ content_type.pk }}" name="content_type_pk">
                                 <input type="hidden" value="{{ contact.pk }}" name="pk">
-                                <input type="hidden" value="{{ evenement.get_absolute_url }}" name="next">
+                                <input type="hidden" value="{{ object.get_absolute_url }}" name="next">
                                 <button type="submit" class="fr-btn" data-testid="contact-delete-{{ contact.pk }}">Oui, je supprime</button>
                             </form>
                         </div>

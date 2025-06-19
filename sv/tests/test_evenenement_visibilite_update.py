@@ -128,8 +128,8 @@ def test_existing_allowed_structures_are_selected_on_structure_add_page(
     url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
-    expect(page.get_by_label(str(selected_structure))).to_be_checked()
-    expect(page.get_by_label(str(not_selected_structure))).not_to_be_checked()
+    expect(page.get_by_label(str(selected_structure), exact=True)).to_be_checked()
+    expect(page.get_by_label(str(not_selected_structure), exact=True)).not_to_be_checked()
 
 
 def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page: Page, mocked_authentification_user):
@@ -151,7 +151,7 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     assert evenement.visibilite == Visibilite.LOCALE
     url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
-    page.get_by_label(str(structure_1)).click(force=True)
+    page.get_by_label(str(structure_1), exact=True).click(force=True)
     page.get_by_role("button", name="Valider").click()
 
     evenement.refresh_from_db()
@@ -204,12 +204,12 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
     expect(bsv_checkbox).to_be_disabled()
 
     # Vérifier que la structure créatrice est cochée et désactivée
-    creator_checkbox = page.get_by_label(str(creator_structure))
+    creator_checkbox = page.get_by_label(str(creator_structure), exact=True)
     expect(creator_checkbox).to_be_checked()
     expect(creator_checkbox).to_be_disabled()
 
     # Vérifier que les autres structures ne sont ni cochées ni désactivées
-    other_checkbox = page.get_by_label(str(other_structure))
+    other_checkbox = page.get_by_label(str(other_structure), exact=True)
     expect(other_checkbox).not_to_be_checked()
     expect(other_checkbox).not_to_be_disabled()
 

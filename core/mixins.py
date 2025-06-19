@@ -1,5 +1,6 @@
 import base64
 import datetime
+from collections import defaultdict
 
 import requests
 from django.conf import settings
@@ -7,28 +8,29 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from requests import ConnectTimeout, ReadTimeout
 from django.views.generic import FormView
 
-from core.forms import DocumentUploadForm, DocumentEditForm
+from core.forms import (
+    DocumentUploadForm,
+    DocumentEditForm,
+    MessageDocumentForm,
+    StructureAddForm,
+    AgentAddForm,
+)
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import (
-    Document,
-    LienLibre,
-    Contact,
-    Message,
-    Visibilite,
-    Structure,
-    FinSuiviContact,
-    user_is_referent_national,
-)
+from core.models import user_is_referent_national
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
 from .notifications import notify_message
 from .redirect import safe_redirect
 from celery.exceptions import OperationalError
 import logging
+
+from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,8 @@ class WithDocumentUploadFormMixin:
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
         context["document_form"] = DocumentUploadForm(obj=obj, next=obj.get_absolute_url())
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         return context
 
 
@@ -58,12 +62,55 @@ class WithDocumentListInContextMixin:
         return context
 
 
-class WithMessagesListInContextMixin:
+class WithBlocCommunPermission:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["message_list"] = (
-            self.get_object()
-            .messages.all()
+        obj = self.get_object()
+        context["can_add_document"] = obj.can_add_document(self.request.user)
+        context["can_update_document"] = obj.can_update_document(self.request.user)
+        context["can_delete_document"] = obj.can_delete_document(self.request.user)
+        context["can_download_document"] = obj.can_download_document(self.request.user)
+        context["can_add_agent"] = obj.can_add_agent(self.request.user)
+        context["can_add_structure"] = obj.can_add_structure(self.request.user)
+        context["can_delete_contact"] = obj.can_delete_contact(self.request.user)
+        return context
+
+
+class WithMessageMixin:
+    def get_message_form_class(self):
+        raise NotImplementedError
+
+    def _get_message_update_forms(self, message_list):
+        obj = self.get_object()
+        message_update_forms = []
+        for message in message_list:
+            if message.can_be_updated(self.request.user):
+                form = obj.get_message_form()(
+                    instance=message,
+                    sender=self.request.user,
+                    obj=obj,
+                    next=obj.get_absolute_url(),
+                )
+                form.documents_forms = [
+                    MessageDocumentForm(instance=d, object=message) for d in message.documents.all()
+                ]
+                message_update_forms.append(form)
+        return message_update_forms
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        context["message_form"] = obj.get_message_form()(
+            sender=self.request.user,
+            obj=obj,
+            next=obj.get_absolute_url(),
+        )
+        context["add_document_form"] = MessageDocumentForm(object=obj)
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["message_status"] = Message.Status
+        message_list = (
+            obj.messages.all()
             .select_related("sender__agent__structure")
             .prefetch_related(
                 "recipients__agent",
@@ -75,6 +122,19 @@ class WithMessagesListInContextMixin:
                 "documents",
             )
         )
+        context["message_list"] = message_list
+        context["message_update_forms"] = self._get_message_update_forms(message_list)
+        return context
+
+
+class WithContactFormsInContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        content_type = ContentType.objects.get_for_model(obj)
+        initial_data = {"content_id": obj.id, "content_type_id": content_type.id}
+        context["add_contact_structure_form"] = StructureAddForm(initial=initial_data, obj=obj)
+        context["add_contact_agent_form"] = AgentAddForm(initial=initial_data, obj=obj)
         return context
 
 
@@ -251,6 +311,15 @@ class WithVisibiliteMixin(models.Model):
             case Visibilite.NATIONALE:
                 return "Toutes les structures"
 
+    def update_allowed_structures_and_visibility(self, contacts_structures: list[Contact]):
+        if not contacts_structures or self.is_visibilite_nationale:
+            return
+        structures = [contact.structure for contact in contacts_structures]
+        self.allowed_structures.add(*structures)
+        if self.is_visibilite_locale:
+            self.visibilite = Visibilite.LIMITEE
+            self.save()
+
     @property
     def visibility_display(self) -> str:
         return Visibilite.get_masculine_label(self.visibilite)
@@ -293,6 +362,10 @@ class WithEtatMixin(models.Model):
     def is_cloture(self):
         return self.etat == self.Etat.CLOTURE
 
+    @property
+    def is_published(self):
+        return self.etat == self.Etat.EN_COURS
+
     def can_publish(self, user):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
@@ -312,6 +385,12 @@ class WithEtatMixin(models.Model):
             return False, "Vous n'avez pas les droits pour clôturer cet événement."
         return True, ""
 
+    def can_ouvrir(self, user: User):
+        """Vérifie si l'évènement peut être ouvert (repasser dans l'état EN COURS)"""
+        if self.is_cloture:
+            return user.agent.structure.is_ac
+        return False
+
     def get_publish_success_message(self):
         return "Objet publié avec succès"
 
@@ -328,6 +407,9 @@ class WithEtatMixin(models.Model):
         if not self.is_cloture and is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
+
+    def get_cloture_confirm_message(self):
+        return "L'objet a bien été cloturé."
 
 
 class WithFreeLinkIdsMixin:
@@ -390,6 +472,9 @@ class EmailNotificationMixin:
 
     def get_email_subject(self):
         raise NotImplementedError
+
+    def get_absolute_url_with_message(self, message_id: int):
+        return f"{self.get_absolute_url()}?message={message_id}"
 
 
 class WithSireneTokenMixin:
@@ -478,3 +563,227 @@ class WithContactPermissionMixin(BasePermissionMixin):
 
     def can_delete_contact(self, user):
         return self._user_can_interact(user)
+
+
+class WithAddUserContactsMixin:
+    """Mixin pour ajouter automatiquement l'utilisateur courant et sa structure comme contacts."""
+
+    def add_user_contacts(self, obj):
+        """Ajoute l'utilisateur courant et sa structure comme contacts de l'objet."""
+        agent = self.request.user.agent
+
+        agent_contact = Contact.objects.get(agent=agent)
+        obj.contacts.add(agent_contact)
+
+        if structure_contact := agent_contact.get_structure_contact():
+            obj.contacts.add(structure_contact)
+
+
+class WithClotureContextMixin:
+    """
+    Mixin qui ajoute au contexte les informations relatives à la clôture d'un objet.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        object = self.get_object()
+        user = self.request.user
+        context["contacts_not_in_fin_suivi"] = contacts_structures_not_in_fin_suivi = (
+            object.get_contacts_structures_not_in_fin_suivi()
+        )
+        context["is_evenement_can_be_cloturer"], _ = object.can_be_cloturer(user)
+        context["is_the_only_remaining_structure"] = object.is_the_only_remaining_structure(
+            user, contacts_structures_not_in_fin_suivi
+        )
+        return context
+
+
+class WithPublishMixin:
+    def publish(self, obj, request):
+        if not obj.can_publish(request.user):
+            messages.error(request, obj.get_publish_error_message())
+            return False
+        try:
+            obj.publish()
+            messages.success(request, obj.get_publish_success_message())
+            return True
+        except AttributeError:
+            messages.error(request, obj.get_publish_error_message())
+            return False
+
+
+class WithACNotificationMixin:
+    def notify_ac(self, obj, request):
+        try:
+            obj.notify_ac(user=request.user)
+            messages.success(request, "L'administration centrale a été notifiée avec succès")
+            return True
+        except AttributeError:
+            messages.error(request, "Ce type d'objet n'est pas compatible avec une notification à l'AC.")
+            return False
+        except ValidationError as e:
+            messages.error(request, e.message)
+            return False
+
+
+class WithOrderingMixin:
+    ORDER_DIR_ASC = "asc"
+    ORDER_DIR_DESC = "desc"
+
+    def get_ordering_fields(self):
+        raise NotImplementedError
+
+    def get_default_order_by(self):
+        raise NotImplementedError
+
+    def get_default_order_dir(self):
+        return self.ORDER_DIR_DESC
+
+    def setup_ordering(self):
+        ordering_fields = self.get_ordering_fields()
+        default_order_dir = self.get_default_order_dir()
+        default_order_by = self.get_default_order_by()
+        order_dir_param = self.request.GET.get("order_dir", default_order_dir)
+        order_by_param = self.request.GET.get("order_by", default_order_by)
+        self.order_dir = (
+            order_dir_param if order_dir_param in [self.ORDER_DIR_ASC, self.ORDER_DIR_DESC] else default_order_dir
+        )
+        self.order_by = order_by_param if order_by_param in ordering_fields else default_order_by
+
+    def get_ordering_prefix(self):
+        return "-" if self.order_dir == self.ORDER_DIR_DESC else ""
+
+    def get_ordering(self):
+        self.setup_ordering()
+        ordering_fields = self.get_ordering_fields()
+        order_by_field = ordering_fields.get(self.order_by)
+        prefix = self.get_ordering_prefix()
+        if isinstance(order_by_field, tuple):
+            return tuple([prefix + field for field in order_by_field])
+        return prefix + order_by_field
+
+    def apply_ordering(self, queryset):
+        ordering = self.get_ordering()
+        if isinstance(ordering, str):
+            ordering = (ordering,)
+        return queryset.order_by(*ordering, "-pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self, "order_by"):
+            context["current_order_by"] = self.order_by
+        if hasattr(self, "order_dir"):
+            context["current_order_dir"] = self.order_dir
+        return context
+
+
+class MessageHandlingMixin(WithAddUserContactsMixin):
+    def _mark_contact_as_fin_suivi(self, form):
+        if form.instance.status == Message.Status.BROUILLON:
+            return
+        message_type = form.cleaned_data.get("message_type")
+        if message_type == Message.FIN_SUIVI:
+            content_type = form.cleaned_data.get("content_type")
+            object_id = form.cleaned_data.get("object_id")
+
+            fin_suivi_contact = FinSuiviContact(
+                content_type=content_type,
+                object_id=object_id,
+                contact=Contact.objects.get(structure=self.request.user.agent.structure),
+            )
+            fin_suivi_contact.full_clean()
+            fin_suivi_contact.save()
+
+    def _is_internal_communication(self, structures):
+        """
+        Returns True if all contacts involved are part of the same structure
+        """
+        return len(structures) <= 1
+
+    def _handle_visibilite_if_needed(self, message):
+        if not hasattr(self.obj, "visibilite"):
+            return
+
+        structures = [c.structure for c in self.obj.contacts.structures_only()]
+
+        if self._is_internal_communication(structures):
+            return
+        if self.obj.visibilite == Visibilite.LOCALE:
+            with transaction.atomic():
+                self.obj.allowed_structures.set(structures)
+                self.obj.visibilite = Visibilite.LIMITEE
+                self.obj.save()
+        if self.obj.visibilite == Visibilite.LIMITEE:
+            self.obj.allowed_structures.set(structures)
+
+    def _add_contacts_to_object(self, message):
+        """
+        Ajoute les destinataires du message dans les contacts (agent et leur structure)
+        N'ajoute pas la structure quand son seul représentant est un référent national.
+        """
+        structures_with_agents = defaultdict(list)
+
+        for contact in message.recipients.all().union(message.recipients_copy.all()):
+            self.obj.contacts.add(contact)
+            if contact.agent:
+                structures_with_agents[contact.agent.structure].append(contact)
+
+        for structure, contacts_agents in structures_with_agents.items():
+            all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
+            add_structure = not all_referents_nationaux
+            if add_structure and (structure := contacts_agents[0].get_structure_contact()):
+                self.obj.contacts.add(structure)
+
+    def _create_documents(self, form):
+        message = form.instance
+        content_type = ContentType.objects.get_for_model(message)
+        document_numbers = [
+            s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
+        ]
+        for i in document_numbers:
+            try:
+                Document.objects.create(
+                    file=form.cleaned_data[f"document_{i}"],
+                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    document_type=form.cleaned_data[f"document_type_{i}"],
+                    content_type=content_type,
+                    object_id=message.pk,
+                    created_by=self.request.user.agent,
+                    created_by_structure=self.request.user.agent.structure,
+                )
+            except OperationalError:
+                logger.error("Could not connect to Redis")
+                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
+
+    def _delete_documents_if_needed(self, form):
+        prefix = "existing_document_name_"
+        pks_to_keeps = [s.replace(prefix, "") for s in self.request.POST.keys() if s.startswith(prefix)]
+        content_type = ContentType.objects.get_for_model(form.instance)
+        Document.objects.filter(
+            content_type=content_type,
+            object_id=form.instance.pk,
+        ).exclude(pk__in=pks_to_keeps).delete()
+
+    def handle_message_form(self, form):
+        try:
+            self._mark_contact_as_fin_suivi(form)
+        except ValidationError as e:
+            for message in e.messages:
+                messages.error(self.request, message)
+            return HttpResponseRedirect(self.obj.get_absolute_url())
+        response = super().form_valid(form)
+        self._add_contacts_to_object(form.instance)
+        self.add_user_contacts(self.obj)
+        self._handle_visibilite_if_needed(form.instance)
+        self._delete_documents_if_needed(form)
+        self._create_documents(form)
+        try:
+            transaction.on_commit(lambda: notify_message(form.instance))
+        except OperationalError:
+            messages.error(
+                self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
+            )
+            logger.error("Could not connect to Redis")
+        else:
+            messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
+        return response

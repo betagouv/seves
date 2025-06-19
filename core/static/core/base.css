@@ -1,6 +1,15 @@
 body{
     background-color: #F6F6F6;
 }
+
+body.environment-test *,
+body.environment-test *:before,
+body.environment-test *:after {
+    transition-property: none !important;
+    transform: none !important;
+    animation: none !important;
+}
+
 header{
     border-bottom: 2px solid #000091;
 }
@@ -36,6 +45,17 @@ header .fr-header__body-row {
 .fr-header__body-row .fr-btns-group {
     margin-top: -1rem;
 }
+
+/* Enbables using Remix icons with DSFR styles */
+.fr-icon-ri[class*=" ri-"]:after,
+.fr-icon-ri[class*=" ri-"]:before,
+.fr-icon-ri[class^=ri-]:after,
+.fr-icon-ri[class^=ri-]:before {
+    background-color: transparent;
+    font-size: var(--icon-size);
+    align-self: baseline;
+}
+
 .product-switch .fr-menu .fr-nav__link{
     padding: 0.25rem 0.5rem;
 }
@@ -190,8 +210,6 @@ label:has(+ .choices select[data-required="true"])::after,
     flex-wrap: wrap;
 }
 .details-top-row--actions {
-    display: flex;
-    justify-content: space-between;
     max-height: 2.5rem;
 }
 .details-top-row--actions .fr-translate__btn::before {

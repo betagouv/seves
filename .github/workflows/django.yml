@@ -1,8 +1,56 @@
 name: Django application
 on: [push]
+env:
+  SECRET_KEY: NOT_A_REAL_SECRET
+  DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
+  STORAGE_ENGINE: django.core.files.storage.FileSystemStorage
+  OIDC_RP_CLIENT_ID: null
+  OIDC_RP_CLIENT_SECRET: null
+  OIDC_RP_AUTH_ENDPOINT: null
+  OIDC_RP_TOKEN_ENDPOINT: null
+  OIDC_RP_USER_ENDPOINT: null
+  OIDC_RP_JWKS_ENDPOINT: null
+  OIDC_RP_LOGOUT_ENDPOINT: null
+  DJANGO_ADMIN_URL: mon_url_secrete_admin
+  SCALINGO_REDIS_URL: redis://127.0.0.1:6379
+  SENTRY_REPORT_URL: null
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11.1
+          cache: pip
+      - name: Install dependencies
+        run: pip install pip-tools && pip-sync
+      - name: Check no missing migrations
+        run: python manage.py makemigrations --check --dry-run >  /dev/null
+      - name: Run ruff
+        run: ruff check .
+      - name: Run ruff format
+        run: ruff format --check .
+      - name: Run DjHTML
+        run: ./bin/check_html_format.sh
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     services:
       postgres:
         image: postgres:latest
@@ -29,38 +77,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11.1
+          cache: pip
       - name: Install dependencies
-        run: pip install pip-tools && pip-sync && playwright install
-      - name: Check no missing migrations
-        run: python manage.py makemigrations --check --dry-run >  /dev/null
-        env:
-          SECRET_KEY: NOT_A_REAL_SECRET
-          DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
-          STORAGE_ENGINE: django.core.files.storage.FileSystemStorage
-          OIDC_RP_CLIENT_ID: null
-          OIDC_RP_CLIENT_SECRET: null
-          OIDC_RP_AUTH_ENDPOINT: null
-          OIDC_RP_TOKEN_ENDPOINT: null
-          OIDC_RP_USER_ENDPOINT: null
-          OIDC_RP_JWKS_ENDPOINT: null
-          OIDC_RP_LOGOUT_ENDPOINT: null
-          DJANGO_ADMIN_URL: mon_url_secrete_admin
-          SCALINGO_REDIS_URL: redis://127.0.0.1:6379
-          SENTRY_REPORT_URL: null
-      - name: Run ruff
-        run: ruff check .
-      - name: Run ruff format
-        run: ruff format --check .
-      - name: Run DjHTML
-        run: ./bin/check_html_format.sh
+        run: pip install pip-tools && pip-sync
+      - name: Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(playwright --version | awk '{print $2}')" >> $GITHUB_ENV
+      - name: Cache playwright binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - name: Install Playwright dependencies
+        run: playwright install
       - name: Run tests
-        run: pytest --tracing=retain-on-failure
+        run: >-
+          pytest
+          --tracing=retain-on-failure
+          --splits ${{ strategy.job-total }}
+          --group ${{ matrix.group }}
+          --reruns 1
+          --reruns-delay 5
+          --only-rerun E2ETestNetworkError
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
           DJANGO_ADMIN_URL: mon_url_secrete_admin
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ failure() }}
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.group }}
           path: test-results/

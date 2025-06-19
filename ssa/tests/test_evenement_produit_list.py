@@ -2,8 +2,9 @@ from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory
-from ssa.models import TypeEvenement, EvenementProduit
+from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
+from ssa.models.evenement_produit import PretAManger, ActionEngagees
 from ssa.tests.pages import EvenementProduitListPage
 
 
@@ -122,3 +123,346 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
     search_page.page.wait_for_timeout(600)
     expect(search_page.page.get_by_text("2024.22")).to_be_visible()
     expect(search_page.numero_field).to_have_value("")
+
+
+def test_compteur_fiche(live_server, page: Page):
+    nb_evenements = 101
+    EvenementProduitFactory.create_batch(nb_evenements)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    expect(page.get_by_text(f"100 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    page.get_by_role("link", name="Dernière page").click()
+    expect(page.get_by_text(f"1 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+
+
+def test_list_can_filter_with_free_search(live_server, mocked_authentification_user, page: Page):
+    evenement_1 = EvenementProduitFactory(description="Morbier")
+    evenement_2 = EvenementProduitFactory(denomination="Morbier")
+    evenement_3 = EvenementProduitFactory(marque="Morbier")
+    evenement_4 = EvenementProduitFactory(evaluation="Morbier")
+    evenement_5 = EvenementProduitFactory(lots="Morbier")
+    evenement_6 = EvenementProduitFactory(description_complementaire="Morbier")
+    evenement_7 = EvenementProduitFactory()
+    EtablissementFactory(raison_sociale="Morbier", evenement_produit=evenement_7)
+    evenement_8 = EvenementProduitFactory()
+    evenement_9 = EvenementProduitFactory()
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.full_text_field.fill("Morbier")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_5.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_6.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_8.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_9.numero)).not_to_be_visible()
+
+
+def test_more_filters_interactions(live_server, page: Page):
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.reference_souches.fill("Test")
+    search_page.reference_clusters.fill("Test")
+    search_page.add_filters()
+
+    expect(search_page.filter_counter).to_be_visible()
+    expect(search_page.filter_counter).to_have_text("2")
+
+    search_page.open_sidebar()
+    search_page.numeros_rappel_conso.fill("Test")
+    search_page.add_filters()
+
+    expect(search_page.filter_counter).to_be_visible()
+    expect(search_page.filter_counter).to_have_text("3")
+
+    search_page.open_sidebar()
+    search_page.reset_more_filters()
+    search_page.close_sidebar()
+    expect(search_page.filter_counter).not_to_be_visible()
+
+
+def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    not_to_be_found_1 = EvenementProduitFactory()
+    not_to_be_found_2 = EvenementProduitFactory(etat=EvenementProduit.Etat.CLOTURE)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.etat.select_option("En cours")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_temperature_conservation(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(temperature_conservation=TemperatureConservation.SURGELE)
+    not_to_be_found_1 = EvenementProduitFactory(temperature_conservation=TemperatureConservation.REFRIGERE)
+    not_to_be_found_2 = EvenementProduitFactory(temperature_conservation=TemperatureConservation.TEMPERATURE_AMBIANTE)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.temperature_conservation.select_option("Surgelé")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
+    not_to_be_found_1 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
+    not_to_be_found_2 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.SANS_OBJET)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.pret_a_manger.select_option("Oui")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(reference_souches="FOO")
+    not_to_be_found_1 = EvenementProduitFactory(reference_souches="BAR")
+    not_to_be_found_2 = EvenementProduitFactory(reference_souches="BUZZ")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.reference_souches.fill("FOO")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_reference_clusters(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(reference_clusters="FOO")
+    not_to_be_found_1 = EvenementProduitFactory(reference_clusters="BAR")
+    not_to_be_found_2 = EvenementProduitFactory(reference_clusters="BUZZ")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.reference_clusters.fill("FOO")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_actions_engagees(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(actions_engagees=ActionEngagees.RETRAIT)
+    not_to_be_found_1 = EvenementProduitFactory(actions_engagees=ActionEngagees.PAS_DE_MESURE)
+    not_to_be_found_2 = EvenementProduitFactory(actions_engagees=ActionEngagees.RETRAIT_RAPPEL)
+    not_to_be_found_3 = EvenementProduitFactory(actions_engagees=ActionEngagees.RETRAIT_RAPPEL_CP)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.actions_engagees.select_option("Retrait du marché (sans information des consommateurs)")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_numeros_rappel_conso(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = EvenementProduitFactory(numeros_rappel_conso=["2024-10-1000", "2024-10-1001"])
+    to_be_found_2 = EvenementProduitFactory(numeros_rappel_conso=["2024-10-1005", "2024-10-1000"])
+    not_to_be_found_1 = EvenementProduitFactory(numeros_rappel_conso=[])
+    not_to_be_found_2 = EvenementProduitFactory(numeros_rappel_conso=["2023-20-2000"])
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numeros_rappel_conso.fill("2024-10-1000")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(numero_agrement="123.11.111")
+    not_to_be_found_1 = EtablissementFactory(numero_agrement="")
+    not_to_be_found_2 = EtablissementFactory(numero_agrement="124.11.111")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numero_agrement.fill("123.11.111")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_commune(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(commune="Paris")
+    not_to_be_found_1 = EtablissementFactory(commune="")
+    not_to_be_found_2 = EtablissementFactory(commune="Bordeaux")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.commune.fill("Paris")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(siret="12345678912345")
+    not_to_be_found_1 = EtablissementFactory(siret="")
+    not_to_be_found_2 = EtablissementFactory(siret="9" * 14)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.siret.fill("12345678")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_departement(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(departement="Cantal")
+    not_to_be_found_1 = EtablissementFactory(departement="Aveyron")
+    not_to_be_found_2 = EtablissementFactory(departement="")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.departement.select_option("Cantal")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(pays="FR")
+    not_to_be_found_1 = EtablissementFactory(pays="BE")
+    not_to_be_found_2 = EtablissementFactory(pays="")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.pays.select_option("France")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_produit(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_produit("Produit carné > De boucherie > Abat blanc de boucherie")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_produit("Produit carné > De boucherie")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_categorie_danger(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(categorie_danger="Salmonella dublin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_danger="Listeria")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_danger="Staphylococcus")
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_categorie_danger("Bactérie > Salmonella > Salmonella dublin")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_with_free_links(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
+    linked_evenement = EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    LienLibre.objects.create(related_object_1=linked_evenement, related_object_2=to_be_found)
+
+    not_to_be_found_1 = EvenementProduitFactory(numero_annee=2024, numero_evenement=2)
+    not_to_be_found_2 = EvenementProduitFactory(numero_annee=2024, numero_evenement=1)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.numero_field.fill("2025.2")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+    search_page.numero_field.fill("2025.2")
+    search_page.with_links.check()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()

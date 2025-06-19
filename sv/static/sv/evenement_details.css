@@ -3,8 +3,8 @@
     border: none !important;
 }
 .no-tab-look .fr-tabs__list {
-    width: calc(100% - min(40%, 340px));
-    min-width: 700px;
+    width: calc(100% - min(40%, 440px));
+    min-width: 600px;
     order: 0 !important;
     flex-wrap: wrap;
 }
@@ -17,8 +17,8 @@
 [id^="detection-actions-"] {
     display: flex;
     justify-content: flex-end;
-    width: min(40%, 340px);
-    min-width: 340px;
+    width: min(40%, 440px);
+    min-width: 440px;
     margin-left: auto;
 }
 .fr-btn--delete{

@@ -4,25 +4,48 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
+    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 
 {% block content %}
     <form method="post" id="main-form">
         {% csrf_token %}
+        <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
+        <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
+        <div class="fr-hidden" id="categorie-danger-header">
+            <div class="fr-ml-1v">Danger les plus courants</div>
+            {% for danger in danger_plus_courant %}
+                <div class="treeselect-list__item" level="0" group="false">
+                    <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
+                </div>
+            {% endfor %}
+            <div class="fr-ml-1v">Liste complètes des dangers</div>
+        </div>
+
         <main class="main-container">
 
             <div class="evenement-produit-form-header">
-                <h1>Création d'un événement</h1>
+                <h1>{% if form.instance.pk %}Modification de l'événement {{ form.instance.numero }}{% else %}Création d'un événement{% endif %}</h1>
                 <div class="fr-mb-auto">
                     <a href="{% url 'ssa:evenement-produit-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
-                    <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
-                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">Publier</button>
+                    {% if form.instance and form.instance.is_draft %}
+                        <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
+                    {% endif %}
+                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+                        {% if form.instance.pk %}
+                            Enregistrer
+                        {% else %}
+                            Publier
+                        {% endif %}
+                    </button>
                 </div>
             </div>
 
@@ -33,7 +56,7 @@
                         <div class="fr-col-12 fr-col-lg-4 flex-column ">
                             <div id="date-creation">
                                 <label class="fr-label" for="date-creation-input">Date de création</label>
-                                <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% now 'd/m/Y' %}" disabled>
+                                <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                             </div>
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
@@ -41,8 +64,8 @@
                         </div>
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
                             <div>{% render_field form.type_evenement %}</div>
-                            <div>{% render_field form.source %}</div>
-                            <div>{% render_field form.cerfa_recu %}</div>
+                            <div class="source">{% render_field form.source %}</div>
+
                         </div>
                         <div class="fr-col-12 fr-col-lg-4">
                             {% render_field form.description %}
@@ -57,33 +80,46 @@
                         <div class="white-container--lite tall-column">
                             <h3>Produit</h3>
                             <div>
-                                {% render_field form.denomination %}
-                                {% render_field form.marque %}
-                                {% render_field form.lots %}
-                                {% render_field form.description_complementaire %}
-                                {{ form.temperature_conservation.label_tag }}
-                                <div class="radio-inline-container radio-inline-container--wrap">
-                                    {{ form.temperature_conservation }}
+                                <label>Catégorie de produit</label>
+                                <div id="categorie-produit"></div>
+                                <div class="fr-mt-2w">
+                                    {{ form.categorie_produit  }}
+                                    {% render_field form.denomination %}
+                                    {% render_field form.marque %}
+                                    {% render_field form.lots %}
+                                    {% render_field form.description_complementaire %}
+                                    {{ form.temperature_conservation.label_tag }}
+                                    <div class="radio-inline-container radio-inline-container--wrap">
+                                        {{ form.temperature_conservation }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
-                        <div class="white-container--lite tall-column">
+                        <div class="white-container--lite tall-column risk-column">
                             <h3>Risque</h3>
                             <div>
-                                <div class="fr-container--fluid fr-mt-4w">
+                                <label>Catégorie de danger</label>
+                                <div id="categorie-danger"></div>
+                                {{ form.categorie_danger  }}
+                                <div class="fr-mt-4v">
+                                    {% render_field form.precision_danger %}
+                                </div>
+                                <div class="fr-mt-2w">
                                     <div class="fr-grid-row fr-grid-row--gutters">
-                                        <div class="fr-col-lg-9">
-                                            {% render_field form.quantification %}
+                                        <div class="fr-col-lg-8">
+                                            {{ form.quantification.label_tag }}
+                                            <span class="fr-hint-text">Résultat le plus défavorable à l'origine de l'événement</span>
+                                            {{ form.quantification }}
                                         </div>
-                                        <div class="fr-col-lg-3">
+                                        <div class="fr-col-lg-4 fr-my-auto">
                                             {% render_field form.quantification_unite %}
                                         </div>
                                     </div>
                                 </div>
                                 {% render_field form.evaluation %}
-                                <div class="radio-inline-container">
+                                <div class="radio-inline-container fr-hidden" id="pam-container">
                                     {{ form.produit_pret_a_manger.label_tag }}
                                     <div class="radio-inline-container fr-ml-4w">
                                         {{ form.produit_pret_a_manger }}
@@ -107,7 +143,7 @@
             </div>
 
             <div class="white-container--lite fr-mt-4w">
-                <h3>Action engagées</h3>
+                <h3>Actions engagées</h3>
                 <span class="helptext fr-hint-text fr-mb-1w">{{ form.actions_engagees.help_text }}</span>
                 <div class="fr-container--fluid">
                     <div class="fr-grid-row fr-grid-row--gutters">
@@ -143,6 +179,7 @@
             {% include "ssa/_etablissement_block.html" %}
             <div id="liens-libre" class="white-container fr-mt-2w">
                 <h3>Liens libres</h3>
+                {{ form.instance.free_link_ids|json_script:"free-links-id" }}
                 <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
                 <div>
                     {{ form.free_link }}

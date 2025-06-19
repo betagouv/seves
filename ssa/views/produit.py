@@ -1,17 +1,40 @@
+import json
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect, Http404
-from django.views.generic import CreateView, DetailView, ListView
+from django.urls import reverse
+from django.views import View
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
+from core.mixins import WithClotureContextMixin
+from core.mixins import (
+    WithFormErrorsAsMessagesMixin,
+    WithFreeLinksListInContextMixin,
+    WithMessageMixin,
+    WithContactListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithDocumentListInContextMixin,
+    WithContactFormsInContextMixin,
+    WithBlocCommunPermission,
+    WithAddUserContactsMixin,
+    WithSireneTokenMixin,
+)
+from core.models import Export
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit
-from ssa.filters import EvenementProduitFilter
+from ssa.models import EvenementProduit, CategorieDanger
+from ssa.models.evenement_produit import CategorieProduit
+from ssa.tasks import export_task
+from ssa.views.mixins import WithFilteredListMixin
 
 
-class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
+class EvenementProduitCreateView(
+    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, WithSireneTokenMixin, CreateView
+):
     form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
 
@@ -33,6 +56,14 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
             self.request,
             "Erreurs dans le(s) formulaire(s) Etablissement",
         )
+        for i, form in enumerate(self.etablissement_formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(
+                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
+                        )
+
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
@@ -48,6 +79,7 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         self.object = form.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
+        self.add_user_contacts(self.object)
 
         messages.success(self.request, "La fiche produit a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
@@ -60,10 +92,24 @@ class EvenementProduitCreateView(WithFormErrorsAsMessagesMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
+        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
         return context
 
 
-class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTestMixin, DetailView):
+class EvenementProduitDetailView(
+    WithBlocCommunPermission,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithMessageMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
+    UserPassesTestMixin,
+    DetailView,
+):
     model = EvenementProduit
     template_name = "ssa/evenement_produit_detail.html"
 
@@ -89,33 +135,73 @@ class EvenementProduitDetailView(WithFreeLinksListInContextMixin, UserPassesTest
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 
 
-class EvenementProduitListView(ListView):
-    model = EvenementProduit
-    paginate_by = 100
+class EvenementUpdateView(
+    UserPassesTestMixin,
+    WithAddUserContactsMixin,
+    WithFormErrorsAsMessagesMixin,
+    SuccessMessageMixin,
+    UpdateView,
+):
+    form_class = EvenementProduitForm
+    template_name = "ssa/evenement_produit_form.html"
+    success_message = "L'événement produit a bien été modifié."
 
     def get_queryset(self):
-        user = self.request.user
-        contact = user.agent.structure.contact_set.get()
-        queryset = (
-            EvenementProduit.objects.select_related("createur")
-            .get_user_can_view(user)
-            .with_fin_de_suivi(contact)
-            .with_nb_liens_libres()
-            .order_by_numero()
-        )
-        self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
-        return self.filter.qs
+        return EvenementProduit.objects.all()
+
+    def test_func(self) -> bool | None:
+        return self.get_object().can_be_updated(self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
+        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.add_user_contacts(form.instance)
+        return response
+
+
+class EvenementProduitListView(WithFilteredListMixin, ListView):
+    model = EvenementProduit
+    paginate_by = 100
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options())
 
         for evenement in context["object_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
         return context
+
+
+class EvenementProduitExportView(WithFilteredListMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        ids = list(self.get_queryset().values_list("id", flat=True))
+        task = Export.objects.create(object_ids=ids, user=request.user)
+        export_task.delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")

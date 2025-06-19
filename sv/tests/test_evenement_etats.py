@@ -1,3 +1,5 @@
+import html
+
 import pytest
 from django.urls import reverse
 
@@ -6,8 +8,8 @@ from sv.factories import EvenementFactory, FicheDetectionFactory
 from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.models import Contact, FinSuiviContact, Message
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from core.models import Contact, FinSuiviContact, Message, Visibilite
 
 
 @pytest.fixture
@@ -282,10 +284,205 @@ def test_cant_cloture_evenement_if_already_cloture(client):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     response = client.post(
-        reverse("sv:evenement-cloturer", kwargs={"pk": evenement.id}),
+        reverse("cloturer", kwargs={"pk": evenement.id}),
         data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
     )
 
     evenement.refresh_from_db()
     assert response.status_code == 302
     assert evenement.is_deleted is False
+
+
+@pytest.mark.django_db
+def test_can_ouvrir_evenement_if_cloture(live_server, page: Page, mocked_authentification_user, contact_ac):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    mocked_authentification_user.agent.structure = contact_ac.structure
+    FinSuiviContact.objects.create(
+        content_type=ContentType.objects.get_for_model(Evenement), object_id=evenement.id, contact=contact_ac
+    )
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Ouvrir l'évènement").click()
+    page.get_by_role("button", name="Confirmer", exact=True).click()
+
+    expect(page.get_by_text(f"L'événement {evenement.numero} a bien été ouvert de nouveau.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.EN_COURS
+    assert not evenement.fin_suivi.filter(contact=contact_ac).exists()
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_draft(live_server, page: Page, client):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.BROUILLON
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_en_cours(live_server, page: Page, client, mocked_authentification_user, contact_ac):
+    evenement = EvenementFactory(etat=Evenement.Etat.EN_COURS)
+    mocked_authentification_user.agent.structure = contact_ac.structure
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.EN_COURS
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_cant_ouvrir_evenement_if_user_is_not_ac(live_server, page: Page, client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE, visibilite=Visibilite.NATIONALE)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Ouvrir l'évènement")).not_to_be_visible()
+
+    response = client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": evenement.id}),
+        data={"content_type_id": ContentType.objects.get_for_model(evenement).id},
+        follow=True,
+    )
+    assert response.status_code == 200
+    evenement.refresh_from_db()
+    assert evenement.etat == Evenement.Etat.CLOTURE
+    assert "Vous ne pouvez pas ouvrir l'évènement." in html.unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_can_publish_evenement(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    publish_btn = page.get_by_role("button", name="Publier sans déclarer à l'AC")
+    expect(publish_btn).to_be_enabled()
+    publish_btn.click()
+    page.get_by_text("Publier l'événement").click()
+
+    expect(page.get_by_text(f"Événement {evenement.numero} publié avec succès")).to_be_visible()
+    expect(publish_btn).not_to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.is_published is True
+
+
+@pytest.mark.django_db
+def test_cant_forge_publication_of_evenement_we_are_not_owner(client, mocked_authentification_user):
+    evenement = EvenementFactory(
+        createur=Structure.objects.create(libelle="A new structure"), etat=Evenement.Etat.BROUILLON
+    )
+    response = client.get(evenement.get_absolute_url())
+
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+    }
+    response = client.post(reverse("publish"), data=payload)
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.is_draft is True
+
+
+def test_publish_without_notifier_ac_show_modal(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Publier sans déclarer à l'AC").click()
+
+    expect(page.get_by_role("heading", name="Publier sans déclarer à l'AC")).to_be_visible()
+    expect(
+        page.get_by_text(
+            "L'administration centrale ne sera pas notifiée de la publication de cet événement. Vous pourrez le faire plus tard avec le bouton \"Déclarer à l'AC\" dans le menu Actions."
+        )
+    ).to_be_visible()
+    expect(page.get_by_role("button", name="Publier l'événement")).to_be_visible()
+
+
+def test_publish_and_notifier_ac_show_modal(live_server, page: Page):
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Publier et déclarer à l'AC").click()
+
+    expect(page.get_by_role("heading", name="Notifier à l'AC l'événement ")).to_be_visible()
+    expect(
+        page.get_by_text(
+            "Un message automatique va être envoyé à l'administration centrale pour l'informer de cette notification. Confirmez-vous la déclaration de cet événement ?"
+        )
+    ).to_be_visible()
+    expect(
+        page.get_by_label("Notifier à l'AC l'événement").get_by_role("button", name="Publier et déclarer à l'AC")
+    ).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_can_publish_and_notifier_ac(live_server, page: Page, mailoutbox):
+    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("button", name="Publier et déclarer à l'AC").click()
+    page.get_by_label("Notifier à l'AC l'événement").get_by_role("button", name="Publier et déclarer à l'AC").click()
+
+    expect(page.get_by_text(f"Événement {evenement.numero} publié avec succès")).to_be_visible()
+    expect(page.get_by_text("L'administration centrale a été notifiée avec succès")).to_be_visible()
+    expect(page.get_by_text("Déclaré AC")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.is_published is True
+    assert evenement.is_ac_notified is True
+    assert len(mailoutbox) == 1
+
+
+@pytest.mark.django_db
+def test_cant_publish_and_notifier_ac_evenement_i_cant_see(client, mailoutbox):
+    evenement = EvenementFactory(createur=StructureFactory(), etat=Evenement.Etat.BROUILLON)
+    response = client.get(evenement.get_absolute_url())
+    assert response.status_code == 403
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(evenement).id,
+        "content_id": evenement.pk,
+    }
+    response = client.post(reverse("publish-and-ac-notification"), data=payload)
+
+    assert response.status_code == 302
+    evenement.refresh_from_db()
+    assert evenement.is_draft is True
+    assert evenement.is_ac_notified is False
+    assert len(mailoutbox) == 0
+
+
+def test_show_only_publish_btn_and_not_show_modal_for_ac_users(
+    live_server, page: Page, mocked_authentification_user, contact_ac
+):
+    contact_structure_mus = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    mocked_authentification_user.agent.structure = contact_structure_mus.structure
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON, createur=contact_structure_mus.structure)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    expect(page.get_by_role("button", name="Publier", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name="Publier sans déclarer à l'AC")).not_to_be_visible()
+    expect(page.get_by_role("button", name="Publier et déclarer à l'AC")).not_to_be_visible()
+
+    page.get_by_role("button", name="Publier").click()
+    expect(page.get_by_text(f"Événement {evenement.numero} publié avec succès")).to_be_visible()

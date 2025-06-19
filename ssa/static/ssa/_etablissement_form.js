@@ -1,4 +1,7 @@
 import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+import {setUpSiretChoices} from "/static/core/siret.js";
+
+let modalEtablissementHTMLContent = {}
 
 document.addEventListener('DOMContentLoaded', () => {
     function getNextIdToUse() {
@@ -7,6 +10,53 @@ document.addEventListener('DOMContentLoaded', () => {
             num++
         }
         return num
+    }
+
+    function setupAdresseField(modal){
+        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
+        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
+            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
+            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
+            if (!!event.detail.customProperties.context)
+            {
+                modal.querySelector('[id$=pays]').value = "FR"
+                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
+            }
+        })
+        return addressChoices
+    }
+
+    function configureSiretField(field, addressChoices){
+        const choicesSIRET = setUpSiretChoices(field, 'bottom')
+        choicesSIRET.passedElement.element.addEventListener("choice", (event)=> {
+            field.closest("dialog").querySelector('[id$=siret]').value = event.detail.customProperties.siret
+            field.closest("dialog").querySelector('[id$=raison_sociale]').value = event.detail.customProperties.raison
+            field.closest("dialog").querySelector('[id$=commune]').value = event.detail.customProperties.commune
+            field.closest("dialog").querySelector('[id$=code_insee]').value = event.detail.customProperties.code_commune
+            field.closest("dialog").querySelector('[id$=pays]').value = "FR"
+
+            if (!!event.detail.customProperties.streetData){
+                let result = [{"value": event.detail.customProperties.streetData, "label": event.detail.customProperties.streetData, selected:true }]
+                addressChoices.setChoices(result, 'value', 'label', true)
+            }
+
+            fetch(`/ssa/api/find-numero-agrement/?siret=${event.detail.customProperties.siret}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!!data["numero_agrement"]){
+                        field.closest("dialog").querySelector('[id$=agrement]').value = data["numero_agrement"]
+                    }
+                });
+        })
+    }
+
+    function setupSiretBlock(modal, addressChoices){
+        const siretSelect = modal.querySelector("[id^=search-siret-input-]")
+        if (!siretSelect.dataset.token){
+            return
+        }
+
+        configureSiretField(siretSelect, addressChoices)
     }
 
     function showEtablissementModal() {
@@ -23,24 +73,21 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             dsfr(modal).modal.disclose()
             dsfr(modal).modal.node.addEventListener('dsfr.conceal', event => {
+                if (modal.dataset.needsRestoreBackup === "false"){
+                    modal.dataset.needsRestoreBackup = ""
+                    removeRequired(modal)
+                    return
+                }
                 removeRequired(modal)
-                const originalTarget = event.explicitOriginalTarget
-                if (!originalTarget.classList.contains("save-btn")) {
-                    resetForm(modal)
+                if (!!modalEtablissementHTMLContent[nextIdToUse]) {
+                    event.target.querySelector(".fr-modal__content").replaceWith(modalEtablissementHTMLContent[nextIdToUse])
+                    modalEtablissementHTMLContent[nextIdToUse] = null
                 }
             });
         }, 10)
 
-        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
-        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
-            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
-            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
-            if (!!event.detail.customProperties.context)
-            {
-                modal.querySelector('[id$=pays]').value = "FR"
-                modal.querySelector('[id$=departement]').value = event.detail.customProperties.context.split(",")[1].trim()
-            }
-        })
+        let addressChoices = setupAdresseField(modal)
+        setupSiretBlock(modal, addressChoices)
 
 
         modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
@@ -78,8 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const structure = `Département : ${currentModal.querySelector('[id$=departement]').value || 'nc.'}`
         baseCard.querySelector('.structure').textContent = structure
 
-        const numeroAgrement = `N° d'agrément : ${currentModal.querySelector('[id$=numero_agrement]').value || 'nc.'}`
-        baseCard.querySelector('.numero-agrement').textContent = numeroAgrement
+        const numeroAgrementValue = currentModal.querySelector('[id$=numero_agrement]').value
+        if (!!numeroAgrementValue) {
+            baseCard.querySelector('.numero-agrement').textContent = `N° d'agrément : ${numeroAgrementValue}`
+            baseCard.querySelector('.numero-agrement').classList.remove("fr-hidden")
+        } else {
+            baseCard.querySelector('.numero-agrement').classList.add("fr-hidden")
+        }
+
 
         const positionDossierInput = currentModal.querySelector('[id$=position_dossier]')
         const positionDossier = getSelectedLabel(positionDossierInput)
@@ -87,7 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
             baseCard.querySelector('.position-dossier').innerText = positionDossier
             baseCard.querySelector('.position-dossier').classList.remove("fr-hidden")
             const extraClass = positionDossierInput.options[positionDossierInput.selectedIndex].dataset.extraClass
-            baseCard.querySelector('.position-dossier').classList.add(extraClass)
+            const basePositionDossier = baseCard.querySelector('.position-dossier')
+            if (!!extraClass){
+                basePositionDossier.classList.add(extraClass)
+            } else {
+                basePositionDossier.classList.value = basePositionDossier.dataset.resetClasses
+            }
         }
         return baseCard
     }
@@ -112,12 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = getEtablissementCard(clone, currentModal, etablissementId)
             card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
             card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
+            card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
+                modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement${etablissementId} .fr-modal__content`).cloneNode(true)
+            })
             document.getElementById("etablissement-card-container").appendChild(card);
         } else {
             existingCard.replaceWith(getEtablissementCard(existingCard, currentModal, etablissementId))
         }
 
         dsfr(currentModal).modal.conceal()
+        currentModal.dataset.needsRestoreBackup = "false"
         removeRequired(currentModal)
     }
 

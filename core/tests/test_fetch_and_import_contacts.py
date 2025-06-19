@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import csv
 import os
 import subprocess
@@ -8,6 +9,7 @@ import zipfile
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from docker.errors import DockerException
 from testcontainers.sftp import SFTPContainer
 
 from core.models import Agent, Structure, Contact
@@ -131,6 +133,18 @@ def update_env_vars(sftp_container: SFTPContainer):
     os.environ["SFTP_PATH"] = "upload"
 
 
+@pytest.fixture(autouse=True)
+def cleanup_testfiles():
+    for file in (
+        "test1.csv.zip.encrypted",
+        "test2.csv.zip.encrypted",
+        "symmetric1.key.encrypted",
+        "symmetric2.key.encrypted",
+    ):
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(file)
+
+
 @pytest.mark.django_db
 def test_fetch_and_import_contacts_command():
     _reset_contacts()
@@ -146,33 +160,36 @@ def test_fetch_and_import_contacts_command():
     os.remove("symmetric1.key")
     os.remove("symmetric2.key")
 
-    with SFTPContainer() as sftp_container:
-        sftp_container.start()
-        update_env_vars(sftp_container)
-        upload_file_to_sftp_server("test1.csv.zip.encrypted")
-        upload_file_to_sftp_server("symmetric1.key.encrypted")
-        time.sleep(2)  # S'assurer que les timestamps sont différents
-        upload_file_to_sftp_server("test2.csv.zip.encrypted")
-        upload_file_to_sftp_server("symmetric2.key.encrypted")
-        os.remove("test1.csv.zip.encrypted")
-        os.remove("test2.csv.zip.encrypted")
-        os.remove("symmetric1.key.encrypted")
-        os.remove("symmetric2.key.encrypted")
+    try:
+        with SFTPContainer() as sftp_container:
+            sftp_container.start()
+            update_env_vars(sftp_container)
+            upload_file_to_sftp_server("test1.csv.zip.encrypted")
+            upload_file_to_sftp_server("symmetric1.key.encrypted")
+            time.sleep(2)  # S'assurer que les timestamps sont différents
+            upload_file_to_sftp_server("test2.csv.zip.encrypted")
+            upload_file_to_sftp_server("symmetric2.key.encrypted")
+            os.remove("test1.csv.zip.encrypted")
+            os.remove("test2.csv.zip.encrypted")
+            os.remove("symmetric1.key.encrypted")
+            os.remove("symmetric2.key.encrypted")
 
-        subprocess.run(
-            os.path.join(settings.BASE_DIR, "bin", "fetch_contacts_agricoll_and_key.sh"),
-            check=True,
-            cwd=settings.BASE_DIR,
-        )
-        call_command("import_contacts", "agricoll.csv")
-        os.remove("agricoll.csv")
+            subprocess.run(
+                os.path.join(settings.BASE_DIR, "bin", "fetch_contacts_agricoll_and_key.sh"),
+                check=True,
+                cwd=settings.BASE_DIR,
+            )
+            call_command("import_contacts", "agricoll.csv")
+            os.remove("agricoll.csv")
 
-        assert Agent.objects.count() == 2
-        assert Structure.objects.count() == 2
-        assert Contact.objects.count() == 4
-        user_model = get_user_model()
-        assert user_model.objects.count() == 2
-        assert Contact.objects.filter(agent__prenom="John", agent__nom="Doe").exists()
-        assert Contact.objects.filter(agent__prenom="John2", agent__nom="Doe2").exists()
-        assert not Contact.objects.filter(agent__prenom="John3", agent__nom="Doe3").exists()
-        assert not Contact.objects.filter(agent__prenom="Prestataire", agent__nom="TEMPORAIRE").exists()
+            assert Agent.objects.count() == 2
+            assert Structure.objects.count() == 2
+            assert Contact.objects.count() == 4
+            user_model = get_user_model()
+            assert user_model.objects.count() == 2
+            assert Contact.objects.filter(agent__prenom="John", agent__nom="Doe").exists()
+            assert Contact.objects.filter(agent__prenom="John2", agent__nom="Doe2").exists()
+            assert not Contact.objects.filter(agent__prenom="John3", agent__nom="Doe3").exists()
+            assert not Contact.objects.filter(agent__prenom="Prestataire", agent__nom="TEMPORAIRE").exists()
+    except DockerException:
+        pytest.skip("No docker installed")

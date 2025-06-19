@@ -1,7 +1,6 @@
 import datetime
 
 import reversion
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.urls import reverse
@@ -18,7 +17,8 @@ from core.mixins import (
     WithContactPermissionMixin,
 )
 from core.mixins import WithEtatMixin
-from core.models import Document, Message, Contact, Structure, FinSuiviContact
+from core.model_mixins import WithBlocCommunFieldsMixin
+from core.models import Structure, Document
 from . import FicheZoneDelimitee
 from .common import OrganismeNuisible, StatutReglementaire
 from .models_mixins import WithDerniereMiseAJourMixin
@@ -37,6 +37,7 @@ class Evenement(
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithDerniereMiseAJourMixin,
+    WithBlocCommunFieldsMixin,
     models.Model,
 ):
     numero_annee = models.IntegerField(verbose_name="Année")
@@ -58,11 +59,6 @@ class Evenement(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
-
-    fin_suivi = GenericRelation(FinSuiviContact)
-    documents = GenericRelation(Document)
-    messages = GenericRelation(Message)
-    contacts = models.ManyToManyField(Contact, verbose_name="Contacts", blank=True)
 
     objects = EvenementManager()
 
@@ -101,9 +97,6 @@ class Evenement(
     def get_absolute_url(self):
         return reverse("sv:evenement-details", kwargs={"numero": self.numero})
 
-    def get_absolute_url_with_message(self, message_id: int):
-        return f"{self.get_absolute_url()}?message={message_id}"
-
     def get_update_url(self):
         return reverse("sv:evenement-update", kwargs={"pk": self.pk})
 
@@ -115,11 +108,6 @@ class Evenement(
 
     def __str__(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
-
-    def get_contacts_structures_not_in_fin_suivi(self):
-        contacts_structure = self.contacts.exclude(structure__isnull=True).select_related("structure")
-        fin_suivi_contacts_ids = self.fin_suivi.values_list("contact", flat=True)
-        return contacts_structure.exclude(id__in=fin_suivi_contacts_ids)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
@@ -178,22 +166,8 @@ class Evenement(
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
 
-    def add_fin_suivi(self, user):
-        with transaction.atomic():
-            fin_suivi_contact = FinSuiviContact(
-                content_object=self,
-                contact=Contact.objects.get(structure=user.agent.structure),
-            )
-            fin_suivi_contact.full_clean()
-            fin_suivi_contact.save()
-
-            Message.objects.create(
-                title="Fin de suivi",
-                content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
-                sender=user.agent.contact_set.get(),
-                message_type=Message.FIN_SUIVI,
-                content_object=self,
-            )
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
 
     def get_email_subject(self):
         return f"{self.organisme_nuisible.code_oepp} {self.numero}"
@@ -221,3 +195,27 @@ class Evenement(
 
     def can_add_fiche_zone_delimitee(self, user):
         return self._user_can_interact(user)
+
+    def get_message_form(self):
+        from ..forms import MessageForm
+
+        return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.ARRETE,
+            Document.TypeDocument.AUTRE,
+            Document.TypeDocument.CARTOGRAPHIE,
+            Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE,
+            Document.TypeDocument.COMPTE_RENDU_REUNION,
+            Document.TypeDocument.COURRIER_OFFICIEL,
+            Document.TypeDocument.DSCE,
+            Document.TypeDocument.FACTURE,
+            Document.TypeDocument.IMAGE,
+            Document.TypeDocument.PASSEPORT_PHYTOSANITAIRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.RAPPORT_INSPECTION,
+            Document.TypeDocument.REGLEMENTATION,
+            Document.TypeDocument.TRANSPORT,
+            Document.TypeDocument.TRACABILITE,
+        ]

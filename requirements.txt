@@ -54,7 +54,7 @@ cryptography==44.0.1
     #   testcontainers
 distlib==0.3.8
     # via virtualenv
-django==5.1.8
+django==5.2.2
     # via
     #   -r requirements.in
     #   django-csp
@@ -69,7 +69,7 @@ django-countries==7.6.1
     # via -r requirements.in
 django-csp==3.8
     # via -r requirements.in
-django-debug-toolbar==5.1.0
+django-debug-toolbar==5.2.0
     # via -r requirements.in
 django-environ==0.12.0
     # via -r requirements.in
@@ -81,7 +81,7 @@ django-reversion==5.1.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-djhtml==3.0.7
+djhtml==3.0.8
     # via -r requirements.in
 docker==7.1.0
     # via testcontainers
@@ -121,9 +121,10 @@ packaging==24.0
     # via
     #   gunicorn
     #   pytest
+    #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.51.0
+playwright==1.52.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -137,7 +138,7 @@ psycopg2-binary==2.9.10
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyee==12.1.1
+pyee==13.0.0
     # via playwright
 pyopenssl==25.0.0
     # via josepy
@@ -147,6 +148,8 @@ pytest==8.3.3
     #   pytest-django
     #   pytest-env
     #   pytest-playwright
+    #   pytest-rerunfailures
+    #   pytest-split
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
@@ -156,7 +159,11 @@ pytest-env==1.1.5
     # via -r requirements.in
 pytest-playwright==0.7.0
     # via -r requirements.in
-pytest-xdist==3.6.1
+pytest-rerunfailures==15.1
+    # via -r requirements.in
+pytest-split==0.10.0
+    # via -r requirements.in
+pytest-xdist==3.7.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
@@ -178,11 +185,11 @@ requests==2.32.3
     #   docker
     #   mozilla-django-oidc
     #   pytest-base-url
-ruff==0.11.7
+ruff==0.11.13
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.27.0
+sentry-sdk[django]==2.29.1
     # via -r requirements.in
 six==1.16.0
     # via
@@ -192,7 +199,7 @@ sqlparse==0.5.3
     # via
     #   django
     #   django-debug-toolbar
-testcontainers[sftp]==4.10.0
+testcontainers[sftp]==4.11.0
     # via -r requirements.in
 text-unidecode==1.3
     # via python-slugify

@@ -10,7 +10,6 @@ from playwright.sync_api import Page, expect
 from core.factories import StructureFactory
 from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
-from .conftest import check_select_options
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
     LaboratoireFactory,
@@ -23,6 +22,7 @@ from ..factories import (
     PositionChaineDistributionFactory,
     StructurePreleveuseFactory,
     FicheDetectionFactory,
+    EspeceEchantillonFactory,
 )
 from ..models import (
     FicheDetection,
@@ -34,6 +34,7 @@ from ..models import (
     Laboratoire,
     Evenement,
     Prelevement,
+    Lieu,
 )
 
 
@@ -61,7 +62,9 @@ def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDo
     expect(page.get_by_role("heading", name="Création d'une fiche détection", exact=True)).to_be_visible()
 
 
-def test_new_fiche_detection_form_content(live_server, page: Page, form_elements: FicheDetectionFormDomElements):
+def test_new_fiche_detection_form_content(
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, check_select_options
+):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.informations_title).to_be_visible()
@@ -155,7 +158,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "xylela", organisme_nuisible.libelle_court)
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Xylella", organisme_nuisible.libelle_court)
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
@@ -215,15 +218,15 @@ def test_create_fiche_detection_with_lieu(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    lieu_form_elements.is_etablissement_checkbox.click()
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
-    lieu_form_elements.pays_etablissement_input.fill(lieu.pays_etablissement)
+    lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
-    lieu_form_elements.adresse_etablissement_input.fill(lieu.adresse_etablissement)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
     lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
     lieu_form_elements.lieu_site_inspection_input.select_option(str(lieu.site_inspection.id))
@@ -282,7 +285,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.adresse_input.fill(lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     fill_commune(page)
     lieu_form_elements.lieu_site_inspection_input.select_option(str(site_inspection.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -610,6 +613,8 @@ def test_create_fiche_detection_with_lieu_using_siret(
     choice_js_fill,
     settings,
 ):
+    call_count = {"count": 0}
+
     def handle(route):
         data = {
             "etablissements": [
@@ -626,11 +631,13 @@ def test_create_fiche_detection_with_lieu_using_siret(
                         "libelleVoieEtablissement": "DU CHEVALERET",
                         "codePostalEtablissement": "75013",
                         "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75013",
                     },
                 }
             ]
         }
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
 
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
@@ -640,7 +647,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
     )
 
     page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
+        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
         handle,
     )
 
@@ -663,7 +670,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
         form_elements.add_lieu_btn.click()
         page.wait_for_timeout(200)
         lieu_form_elements.nom_input.fill("Mon lieu")
-        lieu_form_elements.is_etablissement_checkbox.click(force=True)
+        lieu_form_elements.is_etablissement_checkbox.click()
         lieu_form_elements.sirene_btn.click()
         choice_js_fill(
             page,
@@ -671,6 +678,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
             "120 079 017",
             "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
         )
+        assert call_count["count"] == 1
 
         lieu_form_elements.save_btn.click()
         form_elements.publish_btn.click()
@@ -681,8 +689,11 @@ def test_create_fiche_detection_with_lieu_using_siret(
     assert lieu_from_db.nom == "Mon lieu"
     assert lieu_from_db.is_etablissement is True
     assert lieu_from_db.siret_etablissement == "12007901700030"
-    assert lieu_from_db.pays_etablissement == "France"
-    assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET - 75013 PARIS"
+    assert lieu_from_db.pays_etablissement == "FR"
+    assert lieu_from_db.adresse_etablissement == "175 RUE DU CHEVALERET"
+    assert lieu_from_db.commune_etablissement == "PARIS"
+    assert lieu_from_db.code_insee_etablissement == "75013"
+    assert lieu_from_db.departement_etablissement.numero == "75"
 
 
 def test_fiche_detection_without_organisme_nuisible_shows_error(
@@ -801,3 +812,169 @@ def test_cant_add_detection_to_existing_evenement_cloture(client):
     )
     assert response.status_code == 403
     assert evenement.detections.count() == 0
+
+
+def test_can_add_lieu_with_adresse_auto_complete(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_fill_from_element,
+):
+    call_count = {"count": 0}
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
+
+    form_elements.page.route(
+        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    choice_js_fill_from_element(
+        page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
+    )
+    assert call_count["count"] == 1
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.adresse_lieu_dit == "251 Rue de Vaugirard"
+    assert lieu.commune == "Paris"
+    assert lieu.code_insee == "75115"
+    assert lieu.departement.nom == "Paris"
+
+
+def test_can_add_lieu_with_adresse_etablissement_autocomplete(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_fill_from_element,
+):
+    call_count = {"count": 0}
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "label": "251 Rue de Vaugirard 75015 Paris",
+                        "name": "251 Rue de Vaugirard",
+                        "citycode": "75115",
+                        "city": "Paris",
+                        "context": "75, Paris, Île-de-France",
+                    }
+                },
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
+
+    form_elements.page.route(
+        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.is_etablissement_checkbox.click(force=True)
+    choice_js_fill_from_element(
+        page, lieu_form_elements.adresse_etablissement_input, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
+    )
+    assert call_count["count"] == 1
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.adresse_etablissement == "251 Rue de Vaugirard"
+    assert lieu.commune_etablissement == "Paris"
+    assert lieu.code_insee_etablissement == "75115"
+    assert lieu.departement_etablissement.nom == "Paris"
+    assert lieu.pays_etablissement == "FR"
+
+
+@pytest.mark.django_db
+def test_prelevement_espece_echantillon_is_preserved_in_template(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+    prelevement = detection.lieux.first().prelevements.first()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Modifier le prélèvement").click()
+
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+
+
+@pytest.mark.django_db
+def test_can_clone_prelevement_from_existing(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+):
+    detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
+    EspeceEchantillonFactory.create_batch(10)
+    prelevements = detection.lieux.first().prelevements
+
+    assert prelevements.count() == 1
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_role("button", name="Dupliquer le prélèvement").click()
+    prelevement = prelevements.first()
+    assert (
+        prelevement_form_elements.numero_rapport_inspection_input.input_value() == prelevement.numero_rapport_inspection
+    )
+    assert prelevement_form_elements.numero_echantillon_input.input_value() == prelevement.numero_echantillon
+    assert prelevement_form_elements.lieu_input.input_value() == prelevement.lieu.nom
+    assert prelevement_form_elements.structure_input.input_value() == f"{prelevement.structure_preleveuse.pk}"
+    assert prelevement_form_elements.matrice_prelevee_input.input_value() == f"{prelevement.matrice_prelevee.pk}"
+    assert prelevement_form_elements.date_prelevement_input.input_value() == f"{prelevement.date_prelevement}"
+    assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
+    assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    assert prelevements.count() == 2

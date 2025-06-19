@@ -4,6 +4,9 @@ from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Contact
+from core.constants import REGION_STRUCTURE_MAPPING
+from core.factories import StructureFactory
+from core.models import Visibilite
 from seves import settings
 from ..factories import (
     FicheDetectionFactory,
@@ -169,6 +172,53 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     expect(page.get_by_role("cell", name=str(other_lieu.fiche_detection.evenement.numero))).not_to_be_visible()
 
 
+@pytest.mark.django_db
+def test_search_with_region_structure_mapping(live_server, page: Page) -> None:
+    """Test que le filtre région retourne aussi les événements créés par une structure de la région
+    lorsque les lieux n'ont pas de région spécifiée."""
+    nouvelle_aquitaine = "Nouvelle-Aquitaine"
+    region_nouvelle_aquitaine = RegionFactory(nom=nouvelle_aquitaine)
+    structure_region_nouvelle_aquitaine = REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine)
+    structure_nouvelle_aquitaine = StructureFactory(
+        niveau2=REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine), libelle=structure_region_nouvelle_aquitaine
+    )
+
+    # Evenements avec lieu(x)
+    evenement_lieu_sans_region_structure_autre = LieuFactory(departement=None).fiche_detection.evenement
+    evenement_lieu_naq_structure_autre = LieuFactory(
+        departement__region=region_nouvelle_aquitaine
+    ).fiche_detection.evenement
+    evenement_lieu_autre_region_structure_autre = LieuFactory(departement__nom="Finistère").fiche_detection.evenement
+    evenement_lieu_naq_structure_naq = LieuFactory(
+        commune="La Rochelle",
+        departement__nom="Charente-Maritime",
+        fiche_detection__evenement__createur=structure_nouvelle_aquitaine,
+    ).fiche_detection.evenement
+    fiche_detection = FicheDetectionFactory(createur=structure_nouvelle_aquitaine)
+    LieuFactory(fiche_detection=fiche_detection, departement__nom="Finistère", commune="Quimper")
+    LieuFactory(fiche_detection=fiche_detection, departement=None, commune="")
+    evenement_structure_naq = fiche_detection.evenement
+
+    # Evenements sans lieu
+    evenement_sans_lieu_structure_naq = FicheDetectionFactory(createur=structure_nouvelle_aquitaine).evenement
+    evenement_sans_lieu_structure_autre = FicheDetectionFactory().evenement
+    Evenement.objects.update(visibilite=Visibilite.NATIONALE)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Région").select_option(str(region_nouvelle_aquitaine.id))
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name=str(evenement_lieu_sans_region_structure_autre.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_autre_region_structure_autre.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_autre.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_autre.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero))).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_naq.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_structure_naq.numero))).to_be_visible()
+    expect(page.locator("body")).to_contain_text("4 sur un total de 4")
+
+
 def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
     """Test la recherche d'une fiche détection en utilisant un organisme nuisible.
     Effectue une recherche en sélectionnant un organisme nuisible spécifique et
@@ -241,7 +291,7 @@ def test_search_with_crossed_dates(live_server, page: Page, mocked_authentificat
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.locator("body")).to_contain_text("0 évènement au total")
+    expect(page.get_by_text("0 sur un total de 0")).to_be_visible()
 
 
 def test_search_with_state(live_server, page: Page) -> None:
@@ -290,7 +340,7 @@ def test_search_without_filters(live_server, page: Page) -> None:
 
     expect(page.get_by_role("cell", name=str(fiche_1.evenement.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero))).to_be_visible()
-    expect(page.locator("body")).to_contain_text("2 évènements au total")
+    expect(page.get_by_text("2 sur un total de 2")).to_be_visible()
 
 
 def test_zone_column(live_server, page: Page):

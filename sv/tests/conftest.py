@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
 
@@ -29,14 +28,6 @@ def prelevement_form_elements(page: Page):
     return PrelevementFormDomElements(page)
 
 
-def check_select_options(page, select_id, expected_options):
-    options = page.locator(f"#{select_id} option").element_handles()
-    option_texts = [option.inner_text() for option in options]
-    assert option_texts == [settings.SELECT_EMPTY_CHOICE] + expected_options, (
-        f"Les options pour {select_id} ne correspondent pas aux options attendues"
-    )
-
-
 @pytest.fixture(autouse=True)
 def add_status_reglementaire_objects():
     for code, libelle in STATUTS_REGLEMENTAIRES.items():
@@ -46,7 +37,7 @@ def add_status_reglementaire_objects():
 @pytest.fixture
 def fill_commune(db, page: Page, choice_js_fill_from_element):
     def _fill_commune(page):
-        element = page.locator(".fr-modal__content").locator("visible=true").locator(".choices__list--single")
+        element = page.locator(".fr-modal__content").locator("visible=true").locator(".commune .choices__list--single")
         choice_js_fill_from_element(page, element, fill_content="Lille", exact_name="Lille (59)")
 
     return _fill_commune
@@ -59,3 +50,12 @@ def create_departement_if_needed(db):
     for numero, nom, region_nom in DEPARTEMENTS:
         region = Region.objects.get(nom=region_nom)
         Departement.objects.get_or_create(numero=numero, nom=nom, region=region)
+
+
+@pytest.fixture
+def goto_contacts(db):
+    def _goto_contacts(page):
+        page.get_by_role("tab", name="Contacts").click()
+        page.get_by_role("tab", name="Contacts").evaluate("el => el.scrollIntoView()")
+
+    return _goto_contacts
