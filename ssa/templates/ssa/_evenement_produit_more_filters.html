@@ -5,13 +5,27 @@
         <a href="#" class="fr-link close-sidebar fr-mb-2v">Fermer</a>
     </div>
     <div>
-        {% for field in filter.form %}
-            {% if field.name in filter.form.manual_render_fields %}
-                <div class="fr-fieldset__element">
-                    {% render_field field %}
-                </div>
-            {% endif %}
-        {% endfor %}
+        <div class="fr-fieldset__element">{% render_field filter.form.etat %}</div>
+
+        <div class="fr-fieldset__element">
+            <div class="fr-p-2v etablissment-filters ">
+                <h5 class="fr-h5 fr-mb-2v">Établissements</h5>
+                <div class="fr-fieldset__element">{% render_field filter.form.siret %}</div>
+                <div class="fr-fieldset__element">{% render_field filter.form.numero_agrement %}</div>
+                <div class="fr-fieldset__element">{% render_field filter.form.commune %}</div>
+                <div class="fr-fieldset__element">{% render_field filter.form.departement %}</div>
+                <div class="fr-fieldset__element">{% render_field filter.form.pays %}</div>
+            </div>
+        </div>
+
+        <div class="fr-fieldset__element">{% render_field filter.form.temperature_conservation %}</div>
+        <div class="fr-fieldset__element">{% render_field filter.form.produit_pret_a_manger %}</div>
+        <div class="fr-fieldset__element">{% render_field filter.form.reference_souches %}</div>
+        <div class="fr-fieldset__element">{% render_field filter.form.reference_clusters %}</div>
+        <div class="fr-fieldset__element">{% render_field filter.form.actions_engagees %}</div>
+        <div class="fr-fieldset__element">{% render_field filter.form.numeros_rappel_conso %}</div>
+
+
         <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
             <button class="fr-btn fr-btn--secondary clear-btn">Effacer</button>
             <button class="fr-btn add-btn">Ajouter</button>
