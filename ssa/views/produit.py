@@ -29,11 +29,15 @@ from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, CategorieDanger
 from ssa.models.evenement_produit import CategorieProduit
 from ssa.tasks import export_task
-from ssa.views.mixins import WithFilteredListMixin
+from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 
 
 class EvenementProduitCreateView(
-    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, WithSireneTokenMixin, CreateView
+    WithFormErrorsAsMessagesMixin,
+    WithAddUserContactsMixin,
+    WithSireneTokenMixin,
+    EvenementProduitValuesMixin,
+    CreateView,
 ):
     form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
@@ -92,9 +96,6 @@ class EvenementProduitCreateView(
         context = super().get_context_data(**kwargs)
         context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
-        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
-        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
         return context
 
 
@@ -146,6 +147,7 @@ class EvenementUpdateView(
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     SuccessMessageMixin,
+    EvenementProduitValuesMixin,
     UpdateView,
 ):
     form_class = EvenementProduitForm
@@ -163,13 +165,6 @@ class EvenementUpdateView(
         kwargs["user"] = self.request.user
         return kwargs
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger"] = json.dumps(CategorieDanger.build_options())
-        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
-        return context
-
     def form_valid(self, form):
         response = super().form_valid(form)
         self.add_user_contacts(form.instance)
@@ -184,7 +179,7 @@ class EvenementProduitListView(WithFilteredListMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options())
+        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
 
         for evenement in context["object_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)

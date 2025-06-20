@@ -1,6 +1,13 @@
+def sort_tree(tree):
+    tree.sort(key=lambda x: x["name"].lower())
+    for node in tree:
+        if node["children"]:
+            sort_tree(node["children"])
+
+
 class WithChoicesToJS:
     @classmethod
-    def build_options(cls):
+    def build_options(cls, sorted_results=False):
         def insert_node(path, value, tree):
             current_level = tree
             for label in path[:-1]:
@@ -20,5 +27,8 @@ class WithChoicesToJS:
             if option["children"] != []:
                 option["isGroupSelectable"] = False
                 option["value"] = 2 * option["value"]  # We can pick it we just need a unique value for TreeselectJS
+
+        if sorted_results:
+            sort_tree(options)
 
         return options
