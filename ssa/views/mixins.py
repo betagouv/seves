@@ -1,6 +1,8 @@
+import json
+
 from core.mixins import WithOrderingMixin
 from ssa.filters import EvenementProduitFilter
-from ssa.models import EvenementProduit
+from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
 
 
 class WithFilteredListMixin(WithOrderingMixin):
@@ -28,3 +30,12 @@ class WithFilteredListMixin(WithOrderingMixin):
         queryset = self.apply_ordering(queryset)
         self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
+
+
+class EvenementProduitValuesMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
+        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
+        return context
