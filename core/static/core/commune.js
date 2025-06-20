@@ -1,3 +1,5 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 export function fetchCommunes(query) {
     return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
         .then(response => response.json())
@@ -19,14 +21,10 @@ export function fetchCommunes(query) {
 
 export function setUpCommuneChoices(element) {
     const choicesCommunes = new Choices(element, {
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
         placeholderValue: 'Recherchez...',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucun résultat trouvé',
         shouldSort: false,
-        searchResultLimit: 10,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
     });
     choicesCommunes.input.element.addEventListener('input', function (event) {
         const query = choicesCommunes.input.element.value

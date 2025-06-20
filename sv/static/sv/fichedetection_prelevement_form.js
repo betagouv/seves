@@ -1,5 +1,7 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 document.prelevementCards =[]
-modalHTMLContent = {}
+let modalHTMLContent = {}
 
 function fetchEspecesEchantillon(query) {
     return fetch(`/sv/api/espece/recherche/?q=${query}`)
@@ -19,14 +21,11 @@ function fetchEspecesEchantillon(query) {
 
 function addChoicesEspeceEchantillon(element){
     const choicesEspece = new Choices(element, {
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
         placeholderValue: 'Tapez minimum 2 caractères',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucun résultat trouvé',
         shouldSort: false,
         searchResultLimit: 50,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
         position: 'top',
     });
     choicesEspece.input.element.addEventListener('input', function (event) {

@@ -1,17 +1,8 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const choicesOrganismeNuisible = new Choices(document.getElementById('id_organisme_nuisible'), {
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        itemSelectText: ''
-    });
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
 
-    const choicesAgentContact = new Choices(document.getElementById('id_agent_contact'), {
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        itemSelectText: ''
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const choicesOrganismeNuisible = new Choices(document.getElementById('id_organisme_nuisible'), choiceJSDefaultOptions);
+    const choicesAgentContact = new Choices(document.getElementById('id_agent_contact'), choiceJSDefaultOptions);
 
     document.getElementById('search-form').addEventListener('reset', function (e) {
         e.preventDefault();

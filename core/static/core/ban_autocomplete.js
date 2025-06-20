@@ -1,3 +1,5 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 /**
  * @typedef {Object} AddressResult
  * @property {string} value
@@ -7,6 +9,7 @@
  * @property {String} customProperties.city
  * @property {String} customProperties.context
  */
+
 /**
  * @param query
  * @param {AbortController=} abortController
@@ -41,14 +44,10 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
 
 export function setUpAddressChoices(element) {
     const addressCommunes = new Choices(element, {
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
         placeholderValue: 'Recherchez...',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucun résultat trouvé',
         shouldSort: false,
-        searchResultLimit: 10,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
     });
     addressCommunes.abortController = new AbortController();
     addressCommunes.abort = () => {

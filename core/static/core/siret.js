@@ -1,3 +1,5 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -69,14 +71,11 @@ export function fetchSiret(value, token) {
 
 export function setUpSiretChoices(element, position){
     const choicesSIRET = new Choices(element, {
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
         placeholderValue: 'N° SIRET',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucun résultat trouvé',
         shouldSort: false,
         searchResultLimit: 20,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
         position: position,
     });
 

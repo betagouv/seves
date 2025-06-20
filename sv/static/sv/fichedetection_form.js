@@ -1,14 +1,12 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 function setUpOrganismeNuisible(){
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('id_organisme_nuisible');
     if(!(element instanceof HTMLElement)) return;
     const choices = new Choices(element, {
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        itemSelectText: '',
+        ...choiceJSDefaultOptions,
         position: 'bottom',
-        searchResultLimit: 10,
     });
 
     choices.passedElement.element.addEventListener("choice", (event)=> {

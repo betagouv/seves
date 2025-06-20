@@ -1,5 +1,7 @@
 import {setUpFreeLinks} from "/static/core/free_links.js";
 import {patchItems, findPath, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 
 document.addEventListener('DOMContentLoaded', () => {
   function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
@@ -125,10 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   disableSourceOptions(typeEvenementInput, sourceInput, false)
   setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
   new Choices(document.getElementById("id_quantification_unite"), {
-    classNames: {
-      containerInner: 'fr-select',
-    },
-    itemSelectText: '',
+    ...choiceJSDefaultOptions,
     position: 'bottom',
     shouldSort: false,
   });

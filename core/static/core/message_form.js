@@ -5,6 +5,8 @@ import {
     isSelectedFileExtensionValid,
     removeEmptyOptionIfExist
 } from "./document.js";
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 
 let currentID = 0
 
@@ -165,9 +167,8 @@ function updateLimitedRecipientsValidation() {
 
 function initializeChoices(element){
     return new Choices(element, {
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
         searchResultLimit: 500,
     })
 }

@@ -1,3 +1,5 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 let pickedDetections = []
 let allChoices = []
 
@@ -21,13 +23,9 @@ function rebuildChoicesOptions(){
 
 function initializeChoices(elementId) {
     options = {
+        ...choiceJSDefaultOptions,
         searchResultLimit: 500,
-        classNames: {
-            containerInner: 'fr-select',
-        },
         removeItemButton: true,
-        itemSelectText: '',
-        noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche détection à sélectionner',
         searchFields: ['label'],
     }

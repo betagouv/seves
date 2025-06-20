@@ -1,9 +1,8 @@
+import {choiceJSDefaultOptions} from "/static/core/_custom_choicesjs.js"
+
 document.addEventListener('DOMContentLoaded', function() {
     const options = {
-        itemSelectText: '',
-        classNames: {
-            containerInner: 'fr-select',
-        },
+        ...choiceJSDefaultOptions,
         removeItemButton: true,
     };
     const select_contacts_structures = document.getElementById('id_contacts_structures');
