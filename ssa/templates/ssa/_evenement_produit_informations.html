@@ -1,3 +1,4 @@
+{% load or_empty_value_tag %}
 <div class="white-container detail-content">
   <h2 class="fr-h6">Informations</h2>
   <div class="fr-container--fluid">
@@ -14,7 +15,7 @@
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-7 bold">N° RASFF/AAC</div>
-            <div class="fr-col-5">{{ object.numero_rasff|default:"nc."  }}</div>
+            <div class="fr-col-5">{{ object.numero_rasff|or_empty_value_tag }}</div>
           </div>
         </div>
       </div>
@@ -22,11 +23,11 @@
         <div class="fr-container--fluid">
           <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-5 bold">Type d'événement</div>
-            <div class="fr-col-7">{{ object.get_type_evenement_display|default:"nc." }}</div>
+            <div class="fr-col-7">{{ object.get_type_evenement_display|or_empty_value_tag }}</div>
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-5 bold">Source</div>
-            <div class="fr-col-7">{{ object.get_source_display|default:"nc."  }}</div>
+            <div class="fr-col-7">{{ object.get_source_display|or_empty_value_tag }}</div>
           </div>
         </div>
       </div>
