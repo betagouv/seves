@@ -48,6 +48,9 @@
     flex: 1 1 250px;
     max-width: 300px;
 }
+.evenements_liste__search-form .choices__item{
+    line-height: 1rem;
+}
 
 .evenements_liste__search-form .single-checkbox-no-legend,
 .evenements_liste__search-form .single-checkbox-no-legend .fr-fieldset__element {

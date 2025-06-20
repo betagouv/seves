@@ -492,3 +492,11 @@ class EvenementProduitListPage(WithTreeSelect):
     @property
     def filter_counter(self):
         return self.page.locator("#more-filters-btn-counter")
+
+    def set_agent_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_agent_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def set_structure_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_structure_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
