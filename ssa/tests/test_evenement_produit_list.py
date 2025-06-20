@@ -187,6 +187,24 @@ def test_more_filters_interactions(live_server, page: Page):
     expect(search_page.filter_counter).not_to_be_visible()
 
 
+def test_more_filters_counter_after_search_is_done(live_server, page: Page):
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
+    search_page.open_sidebar()
+    search_page.reference_souches.fill("Test")
+    search_page.reference_clusters.fill("Test")
+    search_page.add_filters()
+
+    expect(search_page.filter_counter).to_be_visible()
+    expect(search_page.filter_counter).to_have_text("2")
+    search_page.submit_search()
+
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+    expect(search_page.filter_counter).to_be_visible()
+    expect(search_page.filter_counter).to_have_text("2")
+
+
 def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     not_to_be_found_1 = EvenementProduitFactory()
