@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll(".no-tab-look .fr-tabs__panel").forEach(element =>{
         element.addEventListener('dsfr.disclose', event=>{
+            if (!event.target.getAttribute("id").includes("tabpanel")) return;
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
             updateURLParameters('detection', tabId);
