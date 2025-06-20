@@ -353,6 +353,23 @@ def test_will_edit_correct_fiche_detection(live_server, page: Page):
     assert fiche_2.get_update_url() in page.url
 
 
+def test_will_show_action_buttons_for_fiche_detection_after_showing_lieu_modal(live_server, page: Page):
+    evenement = EvenementFactory()
+    fiche_1 = FicheDetectionFactory(evenement=evenement)
+    LieuFactory(fiche_detection=fiche_1)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name=fiche_1.numero_detection).click()
+    expect(page.get_by_role("button", name="Modifier la détection", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name="Supprimer la détection", exact=True)).to_be_visible()
+
+    page.locator(".lieu-initial").get_by_text("Voir le détail", exact=True).click()
+    page.keyboard.press("Escape")
+
+    expect(page.get_by_role("button", name="Modifier la détection", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name="Supprimer la détection", exact=True)).to_be_visible()
+
+
 @pytest.mark.parametrize("createur", [MUS_STRUCTURE, BSV_STRUCTURE])
 def test_visibilite_display_text_when_evenement_locale_and_createur_ac(
     live_server, page: Page, mocked_authentification_user, createur
