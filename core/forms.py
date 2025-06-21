@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField
-from core.models import Document, Contact, Message, Visibilite, Structure
+from core.models import Document, Contact, Message, Visibilite, Structure, Departement
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
 
@@ -314,3 +314,13 @@ class AgentAddForm(DSFRForm):
         if obj:
             queryset = queryset.exclude(id__in=obj.contacts.values_list("id", flat=True))
         self.fields["contacts_agents"].queryset = queryset
+
+
+class DepartementModelChoiceField(forms.ModelChoiceField):
+    def prepare_value(self, value):
+        try:
+            if str(value).isdigit():
+                return Departement.objects.get(id=value).numero
+        except Departement.DoesNotExist:
+            pass
+        return super().prepare_value(value)

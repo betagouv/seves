@@ -420,7 +420,10 @@ class Departement(models.Model):
 
     numero = models.CharField(max_length=3, verbose_name="Numéro", unique=True)
     nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
-    region = models.ForeignKey(Region, on_delete=models.PROTECT, verbose_name="Région")
+    region = models.ForeignKey(Region, on_delete=models.PROTECT, verbose_name="Région", null=True)
+
+    def get_num_name_display(self):
+        return f"{self.numero} - {self.nom}" if self.region is not None else self.nom
 
     def __str__(self):
-        return f"{self.numero} - {self.nom}"
+        return self.nom

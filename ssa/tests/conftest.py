@@ -1,5 +1,7 @@
 import pytest
 
+from core.tests.conftest import create_departement_if_needed  # noqa F403
+
 
 @pytest.fixture
 def assert_models_are_equal():

@@ -32,7 +32,7 @@
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Département</div>
-                                <div class="fr-col-7">{{ etablissement.get_departement_display|default:"nc." }}</div>
+                                <div class="fr-col-7">{{ etablissement.departement.get_num_name_display|default:"nc." }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Pays</div>

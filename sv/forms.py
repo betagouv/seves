@@ -13,7 +13,7 @@ from django_countries.fields import CountryField
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
 from core.form_mixins import DSFRForm
-from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
+from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm, DepartementModelChoiceField
 from core.models import Structure, Visibilite, Message, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
@@ -44,16 +44,6 @@ class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
         self.fields["visibilite"].choices = [
             (value, Visibilite.get_masculine_label(value)) for value, _ in Visibilite.choices
         ]
-
-
-class DepartementModelChoiceField(forms.ModelChoiceField):
-    def prepare_value(self, value):
-        try:
-            if str(value).isdigit():
-                return Departement.objects.get(id=value).numero
-        except Departement.DoesNotExist:
-            pass
-        return super().prepare_value(value)
 
 
 class AdresseLieuDitField(forms.ChoiceField):
