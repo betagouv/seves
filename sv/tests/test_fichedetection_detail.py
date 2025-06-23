@@ -8,7 +8,7 @@ def test_lieu_details(live_server, page):
     "Test que les détails d'un lieu s'affichent correctement dans la modale"
     lieu = LieuFactory(is_etablissement=True)
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
+    page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Adresse ou lieu-dit")).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Commune")).to_be_visible()
@@ -49,7 +49,7 @@ def test_lieu_details_second_lieu(live_server, page):
     "Test que si je clique sur le bouton 'Consulter le détail du lieu' d'un deuxième lieu, les détails de ce lieu s'affichent correctement dans la modale"
     _, lieu2 = LieuFactory.create_batch(2)
     page.goto(f"{live_server.url}{lieu2.fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du lieu {lieu2.nom}").click()
+    page.get_by_title(f"Consulter le détail du lieu {lieu2.nom}").click()
     expect(page.get_by_role("heading", name=lieu2.nom)).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-adresse")).to_contain_text(lieu2.adresse_lieu_dit)
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-commune")).to_contain_text(lieu2.commune)
@@ -75,7 +75,7 @@ def test_lieu_details_of_second_detection_when_first_detection_has_lieu(live_ser
     page.wait_for_timeout(4000)
     page.get_by_role("tab", name=fiche_detection_2.numero_detection).click()
     page.wait_for_timeout(4000)
-    page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
+    page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
     expect(page.locator(".fr-modal--opened")).to_contain_text(lieu.adresse_lieu_dit)
     expect(page.locator(".fr-modal--opened")).to_contain_text(lieu.commune)
@@ -90,7 +90,7 @@ def test_lieu_details_with_no_data(live_server, page):
     "Test que les détails d'un lieu s'affichent correctement dans la modale lorsqu'il n'y a pas de données (sauf pour les champs obligatoires)"
     lieu = LieuFactory.create_minimal()
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du lieu {lieu.nom}").click()
+    page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-adresse")).to_contain_text("nc.")
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-commune")).to_contain_text(lieu.commune)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-code-insee")).to_contain_text("nc.")
@@ -116,7 +116,7 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page):
     prelevement = PrelevementFactory.create_minimal(is_officiel=False)
 
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
+    page.get_by_title(f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-is-officiel")).to_contain_text(
         "oui" if prelevement.is_officiel else "non"
     )
@@ -142,7 +142,7 @@ def test_prelevement_non_officiel_details_second_prelevement(live_server, page):
     prelevement2 = PrelevementFactory(lieu=lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{fiche_detection.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
+    page.get_by_title(f"Consulter le détail du prélèvement {prelevement2.numero_echantillon}").click()
 
     expect(page.get_by_role("heading", name=f"Échantillon {prelevement2.numero_echantillon}")).to_be_visible()
     expect(page.get_by_test_id(f"prelevement-{prelevement2.pk}-type-analyse")).to_contain_text(
@@ -190,7 +190,7 @@ def test_prelevement_details(live_server, page):
     prelevement = PrelevementFactory(lieu=lieu)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("button", name=f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
+    page.get_by_title(f"Consulter le détail du prélèvement {prelevement.numero_echantillon}").click()
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-type-analyse")).to_contain_text(
         prelevement.get_type_analyse_display()
     )
