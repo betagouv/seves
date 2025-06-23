@@ -3,7 +3,7 @@
     gap: 1rem;
 }
 .etablissement-card {
-    background-color: #E3E3FD;
+    background-color: var(--background-contrast-grey);
     margin-bottom: 1rem;
     padding: 1rem;
     width: 400px;

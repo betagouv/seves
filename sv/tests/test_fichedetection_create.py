@@ -8,7 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory, DepartementFactory
-from core.models import Contact, Visibilite
+from core.models import Contact, Visibilite, Region
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
@@ -196,6 +196,8 @@ def test_create_fiche_detection_with_lieu(
     fill_commune,
     choice_js_fill,
 ):
+    region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
+    Departement.objects.get_or_create(numero=59, nom="Nord", region=region)
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
@@ -268,6 +270,8 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     fill_commune,
     choice_js_fill,
 ):
+    region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
+    Departement.objects.get_or_create(numero=59, nom="Nord", region=region)
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
@@ -612,6 +616,8 @@ def test_create_fiche_detection_with_lieu_using_siret(
     choice_js_fill,
     settings,
 ):
+    region = Region.objects.create(nom="Île-de-France")
+    Departement.objects.get_or_create(numero=75, nom="Paris", region=region)
     call_count = {"count": 0}
 
     def handle(route):
@@ -821,6 +827,8 @@ def test_can_add_lieu_with_adresse_auto_complete(
     choice_js_fill,
     choice_js_fill_from_element,
 ):
+    region = Region.objects.create(nom="Île-de-France")
+    Departement.objects.get_or_create(numero=75, nom="Paris", region=region)
     call_count = {"count": 0}
 
     def handle(route):
@@ -878,6 +886,8 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     choice_js_fill_from_element,
 ):
     call_count = {"count": 0}
+    region = Region.objects.create(nom="Île-de-France")
+    Departement.objects.create(numero=75, nom="Paris", region=region)
 
     def handle(route):
         response = {

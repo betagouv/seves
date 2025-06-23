@@ -295,7 +295,7 @@ class EvenementProduitDetailsPage:
         return self.page.locator(".etablissement-card").nth(index)
 
     def etablissement_open_modal(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index).locator(".fr-icon-eye-line").click()
+        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
 
     @property
     def etablissement_modal(self):
@@ -492,3 +492,11 @@ class EvenementProduitListPage(WithTreeSelect):
     @property
     def filter_counter(self):
         return self.page.locator("#more-filters-btn-counter")
+
+    def set_agent_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_agent_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def set_structure_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_structure_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)

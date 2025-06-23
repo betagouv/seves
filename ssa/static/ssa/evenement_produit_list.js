@@ -1,13 +1,6 @@
 import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
 
 document.addEventListener('DOMContentLoaded', function() {
-    function resetAndSubmit(event){
-        const searchForm = document.getElementById('search-form')
-        event.preventDefault()
-        resetForm(searchForm)
-        searchForm.submit()
-    }
-
     function clearSidebarFilters(event) {
         event.preventDefault()
         resetForm(document.getElementById("sidebar"))
@@ -67,8 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function disableCheckboxIfNeeded(){
         document.querySelector("#id_with_free_links").disabled = !document.querySelector("#id_numero").value
     }
-
-    document.getElementById('search-form').addEventListener('reset', resetAndSubmit)
     document.querySelector(".clear-btn").addEventListener("click", clearSidebarFilters)
     document.querySelector(".add-btn").addEventListener("click", addSidebarFilters)
     document.querySelector("#id_numero").addEventListener("input", disableCheckboxIfNeeded)
@@ -93,4 +84,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     sidebarClosingObserver.observe(document.getElementById("sidebar"), {attributes: true})
+
+    const choicesAgentContact = new Choices(document.getElementById('id_agent_contact'), {
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: ''
+    });
+    const choicesStructureContact = new Choices(document.getElementById('id_structure_contact'), {
+        classNames: {containerInner: 'fr-select'},
+        itemSelectText: ''
+    });
+
+    const searchForm = document.getElementById('search-form')
+    searchForm.addEventListener('reset', (event) =>{
+        event.preventDefault()
+        resetForm(searchForm)
+        choicesAgentContact.setChoiceByValue('');
+        choicesStructureContact.setChoiceByValue('');
+        searchForm.submit()
+    })
+
 });

@@ -125,10 +125,11 @@
                   <div class="etablissement-card">
                     <div class="etablissement-card--header">
                       <p class="raison-sociale">{{ etablissement.raison_sociale }}</p>
-                      <button class="fr-btn fr-btn--sm fr-btn--tertiary fr-icon-eye-line"
+                      <button class="fr-btn fr-btn--tertiary"
                               data-fr-opened="false"
                               aria-controls="fr-modal-etablissement-{{ etablissement.pk }}"
                               title="Consulter le détail de l'établissement {{etablissement.raison_sociale}}">
+                        Voir le détail
                       </button>
                     </div>
                     {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.get_type_exploitant_display }}</p>{% endif %}

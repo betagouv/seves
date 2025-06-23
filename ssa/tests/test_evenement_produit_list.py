@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-from core.factories import StructureFactory
+from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
@@ -466,3 +466,33 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(linked_evenement.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
+    evenement_1 = EvenementProduitFactory()
+    evenement_2 = EvenementProduitFactory()
+    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    evenement_2.contacts.add(contact_structure)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_structure_filter(str(contact_structure), choice_js_fill_from_element)
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+
+
+def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
+    evenement_1 = EvenementProduitFactory()
+    evenement_2 = EvenementProduitFactory()
+    contact_agent = ContactAgentFactory(with_active_agent=True)
+    evenement_2.contacts.add(contact_agent)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.set_agent_filter(str(contact_agent), choice_js_fill_from_element)
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()

@@ -2,6 +2,7 @@ import reversion
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from reversion.models import Version
 
 from core.mixins import (
@@ -228,8 +229,8 @@ class EvenementProduit(
             "Catégorie": self.get_categorie_produit_display(),
             "Dénomination": self.denomination,
             "Marque": self.marque,
-            "Lots, DLC/DDM": self.lots,
-            "Description complémentaire": self.description_complementaire,
+            "Lots, DLC/DDM": mark_safe(self.lots.replace("\n", "<br>")),
+            "Description complémentaire": mark_safe(self.description_complementaire.replace("\n", "<br>")),
             "Température de conservation": self.get_temperature_conservation_display(),
         }
 
@@ -243,7 +244,7 @@ class EvenementProduit(
             "Catégorie de danger": self.get_categorie_danger_display(),
             "Précision danger": self.precision_danger,
             "Quantification": quantification,
-            "Évaluation": self.evaluation,
+            "Évaluation": mark_safe(self.evaluation.replace("\n", "<br>")),
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
             "Référence souche": self.reference_souches,
             "Référence cluster": self.reference_clusters,
