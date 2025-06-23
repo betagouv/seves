@@ -169,6 +169,20 @@ class LieuFormDomElements:
         self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
         self.page.get_by_role("option", name=f"{adresse}{extra_str} (Forcer la valeur)", exact=True).click()
 
+    def force_commune(self):
+        self.page.route(
+            "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement&boost=population&limit=15",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body="""[{"nom":"Lille","code":"59350","_score":1.8106081554689044,"departement":{"code":"59","nom":"Nord"}}]""",
+            ),
+        )
+        self.page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill("Lille")
+        self.page.get_by_role("option", name="Lille (59)", exact=True).click()
+
     @property
     def close_btn(self) -> Locator:
         return self.page.get_by_role("button", name="Fermer")
