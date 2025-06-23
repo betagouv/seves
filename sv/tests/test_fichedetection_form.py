@@ -4,6 +4,7 @@ import pytest
 from playwright.sync_api import Page, expect
 from django.urls import reverse
 
+from core.models import Region, Departement
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import StructurePreleveuse, Prelevement
@@ -20,6 +21,8 @@ def create_fixtures_if_needed(db):
 @pytest.fixture(autouse=True)
 def test_goto_fiche_detection_creation_url(live_server, page: Page, choice_js_fill):
     """Ouvre la page de création d'une fiche de détection"""
+    region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
+    Departement.objects.get_or_create(numero=59, nom="Nord", region=region)
     add_fiche_detection_form_url = reverse("sv:fiche-detection-creation")
     return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
 
