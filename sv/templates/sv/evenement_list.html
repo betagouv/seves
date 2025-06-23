@@ -38,7 +38,7 @@
 
     <div class="evenements__list-container">
         <div class="evenements__list-header">
-            <span class="evenements__count">{{ evenement_list.count }} sur un total de {{ page_obj.paginator.count }}</span>
+            <span class="evenements__count">{{ evenement_list.count }} sur un total de {{ total_object_count }}</span>
             <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
                 Extraire
             </button>

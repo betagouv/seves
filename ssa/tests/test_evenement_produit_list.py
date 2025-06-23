@@ -515,3 +515,20 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+
+
+def test_number_of_total_items(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON, createur=StructureFactory())
+    EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    expect(page.get_by_text("2 sur un total de 2", exact=True)).to_be_visible()
+
+    search_page.open_sidebar()
+    search_page.etat.select_option("En cours")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text("1 sur un total de 2", exact=True)).to_be_visible()

@@ -218,7 +218,7 @@ def test_search_with_region_structure_mapping(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero))).to_have_count(1)
     expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_naq.numero))).to_be_visible()
     expect(page.get_by_role("cell", name=str(evenement_structure_naq.numero))).to_be_visible()
-    expect(page.locator("body")).to_contain_text("4 sur un total de 4")
+    expect(page.locator("body")).to_contain_text("4 sur un total de 7")
 
 
 def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
@@ -293,7 +293,7 @@ def test_search_with_crossed_dates(live_server, page: Page, mocked_authentificat
     page.get_by_label("Au").fill("2024-06-19")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_text("0 sur un total de 0")).to_be_visible()
+    expect(page.get_by_text("0 sur un total de 1")).to_be_visible()
 
 
 def test_search_with_state(live_server, page: Page) -> None:

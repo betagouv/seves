@@ -47,7 +47,7 @@
     <main class="main-container">
 
         <div class="evenements_liste__table--header">
-            <div>{{ object_list.count }} sur un total de {{ page_obj.paginator.count }}</div>
+            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
             <form action="{% url 'ssa:export-evenement-produit' %}?{{ request.GET.urlencode }}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">Extraire</button>

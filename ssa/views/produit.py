@@ -222,6 +222,8 @@ class EvenementProduitListView(WithFilteredListMixin, ListView):
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
+
+        context["total_object_count"] = self.get_raw_queryset().count()
         return context
 
 
