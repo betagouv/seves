@@ -18,17 +18,19 @@ class WithFilteredListMixin(WithOrderingMixin):
     def get_default_order_by(self):
         return "numero_evenement"
 
-    def get_queryset(self):
+    def get_raw_queryset(self):
         user = self.request.user
         contact = user.agent.structure.contact_set.get()
-        queryset = (
+        return (
             EvenementProduit.objects.with_departement_prefetched()
             .select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
             .with_nb_liens_libres()
         )
-        queryset = self.apply_ordering(queryset)
+
+    def get_queryset(self):
+        queryset = self.apply_ordering(self.get_raw_queryset())
         self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
