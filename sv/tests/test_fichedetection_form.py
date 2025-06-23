@@ -18,7 +18,7 @@ def create_fixtures_if_needed(db):
 
 
 @pytest.fixture(autouse=True)
-def test_goto_fiche_detection_creation_url(live_server, page: Page, choice_js_fill):
+def test_goto_fiche_detection_creation_url(live_server, page: Page):
     """Ouvre la page de création d'une fiche de détection"""
     add_fiche_detection_form_url = reverse("sv:fiche-detection-creation")
     return page.goto(f"{live_server.url}{add_fiche_detection_form_url}")
@@ -28,7 +28,6 @@ def _add_new_lieu(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
     extra_str="",
     extra_int=0,
 ):
@@ -39,11 +38,7 @@ def _add_new_lieu(
 
     page.wait_for_timeout(100)
 
-    page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Lille")
-    page.get_by_role("option", name="Lille (59)", exact=True).click()
-
+    lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.click()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(1 + extra_int))
     lieu_form_elements.coord_gps_wgs84_longitude_input.click()
@@ -198,10 +193,9 @@ def test_added_lieu_content_in_list(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le contenu du lieu ajouté contient le nom du lieu, la commune et les boutons de suppression et de modification"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
     expect(page.locator("#lieux").get_by_text("nom lieu")).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("nom lieu")
     expect(page.get_by_text("Lille", exact=True)).to_be_visible()
@@ -239,10 +233,9 @@ def test_edit_lieu_button_show_form_in_modal(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le bouton Modifier le lieu affiche le formulaire de modification dans une modal"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Modifier le lieu").click()
 
@@ -254,10 +247,9 @@ def test_edit_lieu_modal_title_and_actions_btn(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le titre de la modal de modification d'un lieu est bien 'Modifier le lieu'"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Modifier le lieu").click()
 
@@ -292,10 +284,9 @@ def test_edit_lieu_form_have_all_fields(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le formulaire de modification d'un lieu contient bien les champs attendus et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier."""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
     # modification du lieu
     page.get_by_role("button", name="Modifier le lieu").click()
 
@@ -333,12 +324,11 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le formulaire de modification d'un lieu contient bien les champs attendus
     et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier si plusieurs lieux sont présentent dans la liste"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill, extra_str=" 2", extra_int=2)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
+    _add_new_lieu(page, form_elements, lieu_form_elements, extra_str=" 2", extra_int=2)
 
     # vérification des valeurs du premier lieu
     page.get_by_role("button", name="Modifier le lieu").first.click()
@@ -368,12 +358,11 @@ def test_add_lieu_form_is_empty_after_edit(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
     fill_commune,
 ):
     """Test que le formulaire d'ajout d'un lieu est vide après la modification d'un lieu"""
     # ajout d'un lieu
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     # modification du lieu
     page.get_by_role("button", name="Modifier le lieu").click()
@@ -400,11 +389,10 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_close_btn_without_sav
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que si je quitte la modification d’un lieu sans enregistrer via le  bouton fermer,
     je dois trouver le formulaire d’ajout d’un lieu vide"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Modifier le lieu").click()
     page.get_by_role("button", name="Fermer").click()
@@ -418,11 +406,10 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que si je quitte la modification d’un lieu sans enregistrer via le bouton annuler,
     je dois trouver le formulaire d’ajout d’un lieu vide"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Modifier le lieu").click()
     page.get_by_label("Modifier le lieu").get_by_role("link", name="Annuler").click()
@@ -436,11 +423,10 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que si je quitte la modification d’un lieu sans enregistrer via la touche echap du clavier,
     je dois trouver le formulaire d’ajout d’un lieu vide"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Modifier le lieu").click()
     page.keyboard.press("Escape")
@@ -457,10 +443,9 @@ def test_delete_lieu_button_show_confirmation_modal(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test qu'une modal de confirmation est affichée lors de la suppression d'un lieu liée à aucun prélèvement"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Supprimer le lieu").click()
 
@@ -472,10 +457,9 @@ def test_delete_lieu_from_list(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le lieu est bien supprimée de la liste des lieux après confirmation"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     page.get_by_role("button", name="Supprimer le lieu").click()
     page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
@@ -594,10 +578,9 @@ def test_add_prelevement_btn_is_visible_if_lieu_exists(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test que le bouton d'ajout d'un prélèvement est visible si au moins un lieu existe dans la liste"""
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
     expect(form_elements.add_prelevement_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_enabled()
 
@@ -627,11 +610,10 @@ def test_prelevement_resultat_card(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
 ):
     """Test le bon affichage du résultat dans la liste des prélèvements"""
     # Ajout d'un lieu nécessaire pour pouvoir ajouter un prélèvement
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
 
     # Ajout du prélèvement initial (Détecté)
     form_elements.add_prelevement_btn.click()
@@ -672,7 +654,7 @@ def test_return_to_correct_detection_after_creation_or_update(live_server, page:
 def test_add_prelevement_en_attente_show_modal(
     page: Page, form_elements: FicheDetectionFormDomElements, lieu_form_elements: LieuFormDomElements, choice_js_fill
 ):
-    _add_new_lieu(page, form_elements, lieu_form_elements, choice_js_fill)
+    _add_new_lieu(page, form_elements, lieu_form_elements)
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements = PrelevementFormDomElements(page)
     prelevement_form_elements.type_analyse_input("première intention").click()
