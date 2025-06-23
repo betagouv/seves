@@ -23,3 +23,6 @@
     max-height: 450px;
     overflow-y: auto;
 }
+.see-more-btn {
+    float: right;
+}
