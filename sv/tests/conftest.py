@@ -2,8 +2,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
 
-from core.tests.conftest import create_departement_if_needed  # noqa F403
-
 from sv.models import StatutReglementaire
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..constants import STATUTS_REGLEMENTAIRES
