@@ -88,9 +88,9 @@ class EvenementListView(WithOrderingMixin, ListView):
     def get_default_order_by(self):
         return "maj"
 
-    def get_queryset(self):
+    def get_raw_queryset(self):
         contact = self.request.user.agent.structure.contact_set.get()
-        queryset = (
+        return (
             Evenement.objects.all()
             .get_user_can_view(self.request.user)
             .with_list_of_lieux_with_commune()
@@ -99,13 +99,16 @@ class EvenementListView(WithOrderingMixin, ListView):
             .optimized_for_list()
             .with_date_derniere_mise_a_jour()
         )
-        queryset = self.apply_ordering(queryset)
+
+    def get_queryset(self):
+        queryset = self.apply_ordering(self.get_raw_queryset())
         self.filter = EvenementFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
+        context["total_object_count"] = self.get_raw_queryset().count()
 
         for evenement in context["evenement_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
