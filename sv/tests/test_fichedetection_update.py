@@ -262,7 +262,6 @@ def test_add_new_lieu(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory()
@@ -272,7 +271,7 @@ def test_add_new_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
@@ -297,7 +296,6 @@ def test_add_multiple_lieux(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     """Test que l'ajout de plusieurs lieux est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory()
@@ -311,7 +309,7 @@ def test_add_multiple_lieux(
         form_elements.add_lieu_btn.click()
         lieu_form_elements.nom_input.fill(lieu.nom)
         lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
-        fill_commune(page)
+        lieu_form_elements.force_commune()
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
         lieu_form_elements.save_btn.click()
@@ -340,7 +338,6 @@ def test_update_lieu(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
@@ -358,7 +355,7 @@ def test_update_lieu(
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
     if new_lieu.is_etablissement:
@@ -420,18 +417,14 @@ def test_update_two_lieux(
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
         if index == 0:
-            choice_js_fill(
-                page,
-                f"#modal-add-lieu-{fiche_detection.lieux.first().id} .fr-modal__content .commune .choices__list--single",
-                "Lille",
-                "Lille (59)",
-            )
+            lieu_form_elements.force_commune()
         else:
-            choice_js_fill(
-                page,
-                f"#modal-add-lieu-{fiche_detection.lieux.last().id} .fr-modal__content .commune .choices__list--single",
-                "Paris",
-                "Paris (75)",
+            lieu_form_elements.force_commune(
+                {
+                    "search_text": "Paris",
+                    "option_name": "Paris (75)",
+                    "response_body": """[{"nom":"Paris","code":"75056","_score":1.8,"departement":{"code":"75","nom":"Île-de-France"}}]""",
+                }
             )
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
@@ -1213,7 +1206,6 @@ def test_add_lieu_add_and_remove_commune(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     fiche_detection = FicheDetectionFactory()
     lieu = LieuFactory.build(code_insee="17000")
@@ -1221,7 +1213,7 @@ def test_add_lieu_add_and_remove_commune(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     page.locator("button[aria-label='Remove item: Lille']").click(force=True)
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
@@ -1281,12 +1273,11 @@ def test_can_add_commune_to_existing_lieu(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     lieu = LieuFactory(commune="")
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     page.get_by_role("button", name="Modifier le lieu").click()
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
 
