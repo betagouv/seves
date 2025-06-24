@@ -361,7 +361,6 @@ def test_add_lieu_form_is_empty_after_edit(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    fill_commune,
 ):
     """Test que le formulaire d'ajout d'un lieu est vide après la modification d'un lieu"""
     # ajout d'un lieu
@@ -371,7 +370,7 @@ def test_add_lieu_form_is_empty_after_edit(
     page.get_by_role("button", name="Modifier le lieu").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, "une adresse modifiée")
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
     lieu_form_elements.save_btn.click()

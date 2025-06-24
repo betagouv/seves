@@ -169,19 +169,31 @@ class LieuFormDomElements:
         self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
         self.page.get_by_role("option", name=f"{adresse}{extra_str} (Forcer la valeur)", exact=True).click()
 
-    def force_commune(self):
+    def force_commune(self, config=None):
+        if not config:
+            config = {
+                "search_text": "Lille",
+                "option_name": "Lille (59)",
+                "response_body": """[{"nom":"Lille","code":"59350","_score":1.8106081554689044,"departement":{"code":"59","nom":"Nord"}}]""",
+            }
+
+        url = (
+            f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement&boost=population&limit=15"
+        )
+
         self.page.route(
-            "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement&boost=population&limit=15",
+            url,
             lambda route: route.fulfill(
                 status=200,
                 content_type="application/json",
-                body="""[{"nom":"Lille","code":"59350","_score":1.8106081554689044,"departement":{"code":"59","nom":"Nord"}}]""",
+                body=config["response_body"],
             ),
         )
+
         self.page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill("Lille")
-        self.page.get_by_role("option", name="Lille (59)", exact=True).click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2000)
+        self.page.locator("*:focus").fill(config["search_text"])
+        self.page.get_by_role("option", name=config["option_name"], exact=True).click()
 
     @property
     def close_btn(self) -> Locator:

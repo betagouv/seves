@@ -193,7 +193,6 @@ def test_create_fiche_detection_with_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
-    fill_commune,
     choice_js_fill,
 ):
     region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
@@ -220,7 +219,7 @@ def test_create_fiche_detection_with_lieu(
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.is_etablissement_checkbox.click()
@@ -267,7 +266,6 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
-    fill_commune,
     choice_js_fill,
 ):
     region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
@@ -289,7 +287,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
-    fill_commune(page)
+    lieu_form_elements.force_commune()
     lieu_form_elements.lieu_site_inspection_input.select_option(str(site_inspection.id))
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
