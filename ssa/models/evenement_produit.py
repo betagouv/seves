@@ -347,6 +347,7 @@ class EvenementProduit(
             Document.TypeDocument.CERTIFICAT_SANITAIRE,
             Document.TypeDocument.COURRIERS_COURRIELS,
             Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
             Document.TypeDocument.AUTRE,
         ]
 

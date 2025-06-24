@@ -181,6 +181,7 @@ class Document(models.Model):
         CERTIFICAT_SANITAIRE = "certificat_sanitaire", "Certificat sanitaire"
         COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
         COMPTE_RENDU = "compte_rendu", "Compte-rendu"
+        PHOTO = "photo", "Photo (du produit, photo de l’établissement…)"
 
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
