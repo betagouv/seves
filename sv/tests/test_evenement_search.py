@@ -161,7 +161,7 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     Effectuer une recherche en sélectionnant uniquement une région.
     Vérifier que tous les résultats retournés sont bien associés à cette région."""
     region, _ = Region.objects.get_or_create(nom="Corse")
-    departement, _ = Departement.objects.get_or_create(numero="2A", nom="Corse-du-Sud", region=region)
+    departement, _ = Departement.objects.get_or_create(nom="Corse-du-Sud", defaults={"region": region, "numero": "2A"})
     lieu = LieuFactory(departement=departement)
     other_lieu = LieuFactory(departement__nom="Ain")
 

@@ -14,7 +14,7 @@
                         {% endif %}
                         <div class="fr-fieldset__element">
                             <label for="search-siret-input-">N° SIRET</label>
-                            <select class="fr-input" type="search" id="search-siret-input-" data-token="{{ sirene_token }}"></select>
+                            <select class="fr-input" type="search" id="search-siret-input-" data-token="{{ sirene_token }}" data-communes-api="https://geo.api.gouv.fr/communes"></select>
                         </div>
                         {{ form.as_dsfr_div }}
                     </div>

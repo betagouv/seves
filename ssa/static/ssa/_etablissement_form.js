@@ -27,13 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return addressChoices
     }
 
-    function configureSiretField(field, addressChoices){
+    function configureSiretField(field, addressChoices, communesApi){
         const choicesSIRET = setUpSiretChoices(field, 'bottom')
         choicesSIRET.passedElement.element.addEventListener("choice", (event)=> {
+            const codeCommune = event.detail.customProperties.code_commune;
             field.closest("dialog").querySelector('[id$=siret]').value = event.detail.customProperties.siret
             field.closest("dialog").querySelector('[id$=raison_sociale]').value = event.detail.customProperties.raison
             field.closest("dialog").querySelector('[id$=commune]').value = event.detail.customProperties.commune
-            field.closest("dialog").querySelector('[id$=code_insee]').value = event.detail.customProperties.code_commune
+            field.closest("dialog").querySelector('[id$=code_insee]').value = codeCommune
             field.closest("dialog").querySelector('[id$=pays]').value = "FR"
 
             if (!!event.detail.customProperties.streetData){
@@ -48,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         field.closest("dialog").querySelector('[id$=agrement]').value = data["numero_agrement"]
                     }
                 });
+
+            if (!!codeCommune && !!communesApi) {
+                fetch(`${communesApi}/${codeCommune}?fields=departement`).then(async response => {
+                    const json = await response.json();
+                    field.closest("dialog").querySelector('[id$=departement]').value = json.departement.code;
+                })
+            }
         })
     }
 
@@ -57,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return
         }
 
-        configureSiretField(siretSelect, addressChoices)
+        configureSiretField(siretSelect, addressChoices, siretSelect.dataset.communesApi)
     }
 
     function setupEtablisementModal(modal){
