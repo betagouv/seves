@@ -633,11 +633,7 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
-    creation_page.page.locator("#categorie-danger .treeselect-input__edit").click()
-    creation_page.page.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
-    creation_page.page.locator("#categorie-danger .shortcut", has_text="Escherichia coli (non STEC - EHEC)").locator(
-        ".."
-    ).click()
+    creation_page.set_categorie_danger_from_shortcut("Escherichia coli (non STEC - EHEC)")
     creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()

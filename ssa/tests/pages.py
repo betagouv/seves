@@ -122,6 +122,11 @@ class EvenementProduitFormPage(WithTreeSelect):
         label = evenement_produit.get_categorie_danger_display()
         self._set_treeselect_option("categorie-danger", label, clear_input)
 
+    def set_categorie_danger_from_shortcut(self, label):
+        self.page.locator("#categorie-danger .treeselect-input__edit").click()
+        self.page.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+        self.page.locator("#categorie-danger .shortcut", has_text=label).locator("..").click()
+
     def set_quantification_unite(self, value):
         self.page.query_selector(".risk-column .choices").click()
         self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)

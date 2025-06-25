@@ -3,7 +3,7 @@ from playwright.sync_api import expect
 from core.factories import StructureFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit
+from ssa.models import EvenementProduit, CategorieDanger
 from ssa.tests.pages import EvenementProduitFormPage
 
 
@@ -130,3 +130,18 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
     assert evenement.contacts.count() == 2
     assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
     assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
+
+
+def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_server, page):
+    evenement: EvenementProduit = EvenementProduitFactory(bacterie=True)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.clear_treeselect("categorie-danger")
+    update_page.set_categorie_danger_from_shortcut("Résidu de Pesticide Biocide")
+
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.categorie_danger == CategorieDanger.PESTICIDE_RESIDU
+    assert evenement.produit_pret_a_manger == ""
