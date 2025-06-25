@@ -130,3 +130,20 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
     assert evenement.contacts.count() == 2
     assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
     assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
+
+
+def test_can_update_and_handle_rappel_conso_on_publised_evenement_produit(live_server, page):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        numeros_rappel_conso=["2000-01-1111"], not_bacterie=True, etat=EvenementProduit.Etat.EN_COURS
+    )
+
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    expect(update_page.page.get_by_text("2000-01-1111", exact=True)).to_be_visible()
+    update_page.delete_rappel_conso("2000-01-1111")
+    update_page.add_rappel_conso("2025-12-1212")
+    update_page.publish()
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+
+    evenement.refresh_from_db()
+    assert evenement.numeros_rappel_conso == ["2025-12-1212"]
