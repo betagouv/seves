@@ -1,5 +1,6 @@
 import json
 from unittest import mock
+from unittest.mock import Mock
 
 from django.http import JsonResponse
 from playwright.sync_api import Page, expect
@@ -450,7 +451,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     evenement = EvenementProduitFactory.build()
     call_count = {"count": 0}
 
-    def handle(route):
+    def handle_insee_siret(route):
         data = {
             "etablissements": [
                 {
@@ -476,7 +477,17 @@ def test_can_create_etablissement_with_sirene_autocomplete(
 
     page.route(
         "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
+        handle_insee_siret,
+    )
+
+    def handle_insee_commune(route):
+        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(
+        "https://geo.api.gouv.fr/communes/.+",
+        handle_insee_commune,
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
@@ -513,6 +524,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.pays.name == "France"
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
+    assert etablissement.departement == Departement.objects.get(nom="Paris")
 
 
 @mock.patch("ssa.views.api.requests.get")
@@ -538,6 +550,13 @@ def test_can_create_etablissement_with_force_siret_value(
         handle,
     )
 
+    handle_insee_commune = Mock(side_effect=Exception("Shound not be called"))
+
+    page.route(
+        "https://geo.api.gouv.fr/communes/.+",
+        handle_insee_commune,
+    )
+
     creation_page = EvenementProduitFormPage(page, live_server.url)
 
     with mock.patch("core.mixins.requests.post") as mock_post:
@@ -560,22 +579,31 @@ def test_can_create_etablissement_with_force_siret_value(
 
     etablissement = Etablissement.objects.get()
     assert etablissement.siret == "12312312312312"
+    handle_insee_commune.assert_not_called()
 
 
 @mock.patch("ssa.views.api.requests.get")
 @mock.patch("ssa.views.api.csv.reader")
 def test_can_create_etablissement_with_full_siren_will_filter_results(
-    mock_csv_reader, mock_requests_get, live_server, page: Page, choice_js_cant_pick, choice_js_fill, settings
+    mock_csv_reader,
+    mock_requests_get,
+    live_server,
+    page: Page,
+    ensure_departements,
+    choice_js_cant_pick,
+    choice_js_fill,
+    settings,
 ):
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
+    ensure_departements("Paris")
     evenement = EvenementProduitFactory.build()
 
     mock_requests_get.return_value.text = "mocked content"
     mock_csv_reader.return_value = None
     call_count = {"count": 0}
 
-    def handle(route):
+    def handle_insee_siret(route):
         data = {
             "etablissements": [
                 {
@@ -617,7 +645,17 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
 
     page.route(
         "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
+        handle_insee_siret,
+    )
+
+    def handle_insee_commune(route):
+        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(
+        "https://geo.api.gouv.fr/communes/.+",
+        handle_insee_commune,
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
@@ -639,6 +677,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     choice_js_fill(
         creation_page.page, 'label[for="search-siret-input-"] ~ div.choices', "12312312322222", expected_value
     )
+    departement = page.locator(".fr-modal__content").locator("visible=true").locator('[id$="-departement"]')
+    expect(departement).to_have_value("75")
 
 
 def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
