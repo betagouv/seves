@@ -86,6 +86,11 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
 
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["categorie_danger"] not in CategorieDanger.dangers_bacteriens():
+            self.cleaned_data["produit_pret_a_manger"] = ""
+
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
