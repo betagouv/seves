@@ -60,4 +60,5 @@ export const tsDefaultOptions = {
     placeholder: "Choisir",
     emptyText: "Pas de résultat",
     direction: "bottom",
+    tagsCountText: "éléments sélectionnés"
 }
