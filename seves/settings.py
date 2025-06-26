@@ -20,6 +20,7 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
+from csp.constants import SELF
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -289,33 +290,38 @@ SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
-CSP_STYLE_SRC = ("'self'", "cdn.jsdelivr.net")
-CSP_FONT_SRC = ("'self'", "cdn.jsdelivr.net")
-CSP_IMG_SRC = (
-    "'self'",
-    "data:",
-    "s3.rbx.io.cloud.ovh.net",
-    "s3.eu-west-par.io.cloud.ovh.net",
-)
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": (SELF,),
+        "script-src": (SELF, "cdn.jsdelivr.net"),
+        "style-src": (SELF, "cdn.jsdelivr.net"),
+        "font-src": (SELF, "cdn.jsdelivr.net"),
+        "img-src": (
+            SELF,
+            "data:",
+            "s3.rbx.io.cloud.ovh.net",
+            "s3.eu-west-par.io.cloud.ovh.net",
+        ),
+        "connect-src": (
+            SELF,
+            "geo.api.gouv.fr",
+            "api.insee.fr",
+            "data.economie.gouv.fr",
+            "api-adresse.data.gouv.fr",
+            "fichiers-publics.agriculture.gouv.fr",
+        ),
+    },
+}
+
 if DEBUG:
-    CSP_IMG_SRC = ("'self'", "data:", "127.0.0.1:9000")
-CSP_CONNECT_SRC = (
-    "'self'",
-    "geo.api.gouv.fr",
-    "api.insee.fr",
-    "data.economie.gouv.fr",
-    "api-adresse.data.gouv.fr",
-    "fichiers-publics.agriculture.gouv.fr",
-)
+    CONTENT_SECURITY_POLICY["DIRECTIVES"]["img-src"] = (SELF, "data:", "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
     SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
     if SENTRY_REPORT_URL:
         query_param = f"sentry_environment={ENVIRONMENT}"
         last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
-        CSP_REPORT_URI = f"{SENTRY_REPORT_URL}{last_token}"
+        CONTENT_SECURITY_POLICY["DIRECTIVES"]["report-uri"] = f"{SENTRY_REPORT_URL}{last_token}"
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")

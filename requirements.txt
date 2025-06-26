@@ -66,7 +66,7 @@ django==5.2.3
     #   sentry-sdk
 django-countries==7.6.1
     # via -r requirements.in
-django-csp==3.8
+django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==5.2.0
     # via -r requirements.in
@@ -116,6 +116,7 @@ nodeenv==1.8.0
     # via pre-commit
 packaging==24.0
     # via
+    #   django-csp
     #   gunicorn
     #   pytest
     #   pytest-rerunfailures
