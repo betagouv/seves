@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Document)
 def bypass_antivirus_scan_if_needed(sender, instance, **kwargs):
-    if instance._state.adding is True and settings.BYPASS_ANTIVIRUS and settings.DEBUG:
+    if instance._state.adding is True and settings.BYPASS_ANTIVIRUS and settings.ENVIRONMENT in ("test", "dev"):
         instance.is_infected = False
 
 
