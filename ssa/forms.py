@@ -50,7 +50,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             }
         ),
     )
-    quantification = forms.CharField(required=False, label="Résultat analytique")
+    quantification = forms.CharField(required=False, label="Résultat analytique du danger")
     quantification_unite = SEVESChoiceField(
         required=False,
         choices=QuantificationUnite.with_opt_group(),
