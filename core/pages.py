@@ -163,7 +163,7 @@ class WithDocumentsPage:
         return self.page.locator(".fr-modal__body").locator("visible=true").locator("#id_document_type")
 
     def open_edit_document(self, id):
-        self.page.locator(f'a[aria-controls="fr-modal-edit-{id}"]').click()
+        self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{id}"]').click()
         expect(self.page.locator(f"#fr-modal-edit-{id}")).to_be_visible()
 
     def document_edit_title(self, id):
