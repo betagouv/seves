@@ -31,12 +31,12 @@ class TypeEvenement(models.TextChoices):
     ALERTE_PRODUIT_UE = "alerte_produit_ue", "Alerte produit UE/INT (RASFF)"
     NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (AAC)"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
+    AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
 
 
 class Source(models.TextChoices):
     AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
     AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
-    AUTOCONTROLE_NON_NOTIFIE = "autocontrole_non_notifie", "Autocontrôle non notifié"
     PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
     AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
@@ -44,7 +44,7 @@ class Source(models.TextChoices):
     DO_LISTERIOSE = "do_listeriose", "DO Listériose"
     CAS_GROUPES = "cas_groupes", "Cas groupés"
     SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
-    AUTRE = "autre", "Autre"
+    AUTRE = "autre", "Signalement autre"
 
 
 class PretAManger(models.TextChoices):
@@ -243,7 +243,7 @@ class EvenementProduit(
         risk_fields = {
             "Catégorie de danger": self.get_categorie_danger_display(),
             "Précision danger": self.precision_danger,
-            "Quantification": quantification,
+            "Résultat analytique du danger": quantification,
             "Évaluation": mark_safe(self.evaluation.replace("\n", "<br>")),
             "Produit prêt à manger (PAM)": self.get_produit_pret_a_manger_display(),
             "Référence souche": self.reference_souches,
