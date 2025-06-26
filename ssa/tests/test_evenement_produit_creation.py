@@ -160,7 +160,7 @@ def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page
     creation_page.type_evenement.select_option(label=TypeEvenement.INVESTIGATION_CAS_HUMAINS.label)
     wanted_values = {s.value for s in EvenementProduit.SOURCES_FOR_HUMAN_CASE}
     expected = [s.label for s in Source if s.value in wanted_values]
-    expected.append("Autre")
+    expected.append("Signalement autre")
     check_select_options(creation_page.page, "id_source", expected, with_default_value=False)
 
 
