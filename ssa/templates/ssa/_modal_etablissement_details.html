@@ -3,7 +3,7 @@
         id="fr-modal-etablissement-{{ etablissement.pk }}" class="fr-modal">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
-            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
                         <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
@@ -14,6 +14,14 @@
                         <h1 id="fr-modal-title-modal-etablissement-{{ etablissement.pk }}"
                             class="fr-modal__title">{{ etablissement.raison_sociale }}</h1>
                         <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Type d'exploitant</div>
+                                <div class="fr-col-7">{{ etablissement.get_type_exploitant_display|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Position dossier</div>
+                                <div class="fr-col-7">{% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% else %}<span class="empty-value">Vide</span>{% endif %}</div>
+                            </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Siret</div>
                                 <div class="fr-col-7">{{ etablissement.siret|or_empty_value_tag }}</div>
@@ -38,15 +46,6 @@
                                 <div class="fr-col-5 bold">Pays</div>
                                 <div class="fr-col-7">{{ etablissement.get_pays_display|or_empty_value_tag }}</div>
                             </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-5 bold">Type d'exploitant</div>
-                                <div class="fr-col-7">{{ etablissement.get_type_exploitant_display|or_empty_value_tag }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-5 bold">Position dossier</div>
-                                <div class="fr-col-7">{% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% else %}<span class="empty-value">Vide</span>{% endif %}</div>
-                            </div>
-
                         </div>
                     </div>
                 </div>

@@ -138,7 +138,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         required=False,
         label="Département",
     )
-    manual_render_fields = ["DELETE"]
+    manual_render_fields = ["DELETE", "position_dossier", "type_exploitant"]
 
     class Meta:
         model = Etablissement
