@@ -124,11 +124,11 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     FROMAGE_TRAITE = "Fromage lait traité", "Produit laitier > Fromage > Fromage lait traité"
     FROMAGE_FONDU = "Fromage fondu et autre", "Produit laitier > Fromage > Fromage fondu et autre"
 
-    CREME_BEURRE = "Produit laitier creme beurre", "Produit laitier > Créme et beurre"
-    CREME_CRUE = "Crème crue", "Produit laitier > Créme et beurre > Crème crue"
-    CREME_TRAITEE = "Crème traitée", "Produit laitier > Créme et beurre > Crème traitée"
-    BEURRE_CRU = "Beurre cru", "Produit laitier > Créme et beurre > Beurre cru"
-    BEURRE_TRAITE = "Beurre traité", "Produit laitier > Créme et beurre > Beurre traité"
+    CREME_BEURRE = "Produit laitier creme beurre", "Produit laitier > Crème et beurre"
+    CREME_CRUE = "Crème crue", "Produit laitier > Crème et beurre > Crème crue"
+    CREME_TRAITEE = "Crème traitée", "Produit laitier > Crème et beurre > Crème traitée"
+    BEURRE_CRU = "Beurre cru", "Produit laitier > Crème et beurre > Beurre cru"
+    BEURRE_TRAITE = "Beurre traité", "Produit laitier > Crème et beurre > Beurre traité"
 
     PRODUIT_RUCHE = "Produit ruche", "Produit de la ruche > Miel et produit de la ruche"
     MIEL = "Miel", "Produit de la ruche > Miel et produit de la ruche > Miel"
@@ -196,22 +196,25 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Produit de céréale > Produit de la boulangerie (pain et viennoiserie)",
     )
 
-    SUBSTITUT_PRODUIT_LAITIER = "Substitut produit laitier", "Analogue végétal > Subtitut végétal de produit laitier"
+    SUBSTITUT_PRODUIT_LAITIER = "Substitut produit laitier", "Analogue végétal > Substitut végétal de produit laitier"
     SUBSTITUT_LAIT_INFANTILE = (
         "Substitut de lait infantile végétal",
-        "Analogue végétal > Subtitut végétal de produit laitier > Substitut de lait infantile végétal",
+        "Analogue végétal > Substitut végétal de produit laitier > Substitut de lait infantile végétal",
     )
-    SUBSTITUT_LAIT = "Substitut de lait", "Analogue végétal > Subtitut végétal de produit laitier > Substitut de lait"
+    SUBSTITUT_LAIT = "Substitut de lait", "Analogue végétal > Substitut végétal de produit laitier > Substitut de lait"
     SUBSTITUT_FROMAGE = (
         "Substitut de fromage",
-        "Analogue végétal > Subtitut végétal de produit laitier > Substitut de fromage",
+        "Analogue végétal > Substitut végétal de produit laitier > Substitut de fromage",
     )
     SUBSTITUT_YAOURT = (
         "Substitut de yaourt",
-        "Analogue végétal > Subtitut végétal de produit laitier > Substitut de yaourt",
+        "Analogue végétal > Substitut végétal de produit laitier > Substitut de yaourt",
     )
-    SUBSTITUT_CARNE = "Substitut végétal de produit carné", "Analogue végétal > Subtitut végétal de produit carné"
-    SUBSTITUT_MER = "Substitut végétal de produit de la mer", "Analogue végétal > Subtitut végétal de produit de la mer"
+    SUBSTITUT_CARNE = "Substitut végétal de produit carné", "Analogue végétal > Substitut végétal de produit carné"
+    SUBSTITUT_MER = (
+        "Substitut végétal de produit de la mer",
+        "Analogue végétal > Substitut végétal de produit de la mer",
+    )
 
     CONDIMENT_SUCRE = "Sucre", "Condiment > Sucre"
     CONDIMENT_VINAIGRE = "Moutarde, vinaigre et vinaigrette", "Condiment > Moutarde, vinaigre et vinaigrette"
