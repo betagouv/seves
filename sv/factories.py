@@ -1,6 +1,7 @@
 import random
 import string
 from datetime import datetime
+from django.utils import timezone
 
 import factory
 from factory.django import DjangoModelFactory
@@ -331,7 +332,7 @@ class EvenementFactory(DjangoModelFactory):
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
         if extracted and create:
             if isinstance(extracted, str):
-                self.date_creation = datetime.strptime(extracted, "%Y-%m-%d").date()
+                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
             else:
                 self.date_creation = extracted
             self.save()
