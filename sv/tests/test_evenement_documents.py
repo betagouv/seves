@@ -49,7 +49,7 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
 
 
 def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
@@ -100,7 +100,7 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
 
 def test_can_see_and_delete_document_on_evenement(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
-    document = DocumentFactory(nom="Test document", description="", content_object=evenement)
+    document = DocumentFactory(nom="Test document", description="", content_object=evenement, is_infected=False)
     evenement.documents.set([document])
     assert evenement.documents.count() == 1
 
@@ -108,7 +108,7 @@ def test_can_see_and_delete_document_on_evenement(live_server, page: Page, mocke
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Test document", exact=True)).to_be_visible()
 
-    page.locator(f'a[aria-controls="fr-modal-{document.id}"]').click()
+    page.locator(f'button[aria-controls="fr-modal-{document.id}"].fr-icon-delete-line').click()
     expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()
     page.get_by_test_id(f"documents-delete-{document.id}").click()
 
@@ -441,9 +441,9 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
-    expect(page.get_by_text("En cours d'analyse antivirus")).to_be_visible()
+    expect(page.get_by_text("Analyse antivirus", exact=True)).to_be_visible()
 
     document.is_infected = True
     document.save()
@@ -453,9 +453,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).not_to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).not_to_be_visible()
-    expect(
-        page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")
-    ).not_to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).not_to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
 
     document.is_infected = False
@@ -466,7 +464,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.get_by_test_id("documents").click()
     expect(page.get_by_text("Name of the document Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".document__details--type", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
 
 
@@ -590,7 +588,7 @@ def test_cant_see_update_document_btn_if_evenement_is_cloture(live_server, page:
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
-    expect(page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]')).not_to_be_visible()
+    expect(page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{document.id}"]')).not_to_be_visible()
 
 
 def test_cant_forge_update_document_if_evenement_is_cloture(client):
@@ -777,9 +775,10 @@ def test_document_name_length_validation(live_server, page: Page, mocked_authent
     assert evenement.documents.count() == 1
     document = evenement.documents.get()
     assert len(document.nom) == 256
+    assert document.is_infected is False
 
     # Test pour le formulaire de mise à jour
-    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{document.id}"]').click()
     expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
     page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill(long_name)
     page.get_by_test_id(f"documents-edit-{document.pk}").click()
@@ -791,10 +790,10 @@ def test_document_name_length_validation(live_server, page: Page, mocked_authent
 def test_can_edit_document_from_message(live_server, page: Page):
     evenement = EvenementFactory()
     message = MessageFactory(content_object=evenement, message_type=Message.MESSAGE)
-    document = DocumentFactory(nom="Test document", description="", content_object=message)
+    document = DocumentFactory(nom="Test document", description="", content_object=message, is_infected=False)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-documents-panel")
-    page.locator(f'a[aria-controls="fr-modal-edit-{document.id}"]').click()
+    page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{document.id}"]').click()
     page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill("New name")
     page.locator(f"#fr-modal-edit-{document.id} #id_description").fill("un commentaire")
     page.get_by_test_id(f"documents-edit-{document.pk}").click()

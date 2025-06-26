@@ -47,3 +47,7 @@ fileignoreconfig:
   checksum: d3c07c3669e197136987b8fc9d4d0a837484e5976455aa31e782032d7964802b
 - filename: core/migrations/0036_alter_document_document_type.py
   checksum: 2e8699e33c60f9a9449163078d9171b0186bb7d490e72cf926d15b6833eda02e
+- filename: core/templates/core/_documents.html
+  checksum: dcfbe5645e746a88ab08eb84661bd4f8f78c9a40d7b8eafa85608253d68554c6
+- filename: core/signals.py
+  checksum: cc815105e3512722970c0210b92e488988efc161f76eacbc1d7de914af9c8de0

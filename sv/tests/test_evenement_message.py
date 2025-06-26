@@ -812,7 +812,7 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     page.get_by_test_id("documents").click()
     expect(page.get_by_role("link", name="Test document")).to_be_visible()
 
-    page.locator(f'a[aria-controls="fr-modal-{document.id}"]').click()
+    page.locator(f'.fr-btns-group button[aria-controls="fr-modal-{document.id}"].fr-icon-delete-line').click()
     expect(page.locator(f"#fr-modal-{document.id}")).to_be_visible()
     page.get_by_test_id(f"documents-delete-{document.id}").click()
 
