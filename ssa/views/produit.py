@@ -85,7 +85,7 @@ class EvenementProduitCreateView(
         self.etablissement_formset.save()
         self.add_user_contacts(self.object)
 
-        messages.success(self.request, "La fiche produit a été créé avec succès.")
+        messages.success(self.request, "La fiche produit a été créée avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 
     def form_invalid(self, form):
