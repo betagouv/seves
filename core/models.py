@@ -322,7 +322,7 @@ class Message(models.Model):
         return self.status == self.Status.BROUILLON
 
     def can_be_updated(self, user):
-        return self.sender == user.agent.contact_set.get() and self.status == self.Status.BROUILLON
+        return self.is_draft and self.sender == user.agent.contact_set.get()
 
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})
