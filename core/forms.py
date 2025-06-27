@@ -274,7 +274,7 @@ class StructureAddForm(DSFRForm):
         queryset=Contact.objects.none(),
         widget=forms.SelectMultiple(),
         label="Ajouter une structure",
-        help_text="Saisissez quelques caractères (nom, département...) pour voir des suggestions",
+        help_text="Saisissez quelques caractères (nom, département…) pour voir des suggestions",
         required=True,
     )
 
@@ -298,7 +298,7 @@ class AgentAddForm(DSFRForm):
     contacts_agents = ContactModelMultipleChoiceField(
         queryset=Contact.objects.none(),
         label="Ajouter un agent",
-        help_text="Saisissez quelques caractères (nom, prénom...) pour voir des suggestions",
+        help_text="Saisissez quelques caractères (nom, prénom…) pour voir des suggestions",
         required=True,
     )
 
