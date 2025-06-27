@@ -28,7 +28,7 @@
                     <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.date_creation }}</a>
                 </td>
                 <td>
-                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.sender.agent.structure }}</a>
+                    <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.sender_structure }}</a>
                 </td>
                 <td>
                     {% if message.recipients.all|length == 0 %}

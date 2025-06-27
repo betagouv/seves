@@ -32,6 +32,7 @@ class WithBlocCommunFieldsMixin(models.Model):
                 title="Fin de suivi",
                 content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
                 sender=user.agent.contact_set.get(),
+                sender_structure=user.agent.structure,
                 message_type=Message.FIN_SUIVI,
                 content_object=self,
             )
