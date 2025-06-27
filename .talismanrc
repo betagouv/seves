@@ -1,6 +1,6 @@
 fileignoreconfig:
 - filename: core/models.py
-  checksum: cb12abff13f430d819ff6054eb682b68f96a3fa966de51ae98c49b2b33158000
+  checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
 - filename: ssa/models/evenement_produit.py
   checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
 - filename: ssa/views/produit.py

@@ -5,7 +5,7 @@ from django.utils import html
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
-from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, MessageFactory
 from core.models import Message
 from core.notifications import notify_message
 from sv.factories import EvenementFactory
@@ -14,7 +14,7 @@ from sv.factories import EvenementFactory
 def create_message_and_notify(
     *, message_type, object, content="My message \n Thanks", recipients=None, recipients_copy=None
 ):
-    message = Message.objects.create(
+    message = MessageFactory(
         title="TITLE",
         content=content,
         sender=ContactAgentFactory(),

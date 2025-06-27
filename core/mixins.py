@@ -111,7 +111,7 @@ class WithMessageMixin:
         context["message_status"] = Message.Status
         message_list = (
             obj.messages.all()
-            .select_related("sender__agent__structure")
+            .select_related("sender__agent__structure", "sender_structure")
             .prefetch_related(
                 "recipients__agent",
                 "recipients__structure",
@@ -238,6 +238,7 @@ class AllowACNotificationMixin(models.Model):
             title="Notification à l'AC",
             content="L'administration a été notifiée de cette fiche.",
             sender=user.agent.contact_set.get(),
+            sender_structure=user.agent.structure,
             content_object=self,
         )
 
