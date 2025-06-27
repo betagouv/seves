@@ -50,7 +50,11 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             }
         ),
     )
-    quantification = forms.CharField(required=False, label="Résultat analytique du danger")
+    quantification = forms.CharField(
+        required=False,
+        label="Résultat analytique du danger",
+        widget=forms.CharField.widget(attrs={"placeholder": "détecté / non détecté, quantification"}),
+    )
     quantification_unite = SEVESChoiceField(
         required=False,
         choices=QuantificationUnite.with_opt_group(),
@@ -103,6 +107,16 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     class Meta:
         model = EvenementProduit
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
+        widgets = {
+            "evaluation": forms.Textarea(
+                attrs={
+                    "placeholder": (
+                        "Préciser si besoin (facultatif) : analyse du danger et du risque par le professionnel, "
+                        "par les autorités, évaluation de la situation"
+                    )
+                },
+            )
+        }
 
 
 class AdresseLieuDitField(forms.ChoiceField):
