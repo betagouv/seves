@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
             containerInner: 'fr-select',
         },
         removeItemButton: true,
+        placeholderValue: "Choisir",
+        searchPlaceholderValue: "Choisir",
+        noResultsText: 'Aucun résultat trouvé',
+        noChoicesText: 'Aucune fiche à sélectionner',
     };
     const select_contacts_structures = document.getElementById('id_contacts_structures');
     const select_contacts_agents = document.getElementById('id_contacts_agents');
