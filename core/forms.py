@@ -226,6 +226,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         if self.cleaned_data["message_type"] == Message.POINT_DE_SITUATION:
             self.cleaned_data["recipients"] = self.obj.contacts.all()
         self.instance.sender = self.sender
+        self.instance.sender_structure = self.sender.agent.structure
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):

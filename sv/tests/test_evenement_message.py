@@ -431,7 +431,7 @@ def test_formatting_contacts_messages_details_page(live_server, page: Page):
     evenement.contacts.add(sender)
     contact = ContactAgentFactory(agent__nom="Reinhardt", agent__prenom="Jean", agent__structure=structure)
     evenement.contacts.add(contact)
-    message = Message.objects.create(content_object=evenement, sender=sender, title="Minor", content="Swing")
+    message = MessageFactory(content_object=evenement, sender=sender, title="Minor", content="Swing")
     message.recipients.set([contact])
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -804,7 +804,7 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     evenement.contacts.add(sender)
     contact = ContactAgentFactory()
     evenement.contacts.add(contact)
-    message = Message.objects.create(content_object=evenement, sender=sender, title="Minor", content="Swing")
+    message = MessageFactory(content_object=evenement, sender=sender, title="Minor", content="Swing")
     message.recipients.set([contact])
     document = DocumentFactory(nom="Test document", description="", content_object=message)
 

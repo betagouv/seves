@@ -285,7 +285,8 @@ class Message(models.Model):
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
 
-    sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages")
+    sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages", null=True)
+    sender_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="messages", null=False)
     recipients = models.ManyToManyField(Contact, related_name="messages_recipient")
     recipients_copy = models.ManyToManyField(Contact, related_name="messages_recipient_copy")
 
