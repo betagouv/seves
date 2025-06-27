@@ -137,6 +137,10 @@ class MessageFactory(DjangoModelFactory):
 
     sender = factory.SubFactory(ContactAgentFactory)
 
+    @factory.lazy_attribute
+    def sender_structure(self):
+        return self.sender.agent.structure
+
     @factory.post_generation
     def recipients(self, create, extracted, **kwargs):
         if not create:
