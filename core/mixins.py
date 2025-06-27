@@ -111,7 +111,7 @@ class WithMessageMixin:
         context["message_status"] = Message.Status
         message_list = (
             obj.messages.all()
-            .select_related("sender__agent__structure")
+            .select_related("sender__agent__structure", "sender_structure")
             .prefetch_related(
                 "recipients__agent",
                 "recipients__structure",
