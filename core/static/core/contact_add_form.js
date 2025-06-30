@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
             containerInner: 'fr-select',
         },
         removeItemButton: true,
-        placeholderValue: "Choisir",
-        searchPlaceholderValue: "Choisir",
+        placeholderValue: "Choisir dans la liste",
+        searchPlaceholderValue: "Choisir dans la liste",
         noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche à sélectionner',
     };
