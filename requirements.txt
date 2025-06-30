@@ -122,7 +122,7 @@ packaging==24.0
     #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.52.0
+playwright==1.53.0
     # via
     #   -r requirements.in
     #   pytest-playwright
