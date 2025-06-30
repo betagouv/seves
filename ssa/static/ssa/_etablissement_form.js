@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const select = currentModal.querySelector('[id$=departement]');
             const option = select.options[select.selectedIndex];
-            baseCard.querySelector('.structure').textContent = `Département : ${option.value} - ${option.innerText}`;
+            baseCard.querySelector('.structure').textContent = `Département : ${option.innerText}`;
         } catch {
             baseCard.querySelector('.structure').textContent = '<span class="empty-value">Vide</span>';
         }
