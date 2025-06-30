@@ -147,7 +147,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
     departement = forms.ModelChoiceField(
-        queryset=Departement.objects.order_by("nom").all(),
+        queryset=Departement.objects.order_by("numero").all(),
         to_field_name="numero",
         required=False,
         label="Département",
