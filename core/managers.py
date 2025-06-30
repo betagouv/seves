@@ -1,3 +1,6 @@
+from typing import Literal
+
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager
 
@@ -33,6 +36,16 @@ class DocumentQueryset(QuerySet):
 class ContactQueryset(QuerySet):
     def with_structure_and_agent(self):
         return self.select_related("structure", "agent")
+
+    def for_apps(self, *apps: None | Literal["sv", "ssa"]):
+        groups = set()
+        for app in apps:
+            match app:
+                case "sv":
+                    groups.add(settings.SV_GROUP)
+                case "ssa":
+                    groups.add(settings.SSA_GROUP)
+        return self.filter(Q(agent__user__groups__name__in=groups) | Q(structure__agent__user__groups__name__in=groups))
 
     def get_mus(self):
         return self.get(structure__niveau2=MUS_STRUCTURE)
