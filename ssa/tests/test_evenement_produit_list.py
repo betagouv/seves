@@ -388,7 +388,7 @@ def test_can_filter_by_departement(live_server, ensure_departements, mocked_auth
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
     search_page.open_sidebar()
-    search_page.departement.select_option("Cantal")
+    search_page.departement.select_option("15 - Cantal")
     search_page.add_filters()
     search_page.submit_search()
 

@@ -201,18 +201,18 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, ensure_d
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement)
     creation_page.open_edit_etablissement()
-    creation_page.current_modal.locator('[id$="-departement"]').select_option("Ain")
+    creation_page.current_modal.locator('[id$="-departement"]').select_option("01 - Ain")
     creation_page.close_etablissement_modal()
 
     creation_page.open_edit_etablissement()
-    creation_page.current_modal.locator('[id$="-departement"]').select_option("Aisne")
+    creation_page.current_modal.locator('[id$="-departement"]').select_option("02 - Aisne")
     creation_page.close_etablissement_modal()
 
     creation_page.submit_as_draft()
     creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
-    assert str(etablissement.departement) == "Aisne"
+    assert str(etablissement.departement) == "02 - Aisne"
 
 
 def test_card_etablissement_content(live_server, page: Page, assert_etablissement_card_is_correct):

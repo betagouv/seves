@@ -84,7 +84,7 @@ class EvenementProduitFilter(
     commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
     departement = django_filters.ModelChoiceFilter(
         label="Département",
-        queryset=Departement.objects.all(),
+        queryset=Departement.objects.order_by("numero").all(),
         empty_label=settings.SELECT_EMPTY_CHOICE,
         field_name="etablissements__departement",
         distinct=True,

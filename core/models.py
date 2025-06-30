@@ -423,8 +423,5 @@ class Departement(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
     region = models.ForeignKey(Region, on_delete=models.PROTECT, verbose_name="Région")
 
-    def get_num_name_display(self):
-        return f"{self.numero} - {self.nom}"
-
     def __str__(self):
-        return self.nom
+        return f"{self.numero} - {self.nom}"
