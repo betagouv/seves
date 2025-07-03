@@ -618,6 +618,7 @@ class MessageForm(BaseMessageForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        kwargs["limit_contacts_to"] = "sv"
         instance = kwargs.get("instance")
         if instance and instance.pk and "recipients_limited_recipients" in self.fields:
             self.fields["recipients_limited_recipients"].widget.attrs["id"] = (

@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 
@@ -10,7 +11,7 @@ from core.pages import CreateMessagePage, UpdateMessagePage
 
 
 def generic_test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill, object):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -189,10 +190,16 @@ def generic_test_can_send_draft_element_suivi(
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     object.contacts.add(contact)
     ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+        structure__niveau1=AC_STRUCTURE,
+        structure__niveau2=MUS_STRUCTURE,
+        structure__libelle=MUS_STRUCTURE,
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
     )
     ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
+        structure__niveau1=AC_STRUCTURE,
+        structure__niveau2=BSV_STRUCTURE,
+        structure__libelle=BSV_STRUCTURE,
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
     )
     message = MessageFactory(
         content_object=object,

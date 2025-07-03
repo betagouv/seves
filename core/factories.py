@@ -1,7 +1,9 @@
 import random
 
 import factory
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
@@ -76,10 +78,16 @@ class ContactAgentFactory(DjangoModelFactory):
 
     @factory.post_generation
     def with_active_agent(self, create, extracted, **kwargs):
-        if not create or not extracted:
+        if not create or (not extracted and not kwargs):
             return
+
+        kwargs.setdefault("with_groups", [])
+
         self.agent.user.is_active = True
         self.agent.user.save()
+        for group in kwargs["with_groups"]:
+            group, _ = Group.objects.get_or_create(name=group)
+            self.agent.user.groups.add(group)
 
 
 class ContactStructureFactory(DjangoModelFactory):
@@ -92,11 +100,17 @@ class ContactStructureFactory(DjangoModelFactory):
 
     @factory.post_generation
     def with_one_active_agent(self, create, extracted, **kwargs):
-        if not create or not extracted:
+        if not create or (not extracted and not kwargs):
             return
+
+        kwargs.setdefault("with_groups", [])
+
         active_agent = AgentFactory(structure=self.structure)
         active_agent.user.is_active = True
         active_agent.user.save()
+        for group in kwargs["with_groups"]:
+            group, _ = Group.objects.get_or_create(name=group)
+            active_agent.user.groups.add(group)
 
 
 class DocumentFactory(DjangoModelFactory):
@@ -151,9 +165,13 @@ class MessageFactory(DjangoModelFactory):
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
-                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+                self.recipients.add(
+                    ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                )
             else:
-                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
+                self.recipients.add(
+                    ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                )
 
     @factory.post_generation
     def recipients_copy(self, create, extracted, **kwargs):
@@ -165,9 +183,13 @@ class MessageFactory(DjangoModelFactory):
         for i in range(random.randint(1, 10)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
-                self.recipients.add(ContactAgentFactory(with_active_agent=True))
+                self.recipients.add(
+                    ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                )
             else:
-                self.recipients.add(ContactStructureFactory(with_one_active_agent=True))
+                self.recipients.add(
+                    ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                )
 
 
 class RegionFactory(DjangoModelFactory):

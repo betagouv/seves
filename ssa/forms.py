@@ -205,6 +205,10 @@ class MessageForm(BaseMessageForm):
             "status",
         ]
 
+    def __init__(self, *args, **kwargs):
+        kwargs["limit_contacts_to"] = "ssa"
+        super().__init__(*args, **kwargs)
+
     def clean(self):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:

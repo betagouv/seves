@@ -1,3 +1,5 @@
+from typing import Literal
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -159,7 +161,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         return self._build_label_with_shortcuts("Copie", structure_ids, css_class_prefix="copie")
 
-    def __init__(self, *args, sender, **kwargs):
+    def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
@@ -167,6 +169,10 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         super().__init__(*args, **kwargs)
         self.fields["status"].widget = forms.HiddenInput()
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+
+        if limit_contacts_to:
+            queryset = queryset.for_apps(limit_contacts_to)
+
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
 
