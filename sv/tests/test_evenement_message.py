@@ -33,6 +33,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_fin_suivi,
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
+    generic_test_only_displays_app_contacts,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -106,7 +107,7 @@ def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js
 
 
 def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -124,19 +125,19 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/login.jpeg")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("login.jpeg", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Cartographie")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("marianne.png", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/favicon/apple-touch-icon.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/favicon/apple-touch-icon.png")
     page.locator("#message-add-document").click()
     expect(page.get_by_text("apple-touch-icon.png", exact=True)).to_be_visible()
 
@@ -167,7 +168,9 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
-    contacts = ContactAgentFactory.create_batch(4, with_active_agent=True)
+    contacts = ContactAgentFactory.create_batch(
+        4, with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
     agents = [contact.agent for contact in contacts]
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -373,7 +376,11 @@ def test_cant_click_on_shortcut_when_only_our_structure(live_server, page: Page,
 def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
-    contact = Contact.objects.create(email="foo@example.com", structure=structure)
+    contact = ContactStructureFactory(
+        email="foo@example.com",
+        structure=structure,
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
     evenement.contacts.add(contact)
     # Test our own structure is never added when using the shortcut
     evenement.contacts.add(mocked_authentification_user.agent.structure.contact_set.get())
@@ -400,8 +407,10 @@ def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
     live_server, page: Page, mocked_authentification_user
 ):
     evenement = EvenementFactory()
-    contact_structure = ContactStructureFactory(with_one_active_agent=True)
-    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_structure = ContactStructureFactory(
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
+    contact_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contacts = [
         contact_structure,
         contact_agent,
@@ -454,8 +463,19 @@ def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_c
 
 def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_fill, choice_js_cant_pick):
     evenement = EvenementFactory()
-    ContactStructureFactory(structure__niveau1="FOO", structure__niveau2="FOO", structure__libelle="FOO")
-    ContactStructureFactory(structure__niveau1="BAR", structure__niveau2="BAR", structure__libelle="BAR", email="")
+    ContactStructureFactory(
+        structure__niveau1="FOO",
+        structure__niveau2="FOO",
+        structure__libelle="FOO",
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
+    ContactStructureFactory(
+        structure__niveau1="BAR",
+        structure__niveau2="BAR",
+        structure__libelle="BAR",
+        email="",
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
@@ -493,7 +513,11 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     nb_structure = 20
     for i in range(nb_structure):
         structure = Structure.objects.create(niveau1=f"Structure {i + 1}", libelle=f"Structure {i + 1}")
-        Contact.objects.create(structure=structure, email=f"structure{i}@test.fr")
+        ContactStructureFactory(
+            with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+            structure=structure,
+            email=f"structure{i}@test.fr",
+        )
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -532,16 +556,19 @@ def test_create_message_adds_agent_and_structure_contacts(
     evenement = EvenementFactory()
 
     # Création du contact destinataire
-    contact = ContactAgentFactory()
+    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contact.agent.user.is_active = True
     contact.agent.user.save()
     ContactStructureFactory(structure=contact.agent.structure)
 
     # Création du contact de copie
-    contact_copy = ContactAgentFactory()
+    contact_copy = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contact_copy.agent.user.is_active = True
     contact_copy.agent.user.save()
-    ContactStructureFactory(structure=contact_copy.agent.structure)
+    ContactStructureFactory(
+        structure=contact_copy.agent.structure,
+        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -607,7 +634,7 @@ def test_create_multiple_messages_adds_contacts_once(
     evenement = EvenementFactory()
 
     # Création du contact destinataire
-    contact = ContactAgentFactory()
+    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contact.agent.user.is_active = True
     contact.agent.user.save()
 
@@ -670,10 +697,12 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
     evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
 
     # Création du contact destinataire
-    contact = ContactAgentFactory()
+    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contact.agent.user.is_active = True
     contact.agent.user.save()
-    ContactStructureFactory(structure=contact.agent.structure)
+    ContactStructureFactory(
+        structure=contact.agent.structure, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -705,7 +734,10 @@ def test_create_message_from_locale_from_same_structure_does_not_changes_visibil
     evenement = EvenementFactory(visibilite=Visibilite.LOCALE)
 
     # Création du contact destinataire
-    contact = ContactAgentFactory(agent__structure=mocked_authentification_user.agent.structure, with_active_agent=True)
+    contact = ContactAgentFactory(
+        agent__structure=mocked_authentification_user.agent.structure,
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -738,10 +770,12 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
     evenement.save()
 
     # Création du contact destinataire
-    contact = ContactAgentFactory()
+    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     contact.agent.user.is_active = True
     contact.agent.user.save()
-    ContactStructureFactory(structure=contact.agent.structure)
+    ContactStructureFactory(
+        structure=contact.agent.structure, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
 
     # Ajout d'un message
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -823,7 +857,7 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
 
 
 def test_message_with_document_exceeding_max_size_shows_validation_error(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     # Créer un fichier temporaire CSV de 16Mo
     file_size = 16 * 1024 * 1024
     fd, temp_path = tempfile.mkstemp(suffix=".csv")
@@ -865,7 +899,7 @@ def test_message_with_document_exceeding_max_size_shows_validation_error(live_se
 
 
 def test_can_add_message_with_document_confirmation_modal_reject(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -894,7 +928,7 @@ def test_can_add_message_with_document_confirmation_modal_reject(live_server, pa
 
 
 def test_can_add_message_with_document_confirmation_modal_confirm(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -1062,7 +1096,7 @@ def test_document_cartographie_upload_disabled_when_invalid_file_added_for_other
 
 
 def test_can_send_message_with_document_confirmation_modal_reject(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
@@ -1087,7 +1121,7 @@ def test_can_send_message_with_document_confirmation_modal_reject(live_server, p
 
 
 def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
-    national_referent = ContactAgentFactory(with_active_agent=True)
+    national_referent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
     national_referent.agent.user.groups.add(referent_national_group)
 
@@ -1114,8 +1148,14 @@ def test_message_with_two_national_referents_in_same_structure_does_not_add_stru
     live_server, page: Page, choice_js_fill
 ):
     contact_structure = ContactStructureFactory()
-    national_referent1 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
-    national_referent2 = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    national_referent1 = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        agent__structure=contact_structure.structure,
+    )
+    national_referent2 = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        agent__structure=contact_structure.structure,
+    )
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
     national_referent1.agent.user.groups.add(referent_national_group)
     national_referent2.agent.user.groups.add(referent_national_group)
@@ -1149,10 +1189,13 @@ def test_message_with_two_national_referents_in_same_structure_does_not_add_stru
 
 
 def test_message_with_national_referent_and_regular_agent_add_structure(live_server, page: Page, choice_js_fill):
-    national_referent = ContactAgentFactory(with_active_agent=True)
+    national_referent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
     national_referent.agent.user.groups.add(referent_national_group)
-    regular_agent = ContactAgentFactory(with_active_agent=True, agent__structure=national_referent.agent.structure)
+    regular_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        agent__structure=national_referent.agent.structure,
+    )
     ContactStructureFactory(structure=national_referent.agent.structure)
 
     evenement = EvenementFactory()
@@ -1185,11 +1228,11 @@ def test_message_with_national_referent_and_regular_agent_add_structure(live_ser
 def test_message_with_national_referent_and_regular_agent_in_different_structures_adds_only_regular_agent_structure(
     live_server, page: Page, choice_js_fill
 ):
-    national_referent = ContactAgentFactory(with_active_agent=True)
+    national_referent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     ContactStructureFactory(structure=national_referent.agent.structure)
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
     national_referent.agent.user.groups.add(referent_national_group)
-    regular_agent = ContactAgentFactory(with_active_agent=True)
+    regular_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     ContactStructureFactory(structure=regular_agent.agent.structure)
 
     evenement = EvenementFactory()
@@ -1221,7 +1264,7 @@ def test_message_with_national_referent_and_regular_agent_in_different_structure
 
 
 def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutbox):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -1250,7 +1293,7 @@ def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutb
 def test_can_add_draft_message_with_document_confirmation_modal_reject(
     live_server, page: Page, choice_js_fill, mailoutbox
 ):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -1278,7 +1321,7 @@ def test_can_add_draft_message_with_document_confirmation_modal_reject(
 def test_can_add_draft_message_with_document_confirmation_modal_confirm(
     live_server, page: Page, choice_js_fill, mailoutbox
 ):
-    active_contact = ContactAgentFactory(with_active_agent=True).agent
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -1565,3 +1608,7 @@ def test_can_see_and_delete_documents_from_draft_message(
         mocked_authentification_user,
         mailoutbox,
     )
+
+
+def test_only_displays_sv_contacts(live_server, page: Page, mocked_authentification_user):
+    generic_test_only_displays_app_contacts(live_server, page, EvenementFactory(), "sv")

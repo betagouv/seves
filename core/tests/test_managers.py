@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -39,6 +40,25 @@ def test_can_be_emailed():
     user.save()
 
     assert list(Contact.objects.can_be_emailed()) == [contact_for_structure, contact_for_active_agent]
+
+
+@pytest.mark.django_db
+def test_filter_contacts_for_apps():
+    no_active_agent = ContactAgentFactory(with_active_agent__with_groups=[])
+    active_agent_sv = ContactAgentFactory(with_active_agent__with_groups=[settings.SV_GROUP])
+    active_agent_ssa = ContactAgentFactory(with_active_agent__with_groups=[settings.SSA_GROUP])
+    structure_no_active_agent = ContactStructureFactory(with_one_active_agent__with_groups=[])
+    structure_active_agent_sv = ContactStructureFactory(with_one_active_agent__with_groups=[settings.SV_GROUP])
+    structure_active_agent_ssa = ContactStructureFactory(with_one_active_agent__with_groups=[settings.SSA_GROUP])
+
+    contacts_sv = set(Contact.objects.for_apps("sv").all())
+    contacts_ssa = set(Contact.objects.for_apps("ssa").all())
+    assert contacts_sv >= {active_agent_sv, structure_active_agent_sv}
+    assert no_active_agent not in contacts_sv
+    assert structure_no_active_agent not in contacts_sv
+    assert contacts_ssa >= {active_agent_ssa, structure_active_agent_ssa}
+    assert no_active_agent not in contacts_ssa
+    assert structure_no_active_agent not in contacts_ssa
 
 
 @pytest.mark.django_db

@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -39,7 +40,9 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
 def generic_test_can_update_draft_message(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):
-    contact, contact_cc, contact_to_add, contact_cc_to_add = ContactAgentFactory.create_batch(4, with_active_agent=True)
+    contact, contact_cc, contact_to_add, contact_cc_to_add = ContactAgentFactory.create_batch(
+        4, with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
     message = MessageFactory(
         content_object=object,
         status=Message.Status.BROUILLON,
@@ -313,3 +316,35 @@ def generic_test_can_see_and_delete_documents_from_draft_message(
     assert document_to_keep in message.documents.all()
     assert document_to_remove not in message.documents.all()
     assert len(mailoutbox) == 1
+
+
+def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa"]):
+    ContactAgentFactory(with_active_agent__with_groups=[])
+    ContactStructureFactory(with_one_active_agent__with_groups=[])
+    sv_contacts = (
+        ContactAgentFactory(with_active_agent__with_groups=[settings.SV_GROUP]),
+        ContactStructureFactory(with_one_active_agent__with_groups=[settings.SV_GROUP]),
+    )
+    ssa_contacts = (
+        ContactStructureFactory(with_one_active_agent__with_groups=[settings.SSA_GROUP]),
+        ContactAgentFactory(with_active_agent__with_groups=[settings.SSA_GROUP]),
+    )
+
+    match app:
+        case "sv":
+            present = sv_contacts
+            absent = ssa_contacts
+        case "ssa":
+            present = ssa_contacts
+            absent = sv_contacts
+
+    page.goto(f"{live_server.url}{record.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+
+    dropdown_items = {item.inner_text() for item in message_page.recipents_dropdown_items.all()}
+
+    # Assert all of the expected items are there
+    assert {contact.display_with_agent_unit for contact in present} <= dropdown_items
+    # Assert none of the unexpected items are there
+    assert dropdown_items - {contact.display_with_agent_unit for contact in absent} == dropdown_items
