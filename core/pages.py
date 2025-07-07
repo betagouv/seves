@@ -17,6 +17,10 @@ class BaseMessagePage(ABC):
     def container_id(self):
         return ""
 
+    @property
+    def recipients_locator(self):
+        return f'{self.container_id} label[for="id_recipients"] ~ div.choices'
+
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
@@ -24,7 +28,7 @@ class BaseMessagePage(ABC):
     def pick_recipient(self, contact, choice_js_fill):
         choice_js_fill(
             self.page,
-            f'{self.container_id} label[for="id_recipients"] ~ div.choices',
+            self.recipients_locator,
             contact.nom,
             contact.contact_set.get().display_with_agent_unit,
             use_locator_as_parent_element=True,
@@ -128,6 +132,10 @@ class BaseMessagePage(ABC):
         cards = self.page.locator(self.container_id).locator("[id^='document_card_'] span")
         texts = [cards.nth(i).inner_text() for i in range(cards.count())]
         return [t for t in texts if t]
+
+    @property
+    def recipents_dropdown_items(self):
+        return self.page.locator(f"{self.recipients_locator} .choices__item")
 
 
 class CreateMessagePage(BaseMessagePage):

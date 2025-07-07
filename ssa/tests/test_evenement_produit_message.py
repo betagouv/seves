@@ -14,6 +14,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_fin_suivi,
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
+    generic_test_only_displays_app_contacts,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -151,3 +152,8 @@ def test_can_see_and_delete_documents_from_draft_message(
         mocked_authentification_user,
         mailoutbox,
     )
+
+
+def test_only_displays_ssa_contacts(live_server, page: Page, mocked_authentification_user):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_only_displays_app_contacts(live_server, page, evenement_produit, "ssa")

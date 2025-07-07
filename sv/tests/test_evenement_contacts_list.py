@@ -3,6 +3,7 @@ from playwright.sync_api import expect
 
 from core.factories import ContactAgentFactory, StructureFactory, ContactStructureFactory
 from core.models import Contact
+from seves import settings
 from sv.factories import EvenementFactory
 
 
@@ -93,7 +94,7 @@ def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
 
 def test_click_on_contact_agent_name_opens_sidebar_for_message(live_server, page):
     evenement = EvenementFactory()
-    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     evenement.contacts.set([contact_agent])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
@@ -108,7 +109,7 @@ def test_click_on_contact_agent_name_opens_sidebar_for_message(live_server, page
 
 def test_click_on_contact_structure_name_opens_sidebar_for_message(live_server, page):
     evenement = EvenementFactory()
-    contact_agent = ContactStructureFactory(with_one_active_agent=True)
+    contact_agent = ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     evenement.contacts.set([contact_agent])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
