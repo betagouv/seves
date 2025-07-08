@@ -1,13 +1,10 @@
+import choicesDefaults from "choicesDefaults"
+
 export function setUpFreeLinks(element, dataElement){
     const freeLinksChoices = new Choices(element, {
+        ...choicesDefaults,
         searchResultLimit: 500,
-        classNames: {
-            containerInner: 'fr-select',
-        },
         removeItemButton: true,
-        shouldSort: false,
-        itemSelectText: '',
-        noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche à sélectionner',
         searchFields: ['label'],
     });

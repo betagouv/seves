@@ -1,3 +1,4 @@
+import choicesDefaults from "choicesDefaults"
 import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -91,14 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     sidebarClosingObserver.observe(document.getElementById("sidebar"), {attributes: true})
 
-    const choicesAgentContact = new Choices(document.getElementById('id_agent_contact'), {
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: ''
-    });
-    const choicesStructureContact = new Choices(document.getElementById('id_structure_contact'), {
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: ''
-    });
+    const choicesAgentContact = new Choices(
+        document.getElementById('id_agent_contact'),
+        choicesDefaults
+    );
+    const choicesStructureContact = new Choices(
+        document.getElementById('id_structure_contact'),
+        choicesDefaults
+    );
 
     const searchForm = document.getElementById('search-form')
     searchForm.addEventListener('reset', (event) =>{

@@ -1,14 +1,10 @@
+import choicesDefaults from "choicesDefaults"
 import {setUpFreeLinks} from "/static/core/free_links.js";
 
 function setUpOrganismeNuisible(){
     const statusToNuisibleId =  JSON.parse(document.getElementById('status-to-organisme-nuisible-id').textContent)
     const element = document.getElementById('id_organisme_nuisible');
-    const choices = new Choices(element, {
-        classNames: {
-            containerInner: 'fr-select',
-        },
-        itemSelectText: ''
-    });
+    const choices = new Choices(element, choicesDefaults);
 
     choices.passedElement.element.addEventListener("choice", (event)=> {
         let found = false;
@@ -26,8 +22,6 @@ function setUpOrganismeNuisible(){
         }
     })
 }
-
-
 
 document.addEventListener('DOMContentLoaded', function() {
     setUpOrganismeNuisible()
