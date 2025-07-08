@@ -170,7 +170,8 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(live_s
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
-    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
+    # Bypass front-end protection
+    page.evaluate("window.skipRebuildDetectionOptions = true")
     form_page.fill_form(fiche_zone_delimitee, zone_infestee, (fiche_detection,), (fiche_detection,))
     form_page.save()
 
@@ -191,7 +192,8 @@ def test_cant_have_same_detection_in_zone_infestee_forms(live_server, page: Page
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
-    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
+    # Bypass front-end protection
+    page.evaluate("window.skipRebuildDetectionOptions = true")
     form_page.fill_form(fiche_zone_delimitee, zone_infestee1, (), (fiche_detection,))
     form_page.add_new_zone_infestee(zone_infestee2, (fiche_detection,))
     form_page.save()
