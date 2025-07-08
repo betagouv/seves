@@ -1,7 +1,10 @@
+import choicesDefaults from "/static/core/choices.js"
+
 let pickedDetections = []
 let allChoices = []
 
 function rebuildDetectionOptions(detectionChoices){
+    if(window.skipRebuildDetectionOptions === true) return;
     detectionChoices.enable()
     const currentChoices = detectionChoices.passedElement.optionsAsChoices()
     const updatedChoices = currentChoices.map(choice => ({
@@ -20,18 +23,13 @@ function rebuildChoicesOptions(){
 }
 
 function initializeChoices(elementId) {
-    options = {
+    let choices = new Choices(document.getElementById(elementId), {
+        ...choicesDefaults,
         searchResultLimit: 500,
-        classNames: {
-            containerInner: 'fr-select',
-        },
         removeItemButton: true,
-        itemSelectText: '',
-        noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche détection à sélectionner',
         searchFields: ['label'],
-    }
-    let choices = new Choices(document.getElementById(elementId), options)
+    })
     choices.passedElement.element.addEventListener('change', event=> {
         initializepickedDetections()
         rebuildChoicesOptions()
