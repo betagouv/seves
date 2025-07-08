@@ -1,13 +1,11 @@
+import choicesDefaults from "choicesDefaults"
+
 document.addEventListener('DOMContentLoaded', function() {
     const options = {
-        itemSelectText: '',
-        classNames: {
-            containerInner: 'fr-select',
-        },
+        ...choicesDefaults,
         removeItemButton: true,
         placeholderValue: "Choisir dans la liste",
         searchPlaceholderValue: "Choisir dans la liste",
-        noResultsText: 'Aucun résultat trouvé',
         noChoicesText: 'Aucune fiche à sélectionner',
     };
     const select_contacts_structures = document.getElementById('id_contacts_structures');

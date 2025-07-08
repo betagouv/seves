@@ -1,7 +1,8 @@
 import {Controller} from "Stimulus";
 import {useStore, createStore} from "StimulusStore"
-import {applicationReady} from "Application";
-import Choices from "Choices";
+import {applicationReady} from "Application"
+import Choices from "Choices"
+import choicesDefaults from "choicesDefaults"
 
 
 const choicesStore = createStore({
@@ -28,11 +29,9 @@ class ZoneInfesteeController extends Controller {
         useStore(this)
 
         this.choices = new Choices(this.formDetectionsSelectTarget, {
+            ...choicesDefaults,
             searchResultLimit: 500,
-            classNames: {containerInner: "fr-select"},
             removeItemButton: true,
-            itemSelectText: "",
-            noResultsText: "Aucun résultat trouvé",
             noChoicesText: "Aucune fiche détection à sélectionner",
             searchFields: ["label"],
         })
