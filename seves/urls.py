@@ -26,6 +26,7 @@ urlpatterns = [
     path("login-eap-callback", OIDCCallbackClass.as_view(), name="custom_oidc_authentication_callback"),
     path("sv/", include("sv.urls", namespace="sv")),
     path("ssa/", include("ssa.urls", namespace="ssa")),
+    path("tiac/", include("tiac.urls", namespace="tiac")),
     path("core/", include("core.urls"), name="core"),
     path("account/", include("account.urls"), name="account"),
     path("oidc/", include("mozilla_django_oidc.urls")),
