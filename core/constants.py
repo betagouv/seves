@@ -1,3 +1,10 @@
+import contextlib
+
+from django.db.models.enums import StrEnum
+from django.urls import reverse_lazy
+from django.utils.functional import classproperty
+from dsfr.enums import ExtendedChoices, enum_property
+
 AC_STRUCTURE = "AC/DAC/DGAL"
 MUS_STRUCTURE = "MUS"
 BSV_STRUCTURE = "SAS/SDSPV/BSV"
@@ -151,3 +158,44 @@ DEPARTEMENTS = [
     ("974", "La Réunion", "La Réunion"),
     ("976", "Mayotte", "Mayotte"),
 ]
+
+
+class Domains(StrEnum, ExtendedChoices):
+    SV = {
+        "value": "sv",
+        "group": "sv_user",
+        "label": "Santé des végétaux",
+        "icon": "fr-icon-leaf-line",
+        "url": reverse_lazy("sv:evenement-liste"),
+        "help_url": "https://doc-sv.seves.beta.gouv.fr",
+    }
+    SSA = {
+        "value": "ssa",
+        "group": "ssa_user",
+        "label": "Sécurité sanitaire des aliments",
+        "icon": "fr-icon-restaurant-line ",
+        "url": reverse_lazy("ssa:evenement-produit-liste"),
+        "help_url": "https://doc-ssa.seves.beta.gouv.fr",
+    }
+    TIAC = {
+        "value": "tiac",
+        "group": "ssa_user",
+        "label": "Sécurité sanitaire des aliments : TIAC & plaintes",
+        "icon": "fr-icon-restaurant-line ",
+        "url": reverse_lazy("tiac:evenement-produit-liste"),
+        "help_url": "https://doc-ssa.seves.beta.gouv.fr",
+    }
+
+    @enum_property
+    def nom(self):
+        return self.label
+
+    @classproperty
+    def groups(cls):
+        return {item.group for item in cls}
+
+    @staticmethod
+    def group_for_value(value):
+        with contextlib.suppress(ValueError):
+            return Domains(value).group
+        return None
