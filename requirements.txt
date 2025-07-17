@@ -53,9 +53,12 @@ cryptography==44.0.1
     #   pyopenssl
 distlib==0.3.8
     # via virtualenv
+dj-importmap==0.0.3
+    # via -r requirements.in
 django==5.2.4
     # via
     #   -r requirements.in
+    #   dj-importmap
     #   django-crispy-forms
     #   django-csp
     #   django-debug-toolbar
@@ -64,6 +67,7 @@ django==5.2.4
     #   django-post-office
     #   django-reversion
     #   django-storages
+    #   django-template-partials
     #   mozilla-django-oidc
     #   sentry-sdk
 django-countries==7.6.1
@@ -85,6 +89,8 @@ django-post-office==3.10.0
 django-reversion==5.1.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
+    # via -r requirements.in
+django-template-partials==24.4
     # via -r requirements.in
 django-widget-tweaks==1.5.0
     # via django-dsfr

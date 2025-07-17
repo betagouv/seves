@@ -59,6 +59,7 @@ if ADMIN_ENABLED:
 # Application definition
 
 INSTALLED_APPS = [
+    "template_partials",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
@@ -72,6 +73,7 @@ INSTALLED_APPS = [
     "ssa",
     "core",
     "account",
+    "importmap",
     "django_filters",
     "post_office",
     "reversion",
@@ -296,8 +298,8 @@ REFERENT_NATIONAL_GROUP = "referent_national"
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": (SELF,),
-        "script-src": (SELF, "cdn.jsdelivr.net"),
-        "style-src": (SELF, NONCE, "cdn.jsdelivr.net"),
+        "script-src": (SELF, NONCE, "cdn.jsdelivr.net"),
+        "style-src": (SELF, "cdn.jsdelivr.net"),
         "font-src": (SELF, "cdn.jsdelivr.net"),
         "img-src": (
             SELF,

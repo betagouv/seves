@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from django.conf import settings
 from playwright.sync_api import Page, expect
 
 
@@ -105,7 +106,9 @@ class BaseMessagePage(ABC):
     def add_document(self):
         self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
         self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
-        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files("static/images/login.jpeg")
+        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files(
+            settings.BASE_DIR / "static/images/login.jpeg"
+        )
         self.page.locator(f"{self.container_id} #message-add-document").click()
 
     def remove_document(self, index):
