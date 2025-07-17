@@ -1,4 +1,4 @@
-{% load static dsfr_tags groups %}
+{% load static importmap dsfr_tags groups %}
 
 <!doctype html>
 <html lang="fr">
@@ -6,9 +6,10 @@
         <meta charset="utf-8">
         <meta name="format-detection" content="telephone=no">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        {% importmap nonce=request.csp_nonce %}
         {% dsfr_css %}
-        {% dsfr_favicon %}
         <link rel="stylesheet" href="{% static 'dsfr/dist/utility/icons/icons.min.css' %}">
+        {% dsfr_favicon %}
         <title>Sèves</title>
         <link rel="stylesheet" href="{% static 'core/base.css' %}">
         <link rel="stylesheet" href="{% static 'core/liens_libres.css' %}">
@@ -20,6 +21,7 @@
         <link rel="stylesheet" href="{% static 'core/document_form.css' %}">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/styles/choices.min.css" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css"/>
+        {% if media %}{% for tag in media.render_css %}{{ tag }}{% endfor %}{% endif %}
         {% block extrahead %}{% endblock %}
     </head>
 
@@ -143,8 +145,10 @@
         {% block content %}{% endblock %}
 
         {% dsfr_js nonce=request.csp_nonce %}
-        <script src="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js"></script>
         <script type="text/javascript" src="{% static 'core/base.js' %}"></script>
+        {% if media %}{% for tag in media.render_js %}{{ tag }}{% endfor %}{% endif %}
+        {# Kept for compatibility for now #}
+        <script src="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js"></script>
         {% block scripts %}{% endblock %}
     </body>
 

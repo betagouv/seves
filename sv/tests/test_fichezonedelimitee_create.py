@@ -135,7 +135,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(l
     form_page.fill_form(fiche, zone_infestee1, detections_hors_zone_infestee, detections_zone_infestee1)
     form_page.add_new_zone_infestee(zone_infestee2, detections_zone_infestee2)
     page.get_by_role("button", name="Supprimer la zone infestée").nth(0).click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_role("alertdialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
     form_page.save()
 
     form_page.check_message_succes()
@@ -170,7 +170,6 @@ def test_cant_have_same_detection_in_hors_zone_infestee_and_zone_infestee(live_s
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
-    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
     form_page.fill_form(fiche_zone_delimitee, zone_infestee, (fiche_detection,), (fiche_detection,))
     form_page.save()
 
@@ -191,9 +190,8 @@ def test_cant_have_same_detection_in_zone_infestee_forms(live_server, page: Page
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
 
     form_page.goto_create_form_page(live_server, evenement)
-    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
     form_page.fill_form(fiche_zone_delimitee, zone_infestee1, (), (fiche_detection,))
-    form_page.add_new_zone_infestee(zone_infestee2, (fiche_detection,))
+    form_page.add_new_zone_infestee(zone_infestee2, (fiche_detection,), bypass_front=True)
     form_page.save()
 
     expect(page.get_by_text("Erreurs dans le(s) formulaire(s) Zones infestées")).to_be_visible()

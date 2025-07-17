@@ -98,7 +98,7 @@ def test_update_can_delete_zone_infestee(live_server, page: Page, choice_js_fill
     page.goto(f"{live_server.url}{to_keep.fiche_zone_delimitee.get_update_url()}")
 
     page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_role("alertdialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
     page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
 
     assert ZoneInfestee.objects.get(id=to_keep.id).nom == "To keep"
@@ -118,7 +118,7 @@ def test_update_can_add_and_delete_zone_infestee(live_server, page: Page, choice
     form_page.add_new_zone_infestee(new_zone_infestee_2, ())
 
     page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_role("alertdialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
     page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
 
     ZoneInfestee.objects.get(nom="To keep")
@@ -142,11 +142,10 @@ def test_update_form_cant_have_same_detection_in_hors_zone_infestee_and_zone_inf
 
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
-    page.wait_for_function("pickedDetections !== undefined")
-    page.evaluate("pickedDetections.push = function() {};")
-    page.evaluate("pickedDetections = [];")  # Bypass front-end protection
-    page.evaluate("window.rebuildChoicesOptions();")
-    form_page.select_detections_in_zone_infestee(0, (fiche_detection,))
+    form_page.force_add_zone_infestee(
+        page.locator("#zones-infestees .fr-col-4:nth-of-type(1) [data-test-locator='form-detections-select']"),
+        fiche_detection,
+    )
     form_page.save()
     expect(
         page.get_by_text(
@@ -164,8 +163,7 @@ def test_update_form_cant_have_same_detection_in_two_zone_infestee(live_server, 
     fiche_detection.save()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     page.goto(f"{live_server.url}{fiche_zone_delimitee.get_update_url()}")
-    page.evaluate("window.rebuildDetectionOptions = function() {};")  # Bypass front-end protection
-    form_page.add_new_zone_infestee(ZoneInfesteeFactory(), (fiche_detection,))
+    form_page.add_new_zone_infestee(ZoneInfesteeFactory(), (fiche_detection,), bypass_front=True)
     form_page.save()
     expect(
         page.get_by_text(
