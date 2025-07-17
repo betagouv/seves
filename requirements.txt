@@ -53,22 +53,32 @@ cryptography==44.0.1
     #   pyopenssl
 distlib==0.3.8
     # via virtualenv
+dj-importmap==0.0.3
+    # via -r requirements.in
 django==5.2.4
     # via
     #   -r requirements.in
+    #   dj-importmap
+    #   django-crispy-forms
     #   django-csp
     #   django-debug-toolbar
+    #   django-dsfr
     #   django-filter
     #   django-post-office
     #   django-reversion
     #   django-storages
+    #   django-template-partials
     #   mozilla-django-oidc
     #   sentry-sdk
 django-countries==7.6.1
     # via -r requirements.in
+django-crispy-forms==2.4
+    # via django-dsfr
 django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==5.2.0
+    # via -r requirements.in
+django-dsfr==3.0.0
     # via -r requirements.in
 django-environ==0.12.0
     # via -r requirements.in
@@ -80,6 +90,10 @@ django-reversion==5.1.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
+django-template-partials==24.4
+    # via -r requirements.in
+django-widget-tweaks==1.5.0
+    # via django-dsfr
 djhtml==3.0.8
     # via -r requirements.in
 execnet==2.1.1
@@ -178,6 +192,7 @@ redis==5.2.1
     # via -r requirements.in
 requests==2.32.3
     # via
+    #   django-dsfr
     #   mozilla-django-oidc
     #   pytest-base-url
 ruff==0.12.3

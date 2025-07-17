@@ -28,3 +28,6 @@ django-countries
 whitenoise
 pytest-split
 pytest-rerunfailures
+django-dsfr
+dj-importmap
+django-template-partials

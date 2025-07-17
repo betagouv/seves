@@ -20,7 +20,7 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
-from csp.constants import SELF
+from csp.constants import SELF, NONCE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -59,15 +59,19 @@ if ADMIN_ENABLED:
 # Application definition
 
 INSTALLED_APPS = [
+    "template_partials",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "sv.apps.SvConfig",
-    "ssa.apps.SsaConfig",
-    "core.apps.CoreConfig",
+    "widget_tweaks",
+    "dsfr",
+    "importmap",
+    "sv",
+    "ssa",
+    "core",
     "account.apps.AccountConfig",
     "django_filters",
     "post_office",
@@ -293,7 +297,7 @@ REFERENT_NATIONAL_GROUP = "referent_national"
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": (SELF,),
-        "script-src": (SELF, "cdn.jsdelivr.net"),
+        "script-src": (SELF, NONCE, "cdn.jsdelivr.net"),
         "style-src": (SELF, "cdn.jsdelivr.net"),
         "font-src": (SELF, "cdn.jsdelivr.net"),
         "img-src": (

@@ -1,4 +1,5 @@
 import logging
+from functools import wraps
 
 from celery.exceptions import OperationalError
 from django.contrib import messages
@@ -6,11 +7,13 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.forms import Media
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 
 from .forms import (
@@ -33,6 +36,30 @@ from .notifications import notify_contact_agent
 from .redirect import safe_redirect
 
 logger = logging.getLogger(__name__)
+
+
+class MediaDefiningMixin(ContextMixin):
+    def __new__(cls):
+        """
+        Wrapping get_context_data in a decorator here ensures get_media is called at the very last moment
+        when all superclasses' get_context_data have been called.
+        """
+
+        def patch_get_context_data(get_context_data):
+            @wraps(get_context_data)
+            def wrapper(*args, **kwargs):
+                context = get_context_data(*args, **kwargs)
+                context.setdefault("media", obj.get_media(**context))
+                return context
+
+            return wrapper
+
+        obj = super().__new__(cls)
+        obj.get_context_data = patch_get_context_data(obj.get_context_data)
+        return obj
+
+    def get_media(self, **context_data) -> Media:
+        return context_data["form"].media if "form" in context_data else Media()
 
 
 class DocumentUploadView(
