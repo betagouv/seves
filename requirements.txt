@@ -180,7 +180,7 @@ requests==2.32.3
     # via
     #   mozilla-django-oidc
     #   pytest-base-url
-ruff==0.12.3
+ruff==0.12.4
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
