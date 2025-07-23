@@ -51,3 +51,5 @@ fileignoreconfig:
   checksum: dcfbe5645e746a88ab08eb84661bd4f8f78c9a40d7b8eafa85608253d68554c6
 - filename: core/signals.py
   checksum: cc815105e3512722970c0210b92e488988efc161f76eacbc1d7de914af9c8de0
+- filename: tiac/models.py
+  checksum: 0983e5fa86cc1b2a56aa36803689ce0e69f18a9c04267b6d0201c20eef7af9a4
