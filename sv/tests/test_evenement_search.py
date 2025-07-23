@@ -3,7 +3,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory, RegionFactory, DepartementFactory
-from core.models import Contact, Departement, Region
+from core.models import Contact
 from core.constants import REGION_STRUCTURE_MAPPING
 from core.factories import StructureFactory
 from core.models import Visibilite
@@ -156,14 +156,13 @@ def test_search_with_invalid_evenement_number(live_server, page: Page):
     ]
 
 
-def test_search_with_region(live_server, page: Page, mocked_authentification_user) -> None:
+def test_search_with_region(live_server, page: Page, mocked_authentification_user, ensure_departements) -> None:
     """Test la recherche d'une fiche détection en utilisant une région
     Effectuer une recherche en sélectionnant uniquement une région.
     Vérifier que tous les résultats retournés sont bien associés à cette région."""
-    region, _ = Region.objects.get_or_create(nom="Corse")
-    departement, _ = Departement.objects.get_or_create(nom="Corse-du-Sud", defaults={"region": region, "numero": "2A"})
-    lieu = LieuFactory(departement=departement)
-    other_lieu = LieuFactory(departement__nom="Ain")
+    [corse, ain, *_] = ensure_departements("Corse-du-Sud", "Ain")
+    lieu = LieuFactory(departement=corse)
+    other_lieu = LieuFactory(departement=ain)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Région").select_option("Corse")
