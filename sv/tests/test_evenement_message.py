@@ -106,7 +106,7 @@ def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js
     assert message.status == Message.Status.FINALISE
 
 
-def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill):
+def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill, tmp_path):
     active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -135,11 +135,13 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
     page.locator("#message-add-document").click()
     expect(page.get_by_text("marianne.png", exact=True)).to_be_visible()
 
+    other_document = tmp_path / "test.txt"
+    other_document.touch()
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/favicon/apple-touch-icon.png")
+    page.locator(".sidebar #id_file").set_input_files(other_document)
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("apple-touch-icon.png", exact=True)).to_be_visible()
+    expect(page.get_by_text("test.txt", exact=True)).to_be_visible()
 
     # Test to delete the 2nd document to see if the server can handle non-consecutive IDs of inputs
     page.locator("#document_remove_1").click()
@@ -163,7 +165,7 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
     assert message.documents.count() == 2
 
     expect(page.get_by_role("link", name="login.jpeg", exact=True)).to_be_visible()
-    expect(page.get_by_role("link", name="apple-touch-icon.png", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="test.txt", exact=True)).to_be_visible()
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
@@ -917,7 +919,7 @@ def test_can_add_message_with_document_confirmation_modal_reject(live_server, pa
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
@@ -946,7 +948,7 @@ def test_can_add_message_with_document_confirmation_modal_confirm(live_server, p
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     page.get_by_test_id("fildesuivi-add-submit").click()
     expect(page.locator("#fr-modal-document-confirmation")).to_be_visible()
@@ -1016,7 +1018,7 @@ def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_confi
 
     page.locator(".sidebar #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     file_input = page.locator(".sidebar #id_file")
-    file_input.set_input_files("static/images/marianne.png")
+    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     expect(file_input).to_be_disabled()
     expect(page.locator("#message-add-document")).to_be_disabled()
@@ -1069,7 +1071,7 @@ def test_empty_document_type_option_after_document_added(live_server, page: Page
     page.get_by_role("link", name="Message").click()
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.locator("#message-add-document").click()
     page.get_by_role("button", name="Ajouter un document").click()
 
@@ -1113,7 +1115,7 @@ def test_can_send_message_with_document_confirmation_modal_reject(live_server, p
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     message_submit_button = page.get_by_test_id("fildesuivi-add-submit")
     message_submit_button.click()
     page.locator("#fr-modal-document-confirmation").get_by_role("button", name="Fermer").click()
@@ -1310,7 +1312,7 @@ def test_can_add_draft_message_with_document_confirmation_modal_reject(
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
     page.locator("#send-without-adding-document").click()
 
@@ -1338,7 +1340,7 @@ def test_can_add_draft_message_with_document_confirmation_modal_confirm(
     page.locator("#id_content").fill("My content \n with a line return")
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files("static/images/marianne.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
     page.locator("#send-with-adding-document").click()
 

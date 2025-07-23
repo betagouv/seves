@@ -1,0 +1,164 @@
+{% load partials dsfr_tags widget_tweaks get_field_label %}
+
+{% partialdef formset-form %}
+    <div
+        id="{{ form.prefix }}-wrapper"
+        class="fr-col-4"
+        data-controller="zone-infestee-form"
+    >
+        <dialog
+            id="{{ form.prefix }}-dialog"
+            class="fr-modal"
+            role="alertdialog"
+            aria-labelledby="fr-modal-delete-zi-confirmation-title"
+        >
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button
+                                    type="button"
+                                    class="fr-btn--close fr-btn"
+                                    aria-controls="{{ form.prefix }}-dialog"
+                                >
+                                    Fermer
+                                </button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="fr-modal-delete-zi-confirmation-title" class="fr-modal__title">Supprimer</h1>
+                                <p>Souhaitez-vous réellement supprimer la zone infestée ?</p>
+                                <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
+                                    <button
+                                        type="button"
+                                        class="fr-btn delete-zone-infestee"
+                                        data-action="zone-infestee-form#onDelete:stop:prevent"
+                                        aria-controls="{{ form.prefix }}-dialog"
+                                    >
+                                        Supprimer
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="fr-btn fr-btn--secondary "
+                                        aria-controls="{{ form.prefix }}-dialog"
+                                    >
+                                        Annuler
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+        <div class="zone-infestees__zone-infestee-form fr-p-3w">
+            {% if form.errors %}
+                <div class="fr-alert fr-alert--error fr-mb-4w">
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ form|get_field_label:field }} : {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                    <button class="fr-btn--close fr-btn btn--close-js" title="Masquer le message">
+                        Masquer le message
+                    </button>
+                </div>
+            {% endif %}
+
+            {% if form.instance.pk %}{{ form.id }}{% endif %}
+
+            <div class="fr-mb-3w">
+                {{ form.nom }}
+            </div>
+            <div class="fr-mb-3w">
+                {{ form.caracteristique_principale }}
+            </div>
+            <div>
+                <div class="fr-mb-1w">{{ form.rayon.label_tag }}</div>
+                <div class="fr-grid-row">
+                    <div class="fr-col">
+                        {{ form.rayon }}
+                    </div>
+                    <div class="fr-col">
+                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
+                            {{ form.unite_rayon }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="fr-mb-1w">{{ form.surface_infestee_totale.label_tag }}</div>
+                <div class="fr-grid-row">
+                    <div class="fr-col">
+                        {{ form.surface_infestee_totale }}
+                    </div>
+                    <div class="fr-col">
+                        <fieldset class="fr-fieldset fr-mt-1w fr-ml-1w">
+                            {{ form.unite_surface_infestee_totale }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+            <div>
+                {{ form.detections|set_data:"zone-infestee-form-target:formDetectionsSelect"|set_data:"action:choice->zone-infestee-form#onChoice removeItem->zone-infestee-form#onRemoveItem"|set_data:"test-locator:form-detections-select" }}
+            </div>
+
+            <ul class="fr-btns-group fr-btns-group--sm fr-mt-2w">
+                <li>
+                    <button
+                        type="button"
+                        class="fr-btn fr-btn--secondary fr-icon-delete-fill"
+                        aria-controls="{{ form.prefix }}-dialog"
+                        data-fr-opened="false"
+                        title="Supprimer la zone infestée">
+                    </button>
+                    <span
+                        class="fr-tooltip fr-placement delete-tooltip"
+                        role="tooltip"
+                        aria-hidden="true"
+                        aria-controls="{{ form.prefix }}-dialog"
+                    >Supprimer la zone infestée</span>
+                    {% with delete_field=form.DELETE|set_data:"zone-infestee-form-target:deleteInput" %}
+                        {{ delete_field.as_hidden }}
+                    {% endwith %}
+                </li>
+            </ul>
+        </div>
+    </div>
+{% endpartialdef %}
+
+<div class="white-container fr-mt-4w" data-controller="zone-infestee-formset">
+    <div class="fr-grid-row">
+        <div class="fr-col">
+            <p class="fr-h6">Zones infestées</p>
+        </div>
+        <div class="fr-col zones-infestees__add-form-btn">
+            <button
+                type="button"
+                id="add-zone-infestee"
+                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                data-action="zone-infestee-formset#onAddForm:prevent:stop"
+            >
+                Ajouter une zone infestée
+            </button>
+        </div>
+    </div>
+    {{ formset.non_form_errors }}
+    <div id="zones-infestees" class="fr-grid-row fr-grid-row--gutters" data-zone-infestee-formset-target="formsetContainer">
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"zone-infestee-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        {% for form in formset %}
+            {% partial formset-form %}
+        {% endfor %}
+    </div>
+
+    <template id="zone-form-template" data-zone-infestee-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form %}{% partial formset-form %}{% endwith %}
+    </template>
+</div>

@@ -6,13 +6,13 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 1adec794440e318ec02b1c28f092bafc05666fa8014342dc3587220d2adf9e4e
+  checksum: fb80a4f4b4e078dcd3b2953f8747d98514473ee314708a8f166ee48315b53faf
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
   checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214
 - filename: sv/views.py
-  checksum: 4ceb0a98828aa09751d33b14f8183c8ac6872bd6bc6e32bc0c605533286e55e6
+  checksum: 17381b88af7a141fb85a3ee9607583404107a063715bed7c406d53d397c63345
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
 - filename: core/views.py
@@ -51,3 +51,5 @@ fileignoreconfig:
   checksum: dcfbe5645e746a88ab08eb84661bd4f8f78c9a40d7b8eafa85608253d68554c6
 - filename: core/signals.py
   checksum: cc815105e3512722970c0210b92e488988efc161f76eacbc1d7de914af9c8de0
+- filename: sv/static/sv/fichezone_form.mjs
+  checksum: fc941aa06b62bbd429a0b06f5c2f937e7ab8b204deb09605e242900cf695795d

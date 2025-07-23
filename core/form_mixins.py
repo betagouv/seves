@@ -3,9 +3,15 @@ from collections import defaultdict
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.forms import Script
 
 from core.fields import MultiModelChoiceField
 from core.models import LienLibre
+
+
+def js_module(src, **attributes):
+    attributes["type"] = "module"
+    return Script(src, **attributes)
 
 
 class DSFRForm(forms.Form):

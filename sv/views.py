@@ -7,6 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Prefetch
+from django.forms import Media
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse, Http404
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -37,6 +38,7 @@ from core.mixins import (
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
+from core.views import MediaDefiningMixin
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,
@@ -509,7 +511,7 @@ class EvenementVisibiliteUpdateView(CanUpdateVisibiliteRequiredMixin, SuccessMes
         return super().form_invalid(form)
 
 
-class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTestMixin, CreateView):
+class FicheZoneDelimiteeCreateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, UserPassesTestMixin, CreateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
@@ -536,6 +538,9 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTest
     def get(self, request, *args, **kwargs):
         self.object = None
         return super().get(request, *args, **kwargs)
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["zone_infestee_formset"].media
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -618,7 +623,7 @@ class FicheZoneDelimiteeCreateView(WithFormErrorsAsMessagesMixin, UserPassesTest
 
 
 class FicheZoneDelimiteeUpdateView(
-    WithAddUserContactsMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
+    MediaDefiningMixin, WithAddUserContactsMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
 ):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
@@ -636,6 +641,9 @@ class FicheZoneDelimiteeUpdateView(
                 "evenement__organisme_nuisible", "evenement__statut_reglementaire"
             )
         )
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["zone_infestee_formset"].media
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

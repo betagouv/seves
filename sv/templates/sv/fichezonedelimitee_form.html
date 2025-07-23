@@ -1,14 +1,5 @@
 {% extends 'sv/base.html' %}
-
-{% load static %}
-
-{% block extrahead %}
-    <link rel="stylesheet" href="{% static 'sv/fichezone_form.css' %}">
-{% endblock %}
-
-{% block scripts %}
-    <script src="{% static 'sv/fichezone_form.js' %}"></script>
-{% endblock %}
+{% load widget_tweaks %}
 
 {% block content %}
     <form action="{% if fiche.id %}{{ fiche.get_update_url }}{% else %}{% url 'sv:fiche-zone-delimitee-creation' %}?evenement={{ request.GET.evenement }}{% endif %}" id="fiche-zone-delimitee-form" method="post" class="fr-container--fluid fr-m-4w">
@@ -77,13 +68,13 @@
             <p class="info-text">Si le statut de la détection change, veuillez la supprimer afin de pouvoir l’affecter à une nouvelle ZI ou une ZI existante.</p>
             <div class="fr-mb-1w">{{ form.detections_hors_zone.label_tag }}</div>
             <div class="fr-grid-row">
-                <div class="fr-col-4">
-                    {{ form.detections_hors_zone }}
+                <div class="fr-col-4" data-controller="hors-zone">
+                    {{ form.detections_hors_zone|set_data:"hors-zone-target:formDetectionsSelect"|set_data:"test-locator:hors-zone-select" }}
                 </div>
             </div>
         </div>
 
-        {% include 'sv/_fichezonedelimitee_form_zones_infestees.html' %}
+        {{ zone_infestee_formset }}
 
         <div class="fichezoneform__zone-tampon white-container fr-mt-4w">
             <p class="fr-h6">Zone tampon</p>
@@ -112,6 +103,5 @@
                 </div>
             </div>
         </div>
-
     </form>
 {% endblock %}

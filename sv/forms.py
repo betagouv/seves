@@ -6,13 +6,15 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
+from django.forms.widgets import Media
 from django.utils.timezone import now
 from django.utils.translation import ngettext
 from django_countries.fields import CountryField
+from dsfr.forms import DsfrBaseForm
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
-from core.form_mixins import DSFRForm
+from core.form_mixins import DSFRForm, js_module
 from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
 from core.models import Structure, Visibilite, Message, Contact
 from sv.form_mixins import (
@@ -331,7 +333,14 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
         return instance
 
 
-class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
+class FicheZoneDelimiteeForm(DsfrBaseForm, WithLatestVersionLocking, forms.ModelForm):
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("sv/fichezone_form.mjs"),),
+            css={"all": ("sv/fichezone_form.css",)},
+        )
+
     date_creation = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"disabled": "", "value": now().strftime("%d/%m/%Y")}),
         required=False,
@@ -422,7 +431,7 @@ class FicheZoneDelimiteeForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm
             detection.save()
 
 
-class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
+class ZoneInfesteeForm(DsfrBaseForm, forms.ModelForm):
     unite_surface_infestee_totale = forms.ChoiceField(
         choices=[(choice.value, choice.value) for choice in ZoneInfestee.UnitesSurfaceInfesteeTotale],
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
@@ -488,7 +497,16 @@ class ZoneInfesteeForm(DSFRForm, forms.ModelForm):
             detection.save()
 
 
-class ZoneInfesteeFormSet(BaseInlineFormSet):
+class ZoneInfesteeBaseFormSet(BaseInlineFormSet):
+    template_name = "sv/forms/zone_infestee_base_set.html"
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("sv/fichezone_form.mjs"),),
+            css={"all": ("sv/fichezone_form.css",)},
+        )
+
     def clean(self):
         super().clean()
 
@@ -511,7 +529,7 @@ class ZoneInfesteeFormSet(BaseInlineFormSet):
 
 
 ZoneInfesteeFormSet = inlineformset_factory(
-    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeFormSet, extra=1, can_delete=True
+    FicheZoneDelimitee, ZoneInfestee, form=ZoneInfesteeForm, formset=ZoneInfesteeBaseFormSet, extra=1, can_delete=True
 )
 
 ZoneInfesteeFormSetUpdate = inlineformset_factory(

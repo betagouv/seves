@@ -684,12 +684,27 @@ class FicheZoneDelimiteeFormPage:
                 field["action"]()
 
     def add_new_zone_infestee(
-        self, zoneinfestee: ZoneInfestee, detections: Optional[Tuple[FicheDetection, ...]] = None
+        self, zoneinfestee: ZoneInfestee, detections: Optional[Tuple[FicheDetection, ...]] = None, bypass_front=False
     ):
         detections = detections or ()
         self.add_zone_infestee_btn.click()
         index = max(int(self.zone_infestee_total_forms.get_attribute("value")) - 1, 0)
-        self.fill_zone_infestee_form(index, zoneinfestee, detections)
+        if bypass_front:
+            self.fill_zone_infestee_form(index, zoneinfestee, ())
+            self.force_add_zone_infestee(
+                self.page.locator(
+                    f"#zones-infestees .fr-col-4:nth-of-type({index + 1}) [data-test-locator='form-detections-select']"
+                ),
+                *detections,
+            )
+        else:
+            self.fill_zone_infestee_form(index, zoneinfestee, detections)
+
+    def force_add_zone_infestee(self, locator: Locator, *detections: FicheDetection):
+        for detection in detections:
+            option = locator.get_by_text(f"{detection}")
+            option.evaluate("element => element.removeAttribute('disabled')")
+            locator.select_option(label=f"{detection}", force=True)
 
     def save(self):
         self.save_changes_btn.click()
