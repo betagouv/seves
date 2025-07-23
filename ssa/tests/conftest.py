@@ -1,27 +1,6 @@
 import pytest
 from playwright.sync_api import expect
 
-from core.models import Region, Departement
-from core.constants import DEPARTEMENTS
-
-
-DEPARTEMENTS_BY_NAME = {it[1]: it for it in DEPARTEMENTS}
-
-
-@pytest.fixture
-def ensure_departements(db):
-    def _ensure_departements(*dpt_names):
-        departements = []
-        for dpt_name in dpt_names:
-            numero, nom, region_name = DEPARTEMENTS_BY_NAME[dpt_name]
-            region, _ = Region.objects.get_or_create(nom=region_name)
-            dpt, _ = Departement.objects.get_or_create(numero=numero, defaults={"region": region, "nom": nom})
-            departements.append(dpt)
-
-        return departements
-
-    return _ensure_departements
-
 
 @pytest.fixture
 def assert_models_are_equal():
