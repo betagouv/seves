@@ -48,7 +48,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.get_temperature_conservation_display(),
         evenement.get_categorie_danger_display(),
         str(evenement.quantification),
-        evenement.quantification_unite,
+        evenement.get_quantification_unite_display(),
         evenement.evaluation,
         evenement.get_produit_pret_a_manger_display(),
         evenement.reference_souches,
