@@ -28,3 +28,4 @@ django-countries
 whitenoise
 pytest-split
 pytest-rerunfailures
+django-dsfr
