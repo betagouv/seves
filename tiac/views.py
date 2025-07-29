@@ -1,5 +1,8 @@
-from django.views.generic import TemplateView
+from django.views.generic import CreateView
+
+from tiac import forms
 
 
-class EvenementProduitListView(TemplateView):
-    template_name = "tiac/base.html"
+class EvenementSimpleCreationView(CreateView):
+    template_name = "tiac/evenement_simple.html"
+    form_class = forms.EvenementSimpleForm
