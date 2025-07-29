@@ -182,7 +182,7 @@ class Domains(StrEnum, ExtendedChoices):
         "group": "ssa_user",
         "label": "TIAC & plaintes",
         "icon": "fr-icon-restaurant-line ",
-        "url": reverse_lazy("tiac:evenement-produit-liste"),
+        "url": reverse_lazy("tiac:evenement-liste"),
         "help_url": "https://doc-ssa.seves.beta.gouv.fr",
     }
 

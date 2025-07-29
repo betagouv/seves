@@ -1,0 +1,33 @@
+{% load dsfr_tags %}
+
+{% if form.non_field_errors %}
+    <section class="fr-my-4v fr-input-group fr-input-group--error">
+        {{ form.non_field_errors }}
+    </section>
+{% endif %}
+
+<fieldset class="fr-fieldset form-fieldset">
+    <legend class="fr-fieldset__legend fr-h6">Le contexte</legend>
+
+    <div class="fr-grid-row fr-grid-row--gutters fr-col">
+        <div class="fr-col-12 fr-col-lg-4">
+            <div class="fr-input-group">
+                <label class="fr-label" for="date-creation-input">Date de création</label>
+                <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+            </div>
+            {% dsfr_form_field form.date_reception %}
+            {% dsfr_form_field form.evenement_origin %}
+            {% dsfr_form_field form.modalites_declaration|dsfr_inline %}
+        </div>
+
+        <div class="fr-col-12 fr-col-lg-4">
+            {% dsfr_form_field form.contenu %}
+        </div>
+
+        <div class="fr-col-12 fr-col-lg-4">
+            {% dsfr_form_field form.notify_ars|dsfr_inline %}
+            {% dsfr_form_field form.nb_sick_persons|dsfr_inline %}
+            {% dsfr_form_field form.follow_up|dsfr_inline %}
+        </div>
+    </div>
+</fieldset>
