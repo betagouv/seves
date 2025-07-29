@@ -1,0 +1,52 @@
+@media (min-width: 62em) {
+    .fr-header__body-row {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        min-height: 4rem;
+    }
+}
+
+.fr-header__tools-links .fr-btn--header-blue {
+    --hover: var(--background-action-high-blue-france-hover);
+    background-color: var(--background-action-high-blue-france);
+    color: var(--text-inverted-blue-france);
+    margin-right: 1rem !important;
+    padding: .5rem 1rem !important;
+}
+
+.fr-header__body-row .fr-btns-group .fr-btn {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.fr-header__body-row .fr-btns-group {
+    margin-top: -1rem;
+}
+
+/* Enbables using Remix icons with DSFR styles */
+.fr-icon-ri[class*=" ri-"]:after,
+.fr-icon-ri[class*=" ri-"]:before,
+.fr-icon-ri[class^=ri-]:after,
+.fr-icon-ri[class^=ri-]:before {
+    background-color: transparent;
+    font-size: var(--icon-size);
+    align-self: baseline;
+}
+
+.fr-header .fr-nav__list {
+    margin: 0;
+}
+
+.fr-tabs__panel{
+    transition: none !important;
+}
+
+.fr-fieldset__legend.fr-h1,
+.fr-fieldset__legend.fr-h2,
+.fr-fieldset__legend.fr-h3,
+.fr-fieldset__legend.fr-h4,
+.fr-fieldset__legend.fr-h5,
+.fr-fieldset__legend.fr-h6 {
+    padding-bottom: 0;
+}
