@@ -1,21 +1,19 @@
-from enum import auto
-
-from django.db.models import IntegerChoices
+from django.db.models import TextChoices
 
 
-class EvenementOrigin(IntegerChoices):
-    ARS = auto(), "ARS"
-    CONSUMER = auto(), "Consommateur"
-    ETABLISSEMENT = auto(), "Établissement"
-    DOCTOR = auto(), "Médecin"
-    OTHER = auto(), "Autre"
+class EvenementOrigin(TextChoices):
+    ARS = "ars", "ARS"
+    CONSUMER = "consommateur", "Consommateur"
+    ETABLISSEMENT = "etablissement", "Établissement"
+    DOCTOR = "medecin", "Médecin"
+    OTHER = "autre", "Autre"
 
 
-class ModaliteDeclarationEvenement(IntegerChoices):
-    SIGNAL_CONSO = auto(), "SignalConso"
-    OTHER = auto(), "Autre"
+class ModaliteDeclarationEvenement(TextChoices):
+    SIGNAL_CONSO = "signalconso", "SignalConso"
+    OTHER = "autre", "Autre"
 
 
-class EvenementFollowUp(IntegerChoices):
-    NONE = auto(), "Aucune suite"
-    INSPECTION = auto(), "Programmation d’un futur contrôle"
+class EvenementFollowUp(TextChoices):
+    NONE = "aucune suite", "Aucune suite"
+    INSPECTION = "programmation futur controle", "Programmation d’un futur contrôle"
