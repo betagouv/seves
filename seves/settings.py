@@ -20,7 +20,7 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
-from csp.constants import SELF
+from csp.constants import SELF, NONCE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -297,7 +297,7 @@ CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": (SELF,),
         "script-src": (SELF, "cdn.jsdelivr.net"),
-        "style-src": (SELF, "cdn.jsdelivr.net"),
+        "style-src": (SELF, NONCE, "cdn.jsdelivr.net"),
         "font-src": (SELF, "cdn.jsdelivr.net"),
         "img-src": (
             SELF,

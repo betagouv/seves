@@ -16,6 +16,6 @@
 }
 
 .fiche-action .fr-translate .fr-translate__btn::before {
-    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
-    mask-image: url(../../../static/icons/system/add-line.svg);
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
