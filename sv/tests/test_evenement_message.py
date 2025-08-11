@@ -137,9 +137,9 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
 
     page.get_by_role("button", name="Ajouter un document").click()
     page.locator(".sidebar #id_document_type").select_option("Autre document")
-    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/favicon/apple-touch-icon.png")
+    page.locator(".sidebar #id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
     page.locator("#message-add-document").click()
-    expect(page.get_by_text("apple-touch-icon.png", exact=True)).to_be_visible()
+    expect(page.get_by_text("login.jpeg", exact=True)).to_have_count(2)
 
     # Test to delete the 2nd document to see if the server can handle non-consecutive IDs of inputs
     page.locator("#document_remove_1").click()
@@ -162,8 +162,7 @@ def test_can_add_and_see_message_multiple_documents(live_server, page: Page, cho
     message = Message.objects.get()
     assert message.documents.count() == 2
 
-    expect(page.get_by_role("link", name="login.jpeg", exact=True)).to_be_visible()
-    expect(page.get_by_role("link", name="apple-touch-icon.png", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="login.jpeg", exact=True)).to_have_count(2)
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):

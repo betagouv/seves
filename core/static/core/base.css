@@ -178,8 +178,8 @@ label:has(+ .choices select[data-required="true"])::after,
     max-height: 2.5rem;
 }
 .details-top-row--actions .fr-translate__btn::before {
-    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
-    mask-image: url(../../../static/icons/system/add-line.svg);
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
 .details-top-row--actions .fr-translate__btn{
     height: 100%;
