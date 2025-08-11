@@ -80,7 +80,7 @@ django-environ==0.12.0
     # via -r requirements.in
 django-filter==25.1
     # via -r requirements.in
-django-post-office==3.9.1
+django-post-office==3.10.0
     # via -r requirements.in
 django-reversion==5.1.0
     # via -r requirements.in
@@ -189,11 +189,11 @@ requests==2.32.3
     #   django-dsfr
     #   mozilla-django-oidc
     #   pytest-base-url
-ruff==0.12.3
+ruff==0.12.4
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.32.0
+sentry-sdk[django]==2.33.1
     # via -r requirements.in
 six==1.16.0
     # via
