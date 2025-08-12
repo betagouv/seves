@@ -15,4 +15,9 @@ urlpatterns = [
         views.EvenementSimpleCreationView.as_view(),
         name="evenement-simple-creation",
     ),
+    path(
+        "evenement-simple/<str:numero>/",
+        views.EvenementSimpleDetailView.as_view(),
+        name="evenement-simple-details",
+    ),
 ]

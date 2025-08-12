@@ -1,5 +1,6 @@
 import reversion
 from django.db import models, transaction
+from django.urls import reverse
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
@@ -8,8 +9,8 @@ from core.mixins import (
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
 )
+from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure
-from ssa.models import EvenementProduit
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
 
 
@@ -20,11 +21,12 @@ class EvenementSimple(
     WithEtatMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
+    WithBlocCommunFieldsMixin,
     models.Model,
 ):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    date_reception = models.DateTimeField(verbose_name="Date de réception à la DD(ETS)PP")
+    date_reception = models.DateField(verbose_name="Date de réception à la DD(ETS)PP")
     evenement_origin = models.CharField(
         choices=EvenementOrigin.choices, verbose_name="Signalement déclaré par", blank=True
     )
@@ -48,7 +50,7 @@ class EvenementSimple(
         with transaction.atomic():
             with reversion.create_revision():
                 if not self.numero_annee and not self.numero_evenement:
-                    annee, numero = EvenementProduit._get_annee_and_numero()
+                    annee, numero = EvenementSimple._get_annee_and_numero()
                     self.numero_annee = annee
                     self.numero_evenement = numero
                 super().save(*args, **kwargs)
@@ -59,3 +61,12 @@ class EvenementSimple(
 
     def __str__(self):
         return self.numero
+
+    def get_absolute_url(self):
+        numero = f"{self.numero_annee}.{self.numero_evenement}"
+        return reverse("tiac:evenement-simple-details", kwargs={"numero": numero})
+
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
