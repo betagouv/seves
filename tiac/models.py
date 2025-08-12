@@ -52,3 +52,10 @@ class EvenementSimple(
                     self.numero_annee = annee
                     self.numero_evenement = numero
                 super().save(*args, **kwargs)
+
+    @property
+    def numero(self):
+        return f"T-{self.numero_annee}.{self.numero_evenement}"
+
+    def __str__(self):
+        return self.numero

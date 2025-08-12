@@ -55,7 +55,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.reference_clusters,
         evenement.get_actions_engagees_display(),
         ",".join(evenement.numeros_rappel_conso),
-        "2024.22",
+        "A-2024.22",
         "",
         "",
         "",
@@ -178,9 +178,9 @@ def test_export_evenement_produit_from_ui(live_server, mocked_authentification_u
     task = Export.objects.get()
     assert task.task_done is True
     lines = task.file.read().decode("utf-8").split("\n")
-    assert lines[1].startswith('"2025.21",')
-    assert lines[2].startswith('"2025.2",')
-    assert lines[3].startswith('"2025.1",')
+    assert lines[1].startswith('"A-2025.21",')
+    assert lines[2].startswith('"A-2025.2",')
+    assert lines[3].startswith('"A-2025.1",')
     assert len(lines) == 5
 
     assert len(mailoutbox) == 1

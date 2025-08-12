@@ -195,7 +195,8 @@ class EvenementProduit(
     SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
-        return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})
+        numero = f"{self.numero_annee}.{self.numero_evenement}"
+        return reverse("ssa:evenement-produit-details", kwargs={"numero": numero})
 
     def get_update_url(self):
         return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})
@@ -208,6 +209,10 @@ class EvenementProduit(
                     self.numero_annee = annee
                     self.numero_evenement = numero
                 super().save(*args, **kwargs)
+
+    @property
+    def numero(self):
+        return f"A-{self.numero_annee}.{self.numero_evenement}"
 
     def __str__(self):
         return self.numero
