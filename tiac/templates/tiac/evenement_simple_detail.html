@@ -1,0 +1,33 @@
+{% extends "tiac/base.html" %}
+{% load static %}
+{% load etat_tags %}
+{% load or_empty_value_tag %}
+
+{% block content %}
+  <main class="main-container">
+    <div>
+      <div class="details-top-row">
+        <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+
+        {% if not object.is_draft %}
+          {% include "core/_details_toogle.html" with pk=object.pk %}
+        {% endif %}
+
+        <div class="details-top-row--actions">
+          <ul class="fr-btns-group fr-btns-group--inline-md">
+
+          </ul>
+        </div>
+
+      </div>
+      <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
+    </div>
+
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
+
+    <div id="detail-content">
+      {% include "tiac/_evenement_simple_informations.html" %}
+
+    </div>
+  </main>
+{% endblock content %}
