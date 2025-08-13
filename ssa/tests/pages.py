@@ -257,8 +257,8 @@ class EvenementProduitFormPage(WithTreeSelect):
     def delete_etablissement(self, index):
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
-    def add_free_link(self, numero, choice_js_fill):
-        choice_js_fill(self.page, "#liens-libre .choices", str(numero), "Événement produit : " + str(numero))
+    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
     @property
     def error_messages(self):

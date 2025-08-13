@@ -12,6 +12,7 @@ from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
+from tiac.factories import EvenementSimpleFactory
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",
@@ -283,6 +284,22 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
     expected = sorted([evenement_1.numero, evenement_2.numero])
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory.build()
+    evenement_simple = EvenementSimpleFactory(etat=EvenementProduit.Etat.EN_COURS)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Évenement simple : ")
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    evenement = EvenementProduit.objects.get()
+    lien = LienLibre.objects.get()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == evenement_simple
 
 
 def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
