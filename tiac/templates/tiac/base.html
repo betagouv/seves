@@ -2,5 +2,17 @@
 {% load static %}
 
 {% block extrahead %}
-        <link rel="stylesheet" href="{% static 'tiac/base.css' %}"/>
+    <link rel="stylesheet" href="{% static 'tiac/base.css' %}"/>
 {% endblock %}
+
+{% block product_nav %}
+    <li>
+        <button class="fr-btn fr-btn--header-blue fr-my-auto">
+            <span class="fr-icon-add-line" aria-hidden="true"></span>
+            <a href="{% url 'tiac:evenement-simple-creation' %}">Créer un événement</a>
+        </button>
+    </li>
+    <li class="{% block highlight_menu_evenements %}{% endblock %}">
+        <a class="fr-btn" href="{% url 'tiac:evenement-liste' %}">Liste des événements</a>
+    </li>
+{% endblock product_nav %}

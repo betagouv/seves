@@ -1,5 +1,4 @@
 from django.urls import path
-from django.views.generic import RedirectView
 
 from tiac import views
 
@@ -7,11 +6,11 @@ app_name = "tiac"
 urlpatterns = [
     path(
         "evenements/",
-        RedirectView.as_view(pattern_name="tiac:evenement-simple-creation", permanent=False),
+        views.EvenementListView.as_view(),
         name="evenement-liste",
     ),
     path(
-        "evenement-simple/",
+        "evenement-simple/creation",
         views.EvenementSimpleCreationView.as_view(),
         name="evenement-simple-creation",
     ),

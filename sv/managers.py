@@ -1,11 +1,10 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q, Prefetch, OuterRef, Subquery, Count, Exists
-from django.db.models.functions import Cast, Greatest
-from core.models import Visibilite, FinSuiviContact, user_is_referent_national
-
 from django.db.models import IntegerField, Func, Value
+from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+from django.db.models.functions import Cast, Greatest
 
+from core.managers import EvenementManagerMixin
+from core.models import Visibilite, user_is_referent_national
 from sv.managers_mixins import WithDerniereMiseAJourManagerMixin
 
 
@@ -106,7 +105,7 @@ class EvenementManager(WithDerniereMiseAJourManagerMixin, models.Manager):
         return EvenementQueryset(self.model, using=self._db).filter(is_deleted=False)
 
 
-class EvenementQueryset(models.QuerySet):
+class EvenementQueryset(EvenementManagerMixin, models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero_annee", "-numero_evenement")
 
@@ -157,14 +156,9 @@ class EvenementQueryset(models.QuerySet):
         return self.prefetch_related(detections_prefetch)
 
     def with_fin_de_suivi(self, contact):
-        from sv.models import Evenement
+        from .models import Evenement
 
-        content_type = ContentType.objects.get_for_model(Evenement)
-        return self.annotate(
-            has_fin_de_suivi=Exists(
-                FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)
-            )
-        )
+        return self._with_fin_de_suivi(contact, Evenement)
 
     def with_nb_fiches_detection(self):
         return self.annotate(

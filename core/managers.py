@@ -2,7 +2,7 @@ from typing import Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager
+from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager, OuterRef, Subquery, Func, F, Exists
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME, SSA_STRUCTURES
 
@@ -109,3 +109,30 @@ class StructureQueryset(QuerySet):
 
     def can_be_contacted(self):
         return self.has_at_least_one_active_contact().exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
+
+
+class EvenementManagerMixin:
+    def _with_nb_liens_libres(self, model_class):
+        from .models import LienLibre
+
+        content_type = ContentType.objects.get_for_model(model_class)
+
+        liens = (
+            LienLibre.objects.filter(
+                Q(content_type_1=content_type, object_id_1=OuterRef("pk"))
+                | Q(content_type_2=content_type, object_id_2=OuterRef("pk"))
+            )
+            .annotate(count=Func(F("id"), function="Count"))
+            .values("count")
+        )
+        return self.annotate(nb_liens_libre=Subquery(liens))
+
+    def _with_fin_de_suivi(self, contact, model_class):
+        from .models import FinSuiviContact
+
+        content_type = ContentType.objects.get_for_model(model_class)
+        return self.annotate(
+            has_fin_de_suivi=Exists(
+                FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)
+            )
+        )

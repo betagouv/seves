@@ -1,0 +1,46 @@
+{% extends "tiac/base.html" %}
+{% load static etat_tags %}
+{% block highlight_menu_evenements %}menu__item--active{% endblock %}
+{% block content %}
+    <main class="main-container">
+        <div class="evenements_liste__table--header">
+            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
+        </div>
+        {% if object_list.count %}
+            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Créateur' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='date_reception' display_name='Réception' %}</th>
+                            <th class="fr-col-3" scope="col">Établissement</th>
+                            <th class="fr-col-1" scope="col">Malades</th>
+                            <th class="fr-col-2" scope="col">Type d'événement/suites</th>
+                            <th class="fr-col-2" scope="col">Conclusion</th>
+                            <th class="fr-col-2" scope="col">Danger retenu</th>
+                            <th class="fr-col-2" scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evenement in evenementsimple_list %}
+                            <tr class="evenements__list-row">
+                                <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
+                                <td>{{ evenement.createur }}</td>
+                                <td>{{ evenement.date_reception|date:"d/m/Y" }}</td>
+                                <td>-</td>
+                                <td>{{ evenement.nb_sick_persons|default:"-" }}</td>
+                                <td>Enr. simple / {{ evenement.get_follow_up_display }}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        {% include "core/_pagination.html" %}
+    </main>
+{% endblock content %}
