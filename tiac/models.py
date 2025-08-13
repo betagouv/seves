@@ -12,6 +12,7 @@ from core.mixins import (
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
+from .managers import EvenementSimpleManager
 
 
 @reversion.register()
@@ -45,6 +46,8 @@ class EvenementSimple(
     )
 
     etablissements = models.ManyToManyField("ssa.Etablissement", verbose_name="Établissements impliqués")
+
+    objects = EvenementSimpleManager()
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

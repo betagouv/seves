@@ -43,3 +43,42 @@ class EvenementSimpleFormPage:
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+
+
+class EvenementListPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
+
+    def _cell_content(self, line_index, cell_index):
+        return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
+
+    def numero_cell(self, line_index=1):
+        return self._cell_content(line_index, 1)
+
+    def createur_cell(self, line_index=1):
+        return self._cell_content(line_index, 2)
+
+    def date_reception_cell(self, line_index=1):
+        return self._cell_content(line_index, 3)
+
+    def etablissement_cell(self, line_index=1):
+        return self._cell_content(line_index, 4)
+
+    def malades_cell(self, line_index=1):
+        return self._cell_content(line_index, 5)
+
+    def type_cell(self, line_index=1):
+        return self._cell_content(line_index, 6)
+
+    def conclusion_cell(self, line_index=1):
+        return self._cell_content(line_index, 7)
+
+    def danger_cell(self, line_index=1):
+        return self._cell_content(line_index, 8)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 9)
