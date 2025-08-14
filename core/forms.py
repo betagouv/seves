@@ -1,6 +1,7 @@
 from typing import Literal
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
@@ -34,7 +35,10 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         obj = kwargs.pop("obj")
         next = kwargs.pop("next", None)
         super().__init__(*args, **kwargs)
-        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+        ]
         self.add_content_type_fields(obj)
         self.add_next_field(next)
 
@@ -252,7 +256,10 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         obj = kwargs.pop("object")
         super().__init__(*args, **kwargs)
-        self.fields["document_type"].choices = [(c.value, c.label) for c in obj.get_allowed_document_types()]
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+        ]
 
 
 class VisibiliteUpdateBaseForm(DSFRForm):
