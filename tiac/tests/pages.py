@@ -118,3 +118,8 @@ class EvenementSimpleDetailsPage:
     @property
     def links_block(self):
         return self.page.get_by_role("heading", name="Événements liés").locator("..")
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()
