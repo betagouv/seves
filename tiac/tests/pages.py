@@ -44,6 +44,9 @@ class EvenementSimpleFormPage:
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
 
+    def add_free_link(self, numero, choice_js_fill, link_label="Évenement simple : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
+
 
 class EvenementListPage:
     def __init__(self, page: Page, base_url):
@@ -82,3 +85,36 @@ class EvenementListPage:
 
     def etat_cell(self, line_index=1):
         return self._cell_content(line_index, 9)
+
+
+class EvenementSimpleDetailsPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self, object):
+        return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
+
+    @property
+    def title(self):
+        return self.page.locator(".details-top-row h1").nth(0)
+
+    @property
+    def last_modification(self):
+        return self.page.locator(".last-modification")
+
+    @property
+    def context_block(self):
+        return self.page.get_by_role("heading", name="Le contexte").locator("..")
+
+    @property
+    def modalite(self):
+        return self.page.get_by_test_id("modalite")
+
+    @property
+    def origin(self):
+        return self.page.get_by_test_id("origin")
+
+    @property
+    def links_block(self):
+        return self.page.get_by_role("heading", name="Événements liés").locator("..")
