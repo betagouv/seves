@@ -73,7 +73,10 @@
                             <tr class="evenements__list-row">
                                 <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
                                 <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                                <td class="ellipsis">{{ evenement.product_description }}</td>
+                                <td class="ellipsis">
+                                    <span aria-describedby="tooltip-{{ evenement.pk }}">{{ evenement.product_description }}</span>
+                                    <span class="fr-tooltip fr-placement" id="tooltip-{{ evenement.pk }}" role="tooltip">{{ evenement.product_description }}</span>
+                                </td>
                                 <td>{{ evenement.get_categorie_produit_display }}</td>
                                 <td>{{ evenement.get_categorie_danger_display }}</td>
                                 <td>{{ evenement.createur }}</td>
