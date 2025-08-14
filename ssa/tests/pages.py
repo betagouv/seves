@@ -397,7 +397,7 @@ class EvenementProduitListPage(WithTreeSelect):
         return self._cell_content(line_index, 2)
 
     def description_cell(self, line_index=1):
-        return self._cell_content(line_index, 3)
+        return self._cell_content(line_index, 3).locator("span").nth(0)
 
     def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 6)
