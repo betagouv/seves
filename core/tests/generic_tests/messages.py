@@ -274,7 +274,7 @@ def generic_test_can_only_see_own_document_types_in_message_form(
     message_page = CreateMessagePage(page)
     message_page.new_message()
 
-    expected = [t.label for t in object.get_allowed_document_types()]
+    expected = [settings.SELECT_EMPTY_CHOICE, *[t.label for t in object.get_allowed_document_types()]]
     check_select_options_from_element(message_page.document_type_input, expected, False)
 
 
