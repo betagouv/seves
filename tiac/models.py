@@ -83,3 +83,9 @@ class EvenementSimple(
             .select_related("revision__user__agent__structure")
             .first()
         )
+
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_success_message(self):
+        return f"L'évènement {self.numero} a bien été supprimé"
