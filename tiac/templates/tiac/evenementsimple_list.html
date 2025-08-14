@@ -29,7 +29,7 @@
                                 <td>{{ evenement.createur }}</td>
                                 <td>{{ evenement.date_reception|date:"d/m/Y" }}</td>
                                 <td>-</td>
-                                <td>{{ evenement.nb_sick_persons }}</td>
+                                <td>{% if evenement.nb_sick_persons >= 0 %}{{ evenement.nb_sick_persons }}{% else %}-{% endif %}</td>
                                 <td>Enr. simple / {{ evenement.get_follow_up_display }}</td>
                                 <td>-</td>
                                 <td>-</td>

@@ -1,6 +1,7 @@
 import reversion
 from django.db import models, transaction
 from django.urls import reverse
+from reversion.models import Version
 
 from core.mixins import (
     AllowsSoftDeleteMixin,
@@ -73,3 +74,12 @@ class EvenementSimple(
         if user.agent.is_in_structure(self.createur):
             return True
         return not self.is_draft
+
+    @property
+    def latest_version(self):
+        return (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
