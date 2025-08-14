@@ -3,14 +3,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithFormErrorsAsMessagesMixin
+from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
+from core.views import MediaDefiningMixin
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple
 from .filters import EvenementSimpleFilter
 
 
-class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageMixin, CreateView):
+class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageMixin, MediaDefiningMixin, CreateView):
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
     success_message = "L’évènement a été créé avec succès."
@@ -26,6 +27,7 @@ class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageM
 
 class EvenementSimpleDetailView(
     UserPassesTestMixin,
+    WithFreeLinksListInContextMixin,
     DetailView,
 ):
     model = EvenementSimple

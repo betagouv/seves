@@ -1,4 +1,4 @@
-{% load dsfr_tags %}
+{% load dsfr_tags widget_tweaks %}
 
 {% if form.non_field_errors %}
     <section class="fr-my-4v fr-input-group fr-input-group--error">
@@ -31,3 +31,12 @@
         </div>
     </div>
 </fieldset>
+
+
+<div id="liens-libre" class="white-container fr-mt-2w">
+    <h3>Événements liés</h3>
+    <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
+    <div data-controller="free-links" data-free-links-ids-value='{{ form.instance.free_link_ids }}'>
+        {{ form.free_link|set_data:"free-links-target:select"  }}
+    </div>
+</div>

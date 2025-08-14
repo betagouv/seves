@@ -1,13 +1,16 @@
 from django import forms
+from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
-from core.fields import SEVESChoiceField
+from core.fields import SEVESChoiceField, MultiModelChoiceField
+from core.form_mixins import WithFreeLinksMixin, js_module
+from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
 from tiac.models import EvenementSimple
 
 
-class EvenementSimpleForm(DsfrBaseForm, forms.ModelForm):
+class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     template_name = "tiac/forms/evenement_simple.html"
 
     date_reception = forms.DateTimeField(
@@ -40,11 +43,47 @@ class EvenementSimpleForm(DsfrBaseForm, forms.ModelForm):
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
         }
 
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("core/free_links.mjs"),),
+        )
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self._add_free_links()
 
     def save(self, commit=True):
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
-        return super().save(commit)
+        instance = super().save(commit)
+        self.save_free_links(instance)
+        return instance
+
+    def _add_free_links(self, model=None):
+        instance = getattr(self, "instance", None)
+
+        queryset = (
+            EvenementSimple.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementSimple.Etat.BROUILLON)
+        )
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        queryset_evenement_produit = (
+            EvenementProduit.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=[
+                ("Évenement simple", queryset),
+                ("Évenement produit", queryset_evenement_produit),
+            ],
+        )
