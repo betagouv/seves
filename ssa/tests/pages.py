@@ -234,7 +234,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
         modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
-        modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
+        modal.locator('[id$="-type_exploitant"]').fill(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
 
     def add_etablissement(self, etablissement: Etablissement):

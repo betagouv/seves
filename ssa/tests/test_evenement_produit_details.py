@@ -76,9 +76,7 @@ def test_evenement_produit_detail_page_content_etablissement(
     expect(details_page.etablissement_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(f"{etablissement.departement}")).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.pays.name, exact=True)).to_be_visible()
-    expect(
-        details_page.etablissement_modal.get_by_text(etablissement.get_type_exploitant_display(), exact=True)
-    ).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.type_exploitant, exact=True)).to_be_visible()
     expect(
         details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display(), exact=True)
     ).to_be_visible()

@@ -140,7 +140,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.commune,
         str(etablissement_1.departement),
         str(etablissement_1.pays.name),
-        etablissement_1.get_type_exploitant_display(),
+        etablissement_1.type_exploitant,
         etablissement_1.get_position_dossier_display(),
     ]
     assert expected_fields == next(csv.reader(StringIO(lines[1])))[24:32]
@@ -152,7 +152,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.commune,
         str(etablissement_2.departement),
         str(etablissement_2.pays.name),
-        etablissement_2.get_type_exploitant_display(),
+        etablissement_2.type_exploitant,
         etablissement_2.get_position_dossier_display(),
     ]
     assert expected_fields == next(csv.reader(StringIO(lines[2])))[24:32]

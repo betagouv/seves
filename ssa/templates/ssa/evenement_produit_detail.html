@@ -134,7 +134,7 @@
                         Voir le détail
                       </button>
                     </div>
-                    {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.get_type_exploitant_display }}</p>{% endif %}
+                    {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.type_exploitant }}</p>{% endif %}
                     {% if etablissement.pays %}<p class="pays fr-tag fr-mb-2v">{{ etablissement.get_pays_display }}</p>{% endif %}
                     <div class="structure">Département : {{ etablissement.departement|or_empty_value_tag }}</div>
                     <div class="numero-agrement">N° d'agrément&nbsp;: {{ etablissement.numero_agrement|or_empty_value_tag }}</div>
