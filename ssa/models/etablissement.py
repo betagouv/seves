@@ -9,24 +9,6 @@ from ssa.models import EvenementProduit
 from ssa.models.validators import validate_numero_agrement
 
 
-class TypeExploitant(models.TextChoices):
-    PRODUCTEUR_PRIMAIRE = "producteur_primaire", "A - Producteur primaire"
-    HOTELLERIE_RESTAURATION_CAFE = "hotellerie_restauration_cafe", "B - Hôtellerie/restauration/café"
-    RESTAURATION_COLLECTIVE = "restauration_collective", "B - Restauration collective"
-    AUTRE_DETAILLANT = "autre_detaillant", "B - Autre détaillant"
-    PRODUCTEUR_FABRIQUANT = "producteur_fabricant", "C - Producteur / fabricant (hors restauration)"
-    PLATEFORME_DISTRIBUTION = "plateforme_distribution", "D - Plateforme de distribution"
-    AUTRE_ENTREPOT = "autre_entrepot", "D - Autre entrepôt"
-    TRANSPORTEUR = "transporteur", "D - Transporteur"
-    NEGOCIANT = "negociant", "D - Négociant"
-    SITE_VENTE_EN_LIGNE = "site_vente_en_ligne", "E - Site de vente en ligne"
-    EXPEDITEUR_FOURNISSEUR_HORS_UE = "expediteur_fournisseur_hors_ue", "F - Expéditeur / fournisseur hors UE"
-    IMPORTATEUR_UE_DE_PAYS_TIERS = "importateur_ue_de_pays_tiers", "F - Importateur UE de pays tiers"
-    EXPORTATEUR_UE_VERS_PAYS_TIERS = "exportateur_ue_vers_pays_tiers", "F - Exportateur UE vers pays tiers"
-    AUTRE = "autre", "Y - Autre"
-    SANS_OBJET = "sans_objet", "Z - Sans objet"
-
-
 class PositionDossier(models.TextChoices):
     DETECTION_NON_CONFORMITE = "detection_non_conformite", "Détection de la non-conformité"
     SURVENUE_NON_CONFORMITE = "survenue_non_conformite", "Survenue de la non-conformité"
@@ -86,9 +68,7 @@ class Etablissement(models.Model):
     )
     pays = CountryField(null=True)
 
-    type_exploitant = models.CharField(
-        max_length=100, choices=TypeExploitant.choices, verbose_name="Type exploitant", blank=True
-    )
+    type_exploitant = models.CharField(max_length=45, verbose_name="Type exploitant", blank=True)
     position_dossier = models.CharField(
         max_length=100, choices=PositionDossier.choices, verbose_name="Position dossier", blank=True
     )

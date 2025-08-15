@@ -9,7 +9,7 @@ from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Departement
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import Etablissement, TypeExploitant, PositionDossier, CategorieDanger
+from ssa.models import Etablissement, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
@@ -139,7 +139,13 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
-    type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
+    type_exploitant = forms.CharField(
+        label="Type d'exploitant",
+        required=False,
+        widget=forms.TextInput(
+            attrs={"placeholder": "Siège/usine, producteur/affineur, importateur/distributeur…", "maxlength": 45}
+        ),
+    )
     position_dossier = SEVESChoiceField(
         choices=PositionDossier.choices,
         label="Position dossier",

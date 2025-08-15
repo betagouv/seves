@@ -16,7 +16,6 @@ from ssa.models import (
     QuantificationUnite,
     ActionEngagees,
     Etablissement,
-    TypeExploitant,
     PositionDossier,
     CategorieDanger,
 )
@@ -121,6 +120,6 @@ class EtablissementFactory(DjangoModelFactory):
     departement = factory.SubFactory("core.factories.DepartementFactory")
     pays = FuzzyChoice([c.code for c in Countries()])
 
-    type_exploitant = FuzzyChoice([choice[0] for choice in TypeExploitant.choices])
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
+    type_exploitant = factory.Faker("sentence", nb_words=2)
     numero_agrement = factory.Faker("numerify", text="###.##.###")
