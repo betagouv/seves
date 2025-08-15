@@ -87,3 +87,8 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 ("Évenement produit", queryset_evenement_produit),
             ],
         )
+
+
+class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
+    class Meta:
+        model = EvenementSimple

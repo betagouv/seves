@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin, WithClotureContextMixin
 from core.views import MediaDefiningMixin
@@ -57,6 +57,7 @@ class EvenementSimpleDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 
@@ -81,3 +82,7 @@ class EvenementListView(WithFilteredListMixin, ListView):
         context["total_object_count"] = self.get_raw_queryset().count()
 
         return context
+
+
+class EvenementSimpleTransferView(UpdateView):
+    pass
