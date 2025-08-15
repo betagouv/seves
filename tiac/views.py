@@ -4,7 +4,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin
+from core.mixins import WithFormErrorsAsMessagesMixin, WithFreeLinksListInContextMixin, WithClotureContextMixin
 from core.views import MediaDefiningMixin
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
@@ -29,6 +29,7 @@ class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageM
 class EvenementSimpleDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
     DetailView,
 ):
     model = EvenementSimple

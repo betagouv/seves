@@ -1,4 +1,4 @@
-{% if can_be_deleted %}
+{% if can_be_deleted or is_evenement_can_be_cloturer %}
     <nav role="navigation" class="fr-translate fr-nav">
         <div class="fr-nav__item">
             <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
@@ -7,6 +7,9 @@
                 <ul class="fr-menu__list">
                     {% if can_be_deleted %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
+                    {% endif %}
+                    {%  if is_evenement_can_be_cloturer %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -17,4 +20,7 @@
 {% if can_be_deleted %}
     {% url 'tiac:evenement-liste' as next_url %}
     {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+{% endif %}
+{% if is_evenement_can_be_cloturer%}
+    {% include "core/_cloturer_modal.html" with evenement=object %}
 {% endif %}

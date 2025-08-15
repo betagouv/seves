@@ -89,3 +89,6 @@ class EvenementSimple(
 
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
+
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
