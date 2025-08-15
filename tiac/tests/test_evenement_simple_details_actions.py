@@ -1,6 +1,6 @@
 from playwright.sync_api import expect, Page
 
-from core.factories import ContactStructureFactory
+from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Structure, Contact
 from tiac.factories import EvenementSimpleFactory
 from tiac.models import EvenementSimple
@@ -21,7 +21,7 @@ def test_can_delete_evenement_simple(live_server, page):
     assert EvenementSimple._base_manager.get().pk == evenement.pk
 
 
-def test_can_cloturer_evenement_produit(live_server, page: Page, mocked_authentification_user):
+def test_can_cloturer_evenement_simple(live_server, page: Page, mocked_authentification_user):
     ac_structure = Structure.objects.create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
     contact = Contact.objects.create(structure=ac_structure)
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
@@ -50,3 +50,18 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
     assert evenement.etat == EvenementSimple.Etat.EN_COURS
     expect(page.get_by_text("En cours", exact=True)).to_be_visible()
     expect(page.get_by_text("Événement simple publié avec succès")).to_be_visible()
+
+
+def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill):
+    contact = ContactStructureFactory(structure__libelle="DDPP52")
+    ContactAgentFactory(agent__structure=contact.structure, with_active_agent=True)
+    evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+
+    details_page = EvenementSimpleDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.transfer(choice_js_fill, "DDPP52")
+
+    evenement.refresh_from_db()
+    expect(page.get_by_text("L’évènement a bien été transféré à la DDPP52")).to_be_visible()
+    assert evenement.transfered_to == contact.structure
+    assert contact in evenement.contacts.all()

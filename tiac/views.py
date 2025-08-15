@@ -1,9 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib import messages
 from django.forms import Media
-from django.http import Http404, HttpResponseRedirect
-from django.views.generic import CreateView, DetailView, ListView
+from django.http import Http404
+from django.http import HttpResponseRedirect
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -22,6 +23,7 @@ from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple
 from .filters import EvenementSimpleFilter
+from .forms import EvenementSimpleTransferForm
 from .formsets import EtablissementFormSet
 
 
@@ -137,7 +139,9 @@ class EvenementSimpleDetailView(
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
+        context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["transfer_form"] = EvenementSimpleTransferForm()
         return context
 
 
@@ -161,3 +165,16 @@ class EvenementListView(WithFilteredListMixin, ListView):
         context["total_object_count"] = self.get_raw_queryset().count()
 
         return context
+
+
+class EvenementSimpleTransferView(UpdateView):
+    form_class = EvenementSimpleTransferForm
+
+    def get_queryset(self):
+        return EvenementSimple.objects.all()
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"L’évènement a bien été transféré à la {self.object.transfered_to}")
+        self.object.contacts.add(self.object.transfered_to.contact_set.get())
+        return response

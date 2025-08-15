@@ -181,6 +181,12 @@ class EvenementSimpleDetailsPage:
         self.page.get_by_role("link", name="Clôturer l'événement").click()
         self.page.get_by_role("button", name="Clôturer").click()
 
+    def transfer(self, choice_js_fill, libelle):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Transférer à une autre DD").click()
+        choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
+        self.page.get_by_role("button", name="Transférer").click()
+
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
 

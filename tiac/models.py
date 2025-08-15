@@ -52,6 +52,7 @@ class EvenementSimple(
     follow_up = models.CharField(
         choices=EvenementFollowUp.choices, default=EvenementFollowUp.NONE, verbose_name="Suite donnée par la DD"
     )
+    transfered_to = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="transfered", null=True)
 
     objects = EvenementSimpleManager()
 
@@ -91,6 +92,9 @@ class EvenementSimple(
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
+
+    def can_be_transfered(self, user):
+        return self.can_user_access(user) and self.is_published
 
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
