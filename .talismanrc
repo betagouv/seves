@@ -52,7 +52,7 @@ fileignoreconfig:
 - filename: core/signals.py
   checksum: cc815105e3512722970c0210b92e488988efc161f76eacbc1d7de914af9c8de0
 - filename: tiac/models.py
-  checksum: 0983e5fa86cc1b2a56aa36803689ce0e69f18a9c04267b6d0201c20eef7af9a4
+  checksum: 8409a82c1f59e9046bf067ffbc9ec427cd34010c347e60bc13c830f22410e3de
 - filename: sv/static/sv/fichezone_form.mjs
   checksum: fc941aa06b62bbd429a0b06f5c2f937e7ab8b204deb09605e242900cf695795d
 - filename: core/migrations/0038_alter_document_document_type.py

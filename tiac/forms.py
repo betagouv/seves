@@ -7,8 +7,9 @@ from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMul
 from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
-from core.mixins import WithSireneTokenMixin, WithEtatMixin
-from core.models import Contact, Message
+from core.mixins import WithEtatMixin
+from core.mixins import WithSireneTokenMixin
+from core.models import Contact, Message, Structure
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
 from tiac.constants import ModaliteDeclarationEvenement
@@ -164,3 +165,15 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
             "departement",
             "pays",
         ]
+
+
+class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
+    transfered_to = forms.ModelChoiceField(
+        queryset=Structure.objects.only_DD(),
+        label="Sélectionner une structure",
+        required=True,
+    )
+
+    class Meta:
+        model = EvenementSimple
+        fields = ["transfered_to"]

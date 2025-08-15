@@ -44,6 +44,9 @@
         {% if is_evenement_can_be_cloturer%}
           {% include "core/_cloturer_modal.html" with evenement=object %}
         {% endif %}
+        {% if can_be_transfered %}
+          {% include "tiac/_transfer_modal.html" with evenement=object %}
+        {% endif %}
 
         <div class="details-top-row--actions">
           <ul class="fr-btns-group fr-btns-group--inline-md">

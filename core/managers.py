@@ -113,6 +113,9 @@ class StructureQueryset(QuerySet):
     def can_be_contacted(self):
         return self.has_at_least_one_active_contact().exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
 
+    def only_DD(self):
+        return self.filter(libelle__startswith="DD").can_be_contacted()
+
 
 class EvenementManagerMixin:
     def _with_nb_liens_libres(self, model_class):
