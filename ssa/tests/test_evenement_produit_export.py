@@ -28,7 +28,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     lines = task.file.read().decode("utf-8").split("\n")
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -56,6 +56,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.get_actions_engagees_display(),
         ",".join(evenement.numeros_rappel_conso),
         "A-2024.22",
+        "",
         "",
         "",
         "",
