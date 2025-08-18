@@ -1,3 +1,6 @@
 .empty-value {
     color: var(--text-disabled-grey);
 }
+.enseigne {
+    color: var(--grey-425-625) !important;
+}

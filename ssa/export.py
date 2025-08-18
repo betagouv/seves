@@ -39,6 +39,7 @@ class EvenementProduitExport:
     etablissement_fields = [
         ("siret", "Numéro SIRET"),
         ("raison_sociale", "Raison sociale"),
+        ("enseigne_usuelle", "Enseigne usuelle"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),
         ("commune", "Commune"),
         ("departement", "Département"),
