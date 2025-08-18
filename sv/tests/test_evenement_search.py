@@ -108,7 +108,7 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
 
 @pytest.mark.django_db
 def test_search_with_evenement_number(live_server, page: Page) -> None:
-    """Test la recherche d'un évènement en utilisant un numéro d'évènement valide (format année.numéro)"""
+    """Test la recherche d'un évènement en utilisant un numéro d'évènement"""
     EvenementFactory(numero_annee=2024, numero_evenement=1)
     EvenementFactory(numero_annee=2024, numero_evenement=2)
 
@@ -118,6 +118,23 @@ def test_search_with_evenement_number(live_server, page: Page) -> None:
 
     expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
     expect(page.get_by_role("cell", name="2024.2")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_search_with_evenement_number_loose_case(live_server, page: Page) -> None:
+    EvenementFactory(numero_annee=2024, numero_evenement=1)
+    EvenementFactory(numero_annee=2024, numero_evenement=2)
+    EvenementFactory(numero_annee=2023, numero_evenement=1243)
+    EvenementFactory(numero_annee=2023, numero_evenement=23)
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    page.get_by_label("Numéro").fill("24")
+    page.get_by_role("button", name="Rechercher").click()
+
+    expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.2")).to_be_visible()
+    expect(page.get_by_role("cell", name="2023.1243")).to_be_visible()
+    expect(page.get_by_role("cell", name="2023.23")).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -133,27 +150,6 @@ def test_search_with_evenement_number_allows_year_only(live_server, page: Page):
     expect(page.get_by_role("cell", name="2024.1", exact=True)).to_be_visible()
     expect(page.get_by_role("cell", name="2024.10")).to_be_visible()
     expect(page.get_by_role("cell", name="2023.1")).not_to_be_visible()
-
-
-def test_search_with_invalid_evenement_number(live_server, page: Page):
-    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    numero_input = page.get_by_label("Numéro")
-
-    numero_input.fill("az.erty")
-    page.get_by_role("button", name="Rechercher").click()
-    validation_message = numero_input.evaluate("el => el.validationMessage")
-    assert validation_message in [
-        "Please match the requested format.",
-        "Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2025.1)",
-    ]
-
-    numero_input.fill("2025-15")
-    page.get_by_role("button", name="Rechercher").click()
-    validation_message = numero_input.evaluate("el => el.validationMessage")
-    assert validation_message in [
-        "Please match the requested format.",
-        "Le format attendu est AAAA ou AAAA.N (ex: 2025 ou 2025.1)",
-    ]
 
 
 def test_search_with_region(live_server, page: Page, mocked_authentification_user, ensure_departements) -> None:

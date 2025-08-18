@@ -49,11 +49,10 @@ class EvenementProduitFilter(
     )
     numero_rasff = django_filters.CharFilter(
         label="Numéro RASFF/AAC",
+        lookup_expr="contains",
         widget=TextInput(
             attrs={
                 "placeholder": "0000.0000 ou 000000",
-                "pattern": r"^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$",
-                "title": "Le format attendu est XXXX.YYYY ou AAXX.YYYY ou XXXXXX (ex: 2025.1234 ou AA24.1234 ou 123456)",
             }
         ),
     )
