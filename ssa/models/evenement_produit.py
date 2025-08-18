@@ -353,6 +353,7 @@ class EvenementProduit(
             Document.TypeDocument.COURRIERS_COURRIELS,
             Document.TypeDocument.COMPTE_RENDU,
             Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
             Document.TypeDocument.AUTRE,
         ]
 
