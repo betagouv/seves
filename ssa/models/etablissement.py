@@ -43,6 +43,7 @@ class Etablissement(models.Model):
         max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
+    enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
 
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
     commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)

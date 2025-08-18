@@ -113,6 +113,7 @@ class EtablissementFactory(DjangoModelFactory):
 
     siret = factory.Faker("numerify", text="##############")
     raison_sociale = factory.Faker("sentence", nb_words=5)
+    enseigne_usuelle = factory.Faker("sentence", nb_words=5)
 
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")

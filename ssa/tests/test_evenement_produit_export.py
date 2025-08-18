@@ -28,7 +28,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     lines = task.file.read().decode("utf-8").split("\n")
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -56,6 +56,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.get_actions_engagees_display(),
         ",".join(evenement.numeros_rappel_conso),
         "A-2024.22",
+        "",
         "",
         "",
         "",
@@ -137,6 +138,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
     expected_fields = [
         etablissement_1.siret,
         etablissement_1.raison_sociale,
+        etablissement_1.enseigne_usuelle,
         etablissement_1.adresse_lieu_dit,
         etablissement_1.commune,
         str(etablissement_1.departement),
@@ -144,11 +146,12 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.type_exploitant,
         etablissement_1.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[1])))[24:32]
+    assert expected_fields == next(csv.reader(StringIO(lines[1])))[24:33]
 
     expected_fields = [
         etablissement_2.siret,
         etablissement_2.raison_sociale,
+        etablissement_2.enseigne_usuelle,
         etablissement_2.adresse_lieu_dit,
         etablissement_2.commune,
         str(etablissement_2.departement),
@@ -156,7 +159,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.type_exploitant,
         etablissement_2.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[2])))[24:32]
+    assert expected_fields == next(csv.reader(StringIO(lines[2])))[24:33]
     assert lines[3] == ""
     assert len(lines) == 4
 

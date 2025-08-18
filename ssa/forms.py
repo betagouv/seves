@@ -166,6 +166,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "siret",
             "numero_agrement",
             "raison_sociale",
+            "enseigne_usuelle",
             "adresse_lieu_dit",
             "commune",
             "code_insee",
