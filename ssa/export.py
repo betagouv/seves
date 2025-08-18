@@ -45,6 +45,7 @@ class EvenementProduitExport:
         ("pays", "Pays établissement"),
         ("type_exploitant", "Type d'exploitant"),
         ("position_dossier", "Position dans le dossier"),
+        ("numeros_resytal", "Numéros d’inspection Resytal"),
     ]
 
     def get_fieldnames(self):

@@ -72,6 +72,7 @@ class Etablissement(models.Model):
     position_dossier = models.CharField(
         max_length=100, choices=PositionDossier.choices, verbose_name="Position dossier", blank=True
     )
+    numeros_resytal = models.CharField(max_length=255, verbose_name="Numéros d’inspection Resytal", blank=True)
 
     def __str__(self):
         return f"{self.raison_sociale}"

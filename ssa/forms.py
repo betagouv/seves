@@ -173,6 +173,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "pays",
             "type_exploitant",
             "position_dossier",
+            "numeros_resytal",
         ]
 
     def __init__(self, **kwargs):
