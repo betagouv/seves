@@ -55,3 +55,5 @@ fileignoreconfig:
   checksum: 0983e5fa86cc1b2a56aa36803689ce0e69f18a9c04267b6d0201c20eef7af9a4
 - filename: sv/static/sv/fichezone_form.mjs
   checksum: fc941aa06b62bbd429a0b06f5c2f937e7ab8b204deb09605e242900cf695795d
+- filename: core/migrations/0038_alter_document_document_type.py
+  checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
