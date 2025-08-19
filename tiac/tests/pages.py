@@ -128,3 +128,13 @@ class EvenementSimpleDetailsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_role("link", name="Clôturer l'événement").click()
         self.page.get_by_role("button", name="Clôturer").click()
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
+    def etablissement_open_modal(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
+
+    @property
+    def etablissement_modal(self):
+        return self.page.locator(".fr-modal").locator("visible=true")

@@ -1,0 +1,58 @@
+{% load or_empty_value_tag dsfr_tags %}
+<dialog aria-labelledby="fr-modal-title-modal-etablissement-{{ etablissement.pk }}" role="dialog"
+        id="fr-modal-etablissement-{{ etablissement.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-etablissement-{{ etablissement.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-etablissement-{{ etablissement.pk }}"
+                            class="fr-modal__title">{{ etablissement.raison_sociale }}</h1>
+
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Type d'établissement</div>
+                                <div class="fr-col-3">{% dsfr_badge label=etablissement.type_etablissement extra_classes="fr-mb-2v fr-badge--info fr-badge--no-icon fr-badge--sm fr-mt-2v" %}</div>
+                                <div class="fr-col-3 bold">Numero Résytal</div>
+                                <div class="fr-col-3">{{ etablissement.numero_resytal|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Siret</div>
+                                <div class="fr-col-3">{{ etablissement.siret }}</div>
+                                <div class="fr-col-3 bold">Évaluation globale</div>
+                                <div class="fr-col-3">{{ etablissement.evaluation|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Enseigne usuelle</div>
+                                <div class="fr-col-3">{{ etablissement.enseigne_usuelle }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Adresse</div>
+                                <div class="fr-col-3">{{ etablissement.adresse_lieu_dit }}</div>
+                                <div class="fr-col-3 bold">Commentaire</div>
+                                <div class="fr-col-3">{{ etablissement.commentaire|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Commune</div>
+                                <div class="fr-col-3">{{ etablissement.commune }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Département</div>
+                                <div class="fr-col-3">{{ etablissement.departement }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Région</div>
+                                <div class="fr-col-3">{{ etablissement.departement.region }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
