@@ -6,4 +6,8 @@ importmaps = {
     "Choices": "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.mjs",
     "Application": static("core/stimulus_app.mjs"),
     "choicesDefaults": static("core/choices.mjs"),
+    "BaseFormset": static("core/base_formset.mjs"),
+    "dsfr": static("dsfr/dist/dsfr.module.min.js"),
+    "BanAutocomplete": static("core/ban_autocomplete.js"),
+    "Forms": static("core/forms.mjs"),
 }

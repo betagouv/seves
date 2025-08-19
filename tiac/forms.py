@@ -5,11 +5,13 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
+from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.models import Contact, Message
 from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp, ModaliteDeclarationEvenement
-from tiac.models import EvenementSimple
+from tiac.constants import EvenementOrigin, EvenementFollowUp
+from tiac.constants import ModaliteDeclarationEvenement
+from tiac.models import EvenementSimple, Etablissement
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -130,3 +132,21 @@ class MessageForm(BaseMessageForm):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
+
+
+class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+    template_name = "tiac/forms/etablissement.html"
+
+    class Meta:
+        model = Etablissement
+        fields = [
+            "type_etablissement",
+            "siret",
+            "raison_sociale",
+            "enseigne_usuelle",
+            "adresse_lieu_dit",
+            "commune",
+            "code_insee",
+            "departement",
+            "pays",
+        ]

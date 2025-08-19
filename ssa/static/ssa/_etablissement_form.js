@@ -1,4 +1,4 @@
-import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+import {setUpAddressChoices} from "BanAutocomplete";
 import {setUpSiretChoices} from "/static/core/siret.js";
 
 let modalEtablissementHTMLContent = {}

@@ -1,0 +1,33 @@
+{% load widget_tweaks %}
+
+<div class="fr-input-group">
+    {{ form.type_etablissement.label_tag }}
+    {{ form.type_etablissement|set_data:"etablissement-form-target:typeEtablissementInput" }}
+</div>
+<div class="fr-input-group">
+    {{ form.raison_sociale.label_tag }}
+    {{ form.raison_sociale|set_data:"etablissement-form-target:raisonSocialeInput" }}
+</div>
+<div class="fr-input-group">
+    {{ form.enseigne_usuelle.label_tag }}
+    {{ form.enseigne_usuelle }}
+</div>
+<div class="fr-input-group">
+    {{ form.adresse_lieu_dit.label_tag }}
+    {{ form.adresse_lieu_dit|set_data:"etablissement-form-target:adresseInput"|set_data:"action:choice->etablissement-form#onAddressChoice" }}
+</div>
+<div class="fr-input-group">
+    {{ form.commune.label_tag }}
+    {{ form.commune|set_data:"etablissement-form-target:communeInput" }}
+</div>
+<div class="fr-input-group">
+    {{ form.departement.label_tag }}
+    {{ form.departement|set_data:"etablissement-form-target:departementInput" }}
+</div>
+<div class="fr-input-group">
+    {{ form.pays.label_tag }}
+    {{ form.pays|set_data:"etablissement-form-target:paysInput" }}
+</div>
+<div class="fr-hidden">
+    {{ form.code_insee|set_data:"etablissement-form-target:codeInseeInput" }}
+</div>
