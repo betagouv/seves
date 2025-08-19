@@ -5,9 +5,10 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField, MultiModelChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
+from core.forms import BaseEtablissementForm
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
-from tiac.models import EvenementSimple
+from tiac.models import EvenementSimple, Etablissement
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -87,3 +88,26 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 ("Évenement produit", queryset_evenement_produit),
             ],
         )
+
+
+class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+    manual_render_fields = [
+        "DELETE",
+    ]
+
+    class Meta:
+        model = Etablissement
+        fields = [
+            "siret",
+            # "numero_agrement",
+            "raison_sociale",
+            "enseigne_usuelle",
+            "adresse_lieu_dit",
+            "commune",
+            "code_insee",
+            "departement",
+            "pays",
+            # "type_exploitant",
+            # "position_dossier",
+            # "numeros_resytal",
+        ]

@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
+from django.forms import Media
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, ListView
 
@@ -10,6 +11,7 @@ from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple
 from .filters import EvenementSimpleFilter
+from .formsets import EtablissementFormSet
 
 
 class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageMixin, MediaDefiningMixin, CreateView):
@@ -24,6 +26,15 @@ class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, SuccessMessageM
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["etablissement_formset"] = EtablissementFormSet()
+        context["empty_form"] = context["etablissement_formset"].empty_form
+        return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["etablissement_formset"].media
 
 
 class EvenementSimpleDetailView(
