@@ -1,5 +1,6 @@
 import reversion
 from django.db import models, transaction
+from django.db.models import Q
 from django.urls import reverse
 from reversion.models import Version
 
@@ -11,7 +12,7 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure
+from core.models import Structure, BaseEtablissement
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
 from .managers import EvenementSimpleManager
 
@@ -45,8 +46,6 @@ class EvenementSimple(
     follow_up = models.CharField(
         choices=EvenementFollowUp.choices, default=EvenementFollowUp.NONE, verbose_name="Suite donnée par la DD"
     )
-
-    etablissements = models.ManyToManyField("ssa.Etablissement", verbose_name="Établissements impliqués")
 
     objects = EvenementSimpleManager()
 
@@ -92,3 +91,38 @@ class EvenementSimple(
 
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
+
+
+class Evaluation(models.TextChoices):
+    SATISFAISANTE = "satisfaisante", "A - Maîtrise des risques satisfaisante"
+    ACCEPTABLE = "acceptable", "B - Maîtrise des risques acceptable"
+    MISE_EN_DEMEURE = "mise en demeure", "C - Maîtrise des risques insatisfaisante - Mise en demeure"
+    RESTRICTION = "restriction", "C - Maîtrise des risques insatisfaisante - Restriction d'activité"
+    PERTE_DE_MAITRISE = "perte de maitrise", "D - Perte de maîtrise des risques - Fermeture ou restriction d'activité"
+
+
+@reversion.register()
+class Etablissement(BaseEtablissement, models.Model):
+    evenement_simple = models.ForeignKey(EvenementSimple, on_delete=models.PROTECT, related_name="etablissements")
+
+    type_etablissement = models.CharField(max_length=45, verbose_name="Type d'établissement", blank=True)
+
+    has_inspection = models.BooleanField(default=False, verbose_name="Inspection")
+    numero_resytal = models.CharField(blank=True, verbose_name="Numéro Résytal")
+    evaluation = models.CharField(choices=Evaluation.choices, blank=True, verbose_name="Évaluation globale")
+    commentaire = models.TextField(verbose_name="Commentaire", blank=True)
+
+    def __str__(self):
+        return f"{self.raison_sociale}"
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(has_inspection=True) | (Q(numero_resytal="") & Q(evaluation="") & Q(commentaire=""))),
+                name="inspection_required_for_inspection_related_fields",
+            ),
+        ]

@@ -13,7 +13,7 @@ from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
-from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple
+from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple, AdresseLieuDitField
 from core.form_mixins import DSFRForm, js_module
 from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
 from core.models import Structure, Visibilite, Message, Contact
@@ -56,12 +56,6 @@ class DepartementModelChoiceField(forms.ModelChoiceField):
         except Departement.DoesNotExist:
             pass
         return super().prepare_value(value)
-
-
-class AdresseLieuDitField(forms.ChoiceField):
-    def validate(self, value):
-        # Autorise n'importe quelle valeur
-        return
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
