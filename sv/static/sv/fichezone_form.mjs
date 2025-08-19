@@ -3,7 +3,7 @@ import {useStore, createStore} from "StimulusStore"
 import {applicationReady} from "Application"
 import Choices from "Choices"
 import choicesDefaults from "choicesDefaults"
-
+import {AbstractFormSetController} from "BaseFormset"
 
 const choicesStore = createStore({
     name: "selectedChoices",
@@ -93,44 +93,14 @@ class ZoneInfesteeFormController extends ZoneInfesteeController {
 }
 
 
-const MGMT_FORM_FIELDS = {
-    TOTAL_FORMS: Number,
-    INITIAL_FORMS: Number,
-    MIN_NUM_FORMS: Number,
-    MAX_NUM_FORMS: Number,
-}
-
-
-/**
- * @property {Number} TOTAL_FORMSValue
- * @property {HTMLTemplateElement} emptyFormTplTarget
- * @property {HTMLElement} formsetContainerTarget
- * @property {String[]} selectedChoicesValue
- */
-class ZoneInfesteeFormSetController extends Controller {
-    static targets = [...Object.keys(MGMT_FORM_FIELDS), "emptyFormTpl", "formsetContainer", "formDetectionsSelect"]
-    static values = {...MGMT_FORM_FIELDS, selectedChoices: Array}
+class ZoneInfesteeFormSetController extends AbstractFormSetController {
+    static targets = [...AbstractFormSetController.targets, "formDetectionsSelect"]
+    static values = { ...AbstractFormSetController.values, selectedChoices: Array }
     static stores = [choicesStore]
 
     connect() {
         useStore(this)
-        for (const fieldName of Object.keys(MGMT_FORM_FIELDS)) {
-            if (!this[`has${fieldName}Target`]) {
-                const htmlAttr = this.context.scope.schema.targetAttributeForScope(this.identifier)
-                console.debug(`Missing target with HTML attribute "${htmlAttr}="${fieldName}"`)
-                continue
-            }
-            this[`${fieldName}Value`] = this[`${fieldName}Target`].value
-            this[`${fieldName}ValueChanged`] = value => {
-                this[`${fieldName}Target`].value = value
-            }
-        }
-    }
-
-    onAddForm() {
-        const html = this.emptyFormTplTarget.innerHTML.replace(/__prefix__/g, `${this.TOTAL_FORMSValue}`)
-        this.formsetContainerTarget.insertAdjacentHTML("beforeend", html)
-        this.TOTAL_FORMSValue += 1
+        this._initializeFieldValues()
     }
 }
 

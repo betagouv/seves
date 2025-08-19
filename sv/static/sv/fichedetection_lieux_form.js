@@ -1,6 +1,6 @@
 import {setUpSiretChoices} from "/static/core/siret.js";
 import {setUpCommuneChoices} from "/static/core/commune.js";
-import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+import {setUpAddressChoices} from "BanAutocomplete";
 
 document.lieuxCards = []
 const modalHTMLContent = {}
