@@ -126,3 +126,12 @@ class Etablissement(BaseEtablissement, models.Model):
                 name="inspection_required_for_inspection_related_fields",
             ),
         ]
+
+    @property
+    def address_summary(self):
+        value = ""
+        if self.commune:
+            value = self.commune
+        if self.departement:
+            value += f" ({self.departement.numero}) | {self.departement.nom}"
+        return value

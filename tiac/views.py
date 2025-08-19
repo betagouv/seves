@@ -39,7 +39,12 @@ class EvenementSimpleDetailView(
         return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
-        return EvenementSimple.objects.all().select_related("createur")
+        return (
+            EvenementSimple.objects.all()
+            .select_related("createur")
+            .prefetch_related("etablissements__departement")
+            .prefetch_related("etablissements__departement__region")
+        )
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):

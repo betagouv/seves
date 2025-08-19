@@ -1,7 +1,3 @@
-#etablissement-card-container {
-    display: flex;
-    gap: 1rem;
-}
 .etablissement-card {
     background-color: var(--background-contrast-grey);
     margin-bottom: 1rem;

@@ -3,6 +3,10 @@
 {% load etat_tags %}
 {% load or_empty_value_tag %}
 
+{% block extrahead %}
+  <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
+{% endblock extrahead %}
+
 {% block content %}
   <main class="main-container">
     <div>
@@ -28,8 +32,12 @@
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
 
     <div id="detail-content">
+
       {% include "tiac/_evenement_simple_informations.html" %}
-      {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
+      <div class="fr-container--fluid fr-mt-2w detail-content">
+        {% include "tiac/_evenement_simple_etablissements.html" %}
+        {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
+      </div>
     </div>
   </main>
 {% endblock content %}
