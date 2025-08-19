@@ -1,12 +1,11 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
-from django_countries.fields import CountryField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
-from core.forms import BaseMessageForm
+from core.forms import BaseMessageForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message, Departement
+from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import Etablissement, PositionDossier, CategorieDanger
@@ -119,26 +118,12 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         }
 
 
-class AdresseLieuDitField(forms.ChoiceField):
-    def validate(self, value):
-        # Autorise n'importe quelle valeur
-        return
-
-
-class EtablissementForm(DSFRForm, forms.ModelForm):
-    siret = forms.CharField(
-        required=False,
-        max_length=14,
-        widget=forms.HiddenInput,
-    )
+class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
     numero_agrement = forms.CharField(
         required=False,
         label="Numéro d'agrément",
         widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
     )
-    code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
-    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
-    pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
     type_exploitant = forms.CharField(
         label="Type d'exploitant",
         required=False,
@@ -152,12 +137,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
         required=False,
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
-    departement = forms.ModelChoiceField(
-        queryset=Departement.objects.order_by("numero").all(),
-        to_field_name="numero",
-        required=False,
-        label="Département",
-    )
+
     manual_render_fields = ["DELETE", "position_dossier", "type_exploitant"]
 
     class Meta:
@@ -176,16 +156,6 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "position_dossier",
             "numeros_resytal",
         ]
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
-            self.fields["adresse_lieu_dit"].choices = [(self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)]
-
-        departement_obj = self.instance.departement
-        if departement_obj:
-            self.initial["departement"] = departement_obj.numero
 
 
 class MessageForm(BaseMessageForm):

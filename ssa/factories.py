@@ -1,12 +1,12 @@
 import random
 from datetime import datetime
-from django.utils import timezone
 
 import factory
-from django_countries import Countries
+from django.utils import timezone
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
+from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from ssa.models import (
     EvenementProduit,
@@ -105,21 +105,11 @@ class EvenementProduitFactory(DjangoModelFactory):
         )
 
 
-class EtablissementFactory(DjangoModelFactory):
+class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
     evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
-
-    siret = factory.Faker("numerify", text="##############")
-    raison_sociale = factory.Faker("sentence", nb_words=5)
-    enseigne_usuelle = factory.Faker("sentence", nb_words=5)
-
-    adresse_lieu_dit = factory.Faker("street_address")
-    commune = factory.Faker("city")
-    code_insee = factory.Faker("numerify", text="#####")
-    departement = factory.SubFactory("core.factories.DepartementFactory")
-    pays = FuzzyChoice([c.code for c in Countries()])
 
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     type_exploitant = factory.Faker("sentence", nb_words=2)

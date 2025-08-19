@@ -1,13 +1,14 @@
 from datetime import datetime
-
+import random
 import factory
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
+from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from tiac.constants import EvenementOrigin, ModaliteDeclarationEvenement, EvenementFollowUp
-from tiac.models import EvenementSimple
+from tiac.models import EvenementSimple, Etablissement, Evaluation
 
 
 class EvenementSimpleFactory(DjangoModelFactory):
@@ -43,3 +44,20 @@ class EvenementSimpleFactory(DjangoModelFactory):
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+
+class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
+    class Meta:
+        model = Etablissement
+
+    evenement_simple = factory.SubFactory("tiac.factories.EvenementSimpleFactory")
+
+    type_etablissement = factory.Faker("sentence", nb_words=2)
+
+    class Params:
+        inspection = factory.Trait(
+            has_inspection=True,
+            numero_resytal=factory.Faker("numerify", text="##############"),
+            evaluation=random.choice([c[0] for c in Evaluation.values]),
+            commentaire=factory.Faker("paragraph"),
+        )

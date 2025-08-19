@@ -1,10 +1,8 @@
 import reversion
-from django.core.validators import RegexValidator
 
 from django.db import models
-from django_countries.fields import CountryField
 
-from core.models import Departement
+from core.models import BaseEtablissement
 from ssa.models import EvenementProduit
 from ssa.models.validators import validate_numero_agrement
 
@@ -24,50 +22,12 @@ class PositionDossier(models.TextChoices):
 
 
 @reversion.register()
-class Etablissement(models.Model):
+class Etablissement(BaseEtablissement, models.Model):
     evenement_produit = models.ForeignKey(EvenementProduit, on_delete=models.PROTECT, related_name="etablissements")
 
-    siret = models.CharField(
-        max_length=14,
-        verbose_name="SIRET de l'établissement",
-        blank=True,
-        validators=[
-            RegexValidator(
-                regex="^[0-9]{14}$",
-                message="Le SIRET doit contenir exactement 14 chiffres",
-                code="invalid_siret",
-            ),
-        ],
-    )
     numero_agrement = models.CharField(
         max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
-    raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
-    enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
-
-    adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
-    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
-    code_insee = models.CharField(
-        max_length=5,
-        blank=True,
-        verbose_name="Code INSEE de la commune",
-        validators=[
-            RegexValidator(
-                regex="^[0-9]{5}$",
-                message="Le code INSEE doit contenir exactement 5 chiffres",
-                code="invalid_code_insee",
-            ),
-        ],
-    )
-    departement = models.ForeignKey(
-        Departement,
-        on_delete=models.PROTECT,
-        verbose_name="Département",
-        related_name="etablissements",
-        blank=True,
-        null=True,
-    )
-    pays = CountryField(null=True)
 
     type_exploitant = models.CharField(max_length=45, verbose_name="Type exploitant", blank=True)
     position_dossier = models.CharField(

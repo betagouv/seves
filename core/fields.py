@@ -75,3 +75,9 @@ class SEVESChoiceField(forms.ChoiceField):
         choices.insert(0, ("", empty_label))
         kwargs["choices"] = choices
         super().__init__(*args, **kwargs)
+
+
+class AdresseLieuDitField(forms.ChoiceField):
+    def validate(self, value):
+        # Autorise n'importe quelle valeur
+        return
