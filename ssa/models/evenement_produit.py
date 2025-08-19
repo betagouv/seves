@@ -283,7 +283,8 @@ class EvenementProduit(
     def danger_plus_courants(self):
         return [
             CategorieDanger.LISTERIA_MONOCYTOGENES,
-            CategorieDanger.SALMONELLA,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
             CategorieDanger.E_COLI_NON_STEC,
             CategorieDanger.PESTICIDE_RESIDU,
         ]
