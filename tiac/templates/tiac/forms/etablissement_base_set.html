@@ -28,7 +28,39 @@
         {% endfor %}
     </div>
 
-    <template id="zone-form-template" data-etablissement-formset-target="emptyFormTpl">
-        {{ formset.empty_form }}
+    <template   data-etablissement-formset-target="emptyFormTpl">
+        <button class="fr-btn fr-hidden"  data-fr-opened="false" aria-controls="fr-modal-etablissement__prefix__" ></button>
+        <dialog aria-labelledby="fr-modal-title-modal-etablissement__prefix__" role="dialog" id="fr-modal-etablissement__prefix__" class="fr-modal modal-etablissement">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-etablissement__prefix__" type="button">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="fr-modal-title-modal--etablissement__prefix__" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un établissement</h1>
+                                {{ formset.empty_form }}
+                            </div>
+                            <div class="fr-modal__footer">
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                                    <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-etablissement__prefix__" type="button">Annuler</button>
+                                    <button type="submit" class="fr-btn save-btn" id="etablissement-save-btn-__prefix__" data-action="etablissement-formset#validateForm:prevent:stop">Enregistrer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
     </template>
+
+    <template data-etablissement-formset-target="cardTemplate">
+        <div class="etablissement-card">
+            <p class="raison-sociale"></p>
+        </div>
+    </template>
+
+    <div class="fr-mt-2w" data-etablissement-formset-target="cardContainer">
+    </div>
 </div>
