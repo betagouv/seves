@@ -1,6 +1,6 @@
 import choicesDefaults from "choicesDefaults"
 import {setUpFreeLinks} from "/static/core/free_links.js";
-import {patchItems, findPath, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
+import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener('DOMContentLoaded', () => {
   function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
@@ -41,6 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = findPath(e.detail, options)
       document.getElementById("id_categorie_produit").value = e.detail
       document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
+    })
+
+    treeselect.srcElement.addEventListener('input', (e) => {
+      if(isLevel2WithChildren(options,e.detail)){
+        document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
+      } else {
+        document.querySelector("#notice-container-produit").classList.add("fr-hidden")
+      }
     })
   }
 
@@ -114,6 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
         handleValueChangeCategorieDanger(e.detail, options)
       } else {
         document.getElementById("pam-container").classList.add("fr-hidden")
+      }
+    })
+
+    treeselect.srcElement.addEventListener('input', (e) => {
+      if(isLevel2WithChildren(options,e.detail)){
+        document.querySelector("#notice-container-risque").classList.remove("fr-hidden")
+      } else {
+        document.querySelector("#notice-container-risque").classList.add("fr-hidden")
       }
     })
   }

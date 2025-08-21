@@ -83,6 +83,63 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     assert evenement_produit_data == input_data
 
 
+def test_display_of_notice_produit_field(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_produit_from_label("Produit non alimentaire > Autre produit non alimentaire")
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_produit_from_label("Produit carné > PABV cuit - produit à base de viande cuit")
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
+
+
+def test_display_of_notice_danger_field_not_shown(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_danger_from_label("Bactérie > Coliformes")
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+
+
+def test_display_of_notice_danger_field_shown(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_danger_from_label("Bactérie > Clostridium")
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
+
+
 def test_can_create_evenement_produit_with_pam_if_bacterie(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementProduitFactory.build(bacterie=True)
     creation_page = EvenementProduitFormPage(page, live_server.url)

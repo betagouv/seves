@@ -108,6 +108,9 @@ class EvenementProduitFormPage(WithTreeSelect):
 
     def set_categorie_produit(self, evenement_produit, clear_input=False):
         label = evenement_produit.get_categorie_produit_display()
+        self.set_categorie_produit_from_label(label, clear_input)
+
+    def set_categorie_produit_from_label(self, label, clear_input=False):
         self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", label, clear_input)
 
@@ -125,6 +128,10 @@ class EvenementProduitFormPage(WithTreeSelect):
     def set_categorie_danger(self, evenement_produit, clear_input=False):
         self.display_and_get_categorie_danger()
         label = evenement_produit.get_categorie_danger_display()
+        self._set_treeselect_option("categorie-danger", label, clear_input)
+
+    def set_categorie_danger_from_label(self, label, clear_input=False):
+        self.display_and_get_categorie_danger()
         self._set_treeselect_option("categorie-danger", label, clear_input)
 
     def set_categorie_danger_from_shortcut(self, label):

@@ -54,6 +54,18 @@ export function addLevel2CategoryIfAllChildrenAreSelected(options, selectedOptio
     return result
 }
 
+export function isLevel2WithChildren(data, value) {
+    for (const item of data) {
+        for (const child of item.children || []) {
+            if (child.value === value) {
+                return child.children && child.children.length > 0;
+            }
+        }
+    }
+    return false;
+}
+
+
 export const tsDefaultOptions = {
     showTags: false,
     clearable: false,
