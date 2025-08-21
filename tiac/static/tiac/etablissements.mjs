@@ -1,5 +1,6 @@
 import {AbstractFormSetController} from "BaseFormset"
 import {applicationReady} from "Application";
+import {formIsValid, removeRequired} from "/static/core/forms.mjs";
 import "dsfr";
 
 class EtablissementsFormSetController extends AbstractFormSetController {
@@ -42,16 +43,14 @@ class EtablissementsFormSetController extends AbstractFormSetController {
 
     validateForm(event){
         const currentModal = event.target.closest("dialog")
-        // TODO use a module for this ?
-        // if (formIsValid(currentModal) === false) {
-        //     return
-        // }
+        if (formIsValid(currentModal) === false) {
+            return
+        }
 
         this._getAndAddCardToList(currentModal)
         dsfr(currentModal).modal.conceal()
 
-        // TODO use a module for this ?
-        // removeRequired(currentModal)
+        removeRequired(currentModal)
     }
 }
 

@@ -92,7 +92,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
 class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     manual_render_fields = [
-        "DELETE",
+        "DELETE",  # TODO make this hidden
     ]
 
     class Meta:
@@ -107,5 +107,10 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "code_insee",
             "departement",
             "pays",
-            # TODO add inspection fields
+            # TODO add inspection fields --> Move to other ticket ?
         ]
+
+
+# TODO commune -> Implementer BAN
+# TODO handle siret in another ticket
+# TODO add ban autocomplete on addresse ?
