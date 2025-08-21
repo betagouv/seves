@@ -57,3 +57,5 @@ fileignoreconfig:
   checksum: fc941aa06b62bbd429a0b06f5c2f937e7ab8b204deb09605e242900cf695795d
 - filename: core/migrations/0038_alter_document_document_type.py
   checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
+- filename: tiac/static/tiac/etablissements.mjs
+  checksum: 47e4768c4bea879aa0043812662bb786bedd8a87eaa241029f762214ac4bad1e

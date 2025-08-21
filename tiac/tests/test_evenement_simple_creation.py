@@ -3,9 +3,19 @@ from playwright.sync_api import Page, expect
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from tiac.factories import EvenementSimpleFactory
+from tiac.factories import EvenementSimpleFactory, EtablissementFactory
 from .pages import EvenementSimpleFormPage
-from ..models import EvenementSimple
+from ..models import EvenementSimple, Etablissement
+
+
+FIELD_TO_EXCLUDE_ETABLISSEMENT = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "code_insee",
+    "evenement_simple_id",
+    "siret",
+]
 
 
 def test_can_create_evenement_simple_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
@@ -51,3 +61,26 @@ def test_can_create_evenement_simple_with_all_fields(
         input_data, evenement, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
     )
     assert LienLibre.objects.count() == 2
+
+
+def test_can_add_etablissements(live_server, page: Page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+    evenement = EvenementSimpleFactory()
+
+    etablissement_1, etablissement_2 = EtablissementFactory.build_batch(
+        2, evenement_simple=evenement, departement=departement
+    )
+
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement_1)
+    creation_page.add_etablissement(etablissement_2)
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    assert Etablissement.objects.count() == 2
+    etablissements = Etablissement.objects.all()
+
+    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)

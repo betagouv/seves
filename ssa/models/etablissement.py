@@ -2,7 +2,7 @@ import reversion
 
 from django.db import models
 
-from core.models import BaseEtablissement
+from core.models import Departement, BaseEtablissement
 from ssa.models import EvenementProduit
 from ssa.models.validators import validate_numero_agrement
 

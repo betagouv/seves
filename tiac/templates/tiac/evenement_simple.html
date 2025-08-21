@@ -1,5 +1,8 @@
 {% extends "tiac/base.html" %}
-
+{% load static %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
+{% endblock extrahead %}
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
@@ -20,6 +23,8 @@
             </div>
 
             {{ form }}
+
+            {{ etablissement_formset }}
         </main>
     </form>
 {% endblock %}
