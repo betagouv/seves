@@ -2,10 +2,10 @@
 
 <div class="white-container fr-mt-4w" data-controller="etablissement-formset">
     <div class="fr-grid-row">
-        <div class="fr-col">
+        <div class="fr-col-10">
             <p class="fr-h6">Établissements</p>
         </div>
-        <div class="fr-col">
+        <div class="fr-col-2">
             <button
                 type="button"
                 class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
@@ -23,9 +23,8 @@
             {% endwith %}
         {% endfor %}
 
-{#        TODO is this normal ?#}
         {% for form in formset %}
-
+            {{ form }}
         {% endfor %}
     </div>
 
@@ -63,7 +62,7 @@
                     <div>
                         <p class="fr-card__title raison-sociale"  data-etablissement-formset-target="raisonSociale"></p>
                     </div>
-                    <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v etablissement fr-hidden"></p>
+                    <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v adresse fr-hidden"></p>
 
                     <span class="siret fr-hidden"></span>
                     {% dsfr_badge label=etablissement.type_etablissement extra_classes="fr-mb-2v fr-badge--info fr-badge--no-icon fr-badge--sm fr-mt-2v fr-hidden type" %}

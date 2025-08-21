@@ -556,7 +556,6 @@ class FicheZoneDelimiteeCreateView(MediaDefiningMixin, WithFormErrorsAsMessagesM
                 form_kwargs=form_kwargs,
                 initial=[{"detections": getattr(self, "zone_infestee_detection", None)}],
             )
-        # TODO this could probably be removed
         context["empty_form"] = context["zone_infestee_formset"].empty_form
         return context
 

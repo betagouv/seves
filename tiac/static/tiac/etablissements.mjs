@@ -1,6 +1,8 @@
 import {AbstractFormSetController} from "BaseFormset"
 import {applicationReady} from "Application";
-import {formIsValid, removeRequired} from "/static/core/forms.mjs";
+import {formIsValid, removeRequired, getSelectedLabel} from "/static/core/forms.mjs";
+import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
+
 import "dsfr";
 
 class EtablissementsFormSetController extends AbstractFormSetController {
@@ -12,9 +14,25 @@ class EtablissementsFormSetController extends AbstractFormSetController {
         const currentModal = document.querySelector(`#fr-modal-etablissement${this.TOTAL_FORMSValue}`)
         this.TOTAL_FORMSValue += 1
         currentModal.querySelector('[id$=raison_sociale]').required = true
+        this._setupAdresseField(currentModal)
         requestAnimationFrame(() => {
             dsfr(currentModal).modal.disclose()
         })
+    }
+
+    _setupAdresseField(modal){
+        const addressChoices = setUpAddressChoices(modal.querySelector('[id$=adresse_lieu_dit]'))
+        addressChoices.passedElement.element.addEventListener("choice", (event)=> {
+            modal.querySelector('[id$=commune]').value = event.detail.customProperties.city
+            modal.querySelector('[id$=code_insee]').value = event.detail.customProperties.inseeCode
+            if (!!event.detail.customProperties.context)
+            {
+                modal.querySelector('[id$=pays]').value = "FR"
+                const [num, ...rest] = event.detail.customProperties.context.split(/\s*,\s*/)
+                modal.querySelector('[id$=departement]').value = num
+            }
+        })
+        return addressChoices
     }
 
     _getEtablissementCard(baseCard, currentModal){
@@ -25,8 +43,19 @@ class EtablissementsFormSetController extends AbstractFormSetController {
             baseCard.querySelector('.siret').innerText = siret
             baseCard.querySelector('.siret').classList.remove("fr-hidden")
         }
-        // TODO Addresse
-        // TODO check margins are ok
+
+        const commune = currentModal.querySelector('[id$=commune]').value
+        const departementLabel = getSelectedLabel(currentModal.querySelector('[id$=departement]'))
+        if(commune != "" || departementLabel != null){
+            const adresse = [
+                commune,
+                departementLabel ? `| ${departementLabel}` : null
+            ].filter(Boolean).join(" ");
+
+            baseCard.querySelector('.adresse').innerText = adresse
+            baseCard.querySelector('.adresse').classList.remove("fr-hidden")
+        }
+
         const type = currentModal.querySelector('[id$=type_etablissement]').value
         if (type != "") {
             baseCard.querySelector('.type').innerText = type

@@ -8,6 +8,16 @@ from .pages import EvenementSimpleFormPage
 from ..models import EvenementSimple, Etablissement
 
 
+FIELD_TO_EXCLUDE_ETABLISSEMENT = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "code_insee",
+    "evenement_simple_id",
+    "siret",
+]
+
+
 def test_can_create_evenement_simple_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementSimpleFactory.build()
     creation_page = EvenementSimpleFormPage(page, live_server.url)
@@ -57,8 +67,8 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     departement, *_ = ensure_departements("Paris")
     evenement = EvenementSimpleFactory()
 
-    etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(
-        3, evenement_simple=evenement, departement=departement
+    etablissement_1, etablissement_2 = EtablissementFactory.build_batch(
+        2, evenement_simple=evenement, departement=departement
     )
 
     creation_page = EvenementSimpleFormPage(page, live_server.url)
@@ -72,6 +82,5 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     assert Etablissement.objects.count() == 2
     etablissements = Etablissement.objects.all()
 
-    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=[])
-    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=[])
-    assert_models_are_equal(etablissements[2], etablissement_3, to_exclude=[])
+    assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+    assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)

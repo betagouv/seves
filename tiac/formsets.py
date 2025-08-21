@@ -3,6 +3,7 @@ from django.forms import inlineformset_factory, BaseInlineFormSet, Media
 from core.form_mixins import js_module
 from .forms import EtablissementForm
 from .models import EvenementSimple, Etablissement
+from django import forms
 
 
 class EtablissementBaseFormSet(BaseInlineFormSet):
@@ -14,7 +15,12 @@ class EtablissementBaseFormSet(BaseInlineFormSet):
             js=(js_module("tiac/etablissements.mjs"),),
         )
 
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if "DELETE" in form.fields:
+            form.fields["DELETE"].widget = forms.HiddenInput()
+
 
 EtablissementFormSet = inlineformset_factory(
-    EvenementSimple, Etablissement, form=EtablissementForm, formset=EtablissementBaseFormSet, extra=10, can_delete=True
+    EvenementSimple, Etablissement, form=EtablissementForm, formset=EtablissementBaseFormSet, extra=0, can_delete=True
 )

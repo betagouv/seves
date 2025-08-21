@@ -1,3 +1,6 @@
+import json
+from urllib.parse import quote
+
 from django.urls import reverse
 from playwright.sync_api import Page
 
@@ -55,12 +58,31 @@ class EvenementSimpleFormPage:
         self.page.get_by_role("button", name="Ajouter").click()
         return self.current_modal
 
+    @property
+    def current_modal_address_field(self):
+        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
+
+    def force_etablissement_adresse(self, adresse, mock_call=False):
+        if mock_call:
+
+            def handle(route):
+                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
+
+            self.page.route(
+                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                handle,
+            )
+
+        self.current_modal_address_field.click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(adresse)
+        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
+
     def _fill_etablissement(self, modal, etablissement: Etablissement):
         modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
-        self.page.wait_for_timeout(10000)
-        modal.locator('[id$="adresse_lieu_dit"]').fill(etablissement.adresse_lieu_dit)
+        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
         modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
