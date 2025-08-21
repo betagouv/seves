@@ -3,7 +3,7 @@ import {applicationReady} from "Application";
 import "dsfr";
 
 class EtablissementsFormSetController extends AbstractFormSetController {
-    static targets = [...this.targets, "cardTemplate", "cardContainer"]
+    static targets = [...this.targets, "cardTemplate", "cardContainer", "raisonSociale"]
 
     onAddForm(){
         const html = this.emptyFormTplTarget.innerHTML.replace(/__prefix__/g, `${this.TOTAL_FORMSValue}`)
@@ -17,12 +17,20 @@ class EtablissementsFormSetController extends AbstractFormSetController {
     }
 
     _getEtablissementCard(baseCard, currentModal){
-
         baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
-        // Addresse
-        // Siret
-        // Type etablissement
 
+        const siret = currentModal.querySelector('[id$=siret]').value
+        if (siret != "") {
+            baseCard.querySelector('.siret').innerText = siret
+            baseCard.querySelector('.siret').classList.remove("fr-hidden")
+        }
+        // TODO Addresse
+        // TODO check margins are ok
+        const type = currentModal.querySelector('[id$=type_etablissement]').value
+        if (type != "") {
+            baseCard.querySelector('.type').innerText = type
+            baseCard.querySelector('.type').classList.remove("fr-hidden")
+        }
         return baseCard
     }
 

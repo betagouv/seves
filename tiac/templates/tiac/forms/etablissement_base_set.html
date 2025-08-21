@@ -56,11 +56,21 @@
     </template>
 
     <template data-etablissement-formset-target="cardTemplate">
-        <div class="etablissement-card">
-            <p class="raison-sociale"></p>
+        <div class="etablissement-card fr-card">
+            <div class="fr-card__body">
+                <div class="fr-card__content">
+                    <div>
+                        <p class="fr-card__title raison-sociale"  data-etablissement-formset-target="raisonSociale"></p>
+                    </div>
+                    <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v etablissement fr-hidden"></p>
+
+                    <span class="siret fr-hidden"></span>
+                    {% dsfr_badge label=etablissement.type_etablissement extra_classes="fr-mb-2v fr-badge--info fr-badge--no-icon fr-badge--sm fr-mt-2v fr-hidden type" %}
+                </div>
+            </div>
         </div>
     </template>
 
-    <div class="fr-mt-2w" data-etablissement-formset-target="cardContainer">
+    <div class="fr-mt-2w" data-etablissement-formset-target="cardContainer" id="etablissement-card-container">
     </div>
 </div>

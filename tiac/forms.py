@@ -98,8 +98,8 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     class Meta:
         model = Etablissement
         fields = [
+            "type_etablissement",
             "siret",
-            # "numero_agrement",
             "raison_sociale",
             "enseigne_usuelle",
             "adresse_lieu_dit",
@@ -107,7 +107,5 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "code_insee",
             "departement",
             "pays",
-            # "type_exploitant",
-            # "position_dossier",
-            # "numeros_resytal",
+            # TODO add inspection fields
         ]
