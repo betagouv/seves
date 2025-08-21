@@ -1,5 +1,5 @@
 import choicesDefaults from "choicesDefaults"
-import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
+import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "CustomTreeSelect"
 
 document.addEventListener('DOMContentLoaded', function() {
     function clearSidebarFilters(event) {

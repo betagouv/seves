@@ -1,6 +1,6 @@
 {% extends "ssa/base.html" %}
 {% load static %}
-{% load render_field %}
+{% load render_field dsfr_tags %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
@@ -84,6 +84,9 @@
                                 <div id="categorie-produit"></div>
                                 <div class="fr-mt-2w">
                                     {{ form.categorie_produit  }}
+                                    <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
+                                        {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                    </div>
                                     {% render_field form.denomination %}
                                     {% render_field form.marque %}
                                     {% render_field form.lots %}
@@ -102,7 +105,10 @@
                             <div>
                                 <label>Catégorie de danger</label>
                                 <div id="categorie-danger"></div>
-                                {{ form.categorie_danger  }}
+                                {{ form.categorie_danger }}
+                                <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
+                                    {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                </div>
                                 <div class="fr-mt-4v">
                                     {% render_field form.precision_danger %}
                                 </div>
