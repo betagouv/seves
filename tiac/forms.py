@@ -3,8 +3,10 @@ from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
-from core.fields import SEVESChoiceField, MultiModelChoiceField
+from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
+from core.forms import BaseMessageForm
+from core.models import Contact, Message
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp, ModaliteDeclarationEvenement
 from tiac.models import EvenementSimple
@@ -93,3 +95,38 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 ("Évenement produit", queryset_evenement_produit),
             ],
         )
+
+
+class MessageForm(BaseMessageForm):
+    recipients_limited_recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.get_tiac_structures(), label="Destinataires", required=False
+    )
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+        "recipients_limited_recipients",
+    ]
+
+    class Meta(BaseMessageForm.Meta):
+        fields = [
+            "recipients",
+            "recipients_structures_only",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "recipients_limited_recipients",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        kwargs["limit_contacts_to"] = "ssa"
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
+            self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]

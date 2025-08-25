@@ -10,9 +10,12 @@ from core.mixins import (
     WithEtatMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure, BaseEtablissement
+from core.models import Structure, BaseEtablissement, Document
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
 from .managers import EvenementSimpleManager
 
@@ -26,6 +29,9 @@ class EvenementSimple(
     WithFreeLinkIdsMixin,
     WithBlocCommunFieldsMixin,
     models.Model,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
 ):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
@@ -91,6 +97,40 @@ class EvenementSimple(
 
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
+
+    def get_message_form(self):
+        from tiac.forms import MessageForm
+
+        return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
+            Document.TypeDocument.AUTRE,
+        ]
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.numero}"
 
 
 class Evaluation(models.TextChoices):

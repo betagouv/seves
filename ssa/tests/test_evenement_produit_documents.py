@@ -3,9 +3,17 @@ from playwright.sync_api import expect
 
 from core.factories import DocumentFactory
 from core.pages import WithDocumentsPage
-from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
+from core.tests.generic_tests.documents import (
+    generic_test_cant_see_document_type_from_other_app,
+    generic_test_can_add_document_to_evenement,
+)
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
+
+
+def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_add_document_to_evenement(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_can_edit_document_on_evenement(live_server, page: Page):
