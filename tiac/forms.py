@@ -6,7 +6,7 @@ from dsfr.forms import DsfrBaseForm
 from core.fields import SEVESChoiceField, MultiModelChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
 from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp
+from tiac.constants import EvenementOrigin, EvenementFollowUp, ModaliteDeclarationEvenement
 from tiac.models import EvenementSimple
 
 
@@ -15,6 +15,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
     date_reception = forms.DateTimeField(
         required=False,
+        label="Date de réception à la DD(ETS)PP",
         widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
@@ -25,6 +26,12 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
     follow_up = forms.ChoiceField(
         choices=EvenementFollowUp.choices, widget=forms.RadioSelect, label="Suite donné par la DD", required=True
+    )
+    modalites_declaration = forms.ChoiceField(
+        required=False,
+        choices=ModaliteDeclarationEvenement.choices,
+        widget=forms.RadioSelect,
+        label="Modalités de déclaration",
     )
 
     class Meta:
@@ -39,7 +46,6 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "follow_up",
         )
         widgets = {
-            "modalites_declaration": forms.RadioSelect,
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
         }
 
