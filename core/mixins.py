@@ -1,6 +1,7 @@
 import base64
 import datetime
 from collections import defaultdict
+from json import JSONDecodeError
 
 import requests
 from django.conf import settings
@@ -495,7 +496,7 @@ class WithSireneTokenMixin:
         try:
             response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
             context["sirene_token"] = response.json()["access_token"]
-        except (KeyError, ConnectionError, ConnectTimeout, ReadTimeout):
+        except (KeyError, ConnectionError, ConnectTimeout, ReadTimeout, JSONDecodeError):
             pass
 
         return context
