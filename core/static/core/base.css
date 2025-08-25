@@ -112,6 +112,9 @@ label:has(+ .choices select[data-required="true"]),
 .required-field {
     font-weight: bold;
 }
+fieldset:has(input[type="radio"][required]) > legend {
+    font-weight: bold;
+}
 label:has(+ input:required)::after,
 label:has(+ input[data-required="true"])::after,
 label:has(+ select:required)::after,

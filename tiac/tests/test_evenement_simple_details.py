@@ -52,10 +52,7 @@ def test_evenement_simple_detail_page_content_etablissement(
     expect(details_page.etablissement_modal.get_by_text(etablissement.enseigne_usuelle, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.adresse_lieu_dit, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()
-    expect(details_page.etablissement_modal.get_by_text(etablissement.departement.nom, exact=True)).to_be_visible()
-    expect(
-        details_page.etablissement_modal.get_by_text(etablissement.departement.region.nom, exact=True)
-    ).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(str(etablissement.departement), exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.numero_resytal, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.evaluation, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.commentaire, exact=True)).to_be_visible()

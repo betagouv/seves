@@ -28,7 +28,7 @@ fileignoreconfig:
 - filename: sv/tests/test_evenement_list_order.py
   checksum: 8f9ff88f349a3e8be0d00903d6a9ccaa81db3c8c825a4feaccbb45042b641542
 - filename: core/mixins.py
-  checksum: 9717807f321037aee25f9711e052e85b2b9e2df83bcce796d1931e04ab2f53fb
+  checksum: a3e7662dc5fd7531847d3aea99bbd0b34e90b7b1fd3a9f57b25037fee28fb857
 - filename: conftest.py
   checksum: e5697a536e77dd0d10a3a7aa899da6cb02223491783161895aa618910c82e409
 - filename: core/pages.py
