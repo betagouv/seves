@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from django.conf import settings
 from playwright.sync_api import Page, expect
 
+from core.models import Document
+
 
 class BaseMessagePage(ABC):
     TITLE_ID = "#id_title"
@@ -176,6 +178,31 @@ class WithDocumentsPage:
     def open_edit_document(self, id):
         self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{id}"]').click()
         expect(self.page.locator(f"#fr-modal-edit-{id}")).to_be_visible()
+
+    @property
+    def document_add_title(self):
+        return self.page.locator("#fr-modal-add-doc #id_nom")
+
+    @property
+    def document_add_type(self):
+        return self.page.locator("#fr-modal-add-doc #id_document_type")
+
+    @property
+    def document_add_description(self):
+        return self.page.locator("#fr-modal-add-doc #id_description")
+
+    @property
+    def document_add_file(self):
+        return self.page.locator("#fr-modal-add-doc #id_file")
+
+    def add_document(self):
+        self.open_document_tab()
+        self.open_add_document()
+        self.document_add_title.fill("Name of the document")
+        self.document_add_type.select_option(Document.TypeDocument.AUTRE)
+        self.document_add_description.fill("Description")
+        self.document_add_file.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
+        self.page.get_by_test_id("documents-send").click()
 
     def document_edit_title(self, id):
         return self.page.locator(f"#fr-modal-edit-{id} #id_nom")

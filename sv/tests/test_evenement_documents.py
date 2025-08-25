@@ -14,7 +14,10 @@ from core.models import Structure, Document, Message
 from django.contrib.auth import get_user_model
 
 from core.pages import WithDocumentsPage
-from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
+from core.tests.generic_tests.documents import (
+    generic_test_cant_see_document_type_from_other_app,
+    generic_test_can_add_document_to_evenement,
+)
 from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -24,35 +27,7 @@ User = get_user_model()
 
 def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_test_id("documents-add")).to_be_visible()
-    page.get_by_test_id("documents-add").click()
-
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
-
-    page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
-        settings.BASE_DIR / "static/images/marianne.png"
-    )
-    page.get_by_test_id("documents-send").click()
-
-    assert evenement.documents.count() == 1
-    document = evenement.documents.get()
-
-    assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
-    assert document.nom == "Name of the document"
-    assert document.description == "Description"
-    assert document.created_by == mocked_authentification_user.agent
-    assert document.created_by_structure == mocked_authentification_user.agent.structure
-
-    # Check the document is now listed on the page
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document Information")).to_be_visible()
-    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    generic_test_can_add_document_to_evenement(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
