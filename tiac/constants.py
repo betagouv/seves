@@ -5,7 +5,7 @@ class EvenementOrigin(TextChoices):
     ARS = "ars", "ARS"
     CONSUMER = "consommateur", "Consommateur"
     ETABLISSEMENT = "etablissement", "Établissement"
-    DOCTOR = "medecin", "Médecin"
+    DOCTOR = "medecin", "Médecin / Personnel médical"
     OTHER = "autre", "Autre"
 
 
