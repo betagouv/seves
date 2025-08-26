@@ -33,8 +33,10 @@ def test_can_create_evenement_simple_with_required_fields_only(live_server, mock
     assert evenement.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
-    expect(creation_page.page.get_by_text(input_data.contenu)).to_be_visible()
-    expect(creation_page.page.get_by_text(input_data.get_follow_up_display())).to_be_visible()
+    expect(creation_page.page.locator(".detail-content").get_by_text(input_data.contenu)).to_be_visible()
+    expect(
+        creation_page.page.locator(".detail-content").get_by_text(input_data.get_follow_up_display())
+    ).to_be_visible()
 
 
 def test_can_create_evenement_simple_with_all_fields(
