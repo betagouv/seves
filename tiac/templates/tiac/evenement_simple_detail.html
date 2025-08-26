@@ -12,6 +12,7 @@
   <script type="module" src="{% static 'core/message_form.js' %}"></script>
   <script type="module" src="{% static 'core/document_form.js' %}"></script>
   <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+  <script type="module" src="{% static 'tiac/evenement_simple_details.js' %}"></script>
 {% endblock %}
 
 {% block aside %}
@@ -50,16 +51,19 @@
 
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
 
-    <div id="detail-content">
+    <div class="white-container fr-hidden synthese-content">
+      {% include "tiac/_evenement_simple_informations_synthese.html" %}
+    </div>
 
+    <div class="detail-content">
       {% include "tiac/_evenement_simple_informations.html" %}
       <div class="fr-container--fluid fr-mt-2w detail-content">
         {% include "tiac/_evenement_simple_etablissements.html" %}
         {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
       </div>
-      {% if not object.is_draft %}
-        {% include "core/_fiche_bloc_commun.html" with object=object %}
-      {% endif %}
     </div>
+    {% if not object.is_draft %}
+      {% include "core/_fiche_bloc_commun.html" with object=object %}
+    {% endif %}
   </main>
 {% endblock content %}

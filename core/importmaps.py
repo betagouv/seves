@@ -10,4 +10,5 @@ importmaps = {
     "dsfr": static("dsfr/dist/dsfr.module.min.js"),
     "BanAutocomplete": static("core/ban_autocomplete.js"),
     "Forms": static("core/forms.mjs"),
+    "ViewManager": static("core/view_manager.js"),
 }
