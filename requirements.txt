@@ -100,7 +100,7 @@ execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
     # via -r requirements.in
-faker==33.0.0
+faker==37.5.3
     # via
     #   -r requirements.in
     #   factory-boy
@@ -181,7 +181,6 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   celery
-    #   faker
 python-magic==0.4.27
     # via -r requirements.in
 python-slugify==8.0.4
@@ -216,11 +215,12 @@ tinycss2==1.2.1
 typing-extensions==4.11.0
     # via
     #   django-countries
-    #   faker
     #   pyee
     #   pyopenssl
 tzdata==2025.2
-    # via kombu
+    # via
+    #   faker
+    #   kombu
 urllib3==2.5.0
     # via
     #   botocore
