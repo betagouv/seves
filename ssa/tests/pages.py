@@ -52,6 +52,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         "marque",
         "lots",
         "description_complementaire",
+        "aliments_animaux",
     ]
     risque_fields = [
         "precision_danger",
@@ -113,6 +114,10 @@ class EvenementProduitFormPage(WithTreeSelect):
     def set_categorie_produit_from_label(self, label, clear_input=False):
         self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", label, clear_input)
+
+    def set_aliments_animaux(self, value):
+        block = self.page.locator("#id_aliments_animaux_0").locator("..").locator("..").locator("..")
+        block.get_by_label(value, exact=True).check(force=True)
 
     def set_temperature_conservation(self, value):
         self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
@@ -453,6 +458,10 @@ class EvenementProduitListPage(WithTreeSelect):
     @property
     def etat(self):
         return self.page.locator("#id_etat")
+
+    @property
+    def aliments_animaux(self):
+        return self.page.locator("#id_aliments_animaux")
 
     @property
     def temperature_conservation(self):

@@ -23,7 +23,23 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         ),
         label="N° RASFF/AAC",
     )
+    aliments_animaux = forms.ChoiceField(
+        required=False,
+        choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
+        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Inclut des aliments pour animaux",
+    )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
+    description = forms.CharField(
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "cols": 30,
+                "rows": 6,
+            }
+        ),
+        label="Description de l'événement",
+    )
 
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")

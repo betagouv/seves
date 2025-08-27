@@ -18,6 +18,7 @@ class EvenementProduitExport:
         ("numero_rasff", "Numéro RASFF"),
         ("type_evenement", "Type d'événement"),
         ("source", "Source"),
+        ("aliments_animaux", "Inclut des aliments pour animaux"),
         ("description", "Description"),
         ("categorie_produit", "Catégorie de produit"),
         ("denomination", "Dénomination"),

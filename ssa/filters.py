@@ -27,6 +27,7 @@ class CharInFilter(CharFilter):
 class EvenementProduitFilterForm(DSFRForm):
     manual_render_fields = [
         "etat",
+        "aliments_animaux",
         "temperature_conservation",
         "produit_pret_a_manger",
         "reference_souches",
@@ -71,6 +72,16 @@ class EvenementProduitFilter(
         widget=TextInput(attrs={"placeholder": "Description, produit, établissement..."}),
     )
 
+    aliments_animaux = django_filters.ChoiceFilter(
+        field_name="aliments_animaux",
+        label="Inclut des aliments pour animaux",
+        choices=(
+            (True, "Oui"),
+            (False, "Non"),
+            ("inconnu", "Inconnu"),
+        ),
+        method="filter_aliments_animaux",
+    )
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
@@ -110,6 +121,7 @@ class EvenementProduitFilter(
             "end_date",
             "full_text_search",
             "etat",
+            "aliments_animaux",
             "temperature_conservation",
             "produit_pret_a_manger",
             "reference_souches",
@@ -131,6 +143,11 @@ class EvenementProduitFilter(
 
     def filter_with_free_links(self, queryset, name, value):
         return queryset
+
+    def filter_aliments_animaux(self, queryset, name, value):
+        if value == "inconnu":
+            return queryset.filter(aliments_animaux__isnull=True)
+        return queryset.filter(aliments_animaux=value)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)

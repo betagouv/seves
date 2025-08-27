@@ -61,6 +61,10 @@
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
                             {% endif %}
+                            {{ form.aliments_animaux.label_tag }}
+                            <div class="radio-inline-container radio-inline-container--wrap">
+                                {{ form.aliments_animaux }}
+                            </div>
                         </div>
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
                             <div>{% render_field form.type_evenement %}</div>

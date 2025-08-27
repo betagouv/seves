@@ -40,11 +40,12 @@ def test_can_create_evenement_produit_with_required_fields_only(live_server, moc
 
 
 def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementProduitFactory.build(not_bacterie=True)
+    input_data = EvenementProduitFactory.build(not_bacterie=True, aliments_animaux=True)
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.source.select_option(input_data.source)
+    creation_page.set_aliments_animaux("Oui")
 
     creation_page.set_categorie_produit(input_data)
     creation_page.denomination.fill(input_data.denomination)
