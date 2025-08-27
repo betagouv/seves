@@ -15,6 +15,7 @@ from core.mixins import (
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithAddUserContactsMixin,
 )
 from core.views import MediaDefiningMixin
 from tiac import forms
@@ -24,7 +25,9 @@ from .filters import EvenementSimpleFilter
 from .formsets import EtablissementFormSet
 
 
-class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
+class EvenementSimpleCreationView(
+    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+):
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
 
@@ -79,6 +82,7 @@ class EvenementSimpleCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMi
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
 
+        self.add_user_contacts(self.object)
         messages.success(self.request, "L’évènement a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 

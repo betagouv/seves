@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-from core.models import LienLibre
+from core.models import LienLibre, Contact
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import EvenementSimpleFactory, EtablissementFactory
@@ -84,3 +84,20 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
 
     assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
     assert_models_are_equal(etablissements[1], etablissement_2, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementSimple.objects.get()
+    assert evenement.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in evenement.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in evenement.contacts.all()
