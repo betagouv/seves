@@ -47,6 +47,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         "marque",
         "lots",
         "description_complementaire",
+        "aliments_animaux",
     ]
     risque_fields = [
         "precision_danger",

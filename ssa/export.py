@@ -16,6 +16,7 @@ class EvenementProduitExport:
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
         ("numero_rasff", "Numéro RASFF"),
+        ("aliments_animaux", "L'évènement concerne pour tout ou partie des aliments pour animaux"),
         ("type_evenement", "Type d'événement"),
         ("source", "Source"),
         ("description", "Description"),

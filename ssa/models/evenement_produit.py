@@ -153,6 +153,9 @@ class EvenementProduit(
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     description = models.TextField(verbose_name="Description de l'événement")
+    aliments_animaux = models.BooleanField(
+        null=True, verbose_name="L'évènement concerne pour tout ou partie des aliments pour animaux"
+    )
 
     # Informations liées au produit
     categorie_produit = models.CharField(

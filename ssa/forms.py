@@ -24,6 +24,17 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         label="N° RASFF/AAC",
     )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
+    aliments_animaux = forms.BooleanField(required=False)
+    description = forms.CharField(
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "cols": 30,
+                "rows": 6,
+            }
+        ),
+        label="Description de l'événement",
+    )
 
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
@@ -79,6 +90,10 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     )
 
     numeros_rappel_conso = SimpleArrayField(base_field=forms.CharField(), required=False, widget=forms.HiddenInput)
+
+    manual_render_fields = [
+        "aliments_animaux",
+    ]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")

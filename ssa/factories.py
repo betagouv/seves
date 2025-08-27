@@ -35,6 +35,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     description = factory.Faker("paragraph")
+    aliments_animaux = factory.Faker("boolean")
 
     categorie_produit = FuzzyChoice(CategorieProduit.values)
     denomination = factory.Faker("sentence", nb_words=5)
@@ -42,6 +43,8 @@ class EvenementProduitFactory(DjangoModelFactory):
     lots = factory.Faker("paragraph")
     description_complementaire = factory.Faker("paragraph")
     temperature_conservation = FuzzyChoice([choice[0] for choice in TemperatureConservation.choices])
+
+    # TODO si on valide la création sans remplir le champ, cela s'affiche à NON
 
     categorie_danger = FuzzyChoice(CategorieDanger.values)
     precision_danger = factory.Faker("sentence", nb_words=3)

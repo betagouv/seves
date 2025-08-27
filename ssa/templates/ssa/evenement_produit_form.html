@@ -1,6 +1,5 @@
 {% extends "ssa/base.html" %}
-{% load static %}
-{% load render_field %}
+{% load static dsfr_tags render_field %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
@@ -61,6 +60,12 @@
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
                             {% endif %}
+
+                            <div class="fr-toggle fr-toggle--label-left fr-mt-3v">
+                                <input type="checkbox" class="fr-toggle__input" id="id_aliments_animaux" aria-describedby="toggle-label-left-messages" name="aliments_animaux">
+                                <label class="fr-toggle__label" for="id_aliments_animaux">L'évènement concerne pour tout ou partie des aliments pour animaux</label>
+                            </div>
+
                         </div>
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
                             <div>{% render_field form.type_evenement %}</div>

@@ -45,6 +45,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.source.select_option(input_data.source)
+    creation_page.aliments_animaux.check()
 
     creation_page.set_categorie_produit(input_data)
     creation_page.denomination.fill(input_data.denomination)

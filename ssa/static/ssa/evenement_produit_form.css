@@ -1,4 +1,4 @@
-.main-container label {
+.main-container label:not(.fr-toggle__label) {
     margin-bottom: 0.5rem;
     display: inline-block;
 }
