@@ -236,6 +236,23 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
+def test_can_filter_by_aliments_animaux(live_server, page: Page):
+    to_be_found = EvenementProduitFactory(aliments_animaux=True)
+    not_to_be_found_1 = EvenementProduitFactory(aliments_animaux=False)
+    not_to_be_found_2 = EvenementProduitFactory(aliments_animaux=None)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.aliments_animaux.select_option("Oui")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
 def test_can_filter_by_temperature_conservation(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(temperature_conservation=TemperatureConservation.SURGELE)
     not_to_be_found_1 = EvenementProduitFactory(temperature_conservation=TemperatureConservation.REFRIGERE)

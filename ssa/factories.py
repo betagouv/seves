@@ -35,6 +35,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     description = factory.Faker("paragraph")
+    aliments_animaux = factory.Faker("boolean")
 
     categorie_produit = FuzzyChoice(CategorieProduit.values)
     denomination = factory.Faker("sentence", nb_words=5)
