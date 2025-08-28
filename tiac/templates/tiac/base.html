@@ -7,10 +7,10 @@
 
 {% block product_nav %}
     <li>
-        <button class="fr-btn fr-btn--header-blue fr-my-auto">
-            <span class="fr-icon-add-line" aria-hidden="true"></span>
-            <a href="{% url 'tiac:evenement-simple-creation' %}">Créer un événement</a>
-        </button>
+        <a
+            class="fr-btn fr-btn--header-blue fr-btn--icon-left fr-icon-add-line fr-my-auto"
+            href="{% url 'tiac:evenement-simple-creation' %}"
+        >Créer un événement</a>
     </li>
     <li class="{% block highlight_menu_evenements %}{% endblock %}">
         <a class="fr-btn" href="{% url 'tiac:evenement-liste' %}">Liste des événements</a>
