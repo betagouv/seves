@@ -2,10 +2,10 @@
 
 {% block product_nav %}
     <li>
-        <button class="fr-btn fr-btn--header-blue fr-my-auto">
-            <span class="fr-icon-add-line" aria-hidden="true"></span>
-            <a href="{% url 'ssa:evenement-produit-creation' %}">Créer un événement</a>
-        </button>
+        <a
+            class="fr-btn fr-btn--icon-left fr-btn--header-blue fr-my-auto fr-icon-add-line"
+            href="{% url 'ssa:evenement-produit-creation' %}"
+        >Créer un événement</a>
     </li>
     <li class="{% block highlight_menu_evenements %}{% endblock %}">
         <a class="fr-btn" href="{% url 'ssa:evenement-produit-liste' %}">Liste des événements</a>
