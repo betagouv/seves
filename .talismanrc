@@ -6,7 +6,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: fb80a4f4b4e078dcd3b2953f8747d98514473ee314708a8f166ee48315b53faf
+  checksum: c84dad4b5d67b89e96b38a6be08c0f5f438f1160bd6fc713b80499e91247b0b1
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh

@@ -69,7 +69,11 @@ header .fr-header__body-row {
     color: var(--text-inverted-blue-france) !important;
     margin: 0.25rem;
 }
-.choices__input {
+
+.fr-input .choices__input,
+.fr-input .choices__list,
+.fr-select .choices__input,
+.fr-select .choices__list {
     background-color: var(--background-contrast-grey) !important;
     margin: 0 !important;  /* margin should be carried by .fr-select parent */
     padding: 0 !important;

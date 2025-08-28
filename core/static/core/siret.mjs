@@ -1,4 +1,5 @@
 import choicesDefaults from "choicesDefaults"
+import Choices from "Choices";
 
 function debounce(func, wait) {
     let timeout;
@@ -69,6 +70,12 @@ export function fetchSiret(value, token) {
         });
 }
 
+/**
+ *
+ * @param {HTMLInputElement} element Element to bin Choices to
+ * @param {"auto"|"top"|"bottom"} position The position of the dropdown
+ * @returns {Choices}
+ */
 export function setUpSiretChoices(element, position){
     const choicesSIRET = new Choices(element, {
         ...choicesDefaults,
