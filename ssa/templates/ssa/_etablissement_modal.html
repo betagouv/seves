@@ -18,7 +18,7 @@
                         <div class="fr-fieldset__element">{% render_field form.type_exploitant %}</div>
                         <div class="fr-fieldset__element">
                             <label for="search-siret-input-">N° SIRET</label>
-                            <select class="fr-input" type="search" id="search-siret-input-" data-token="{{ sirene_token }}" data-communes-api="https://geo.api.gouv.fr/communes"></select>
+                            <select class="fr-input" type="search" id="search-siret-input-" data-token="{{ sirene_token }}" data-communes-api="{{ COMMUNES_API }}"></select>
                         </div>
                         {{ form.as_dsfr_div }}
                     </div>

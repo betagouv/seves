@@ -4,6 +4,8 @@
     "choicesDefaults": "file:./core/static/core/choices.mjs",
     "Stimulus": "npm:@hotwired/stimulus@3.2.2",
     "StimulusStore": "npm:stimulus-store@0.0.3",
-    "Choices": "npm:choices.js@11.0.4"
+    "Choices": "npm:choices.js@11.0.4",
+    "BanAutocomplete": "file:./core/static/core/ban_autocomplete.js",
+    "siret": "file:./core/static/core/siret.mjs"
   }
 }

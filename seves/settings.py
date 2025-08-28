@@ -112,6 +112,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "seves.context_processors.common_settings",
                 "seves.context_processors.select_empty_choice",
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
@@ -330,3 +331,4 @@ if ENVIRONMENT != "test":
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")
+COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")

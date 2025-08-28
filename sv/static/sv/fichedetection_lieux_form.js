@@ -1,4 +1,4 @@
-import {setUpSiretChoices} from "/static/core/siret.js";
+import {setUpSiretChoices} from "siret";
 import {setUpCommuneChoices} from "/static/core/commune.js";
 import {setUpAddressChoices} from "BanAutocomplete";
 

@@ -1,12 +1,13 @@
 from django.forms import inlineformset_factory, BaseInlineFormSet, Media
 
 from core.form_mixins import js_module
+from core.mixins import WithCommonContextVars
 from .forms import EtablissementForm
 from .models import EvenementSimple, Etablissement
 from django import forms
 
 
-class EtablissementBaseFormSet(BaseInlineFormSet):
+class EtablissementBaseFormSet(WithCommonContextVars, BaseInlineFormSet):
     template_name = "tiac/forms/etablissement_base_set.html"
 
     @property
