@@ -3,10 +3,10 @@
 
 {% block product_nav %}
     <li>
-        <button class="fr-btn fr-btn--header-blue fr-my-auto">
-            <span class="fr-icon-add-line" aria-hidden="true"></span>
-            <a href="{% url 'sv:fiche-detection-creation' %}">Créer une fiche</a>
-        </button>
+        <a
+            class="fr-btn fr-btn--header-blue fr-btn--icon-left fr-icon-add-line fr-my-auto"
+            href="{% url 'sv:fiche-detection-creation' %}"
+        >Créer une fiche</a>
     </li>
     <li class="{% block highlight_menu_evenements %}{% endblock %}">
         <a class="fr-btn" href="{% url 'sv:evenement-liste' %}">Évènements</a>
