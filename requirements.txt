@@ -90,7 +90,7 @@ django-reversion==5.1.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-django-template-partials==24.4
+django-template-partials==25.1
     # via -r requirements.in
 django-widget-tweaks==1.5.0
     # via django-dsfr
