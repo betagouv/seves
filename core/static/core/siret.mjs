@@ -69,6 +69,12 @@ export function fetchSiret(value, token) {
         });
 }
 
+/**
+ *
+ * @param {HTMLInputElement} element Element to bin Choices to
+ * @param {"auto"|"top"|"bottom"} position The position of the dropdown
+ * @returns {Choices}
+ */
 export function setUpSiretChoices(element, position){
     const choicesSIRET = new Choices(element, {
         ...choicesDefaults,
@@ -78,7 +84,9 @@ export function setUpSiretChoices(element, position){
         position: position,
     });
 
-    choicesSIRET.input.element.addEventListener('input', debounce((event) => {
+    const el = choicesSIRET.input.element
+
+    el.addEventListener('input', debounce((event) => {
         const query = choicesSIRET.input.element.value
         if (query.length > 5) {
             fetchSiret(query, element.dataset.token).then(results => {
@@ -87,5 +95,6 @@ export function setUpSiretChoices(element, position){
             })
         }
     }, 300))
+
     return choicesSIRET
 }

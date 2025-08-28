@@ -2,6 +2,7 @@ import base64
 import datetime
 from collections import defaultdict
 from json import JSONDecodeError
+from typing import Mapping
 
 import requests
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -482,7 +484,13 @@ class EmailNotificationMixin:
 class WithSireneTokenMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        return self._siren_token_context(**context)
 
+    def get_context(self):
+        context = super().get_context()
+        return self._siren_token_context(**context)
+
+    def _siren_token_context(self, **context):
         if not (settings.SIRENE_CONSUMER_KEY and settings.SIRENE_CONSUMER_SECRET):
             return context
         basic_auth = f"{settings.SIRENE_CONSUMER_KEY}:{settings.SIRENE_CONSUMER_SECRET}"
@@ -789,3 +797,11 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         else:
             messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
         return response
+
+
+class WithCommonContextVars(RenderableMixin):
+    extra_context = None
+
+    def get_context(self):
+        extra_context = self.extra_context if isinstance(self.extra_context, Mapping) else {}
+        return {"COMMUNES_API": settings.COMMUNES_API, **extra_context, **super().get_context()}
