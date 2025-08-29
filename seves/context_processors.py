@@ -3,6 +3,10 @@ from django.conf import settings
 from core.constants import Domains
 
 
+def common_settings(request):
+    return {"COMMUNES_API": settings.COMMUNES_API}
+
+
 def select_empty_choice(request):
     return {"select_empty_choice": settings.SELECT_EMPTY_CHOICE}
 

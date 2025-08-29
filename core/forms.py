@@ -332,11 +332,7 @@ class AgentAddForm(DSFRForm):
 
 
 class BaseEtablissementForm(forms.ModelForm):
-    siret = forms.CharField(
-        required=False,
-        max_length=14,
-        widget=forms.HiddenInput,
-    )
+    siret = forms.CharField(required=False, max_length=14, widget=forms.Select)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
