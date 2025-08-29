@@ -1,4 +1,5 @@
 import json
+import re
 from urllib.parse import quote
 
 from django.urls import reverse
@@ -12,11 +13,15 @@ class WithTreeSelect:
         if clear_input:
             self.clear_treeselect(container_id)
         self.page.locator(f"#{container_id} .treeselect-input__edit").click()
-        for part in label.split(">"):
-            if part == label.split(">")[-1]:
-                self.page.get_by_text(part.strip(), exact=True).locator("..").locator(
-                    ".treeselect-list__item-checkbox-icon"
-                ).click(force=True)
+        parts = re.split(r"\s*>\s*", label)
+        for idx, part in enumerate(parts, start=1):
+            if idx == len(parts):  # last element
+                (
+                    self.page.get_by_title(part, exact=True)
+                    .locator(".treeselect-list__item-checkbox-icon")
+                    .locator("visible=true")
+                    .click(force=True)
+                )
             else:
                 self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
 

@@ -2,8 +2,8 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory, ContactAgentFactory, RegionFactory, DepartementFactory
-from core.models import Contact
+from core.factories import ContactStructureFactory, ContactAgentFactory, RegionFactory
+from core.models import Contact, Region
 from core.constants import REGION_STRUCTURE_MAPPING
 from core.factories import StructureFactory
 from core.models import Visibilite
@@ -169,22 +169,19 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
 
 
 @pytest.mark.django_db
-def test_search_with_region_structure_mapping(live_server, page: Page) -> None:
+def test_search_with_region_structure_mapping(live_server, page: Page, ensure_departements) -> None:
     """Test que le filtre région retourne aussi les événements créés par une structure de la région
     lorsque les lieux n'ont pas de région spécifiée."""
-    nouvelle_aquitaine = "Nouvelle-Aquitaine"
-    region_nouvelle_aquitaine = RegionFactory(nom=nouvelle_aquitaine)
-    departement = DepartementFactory(numero=17, nom="Charente-Maritime", region=region_nouvelle_aquitaine)
-    structure_region_nouvelle_aquitaine = REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine)
+    departement, *_ = ensure_departements("Charente-Maritime")
+    nouvelle_aquitaine: Region = departement.region
+    structure_region_nouvelle_aquitaine = REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine.nom)
     structure_nouvelle_aquitaine = StructureFactory(
-        niveau2=REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine), libelle=structure_region_nouvelle_aquitaine
+        niveau2=structure_region_nouvelle_aquitaine, libelle=structure_region_nouvelle_aquitaine
     )
 
     # Evenements avec lieu(x)
     evenement_lieu_sans_region_structure_autre = LieuFactory(departement=None).fiche_detection.evenement
-    evenement_lieu_naq_structure_autre = LieuFactory(
-        departement__region=region_nouvelle_aquitaine
-    ).fiche_detection.evenement
+    evenement_lieu_naq_structure_autre = LieuFactory(departement__region=nouvelle_aquitaine).fiche_detection.evenement
     evenement_lieu_autre_region_structure_autre = LieuFactory(departement__nom="Finistère").fiche_detection.evenement
     evenement_lieu_naq_structure_naq = LieuFactory(
         commune="La Rochelle",
@@ -202,7 +199,7 @@ def test_search_with_region_structure_mapping(live_server, page: Page) -> None:
     Evenement.objects.update(visibilite=Visibilite.NATIONALE)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option(str(region_nouvelle_aquitaine.id))
+    page.get_by_label("Région").select_option(str(nouvelle_aquitaine.id))
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(evenement_lieu_sans_region_structure_autre.numero))).not_to_be_visible()
