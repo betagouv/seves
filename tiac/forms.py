@@ -16,8 +16,6 @@ from tiac.models import EvenementSimple, Etablissement
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
-    template_name = "tiac/forms/evenement_simple.html"
-
     date_reception = forms.DateTimeField(
         required=False,
         label="Date de réception à la DD(ETS)PP",
@@ -144,6 +142,10 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
         required=False,
         max_length=14,
         widget=forms.Select(attrs={"hidden": "hidden"}),
+    )
+    type_etablissement = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition..."}),
     )
 
     class Meta:
