@@ -75,7 +75,6 @@ class InvestigationCasHumain(
         from ssa.models import Etablissement
 
         etablissement_ids = [e.id for e in self.etablissements.all()]
-        # TODO gérer dans le modèle établissement comment va ton faire ?
         etablissements_versions = get_versions_from_ids(etablissement_ids, Etablissement)
 
         instance_version = (

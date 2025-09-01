@@ -243,7 +243,7 @@ def test_can_udpate_etablissement_with_error_show_message(live_server, page, ass
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
     update_page.page.evaluate("""() => {
-        const agrementInput = document.querySelector('#id_etablissements-0-numero_agrement');
+        const agrementInput = document.querySelector('#id_ssa-etablissement-content_type-object_id-0-numero_agrement');
         agrementInput.removeAttribute('pattern');
         agrementInput.value = "22"
     }""")

@@ -6,7 +6,7 @@ let modalEtablissementHTMLContent = {}
 document.addEventListener('DOMContentLoaded', () => {
     function getNextIdToUse() {
         let num = 0
-        while (document.getElementById(`id_etablissements-${num}-raison_sociale`)) {
+        while (document.getElementById(`id_ssa-etablissement-content_type-object_id-${num}-raison_sociale`)) {
             num++
         }
         return num

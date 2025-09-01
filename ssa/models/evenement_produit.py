@@ -144,7 +144,6 @@ class EvenementProduit(
 ):
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
-    # TODO mettre à jour SOURCE
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
 
     # Informations liées au produit
@@ -281,17 +280,6 @@ class EvenementProduit(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
-    def _user_can_interact(self, user):
-        return not self.is_cloture and self.can_user_access(user)
-
-    def get_email_subject(self):
-        return f"{self.get_type_evenement_display()} {self.numero}"
-
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 
@@ -307,8 +295,19 @@ class EvenementProduit(
     def get_publish_error_message(self):
         return "Cet événement produit ne peut pas être publié"
 
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
+
+    def get_message_form(self):
+        from ssa.forms import MessageForm
+
+        return MessageForm
 
     class Meta:
         constraints = [
