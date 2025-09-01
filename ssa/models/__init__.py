@@ -8,3 +8,4 @@ from .etablissement import Etablissement as Etablissement
 from .etablissement import PositionDossier as PositionDossier
 from .categorie_produit import CategorieProduit as CategorieProduit
 from .categorie_danger import CategorieDanger as CategorieDanger
+from .investigation_cas import InvestigationCasHumain as InvestigationCasHumain

@@ -1,5 +1,4 @@
 import reversion
-
 from django.db import models
 
 from core.models import BaseEtablissement
@@ -23,6 +22,9 @@ class PositionDossier(models.TextChoices):
 
 @reversion.register()
 class Etablissement(BaseEtablissement, models.Model):
+    # content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    # object_id = models.PositiveIntegerField()
+    # evenement_produit = GenericForeignKey("content_type", "object_id")
     evenement_produit = models.ForeignKey(EvenementProduit, on_delete=models.PROTECT, related_name="etablissements")
 
     numero_agrement = models.CharField(

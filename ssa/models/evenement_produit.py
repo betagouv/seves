@@ -16,12 +16,12 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure, Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
-from .categorie_produit import CategorieProduit
-from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
+from ssa.models.validators import rappel_conso_validator
 from .categorie_danger import CategorieDanger
+from .categorie_produit import CategorieProduit
+from .mixins import BaseSSAEvenement
 
 
 class TypeEvenement(models.TextChoices):
@@ -30,7 +30,6 @@ class TypeEvenement(models.TextChoices):
     NON_ALERTE = "non_alerte", "Non alerte"
     ALERTE_PRODUIT_UE = "alerte_produit_ue", "Alerte produit UE/INT (RASFF)"
     NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (AAC)"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
     AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
 
 
@@ -41,8 +40,6 @@ class Source(models.TextChoices):
     AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
     AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas humains"
-    DO_LISTERIOSE = "do_listeriose", "DO Listériose"
-    CAS_GROUPES = "cas_groupes", "Cas groupés"
     SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
     AUTRE = "autre", "Signalement autre"
 
@@ -141,18 +138,13 @@ class EvenementProduit(
     WithEtatMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
+    BaseSSAEvenement,
     models.Model,
 ):
-    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    numero_rasff = models.CharField(
-        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
-    )
-
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
+    # TODO mettre à jour SOURCE
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
-    description = models.TextField(verbose_name="Description de l'événement")
 
     # Informations liées au produit
     categorie_produit = models.CharField(
@@ -167,22 +159,15 @@ class EvenementProduit(
     )
 
     # Informations liées au risque
-    categorie_danger = models.CharField(
-        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
-    )
-    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
     quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
     quantification_unite = models.CharField(
         blank=True, max_length=100, choices=QuantificationUnite.choices, verbose_name="Unité"
     )
-    evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     produit_pret_a_manger = models.CharField(
         blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
-    reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
-    reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")
 
@@ -191,8 +176,6 @@ class EvenementProduit(
     )
 
     objects = EvenementProduitManager()
-
-    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
@@ -279,33 +262,6 @@ class EvenementProduit(
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
 
-    @classmethod
-    def danger_plus_courants(self):
-        return [
-            CategorieDanger.LISTERIA_MONOCYTOGENES,
-            CategorieDanger.SALMONELLA_ENTERITIDIS,
-            CategorieDanger.SALMONELLA_TYPHIMURIUM,
-            CategorieDanger.E_COLI_NON_STEC,
-            CategorieDanger.PESTICIDE_RESIDU,
-        ]
-
-    @property
-    def list_of_linked_objects_as_str(self):
-        links = LienLibre.objects.for_object(self)
-        objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
-        return [str(o) for o in objects if not o.is_deleted]
-
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
-    def can_be_updated(self, user):
-        return self._user_can_interact(user)
-
-    def can_user_delete(self, user):
-        return self.can_user_access(user)
-
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 
@@ -321,65 +277,5 @@ class EvenementProduit(
     def get_publish_error_message(self):
         return "Cet événement produit ne peut pas être publié"
 
-    def _user_can_interact(self, user):
-        return not self.is_cloture and self.can_user_access(user)
-
-    def get_email_subject(self):
-        return f"{self.get_type_evenement_display()} {self.numero}"
-
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
-
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(source=Source.AUTRE)
-                    | models.Q(source="")
-                    | (
-                        models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                    | (
-                        ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                ),
-                name="type_evenement_source_constraint",
-            ),
-            models.CheckConstraint(
-                condition=(
-                    models.Q(produit_pret_a_manger="")
-                    | models.Q(categorie_danger__in=CategorieDanger.dangers_bacteriens())
-                ),
-                name="pam_requires_danger_bacterien",
-            ),
-        ]

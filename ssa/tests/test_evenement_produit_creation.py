@@ -9,7 +9,6 @@ from core.constants import AC_STRUCTURE
 from core.models import LienLibre, Contact, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
-from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import EvenementSimpleFactory
@@ -148,22 +147,6 @@ def test_can_add_and_delete_numero_rappel_conso(live_server, mocked_authentifica
 
     evenement_produit = EvenementProduit.objects.get()
     assert evenement_produit.numeros_rappel_conso == ["2025-01-1234", "2025-02-1234", "2025-04-1234"]
-
-
-def test_source_list_is_updated_when_type_evenement_is_changed(live_server, page: Page, check_select_options):
-    creation_page = EvenementProduitFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.type_evenement.select_option(label=TypeEvenement.ALERTE_PRODUIT_NATIONALE.label)
-    creation_page.source.click()
-    excluded_values = {s.value for s in EvenementProduit.SOURCES_FOR_HUMAN_CASE}
-    expected = [s.label for s in Source if s.value not in excluded_values]
-    check_select_options(creation_page.page, "id_source", expected)
-
-    creation_page.type_evenement.select_option(label=TypeEvenement.INVESTIGATION_CAS_HUMAINS.label)
-    wanted_values = {s.value for s in EvenementProduit.SOURCES_FOR_HUMAN_CASE}
-    expected = [s.label for s in Source if s.value in wanted_values]
-    expected.append("Signalement autre")
-    check_select_options(creation_page.page, "id_source", expected, with_default_value=False)
 
 
 def test_can_add_etablissements(live_server, page: Page, ensure_departements, assert_models_are_equal):

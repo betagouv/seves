@@ -43,8 +43,6 @@ fileignoreconfig:
   checksum: ad80322fb2dab542fe667054b83761da8e386ce7357b123b2e30a0fea28f1f10
 - filename: .github/workflows/django.yml
   checksum: bb2812e864802e3e55d05b28f6da146973a78b382dad3d94d1de8d4f10430657
-- filename: ssa/models/mixins.py
-  checksum: d3c07c3669e197136987b8fc9d4d0a837484e5976455aa31e782032d7964802b
 - filename: core/migrations/0036_alter_document_document_type.py
   checksum: 2e8699e33c60f9a9449163078d9171b0186bb7d490e72cf926d15b6833eda02e
 - filename: core/templates/core/_documents.html
@@ -59,3 +57,9 @@ fileignoreconfig:
   checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
 - filename: tiac/static/tiac/etablissements.mjs
   checksum: 47e4768c4bea879aa0043812662bb786bedd8a87eaa241029f762214ac4bad1e
+- filename: ssa/models/etablissement.py
+  checksum: dc0d7206243df311a33ba0ab4696f1e622c01a3ced34d76566411cb3b2deef5a
+- filename: ssa/models/choicejs_utils.py
+  checksum: cdf044fadc6828c0f87ec5a516c58a4dbb1d081dfd96ca5b479cc9b33a79a6a2
+- filename: ssa/models/mixins.py
+  checksum: e9e64e56bbdb3e0a05cb62f9c393ebefd999e892ba338aab93e1dd375fb5df6a

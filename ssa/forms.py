@@ -6,7 +6,6 @@ from core.form_mixins import DSFRForm
 from core.forms import BaseMessageForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message
-from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import Etablissement, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
@@ -23,7 +22,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         ),
         label="N° RASFF/AAC",
     )
-    source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
+    source = SEVESChoiceField(choices=Source.choices, required=False)
 
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")

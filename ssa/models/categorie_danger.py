@@ -1,5 +1,5 @@
 from django.db import models
-from .mixins import WithChoicesToJS
+from .choicejs_utils import WithChoicesToJS
 
 
 class CategorieDanger(WithChoicesToJS, models.TextChoices):
