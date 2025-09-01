@@ -57,9 +57,11 @@ fileignoreconfig:
   checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
 - filename: tiac/static/tiac/etablissements.mjs
   checksum: 47e4768c4bea879aa0043812662bb786bedd8a87eaa241029f762214ac4bad1e
-- filename: ssa/models/etablissement.py
-  checksum: dc0d7206243df311a33ba0ab4696f1e622c01a3ced34d76566411cb3b2deef5a
 - filename: ssa/models/choicejs_utils.py
   checksum: cdf044fadc6828c0f87ec5a516c58a4dbb1d081dfd96ca5b479cc9b33a79a6a2
 - filename: ssa/models/mixins.py
   checksum: e9e64e56bbdb3e0a05cb62f9c393ebefd999e892ba338aab93e1dd375fb5df6a
+- filename: ssa/models/etablissement.py
+  checksum: 9fecd61403e3b47003e05bbd464ab5742fabddd5b24c2e2313696903e87f5288
+- filename: ssa/models/investigation_cas.py
+  checksum: 7129253e95c28f5a37f9eec6cd9d084f40eb0b147bfad5fd4f33d8a487ce6521

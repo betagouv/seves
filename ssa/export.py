@@ -100,7 +100,7 @@ class EvenementProduitExport:
             return
 
         queryset = (
-            EvenementProduit.objects.with_departement_prefetched()
+            EvenementProduit.objects.all()
             .filter(id__in=task.object_ids)
             .select_related("createur")
             .prefetch_related("etablissements")

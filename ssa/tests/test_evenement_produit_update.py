@@ -172,8 +172,8 @@ def test_can_see_and_edit_etablissement_on_evenement_produit_update(
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
     evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
-    etablissement_1 = EtablissementFactory(evenement_produit=evenement)
-    etablissement_2 = EtablissementFactory(evenement_produit=evenement)
+    etablissement_1 = EtablissementFactory(evenement=evenement)
+    etablissement_2 = EtablissementFactory(evenement=evenement)
 
     departement = DepartementFactory()
     wanted_values = EtablissementFactory.build(departement=departement)
@@ -205,7 +205,7 @@ def test_can_add_etablissement_on_evenement_produit_update(live_server, page, se
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
     evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
-    EtablissementFactory(evenement_produit=evenement)
+    EtablissementFactory(evenement=evenement)
     departement = DepartementFactory()
     wanted_values = EtablissementFactory.build(departement=departement)
 
@@ -223,8 +223,8 @@ def test_can_add_etablissement_on_evenement_produit_update(live_server, page, se
 
 def test_can_delete_etablissement_on_evenement_produit_update(live_server, page, assert_models_are_equal):
     evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
-    to_keep = EtablissementFactory(evenement_produit=evenement)
-    _to_delete = EtablissementFactory(evenement_produit=evenement)
+    to_keep = EtablissementFactory(evenement=evenement)
+    _to_delete = EtablissementFactory(evenement=evenement)
 
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
@@ -238,7 +238,7 @@ def test_can_delete_etablissement_on_evenement_produit_update(live_server, page,
 
 def test_can_udpate_etablissement_with_error_show_message(live_server, page, assert_models_are_equal):
     evenement: EvenementProduit = EvenementProduitFactory(not_bacterie=True)
-    etablissement = EtablissementFactory(evenement_produit=evenement)
+    etablissement = EtablissementFactory(evenement=evenement)
 
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)

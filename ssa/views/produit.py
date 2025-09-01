@@ -118,7 +118,7 @@ class EvenementProduitDetailView(
         return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
-        return EvenementProduit.objects.with_departement_prefetched().all().select_related("createur")
+        return EvenementProduit.objects.all().all().select_related("createur")
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):
@@ -166,7 +166,7 @@ class EvenementUpdateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
+        queryset = Etablissement.objects.for_object(self.get_object())
         formset = EtablissementFormSet(instance=self.get_object(), queryset=queryset)
         context["empty_form"] = formset.empty_form
         context["formset"] = formset
@@ -180,7 +180,7 @@ class EvenementUpdateView(
     def post(self, request, pk):
         self.object = self.get_object()
         form = self.get_form()
-        queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
+        queryset = Etablissement.objects.for_object(self.get_object())
         formset = EtablissementFormSet(request.POST, instance=self.get_object(), queryset=queryset)
         if not form.is_valid():
             return self.form_invalid(form)

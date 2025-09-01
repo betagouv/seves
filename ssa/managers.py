@@ -1,24 +1,16 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
 
 from core.managers import EvenementManagerMixin
 
 
-class BaseSSAManager(models.Manager):
-    def with_departement_prefetched(self):
-        return (
-            self.get_queryset()
-            .prefetch_related("etablissements__departement")
-            .prefetch_related("etablissements__departement__region")
-        )
-
-
-class EvenementProduitManager(BaseSSAManager, models.Manager):
+class EvenementProduitManager(models.Manager):
     def get_queryset(self):
         return EvenementProduitQueryset(self.model, using=self._db).filter(is_deleted=False)
 
 
-class InvestigationManager(BaseSSAManager, models.Manager):
+class InvestigationManager(models.Manager):
     def get_queryset(self):
         return InvestigationQueryset(self.model, using=self._db).filter(is_deleted=False)
 
@@ -87,3 +79,9 @@ class InvestigationQueryset(EvenementManagerMixin, models.QuerySet):
         for f in fields:
             query_object |= Q(**{f"{f}__unaccent__icontains": query})
         return self.filter(query_object)
+
+
+class EtablissementQueryset(models.QuerySet):
+    def for_object(self, obj):
+        content_type = ContentType.objects.get_for_model(obj)
+        return self.filter(content_type=content_type, object_id=obj.id)

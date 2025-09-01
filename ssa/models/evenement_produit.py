@@ -1,4 +1,5 @@
 import reversion
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
@@ -177,6 +178,13 @@ class EvenementProduit(
 
     objects = EvenementProduitManager()
 
+    etablissements = GenericRelation(
+        "Etablissement",
+        content_type_field="content_type",
+        object_id_field="object_id",
+        related_query_name="evenementproduit",
+    )
+
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("ssa:evenement-produit-details", kwargs={"numero": numero})
@@ -262,6 +270,28 @@ class EvenementProduit(
             return None
         return max(versions, key=lambda obj: obj.revision.date_created)
 
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
+
+    def can_be_updated(self, user):
+        return self._user_can_interact(user)
+
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_message_form(self):
+        from ssa.forms import MessageForm
+
+        return MessageForm
+
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 
@@ -279,3 +309,14 @@ class EvenementProduit(
 
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(produit_pret_a_manger="")
+                    | models.Q(categorie_danger__in=CategorieDanger.dangers_bacteriens())
+                ),
+                name="pam_requires_danger_bacterien",
+            ),
+        ]

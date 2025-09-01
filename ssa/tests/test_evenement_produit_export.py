@@ -103,18 +103,18 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
 
 @pytest.mark.django_db
 def test_export_evenement_produit_performances_scales_on_number_of_etablissements(django_assert_num_queries):
-    evenement = EtablissementFactory().evenement_produit
+    evenement = EtablissementFactory().evenement
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
-    with django_assert_num_queries(NB_QUERIES + 2):
+    with django_assert_num_queries(NB_QUERIES + 1):
         EvenementProduitExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
 
-    evenement = EtablissementFactory().evenement_produit
-    EtablissementFactory(evenement_produit=evenement)
-    EtablissementFactory(evenement_produit=evenement)
+    evenement = EtablissementFactory().evenement
+    EtablissementFactory(evenement=evenement)
+    EtablissementFactory(evenement=evenement)
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
     with django_assert_num_queries(NB_QUERIES + 4):
@@ -127,8 +127,8 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
 @pytest.mark.django_db
 def test_export_evenement_produit_content_etablissement(mailoutbox):
     etablissement_1 = EtablissementFactory()
-    etablissement_2 = EtablissementFactory(evenement_produit=etablissement_1.evenement_produit)
-    task = Export.objects.create(user=UserFactory(), object_ids=[etablissement_1.evenement_produit.pk])
+    etablissement_2 = EtablissementFactory(evenement=etablissement_1.evenement)
+    task = Export.objects.create(user=UserFactory(), object_ids=[etablissement_1.evenement.pk])
     EvenementProduitExport().export(task.id)
 
     task.refresh_from_db()

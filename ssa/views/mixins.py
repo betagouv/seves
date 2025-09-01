@@ -22,7 +22,7 @@ class WithFilteredListMixin(WithOrderingMixin):
         user = self.request.user
         contact = user.agent.structure.contact_set.get()
         return (
-            EvenementProduit.objects.with_departement_prefetched()
+            EvenementProduit.objects.all()
             .select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)

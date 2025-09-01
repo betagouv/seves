@@ -38,28 +38,6 @@ class BaseSSAEvenement(models.Model):
         objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
         return [str(o) for o in objects if not o.is_deleted]
 
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
-    def can_be_updated(self, user):
-        return self._user_can_interact(user)
-
-    def can_user_delete(self, user):
-        return self.can_user_access(user)
-
-    def _user_can_interact(self, user):
-        return not self.is_cloture and self.can_user_access(user)
-
-    def get_email_subject(self):
-        return f"{self.get_type_evenement_display()} {self.numero}"
-
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,
@@ -85,12 +63,3 @@ class BaseSSAEvenement(models.Model):
 
     class Meta:
         abstract = True
-        constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(produit_pret_a_manger="")
-                    | models.Q(categorie_danger__in=CategorieDanger.dangers_bacteriens())
-                ),
-                name="pam_requires_danger_bacterien",
-            ),
-        ]

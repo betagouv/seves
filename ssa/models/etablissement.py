@@ -1,8 +1,10 @@
 import reversion
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from core.models import BaseEtablissement
-from ssa.models import EvenementProduit
+from ssa.managers import EtablissementQueryset
 from ssa.models.validators import validate_numero_agrement
 
 
@@ -22,10 +24,9 @@ class PositionDossier(models.TextChoices):
 
 @reversion.register()
 class Etablissement(BaseEtablissement, models.Model):
-    # content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
-    # object_id = models.PositiveIntegerField()
-    # evenement_produit = GenericForeignKey("content_type", "object_id")
-    evenement_produit = models.ForeignKey(EvenementProduit, on_delete=models.PROTECT, related_name="etablissements")
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="etablissements")
+    object_id = models.PositiveIntegerField()
+    evenement = GenericForeignKey("content_type", "object_id")
 
     numero_agrement = models.CharField(
         max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
@@ -36,6 +37,8 @@ class Etablissement(BaseEtablissement, models.Model):
         max_length=100, choices=PositionDossier.choices, verbose_name="Position dossier", blank=True
     )
     numeros_resytal = models.CharField(max_length=255, verbose_name="Numéros d’inspection Resytal", blank=True)
+
+    objects = EtablissementQueryset.as_manager()
 
     def __str__(self):
         return f"{self.raison_sociale}"

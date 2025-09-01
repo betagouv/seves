@@ -1,9 +1,6 @@
-from django.forms import inlineformset_factory
+from django.contrib.contenttypes.forms import generic_inlineformset_factory
 
 from ssa.forms import EtablissementForm
-from ssa.models import EvenementProduit
 from ssa.models.etablissement import Etablissement
 
-EtablissementFormSet = inlineformset_factory(
-    EvenementProduit, Etablissement, form=EtablissementForm, extra=10, can_delete=True
-)
+EtablissementFormSet = generic_inlineformset_factory(Etablissement, form=EtablissementForm, extra=10, can_delete=True)

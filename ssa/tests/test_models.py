@@ -49,7 +49,7 @@ def test_evenement_produit_latest_revision():
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
     latest_version = evenement.latest_version
 
-    etablissement = EtablissementFactory(evenement_produit=evenement)
+    etablissement = EtablissementFactory(evenement=evenement)
     assert latest_version.pk != evenement.latest_version.pk
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
 

@@ -61,7 +61,7 @@ def test_evenement_produit_detail_page_content_etablissement(
     live_server, page: Page, assert_etablissement_card_is_correct
 ):
     evenement = EvenementProduitFactory()
-    etablissement = EtablissementFactory(evenement_produit=evenement)
+    etablissement = EtablissementFactory(evenement=evenement)
 
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

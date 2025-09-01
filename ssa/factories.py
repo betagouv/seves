@@ -102,7 +102,7 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
-    evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
+    evenement = factory.SubFactory("ssa.factories.EvenementProduitFactory")
 
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     type_exploitant = factory.Faker("sentence", nb_words=2)

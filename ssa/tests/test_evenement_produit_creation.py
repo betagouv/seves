@@ -154,7 +154,7 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     evenement = EvenementProduitFactory()
 
     etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(
-        3, evenement_produit=evenement, departement=departement
+        3, evenement=evenement, departement=departement
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
@@ -178,7 +178,7 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, ensure_d
     ain, *_ = ensure_departements("Ain", "Aisne")
     evenement = EvenementProduitFactory()
 
-    etablissement = EtablissementFactory.build(evenement_produit=evenement, departement=ain)
+    etablissement = EtablissementFactory.build(evenement=evenement, departement=ain)
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
@@ -230,7 +230,7 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, ensure_depar
     evenement = EvenementProduitFactory()
 
     etablissement_1, etablissement_2, etablissement_3 = EtablissementFactory.build_batch(
-        3, evenement_produit=evenement, departement=departement
+        3, evenement=evenement, departement=departement
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
@@ -428,7 +428,7 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_models_are_equal):
     evenement = EvenementProduitFactory()
 
-    etablissement = EtablissementFactory(evenement_produit=evenement)
+    etablissement = EtablissementFactory(evenement=evenement)
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()

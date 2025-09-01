@@ -143,7 +143,7 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     evenement_5 = EvenementProduitFactory(lots="Morbier")
     evenement_6 = EvenementProduitFactory(description_complementaire="Morbier")
     evenement_7 = EvenementProduitFactory()
-    EtablissementFactory(raison_sociale="Morbier", evenement_produit=evenement_7)
+    EtablissementFactory(raison_sociale="Morbier", evenement=evenement_7)
     evenement_8 = EvenementProduitFactory()
     evenement_9 = EvenementProduitFactory()
 
@@ -340,9 +340,9 @@ def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(to_be_found.evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_commune(live_server, mocked_authentification_user, page: Page):
@@ -357,9 +357,9 @@ def test_can_filter_by_commune(live_server, mocked_authentification_user, page: 
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(to_be_found.evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Page):
@@ -374,9 +374,9 @@ def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Pa
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(to_be_found.evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_departement(live_server, ensure_departements, mocked_authentification_user, page: Page):
@@ -392,9 +392,9 @@ def test_can_filter_by_departement(live_server, ensure_departements, mocked_auth
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(to_be_found.evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Page):
@@ -409,9 +409,9 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(to_be_found.evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_categorie_produit(live_server, mocked_authentification_user, page: Page):
