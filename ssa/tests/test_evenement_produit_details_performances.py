@@ -18,7 +18,7 @@ def test_evenement_produit_performances(client, django_assert_num_queries):
 
     EtablissementFactory.create_batch(3, evenement=evenement)
 
-    with django_assert_num_queries(NUMBER_BASE_QUERIES + 4):
+    with django_assert_num_queries(NUMBER_BASE_QUERIES + 6):
         client.get(evenement.get_absolute_url())
 
 

@@ -758,10 +758,6 @@ class Migration(migrations.Migration):
             model_name="evenementproduit",
             name="type_evenement_source_constraint",
         ),
-        migrations.RemoveConstraint(
-            model_name="evenementproduit",
-            name="pam_requires_danger_bacterien",
-        ),
         migrations.AddField(
             model_name="etablissement",
             name="content_type",

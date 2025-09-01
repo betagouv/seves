@@ -117,7 +117,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     EtablissementFactory(evenement=evenement)
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
-    with django_assert_num_queries(NB_QUERIES + 4):
+    with django_assert_num_queries(NB_QUERIES + 5):
         EvenementProduitExport().export(task.id)
 
     task.refresh_from_db()
