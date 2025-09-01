@@ -83,7 +83,9 @@ def test_list_can_filter_by_numero_rasff(live_server, mocked_authentification_us
 
 
 def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_UE, numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(
+        type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, numero_annee=2025, numero_evenement=2
+    )
     EvenementProduitFactory(type_evenement=TypeEvenement.NON_ALERTE, numero_annee=2025, numero_evenement=1)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()

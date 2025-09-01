@@ -27,9 +27,8 @@ from .categorie_danger import CategorieDanger
 class TypeEvenement(models.TextChoices):
     ALERTE_PRODUIT_NATIONALE = "alerte_produit_nationale", "Alerte produit nationale"
     ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
-    NON_ALERTE = "non_alerte", "Non alerte"
-    ALERTE_PRODUIT_UE = "alerte_produit_ue", "Alerte produit UE/INT (RASFF)"
-    NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (AAC)"
+    NON_ALERTE = "non_alerte", "Non alerte (non mis sur le marché)"
+    NON_ALERTE_NON_DANGEREUX = "non_alerte_non_dangereux", "Non alerte (non dangereux)"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
     AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
 
