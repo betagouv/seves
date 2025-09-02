@@ -1,4 +1,5 @@
-{% load static importmap dsfr_tags groups %}
+{% load partials %}
+{% load static importmap dsfr_tags groups waffle_tags %}
 
 <!doctype html>
 <html lang="fr">
@@ -62,11 +63,22 @@
                                                         {{ current_domain.nom }}</button>
                                                     <div class="fr-collapse fr-translate__menu fr-menu" id="domain-picker">
                                                         <ul class="fr-menu__list">
-                                                            {% for domain in other_domains %}
+                                                            {% partialdef domain-btn %}
                                                                 <li class="fr-mt-1w">
                                                                     <a class="fr-translate__language fr-nav__link fr-tag" href="{{ domain.url }}" >
                                                                         <span class="{{ domain.icon }} fr-icon--sm fr-pr-1w" ></span>
-                                                                        {{ domain.nom }}</a></li>
+                                                                        {{ domain.nom }}
+                                                                    </a>
+                                                                </li>
+                                                            {% endpartialdef %}
+                                                            {% for domain in other_domains %}
+                                                                {% if domain == "tiac" %}
+                                                                    {% flag "tiac" %}
+                                                                        {% partial domain-btn %}
+                                                                    {% endflag %}
+                                                                {% else %}
+                                                                    {% partial domain-btn %}
+                                                                {% endif %}
                                                             {% endfor %}
                                                         </ul>
                                                     </div>
