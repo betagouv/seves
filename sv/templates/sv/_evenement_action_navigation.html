@@ -25,18 +25,3 @@
         </div>
     </nav>
 {% endif %}
-
-{% if can_be_ac_notified %}
-    {% include "core/_notifier_ac_modale.html" with object=evenement %}
-{% endif %}
-
-{% if can_update_visibilite %}
-    {% include "sv/_update_visibilite_modale.html" %}
-{% endif %}
-{% if is_evenement_can_be_cloturer%}
-    {% include "core/_cloturer_modal.html" %}
-{% endif %}
-{% if can_be_deleted %}
-    {% url 'sv:evenement-liste' as next_url %}
-    {% include "core/_delete_modal.html" with object=evenement content_type=content_type next_url=next_url%}
-{% endif %}
