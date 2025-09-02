@@ -36,13 +36,20 @@ class TypeEvenement(models.TextChoices):
 class Source(models.TextChoices):
     AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
     AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
-    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
-    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
-    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas humains"
+    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC (hors PCF)"
+    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Prélèvement officiel autre (hors PCF)"
+    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel (hors PCF)"
+    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas ou TIAC"
+    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement de consommateur"
+    NOTIFICATION_RASFF = "notification_rasff", "Notification RASFF"
+    NOTIFICATION_AAC = "notification_aac", "Notification AAC"
+    TOUT_DROIT = "tout_droit", "Tout droit"
+    PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
+    PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
+    AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
+
     DO_LISTERIOSE = "do_listeriose", "DO Listériose"
     CAS_GROUPES = "cas_groupes", "Cas groupés"
-    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
     AUTRE = "autre", "Signalement autre"
 
 
