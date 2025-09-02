@@ -28,7 +28,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     )
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
     follow_up = forms.ChoiceField(
-        choices=EvenementFollowUp.choices, widget=forms.RadioSelect, label="Suite donné par la DD", required=True
+        choices=EvenementFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée par la DD", required=True
     )
     modalites_declaration = forms.ChoiceField(
         required=False,
