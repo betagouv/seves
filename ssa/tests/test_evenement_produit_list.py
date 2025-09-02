@@ -417,13 +417,13 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
 
 
 def test_can_filter_by_categorie_produit(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
-    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
-    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+    to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_categorie_produit("Produit carné > De boucherie > Abat blanc de boucherie")
+    search_page.set_categorie_produit("Produit carné > Viande hachée > VH - Bovin")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
@@ -432,13 +432,13 @@ def test_can_filter_by_categorie_produit(live_server, mocked_authentification_us
 
 
 def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
-    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
-    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+    to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_categorie_produit("Produit carné > De boucherie")
+    search_page.set_categorie_produit("Produit carné > Viande hachée")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
