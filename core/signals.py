@@ -1,5 +1,5 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_migrate
 
 from core.models import Document
 from django.conf import settings
@@ -29,3 +29,11 @@ def run_virus_scan(instance):
 def scan_for_viruses_on_creation_if_needed(sender, instance, created, **kwargs):
     if created and not settings.BYPASS_ANTIVIRUS:
         transaction.on_commit(lambda: run_virus_scan(instance))
+
+
+@receiver(post_migrate)
+def tiac_feature_flag(sender, app_config, **kwargs):
+    if app_config.label == "waffle":
+        from waffle import get_waffle_flag_model
+
+        get_waffle_flag_model().objects.get_or_create(name="tiac", defaults={"everyone": None, "superusers": True})

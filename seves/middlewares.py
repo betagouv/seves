@@ -1,3 +1,6 @@
+import contextlib
+
+import waffle
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
@@ -26,6 +29,11 @@ class LoginAndGroupRequiredMiddleware:
         user = request.user
         if not (user and user.is_authenticated):
             return redirect_to_login(request.get_full_path())
+
+        with contextlib.suppress(ValueError):
+            domain = Domains(match.app_name)
+            if domain == "tiac" and not waffle.flag_is_active(request, "tiac"):
+                raise PermissionDenied()
 
         needed_group = Domains.group_for_value(match.app_name)
         if needed_group:

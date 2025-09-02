@@ -19,6 +19,7 @@ whitenoise
 django-dsfr
 dj-importmap
 django-template-partials
+django-waffle
 # Dev
 djhtml
 django-debug-toolbar
