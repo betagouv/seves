@@ -705,11 +705,11 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
-    creation_page.set_categorie_danger_from_shortcut("Escherichia coli (non STEC - EHEC)")
+    creation_page.set_categorie_danger_from_shortcut("Escherichia coli shigatoxinogène (STEC - EHEC)")
     creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()
-    assert evenement_produit.categorie_danger == "Escherichia coli (non STEC - EHEC)"
+    assert evenement_produit.categorie_danger == "Escherichia coli shigatoxinogène (STEC - EHEC)"
 
 
 def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page: Page):
