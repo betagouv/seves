@@ -162,7 +162,7 @@ def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_serv
 
     expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
-    assert evenement.categorie_danger == CategorieDanger.PESTICIDE_RESIDU
+    assert evenement.categorie_danger == CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE
     assert evenement.produit_pret_a_manger == ""
 
 

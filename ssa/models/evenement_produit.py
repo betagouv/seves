@@ -291,8 +291,8 @@ class EvenementProduit(
             CategorieDanger.LISTERIA_MONOCYTOGENES,
             CategorieDanger.SALMONELLA_ENTERITIDIS,
             CategorieDanger.SALMONELLA_TYPHIMURIUM,
-            CategorieDanger.E_COLI_NON_STEC,
-            CategorieDanger.PESTICIDE_RESIDU,
+            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE,
         ]
 
     @property
