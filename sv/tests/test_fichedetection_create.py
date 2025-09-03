@@ -882,10 +882,10 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     lieu_form_elements: LieuFormDomElements,
     choice_js_fill,
     choice_js_fill_from_element,
+    ensure_departements,
 ):
     call_count = {"count": 0}
-    region = Region.objects.create(nom="Île-de-France")
-    Departement.objects.create(numero=75, nom="Paris", region=region)
+    ensure_departements("Paris")
 
     def handle(route):
         response = {
