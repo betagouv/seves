@@ -3,7 +3,7 @@ import {useStore, createStore} from "StimulusStore"
 import {applicationReady} from "Application"
 import Choices from "Choices"
 import choicesDefaults from "choicesDefaults"
-import {AbstractFormSetController} from "BaseFormset"
+import {BaseFormSetController} from "BaseFormset"
 
 const choicesStore = createStore({
     name: "selectedChoices",
@@ -93,9 +93,9 @@ class ZoneInfesteeFormController extends ZoneInfesteeController {
 }
 
 
-class ZoneInfesteeFormSetController extends AbstractFormSetController {
-    static targets = [...AbstractFormSetController.targets, "formDetectionsSelect"]
-    static values = { ...AbstractFormSetController.values, selectedChoices: Array }
+class ZoneInfesteeFormSetController extends BaseFormSetController {
+    static targets = [...BaseFormSetController.targets, "formDetectionsSelect"]
+    static values = { ...BaseFormSetController.values, selectedChoices: Array }
     static stores = [choicesStore]
 
     connect() {
