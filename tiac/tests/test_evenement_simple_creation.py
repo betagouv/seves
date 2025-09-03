@@ -103,3 +103,17 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     assert user_contact_structure in evenement.contacts.all()
+
+
+def test_can_publish_evenement_simple(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.publish()
+
+    evenement_simple = EvenementSimple.objects.get()
+    assert evenement_simple.createur == mocked_authentification_user.agent.structure
+    assert evenement_simple.contenu == input_data.contenu
+    assert evenement_simple.numero is not None
+    assert evenement_simple.is_draft is False
