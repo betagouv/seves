@@ -34,6 +34,5 @@
     {{ form.pays.label_tag }}
     {{ form.pays|set_data:"etablissement-form-target:paysInput" }}
 </div>
-<div class="fr-hidden">
-    {{ form.code_insee|set_data:"etablissement-form-target:codeInseeInput" }}
-</div>
+{{ form.code_insee|set_data:"etablissement-form-target:codeInseeInput" }}
+{{ form.DELETE|set_data:"etablissement-form-target:deleteInput" }}
