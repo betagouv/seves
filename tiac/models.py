@@ -109,6 +109,9 @@ class EvenementSimple(
 
         return MessageForm
 
+    def get_publish_success_message(self):
+        return "Événement simple publié avec succès"
+
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,

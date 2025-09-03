@@ -96,6 +96,9 @@ class EvenementSimpleFormPage:
         self._fill_etablissement(modal, etablissement)
         self.close_etablissement_modal()
 
+    def publish(self):
+        self.page.locator("#submit_publish").click()
+
 
 class EvenementListPage:
     def __init__(self, page: Page, base_url):
@@ -187,3 +190,6 @@ class EvenementSimpleDetailsPage:
     @property
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
+
+    def publish(self):
+        self.page.get_by_role("button", name="Publier").click()

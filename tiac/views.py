@@ -83,7 +83,10 @@ class EvenementSimpleCreationView(
         self.etablissement_formset.save()
 
         self.add_user_contacts(self.object)
-        messages.success(self.request, "L’évènement a été créé avec succès.")
+        if self.object.is_published:
+            messages.success(self.request, "L’évènement a été publié avec succès.")
+        else:
+            messages.success(self.request, "L’évènement a été créé avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())
 
     def form_invalid(self, form):
@@ -133,6 +136,7 @@ class EvenementSimpleDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 

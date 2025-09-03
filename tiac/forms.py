@@ -7,7 +7,7 @@ from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMul
 from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
-from core.mixins import WithSireneTokenMixin
+from core.mixins import WithSireneTokenMixin, WithEtatMixin
 from core.models import Contact, Message
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
@@ -64,6 +64,9 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self._add_free_links()
 
     def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
