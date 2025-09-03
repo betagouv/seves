@@ -26,5 +26,5 @@ def test_domains_context_processor_all_domains(django_user_model, settings):
 
     request.domain = "ssa"
     context = domains(request)
-    assert context["current_domain"].nom == "Sécurité sanitaire des aliments"
+    assert context["current_domain"].nom == "Alimentaire"
     assert context["other_domains"] == [Domains.SV, Domains.TIAC]
