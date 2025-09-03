@@ -23,6 +23,12 @@ header .fr-header__body-row {
     margin: 0;
 }
 
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
 .product-switch .fr-menu .fr-nav__link{
     padding: 0.25rem 0.5rem;
 }
