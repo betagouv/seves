@@ -96,7 +96,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             required=False,
             label="Sélectionner un objet",
             model_choices=[
-                ("Évenement simple", queryset),
+                ("Enregistrement simple", queryset),
                 ("Évenement produit", queryset_evenement_produit),
             ],
         )

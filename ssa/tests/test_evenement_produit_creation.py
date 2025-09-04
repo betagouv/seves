@@ -292,7 +292,7 @@ def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
-    creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Évenement simple : ")
+    creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Enregistrement simple : ")
     creation_page.submit_as_draft()
     creation_page.page.wait_for_timeout(600)
 

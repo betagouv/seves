@@ -30,6 +30,6 @@ class WithEvenementProduitFreeLinksMixin(WithFreeLinksMixin):
             label="Sélectionner un objet",
             model_choices=[
                 (self.model_label, self.get_queryset(model, self.user, instance)),
-                ("Évenement simple", self._get_evenement_simple_queryset(self.user)),
+                ("Enregistrement simple", self._get_evenement_simple_queryset(self.user)),
             ],
         )
