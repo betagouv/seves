@@ -1,7 +1,13 @@
 import {Controller} from "Stimulus";
 import {useStore} from "StimulusStore"
 
-export class AbstractFormSetController extends Controller {
+/**
+ * @property {boolean} hasEmptyFormTplTarget
+ * @property {boolean} hasFormsetContainerTarget
+ * @property {HTMLTemplateElement} emptyFormTplTarget
+ * @property {HTMLElement} formsetContainerTarget
+ */
+export class BaseFormSetController extends Controller {
     static MGMT_FORM_FIELDS = {
         TOTAL_FORMS: Number,
         INITIAL_FORMS: Number,

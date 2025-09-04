@@ -165,6 +165,7 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
             "departement",
             "pays",
         ]
+        widgets = {"code_insee": forms.HiddenInput}
 
 
 class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
