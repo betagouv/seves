@@ -6,6 +6,7 @@
     "StimulusStore": "npm:stimulus-store@0.0.3",
     "Choices": "npm:choices.js@11.0.4",
     "BanAutocomplete": "file:./core/static/core/ban_autocomplete.js",
-    "siret": "file:./core/static/core/siret.mjs"
+    "siret": "file:./core/static/core/siret.mjs",
+    "CustomTreeSelect": "file:./ssa/static/ssa/_custom_tree_select.js"
   }
 }
