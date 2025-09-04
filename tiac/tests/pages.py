@@ -47,7 +47,7 @@ class EvenementSimpleFormPage:
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
 
-    def add_free_link(self, numero, choice_js_fill, link_label="Évenement simple : "):
+    def add_free_link(self, numero, choice_js_fill, link_label="Enregistrement simple : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
     @property
