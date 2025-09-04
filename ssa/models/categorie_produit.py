@@ -107,6 +107,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "V - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > Carcasse, viande, os et abat rouge > V - Petit gibier (mammifères - lapin, lièvre...)",
     )
+    V_PETIT_GIBIER_OISEAUX = (
+        "V - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > Carcasse, viande, os et abat rouge > V - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+    )
     V_DE_GIBIER = (
         "V - De gibier (indéterminé ou mélange)",
         "Produit carné > Carcasse, viande, os et abat rouge > V - De gibier (indéterminé ou mélange)",
@@ -135,6 +139,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     VH_PETIT_GIBIER = (
         "VH - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > Viande hachée > VH - Petit gibier (mammifères - lapin, lièvre...)",
+    )
+    VH_PETIT_GIBIER_OISEAUX = (
+        "VH - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > Viande hachée > VH - Petit gibier (oiseaux - caille, perdrix, faisan...)",
     )
     VH_DE_GIBIER = (
         "VH - De gibier (indéterminé ou mélange)",
@@ -171,6 +179,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "VSM - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > VSM - viande séparée mécaniquement > VSM - Petit gibier (mammifères - lapin, lièvre...)",
     )
+    VSM_PETIT_GIBIER_OISEAUX = (
+        "VSM - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > VSM - viande séparée mécaniquement > VSM - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+    )
     VSM_DE_GIBIER = (
         "VSM - De gibier (indéterminé ou mélange)",
         "Produit carné > VSM - viande séparée mécaniquement > VSM - De gibier (indéterminé ou mélange)",
@@ -206,6 +218,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "ABATB - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > Abat blanc (non cuit, non saumuré si porc) > ABATB - Petit gibier (mammifères - lapin, lièvre...)",
     )
+    ABATB_PETIT_GIBIER_OISEAUX = (
+        "ABATB - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > Abat blanc (non cuit, non saumuré si porc) > ABATB - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+    )
     ABATB_DE_GIBIER = (
         "ABATB - De gibier (indéterminé ou mélange)",
         "Produit carné > Abat blanc (non cuit, non saumuré si porc) > ABATB - De gibier (indéterminé ou mélange)",
@@ -238,6 +254,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     PV_PETIT_GIBIER = (
         "PV - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > PV - préparation de viande > PV - Petit gibier (mammifères - lapin, lièvre...)",
+    )
+    PV_PETIT_GIBIER_OISEAUX = (
+        "PV - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > PV - préparation de viande > PV - Petit gibier (oiseaux - caille, perdrix, faisan...)",
     )
     PV_DE_GIBIER = (
         "PV - De gibier (indéterminé ou mélange)",
@@ -279,6 +299,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     PABV_CRU_PETIT_GIBIER = (
         "PABV cru - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > PABV cru - produit à base de viande cru > PABV cru - Petit gibier (mammifères - lapin, lièvre...)",
+    )
+    PABV_CRU_PETIT_GIBIER_OISEAUX = (
+        "PABV cru - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > PABV cru - produit à base de viande cru > PABV cru - Petit gibier (oiseaux - caille, perdrix, faisan...)",
     )
     PABV_CRU_DE_GIBIER = (
         "PABV cru - De gibier (indéterminé ou mélange)",
@@ -332,6 +356,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     PABV_CUIT_PETIT_GIBIER = (
         "PABV cuit - Petit gibier (mammifères - lapin, lièvre...)",
         "Produit carné > PABV cuit - produit à base de viande cuit > PABV cuit - Petit gibier (mammifères - lapin, lièvre...)",
+    )
+    PABV_CUIT_PETIT_GIBIER_OISEAUX = (
+        "PABV cuit - Petit gibier (oiseaux - caille, perdrix, faisan...)",
+        "Produit carné > PABV cuit - produit à base de viande cuit > PABV cuit - Petit gibier (oiseaux - caille, perdrix, faisan...)",
     )
     PABV_CUIT_DE_GIBIER = (
         "PABV cuit - De gibier (indéterminé ou mélange)",
