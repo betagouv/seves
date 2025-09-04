@@ -75,6 +75,10 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     CRONOBACTER_SAKAZAKII = "Cronobacter sakazakii", "Bactérie > Cronobacter > Cronobacter sakazakii"
     ENTEROBACTERIES = "Entérobactéries", "Bactérie > Entérobactéries"
     ESCHERICHIA_COLI = "Escherichia Coli", "Bactérie > Escherichia Coli"
+    ESCHERICHIA_COLI_NON_STEC = (
+        "Escherichia coli (non STEC - EHEC)",
+        "Bactérie > Escherichia Coli > Escherichia coli (non STEC - EHEC)",
+    )
     ESCHERICHIA_COLI_SHIGATOXINOGENE = (
         "Escherichia coli shigatoxinogène (STEC - EHEC)",
         "Bactérie > Escherichia Coli > Escherichia coli shigatoxinogène (STEC - EHEC)",
@@ -118,16 +122,16 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     NITRATE = "Nitrate (hors additif)", "Contaminant - autre > Nitrate (hors additif)"
     NITRITE = "Nitrite (hors additif)", "Contaminant - autre > Nitrite (hors additif)"
     PERCHLORATE = "Perchlorate", "Contaminant - autre > Perchlorate"
-    ARSENIC = "Arsenic (As)", "Contaminant - métauet autre élément > Arsenic (As)"
+    ARSENIC = "Arsenic (As)", "Contaminant - métau et autre élément > Arsenic (As)"
     AUTRE_ELEMENT_TRACE_METALLIQUE_OU_COMPOSE_INORGANIQUE = (
         "Autre élément trace métallique ou composé inorganique",
-        "Contaminant - métauet autre élément > Autre élément trace métallique ou composé inorganique",
+        "Contaminant - métau et autre élément > Autre élément trace métallique ou composé inorganique",
     )
-    CADMIUM = "Cadmium (Cd)", "Contaminant - métauet autre élément > Cadmium (Cd)"
-    FLUOR = "Fluor (F)", "Contaminant - métauet autre élément > Fluor (F)"
-    MERCURE = "Mercure (Hg)", "Contaminant - métauet autre élément > Mercure (Hg)"
-    NICKEL = "Nickel (Ni)", "Contaminant - métauet autre élément > Nickel (Ni)"
-    PLOMB = "Plomb (Pb)", "Contaminant - métauet autre élément > Plomb (Pb)"
+    CADMIUM = "Cadmium (Cd)", "Contaminant - métau et autre élément > Cadmium (Cd)"
+    FLUOR = "Fluor (F)", "Contaminant - métau et autre élément > Fluor (F)"
+    MERCURE = "Mercure (Hg)", "Contaminant - métau et autre élément > Mercure (Hg)"
+    NICKEL = "Nickel (Ni)", "Contaminant - métau et autre élément > Nickel (Ni)"
+    PLOMB = "Plomb (Pb)", "Contaminant - métau et autre élément > Plomb (Pb)"
     AFLATOXINE = "Aflatoxine", "Contaminant - mycotoxine > Aflatoxine"
     ALTERNARIOL_ALTERNARIOL_MONOMETHYL_ETHER_ACIDE_TENUAZONIQUE = (
         "Alternariol (AOH) Alternariol monométhyl éther (AME) Acide ténuazonique (TeA)",
@@ -474,7 +478,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     )
     STUPEFIANT = (
         "Stupéfiant (dont THC>0,3%)",
-        "Ingrédient - non autorisé ou dangereux > Stupéfiant et psychoactif > Stupéfiant (dont THC>0,3%)",
+        "Ingrédient - non autorisé ou dangereux > Stupéfiant et psychoactif > Stupéfiant (dont THC supérieur à 0,3%)",
     )
     SUBSTANCE_INTERDITE_OU_RESTRICTION_DENREE_ENRICHIE_OU_COMPLEMENT_ALIMENTAIRE = (
         "Substance interdite ou restriction / denrée enrichie ou complément alimentaire",

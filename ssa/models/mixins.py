@@ -1,5 +1,12 @@
+import unicodedata
+
+
+def normalize(s):
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)).lower()
+
+
 def sort_tree(tree):
-    tree.sort(key=lambda x: x["name"].lower())
+    tree.sort(key=lambda x: normalize(x["name"]))
     for node in tree:
         if node["children"]:
             sort_tree(node["children"])
