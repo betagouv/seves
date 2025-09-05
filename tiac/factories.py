@@ -8,12 +8,12 @@ from factory.fuzzy import FuzzyChoice
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from tiac.constants import EvenementOrigin, ModaliteDeclarationEvenement, EvenementFollowUp
-from tiac.models import EvenementSimple, Etablissement, Evaluation
+from tiac.models import EvenementSimple, Etablissement, Evaluation, InvestigationTiac, TypeEvenement
 
 
-class EvenementSimpleFactory(DjangoModelFactory):
+class BaseTiacFactory(DjangoModelFactory):
     class Meta:
-        model = EvenementSimple
+        abstract = True
 
     date_creation = factory.Faker("date_this_decade")
     date_reception = factory.Faker("date_this_decade")
@@ -21,12 +21,8 @@ class EvenementSimpleFactory(DjangoModelFactory):
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
     modalites_declaration = FuzzyChoice(ModaliteDeclarationEvenement.values)
-
     contenu = factory.Faker("paragraph")
     notify_ars = factory.Faker("boolean")
-    nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
-
-    follow_up = FuzzyChoice(EvenementFollowUp.values)
 
     @factory.lazy_attribute
     def createur(self):
@@ -46,6 +42,14 @@ class EvenementSimpleFactory(DjangoModelFactory):
         return n + 1
 
 
+class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):
+    class Meta:
+        model = EvenementSimple
+
+    nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
+    follow_up = FuzzyChoice(EvenementFollowUp.values)
+
+
 class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
@@ -61,3 +65,18 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
             evaluation=random.choice([c[0] for c in Evaluation.values]),
             commentaire=factory.Faker("paragraph"),
         )
+
+
+class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
+    class Meta:
+        model = InvestigationTiac
+
+    will_trigger_inquiry = factory.Faker("boolean")
+    numero_sivss = factory.Faker("numerify", text="######")
+    type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
+
+    nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
+    nb_sick_persons_to_hospital = factory.Faker("pyint", min_value=0, max_value=10)
+    nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
+    datetime_first_symptoms = factory.Faker("date_this_decade")
+    datetime_last_symptoms = factory.Faker("date_this_decade")
