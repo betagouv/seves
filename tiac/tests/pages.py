@@ -5,7 +5,7 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Page
 
-from tiac.models import EvenementSimple, Etablissement
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac
 
 
 class EvenementSimpleFormPage:
@@ -224,3 +224,57 @@ class EvenementSimpleDetailsPage:
 
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
+
+
+class InvestigationTiacFormPage:
+    fields = [
+        "date_reception",
+        "evenement_origin",
+        "modalites_declaration",
+        "contenu",
+        "will_trigger_inquiry",
+        "numero_sivss",
+        "type_evenement",
+        "notify_ars",
+        "nb_sick_persons",
+        "nb_sick_persons_to_hospital",
+        "nb_dead_persons",
+        "datetime_first_symptoms",
+        "datetime_last_symptoms",
+    ]
+
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+        for field in self.fields:
+            setattr(self, field, page.locator(f"#id_{field}"))
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('tiac:investigation-tiac-creation')}")
+
+    def set_modalites_declaration(self, value):
+        self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
+            force=True
+        )
+
+    def set_will_trigger_inquiry(self, value):
+        self.page.locator("#radio-id_will_trigger_inquiry").locator(
+            f"input[type='radio'][value='{str(value).lower()}']"
+        ).check(force=True)
+
+    def set_notify_ars(self, value):
+        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+            force=True
+        )
+
+    def set_type_evenement(self, value):
+        self.page.locator("#radio-id_type_evenement").locator(
+            f"input[type='radio'][value='{str(value).lower()}']"
+        ).check(force=True)
+
+    def fill_required_fields(self, object: InvestigationTiac):
+        self.contenu.fill(object.contenu)
+        self.set_type_evenement(object.type_evenement)
+
+    def submit_as_draft(self):
+        self.page.get_by_role("button", name="Enregistrer le brouillon").click()

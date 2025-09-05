@@ -224,3 +224,20 @@ label:has(+ .choices select[data-required="true"])::after,
 .empty-value {
     color: var(--text-disabled-grey);
 }
+
+.fieldset-flex {
+    display: flex;
+    justify-content: space-between;
+    margin: unset;
+}
+
+.fieldset-flex .fr-fieldset__legend {
+    width: auto !important;
+}
+.fieldset-flex .fr-fieldset__element {
+    flex: unset;
+}
+
+.fieldset-flex-options {
+    display: flex;
+}
