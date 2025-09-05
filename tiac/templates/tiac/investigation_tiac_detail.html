@@ -1,0 +1,16 @@
+{% extends "tiac/base.html" %}
+{% load static %}
+{% load etat_tags %}
+{% load or_empty_value_tag %}
+
+
+
+{% block content %}
+  <main class="main-container">
+    <div>
+      <div class="details-top-row">
+        <h1 class="fr-mb-0-5v">Investigation TIAC {{ object.numero }}</h1>
+      </div>
+    </div>
+  </main>
+{% endblock %}
