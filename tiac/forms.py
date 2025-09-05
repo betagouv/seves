@@ -13,7 +13,7 @@ from core.models import Contact, Message, Structure
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
 from tiac.constants import ModaliteDeclarationEvenement
-from tiac.models import EvenementSimple, Etablissement
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -178,3 +178,93 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
     class Meta:
         model = EvenementSimple
         fields = ["transfered_to"]
+
+
+class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+    date_reception = forms.DateTimeField(
+        required=False,
+        label="Date de réception à la DD(ETS)PP",
+        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+    )
+    evenement_origin = SEVESChoiceField(
+        choices=EvenementOrigin.choices,
+        label="Signalement déclaré par",
+        required=False,
+    )
+    modalites_declaration = forms.ChoiceField(
+        required=False,
+        choices=ModaliteDeclarationEvenement.choices,
+        widget=forms.RadioSelect,
+        label="Modalités de déclaration",
+    )
+    type_evenement = forms.ChoiceField(
+        choices=TypeEvenement.choices, widget=forms.RadioSelect, label="Type d'événement", required=True
+    )
+
+    nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
+    nb_sick_persons_to_hospital = forms.IntegerField(required=False, label="Dont conduits à l'hôpital")
+    nb_dead_persons = forms.IntegerField(required=False, label="Dont décédés")
+    datetime_first_symptoms = forms.DateTimeField(
+        required=False,
+        label="Première date et heure d'apparition des symptômes",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={
+                "type": "datetime-local",
+                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
+            },
+        ),
+    )
+
+    datetime_last_symptoms = forms.DateTimeField(
+        required=False,
+        label="Dernière date et heure d'apparition des symptômes",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={
+                "type": "datetime-local",
+                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
+            },
+        ),
+    )
+
+    class Meta:
+        model = InvestigationTiac
+        fields = (
+            "date_reception",
+            "evenement_origin",
+            "modalites_declaration",
+            "contenu",
+            "notify_ars",
+            "will_trigger_inquiry",
+            "numero_sivss",
+            "type_evenement",
+            "nb_sick_persons",
+            "nb_sick_persons_to_hospital",
+            "nb_dead_persons",
+            "datetime_first_symptoms",
+            "datetime_last_symptoms",
+        )
+        widgets = {
+            "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+            "will_trigger_inquiry": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+        }
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("core/free_links.mjs"),),
+        )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+
+        if not self.instance.pk:
+            self.instance.createur = self.user.agent.structure
+        instance = super().save(commit)
+        return instance

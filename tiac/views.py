@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.forms import Media
 from django.http import Http404
 from django.http import HttpResponseRedirect
@@ -21,7 +22,7 @@ from core.mixins import (
 from core.views import MediaDefiningMixin
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
-from tiac.models import EvenementSimple
+from tiac.models import EvenementSimple, InvestigationTiac
 from .filters import EvenementSimpleFilter
 from .forms import EvenementSimpleTransferForm
 from .formsets import EtablissementFormSet
@@ -178,3 +179,52 @@ class EvenementSimpleTransferView(UpdateView):
         messages.success(self.request, f"L’évènement a bien été transféré à la {self.object.transfered_to}")
         self.object.contacts.add(self.object.transfered_to.contact_set.get())
         return response
+
+
+class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, SuccessMessageMixin, CreateView):
+    template_name = "tiac/investigation.html"
+    form_class = forms.InvestigationTiacForm
+    success_message = "L'investigation TIAC a été créée avec succès."
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+
+class InvestigationTiacDetailView(
+    UserPassesTestMixin,
+    WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
+    WithBlocCommunPermission,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithMessageMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    DetailView,
+):
+    model = InvestigationTiac
+    template_name = "tiac/investigation_tiac_detail.html"
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)
+
+    def get_queryset(self):
+        return InvestigationTiac.objects.all().select_related("createur")
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        if queryset is None:
+            queryset = self.get_queryset()
+        try:
+            annee, numero_evenement = self.kwargs["numero"].split(".")
+            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            return self.object
+        except (ValueError, EvenementSimple.DoesNotExist):
+            raise Http404("Fiche produit non trouvée")

@@ -8,7 +8,6 @@ from core.mixins import (
     AllowsSoftDeleteMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
-    WithNumeroMixin,
     WithFreeLinkIdsMixin,
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
@@ -18,21 +17,10 @@ from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
 from .managers import EvenementSimpleManager
+from .model_mixins import WithSharedNumeroMixin
 
 
-@reversion.register()
-class EvenementSimple(
-    AllowsSoftDeleteMixin,
-    WithContactPermissionMixin,
-    WithEtatMixin,
-    WithNumeroMixin,
-    WithFreeLinkIdsMixin,
-    WithBlocCommunFieldsMixin,
-    models.Model,
-    WithDocumentPermissionMixin,
-    WithMessageUrlsMixin,
-    EmailNotificationMixin,
-):
+class BaseTiacModel(models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     date_reception = models.DateField(verbose_name="Date de réception à la DD(ETS)PP")
@@ -47,6 +35,25 @@ class EvenementSimple(
     )
     contenu = models.TextField(verbose_name="Contenu du signalement")
     notify_ars = models.BooleanField(default=False, verbose_name="ARS informée")
+
+    class Meta:
+        abstract = True
+
+
+@reversion.register()
+class EvenementSimple(
+    AllowsSoftDeleteMixin,
+    WithContactPermissionMixin,
+    WithEtatMixin,
+    WithSharedNumeroMixin,
+    WithFreeLinkIdsMixin,
+    WithBlocCommunFieldsMixin,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    BaseTiacModel,
+    models.Model,
+):
     nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
 
     follow_up = models.CharField(
@@ -188,3 +195,88 @@ class Etablissement(BaseEtablissement, models.Model):
         if self.departement:
             value += f" ({self.departement.numero}) | {self.departement.nom}"
         return value
+
+
+class TypeEvenement(models.TextChoices):
+    INVESTIGATION_DD = "investigation par ma dd", "Investigation par ma DD"
+    INVESTIGATION_COORDONNEE = "investigation coordonnée", "Investigation coordonnée / MUS informée"
+
+
+@reversion.register()
+class InvestigationTiac(
+    AllowsSoftDeleteMixin,
+    WithContactPermissionMixin,
+    WithEtatMixin,
+    WithSharedNumeroMixin,
+    WithFreeLinkIdsMixin,
+    WithBlocCommunFieldsMixin,
+    WithDocumentPermissionMixin,
+    WithMessageUrlsMixin,
+    EmailNotificationMixin,
+    BaseTiacModel,
+    models.Model,
+):
+    will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
+    numero_sivss = models.CharField(max_length=6, verbose_name="N° SIVSS de l'ARS", blank=True)
+    type_evenement = models.CharField(
+        max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement", blank=True
+    )
+
+    # Cas
+    nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
+    nb_sick_persons_to_hospital = models.IntegerField(verbose_name="Dont conduits à l'hôpital", null=True)
+    nb_dead_persons = models.IntegerField(verbose_name="Dont décédés", null=True)
+    datetime_first_symptoms = models.DateTimeField(verbose_name="Première date et heure d'apparition des symptômes")
+    datetime_last_symptoms = models.DateTimeField(verbose_name="Dernière date et heure d'apparition des symptômes")
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            with reversion.create_revision():
+                if not self.numero_annee and not self.numero_evenement:
+                    annee, numero = InvestigationTiac._get_annee_and_numero()
+                    self.numero_annee = annee
+                    self.numero_evenement = numero
+                super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        numero = f"{self.numero_annee}.{self.numero_evenement}"
+        return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
+
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
+
+    def get_message_form(self):
+        from tiac.forms import MessageForm
+
+        return MessageForm
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
+            Document.TypeDocument.AUTRE,
+        ]
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.numero}"
