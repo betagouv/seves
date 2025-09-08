@@ -432,6 +432,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_type_evenement")
 
     @property
+    def source_select(self):
+        return self.page.locator("#id_source")
+
+    @property
     def start_date_field(self):
         return self.page.locator("#id_start_date")
 

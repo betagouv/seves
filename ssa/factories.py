@@ -70,13 +70,15 @@ class EvenementProduitFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
-    @factory.lazy_attribute
-    def source(self):
-        if self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-
-        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
-        return random.choice(list(other_sources))
+    @factory.post_generation
+    def source(self, create, extracted, **kwargs):
+        if extracted:
+            self.source = extracted
+        elif self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
+            self.source = random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
+        else:
+            other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
+            self.source = random.choice(list(other_sources))
 
     @factory.lazy_attribute
     def produit_pret_a_manger(self):
