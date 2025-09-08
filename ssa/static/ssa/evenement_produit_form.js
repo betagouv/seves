@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function handleNoticeProduitDisplay(options, value) {
+    if(isLevel2WithChildren(options, value)){
+      document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
+    } else {
+      document.querySelector("#notice-container-produit").classList.add("fr-hidden")
+    }
+  }
+
   function setupCategorieProduit(){
     const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
     const selectedValue = document.getElementById("id_categorie_produit").value
@@ -43,13 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
     })
 
-    treeselect.srcElement.addEventListener('input', (e) => {
-      if(isLevel2WithChildren(options,e.detail)){
-        document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
-      } else {
-        document.querySelector("#notice-container-produit").classList.add("fr-hidden")
-      }
-    })
+    treeselect.srcElement.addEventListener('input', (e) => {handleNoticeProduitDisplay(options, e.detail)})
+    handleNoticeProduitDisplay(options, selectedValue)
   }
 
   function handleValueChangeCategorieDanger(value, options){
@@ -61,6 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById("pam-container").classList.remove("fr-hidden")
     } else {
       document.getElementById("pam-container").classList.add("fr-hidden")
+    }
+  }
+
+  function handleNoticeDangerDisplay(options, value) {
+    if(isLevel2WithChildren(options, value)){
+      document.querySelector("#notice-container-risque").classList.remove("fr-hidden")
+    } else {
+      document.querySelector("#notice-container-risque").classList.add("fr-hidden")
     }
   }
 
@@ -125,13 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
 
-    treeselect.srcElement.addEventListener('input', (e) => {
-      if(isLevel2WithChildren(options,e.detail)){
-        document.querySelector("#notice-container-risque").classList.remove("fr-hidden")
-      } else {
-        document.querySelector("#notice-container-risque").classList.add("fr-hidden")
-      }
-    })
+    treeselect.srcElement.addEventListener('input', (e) => { handleNoticeDangerDisplay(options, e.detail)})
+    handleNoticeDangerDisplay(options, selectedValue)
   }
 
   const typeEvenementInput = document.getElementById('id_type_evenement')
