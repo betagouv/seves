@@ -105,6 +105,7 @@ class EvenementProduitFilter(
             "structure_contact",
             "agent_contact",
             "type_evenement",
+            "source",
             "start_date",
             "end_date",
             "full_text_search",

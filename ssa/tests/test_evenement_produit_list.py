@@ -4,7 +4,7 @@ from core.factories import StructureFactory, ContactStructureFactory, ContactAge
 from core.models import LienLibre, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
-from ssa.models.evenement_produit import PretAManger, ActionEngagees
+from ssa.models.evenement_produit import PretAManger, ActionEngagees, Source
 from ssa.tests.pages import EvenementProduitListPage
 
 
@@ -94,6 +94,18 @@ def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.1"
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+
+
+def test_list_can_filter_by_source(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(source=Source.TOUT_DROIT, numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(source=Source.AUTOCONTROLE_NOTIFIE_PRODUIT, numero_annee=2025, numero_evenement=1)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(Source.TOUT_DROIT)
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
 
 
 def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
