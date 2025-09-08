@@ -1,4 +1,5 @@
 import json
+import re
 from urllib.parse import quote
 
 from django.urls import reverse
@@ -46,6 +47,8 @@ class EvenementSimpleFormPage:
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
+        self.page.wait_for_url(f"**{redirect}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Enregistrement simple : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
@@ -78,7 +81,7 @@ class EvenementSimpleFormPage:
         self.page.locator("*:focus").fill(adresse)
         self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
 
-    def _fill_etablissement(self, modal, etablissement: Etablissement):
+    def fill_etablissement(self, modal, etablissement: Etablissement):
         modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
@@ -93,11 +96,33 @@ class EvenementSimpleFormPage:
 
     def add_etablissement(self, etablissement: Etablissement):
         modal = self.open_etablissement_modal()
-        self._fill_etablissement(modal, etablissement)
+        self.fill_etablissement(modal, etablissement)
         self.close_etablissement_modal()
 
     def publish(self):
         self.page.locator("#submit_publish").click()
+
+    def get_etablissement_card(self, card_index):
+        return self.page.locator(".modal-etablissement-container").all()[card_index].locator(".etablissement-card")
+
+    def get_detail_modal_content(self, index):
+        self.get_etablissement_card(index).locator(".detail-display").click()
+        modal = self.page.locator(".detail-modal").locator("visible=true")
+        content = [it for it in re.split(r"\s*\n\s*", modal.locator(".fr-modal__content").text_content()) if it]
+        modal.locator(".fr-btn--close").click()
+        modal.wait_for(state="hidden")
+        return content
+
+    def edit_etablissement(self, index, **kwargs):
+        card = self.get_etablissement_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".modal-etablissement-container").all()[index].locator(".modal-etablissement").locator(
+                "visible=true"
+            ).locator(f'[id$="{k}"]').fill(v)
+
+        self.close_etablissement_modal()
 
 
 class EvenementListPage:

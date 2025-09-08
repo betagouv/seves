@@ -2,17 +2,17 @@
 
 {% partialdef form-dialog %}
     <div
-        class="fr-col-12 fr-col-md-6 fr-col-xl-3"
+        class="modal-etablissement-container fr-col-12 fr-col-md-6 fr-col-xl-3"
         data-controller="etablissement-form"
         data-etablissement-form-communes-api-value="{{ COMMUNES_API }}"
-        data-etablissement-form-empty-form-prefix-value="{{ form.prefix }}"
+        data-etablissement-form-form-prefix-value="{{ form.prefix }}"
     >
-        <button class="fr-btn fr-hidden" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
+        <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
-            aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
-            role="alertdialog"
             id="fr-modal-{{ form.prefix }}"
             class="fr-modal modal-etablissement"
+            role="alertdialog"
+            aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-etablissement-form-target="dialog"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
@@ -45,7 +45,7 @@
                                     <button
                                         type="submit"
                                         class="fr-btn save-btn"
-                                        id="etablissement-save-btn-__prefix__"
+                                        id="etablissement-save-btn-{{ form.prefix }}"
                                         data-action="etablissement-form#onValidateForm:prevent:stop"
                                     >Enregistrer</button>
                                 </div>
