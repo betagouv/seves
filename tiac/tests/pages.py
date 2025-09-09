@@ -59,6 +59,7 @@ class EvenementSimpleFormPage:
 
     def open_etablissement_modal(self):
         self.page.get_by_role("button", name="Ajouter").click()
+        self.current_modal.wait_for(state="visible")
         return self.current_modal
 
     @property

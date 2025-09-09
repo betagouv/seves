@@ -164,6 +164,9 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
             "code_insee",
             "departement",
             "pays",
+            "numero_resytal",
+            "evaluation",
+            "commentaire",
         ]
         widgets = {"code_insee": forms.HiddenInput}
 
