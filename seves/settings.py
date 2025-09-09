@@ -325,7 +325,7 @@ if DEBUG:
     CONTENT_SECURITY_POLICY["DIRECTIVES"]["img-src"] = (SELF, "data:", "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
-    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)
     if SENTRY_REPORT_URL:
         query_param = f"sentry_environment={ENVIRONMENT}"
         last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
