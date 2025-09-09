@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -23,6 +25,7 @@ from core.views import MediaDefiningMixin
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
+from .constants import DangersSyndromiques
 from .filters import EvenementSimpleFilter
 from .forms import EvenementSimpleTransferForm
 from .formsets import EtablissementFormSet
@@ -193,6 +196,12 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dangers"] = DangersSyndromiques.as_list()
+        context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
+        return context
 
 
 class InvestigationTiacDetailView(

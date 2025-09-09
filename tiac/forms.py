@@ -12,7 +12,8 @@ from core.models import Contact, Message, Structure
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
 from tiac.constants import ModaliteDeclarationEvenement
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement
+from tiac.constants import DangersSyndromiques
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement, Analyses
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -237,6 +238,15 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         ),
     )
 
+    danger_syndromiques_suspectes_display = forms.ChoiceField(
+        choices=DangersSyndromiques.choices, widget=forms.RadioSelect, label="", required=False
+    )
+    danger_syndromiques_suspectes = forms.CharField(widget=forms.HiddenInput, required=False)
+    analyses_sur_les_malades = forms.ChoiceField(
+        choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
+    )
+    precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+
     class Meta:
         model = InvestigationTiac
         fields = (
@@ -253,6 +263,10 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "nb_dead_persons",
             "datetime_first_symptoms",
             "datetime_last_symptoms",
+            "danger_syndromiques_suspectes_display",
+            "danger_syndromiques_suspectes",
+            "analyses_sur_les_malades",
+            "precisions",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
@@ -262,12 +276,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"),),
+            js=(js_module("core/free_links.mjs"), js_module("tiac/etiologie.mjs")),
         )
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self.initial["danger_syndromiques_suspectes"] = []
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
