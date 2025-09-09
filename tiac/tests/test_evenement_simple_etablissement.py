@@ -128,6 +128,12 @@ def test_show_etablissement_detail(live_server, page: Page, ensure_departements)
         etablissement.commune,
         "Departement",
         str(etablissement.departement),
+        "Numéro Résytal",
+        *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
+        "Évaluation globale",
+        *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
+        "Commentaire",
+        *([etablissement.commentaire] if etablissement.commentaire else []),
     ]
 
     # Check that the detail modal gets updated
@@ -147,4 +153,34 @@ def test_show_etablissement_detail(live_server, page: Page, ensure_departements)
         etablissement.commune,
         "Departement",
         str(etablissement.departement),
+        "Numéro Résytal",
+        *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
+        "Évaluation globale",
+        *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
+        "Commentaire",
+        *([etablissement.commentaire] if etablissement.commentaire else []),
     ]
+
+
+def test_cancel_add_etablissement(live_server, page: Page, ensure_departements):
+    departement, *_ = ensure_departements("Paris")
+    evenement: EvenementSimple = EvenementSimpleFactory()
+
+    etablissement: Etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement)
+
+    # Create a first etablissment
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement)
+
+    # Open the modal to create a new etablissement but cancel before saving
+    modal = creation_page.open_etablissement_modal()
+    modal.get_by_role("button", name="Annuler").click()
+    modal.wait_for(state="hidden")
+    assert not page.locator(".modal-etablissement-container").all()[1].is_visible()
+
+    # Check that empty forms aren't saved
+    creation_page.submit_as_draft()
+
+    assert Etablissement.objects.count() == 1

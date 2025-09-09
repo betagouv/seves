@@ -20,6 +20,7 @@
     margin-top: auto;
     margin-bottom: auto;
 }
+
 .fr-header__body-row .fr-btns-group {
     margin-top: -1rem;
 }
@@ -38,7 +39,7 @@
     margin: 0;
 }
 
-.fr-tabs__panel{
+.fr-tabs__panel {
     transition: none !important;
 }
 
@@ -49,4 +50,9 @@
 .fr-fieldset__legend.fr-h5,
 .fr-fieldset__legend.fr-h6 {
     padding-bottom: 0;
+}
+
+.fr-grid-row--border > .fr-col:not(:first-child),
+.fr-grid-row--border > [class*=" fr-col-"]:not(:first-child) {
+    border-left: 1px solid var(--border-default-grey);
 }

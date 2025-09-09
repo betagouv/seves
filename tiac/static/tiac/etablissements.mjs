@@ -14,6 +14,9 @@ import {setUpSiretChoices} from "siret"
  * @property {String} raison_sociale
  * @property {String} siret
  * @property {String} type_etablissement
+ * @property {String} numero_resytal
+ * @property {String} evaluation
+ * @property {String} commentaire
  */
 
 /**
@@ -34,9 +37,8 @@ import {setUpSiretChoices} from "siret"
  * @property {HTMLDialogElement} detailModalTarget
  * @property {String} communesApiValue
  * @property {String} formPrefixValue
- * @property {Boolean} renderInitialValue
  */
-class EtablissementFormController  extends Controller {
+class EtablissementFormController extends Controller {
     static targets = [
         "raisonSocialeInput",
         "communeInput",
@@ -54,7 +56,7 @@ class EtablissementFormController  extends Controller {
         "detailModalContainer",
         "detailModal",
     ]
-    static values = {communesApi: String, formPrefix: String, renderInitial: Boolean}
+    static values = {communesApi: String, formPrefix: String}
 
     connect() {
         this.raisonSocialeInputTarget.required = true
@@ -63,18 +65,17 @@ class EtablissementFormController  extends Controller {
         this.initCard()
     }
 
-    onAddressChoice(event){
+    onAddressChoice(event) {
         this.communeInputTarget.value = event.detail.customProperties.city
         this.codeInseeInputTarget.value = event.detail.customProperties.inseeCode
-        if (!!event.detail.customProperties.context)
-        {
+        if (!!event.detail.customProperties.context) {
             this.paysInputTarget.value = "FR"
             const [num, ..._] = event.detail.customProperties.context.split(/\s*,\s*/)
             this.departementInputTarget.value = num
         }
     }
 
-    onSiretChoice({detail: {customProperties: {code_commune,commune, raison, siret, streetData}}}) {
+    onSiretChoice({detail: {customProperties: {code_commune, commune, raison, siret, streetData}}}) {
         this.siretInputTarget.value = siret
         this.raisonSocialeInputTarget.value = raison
         this.communeInputTarget.value = commune
@@ -96,30 +97,40 @@ class EtablissementFormController  extends Controller {
             fetch(`${this.communesApiValue}/${code_commune}?fields=departement`).then(async response => {
                 const json = await response.json()
                 this.departementInputTarget.value = json.departement.code
-            }).catch(() => {/* NOOP */})
+            }).catch(() => {/* NOOP */
+            })
         }
     }
 
-    openDialog() {
+    openForm() {
         dsfr(this.dialogTarget).modal.disclose()
     }
 
-    closeDialog() {
+    closeForm() {
         dsfr(this.dialogTarget).modal.conceal()
     }
 
-    onValidateForm(){
-        if(this.fieldsetTarget.checkValidity()) {
+    onCloseForm() {
+        const [hasData, ..._] = this.computeData()
+        if (!hasData) this.forceDelete()
+    }
+
+    onValidateForm() {
+        if (this.fieldsetTarget.checkValidity()) {
             this.initCard()
         }
     }
 
     onModify() {
-        this.openDialog()
+        this.openForm()
     }
 
     onDetailDisplay() {
         dsfr(this.detailModalTarget).modal.disclose()
+    }
+
+    onCancelDelete() {
+        dsfr(this.deleteModalTarget).modal.conceal()
     }
 
     onDelete() {
@@ -127,26 +138,31 @@ class EtablissementFormController  extends Controller {
     }
 
     onDeleteConfirm() {
+        this.forceDelete()
         dsfr(this.deleteModalTarget).modal.conceal()
+    }
+
+    forceDelete() {
         this.deleteInputTarget.value = "on"
+        this.fieldsetTarget.setAttribute("disabled", "disabled")
         this.element.classList.add("fr-hidden")
     }
 
-    initCard() {
+    computeData() {
         let hasData = false
         const etablissement = {}
 
         for (const input of this.fieldsetTarget.elements) {
-            if(!input.name || input.name.length === 0) continue;
+            if (!input.name || input.name.length === 0) continue;
 
             const inputName = input.name.replace(`${this.formPrefixValue}-`, "")
             const inputValue = typeof input.value === "string" ? input.value.trim() : ""
 
-            if(inputValue !== "") {
+            if (inputValue !== "") {
                 hasData = true
             }
 
-            if(inputName === "departement" && inputValue !== "") {
+            if (inputName === "departement" && inputValue !== "") {
                 const option = input.options[input.selectedIndex]
                 etablissement[inputName] = option ? option.innerText.trim() : ""
             } else {
@@ -154,8 +170,13 @@ class EtablissementFormController  extends Controller {
             }
         }
 
-        if(!hasData) { // Case of an empty new form
-            this.openDialog()
+        return [hasData, etablissement]
+    }
+
+    initCard() {
+        const [hasData, etablissement] = this.computeData()
+        if (!hasData) { // Case of an empty new form
+            this.openForm()
             return
         }
 
@@ -175,6 +196,7 @@ class EtablissementFormController  extends Controller {
         function optional(value, text) {
             return value ? (text || `${value}`) : ""
         }
+
         function join(delimiter, ...items) {
             return items.filter(it => !!it.length).join(delimiter)
         }
@@ -192,9 +214,9 @@ class EtablissementFormController  extends Controller {
                         </address>
                         ${optional(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
                         ${optional(
-                            etablissement.type_etablissement,
-                            `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`
-                        )}
+            etablissement.type_etablissement,
+            `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`
+        )}
                     </div>
                 </div>
                 <div class="fr-card__footer">
@@ -251,7 +273,7 @@ class EtablissementFormController  extends Controller {
                                     <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
                                         <button
                                             class="fr-btn fr-btn--secondary delete-cancel"
-                                            data-action="${this.identifier}#closeDialog:prevent:default"
+                                            data-action="${this.identifier}#onCancelDelete:prevent:default"
                                         >Annuler</button>
                                         <button
                                             class="fr-btn delete-confirmation"
@@ -282,7 +304,7 @@ class EtablissementFormController  extends Controller {
                 data-${this.identifier}-target="detailModal"
             >
                 <div class="fr-container fr-container--fluid">
-                    <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-grid-row">
                         <div class="fr-col">
                             <div class="fr-modal__body">
                                 <div class="fr-modal__header">
@@ -297,7 +319,7 @@ class EtablissementFormController  extends Controller {
                                         <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
                                         ${etablissement.raison_sociale}
                                     </h3>
-                                    <div class="fr-grid-row fr-grid-row--gutters">
+                                    <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--border">
                                         <div class="fr-col fr-col-md-6">
                                             <div class="fr-grid-row">
                                                 <p class="fr-col fr-col-md-6 fr-text--bold">Type d'établissement</p>
@@ -327,7 +349,18 @@ class EtablissementFormController  extends Controller {
                                             </div>
                                         </div>
                                         <div class="fr-col fr-col-md-6">
-
+                                            <div class="fr-grid-row">
+                                                <p class="fr-col fr-col-md-6 fr-text--bold">Numéro Résytal</p>
+                                                <p class="fr-col fr-col-md-6">${etablissement.numero_resytal}</p>
+                                            </div>
+                                            <div class="fr-grid-row">
+                                                <p class="fr-col fr-col-md-6 fr-text--bold">Évaluation globale</p>
+                                                <p class="fr-col fr-col-md-6">${etablissement.evaluation}</p>
+                                            </div>
+                                            <div class="fr-grid-row">
+                                                <p class="fr-col fr-col-md-6 fr-text--bold">Commentaire</p>
+                                                <p class="fr-col fr-col-md-6">${etablissement.commentaire}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -34,5 +34,17 @@
     {{ form.pays.label_tag }}
     {{ form.pays|set_data:"etablissement-form-target:paysInput" }}
 </div>
+<div class="fr-input-group">
+    {{ form.numero_resytal.label_tag }}
+    {{ form.numero_resytal }}
+</div>
+<div class="fr-input-group">
+    {{ form.evaluation.label_tag }}
+    {{ form.evaluation }}
+</div>
+<div class="fr-input-group">
+    {{ form.commentaire.label_tag }}
+    {{ form.commentaire }}
+</div>
 {{ form.code_insee|set_data:"etablissement-form-target:codeInseeInput" }}
 {{ form.DELETE|set_data:"etablissement-form-target:deleteInput" }}

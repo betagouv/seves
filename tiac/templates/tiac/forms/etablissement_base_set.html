@@ -7,13 +7,17 @@
         data-etablissement-form-communes-api-value="{{ COMMUNES_API }}"
         data-etablissement-form-form-prefix-value="{{ form.prefix }}"
     >
-        <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
+        <button
+            class="fr-btn fr-hidden" type="button" data-fr-opened="false"
+            aria-controls="fr-modal-{{ form.prefix }}"
+        ></button>
         <dialog
             id="fr-modal-{{ form.prefix }}"
             class="fr-modal modal-etablissement"
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-etablissement-form-target="dialog"
+            data-action="dsfr.conceal->etablissement-form#onCloseForm"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
@@ -29,7 +33,8 @@
                             </div>
                             <div class="fr-modal__content">
                                 <h1 id="fr-modal-title-modal--{{ form.prefix }}" class="fr-modal__title">
-                                    <span class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un établissement
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
+                                    Ajouter un établissement
                                 </h1>
                                 <fieldset data-etablissement-form-target="fieldset">
                                     {{ form }}
@@ -41,6 +46,7 @@
                                         class="fr-btn fr-btn--secondary"
                                         aria-controls="fr-modal-{{ form.prefix }}"
                                         type="button"
+                                        data-action="etablissement-form#closeForm:prevent:stop"
                                     >Annuler</button>
                                     <button
                                         type="submit"
@@ -65,10 +71,14 @@
             type="button"
             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
             data-action="etablissement-formset#onAddForm:prevent:stop"
-        >Ajouter</button>
+        >Ajouter
+        </button>
     </div>
     {{ formset.non_form_errors }}
-    <div id="etablissement" class="fr-col-12 fr-grid-row fr-grid-row--gutters" data-etablissement-formset-target="formsetContainer">
+    <div
+        id="etablissement" class="fr-col-12 fr-grid-row fr-grid-row--gutters"
+        data-etablissement-formset-target="formsetContainer"
+    >
         {% for field in formset.management_form %}
             {% with data_target=field.name|strfmt:"etablissement-formset-target:{0}" %}
                 {{ field|set_data:data_target }}
