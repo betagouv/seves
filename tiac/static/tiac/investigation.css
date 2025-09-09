@@ -1,3 +1,32 @@
 .cas-fieldset .fr-grid-row {
     align-items: end;
 }
+
+.etiologie-card-container {
+    background-color: var(--background-alt-grey);
+    width: 100%;
+}
+
+.etiologie-fieldset {
+    display: block;
+    width: 100%;
+}
+
+.etiologie-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.etiologie-info {
+    color: var(--text-default-info);
+}
+
+.etiologie-template {
+    border: 1px solid  var(--text-default-info);
+    border-radius: 20px;
+}
+
+#radio-id_danger_syndromiques_suspectes .fr-label {
+    display: block
+}
