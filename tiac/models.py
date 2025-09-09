@@ -1,4 +1,5 @@
 import reversion
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
@@ -16,6 +17,7 @@ from core.mixins import (
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
+from .dangers_syndromiques import DangersSyndromiques
 from .managers import EvenementSimpleManager
 from .model_mixins import WithSharedNumeroMixin
 
@@ -202,6 +204,12 @@ class TypeEvenement(models.TextChoices):
     INVESTIGATION_COORDONNEE = "investigation coordonnée", "Investigation coordonnée / MUS informée"
 
 
+class Analyses(models.TextChoices):
+    OUI = "oui", "Oui"
+    NON = "non", "Non"
+    INCONNU = "ne sait pas", "Ne sait pas"
+
+
 @reversion.register()
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
@@ -228,6 +236,17 @@ class InvestigationTiac(
     nb_dead_persons = models.IntegerField(verbose_name="Dont décédés", null=True)
     datetime_first_symptoms = models.DateTimeField(verbose_name="Première date et heure d'apparition des symptômes")
     datetime_last_symptoms = models.DateTimeField(verbose_name="Dernière date et heure d'apparition des symptômes")
+
+    # Etiologie
+    danger_syndromiques_suspectes = ArrayField(
+        models.CharField(max_length=255, choices=DangersSyndromiques.choices),
+        default=list,
+        blank=True,
+    )
+    analyses_sur_les_malades = models.CharField(
+        max_length=100, choices=Analyses.choices, verbose_name="Analyses engagées sur les malades", blank=True
+    )
+    precisions = models.CharField(max_length=255, verbose_name="Précisions", blank=True)
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

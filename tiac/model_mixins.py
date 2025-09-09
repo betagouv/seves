@@ -24,6 +24,3 @@ class WithSharedNumeroMixin(WithNumeroMixin):
 
     class Meta:
         abstract = True
-
-
-# TODO admin
