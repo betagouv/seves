@@ -54,9 +54,30 @@ function displayLieuxCards() {
 function showLieuModal(event){
     event.preventDefault()
     const currentModal = getNextAvailableModal()
+    handleHasNotImplemented(currentModal)
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     dsfr(currentModal).modal.disclose()
     dataRequiredToRequired(currentModal)
+}
+
+function handleEvent(evt) {
+    const target = evt instanceof Event ? evt.target : evt;
+    if(target.checked) {
+        target.closest(".fr-modal__content").classList.add("is-etablissement")
+    } else {
+        target.closest(".fr-modal__content").classList.remove("is-etablissement")
+    }
+}
+
+function handleHasNotImplemented(modal) {
+    try {
+        document.querySelector(":has(body)")
+    } catch {
+        const checkBox = modal.querySelector("[name*='is_etablissement']")
+        checkBox.removeEventListener("change", handleEvent)
+        checkBox.addEventListener("change", handleEvent)
+        handleEvent(checkBox)
+    }
 }
 
 function buildLieuCardFromModal(element){

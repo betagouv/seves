@@ -148,7 +148,8 @@ main {
 .etablissement-fields--lookup .fr-search-bar{
     text-align: start;
 }
-.fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields {
+.fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields,
+.fr-modal__content.is-etablissement .etablissement-fields {
     display: block;
 }
 .fr-search-bar .choices{
