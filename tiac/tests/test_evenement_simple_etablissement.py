@@ -123,12 +123,7 @@ def test_can_delete_etablissements(live_server, page: Page, ensure_departements,
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement_1)
     creation_page.add_etablissement(etablissement_2)
-
-    creation_page.get_etablissement_card(1).locator(".delete-button").click()
-
-    modal = creation_page.page.locator(".delete-modal").locator("visible=true")
-    modal.locator(".delete-confirmation").click()
-    modal.wait_for(state="hidden")
+    creation_page.delete_etablissement(1)
     assert 1 == page.locator(".modal-etablissement-container .etablissement-card").locator("visible=true").count()
 
     creation_page.submit_as_draft()

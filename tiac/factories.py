@@ -77,6 +77,12 @@ class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):
     nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
     follow_up = FuzzyChoice(EvenementFollowUp.values)
 
+    @factory.post_generation
+    def with_etablissements(self, create, extracted, **kwargs):  # noqa: F811
+        if not create or not extracted:
+            return
+        EtablissementFactory.create_batch(int(extracted), evenement_simple=self)
+
 
 class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:

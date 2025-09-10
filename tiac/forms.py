@@ -39,9 +39,8 @@ from tiac.models import (
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     date_reception = forms.DateTimeField(
-        required=False,
         label="Date de réception à la DD(ETS)PP",
-        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -71,7 +70,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "follow_up",
         )
         widgets = {
-            "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+            "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
 
     @property
@@ -188,6 +187,8 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
                 "placeholder": "25-000000",
             }
         )
+        if self.instance and self.instance.siret:
+            self["siret"].field.widget.choices = ((self.instance.siret, f"{self.instance.siret} (Forcer la valeur)"),)
 
     class Meta:
         model = Etablissement

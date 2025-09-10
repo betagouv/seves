@@ -1,7 +1,6 @@
 import {BaseFormSetController} from "BaseFormset"
 import {applicationReady} from "Application";
 import {setUpAddressChoices} from "BanAutocomplete"
-import {Controller} from "Stimulus";
 import {setUpSiretChoices} from "siret"
 import {collectFormValues} from "Forms"
 import {BaseFormInModal} from "BaseFormInModal"
@@ -46,7 +45,6 @@ import {BaseFormInModal} from "BaseFormInModal"
  */
 class EtablissementFormController extends BaseFormInModal {
     static targets = [
-        ...BaseFormInModal.targets,
         "raisonSocialeInput",
         "communeInput",
         "departementInput",
@@ -68,6 +66,13 @@ class EtablissementFormController extends BaseFormInModal {
         setUpSiretChoices(this.siretInputTarget, "bottom")
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
+        } else {
+            this.initCard(
+                collectFormValues(this.fieldsetTarget, {
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true
+                })
+            )
         }
         // Forces the has_inspection toggle to deliver an initial value
         this.hasInspectionTarget.dispatchEvent(new Event("input"))
@@ -111,18 +116,15 @@ class EtablissementFormController extends BaseFormInModal {
         }
     }
 
-
     onCloseForm() {
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-
     onDetailDisplay() {
         dsfr(this.detailModalTarget).modal.disclose()
     }
-
 
     onInspectionToggle({target: {checked}}) {
         if (checked) {
@@ -132,7 +134,6 @@ class EtablissementFormController extends BaseFormInModal {
         }
     }
 
-
     /** @param {EtablissementData} etablissement */
     initCard(etablissement) {
         this.shouldImmediatelyShowValue = false;
@@ -141,7 +142,7 @@ class EtablissementFormController extends BaseFormInModal {
         this.element.insertAdjacentHTML("beforeend", this.renderCardDetailModal(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderCard(etablissement))
-        dsfr(this.dialogTarget).modal.conceal()
+        requestAnimationFrame(() => dsfr(this.dialogTarget).modal.conceal())
     }
 
     /**
@@ -161,10 +162,7 @@ class EtablissementFormController extends BaseFormInModal {
                             ${this.joinText(" | ", etablissement.departement, etablissement.commune)}
                         </address>
                         ${this.optionalText(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
-                        ${this.optionalText(
-            etablissement.type_etablissement,
-            `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`
-        )}
+                        ${this.optionalText(etablissement.type_etablissement, `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`)}
                     </div>
                 </div>
                 <div class="fr-card__footer">

@@ -42,5 +42,5 @@ if settings.ADMIN_ENABLED:
         path(f"{settings.ADMIN_URL}/", admin.site.urls),
     ]
 
-if settings.DEBUG:
+if settings.DEBUG and settings.ENVIRONMENT != "test":
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
