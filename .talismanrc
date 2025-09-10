@@ -10,7 +10,7 @@ fileignoreconfig:
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
-  checksum: 8d190b28dc273aa32259925161d1b26e0749cc1a560a8c75949e03f932db4214
+  checksum: ef99932c5e588d09fdc080f07054dc3374eeeafbec4b7de2fee45a71d2c731ef
 - filename: sv/views.py
   checksum: 17381b88af7a141fb85a3ee9607583404107a063715bed7c406d53d397c63345
 - filename: ssa/static/ssa/_rappel_conso_form.js
