@@ -116,6 +116,9 @@ class EvenementSimple(
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
 
+    def can_be_modified(self, user):
+        return self.can_user_access(user) and not self.is_cloture
+
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 

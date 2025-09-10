@@ -1,3 +1,5 @@
+allowed_patterns:
+- 'class[^:]*:'  # Allow python classes
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a

@@ -39,7 +39,7 @@ class EvenementSimpleFormPage:
         )
 
     def set_notify_ars(self, value):
-        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}' i]").check(
             force=True
         )
 
@@ -116,6 +116,12 @@ class EvenementSimpleFormPage:
         modal.wait_for(state="hidden")
         return content
 
+    def delete_etablissement(self, card_index):
+        self.get_etablissement_card(card_index).locator(".delete-button").click()
+        modal = self.page.locator(".delete-modal").locator("visible=true")
+        modal.locator(".delete-confirmation").click()
+        modal.wait_for(state="hidden")
+
     def edit_etablissement(self, index, **kwargs):
         card = self.get_etablissement_card(index)
         card.locator(".modify-button").click()
@@ -126,6 +132,17 @@ class EvenementSimpleFormPage:
             ).locator(f'[id$="{k}"]').fill(v)
 
         self.close_etablissement_modal()
+
+
+class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
+    def __init__(self, page: Page, base_url, event: EvenementSimple):
+        super().__init__(page, base_url)
+        self.event = event
+
+    def navigate(self):
+        return self.page.goto(
+            f"{self.base_url}{reverse('tiac:evenement-simple-edition', kwargs={'pk': self.event.pk})}"
+        )
 
 
 class EvenementListPage:

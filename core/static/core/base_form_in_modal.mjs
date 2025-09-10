@@ -1,5 +1,5 @@
 import {Controller} from "Stimulus"
-import {collectFormValues} from "Forms"
+import {collectFormValues, removeRequired} from "Forms"
 
 /**
  * Base controller for forms that generate cards and handle deletion.
@@ -29,7 +29,7 @@ export class BaseFormInModal extends Controller {
     }
 
     onValidateForm() {
-        const formValues = collectFormValues(this.fieldsetTarget, name => name.replace(`${this.formPrefixValue}-`, ""))
+        const formValues = collectFormValues(this.fieldsetTarget, {nameTransform: name => name.replace(`${this.formPrefixValue}-`, "")})
         if (formValues === undefined) {
             return
         }
@@ -56,7 +56,7 @@ export class BaseFormInModal extends Controller {
 
     forceDelete() {
         this.deleteInputTarget.value = "on"
-        this.fieldsetTarget.setAttribute("disabled", "disabled")
+        removeRequired(this.fieldsetTarget)
         this.element.classList.add("fr-hidden")
     }
 
@@ -82,6 +82,7 @@ export class BaseFormInModal extends Controller {
     /**
      * @abstract
      * @param {Object} data
+     * @return {string}
      */
     getDeleteConfirmationSentence(data) {
         throw new Error("getDeleteConfirmationSentence must be implemented in the child class.")
@@ -90,6 +91,7 @@ export class BaseFormInModal extends Controller {
     /**
      * @abstract
      * @param {Object} data
+     * @return {string}
      */
     getDeleteConfirmationTitle(data) {
         throw new Error("getDeleteConfirmationTitle must be implemented in the child class.")
