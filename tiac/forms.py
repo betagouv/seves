@@ -197,6 +197,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         widget=forms.RadioSelect,
         label="Modalités de déclaration",
     )
+    numero_sivss = forms.CharField(
+        required=False,
+        label="N° SIVSS de l'ARS",
+        widget=forms.TextInput(
+            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+        ),
+    )
     type_evenement = forms.ChoiceField(
         choices=TypeEvenement.choices, widget=forms.RadioSelect, label="Type d'événement", required=True
     )

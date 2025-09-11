@@ -43,3 +43,13 @@ fieldset.form-fieldset .fr-fieldset__legend {
     padding-left: 0;
     padding-right: 0;
 }
+
+
+.btn-add-group .fr-menu {
+    margin: 0;
+}
+
+.btn-add-group .fr-translate .fr-translate__btn::before {
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+}
