@@ -7,5 +7,5 @@ set -e # exit if any command has a non-zero exit status
 
 bin/fetch_contacts_agricoll_and_key.sh
 
-python manage.py import_contacts agricoll.csv
-rm -f agricoll.csv
+python manage.py import_contacts agricoll_clear.csv
+rm -f agricoll_clear.csv

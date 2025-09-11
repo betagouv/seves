@@ -14,11 +14,10 @@ set -o pipefail # prevents errors in a pipeline from being masked
 : "${SFTP_PRIVATE_KEY:?Variable SFTP_PRIVATE_KEY non définie}"
 : "${SFTP_CLEVERCLOUD_KNOWN_HOSTS:?Variable SFTP_CLEVERCLOUD_KNOWN_HOSTS non définie}"
 
-ENCRYPTED_SYMMETRIC_KEY_FILENAME="symmetric.key.encrypted"
-ENCRYPTED_DATA_FILENAME="agricoll.csv.zip.encrypted"
+ENCRYPTED_SYMMETRIC_KEY_FILENAME="key.encrypted"
+ENCRYPTED_DATA_FILENAME="agricoll.csv"
 SYMMETRIC_KEY_FILENAME="symmetric.key"
-DATA_ZIP_FILENAME="agricoll.csv.zip"
-DATA_FILENAME="agricoll.csv"
+DATA_FILENAME="agricoll_clear.csv"
 # Répertoire où sont stockés les fichiers chiffrés sur le serveur SFTP (par défaut, le répertoire racine)
 SFTP_PATH="${SFTP_PATH:-.}"
 SFTP_PORT="${SFTP_PORT:-22}"
@@ -28,31 +27,15 @@ SFTP_CONNECT="${SFTP_USERNAME}@${SFTP_HOST}"
 # Stocke dans un fichier les cles publiques du serveur SFTP
 echo "${SFTP_CLEVERCLOUD_KNOWN_HOSTS}" | base64 --decode > clevercloud_known_hosts
 
-# Récupère la clé symétrique chiffrée la plus récente (fichier .key.encrypted)
-sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}" <<EOF > sftp_key_output.txt
-ls -lt "${SFTP_PATH}"/*.key.encrypted
-bye
-EOF
-REMOTE_ENCRYPTED_SYMMETRIC_KEY_FILEPATH=$(cat sftp_key_output.txt | grep -v "sftp>" | grep ".key.encrypted" | head -1 | awk '{print $NF}')
-
-# Récupère le fichier de données chiffé le plus récent (fichier .csv.encrypted)
-sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}" <<EOF > sftp_data_output.txt
-ls -lt "${SFTP_PATH}"/*.csv.zip.encrypted
-bye
-EOF
-REMOTE_ENCRYPTED_DATA_FILEPATH=$(cat sftp_data_output.txt | grep -v "sftp>" | grep ".csv.zip.encrypted" | head -1 | awk '{print $NF}')
-
 # Télécharge les deux fichiers chiffrés (clé symétrique et fichier de données)
-sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}":"${REMOTE_ENCRYPTED_SYMMETRIC_KEY_FILEPATH}" "${ENCRYPTED_SYMMETRIC_KEY_FILENAME}"
-sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}":"${REMOTE_ENCRYPTED_DATA_FILEPATH}" "${ENCRYPTED_DATA_FILENAME}"
+sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}":"${ENCRYPTED_SYMMETRIC_KEY_FILENAME}" "${ENCRYPTED_SYMMETRIC_KEY_FILENAME}"
+sshpass -p "${SFTP_PASSWORD}" sftp ${SFTP_OPTIONS} "${SFTP_CONNECT}":"${ENCRYPTED_DATA_FILENAME}" "${ENCRYPTED_DATA_FILENAME}"
 
 # Déchiffre la clé symétrique
 echo "${SFTP_PRIVATE_KEY}" | base64 --decode --ignore-garbage | openssl pkeyutl -decrypt -inkey /dev/stdin -in "${ENCRYPTED_SYMMETRIC_KEY_FILENAME}" -out "${SYMMETRIC_KEY_FILENAME}"
 
 # Déchiffre le fichier de données
-openssl enc -d -aes-256-cbc -a -salt -pbkdf2 -in "${ENCRYPTED_DATA_FILENAME}" -out "${DATA_ZIP_FILENAME}" -pass file:"${SYMMETRIC_KEY_FILENAME}"
-
-unzip -p "${DATA_ZIP_FILENAME}" > "${DATA_FILENAME}"
+openssl enc -d -aes-256-cbc -a -salt -pbkdf2 -in "${ENCRYPTED_DATA_FILENAME}" -out "${DATA_FILENAME}" -pass file:"${SYMMETRIC_KEY_FILENAME}"
 
 rm -f clevercloud_known_hosts \
       sftp_key_output.txt \
