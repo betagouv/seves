@@ -273,11 +273,6 @@ function configureSiretField(field){
     })
 
     document.querySelectorAll(`[id$="-sirene-btn"]`).forEach(siretLookupBtn =>{
-        if (!siretLookupBtn.nextElementSibling.querySelector("select").dataset.token){
-            siretLookupBtn.classList.add("fr-hidden")
-            return
-        }
-
         siretLookupBtn.addEventListener("click", event =>{
             event.preventDefault()
             siretLookupBtn.classList.add("fr-hidden")

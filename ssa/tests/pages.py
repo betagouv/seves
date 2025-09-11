@@ -232,10 +232,7 @@ class EvenementProduitFormPage(WithTreeSelect):
             route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
             call_count["count"] += 1
 
-        self.page.route(
-            f"https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A{siret[:9]}*%20AND%20-periode(etatAdministratifEtablissement:F)",
-            handle,
-        )
+        self.page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**", handle)
 
         self.current_modal.locator('label[for="search-siret-input-"] ~ div.choices').click()
         self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)

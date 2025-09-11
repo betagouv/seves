@@ -6,9 +6,7 @@
 </div>
 <div class="fr-input-group">
     {{ form.siret.label_tag }}
-    {% with data_token=sirene_token|strfmt:"token:{0}" %}
-        {{ form.siret|set_data:"etablissement-form-target:siretInput"|set_data:data_token|set_data:"action:choice->etablissement-form#onSiretChoice" }}
-    {% endwith %}
+    {{ form.siret|set_data:"etablissement-form-target:siretInput"|set_data:"action:choice->etablissement-form#onSiretChoice" }}
 </div>
 <div class="fr-input-group">
     {{ form.raison_sociale.label_tag }}
