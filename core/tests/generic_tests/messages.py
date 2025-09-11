@@ -74,6 +74,20 @@ def generic_test_can_update_draft_message(
     assert len(mailoutbox) == 0
 
 
+def generic_test_cant_see_drafts_from_other_users(live_server, page: Page, object):
+    contact = ContactAgentFactory(with_active_agent=True)
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        message_type=Message.MESSAGE,
+        recipients=[contact],
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    expect(message_page.page.get_by_text("Pas de message pour le moment", exact=True)).to_be_visible()
+
+
 def generic_test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
     message = MessageFactory(
         content_object=object,
