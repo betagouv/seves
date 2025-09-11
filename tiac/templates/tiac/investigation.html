@@ -2,7 +2,7 @@
 {% load dsfr_tags widget_tweaks static render_field_with_inline_label %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
-    <link rel="stylesheet" href="{% static 'tiac/evenement_simple.css' %}">
+    <link rel="stylesheet" href="{% static 'tiac/investigation.css' %}">
 {% endblock extrahead %}
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
@@ -56,7 +56,7 @@
             </fieldset>
 
 
-            <fieldset class="fr-fieldset form-fieldset fr-mt-4v">
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v cas-fieldset">
                 <legend class="fr-fieldset__legend fr-h3">Cas</legend>
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-2">
