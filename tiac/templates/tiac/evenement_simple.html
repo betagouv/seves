@@ -1,0 +1,70 @@
+{% extends "tiac/base.html" %}
+{% load dsfr_tags widget_tweaks static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
+    <link rel="stylesheet" href="{% static 'tiac/evenement_simple.css' %}">
+{% endblock extrahead %}
+{% block content %}
+    <form class="fr-container--fluid fr-background-alt--grey" method="post">
+        {% csrf_token %}
+        <main class="main-container">
+            <div class="evenement-produit-form-header fr-grid-row">
+                <h1 class="fr-col-6">Création d'un enregistrement simple</h1>
+                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
+                    {% if form.instance and form.instance.is_draft %}
+                        <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
+                            Enregistrer le brouillon
+                        </button>
+                    {% endif %}
+                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+                        {% if form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
+                    </button>
+                </div>
+
+            </div>
+
+            {% if form.non_field_errors %}
+                <section class="fr-my-4v fr-input-group fr-input-group--error">
+                    {{ form.non_field_errors }}
+                </section>
+            {% endif %}
+
+            <fieldset class="fr-fieldset form-fieldset">
+                <legend class="fr-fieldset__legend fr-h3">Le contexte</legend>
+
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="fr-input-group">
+                            <label class="fr-label" for="date-creation-input">Date de création</label>
+                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                        </div>
+                        {% dsfr_form_field form.date_reception %}
+                        {% dsfr_form_field form.evenement_origin %}
+                        {% dsfr_form_field form.modalites_declaration|dsfr_inline %}
+                    </div>
+
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.contenu %}
+                    </div>
+
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.notify_ars|dsfr_inline %}
+                        {% dsfr_form_field form.nb_sick_persons|dsfr_inline %}
+                        {% dsfr_form_field form.follow_up|dsfr_inline %}
+                    </div>
+                </div>
+            </fieldset>
+
+            {{ etablissement_formset }}
+
+            <fieldset id="liens-libre" class="fr-fieldset form-fieldset fr-mt-2w">
+                <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
+                <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
+                <div data-controller="free-links" class="free-links" data-free-links-ids-value='{{ form.instance.free_link_ids }}'>
+                    {{ form.free_link|set_data:"free-links-target:select"  }}
+                </div>
+            </fieldset>
+        </main>
+    </form>
+{% endblock %}

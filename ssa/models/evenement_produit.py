@@ -27,9 +27,8 @@ from .categorie_danger import CategorieDanger
 class TypeEvenement(models.TextChoices):
     ALERTE_PRODUIT_NATIONALE = "alerte_produit_nationale", "Alerte produit nationale"
     ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
-    NON_ALERTE = "non_alerte", "Non alerte"
-    ALERTE_PRODUIT_UE = "alerte_produit_ue", "Alerte produit UE/INT (RASFF)"
-    NON_ALERTE_UE = "non_alerte_ue", "Non alerte UE/INT (AAC)"
+    NON_ALERTE = "non_alerte", "Non alerte (non mis sur le marché)"
+    NON_ALERTE_NON_DANGEREUX = "non_alerte_non_dangereux", "Non alerte (non dangereux)"
     INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
     AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
 
@@ -37,13 +36,20 @@ class TypeEvenement(models.TextChoices):
 class Source(models.TextChoices):
     AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
     AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
-    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC"
-    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Autre prélèvement officiel"
-    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas humains"
+    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC (hors PCF)"
+    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Prélèvement officiel autre (hors PCF)"
+    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel (hors PCF)"
+    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas ou TIAC"
+    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement de consommateur"
+    NOTIFICATION_RASFF = "notification_rasff", "Notification RASFF"
+    NOTIFICATION_AAC = "notification_aac", "Notification AAC"
+    TOUT_DROIT = "tout_droit", "Tout droit"
+    PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
+    PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
+    AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
+
     DO_LISTERIOSE = "do_listeriose", "DO Listériose"
     CAS_GROUPES = "cas_groupes", "Cas groupés"
-    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement consommateur"
     AUTRE = "autre", "Signalement autre"
 
 
@@ -153,6 +159,7 @@ class EvenementProduit(
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     description = models.TextField(verbose_name="Description de l'événement")
+    aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     # Informations liées au produit
     categorie_produit = models.CharField(
@@ -195,7 +202,8 @@ class EvenementProduit(
     SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
-        return reverse("ssa:evenement-produit-details", kwargs={"numero": self.numero})
+        numero = f"{self.numero_annee}.{self.numero_evenement}"
+        return reverse("ssa:evenement-produit-details", kwargs={"numero": numero})
 
     def get_update_url(self):
         return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})
@@ -208,6 +216,10 @@ class EvenementProduit(
                     self.numero_annee = annee
                     self.numero_evenement = numero
                 super().save(*args, **kwargs)
+
+    @property
+    def numero(self):
+        return f"A-{self.numero_annee}.{self.numero_evenement}"
 
     def __str__(self):
         return self.numero
@@ -278,9 +290,10 @@ class EvenementProduit(
     def danger_plus_courants(self):
         return [
             CategorieDanger.LISTERIA_MONOCYTOGENES,
-            CategorieDanger.SALMONELLA,
-            CategorieDanger.E_COLI_NON_STEC,
-            CategorieDanger.PESTICIDE_RESIDU,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
+            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE,
         ]
 
     @property
@@ -348,6 +361,7 @@ class EvenementProduit(
             Document.TypeDocument.COURRIERS_COURRIELS,
             Document.TypeDocument.COMPTE_RENDU,
             Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
             Document.TypeDocument.AUTRE,
         ]
 

@@ -1,12 +1,12 @@
 import random
 from datetime import datetime
-from django.utils import timezone
 
 import factory
-from django_countries import Countries
+from django.utils import timezone
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
+from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from ssa.models import (
     EvenementProduit,
@@ -16,7 +16,6 @@ from ssa.models import (
     QuantificationUnite,
     ActionEngagees,
     Etablissement,
-    TypeExploitant,
     PositionDossier,
     CategorieDanger,
 )
@@ -36,6 +35,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
     description = factory.Faker("paragraph")
+    aliments_animaux = factory.Faker("boolean")
 
     categorie_produit = FuzzyChoice(CategorieProduit.values)
     denomination = factory.Faker("sentence", nb_words=5)
@@ -71,13 +71,15 @@ class EvenementProduitFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
-    @factory.lazy_attribute
-    def source(self):
-        if self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            return random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-
-        other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
-        return random.choice(list(other_sources))
+    @factory.post_generation
+    def source(self, create, extracted, **kwargs):
+        if extracted:
+            self.source = extracted
+        elif self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
+            self.source = random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
+        else:
+            other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
+            self.source = random.choice(list(other_sources))
 
     @factory.lazy_attribute
     def produit_pret_a_manger(self):
@@ -106,21 +108,14 @@ class EvenementProduitFactory(DjangoModelFactory):
         )
 
 
-class EtablissementFactory(DjangoModelFactory):
+class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
     evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
 
-    siret = factory.Faker("numerify", text="##############")
-    raison_sociale = factory.Faker("sentence", nb_words=5)
-
-    adresse_lieu_dit = factory.Faker("street_address")
-    commune = factory.Faker("city")
-    code_insee = factory.Faker("numerify", text="#####")
-    departement = factory.SubFactory("core.factories.DepartementFactory")
-    pays = FuzzyChoice([c.code for c in Countries()])
-
-    type_exploitant = FuzzyChoice([choice[0] for choice in TypeExploitant.choices])
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
+    type_exploitant = factory.Faker("sentence", nb_words=2)
     numero_agrement = factory.Faker("numerify", text="###.##.###")
+
+    numeros_resytal = factory.Faker("numerify", text="######")

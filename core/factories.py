@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django_countries import Countries
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
@@ -214,3 +215,18 @@ class DepartementFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def nom(self):
         return [d[1] for d in DEPARTEMENTS if self.numero == d[0]][0]
+
+
+class BaseEtablissementFactory(DjangoModelFactory):
+    siret = factory.Faker("numerify", text="##############")
+    raison_sociale = factory.Faker("sentence", nb_words=5)
+    enseigne_usuelle = factory.Faker("sentence", nb_words=5)
+
+    adresse_lieu_dit = factory.Faker("street_address")
+    commune = factory.Faker("city")
+    code_insee = factory.Faker("numerify", text="#####")
+    departement = factory.SubFactory("core.factories.DepartementFactory")
+    pays = FuzzyChoice([c.code for c in Countries()])
+
+    class Meta:
+        abstract = True

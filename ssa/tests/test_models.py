@@ -85,16 +85,14 @@ def test_evenement_produit_latest_revision():
 
 @pytest.mark.django_db
 def test_pam_requires_danger_bacterien_constraint():
-    EvenementProduitFactory(produit_pret_a_manger="", categorie_danger=CategorieDanger.OGM_PLANTES)
+    EvenementProduitFactory(produit_pret_a_manger="", categorie_danger=CategorieDanger.OGM)
 
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.OGM_PLANTES)
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.OGM)
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.OGM_PLANTES)
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.OGM)
     with pytest.raises(IntegrityError):
-        EvenementProduitFactory(
-            produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.OGM_PLANTES
-        )
+        EvenementProduitFactory(produit_pret_a_manger=PretAManger.SANS_OBJET, categorie_danger=CategorieDanger.OGM)
 
     EvenementProduitFactory(produit_pret_a_manger=PretAManger.OUI, categorie_danger=CategorieDanger.SALMONELLA)
     EvenementProduitFactory(produit_pret_a_manger=PretAManger.NON, categorie_danger=CategorieDanger.STAPHYLOCOCCUS)

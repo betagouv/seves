@@ -1,5 +1,6 @@
+import choicesDefaults from "choicesDefaults"
 import {setUpFreeLinks} from "/static/core/free_links.js";
-import {patchItems, findPath, tsDefaultOptions} from "/static/ssa/_custom_tree_select.js"
+import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener('DOMContentLoaded', () => {
   function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
@@ -15,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (reset===true){
       sourceInput.selectedIndex = 0;
+    }
+  }
+
+  function handleNoticeProduitDisplay(options, value) {
+    if(isLevel2WithChildren(options, value)){
+      document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
+    } else {
+      document.querySelector("#notice-container-produit").classList.add("fr-hidden")
     }
   }
 
@@ -41,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById("id_categorie_produit").value = e.detail
       document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
     })
+
+    treeselect.srcElement.addEventListener('input', (e) => {handleNoticeProduitDisplay(options, e.detail)})
+    handleNoticeProduitDisplay(options, selectedValue)
   }
 
   function handleValueChangeCategorieDanger(value, options){
@@ -52,6 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById("pam-container").classList.remove("fr-hidden")
     } else {
       document.getElementById("pam-container").classList.add("fr-hidden")
+    }
+  }
+
+  function handleNoticeDangerDisplay(options, value) {
+    if(isLevel2WithChildren(options, value)){
+      document.querySelector("#notice-container-risque").classList.remove("fr-hidden")
+    } else {
+      document.querySelector("#notice-container-risque").classList.add("fr-hidden")
     }
   }
 
@@ -115,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("pam-container").classList.add("fr-hidden")
       }
     })
+
+    treeselect.srcElement.addEventListener('input', (e) => { handleNoticeDangerDisplay(options, e.detail)})
+    handleNoticeDangerDisplay(options, selectedValue)
   }
 
   const typeEvenementInput = document.getElementById('id_type_evenement')
@@ -125,12 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
   disableSourceOptions(typeEvenementInput, sourceInput, false)
   setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
   new Choices(document.getElementById("id_quantification_unite"), {
-    classNames: {
-      containerInner: 'fr-select',
-    },
-    itemSelectText: '',
+    ...choicesDefaults,
     position: 'bottom',
-    shouldSort: false,
   });
   setupCategorieProduit()
   setupCategorieDanger()

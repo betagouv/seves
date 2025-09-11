@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block base_override %}
+    <link rel="stylesheet" href="{% static 'tiac/base.css' %}"/>
+{% endblock %}
+
+{% block product_nav %}
+    <li>
+        <a
+            class="fr-btn fr-btn--header-blue fr-btn--icon-left fr-icon-add-line fr-my-auto"
+            href="{% url 'tiac:evenement-simple-creation' %}"
+        >Créer un événement</a>
+    </li>
+    <li class="{% block highlight_menu_evenements %}{% endblock %}">
+        <a class="fr-btn" href="{% url 'tiac:evenement-liste' %}">Liste des événements</a>
+    </li>
+{% endblock product_nav %}

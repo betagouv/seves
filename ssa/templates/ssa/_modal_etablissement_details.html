@@ -13,14 +13,17 @@
                     <div class="fr-modal__content">
                         <h1 id="fr-modal-title-modal-etablissement-{{ etablissement.pk }}"
                             class="fr-modal__title">{{ etablissement.raison_sociale }}</h1>
+                        {% if etablissement.enseigne_usuelle %}
+                            <p class="fr-text--sm enseigne">{{ etablissement.enseigne_usuelle }}</p>
+                        {% endif %}
                         <div class="fr-container--fluid">
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-5 bold">Type d'exploitant</div>
-                                <div class="fr-col-7">{{ etablissement.get_type_exploitant_display|or_empty_value_tag }}</div>
-                            </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Position dossier</div>
                                 <div class="fr-col-7">{% if etablissement.position_dossier %}<p class="position-dossier fr-badge {{ etablissement.position_dossier_css_class }} fr-my-2v">{{ etablissement.get_position_dossier_display }}</p>{% else %}<span class="empty-value">Vide</span>{% endif %}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Type d'exploitant</div>
+                                <div class="fr-col-7">{{ etablissement.type_exploitant|or_empty_value_tag }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Siret</div>
@@ -45,6 +48,10 @@
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">Pays</div>
                                 <div class="fr-col-7">{{ etablissement.get_pays_display|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Numéros d’inspection Resytal</div>
+                                <div class="fr-col-7">{{ etablissement.numeros_resytal|or_empty_value_tag }}</div>
                             </div>
                         </div>
                     </div>

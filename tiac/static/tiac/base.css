@@ -1,0 +1,45 @@
+/* This is already handled by django-dsfr */
+label:has(+ input:required)::after,
+label:has(+ input[data-required="true"])::after,
+label:has(+ select:required)::after,
+label:has(+ select[data-required="true"])::after,
+label:has(+ textarea:required)::after,
+label:has(+ textarea[data-required="true"])::after,
+label:has(+ .choices select:required)::after,
+label:has(+ .choices select[data-required="true"])::after,
+.required-field::after {
+    content: none;
+}
+
+/* Except in modals because the field is marked as not required in the form class but the required attribute is
+added via JS when opening the modal */
+.modal-etablissement label:has(+ input:required)::after,
+.modal-etablissement label:has(+ input[data-required="true"])::after,
+.modal-etablissement label:has(+ select:required)::after,
+.modal-etablissement label:has(+ select[data-required="true"])::after,
+.modal-etablissement label:has(+ textarea:required)::after,
+.modal-etablissement label:has(+ textarea[data-required="true"])::after,
+.modal-etablissement label:has(+ .choices select:required)::after,
+.modal-etablissement label:has(+ .choices select[data-required="true"])::after,
+.required-field::after {
+    content: "*";
+}
+
+fieldset.form-fieldset {
+    margin: 0;
+    padding: 1.25rem;
+    --idle: transparent;
+    --hover: var(--background-default-grey-hover);
+    --active: var(--background-default-grey-active);
+    background-color: var(--background-default-grey);
+    border: none;
+}
+
+fieldset.form-fieldset .fr-fieldset__legend {
+    float: left;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+}

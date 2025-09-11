@@ -1,3 +1,5 @@
+import choicesDefaults from "choicesDefaults"
+
 /**
  * @typedef {Object} AddressResult
  * @property {string} value
@@ -41,14 +43,9 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
 
 export function setUpAddressChoices(element) {
     const addressCommunes = new Choices(element, {
+        ...choicesDefaults,
+        placeholderValue: 'Recherchez…',
         removeItemButton: true,
-        placeholderValue: 'Recherchez...',
-        noResultsText: 'Aucun résultat trouvé',
-        noChoicesText: 'Aucun résultat trouvé',
-        shouldSort: false,
-        searchResultLimit: 10,
-        classNames: {containerInner: 'fr-select'},
-        itemSelectText: '',
     });
     addressCommunes.abortController = new AbortController();
     addressCommunes.abort = () => {

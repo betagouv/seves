@@ -1,15 +1,14 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
-from django_countries.fields import CountryField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
-from core.forms import BaseMessageForm
+from core.forms import BaseMessageForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message, Departement
+from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import Etablissement, TypeExploitant, PositionDossier, CategorieDanger
+from ssa.models import Etablissement, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
 from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
 from ssa.widgets import PositionDossierWidget
@@ -24,7 +23,23 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         ),
         label="N° RASFF/AAC",
     )
+    aliments_animaux = forms.ChoiceField(
+        required=False,
+        choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
+        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Inclut des aliments pour animaux",
+    )
     source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
+    description = forms.CharField(
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "cols": 30,
+                "rows": 6,
+            }
+        ),
+        label="Description de l'événement",
+    )
 
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
@@ -119,39 +134,26 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         }
 
 
-class AdresseLieuDitField(forms.ChoiceField):
-    def validate(self, value):
-        # Autorise n'importe quelle valeur
-        return
-
-
-class EtablissementForm(DSFRForm, forms.ModelForm):
-    siret = forms.CharField(
-        required=False,
-        max_length=14,
-        widget=forms.HiddenInput,
-    )
+class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
     numero_agrement = forms.CharField(
         required=False,
         label="Numéro d'agrément",
         widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
     )
-    code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
-    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
-    pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
-    type_exploitant = SEVESChoiceField(choices=TypeExploitant.choices, label="Type d'exploitant", required=False)
+    type_exploitant = forms.CharField(
+        label="Type d'exploitant",
+        required=False,
+        widget=forms.TextInput(
+            attrs={"placeholder": "Siège/usine, producteur/affineur, importateur/distributeur…", "maxlength": 45}
+        ),
+    )
     position_dossier = SEVESChoiceField(
         choices=PositionDossier.choices,
         label="Position dossier",
         required=False,
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
-    departement = forms.ModelChoiceField(
-        queryset=Departement.objects.order_by("numero").all(),
-        to_field_name="numero",
-        required=False,
-        label="Département",
-    )
+
     manual_render_fields = ["DELETE", "position_dossier", "type_exploitant"]
 
     class Meta:
@@ -160,6 +162,7 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "siret",
             "numero_agrement",
             "raison_sociale",
+            "enseigne_usuelle",
             "adresse_lieu_dit",
             "commune",
             "code_insee",
@@ -167,17 +170,8 @@ class EtablissementForm(DSFRForm, forms.ModelForm):
             "pays",
             "type_exploitant",
             "position_dossier",
+            "numeros_resytal",
         ]
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
-            self.fields["adresse_lieu_dit"].choices = [(self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)]
-
-        departement_obj = self.instance.departement
-        if departement_obj:
-            self.initial["departement"] = departement_obj.numero
 
 
 class MessageForm(BaseMessageForm):

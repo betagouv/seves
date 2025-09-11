@@ -29,6 +29,10 @@
             <div class="fr-col-5 bold">Source</div>
             <div class="fr-col-7">{{ object.get_source_display|or_empty_value_tag }}</div>
           </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">Inclut des aliments pour animaux</div>
+            <div class="fr-col-7">{{ object.aliments_animaux|yesno:"Oui,Non,Vide" }}</div>
+          </div>
         </div>
       </div>
       <div class="fr-col-5">

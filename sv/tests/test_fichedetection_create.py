@@ -8,7 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory, DepartementFactory
-from core.models import Contact, Visibilite, Region
+from core.models import Contact, Visibilite
 from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 from ..factories import (
@@ -194,9 +194,9 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
     choice_js_fill,
+    ensure_departements,
 ):
-    region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
-    Departement.objects.get_or_create(numero=59, nom="Nord", region=region)
+    ensure_departements("Nord")
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
@@ -267,9 +267,9 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
     choice_js_fill,
+    ensure_departements,
 ):
-    region, _ = Region.objects.get_or_create(nom="Hauts-de-France")
-    Departement.objects.get_or_create(numero=59, nom="Nord", region=region)
+    ensure_departements("Nord")
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
@@ -613,9 +613,9 @@ def test_create_fiche_detection_with_lieu_using_siret(
     mocked_authentification_user,
     choice_js_fill,
     settings,
+    ensure_departements,
 ):
-    region = Region.objects.create(nom="Île-de-France")
-    Departement.objects.get_or_create(numero=75, nom="Paris", region=region)
+    ensure_departements("Paris")
     call_count = {"count": 0}
 
     def handle(route):
@@ -824,9 +824,9 @@ def test_can_add_lieu_with_adresse_auto_complete(
     lieu_form_elements: LieuFormDomElements,
     choice_js_fill,
     choice_js_fill_from_element,
+    ensure_departements,
 ):
-    region = Region.objects.create(nom="Île-de-France")
-    Departement.objects.get_or_create(numero=75, nom="Paris", region=region)
+    ensure_departements("Paris")
     call_count = {"count": 0}
 
     def handle(route):
@@ -882,10 +882,10 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     lieu_form_elements: LieuFormDomElements,
     choice_js_fill,
     choice_js_fill_from_element,
+    ensure_departements,
 ):
     call_count = {"count": 0}
-    region = Region.objects.create(nom="Île-de-France")
-    Departement.objects.create(numero=75, nom="Paris", region=region)
+    ensure_departements("Paris")
 
     def handle(route):
         response = {

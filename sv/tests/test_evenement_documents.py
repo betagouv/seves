@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -13,7 +14,10 @@ from core.models import Structure, Document, Message
 from django.contrib.auth import get_user_model
 
 from core.pages import WithDocumentsPage
-from core.tests.generic_tests.documents import generic_test_cant_see_document_type_from_other_app
+from core.tests.generic_tests.documents import (
+    generic_test_cant_see_document_type_from_other_app,
+    generic_test_can_add_document_to_evenement,
+)
 from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -23,33 +27,7 @@ User = get_user_model()
 
 def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_test_id("documents-add")).to_be_visible()
-    page.get_by_test_id("documents-add").click()
-
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
-
-    page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
-    page.get_by_test_id("documents-send").click()
-
-    assert evenement.documents.count() == 1
-    document = evenement.documents.get()
-
-    assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
-    assert document.nom == "Name of the document"
-    assert document.description == "Description"
-    assert document.created_by == mocked_authentification_user.agent
-    assert document.created_by_structure == mocked_authentification_user.agent.structure
-
-    # Check the document is now listed on the page
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document Information")).to_be_visible()
-    expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
-    expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+    generic_test_can_add_document_to_evenement(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
@@ -280,7 +258,9 @@ def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Pa
     page.locator("#id_nom").fill("Test Document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description test")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
+        settings.BASE_DIR / "static/images/marianne.png"
+    )
     page.get_by_test_id("documents-send").click()
 
     # Vérification que le document a été créé
@@ -317,7 +297,7 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     page.locator("#fr-modal-add-doc #id_nom").fill("Document 1")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#fr-modal-add-doc #id_description").fill("Description 1")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     # Ajout du second document
@@ -326,7 +306,7 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     page.locator("#fr-modal-add-doc #id_nom").fill("Document 2")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#fr-modal-add-doc #id_description").fill("Description 2")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     # Vérification que les deux documents ont été créés
@@ -424,7 +404,9 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
+        settings.BASE_DIR / "static/images/marianne.png"
+    )
     page.get_by_test_id("documents-send").click()
 
     assert evenement.documents.count() == 1
@@ -518,7 +500,7 @@ def test_document_upload_with_missing_max_size_shows_configuration_error(live_se
     page.locator("#id_nom").fill("Test configuration manquante")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Test attribut manquant")
-    file_input.set_input_files("static/images/marianne.png")
+    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
     assert "Erreur de configuration: limite de taille non définie" in validation_message
@@ -544,7 +526,7 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
     page.locator("#id_nom").fill("Test configuration invalide")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Test attribut invalide")
-    file_input.set_input_files("static/images/marianne.png")
+    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
     assert "Erreur de configuration: limite de taille invalide" in validation_message
@@ -667,7 +649,7 @@ def test_can_upload_document_with_allowed_extension_for_cartographie(live_server
     page.get_by_test_id("documents-add").click()
     page.locator("#id_nom").fill("Test upload doc cartographie")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
     page.get_by_test_id("documents-send").click()
 
     evenement.refresh_from_db()
@@ -709,7 +691,7 @@ def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_confi
     page.locator("#id_nom").fill("Test configuration manquante")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     file_input = page.locator("#fr-modal-add-doc #id_file")
-    file_input.set_input_files("static/images/marianne.png")
+    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     expect(page.get_by_test_id("documents-send")).to_be_disabled()
     evenement.refresh_from_db()
@@ -769,7 +751,9 @@ def test_document_name_length_validation(live_server, page: Page, mocked_authent
     page.locator("#id_nom").fill(long_name)
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
     page.locator("#id_description").fill("Description test")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("static/images/marianne.png")
+    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
+        settings.BASE_DIR / "static/images/marianne.png"
+    )
     page.get_by_test_id("documents-send").click()
 
     assert evenement.documents.count() == 1

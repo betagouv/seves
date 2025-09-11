@@ -28,7 +28,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     lines = task.file.read().decode("utf-8").split("\n")
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -39,6 +39,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),
         evenement.get_source_display(),
+        str(evenement.aliments_animaux),
         evenement.description,
         evenement.get_categorie_produit_display(),
         evenement.denomination,
@@ -48,14 +49,16 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.get_temperature_conservation_display(),
         evenement.get_categorie_danger_display(),
         str(evenement.quantification),
-        evenement.quantification_unite,
+        evenement.get_quantification_unite_display(),
         evenement.evaluation,
         evenement.get_produit_pret_a_manger_display(),
         evenement.reference_souches,
         evenement.reference_clusters,
         evenement.get_actions_engagees_display(),
         ",".join(evenement.numeros_rappel_conso),
-        "2024.22",
+        "A-2024.22",
+        "",
+        "",
         "",
         "",
         "",
@@ -136,26 +139,28 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
     expected_fields = [
         etablissement_1.siret,
         etablissement_1.raison_sociale,
+        etablissement_1.enseigne_usuelle,
         etablissement_1.adresse_lieu_dit,
         etablissement_1.commune,
         str(etablissement_1.departement),
         str(etablissement_1.pays.name),
-        etablissement_1.get_type_exploitant_display(),
+        etablissement_1.type_exploitant,
         etablissement_1.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[1])))[24:32]
+    assert expected_fields == next(csv.reader(StringIO(lines[1])))[25:34]
 
     expected_fields = [
         etablissement_2.siret,
         etablissement_2.raison_sociale,
+        etablissement_2.enseigne_usuelle,
         etablissement_2.adresse_lieu_dit,
         etablissement_2.commune,
         str(etablissement_2.departement),
         str(etablissement_2.pays.name),
-        etablissement_2.get_type_exploitant_display(),
+        etablissement_2.type_exploitant,
         etablissement_2.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[2])))[24:32]
+    assert expected_fields == next(csv.reader(StringIO(lines[2])))[25:34]
     assert lines[3] == ""
     assert len(lines) == 4
 
@@ -178,9 +183,9 @@ def test_export_evenement_produit_from_ui(live_server, mocked_authentification_u
     task = Export.objects.get()
     assert task.task_done is True
     lines = task.file.read().decode("utf-8").split("\n")
-    assert lines[1].startswith('"2025.21",')
-    assert lines[2].startswith('"2025.2",')
-    assert lines[3].startswith('"2025.1",')
+    assert lines[1].startswith('"A-2025.21",')
+    assert lines[2].startswith('"A-2025.2",')
+    assert lines[3].startswith('"A-2025.1",')
     assert len(lines) == 5
 
     assert len(mailoutbox) == 1

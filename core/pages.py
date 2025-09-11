@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 
+from django.conf import settings
 from playwright.sync_api import Page, expect
+
+from core.models import Document
 
 
 class BaseMessagePage(ABC):
@@ -105,7 +108,9 @@ class BaseMessagePage(ABC):
     def add_document(self):
         self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
         self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
-        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files("static/images/login.jpeg")
+        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files(
+            settings.BASE_DIR / "static/images/login.jpeg"
+        )
         self.page.locator(f"{self.container_id} #message-add-document").click()
 
     def remove_document(self, index):
@@ -173,6 +178,31 @@ class WithDocumentsPage:
     def open_edit_document(self, id):
         self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{id}"]').click()
         expect(self.page.locator(f"#fr-modal-edit-{id}")).to_be_visible()
+
+    @property
+    def document_add_title(self):
+        return self.page.locator("#fr-modal-add-doc #id_nom")
+
+    @property
+    def document_add_type(self):
+        return self.page.locator("#fr-modal-add-doc #id_document_type")
+
+    @property
+    def document_add_description(self):
+        return self.page.locator("#fr-modal-add-doc #id_description")
+
+    @property
+    def document_add_file(self):
+        return self.page.locator("#fr-modal-add-doc #id_file")
+
+    def add_document(self):
+        self.open_document_tab()
+        self.open_add_document()
+        self.document_add_title.fill("Name of the document")
+        self.document_add_type.select_option(Document.TypeDocument.AUTRE)
+        self.document_add_description.fill("Description")
+        self.document_add_file.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
+        self.page.get_by_test_id("documents-send").click()
 
     def document_edit_title(self, id):
         return self.page.locator(f"#fr-modal-edit-{id} #id_nom")

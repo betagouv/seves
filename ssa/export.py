@@ -18,6 +18,7 @@ class EvenementProduitExport:
         ("numero_rasff", "Numéro RASFF"),
         ("type_evenement", "Type d'événement"),
         ("source", "Source"),
+        ("aliments_animaux", "Inclut des aliments pour animaux"),
         ("description", "Description"),
         ("categorie_produit", "Catégorie de produit"),
         ("denomination", "Dénomination"),
@@ -39,12 +40,14 @@ class EvenementProduitExport:
     etablissement_fields = [
         ("siret", "Numéro SIRET"),
         ("raison_sociale", "Raison sociale"),
+        ("enseigne_usuelle", "Enseigne usuelle"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),
         ("commune", "Commune"),
         ("departement", "Département"),
         ("pays", "Pays établissement"),
         ("type_exploitant", "Type d'exploitant"),
         ("position_dossier", "Position dans le dossier"),
+        ("numeros_resytal", "Numéros d’inspection Resytal"),
     ]
 
     def get_fieldnames(self):

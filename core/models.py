@@ -6,11 +6,12 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import Q, CheckConstraint
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
+from django_countries.fields import CountryField
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
@@ -182,6 +183,7 @@ class Document(models.Model):
         COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
         COMPTE_RENDU = "compte_rendu", "Compte-rendu"
         PHOTO = "photo", "Photo (du produit, photo de l’établissement…)"
+        AFFICHETTE_RAPPEL = "affichette rappel", "Affichette de rappel"
 
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
@@ -426,3 +428,47 @@ class Departement(models.Model):
 
     def __str__(self):
         return f"{self.numero} - {self.nom}"
+
+
+class BaseEtablissement(models.Model):
+    siret = models.CharField(
+        max_length=14,
+        verbose_name="SIRET de l'établissement",
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{14}$",
+                message="Le SIRET doit contenir exactement 14 chiffres",
+                code="invalid_siret",
+            ),
+        ],
+    )
+    raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
+    enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
+
+    adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
+    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    code_insee = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE de la commune",
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{5}$",
+                message="Le code INSEE doit contenir exactement 5 chiffres",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    departement = models.ForeignKey(
+        Departement,
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        related_name="%(app_label)s_etablissements",
+        blank=True,
+        null=True,
+    )
+    pays = CountryField(null=True)
+
+    class Meta:
+        abstract = True

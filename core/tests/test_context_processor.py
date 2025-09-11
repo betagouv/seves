@@ -1,8 +1,8 @@
 import pytest
 from django.contrib.auth.models import Group
 from django.test import RequestFactory
-from django.urls import reverse
 
+from core.constants import Domains
 from core.factories import UserFactory
 from seves.context_processors import domains
 
@@ -11,8 +11,8 @@ from seves.context_processors import domains
 def test_domains_context_processor_all_domains(django_user_model, settings):
     factory = RequestFactory()
     user = UserFactory()
-    sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
-    ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
+    sv_group, _ = Group.objects.get_or_create(name=Domains.SV.group)
+    ssa_group, _ = Group.objects.get_or_create(name=Domains.SSA.group)
     user.groups.add(sv_group, ssa_group)
 
     request = factory.get("/")
@@ -20,25 +20,11 @@ def test_domains_context_processor_all_domains(django_user_model, settings):
 
     request.domain = "sv"
     context = domains(request)
-    assert context["current_domain"]["nom"] == "Santé des végétaux"
-    assert context["current_domain"]["help_url"] == "https://doc-sv.seves.beta.gouv.fr"
-    assert context["other_domains"] == [
-        {
-            "icon": "fr-icon-restaurant-line ",
-            "nom": "Sécurité sanitaire des aliments",
-            "url": reverse("ssa:evenement-produit-liste"),
-            "help_url": "https://doc-ssa.seves.beta.gouv.fr",
-        },
-    ]
+    assert context["current_domain"].nom == "Santé des végétaux"
+    assert context["current_domain"].help_url == "https://doc-sv.seves.beta.gouv.fr"
+    assert context["other_domains"] == [Domains.SSA, Domains.TIAC]
 
     request.domain = "ssa"
     context = domains(request)
-    assert context["current_domain"]["nom"] == "Sécurité sanitaire des aliments"
-    assert context["other_domains"] == [
-        {
-            "icon": "fr-icon-leaf-line",
-            "nom": "Santé des végétaux",
-            "url": reverse("sv:evenement-liste"),
-            "help_url": "https://doc-sv.seves.beta.gouv.fr",
-        }
-    ]
+    assert context["current_domain"].nom == "Alimentaire"
+    assert context["other_domains"] == [Domains.SV, Domains.TIAC]

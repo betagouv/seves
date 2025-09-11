@@ -12,6 +12,7 @@ from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
+from tiac.factories import EvenementSimpleFactory
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",
@@ -39,11 +40,12 @@ def test_can_create_evenement_produit_with_required_fields_only(live_server, moc
 
 
 def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementProduitFactory.build(not_bacterie=True)
+    input_data = EvenementProduitFactory.build(not_bacterie=True, aliments_animaux=True)
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.source.select_option(input_data.source)
+    creation_page.set_aliments_animaux("Oui")
 
     creation_page.set_categorie_produit(input_data)
     creation_page.denomination.fill(input_data.denomination)
@@ -80,6 +82,63 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     evenement_produit_data = {k: v for k, v in evenement_produit.__dict__.items() if k not in fields_to_exclude}
     input_data = {k: v for k, v in input_data.__dict__.items() if k not in fields_to_exclude}
     assert evenement_produit_data == input_data
+
+
+def test_display_of_notice_produit_field(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_produit_from_label("Produit non alimentaire > Autre produit non alimentaire")
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_produit_from_label("Produit carné > PABV cuit - produit à base de viande cuit")
+    expect(
+        creation_page.page.locator("#notice-container-produit").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
+
+
+def test_display_of_notice_danger_field_not_shown(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_danger_from_label("Bactérie > Coliformes")
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+
+
+def test_display_of_notice_danger_field_shown(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).not_to_be_visible()
+    creation_page.set_categorie_danger_from_label("Bactérie > Clostridium")
+    expect(
+        creation_page.page.locator("#notice-container-risque").get_by_text(
+            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
 
 
 def test_can_create_evenement_produit_with_pam_if_bacterie(live_server, mocked_authentification_user, page: Page):
@@ -283,6 +342,22 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
     expected = sorted([evenement_1.numero, evenement_2.numero])
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory.build()
+    evenement_simple = EvenementSimpleFactory(etat=EvenementProduit.Etat.EN_COURS)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Enregistrement simple : ")
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    evenement = EvenementProduit.objects.get()
+    lien = LienLibre.objects.get()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == evenement_simple
 
 
 def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
@@ -688,11 +763,11 @@ def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
-    creation_page.set_categorie_danger_from_shortcut("Escherichia coli (non STEC - EHEC)")
+    creation_page.set_categorie_danger_from_shortcut("Escherichia coli shigatoxinogène (STEC - EHEC)")
     creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()
-    assert evenement_produit.categorie_danger == "Escherichia coli (non STEC - EHEC)"
+    assert evenement_produit.categorie_danger == "Escherichia coli shigatoxinogène (STEC - EHEC)"
 
 
 def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page: Page):

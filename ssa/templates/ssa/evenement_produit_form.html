@@ -1,7 +1,8 @@
 {% extends "ssa/base.html" %}
 {% load static %}
-{% load render_field %}
+{% load render_field dsfr_tags %}
 {% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
@@ -61,6 +62,10 @@
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
                             {% endif %}
+                            {{ form.aliments_animaux.label_tag }}
+                            <div class="radio-inline-container radio-inline-container--wrap">
+                                {{ form.aliments_animaux }}
+                            </div>
                         </div>
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
                             <div>{% render_field form.type_evenement %}</div>
@@ -84,6 +89,9 @@
                                 <div id="categorie-produit"></div>
                                 <div class="fr-mt-2w">
                                     {{ form.categorie_produit  }}
+                                    <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
+                                        {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                    </div>
                                     {% render_field form.denomination %}
                                     {% render_field form.marque %}
                                     {% render_field form.lots %}
@@ -102,7 +110,10 @@
                             <div>
                                 <label>Catégorie de danger</label>
                                 <div id="categorie-danger"></div>
-                                {{ form.categorie_danger  }}
+                                {{ form.categorie_danger }}
+                                <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
+                                    {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                </div>
                                 <div class="fr-mt-4v">
                                     {% render_field form.precision_danger %}
                                 </div>
@@ -160,11 +171,11 @@
                         <div class="fr-col-12 fr-col-lg-4">
                             {{ form.numeros_rappel_conso }}
                             <h3>Rappel conso</h3>
-                            <label>Numéro de fiche</label>
+                            <label>Numéro des fiches rappel conso</label>
                             <div class="rappel-conso-container">
-                                <input class="fr-input to-next-input" type="text" id="rappel-1" pattern="^\d{4}$" maxlength="4" placeholder="2025" title="Le nombre doit être exactement 4 chiffres">
-                                <input class="fr-input to-next-input" type="text" id="rappel-2" pattern="^\d{2}$" maxlength="2" placeholder="01" title="Le nombre doit être exactement 2 chiffres">
-                                <input class="fr-input to-next-input" type="text" id="rappel-3" pattern="^\d{4}$" maxlength="4" placeholder="0181" title="Le nombre doit être exactement 4 chiffres">
+                                <input class="fr-input to-next-input" type="text" id="rappel-1" pattern="^\d{4}$" maxlength="4" placeholder="AAAA" title="Le nombre doit être exactement 4 chiffres">
+                                <input class="fr-input to-next-input" type="text" id="rappel-2" pattern="^\d{2}$" maxlength="2" placeholder="00" title="Le nombre doit être exactement 2 chiffres">
+                                <input class="fr-input to-next-input" type="text" id="rappel-3" pattern="^\d{4}$" maxlength="4" placeholder="0000" title="Le nombre doit être exactement 4 chiffres">
                                 <button class="fr-btn" id="rappel-submit" disabled>Ajouter</button>
                             </div>
                         </div>

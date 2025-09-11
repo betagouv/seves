@@ -1,3 +1,5 @@
+@import url("/static/core/base_dsfr.css");
+
 body{
     background-color: #F6F6F6;
 }
@@ -20,40 +22,11 @@ header .fr-menu {
 header .fr-header__body-row {
     margin: 0;
 }
-@media (min-width: 62em) {
-    .fr-header__body-row {
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
-        min-height: 4rem;
-    }
-}
 
-.fr-header__tools-links .fr-btn--header-blue {
-    --hover: var(--background-action-high-blue-france-hover);
-    background-color: var(--background-action-high-blue-france);
-    color: var(--text-inverted-blue-france);
-    margin-right: 1rem !important;
-    padding: .5rem 1rem !important;
-}
-
-.fr-header__body-row .fr-btns-group .fr-btn {
-    margin-top: auto;
-    margin-bottom: auto;
-}
-.fr-header__body-row .fr-btns-group {
-    margin-top: -1rem;
-}
-
-/* Enbables using Remix icons with DSFR styles */
-.fr-icon-ri[class*=" ri-"]:after,
-.fr-icon-ri[class*=" ri-"]:before,
-.fr-icon-ri[class^=ri-]:after,
-.fr-icon-ri[class^=ri-]:before {
-    background-color: transparent;
-    font-size: var(--icon-size);
-    align-self: baseline;
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 .product-switch .fr-menu .fr-nav__link{
@@ -65,7 +38,6 @@ header .fr-header__body-row {
 .product-switch .fr-translate .fr-translate__btn::before {
     width: 0px;
 }
-
 
 .alert-container{
     margin: 2rem 1.5rem;
@@ -82,9 +54,6 @@ header .fr-header__body-row {
 #seves-title {
     font-size: 2rem;
     font-weight: bold;
-}
-.fr-header .fr-nav__list {
-    margin: 0;
 }
 .menu__item--active {
     border-bottom: 4px solid var(--background-active-blue-france);
@@ -106,7 +75,11 @@ header .fr-header__body-row {
     color: var(--text-inverted-blue-france) !important;
     margin: 0.25rem;
 }
-.choices__input {
+
+.fr-input .choices__input,
+.fr-input .choices__list,
+.fr-select .choices__input,
+.fr-select .choices__list {
     background-color: var(--background-contrast-grey) !important;
     margin: 0 !important;  /* margin should be carried by .fr-select parent */
     padding: 0 !important;
@@ -128,9 +101,6 @@ header .fr-header__body-row {
     background-color: white;
     padding: 1rem !important;
 }
-.fr-tabs__panel{
-    transition: none !important;
-}
 @media (min-width: 640px) {
     .choices__list--dropdown .choices__item--selectable {
         padding-right: 0 !important;
@@ -150,6 +120,9 @@ label:has(+ textarea[data-required="true"]),
 label:has(+ .choices select:required),
 label:has(+ .choices select[data-required="true"]),
 .required-field {
+    font-weight: bold;
+}
+fieldset:has(input[type="radio"][required]) > legend {
     font-weight: bold;
 }
 label:has(+ input:required)::after,
@@ -218,8 +191,8 @@ label:has(+ .choices select[data-required="true"])::after,
     max-height: 2.5rem;
 }
 .details-top-row--actions .fr-translate__btn::before {
-    -webkit-mask-image: url(../../../static/icons/system/add-line.svg);
-    mask-image: url(../../../static/icons/system/add-line.svg);
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
 .details-top-row--actions .fr-translate__btn{
     height: 100%;
@@ -246,4 +219,25 @@ label:has(+ .choices select[data-required="true"])::after,
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
+}
+
+.empty-value {
+    color: var(--text-disabled-grey);
+}
+
+.fieldset-flex {
+    display: flex;
+    justify-content: space-between;
+    margin: unset;
+}
+
+.fieldset-flex .fr-fieldset__legend {
+    width: auto !important;
+}
+.fieldset-flex .fr-fieldset__element {
+    flex: unset;
+}
+
+.fieldset-flex-options {
+    display: flex;
 }

@@ -1,4 +1,4 @@
-import {ViewManager, evenementViewModeConfig} from '/static/core/view_manager.js';
+import {ViewManager, evenementViewModeConfig} from 'ViewManager'
 
 function showOnlyActionsForDetection(detectionId){
     document.querySelectorAll('[id^="detection-actions-"]').forEach(element =>{

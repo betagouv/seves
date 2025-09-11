@@ -20,7 +20,7 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
-from csp.constants import SELF
+from csp.constants import SELF, NONCE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -59,16 +59,22 @@ if ADMIN_ENABLED:
 # Application definition
 
 INSTALLED_APPS = [
+    "template_partials",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "sv.apps.SvConfig",
-    "ssa.apps.SsaConfig",
-    "core.apps.CoreConfig",
-    "account.apps.AccountConfig",
+    "widget_tweaks",
+    "dsfr",
+    "waffle",
+    "tiac",
+    "sv",
+    "ssa",
+    "core",
+    "account",
+    "importmap",
     "django_filters",
     "post_office",
     "reversion",
@@ -88,6 +94,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "waffle.middleware.WaffleMiddleware",
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "seves.middlewares.HomeRedirectMiddleware",
     "reversion.middleware.RevisionMiddleware",
@@ -107,6 +114,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "seves.context_processors.common_settings",
                 "seves.context_processors.select_empty_choice",
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
@@ -293,7 +301,7 @@ REFERENT_NATIONAL_GROUP = "referent_national"
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": (SELF,),
-        "script-src": (SELF, "cdn.jsdelivr.net"),
+        "script-src": (SELF, NONCE, "cdn.jsdelivr.net"),
         "style-src": (SELF, "cdn.jsdelivr.net"),
         "font-src": (SELF, "cdn.jsdelivr.net"),
         "img-src": (
@@ -317,7 +325,7 @@ if DEBUG:
     CONTENT_SECURITY_POLICY["DIRECTIVES"]["img-src"] = (SELF, "data:", "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
-    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL")
+    SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)
     if SENTRY_REPORT_URL:
         query_param = f"sentry_environment={ENVIRONMENT}"
         last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
@@ -325,3 +333,4 @@ if ENVIRONMENT != "test":
 
 SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
 SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")
+COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")

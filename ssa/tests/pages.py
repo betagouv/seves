@@ -1,4 +1,5 @@
 import json
+import re
 from urllib.parse import quote
 
 from django.urls import reverse
@@ -12,11 +13,15 @@ class WithTreeSelect:
         if clear_input:
             self.clear_treeselect(container_id)
         self.page.locator(f"#{container_id} .treeselect-input__edit").click()
-        for part in label.split(">"):
-            if part == label.split(">")[-1]:
-                self.page.get_by_text(part.strip(), exact=True).locator("..").locator(
-                    ".treeselect-list__item-checkbox-icon"
-                ).click(force=True)
+        parts = re.split(r"\s*>\s*", label)
+        for idx, part in enumerate(parts, start=1):
+            if idx == len(parts):  # last element
+                (
+                    self.page.get_by_title(part, exact=True)
+                    .locator(".treeselect-list__item-checkbox-icon")
+                    .locator("visible=true")
+                    .click(force=True)
+                )
             else:
                 self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
 
@@ -47,6 +52,7 @@ class EvenementProduitFormPage(WithTreeSelect):
         "marque",
         "lots",
         "description_complementaire",
+        "aliments_animaux",
     ]
     risque_fields = [
         "precision_danger",
@@ -103,8 +109,15 @@ class EvenementProduitFormPage(WithTreeSelect):
 
     def set_categorie_produit(self, evenement_produit, clear_input=False):
         label = evenement_produit.get_categorie_produit_display()
+        self.set_categorie_produit_from_label(label, clear_input)
+
+    def set_categorie_produit_from_label(self, label, clear_input=False):
         self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", label, clear_input)
+
+    def set_aliments_animaux(self, value):
+        block = self.page.locator("#id_aliments_animaux_0").locator("..").locator("..").locator("..")
+        block.get_by_label(value, exact=True).check(force=True)
 
     def set_temperature_conservation(self, value):
         self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
@@ -120,6 +133,10 @@ class EvenementProduitFormPage(WithTreeSelect):
     def set_categorie_danger(self, evenement_produit, clear_input=False):
         self.display_and_get_categorie_danger()
         label = evenement_produit.get_categorie_danger_display()
+        self._set_treeselect_option("categorie-danger", label, clear_input)
+
+    def set_categorie_danger_from_label(self, label, clear_input=False):
+        self.display_and_get_categorie_danger()
         self._set_treeselect_option("categorie-danger", label, clear_input)
 
     def set_categorie_danger_from_shortcut(self, label):
@@ -230,12 +247,14 @@ class EvenementProduitFormPage(WithTreeSelect):
         self.force_siret(etablissement.siret)
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
         modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
-        modal.locator('[id$="-type_exploitant"]').select_option(etablissement.type_exploitant)
+        modal.locator('[id$="-type_exploitant"]').fill(etablissement.type_exploitant)
         modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
+        modal.locator('[id$="-numeros_resytal"]').fill(etablissement.numeros_resytal)
 
     def add_etablissement(self, etablissement: Etablissement):
         modal = self.open_etablissement_modal()
@@ -257,8 +276,8 @@ class EvenementProduitFormPage(WithTreeSelect):
     def delete_etablissement(self, index):
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
-    def add_free_link(self, numero, choice_js_fill):
-        choice_js_fill(self.page, "#liens-libre .choices", str(numero), "Événement produit : " + str(numero))
+    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
     @property
     def error_messages(self):
@@ -397,7 +416,7 @@ class EvenementProduitListPage(WithTreeSelect):
         return self._cell_content(line_index, 2)
 
     def description_cell(self, line_index=1):
-        return self._cell_content(line_index, 3)
+        return self._cell_content(line_index, 3).locator("span").nth(0)
 
     def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 6)
@@ -425,6 +444,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_type_evenement")
 
     @property
+    def source_select(self):
+        return self.page.locator("#id_source")
+
+    @property
     def start_date_field(self):
         return self.page.locator("#id_start_date")
 
@@ -435,6 +458,10 @@ class EvenementProduitListPage(WithTreeSelect):
     @property
     def etat(self):
         return self.page.locator("#id_etat")
+
+    @property
+    def aliments_animaux(self):
+        return self.page.locator("#id_aliments_animaux")
 
     @property
     def temperature_conservation(self):

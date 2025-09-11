@@ -5,7 +5,7 @@ from playwright.sync_api import expect
 from core.factories import StructureFactory, DepartementFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement, CategorieDanger
+from ssa.models import EvenementProduit, Etablissement, CategorieDanger, CategorieProduit
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 
@@ -162,7 +162,7 @@ def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_serv
 
     expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
-    assert evenement.categorie_danger == CategorieDanger.PESTICIDE_RESIDU
+    assert evenement.categorie_danger == CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE
     assert evenement.produit_pret_a_manger == ""
 
 
@@ -272,3 +272,15 @@ def test_can_update_and_handle_rappel_conso_on_publised_evenement_produit(live_s
 
     evenement.refresh_from_db()
     assert evenement.numeros_rappel_conso == ["2025-12-1212"]
+
+
+def test_display_of_notices(live_server, mocked_authentification_user, page):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        categorie_produit=CategorieProduit.OVOPRODUIT, categorie_danger=CategorieDanger.BACILLUS
+    )
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    expected_text = "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+
+    expect(update_page.page.locator("#notice-container-produit").get_by_text(expected_text)).to_be_visible()
+    expect(update_page.page.locator("#notice-container-risque").get_by_text(expected_text)).to_be_visible()

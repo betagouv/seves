@@ -4,7 +4,7 @@ from core.factories import StructureFactory, ContactStructureFactory, ContactAge
 from core.models import LienLibre, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
-from ssa.models.evenement_produit import PretAManger, ActionEngagees
+from ssa.models.evenement_produit import PretAManger, ActionEngagees, Source
 from ssa.tests.pages import EvenementProduitListPage
 
 
@@ -16,10 +16,10 @@ def test_list_table_order(live_server, mocked_authentification_user, page: Page)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    assert search_page.numero_cell(line_index=1).text_content() == "2025.22"
-    assert search_page.numero_cell(line_index=2).text_content() == "2025.2"
-    assert search_page.numero_cell(line_index=3).text_content() == "2025.1"
-    assert search_page.numero_cell(line_index=4).text_content() == "2024.22"
+    assert search_page.numero_cell(line_index=1).text_content() == "A-2025.22"
+    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.2"
+    assert search_page.numero_cell(line_index=3).text_content() == "A-2025.1"
+    assert search_page.numero_cell(line_index=4).text_content() == "A-2024.22"
 
 
 def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, page: Page):
@@ -66,7 +66,7 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
 
     search_page.numero_field.fill("2025")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "2025.2"
+    assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2024.22")).not_to_be_visible()
 
 
@@ -78,20 +78,34 @@ def test_list_can_filter_by_numero_rasff(live_server, mocked_authentification_us
 
     search_page.numero_rasff_field.fill("123456")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "2025.2"
+    assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
 
 
 def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_UE, numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(
+        type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, numero_annee=2025, numero_evenement=2
+    )
     EvenementProduitFactory(type_evenement=TypeEvenement.NON_ALERTE, numero_annee=2025, numero_evenement=1)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
     search_page.type_evenement_select.select_option(TypeEvenement.NON_ALERTE)
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "2025.1"
+    assert search_page.numero_cell().text_content() == "A-2025.1"
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+
+
+def test_list_can_filter_by_source(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(source=Source.TOUT_DROIT, numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(source=Source.AUTOCONTROLE_NOTIFIE_PRODUIT, numero_annee=2025, numero_evenement=1)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(Source.TOUT_DROIT)
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
 
 
 def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
@@ -105,7 +119,7 @@ def test_list_can_filter_by_date(live_server, mocked_authentification_user, page
     search_page.start_date_field.fill("2024-06-19")
     search_page.end_date_field.fill("2024-06-20")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "2025.2"
+    assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.3")).not_to_be_visible()
 
@@ -214,6 +228,23 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
     search_page.navigate()
     search_page.open_sidebar()
     search_page.etat.select_option("En cours")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_aliments_animaux(live_server, page: Page):
+    to_be_found = EvenementProduitFactory(aliments_animaux=True)
+    not_to_be_found_1 = EvenementProduitFactory(aliments_animaux=False)
+    not_to_be_found_2 = EvenementProduitFactory(aliments_animaux=None)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.aliments_animaux.select_option("Oui")
     search_page.add_filters()
     search_page.submit_search()
 
@@ -415,13 +446,13 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
 
 
 def test_can_filter_by_categorie_produit(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
-    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
-    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+    to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_categorie_produit("Produit carné > De boucherie > Abat blanc de boucherie")
+    search_page.set_categorie_produit("Produit carné > Viande hachée > VH - Bovin")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
@@ -430,13 +461,13 @@ def test_can_filter_by_categorie_produit(live_server, mocked_authentification_us
 
 
 def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(categorie_produit="Abat blanc de boucherie")
-    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="Céphalopode cru entier ou coupé")
-    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Produit d'escargot")
+    to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
+    not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
+    not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_categorie_produit("Produit carné > De boucherie")
+    search_page.set_categorie_produit("Produit carné > Viande hachée")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()

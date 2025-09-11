@@ -3,6 +3,7 @@
 {% load etat_tags %}
 {% load or_empty_value_tag %}
 {% block extrahead %}
+  <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
   <link rel="stylesheet" href="{% static 'ssa/evenement_produit_detail.css' %}">
   <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
@@ -36,6 +37,14 @@
 
         {% if not object.is_draft %}
           {% include "core/_details_toogle.html" with pk=object.pk %}
+        {% endif %}
+
+        {% if can_be_deleted %}
+          {% url 'ssa:evenement-produit-liste' as next_url %}
+          {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+        {% endif %}
+        {% if is_evenement_can_be_cloturer%}
+          {% include "core/_cloturer_modal.html" with evenement=object %}
         {% endif %}
 
         <div class="details-top-row--actions">
@@ -134,7 +143,7 @@
                         Voir le détail
                       </button>
                     </div>
-                    {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.get_type_exploitant_display }}</p>{% endif %}
+                    {% if etablissement.type_exploitant %}<p class="type-exploitant fr-tag fr-mb-2v">{{ etablissement.type_exploitant }}</p>{% endif %}
                     {% if etablissement.pays %}<p class="pays fr-tag fr-mb-2v">{{ etablissement.get_pays_display }}</p>{% endif %}
                     <div class="structure">Département : {{ etablissement.departement|or_empty_value_tag }}</div>
                     <div class="numero-agrement">N° d'agrément&nbsp;: {{ etablissement.numero_agrement|or_empty_value_tag }}</div>

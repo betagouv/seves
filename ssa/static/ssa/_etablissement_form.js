@@ -1,5 +1,5 @@
-import {setUpAddressChoices} from "/static/core/ban_autocomplete.js";
-import {setUpSiretChoices} from "/static/core/siret.js";
+import {setUpAddressChoices} from "BanAutocomplete";
+import {setUpSiretChoices} from "siret";
 
 let modalEtablissementHTMLContent = {}
 
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
 
-        const typeExploitant = getSelectedLabel(currentModal.querySelector('[id$=type_exploitant]'))
+        const typeExploitant = currentModal.querySelector('[id$=type_exploitant]').value
         if (typeExploitant != null) {
             baseCard.querySelector('.type-exploitant').innerText = typeExploitant
             baseCard.querySelector('.type-exploitant').classList.remove("fr-hidden")

@@ -10,8 +10,9 @@ from django.urls import resolve
 from django.urls.base import reverse
 from playwright.sync_api import expect, Page
 
+from core.constants import DEPARTEMENTS
 from core.factories import StructureFactory, UserFactory
-from core.models import Agent, Contact
+from core.models import Agent, Contact, Region, Departement
 
 User = get_user_model()
 
@@ -188,6 +189,37 @@ def assert_events_order():
     return _assert_events_order
 
 
+DEPARTEMENTS_BY_NAME = {it[1]: it for it in DEPARTEMENTS}
+
+
 @pytest.fixture
 def check_select_options_from_element():
     return _check_select_options_on_element
+
+
+@pytest.fixture
+def ensure_departements(db):
+    def _ensure_departements(*dpt_names):
+        departements = []
+        for dpt_name in dpt_names:
+            numero, nom, region_name = DEPARTEMENTS_BY_NAME[dpt_name]
+            region, _ = Region.objects.get_or_create(nom=region_name)
+            dpt, _ = Departement.objects.get_or_create(numero=numero, defaults={"region": region, "nom": nom})
+            departements.append(dpt)
+
+        return departements
+
+    return _ensure_departements
+
+
+@pytest.fixture
+def assert_models_are_equal():
+    def _assert_models_are_equal(obj_1, obj_2, to_exclude=None):
+        if not to_exclude:
+            to_exclude = []
+
+        obj_1_data = {k: v for k, v in obj_1.__dict__.items() if k not in to_exclude}
+        obj_2_data = {k: v for k, v in obj_2.__dict__.items() if k not in to_exclude}
+        assert obj_1_data == obj_2_data
+
+    return _assert_models_are_equal

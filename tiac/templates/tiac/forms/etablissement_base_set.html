@@ -1,0 +1,85 @@
+{% load partials dsfr_tags widget_tweaks %}
+
+{% partialdef form-dialog %}
+    <div
+        class="modal-etablissement-container fr-col-12 fr-col-md-6 fr-col-xl-3"
+        data-controller="etablissement-form"
+        data-etablissement-form-communes-api-value="{{ COMMUNES_API }}"
+        data-etablissement-form-form-prefix-value="{{ form.prefix }}"
+    >
+        <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
+        <dialog
+            id="fr-modal-{{ form.prefix }}"
+            class="fr-modal modal-etablissement"
+            role="alertdialog"
+            aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
+            data-etablissement-form-target="dialog"
+        >
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button
+                                    class="fr-btn--close fr-btn"
+                                    title="Fermer la fenêtre modale"
+                                    aria-controls="fr-modal-{{ form.prefix }}"
+                                    type="button"
+                                >Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="fr-modal-title-modal--{{ form.prefix }}" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg"></span>Ajouter un établissement
+                                </h1>
+                                <fieldset data-etablissement-form-target="fieldset">
+                                    {{ form }}
+                                </fieldset>
+                            </div>
+                            <div class="fr-modal__footer">
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                                    <button
+                                        class="fr-btn fr-btn--secondary"
+                                        aria-controls="fr-modal-{{ form.prefix }}"
+                                        type="button"
+                                    >Annuler</button>
+                                    <button
+                                        type="submit"
+                                        class="fr-btn save-btn"
+                                        id="etablissement-save-btn-{{ form.prefix }}"
+                                        data-action="etablissement-form#onValidateForm:prevent:stop"
+                                    >Enregistrer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </div>
+{% endpartialdef %}
+
+<fieldset class="fr-fieldset form-fieldset fr-mt-4v" data-controller="etablissement-formset">
+    <div class="etablissement-header">
+        <h3>Établissements</h3>
+        <button
+            type="button"
+            class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+            data-action="etablissement-formset#onAddForm:prevent:stop"
+        >Ajouter</button>
+    </div>
+    {{ formset.non_form_errors }}
+    <div id="etablissement" class="fr-col-12 fr-grid-row fr-grid-row--gutters" data-etablissement-formset-target="formsetContainer">
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"etablissement-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        {% for form in formset %}
+            {% partial form-dialog %}
+        {% endfor %}
+    </div>
+    <template data-etablissement-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form %}{% partial form-dialog %}{% endwith %}
+    </template>
+</fieldset>
