@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.db.models import Q
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -113,7 +114,7 @@ class WithMessageMixin:
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         message_list = (
-            obj.messages.all()
+            obj.messages.filter(Q(status=Message.Status.FINALISE) | Q(sender=self.request.user.agent.contact_set.get()))
             .select_related("sender__agent__structure", "sender_structure")
             .prefetch_related(
                 "recipients__agent",

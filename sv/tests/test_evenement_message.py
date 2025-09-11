@@ -34,6 +34,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
+    generic_test_cant_see_drafts_from_other_users,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1461,30 +1462,35 @@ def test_draft_messages_always_displayed_first_in_messages_list(live_server, pag
         content_object=evenement,
         title="finalisé le plus ancien",
         status=Message.Status.FINALISE,
+        sender=mocked_authentification_user.agent.contact_set.get(),
         date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
     )
     brouillon_older = MessageFactory(
         content_object=evenement,
         title="Brouillon ancien",
         status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
         date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
     )
     finalise_recent = MessageFactory(
         content_object=evenement,
         title="finalisé récent",
         status=Message.Status.FINALISE,
+        sender=mocked_authentification_user.agent.contact_set.get(),
         date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
     )
     brouillon_newest = MessageFactory(
         content_object=evenement,
         title="Brouillon le plus récent",
         status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
         date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
     )
     finalise_newest = MessageFactory(
         content_object=evenement,
         title="finalisé le plus récent",
         status=Message.Status.FINALISE,
+        sender=mocked_authentification_user.agent.contact_set.get(),
         date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
     )
 
@@ -1505,6 +1511,10 @@ def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocke
     generic_test_can_update_draft_message(
         live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
+
+
+def test_cant_see_drafts_from_other_users(live_server, page: Page):
+    generic_test_cant_see_drafts_from_other_users(live_server, page, EvenementFactory())
 
 
 def test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, mailoutbox):
