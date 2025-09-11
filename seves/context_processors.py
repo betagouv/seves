@@ -1,10 +1,14 @@
 from django.conf import settings
+from django.urls import reverse_lazy
 
 from core.constants import Domains
 
 
 def common_settings(request):
-    return {"COMMUNES_API": settings.COMMUNES_API}
+    return {
+        "COMMUNES_API": settings.COMMUNES_API,
+        "siret_api_endpoint": reverse_lazy("siret-api", kwargs={"siret": "__siret__"}),
+    }
 
 
 def select_empty_choice(request):

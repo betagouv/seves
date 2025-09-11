@@ -8,7 +8,6 @@ from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.mixins import WithSireneTokenMixin
 from core.models import Contact, Message, Structure
 from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
@@ -137,7 +136,7 @@ class MessageForm(BaseMessageForm):
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
 
 
-class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     template_name = "tiac/forms/etablissement.html"
 
     siret = forms.CharField(

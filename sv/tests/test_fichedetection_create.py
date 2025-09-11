@@ -649,10 +649,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
         libelle_long="Mon ON",
     )
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
-    )
+    page.route(f"{settings.SIRENE_API_BASE.removesuffix('/')}/**", handle)
 
     with mock.patch("core.mixins.requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}

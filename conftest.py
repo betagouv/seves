@@ -1,9 +1,11 @@
 import contextlib
 import os
+import re
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
-
+import requests_mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import resolve
@@ -223,3 +225,13 @@ def assert_models_are_equal():
         assert obj_1_data == obj_2_data
 
     return _assert_models_are_equal
+
+
+@pytest.fixture
+def mock_sirene_api(settings):
+    def _mock(request_response):
+        settings.SIRENE_API_KEY = uuid4()
+        return request_mock.get(re.compile(rf"{settings.SIRENE_API_BASE}.*"), json=request_response)
+
+    with requests_mock.Mocker() as request_mock:
+        yield _mock

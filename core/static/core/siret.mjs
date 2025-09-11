@@ -31,19 +31,14 @@ function improveResults(value, results) {
     return filteredResults
 }
 
-export function fetchSiret(value, token) {
+export function fetchSiret(value) {
     const cleanedValue =  value.replaceAll(" ", "")
-    const siren =  cleanedValue.substring(0, 9);
-    const url = `https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A${siren}* AND -periode(etatAdministratifEtablissement:F)`;
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-    };
+    const endpoint = document.querySelector('meta[name="siret-api-endpoint"]').getAttribute("content").replace("__siret__", value);
     let results = []
-    return fetch(url, {method: 'GET', headers: headers})
+    return fetch(endpoint)
         .then(response => response.json())
         .then(data => {
-            if (!data["etablissements"]){
+            if (!data["etablissements"]) {
                 return improveResults(cleanedValue, [])
             }
             data["etablissements"].forEach((etablissement) => {
@@ -52,10 +47,10 @@ export function fetchSiret(value, token) {
                 let fullStreetData = `${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
                 let resultEtablissement = `${etablissement["siret"]} - ${fullStreetData}`
                 const uniteLegale = etablissement["uniteLegale"]
-                let resultUnite = `${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["denominationUniteLegale"]?? ""} ${uniteLegale["prenom1UniteLegale"]?? ""} ${uniteLegale["nomUniteLegale"]?? ""}`
+                let resultUnite = `${uniteLegale["denominationUniteLegale"] ?? ""} ${uniteLegale["denominationUniteLegale"] ?? ""} ${uniteLegale["prenom1UniteLegale"] ?? ""} ${uniteLegale["nomUniteLegale"] ?? ""}`
                 results.push({
                     value: etablissement["siret"],
-                    label: resultUnite + " " + resultEtablissement ,
+                    label: resultUnite + " " + resultEtablissement,
                     customProperties: {
                         "streetData": streetData,
                         "fullStreetData": fullStreetData,
@@ -67,7 +62,7 @@ export function fetchSiret(value, token) {
                 })
             });
             return improveResults(cleanedValue, results)
-        });
+        }).catch(() =>  improveResults(cleanedValue, []));
 }
 
 /**
@@ -76,7 +71,7 @@ export function fetchSiret(value, token) {
  * @param {"auto"|"top"|"bottom"} position The position of the dropdown
  * @returns {Choices}
  */
-export function setUpSiretChoices(element, position){
+export function setUpSiretChoices(element, position) {
     const choicesSIRET = new Choices(element, {
         ...choicesDefaults,
         removeItemButton: true,
@@ -88,7 +83,7 @@ export function setUpSiretChoices(element, position){
     choicesSIRET.input.element.addEventListener('input', debounce((event) => {
         const query = choicesSIRET.input.element.value
         if (query.length > 5) {
-            fetchSiret(query, element.dataset.token).then(results => {
+            fetchSiret(query).then(results => {
                 choicesSIRET.clearChoices()
                 choicesSIRET.setChoices(results, 'value', 'label', true)
             })

@@ -1,7 +1,9 @@
 import logging
 from functools import wraps
 
+import requests
 from celery.exceptions import OperationalError
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -9,6 +11,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.forms import Media
 from django.http import HttpResponseRedirect
+from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
@@ -445,3 +448,28 @@ class EvenementOuvrirView(View):
             obj.publish()
             messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
             return redirect(redirect_url)
+
+
+def sirene_api(request, siret: str):
+    if not settings.SIRENE_API_KEY or not settings.SIRENE_API_BASE:
+        return HttpResponse(status=401)
+
+    siret = siret.replace(" ", "")[:9]
+
+    if not siret.isnumeric() or len(siret) < 5:
+        return HttpResponseServerError()
+
+    try:
+        response = requests.get(
+            f"{settings.SIRENE_API_BASE.removesuffix('/')}/siret",
+            params={"q": f"siren:{siret}* AND -periode(etatAdministratifEtablissement:F)"},
+            headers={"X-INSEE-Api-Key-Integration": settings.SIRENE_API_KEY},
+            timeout=4,
+        )
+        if response.status_code != 200:
+            return HttpResponseServerError()
+
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.exception(e)
+        return HttpResponseServerError()
