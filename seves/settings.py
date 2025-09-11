@@ -11,16 +11,16 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
+import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
 import environ
-import tempfile
 import sentry_sdk
-from django.core.exceptions import ImproperlyConfigured
-from sentry_sdk.integrations.django import DjangoIntegration
-from django.urls import reverse_lazy
 from csp.constants import SELF, NONCE
+from django.core.exceptions import ImproperlyConfigured
+from django.urls import reverse_lazy
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,7 +33,6 @@ env = environ.Env(
 )
 # Take environment variables from .env file
 env.read_env(os.path.join(BASE_DIR, ".env"))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -54,7 +53,6 @@ if ADMIN_ENABLED:
     ADMIN_URL = os.environ.get("DJANGO_ADMIN_URL")
     if not ADMIN_URL:
         raise ImproperlyConfigured("DJANGO_ADMIN_URL doit être défini dans les variables d'environnement")
-
 
 # Application definition
 
@@ -125,7 +123,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "seves.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -138,7 +135,6 @@ CACHES = {
         "BACKEND": env("CACHE_CLASS", default="django.core.cache.backends.locmem.LocMemCache"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -158,7 +154,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -169,7 +164,6 @@ TIME_ZONE = "Europe/Paris"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -185,12 +179,10 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
 # Sentry
 SENTRY_DSN = env("SENTRY_DSN", default=None)
 if SENTRY_DSN and ENVIRONMENT != "test":
     sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()], traces_sample_rate=1.0, environment=ENVIRONMENT)
-
 
 STORAGES = {
     "default": {"BACKEND": env("STORAGE_ENGINE")},
@@ -201,7 +193,6 @@ STORAGES = {
 AWS_S3_OBJECT_PARAMETERS = {
     "ContentDisposition": "attachment",
 }
-
 
 if all(
     [
@@ -259,7 +250,6 @@ if env("EMAIL_HOST", default=None):
     EMAIL_PORT = env("EMAIL_PORT")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-
 
 ROOT_URL = env("ROOT_URL", default=None)
 
@@ -331,6 +321,6 @@ if ENVIRONMENT != "test":
         last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
         CONTENT_SECURITY_POLICY["DIRECTIVES"]["report-uri"] = f"{SENTRY_REPORT_URL}{last_token}"
 
-SIRENE_CONSUMER_KEY = env("SIRENE_CONSUMER_KEY", default="")
-SIRENE_CONSUMER_SECRET = env("SIRENE_CONSUMER_SECRET", default="")
+SIRENE_API_KEY = env("SIRENE_API_KEY", default="")
+SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-sirene/3.11/")
 COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")

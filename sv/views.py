@@ -28,7 +28,6 @@ from core.mixins import (
     WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
     WithFreeLinksListInContextMixin,
-    WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
@@ -266,7 +265,6 @@ class EvenementUpdateView(
 
 class FicheDetectionCreateView(
     WithStatusToOrganismeNuisibleMixin,
-    WithSireneTokenMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
@@ -372,7 +370,6 @@ class FicheDetectionUpdateView(
     WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
-    WithSireneTokenMixin,
     WithFormErrorsAsMessagesMixin,
     UpdateView,
 ):

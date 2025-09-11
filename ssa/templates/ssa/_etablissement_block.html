@@ -6,7 +6,7 @@
     {% for etablissement_form in formset %}
         {% if etablissement_form.instance.pk %}
             {{ etablissement_form.id }}
-            {% include "ssa/_etablissement_modal.html" with form=etablissement_form extra_str=forloop.counter0 data_etablissement_id=forloop.counter0 sirene_token=sirene_token  with_delete=True %}
+            {% include "ssa/_etablissement_modal.html" with form=etablissement_form extra_str=forloop.counter0 data_etablissement_id=forloop.counter0 with_delete=True %}
         {% endif %}
     {% endfor %}
 
@@ -15,7 +15,7 @@
 </div>
 
 <template id="etablissement-template">
-    {% include "ssa/_etablissement_modal.html" with form=empty_form extra_str="__prefix__" sirene_token=sirene_token %}
+    {% include "ssa/_etablissement_modal.html" with form=empty_form extra_str="__prefix__" %}
 </template>
 
 <template id="etablissement-card-template">

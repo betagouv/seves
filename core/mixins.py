@@ -1,10 +1,9 @@
-import base64
 import datetime
+import logging
 from collections import defaultdict
-from json import JSONDecodeError
 from typing import Mapping
 
-import requests
+from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
@@ -14,7 +13,6 @@ from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from requests import ConnectTimeout, ReadTimeout
 from django.views.generic import FormView
 
 from core.forms import (
@@ -24,15 +22,12 @@ from core.forms import (
     StructureAddForm,
     AgentAddForm,
 )
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
+from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import user_is_referent_national
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
 from .notifications import notify_message
 from .redirect import safe_redirect
-from celery.exceptions import OperationalError
-import logging
-
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
 logger = logging.getLogger(__name__)
@@ -479,35 +474,6 @@ class EmailNotificationMixin:
 
     def get_absolute_url_with_message(self, message_id: int):
         return f"{self.get_absolute_url()}?message={message_id}"
-
-
-class WithSireneTokenMixin:
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return self._siren_token_context(**context)
-
-    def get_context(self):
-        context = super().get_context()
-        return self._siren_token_context(**context)
-
-    def _siren_token_context(self, **context):
-        if not (settings.SIRENE_CONSUMER_KEY and settings.SIRENE_CONSUMER_SECRET):
-            return context
-        basic_auth = f"{settings.SIRENE_CONSUMER_KEY}:{settings.SIRENE_CONSUMER_SECRET}"
-        auth_header = base64.b64encode(basic_auth.encode()).decode()
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {auth_header}",
-        }
-        data = {"grant_type": "client_credentials", "validity_period": 60 * 60}
-
-        try:
-            response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
-            context["sirene_token"] = response.json()["access_token"]
-        except (KeyError, ConnectionError, ConnectTimeout, ReadTimeout, JSONDecodeError):
-            pass
-
-        return context
 
 
 class WithFormErrorsAsMessagesMixin(FormView):

@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 from django.http import JsonResponse
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -550,10 +551,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
         data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
@@ -570,14 +568,8 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     mocked_view = mock.Mock()
     mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
 
-    with (
-        mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view),
-        mock.patch("core.mixins.requests.post") as mock_post,
-    ):
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-
+    with mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view):
         creation_page.navigate()
-        mock_post.assert_called_once()
 
         creation_page.fill_required_fields(evenement)
 
@@ -620,10 +612,7 @@ def test_can_create_etablissement_with_force_siret_value(
         route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
 
     handle_insee_commune = Mock(side_effect=Exception("Shound not be called"))
 
@@ -633,12 +622,7 @@ def test_can_create_etablissement_with_force_siret_value(
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
-
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        creation_page.navigate()
-        mock_post.assert_called_once()
-
+    creation_page.navigate()
     creation_page.fill_required_fields(evenement)
 
     creation_page.open_etablissement_modal()
@@ -718,10 +702,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
         data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
@@ -735,10 +716,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        creation_page.navigate()
-        mock_post.assert_called_once()
+    creation_page.navigate()
 
     creation_page.fill_required_fields(evenement)
 
