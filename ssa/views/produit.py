@@ -21,7 +21,6 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
-    WithSireneTokenMixin,
 )
 from core.models import Export
 from ssa.forms import EvenementProduitForm
@@ -35,7 +34,6 @@ from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 class EvenementProduitCreateView(
     WithFormErrorsAsMessagesMixin,
     WithAddUserContactsMixin,
-    WithSireneTokenMixin,
     EvenementProduitValuesMixin,
     CreateView,
 ):
@@ -147,7 +145,6 @@ class EvenementUpdateView(
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     EvenementProduitValuesMixin,
-    WithSireneTokenMixin,
     UpdateView,
 ):
     form_class = EvenementProduitForm

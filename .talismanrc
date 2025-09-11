@@ -6,7 +6,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 6513c55c67626e0db94851877d027d02849a95414b3fbfc737a6adcc548f779e
+  checksum: 9b3a3ee11c6e7fd8b54bb235d7626d68c4e3648fa65edf6afa03fdd2ef240b72
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
@@ -16,7 +16,7 @@ fileignoreconfig:
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
 - filename: core/views.py
-  checksum: 8769185324b5056204e84c1a72696094abeebd374a4ae70f0b273d56dc308c71
+  checksum: 7bee100011c8e54e27854f48acc05e4018f381d5ccdbd7fb635983a0327f54d2
 - filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html
@@ -30,7 +30,7 @@ fileignoreconfig:
 - filename: core/mixins.py
   checksum: a3e7662dc5fd7531847d3aea99bbd0b34e90b7b1fd3a9f57b25037fee28fb857
 - filename: conftest.py
-  checksum: e5697a536e77dd0d10a3a7aa899da6cb02223491783161895aa618910c82e409
+  checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
   checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
 - filename: ssa/static/ssa/treeselectjs.umd.js
@@ -59,3 +59,5 @@ fileignoreconfig:
   checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
 - filename: tiac/static/tiac/etablissements.mjs
   checksum: 47e4768c4bea879aa0043812662bb786bedd8a87eaa241029f762214ac4bad1e
+- filename: .env.dist
+  checksum: 71e0c291bc6cb34a0deee34ad3c4e16dd41b5348484af207e4e6148b368f5b7b

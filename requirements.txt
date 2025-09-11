@@ -197,6 +197,9 @@ requests==2.32.4
     #   django-dsfr
     #   mozilla-django-oidc
     #   pytest-base-url
+    #   requests-mock
+requests-mock==1.12.1
+    # via -r requirements.in
 ruff==0.12.12
     # via -r requirements.in
 s3transfer==0.10.2

@@ -11,7 +11,6 @@ from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
-from ssa.views import FindNumeroAgrementView
 from tiac.factories import EvenementSimpleFactory
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
@@ -518,16 +517,13 @@ def test_can_add_etablissement_and_quit_modal(live_server, page: Page, assert_mo
 
 
 def test_can_create_etablissement_with_sirene_autocomplete(
-    live_server, page: Page, ensure_departements, choice_js_fill_from_element, settings
+    live_server, page: Page, ensure_departements, choice_js_fill_from_element, mock_sirene_api
 ):
-    settings.SIRENE_CONSUMER_KEY = "FOO"
-    settings.SIRENE_CONSUMER_SECRET = "BAR"
     ensure_departements("Paris")
     evenement = EvenementProduitFactory.build()
-    call_count = {"count": 0}
 
-    def handle_insee_siret(route):
-        data = {
+    mock_sirene_api(
+        {
             "etablissements": [
                 {
                     "siret": "12007901700030",
@@ -547,18 +543,11 @@ def test_can_create_etablissement_with_sirene_autocomplete(
                 }
             ]
         }
-        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
-
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
     )
 
     def handle_insee_commune(route):
         data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
 
     page.route(
         "https://geo.api.gouv.fr/communes/.+",
@@ -570,27 +559,18 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     mocked_view = mock.Mock()
     mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
 
-    with (
-        mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view),
-        mock.patch("core.mixins.requests.post") as mock_post,
-    ):
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
 
-        creation_page.navigate()
-        mock_post.assert_called_once()
-
-        creation_page.fill_required_fields(evenement)
-
-        creation_page.open_etablissement_modal()
-        expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
-        creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill_from_element)
-        assert call_count["count"] == 1
-        creation_page.page.wait_for_timeout(1000)
-        mocked_view.assert_called_once()
-        assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
-        creation_page.close_etablissement_modal()
-        creation_page.submit_as_draft()
-        creation_page.page.wait_for_timeout(600)
+    creation_page.open_etablissement_modal()
+    expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
+    creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill_from_element)
+    creation_page.page.wait_for_timeout(1000)
+    mocked_view.assert_called_once()
+    assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
+    creation_page.close_etablissement_modal()
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
@@ -613,17 +593,6 @@ def test_can_create_etablissement_with_force_siret_value(
 
     mock_requests_get.return_value.text = "mocked content"
     mock_csv_reader.return_value = None
-    call_count = {"count": 0}
-
-    def handle(route):
-        data = {"message": "Aucun élément trouvé"}
-        route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
-
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
-    )
 
     handle_insee_commune = Mock(side_effect=Exception("Shound not be called"))
 
@@ -644,7 +613,6 @@ def test_can_create_etablissement_with_force_siret_value(
     creation_page.open_etablissement_modal()
     expected_value = "12312312312312 (Forcer la valeur)"
     creation_page.add_etablissement_siren("12312312312312", expected_value, choice_js_fill_from_element)
-    assert call_count["count"] == 1
     creation_page.page.wait_for_timeout(1000)
     assert mock_requests_get.call_count >= 1
     creation_page.current_modal_raison_sociale_field.fill("Foo")
@@ -668,6 +636,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     choice_js_cant_pick,
     choice_js_fill,
     settings,
+    mock_sirene_api,
 ):
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
@@ -678,8 +647,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     mock_csv_reader.return_value = None
     call_count = {"count": 0}
 
-    def handle_insee_siret(route):
-        data = {
+    mock_sirene_api(
+        {
             "etablissements": [
                 {
                     "siret": "12312312311111",
@@ -715,12 +684,6 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
                 },
             ]
         }
-        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
-
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
     )
 
     def handle_insee_commune(route):
