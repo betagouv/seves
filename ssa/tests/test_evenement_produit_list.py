@@ -97,8 +97,15 @@ def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_
 
 
 def test_list_can_filter_by_source(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(source=Source.TOUT_DROIT, numero_annee=2025, numero_evenement=2)
-    EvenementProduitFactory(source=Source.AUTOCONTROLE_NOTIFIE_PRODUIT, numero_annee=2025, numero_evenement=1)
+    EvenementProduitFactory(
+        source=Source.TOUT_DROIT, type_evenement=TypeEvenement.NON_ALERTE, numero_annee=2025, numero_evenement=2
+    )
+    EvenementProduitFactory(
+        source=Source.AUTOCONTROLE_NOTIFIE_PRODUIT,
+        type_evenement=TypeEvenement.NON_ALERTE,
+        numero_annee=2025,
+        numero_evenement=1,
+    )
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
