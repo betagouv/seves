@@ -242,6 +242,8 @@ class InvestigationTiacFormPage:
         "nb_dead_persons",
         "datetime_first_symptoms",
         "datetime_last_symptoms",
+        "analyses_sur_les_malades",
+        "precisions",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -273,9 +275,37 @@ class InvestigationTiacFormPage:
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
+    def set_analyses(self, value):
+        self.page.locator("#radio-id_analyses_sur_les_malades").locator(
+            f"input[type='radio'][value='{str(value).lower()}']"
+        ).check(force=True)
+
     def fill_required_fields(self, object: InvestigationTiac):
         self.contenu.fill(object.contenu)
         self.set_type_evenement(object.type_evenement)
+
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def find_label_for_danger(self, text):
+        return self.current_modal.get_by_text(text[:25])
+
+    def open_danger_modal(self):
+        self.page.locator(".etiologie-header").get_by_role("button", name="Ajouter").click()
+
+    def add_danger_syndromique(self, text):
+        self.open_danger_modal()
+        self.find_label_for_danger(text).click()
+        self.current_modal.get_by_role("button", name="Vérifier").click()
+        self.current_modal.get_by_role("button", name="Confirmer").click()
+
+    def delete_danger_syndromique(self, index):
+        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role("button").click()
+
+    @property
+    def nb_dangers(self):
+        return self.page.locator(".etiologie-card-container").locator("visible=true").count()
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
