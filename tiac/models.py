@@ -1,4 +1,5 @@
 import reversion
+from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
@@ -217,7 +218,12 @@ class InvestigationTiac(
     models.Model,
 ):
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
-    numero_sivss = models.CharField(max_length=6, verbose_name="N° SIVSS de l'ARS", blank=True)
+    numero_sivss = models.CharField(
+        max_length=6,
+        verbose_name="N° SIVSS de l'ARS",
+        blank=True,
+        validators=[RegexValidator(r"^\d{6}$", "Doit contenir exactement 6 chiffres")],
+    )
     type_evenement = models.CharField(
         max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement", blank=True
     )
@@ -226,8 +232,12 @@ class InvestigationTiac(
     nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
     nb_sick_persons_to_hospital = models.IntegerField(verbose_name="Dont conduits à l'hôpital", null=True)
     nb_dead_persons = models.IntegerField(verbose_name="Dont décédés", null=True)
-    datetime_first_symptoms = models.DateTimeField(verbose_name="Première date et heure d'apparition des symptômes")
-    datetime_last_symptoms = models.DateTimeField(verbose_name="Dernière date et heure d'apparition des symptômes")
+    datetime_first_symptoms = models.DateTimeField(
+        verbose_name="Première date et heure d'apparition des symptômes", null=True
+    )
+    datetime_last_symptoms = models.DateTimeField(
+        verbose_name="Dernière date et heure d'apparition des symptômes", null=True
+    )
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
