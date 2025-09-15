@@ -176,7 +176,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
         if limit_contacts_to:
-            queryset = queryset.for_apps(limit_contacts_to)
+            queryset = queryset.for_apps(limit_contacts_to).distinct()
 
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
