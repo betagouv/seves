@@ -16,6 +16,30 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
 ]
 
 
+def test_form_validation(live_server, page: Page, ensure_departements):
+    departement, *_ = ensure_departements("Paris")
+    evenement = EvenementSimpleFactory()
+    etablissement: Etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement)
+
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.open_etablissement_modal()
+    creation_page.current_modal.locator(".save-btn").click()
+
+    # Check form validity is correcly reported
+    assert creation_page.current_modal.locator("[required]:invalid").count() > 0
+
+    # Check Resytal number format is correctly checked
+    creation_page.fill_etablissement(creation_page.current_modal, etablissement)
+    creation_page.current_modal.locator('[id$="numero_resytal"]').fill("zz")
+    creation_page.current_modal.locator(".save-btn").click()
+
+    assert "Le numéro Resytal doit être au format AA-XXXXXX ; par exemple : 19-067409" == page.evaluate(
+        # language=javascript
+        """() => document.querySelector('[id$="numero_resytal"]').validationMessage"""
+    )
+
+
 def test_can_add_etablissements(live_server, page: Page, ensure_departements, assert_models_are_equal):
     departement, *_ = ensure_departements("Paris")
     evenement = EvenementSimpleFactory()
@@ -128,8 +152,10 @@ def test_show_etablissement_detail(live_server, page: Page, ensure_departements)
         etablissement.commune,
         "Departement",
         str(etablissement.departement),
-        "Numéro Résytal",
+        "Numéro Resytal",
         *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
+        "Date d'inspection",
+        *([etablissement.date_inspection] if etablissement.date_inspection else []),
         "Évaluation globale",
         *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
         "Commentaire",
@@ -153,8 +179,10 @@ def test_show_etablissement_detail(live_server, page: Page, ensure_departements)
         etablissement.commune,
         "Departement",
         str(etablissement.departement),
-        "Numéro Résytal",
+        "Numéro Resytal",
         *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
+        "Date d'inspection",
+        *([etablissement.date_inspection] if etablissement.date_inspection else []),
         "Évaluation globale",
         *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
         "Commentaire",
