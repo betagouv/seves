@@ -35,6 +35,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
     generic_test_cant_see_drafts_from_other_users,
+    generic_test_structure_show_only_one_entry_in_select,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1621,3 +1622,7 @@ def test_can_see_and_delete_documents_from_draft_message(
 
 def test_only_displays_sv_contacts(live_server, page: Page, mocked_authentification_user):
     generic_test_only_displays_app_contacts(live_server, page, EvenementFactory(), "sv")
+
+
+def test_structure_show_only_one_entry_in_select(live_server, page: Page):
+    generic_test_structure_show_only_one_entry_in_select(live_server, page, EvenementFactory())

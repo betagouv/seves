@@ -362,3 +362,22 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
     assert {contact.display_with_agent_unit for contact in present} <= dropdown_items
     # Assert none of the unexpected items are there
     assert dropdown_items - {contact.display_with_agent_unit for contact in absent} == dropdown_items
+
+
+def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page, record):
+    contact_structure = ContactStructureFactory()
+    ContactAgentFactory(
+        agent__structure=contact_structure.structure,
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
+    ContactAgentFactory(
+        agent__structure=contact_structure.structure,
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
+
+    page.goto(f"{live_server.url}{record.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+
+    dropdown_items = [item.inner_text() for item in message_page.recipents_dropdown_items.all()]
+    assert len(dropdown_items) == 3
