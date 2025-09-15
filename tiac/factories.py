@@ -11,8 +11,8 @@ from factory.fuzzy import FuzzyChoice
 
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
-from tiac.constants import EvenementOrigin, ModaliteDeclarationEvenement, EvenementFollowUp
-from tiac.models import EvenementSimple, Etablissement, Evaluation, InvestigationTiac, TypeEvenement
+from tiac.constants import EvenementOrigin, ModaliteDeclarationEvenement, EvenementFollowUp, TypeRepas, Motif
+from tiac.models import EvenementSimple, Etablissement, Evaluation, InvestigationTiac, TypeEvenement, RepasSuspect
 
 fake = Faker()
 
@@ -90,3 +90,20 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
+
+
+class RepasSuspectFactory(DjangoModelFactory):
+    class Meta:
+        model = RepasSuspect
+
+    investigation = factory.SubFactory("tiac.factories.InvestigationTiacFactory")
+    denomination = factory.Faker("sentence", nb_words=5)
+    menu = factory.Faker("paragraph")
+    motif_suspicion = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in Motif.choices], k=random.randint(1, 3))
+    )
+    datetime_repas = factory.LazyFunction(random_datetime_utc)
+    nombre_participant = factory.Faker("pyint", min_value=0, max_value=10)
+    departement = factory.SubFactory("core.factories.DepartementFactory")
+
+    type_repas = FuzzyChoice([choice[0] for choice in TypeRepas.choices])

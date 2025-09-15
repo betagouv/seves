@@ -1,9 +1,17 @@
 from playwright.sync_api import Page, expect
 
-from tiac.factories import InvestigationTiacFactory
+from core.factories import DepartementFactory
+from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory
 from .pages import InvestigationTiacFormPage
 from ..constants import DangersSyndromiques
-from ..models import InvestigationTiac
+from ..models import InvestigationTiac, RepasSuspect
+
+fields_to_exclude_repas = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "investigation_id",
+]
 
 
 def test_can_create_investigation_tiac_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
@@ -100,3 +108,75 @@ def test_cant_add_same_danger_twice_in_investigation_tiac_etiologie(
     creation_page.add_danger_syndromique(DangersSyndromiques.TOXINE_DES_POISSONS.label)
     creation_page.open_danger_modal()
     expect(creation_page.find_label_for_danger(DangersSyndromiques.TOXINE_DES_POISSONS.label)).to_be_disabled()
+
+
+def test_can_create_investigation_tiac_with_repas(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    departement = DepartementFactory()
+    input_data: RepasSuspect = RepasSuspectFactory.build(departement=departement)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+    creation_page.add_repas(input_data)
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display(), exact=True)).to_be_visible()
+    expect(
+        creation_page.get_repas_card(0).get_by_text(f"{input_data.nombre_participant} participant(s)", exact=True)
+    ).to_be_visible()
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.repas.count() == 1
+    assert_models_are_equal(
+        input_data, investigation.repas.get(), to_exclude=fields_to_exclude_repas, ignore_array_order=True
+    )
+
+
+def test_can_create_investigation_tiac_with_repas_and_edit(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    departement = DepartementFactory()
+    input_data: RepasSuspect = RepasSuspectFactory.build(departement=departement)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+    creation_page.add_repas(input_data)
+    assert creation_page.nb_repas == 1
+    creation_page.edit_repas(0, denomination="Ma nouvelle dénomination")
+    assert creation_page.nb_repas == 1
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.repas.get().denomination == "Ma nouvelle dénomination"
+
+
+def test_can_create_investigation_tiac_with_mutliple_repas_and_delete(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    departement = DepartementFactory()
+    input_data_1: RepasSuspect = RepasSuspectFactory.build(departement=departement, denomination="Foo")
+    input_data_2: RepasSuspect = RepasSuspectFactory.build(departement=departement, denomination="Bar")
+    input_data_3: RepasSuspect = RepasSuspectFactory.build(departement=departement, denomination="Buzz")
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data_1.investigation)
+    creation_page.add_repas(input_data_1)
+    creation_page.add_repas(input_data_2)
+    creation_page.add_repas(input_data_3)
+
+    assert creation_page.nb_repas == 3
+    creation_page.delete_repas(1)
+    assert creation_page.nb_repas == 2
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.repas.count() == 2
+    assert investigation.repas.first().denomination == "Foo"
+    assert investigation.repas.last().denomination == "Buzz"

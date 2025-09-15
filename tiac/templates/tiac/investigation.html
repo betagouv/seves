@@ -78,14 +78,15 @@
 
             </fieldset>
 
-            <fieldset class="fr-fieldset form-fieldset fr-mt-4v etiologie-fieldset" data-controller="etiologie-form" data-etiologie-form-selected-values-value='[]'>
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v form-fieldset" data-controller="etiologie-form" data-etiologie-form-selected-values-value='[]'>
 
-                <div class="etiologie-header">
+                <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Étiologie</legend>
                     <button
                         type="button"
                         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
                         data-action="etiologie-form#onShowFirstModal:prevent:stop"
+                        data-testid="add-etiologie"
                     >
                         Ajouter
                     </button>
@@ -116,6 +117,14 @@
                 </div>
 
 
+            </fieldset>
+
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v">
+                <h3 class="fr-fieldset__legend fr-h3">Éléments de l'investigation</h3>
+                <div>
+                    {% dsfr_notice title="Pour les TIAC confirmées ou fortement suspectées, seul l'enregistrement des éléments conclusifs est requis.<br/> Vous pouvez ajouter d'autres éléments si cela vous aide dans l'investigation (ces données ne seront pas valorisées dans les bilans nationaux)" %}
+                </div>
+                {{ repas_formset }}
             </fieldset>
 
         </main>

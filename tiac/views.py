@@ -27,7 +27,7 @@ from tiac.models import EvenementSimple, InvestigationTiac
 from .constants import DangersSyndromiques
 from .filters import EvenementSimpleFilter
 from .forms import EvenementSimpleTransferForm
-from .formsets import EtablissementFormSet
+from .formsets import EtablissementFormSet, RepasFormSet
 
 
 class EvenementSimpleCreationView(
@@ -187,6 +187,16 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
 
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.POST:
+            self.repas_formset = RepasFormSet(data=self.request.POST)
+        else:
+            self.repas_formset = RepasFormSet()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["repas_formset"].media
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
@@ -199,15 +209,43 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
         context = super().get_context_data(**kwargs)
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
+        context["repas_formset"] = RepasFormSet()
+        context["empty_repas_form"] = context["repas_formset"].empty_form
         return context
 
+    def formset_invalid(self):
+        self.object = None
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Repas",
+        )
+        for i, form in enumerate(self.repas_formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"Erreur dans le formulaire repas #{i + 1} : '{field}': {error}")
+
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        if not self.repas_formset.is_valid():
+            return self.formset_invalid()
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)
+
     def form_valid(self, form):
-        response = super().form_valid(form)
+        self.object = form.save()
+        self.repas_formset.instance = self.object
+        self.repas_formset.save()
+
         if self.object.is_published:
             messages.success(self.request, "L’évènement a été publié avec succès.")
         else:
             messages.success(self.request, "L’évènement a été créé avec succès.")
-        return response
+        return HttpResponseRedirect(self.object.get_absolute_url())
 
 
 class InvestigationTiacDetailView(
