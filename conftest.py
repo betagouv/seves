@@ -6,6 +6,7 @@ import pytest
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField
 from django.urls import resolve
 from django.urls.base import reverse
 from playwright.sync_api import expect, Page
@@ -214,12 +215,21 @@ def ensure_departements(db):
 
 @pytest.fixture
 def assert_models_are_equal():
-    def _assert_models_are_equal(obj_1, obj_2, to_exclude=None):
+    def _assert_models_are_equal(obj_1, obj_2, to_exclude=None, ignore_array_order=False):
         if not to_exclude:
             to_exclude = []
 
         obj_1_data = {k: v for k, v in obj_1.__dict__.items() if k not in to_exclude}
         obj_2_data = {k: v for k, v in obj_2.__dict__.items() if k not in to_exclude}
+
+        if ignore_array_order:
+            array_fields = [f.name for f in obj_1._meta.get_fields() if isinstance(f, ArrayField)]
+            for field in array_fields:
+                if field in obj_1_data and obj_1_data[field] is not None:
+                    obj_1_data[field] = sorted(obj_1_data[field])
+                if field in obj_2_data and obj_2_data[field] is not None:
+                    obj_2_data[field] = sorted(obj_2_data[field])
+
         assert obj_1_data == obj_2_data
 
     return _assert_models_are_equal

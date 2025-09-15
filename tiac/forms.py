@@ -10,12 +10,21 @@ from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message, Structure
+from core.models import Contact, Message, Structure, Departement
+from django.conf import settings
 from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp
+from tiac.constants import EvenementOrigin, EvenementFollowUp, TypeRepas, Motif
 from tiac.constants import ModaliteDeclarationEvenement
 from tiac.constants import DangersSyndromiques
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement, Analyses, validate_resytal
+from tiac.models import (
+    EvenementSimple,
+    Etablissement,
+    InvestigationTiac,
+    TypeEvenement,
+    Analyses,
+    validate_resytal,
+    RepasSuspect,
+)
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -310,3 +319,48 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
         return instance
+
+
+class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+    template_name = "tiac/forms/repas_suspect.html"
+
+    denomination = forms.CharField(
+        label="Dénomination", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    menu = forms.CharField(widget=forms.Textarea(attrs={"cols": 30, "rows": 3}), label="Menu", required=False)
+    motif_suspicion = forms.MultipleChoiceField(
+        choices=Motif.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Motif de suspicion du repas",
+    )
+    datetime_repas = forms.DateTimeField(
+        required=False,
+        label="Date et heure du repas",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={
+                "type": "datetime-local",
+            },
+        ),
+    )
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        label="Département",
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
+    type_repas = SEVESChoiceField(required=False, choices=TypeRepas.choices, label="Type de repas")
+
+    class Meta:
+        model = RepasSuspect
+        fields = [
+            "denomination",
+            "menu",
+            "motif_suspicion",
+            "datetime_repas",
+            "nombre_participant",
+            "departement",
+            "type_repas",
+        ]

@@ -7,12 +7,20 @@
     width: 100%;
 }
 
-.etiologie-fieldset {
+.form-fieldset {
     display: block;
     width: 100%;
 }
 
-.etiologie-header {
+fieldset.form-fieldset.repas-fieldset {
+    border: 1px var(--grey-975-100-active) solid;
+}
+
+fieldset.form-fieldset .fr-fieldset__legend{
+    float: unset;
+}
+
+.fieldset-header {
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -29,4 +37,14 @@
 
 #radio-id_danger_syndromiques_suspectes .fr-label {
     display: block
+}
+
+.repas-modal .fr-checkbox-group {
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 78em) {
+    .fr-container {
+        max-width: unset;
+    }
 }

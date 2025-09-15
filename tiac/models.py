@@ -16,8 +16,8 @@ from core.mixins import (
     EmailNotificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure, BaseEtablissement, Document
-from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp
+from core.models import Structure, BaseEtablissement, Document, Departement
+from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp, Motif, TypeRepas
 from .constants import DangersSyndromiques
 from .managers import EvenementSimpleManager
 from .model_mixins import WithSharedNumeroMixin
@@ -332,3 +332,25 @@ class InvestigationTiac(
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"
+
+
+class RepasSuspect(models.Model):
+    investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="repas")
+    denomination = models.CharField(max_length=255, verbose_name="Dénomination du repas")
+    menu = models.TextField(verbose_name="Menu", blank=True)
+    motif_suspicion = ArrayField(
+        models.CharField(max_length=255, choices=Motif.choices),
+        verbose_name="Motif de suspicion du repas",
+        default=list,
+        blank=True,
+    )
+    datetime_repas = models.DateTimeField(verbose_name="Date et heure du repas", blank=True, null=True)
+    nombre_participant = models.IntegerField(verbose_name="Nombre de participant(e)s", blank=True, null=True)
+    departement = models.ForeignKey(
+        Departement,
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+    )
+    type_repas = models.CharField(max_length=255, choices=TypeRepas.choices, blank=True)

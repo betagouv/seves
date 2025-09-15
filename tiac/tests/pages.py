@@ -5,7 +5,7 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Page
 
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect
 
 
 class EvenementSimpleFormPage:
@@ -292,7 +292,7 @@ class InvestigationTiacFormPage:
         return self.current_modal.get_by_text(text[:25])
 
     def open_danger_modal(self):
-        self.page.locator(".etiologie-header").get_by_role("button", name="Ajouter").click()
+        self.page.get_by_test_id("add-etiologie").click()
 
     def add_danger_syndromique(self, text):
         self.open_danger_modal()
@@ -300,12 +300,47 @@ class InvestigationTiacFormPage:
         self.current_modal.get_by_role("button", name="Vérifier").click()
         self.current_modal.get_by_role("button", name="Confirmer").click()
 
+    def add_repas(self, repas: RepasSuspect):
+        self.page.get_by_test_id("add-repas").click()
+
+        for field in ["denomination", "menu", "nombre_participant"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(repas, field)))
+
+        for motif in repas.motif_suspicion:
+            self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]').check(force=True)
+
+        self.current_modal.locator('[id$="-datetime_repas"]').fill(repas.datetime_repas.strftime("%Y-%m-%dT%H:%M"))
+        self.current_modal.locator('[id$="-departement"]').select_option(f"{repas.departement}")
+        self.current_modal.locator('[id$="type_repas"]').select_option(f"{repas.type_repas}")
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def get_repas_card(self, card_index):
+        return self.page.locator(".modal-repas-container").all()[card_index].locator(".repas-card")
+
+    def edit_repas(self, index, **kwargs):
+        card = self.get_repas_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".repas-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
     def delete_danger_syndromique(self, index):
         self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role("button").click()
+
+    def delete_repas(self, index):
+        self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
 
     @property
     def nb_dangers(self):
         return self.page.locator(".etiologie-card-container").locator("visible=true").count()
+
+    @property
+    def nb_repas(self):
+        return self.page.locator(".repas-card").locator("visible=true").count()
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()

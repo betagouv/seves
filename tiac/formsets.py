@@ -2,8 +2,8 @@ from django.forms import inlineformset_factory, BaseInlineFormSet, Media
 
 from core.form_mixins import js_module
 from core.mixins import WithCommonContextVars
-from .forms import EtablissementForm
-from .models import EvenementSimple, Etablissement
+from .forms import EtablissementForm, RepasSuspectForm
+from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect
 from django import forms
 
 
@@ -22,6 +22,25 @@ class EtablissementBaseFormSet(WithCommonContextVars, BaseInlineFormSet):
             form.fields["DELETE"].widget = forms.HiddenInput()
 
 
+class RepasSuspectBaseFormSet(BaseInlineFormSet):
+    template_name = "tiac/forms/repas_suspect_base_set.html"
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("tiac/repas.mjs"),),
+        )
+
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if "DELETE" in form.fields:
+            form.fields["DELETE"].widget = forms.HiddenInput()
+
+
 EtablissementFormSet = inlineformset_factory(
     EvenementSimple, Etablissement, form=EtablissementForm, formset=EtablissementBaseFormSet, extra=0, can_delete=True
+)
+
+RepasFormSet = inlineformset_factory(
+    InvestigationTiac, RepasSuspect, form=RepasSuspectForm, formset=RepasSuspectBaseFormSet, extra=0, can_delete=True
 )

@@ -12,6 +12,20 @@ class EvenementOrigin(TextChoices):
     OTHER = "autre", "Autre"
 
 
+class Motif(TextChoices):
+    PARTAGE = "repas partage", "Car repas partagé par la plupart des malades"
+    COMPATIBLE = "repas compatible", "Car repas compatible avec les délais d'incubations"
+    RISQUE = "repas risque", "Car repas comportant un aliment à risque particulier"
+
+
+class TypeRepas(TextChoices):
+    DOMICILE = "elabore a domicile", "Élaboré à domicile"
+    EMBALLE = "emballe a la demande", "Élaboré à la demande à emporter ou livré"
+    PRE_EMBALLE = "préemballe", "Préemballé consommé en l'état ou réchauffé"
+    RESTAURATION_COLLECTIVE = "restauration collective", "Servi sur place restauration collective"
+    RESTAURATION_COMMERCIALE = "restauration commerciale", "Servi sur place restauration commerciale"
+
+
 class ModaliteDeclarationEvenement(TextChoices):
     SIGNAL_CONSO = "signalconso", "SignalConso"
     OTHER = "autre", "Autre"
