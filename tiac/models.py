@@ -309,3 +309,15 @@ class InvestigationTiac(
 
     def get_email_subject(self):
         return f"{self.numero}"
+
+    @property
+    def latest_version(self):
+        return (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
+
+    def get_publish_success_message(self):
+        return "Évènement publié avec succès"
