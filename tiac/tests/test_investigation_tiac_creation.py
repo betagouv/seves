@@ -20,7 +20,7 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
     assert investigation.numero is not None
     assert investigation.is_draft is True
 
-    expect(creation_page.page.get_by_text("L'investigation TIAC a été créée avec succès.")).to_be_visible()
+    expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
 
 
 def test_can_create_investigation_tiac_with_all_fields(

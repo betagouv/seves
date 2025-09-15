@@ -3,7 +3,6 @@ import json
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages.views import SuccessMessageMixin
 from django.forms import Media
 from django.http import Http404
 from django.http import HttpResponseRedirect
@@ -184,10 +183,9 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, SuccessMessageMixin, CreateView):
+class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
-    success_message = "L'investigation TIAC a été créée avec succès."
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -202,6 +200,14 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
         return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.object.is_published:
+            messages.success(self.request, "L’évènement a été publié avec succès.")
+        else:
+            messages.success(self.request, "L’évènement a été créé avec succès.")
+        return response
 
 
 class InvestigationTiacDetailView(
@@ -237,3 +243,12 @@ class InvestigationTiacDetailView(
             return self.object
         except (ValueError, EvenementSimple.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
+        context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        return context
+
+    def get_publish_success_message(self):
+        return "L’évènement a été publié avec succès."
