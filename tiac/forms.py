@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.forms import Media
 from django.utils import timezone
@@ -13,7 +15,7 @@ from ssa.models import EvenementProduit
 from tiac.constants import EvenementOrigin, EvenementFollowUp
 from tiac.constants import ModaliteDeclarationEvenement
 from tiac.constants import DangersSyndromiques
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement, Analyses
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement, Analyses, validate_resytal
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
@@ -149,8 +151,23 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     )
     type_etablissement = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition..."}),
+        widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition…"}),
     )
+
+    date_inspection = forms.DateTimeField(
+        required=False,
+        label="Date d'inspection",
+        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": ""}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self["numero_resytal"].field.widget.attrs.update(
+            {
+                "pattern": re.sub(r"\\+", r"\\", validate_resytal.regex.pattern),
+                "data-message": validate_resytal.message,
+            }
+        )
 
     class Meta:
         model = Etablissement
@@ -165,6 +182,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "departement",
             "pays",
             "numero_resytal",
+            "date_inspection",
             "evaluation",
             "commentaire",
         ]

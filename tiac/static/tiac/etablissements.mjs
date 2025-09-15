@@ -15,6 +15,7 @@ import {setUpSiretChoices} from "siret"
  * @property {String} siret
  * @property {String} type_etablissement
  * @property {String} numero_resytal
+ * @property {String} date_inspection
  * @property {String} evaluation
  * @property {String} commentaire
  */
@@ -116,9 +117,16 @@ class EtablissementFormController extends Controller {
     }
 
     onValidateForm() {
-        if (this.fieldsetTarget.checkValidity()) {
-            this.initCard()
+        for (const element of this.fieldsetTarget.elements) {
+            if(!element.checkValidity()) {
+                if(element.dataset.message) {
+                    element.setCustomValidity(element.dataset.message)
+                }
+                element.reportValidity()
+                return
+            }
         }
+        this.initCard()
     }
 
     onModify() {
@@ -162,7 +170,7 @@ class EtablissementFormController extends Controller {
                 hasData = true
             }
 
-            if (inputName === "departement" && inputValue !== "") {
+            if (input instanceof HTMLSelectElement && input.dataset.choice === undefined && inputValue !== "") {
                 const option = input.options[input.selectedIndex]
                 etablissement[inputName] = option ? option.innerText.trim() : ""
             } else {
@@ -350,8 +358,12 @@ class EtablissementFormController extends Controller {
                                         </div>
                                         <div class="fr-col fr-col-md-6">
                                             <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Numéro Résytal</p>
+                                                <p class="fr-col fr-col-md-6 fr-text--bold">Numéro Resytal</p>
                                                 <p class="fr-col fr-col-md-6">${etablissement.numero_resytal}</p>
+                                            </div>
+                                            <div class="fr-grid-row">
+                                                <p class="fr-col fr-col-md-6 fr-text--bold">Date d'inspection</p>
+                                                <p class="fr-col fr-col-md-6">${etablissement.date_inspection}</p>
                                             </div>
                                             <div class="fr-grid-row">
                                                 <p class="fr-col fr-col-md-6 fr-text--bold">Évaluation globale</p>

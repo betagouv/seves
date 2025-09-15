@@ -164,6 +164,13 @@ class Evaluation(models.TextChoices):
     PERTE_DE_MAITRISE = "perte de maitrise", "D - Perte de maîtrise des risques - Fermeture ou restriction d'activité"
 
 
+validate_resytal = RegexValidator(
+    regex=r"^\d{2}-\d{6}$",
+    message="Le numéro Resytal doit être au format AA-XXXXXX ; par exemple : 19-067409",
+    code="invalid_resytal",
+)
+
+
 @reversion.register()
 class Etablissement(BaseEtablissement, models.Model):
     evenement_simple = models.ForeignKey(EvenementSimple, on_delete=models.PROTECT, related_name="etablissements")
@@ -171,7 +178,8 @@ class Etablissement(BaseEtablissement, models.Model):
     type_etablissement = models.CharField(max_length=45, verbose_name="Type d'établissement", blank=True)
 
     has_inspection = models.BooleanField(default=False, verbose_name="Inspection")
-    numero_resytal = models.CharField(blank=True, verbose_name="Numéro Résytal")
+    numero_resytal = models.CharField(blank=True, verbose_name="Numéro Resytal", validators=[validate_resytal])
+    date_inspection = models.DateField(blank=True, null=True, default=None, verbose_name="Date d'inspection")
     evaluation = models.CharField(choices=Evaluation.choices, blank=True, verbose_name="Évaluation globale")
     commentaire = models.TextField(verbose_name="Commentaire", blank=True)
 
@@ -185,7 +193,10 @@ class Etablissement(BaseEtablissement, models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=(Q(has_inspection=True) | (Q(numero_resytal="") & Q(evaluation="") & Q(commentaire=""))),
+                condition=(
+                    Q(has_inspection=True)
+                    | (Q(numero_resytal="") & Q(evaluation="") & Q(commentaire="") & Q(date_inspection=None))
+                ),
                 name="inspection_required_for_inspection_related_fields",
             ),
         ]
