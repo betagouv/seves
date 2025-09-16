@@ -58,7 +58,7 @@ class SafeTextChoices(TextChoices):
 class DangersSyndromiques(SafeTextChoices):
     INTOXINATION_BACILLUS = ChoiceData(
         value="intoxination bacillus cereus",
-        name="Intoxination à toxine émétique thermostable préformée dans l'aliment à <b>bacillus cereus - staphylococcus aureus</b>",
+        name="Intoxination à toxine émétique thermostable préformée dans l'aliment à <span class='danger-emphasis'>bacillus cereus - staphylococcus aureus</span>",
         help_text="Incubation courte (30min - 8h) - nausées vomissements prédominants",
         description="""Attention, autres toxines possibles notamment si haricots rouges, courges, produits de la mer, betterave crue... : conserver des échantillons pour d'autres analyses. <br/><br/>
 Pour rappel : si les aliments ou ingrédients sont cuits, l'absence de la bactérie ne signifie pas l'absence de toxine (ces toxines sont thermostables). Si les aliments sont crus, en l'absence de la bactérie, il est inutile de rechercher les toxines. <br/><br/>
@@ -68,13 +68,13 @@ Bacillus cereus : en première intention, recherce de la bactérie. Pour recherc
     )
     TOXI_INFECTION_BACILLUS = ChoiceData(
         value="toxi infection bacillus cereus",
-        name="Toxi-infection à toxine diarrhéique de <b>bacillus cereus - clostridium perfringens</b>",
+        name="Toxi-infection à toxine diarrhéique de <span class='danger-emphasis'>bacillus cereus - clostridium perfringens</span>",
         help_text="Incubation moyenne (6h - 24h) - diarrhées aqueuses et douleurs abdominales prédominantes",
         description="Une contamination bactérienne importante des plats est attendue. Il est inutile de rechercher les toxines (sauf dossiers à enjeux particuliers). ",
     )
     BACTERIE_INTESTINALE = ChoiceData(
         value="bactérie intestinale",
-        name="Infection bactérienne intestinale à <b>salmonella - campylobacter - yersinia enterocolitica - shigella - E. Coli</b> pathogènes",
+        name="Infection bactérienne intestinale à <span class='danger-emphasis'>salmonella - campylobacter - yersinia enterocolitica - shigella - E. Coli</span> pathogènes",
         help_text="Incubation longue (Salmonella: 6 à 72 heures, Campylobacter: 2 à 5 jours, Yersinia enterocolitica: 3 à 7 jours, Shigella : 1 à 4 jours) - fièvre et diarrhées prédominants",
         description="""
         Compte tenu des délais d'incubation, les dates et heures d'apparition des symptômes sont étalées dans le temps, et les repas suspects sont aussi anciens.<br/><br/>
@@ -84,14 +84,14 @@ Les souches sont à envoyer aux LNR.""",
     )
     SHU = ChoiceData(
         value="shu",
-        name="Infection à <b>E. coli</b> STEC avec cas de syndrome hémolytique et urémique (SHU)",
+        name="Infection à <span class='danger-emphasis'>E. coli</span> STEC avec cas de syndrome hémolytique et urémique (SHU)",
         help_text="Incubation longue (1 à 10 jours) - diarrhées souvent sanglantes - puis complications en Syndrôme hémolytique et urémique",
         description="""
         Bien récupérer et transmettre les informations de traçabilité si un ingrédient (fromage au lait cru, crudité, viande hachée, pâte crue...) est suspecté. <br/><br/>Les souches sont à envoyer au LNR.""",
     )
     GASTRO = ChoiceData(
         value="gastro-enterite",
-        name="Gastro-entérite aigüe virale à norovirus, <b>sapovirus</b> etc.",
+        name="Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
         help_text="Incubation longue (10h - 50h) - tous symptômes de gastro-entérite, vomissements très fréquents, fièvre ~50% des cas - cas secondaires fréquents (transmission inter-humaine)",
         description="""Attention, une infection bactérienne à Salmonella etc. ou par vibrio parahaemolyticus est aussi à envisager.<br/><br/>
 Bien récupérer et transmettre les informations de traçabilité si un ingrédient (coquillages, fruits rouges, crudité…) est suspecté.
@@ -99,7 +99,7 @@ Bien récupérer et transmettre les informations de traçabilité si un ingrédi
     )
     VIBRIO_PARAHAEMOLYTICUS = ChoiceData(
         value="vibrio parahmeolyticus",
-        name="Infection à <b>vibrio parahaemolyticus</b> (poissons ou fruits de mer crus ou peu cuits)",
+        name="Infection à <span class='danger-emphasis'>vibrio parahaemolyticus</span> (poissons ou fruits de mer crus ou peu cuits)",
         help_text="Incubation variable (2h à 48h) - diarrhées, douleurs abdominales, vomissements",
         description="""Bien récupérer et transmettre les informations de traçabilité des poissons ou fruits de mer qui ont été consommés crus ou peu cuits.<br/><br/>
 Envoi direct au LNR pour analyse.

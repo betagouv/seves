@@ -301,7 +301,9 @@ class InvestigationTiacFormPage:
         self.current_modal.get_by_role("button", name="Confirmer").click()
 
     def delete_danger_syndromique(self, index):
-        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role("button").click()
+        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role(
+            "button", name="Supprimer"
+        ).click()
 
     @property
     def nb_dangers(self):

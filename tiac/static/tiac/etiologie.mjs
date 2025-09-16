@@ -32,11 +32,14 @@ class EtiologieFormController  extends Controller {
     renderCard(choice) {
         const item = this.config.find(d => d.value === choice);
         return `
-         <div class="etiologie-card-container fr-p-4w fr-mb-4w">
+         <div class="etiologie-card-container fr-p-4w fr-mb-2w">
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-4">${item.name}</div>
                     <div class="fr-col-12 fr-col-lg-4">${item.help_text}</div>
-                    <div class="fr-col-12 fr-col-lg-3">Recommendations</div>
+                    <div class="fr-col-12 fr-col-lg-3">Recommandations
+                        <button aria-describedby="tooltip-${choice}" type="button" class="fr-btn--tooltip fr-btn">infobulle</button>
+                        <span class="fr-tooltip fr-placement" id="tooltip-${choice}" role="tooltip">${item.description}</span>
+                    </div>
                     <div class="fr-col-12 fr-col-lg-1">
                     <button
                                             class="fr-btn fr-icon-delete-line fr-btn--secondary fr-btn--sm"
