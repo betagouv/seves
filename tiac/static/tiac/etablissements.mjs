@@ -3,6 +3,7 @@ import {applicationReady} from "Application";
 import {setUpAddressChoices} from "BanAutocomplete"
 import {Controller} from "Stimulus";
 import {setUpSiretChoices} from "siret"
+import {collectFormValues} from "Forms"
 
 /**
  * @typedef EtablissementData
@@ -36,8 +37,11 @@ import {setUpSiretChoices} from "siret"
  * @property {HTMLDialogElement} deleteModalTarget
  * @property {HTMLElement[]} detailModalContainerTargets
  * @property {HTMLDialogElement} detailModalTarget
+ * @property {HTMLInputElement} hasInspectionTarget
+ * @property {HTMLElement} inspectionFieldsTarget
  * @property {String} communesApiValue
  * @property {String} formPrefixValue
+ * @property {Boolean} shouldImmediatelyShowValue
  */
 class EtablissementFormController extends Controller {
     static targets = [
@@ -56,14 +60,20 @@ class EtablissementFormController extends Controller {
         "deleteModal",
         "detailModalContainer",
         "detailModal",
+        "hasInspection",
+        "inspectionFields",
     ]
-    static values = {communesApi: String, formPrefix: String}
+    static values = {communesApi: String, formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
 
     connect() {
         this.raisonSocialeInputTarget.required = true
         this.addressChoices = setUpAddressChoices(this.adresseInputTarget)
         setUpSiretChoices(this.siretInputTarget, "bottom")
-        this.initCard()
+        if (this.shouldImmediatelyShowValue) {
+            this.openForm()
+        }
+        // Forces the has_inspection toggle to deliver an initial value
+        this.hasInspectionTarget.dispatchEvent(new Event("input"))
     }
 
     onAddressChoice(event) {
@@ -92,6 +102,7 @@ class EtablissementFormController extends Controller {
                 }
             ]
             this.addressChoices.setChoices(result, 'value', 'label', true)
+
         }
 
         if (!!code_commune && !!this.communesApiValue) {
@@ -112,21 +123,18 @@ class EtablissementFormController extends Controller {
     }
 
     onCloseForm() {
-        const [hasData, ..._] = this.computeData()
-        if (!hasData) this.forceDelete()
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
     onValidateForm() {
-        for (const element of this.fieldsetTarget.elements) {
-            if(!element.checkValidity()) {
-                if(element.dataset.message) {
-                    element.setCustomValidity(element.dataset.message)
-                }
-                element.reportValidity()
-                return
-            }
+        const formValues = collectFormValues(this.fieldsetTarget, name => name.replace(`${this.formPrefixValue}-`, ""))
+        if (formValues === undefined) {
+            return
         }
-        this.initCard()
+
+        this.initCard(formValues)
     }
 
     onModify() {
@@ -150,44 +158,23 @@ class EtablissementFormController extends Controller {
         dsfr(this.deleteModalTarget).modal.conceal()
     }
 
+    onInspectionToggle({target: {checked}}) {
+        if (checked) {
+            this.inspectionFieldsTarget.classList.remove("fr-hidden")
+        } else {
+            this.inspectionFieldsTarget.classList.add("fr-hidden")
+        }
+    }
+
     forceDelete() {
         this.deleteInputTarget.value = "on"
         this.fieldsetTarget.setAttribute("disabled", "disabled")
         this.element.classList.add("fr-hidden")
     }
 
-    computeData() {
-        let hasData = false
-        const etablissement = {}
-
-        for (const input of this.fieldsetTarget.elements) {
-            if (!input.name || input.name.length === 0) continue;
-
-            const inputName = input.name.replace(`${this.formPrefixValue}-`, "")
-            const inputValue = typeof input.value === "string" ? input.value.trim() : ""
-
-            if (inputValue !== "") {
-                hasData = true
-            }
-
-            if (input instanceof HTMLSelectElement && input.dataset.choice === undefined && inputValue !== "") {
-                const option = input.options[input.selectedIndex]
-                etablissement[inputName] = option ? option.innerText.trim() : ""
-            } else {
-                etablissement[inputName] = input.value
-            }
-        }
-
-        return [hasData, etablissement]
-    }
-
-    initCard() {
-        const [hasData, etablissement] = this.computeData()
-        if (!hasData) { // Case of an empty new form
-            this.openForm()
-            return
-        }
-
+    /** @param {EtablissementData} etablissement */
+    initCard(etablissement) {
+        this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
         this.detailModalContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCardDetailModal(etablissement))

@@ -22,7 +22,11 @@ def test_form_validation(live_server, page: Page, ensure_departements):
     etablissement: Etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement)
 
     creation_page = EvenementSimpleFormPage(page, live_server.url)
+
+    etablissement_count = Etablissement.objects.count()
+
     creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
     creation_page.open_etablissement_modal()
     creation_page.current_modal.locator(".save-btn").click()
 
@@ -31,6 +35,7 @@ def test_form_validation(live_server, page: Page, ensure_departements):
 
     # Check Resytal number format is correctly checked
     creation_page.fill_etablissement(creation_page.current_modal, etablissement)
+    creation_page.current_modal.locator('label[for$="has_inspection"]').click()
     creation_page.current_modal.locator('[id$="numero_resytal"]').fill("zz")
     creation_page.current_modal.locator(".save-btn").click()
 
@@ -38,6 +43,12 @@ def test_form_validation(live_server, page: Page, ensure_departements):
         # language=javascript
         """() => document.querySelector('[id$="numero_resytal"]').validationMessage"""
     )
+
+    creation_page.current_modal.locator('[id$="numero_resytal"]').fill("25-000000")
+    creation_page.current_modal.locator(".save-btn").click()
+    creation_page.submit_as_draft()
+
+    assert Etablissement.objects.count() == etablissement_count + 1
 
 
 def test_can_add_etablissements(live_server, page: Page, ensure_departements, assert_models_are_equal):

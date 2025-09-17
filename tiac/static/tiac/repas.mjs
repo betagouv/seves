@@ -1,7 +1,7 @@
 import {BaseFormSetController} from "BaseFormset"
 import {applicationReady} from "Application";
 import {Controller} from "Stimulus";
-import {checkValidity} from "Forms"
+import {collectFormValues} from "Forms"
 
 class RepasFormController extends Controller {
     static targets = [
@@ -27,9 +27,12 @@ class RepasFormController extends Controller {
     }
 
     onValidateForm(){
-        if(checkValidity(this.fieldsetTarget)){
-            this.initCard()
+        const formValues = collectFormValues(this.fieldsetTarget, name => name.replace(`${this.formPrefixValue}-`, ""))
+        if (formValues === undefined) {
+            return
         }
+
+        this.initCard(formValues)
     }
 
     onModify() {
@@ -46,22 +49,7 @@ class RepasFormController extends Controller {
         this.element.classList.add("fr-hidden")
     }
 
-    initCard() {
-        const repas = {}
-
-        for (const input of this.fieldsetTarget.elements) {
-            if(!input.name || input.name.length === 0) continue;
-
-            const inputName = input.name.replace(`${this.formPrefixValue}-`, "")
-            const inputValue = typeof input.value === "string" ? input.value.trim() : ""
-
-            if(input.tagName.toLowerCase() === "select" && inputValue !== "") {
-                const option = input.options[input.selectedIndex]
-                repas[inputName] = option ? option.innerText.trim() : ""
-            } else {
-                repas[inputName] = input.value
-            }
-        }
+    initCard(repas) {
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(repas))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(repas))
