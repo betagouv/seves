@@ -174,7 +174,8 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         self["numero_resytal"].field.widget.attrs.update(
             {
                 "pattern": re.sub(r"\\+", r"\\", validate_resytal.regex.pattern),
-                "data-message": validate_resytal.message,
+                "data-errormessage": validate_resytal.message,
+                "placeholder": "25-000000",
             }
         )
 
@@ -190,6 +191,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "code_insee",
             "departement",
             "pays",
+            "has_inspection",
             "numero_resytal",
             "date_inspection",
             "evaluation",

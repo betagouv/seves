@@ -6,6 +6,7 @@
         data-controller="etablissement-form"
         data-etablissement-form-communes-api-value="{{ COMMUNES_API }}"
         data-etablissement-form-form-prefix-value="{{ form.prefix }}"
+        data-etablissement-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
     >
         <button
             class="fr-btn fr-hidden" type="button" data-fr-opened="false"
@@ -90,6 +91,8 @@
         {% endfor %}
     </div>
     <template data-etablissement-formset-target="emptyFormTpl">
-        {% with form=formset.empty_form %}{% partial form-dialog %}{% endwith %}
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
     </template>
 </fieldset>
