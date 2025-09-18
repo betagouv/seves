@@ -3,6 +3,26 @@
 {% load etat_tags %}
 {% load or_empty_value_tag %}
 
+{% block extrahead %}
+  <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
+{% endblock extrahead %}
+{% block scripts %}
+  <script type="module" src="{% static 'core/sidebar.js' %}"></script>
+  <script type="module" src="{% static 'core/message_form.js' %}"></script>
+  <script type="module" src="{% static 'core/document_form.js' %}"></script>
+  <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+{% endblock %}
+
+{% block aside %}
+  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url %}
+  {% include "core/_document_warning_modal.html" %}
+  {% include "core/_message_update_forms.html" with object=object %}
+  {% for message in message_list %}
+    {% if not message.is_draft %}
+      {% include "core/_sidebar_message_details.html" %}
+    {% endif %}
+  {% endfor %}
+{% endblock aside %}
 
 
 {% block content %}
@@ -31,5 +51,10 @@
       <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
+
+    {% if not object.is_draft %}
+      {% include "core/_fiche_bloc_commun.html" with object=object %}
+    {% endif %}
+
   </main>
 {% endblock %}
