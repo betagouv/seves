@@ -1,0 +1,120 @@
+import pytest
+from playwright.sync_api import Page
+
+from core.models import Message
+from core.tests.generic_tests.messages import (
+    generic_test_can_add_and_see_message_without_document,
+    generic_test_can_update_draft_note,
+    generic_test_can_update_draft_point_situation,
+    generic_test_can_send_draft_element_suivi,
+    generic_test_can_finaliser_draft_note,
+    generic_test_can_send_draft_fin_suivi,
+    generic_test_can_only_see_own_document_types_in_message_form,
+    generic_test_can_see_and_delete_documents_from_draft_message,
+    generic_test_only_displays_app_contacts,
+    generic_test_cant_see_drafts_from_other_users,
+    generic_test_structure_show_only_one_entry_in_select,
+)
+from tiac.factories import InvestigationTiacFactory
+from tiac.models import InvestigationTiac
+
+
+def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
+
+
+def test_cant_see_drafts_from_other_users(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_cant_see_drafts_from_other_users(live_server, page, evenement)
+
+
+def test_can_update_draft_note(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, evenement, mailoutbox)
+
+
+def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
+    )
+
+
+def test_can_update_draft_demande_intervention(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
+    )
+
+
+def test_can_update_draft_compte_rendu_demande_intervention(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
+    )
+
+
+def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
+    )
+
+
+@pytest.mark.parametrize(
+    "message_type",
+    [
+        Message.MESSAGE,
+        Message.POINT_DE_SITUATION,
+        Message.DEMANDE_INTERVENTION,
+    ],
+)
+def test_can_send_draft_element_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox, message_type):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_send_draft_element_suivi(
+        live_server, page, mocked_authentification_user, evenement, mailoutbox, message_type
+    )
+
+
+def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, evenement)
+
+
+def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_send_draft_fin_suivi(live_server, page, mocked_authentification_user, evenement, mailoutbox)
+
+
+def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
+    generic_test_can_only_see_own_document_types_in_message_form(
+        live_server,
+        page,
+        check_select_options_from_element,
+        InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS),
+    )
+
+
+def test_can_see_and_delete_documents_from_draft_message(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_see_and_delete_documents_from_draft_message(
+        live_server,
+        page,
+        InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS),
+        mocked_authentification_user,
+        mailoutbox,
+    )
+
+
+def test_only_displays_ssa_contacts(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_only_displays_app_contacts(live_server, page, evenement, "ssa")
+
+
+def test_structure_show_only_one_entry_in_select(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement)
