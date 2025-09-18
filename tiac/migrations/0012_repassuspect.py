@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0038_alter_document_document_type"),
-        ("tiac", "0010_remove_etablissement_inspection_required_for_inspection_related_fields_and_more"),
+        ("tiac", "0011_alter_investigationtiac_danger_syndromiques_suspectes"),
     ]
 
     operations = [
