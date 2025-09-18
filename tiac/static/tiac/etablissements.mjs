@@ -4,6 +4,7 @@ import {setUpAddressChoices} from "BanAutocomplete"
 import {Controller} from "Stimulus";
 import {setUpSiretChoices} from "siret"
 import {collectFormValues} from "Forms"
+import {BaseFormInModal} from "BaseFormInModal"
 
 /**
  * @typedef EtablissementData
@@ -43,8 +44,9 @@ import {collectFormValues} from "Forms"
  * @property {String} formPrefixValue
  * @property {Boolean} shouldImmediatelyShowValue
  */
-class EtablissementFormController extends Controller {
+class EtablissementFormController extends BaseFormInModal {
     static targets = [
+        ...BaseFormInModal.targets,
         "raisonSocialeInput",
         "communeInput",
         "departementInput",
@@ -53,24 +55,19 @@ class EtablissementFormController extends Controller {
         "typeEtablissementInput",
         "codeInseeInput",
         "siretInput",
-        "deleteInput",
-        "fieldset",
-        "dialog",
-        "cardContainer",
-        "deleteModal",
         "detailModalContainer",
         "detailModal",
         "hasInspection",
         "inspectionFields",
     ]
-    static values = {communesApi: String, formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
+    static values = {communesApi: String, shouldImmediatelyShow: {type: Boolean, default: false}}
 
     connect() {
         this.raisonSocialeInputTarget.required = true
         this.addressChoices = setUpAddressChoices(this.adresseInputTarget)
         setUpSiretChoices(this.siretInputTarget, "bottom")
         if (this.shouldImmediatelyShowValue) {
-            this.openForm()
+            this.openDialog()
         }
         // Forces the has_inspection toggle to deliver an initial value
         this.hasInspectionTarget.dispatchEvent(new Event("input"))
@@ -114,13 +111,6 @@ class EtablissementFormController extends Controller {
         }
     }
 
-    openForm() {
-        dsfr(this.dialogTarget).modal.disclose()
-    }
-
-    closeForm() {
-        dsfr(this.dialogTarget).modal.conceal()
-    }
 
     onCloseForm() {
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
@@ -128,35 +118,11 @@ class EtablissementFormController extends Controller {
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onValidateForm() {
-        const formValues = collectFormValues(this.fieldsetTarget, name => name.replace(`${this.formPrefixValue}-`, ""))
-        if (formValues === undefined) {
-            return
-        }
-
-        this.initCard(formValues)
-    }
-
-    onModify() {
-        this.openForm()
-    }
 
     onDetailDisplay() {
         dsfr(this.detailModalTarget).modal.disclose()
     }
 
-    onCancelDelete() {
-        dsfr(this.deleteModalTarget).modal.conceal()
-    }
-
-    onDelete() {
-        dsfr(this.deleteModalTarget).modal.disclose()
-    }
-
-    onDeleteConfirm() {
-        this.forceDelete()
-        dsfr(this.deleteModalTarget).modal.conceal()
-    }
 
     onInspectionToggle({target: {checked}}) {
         if (checked) {
@@ -166,11 +132,6 @@ class EtablissementFormController extends Controller {
         }
     }
 
-    forceDelete() {
-        this.deleteInputTarget.value = "on"
-        this.fieldsetTarget.setAttribute("disabled", "disabled")
-        this.element.classList.add("fr-hidden")
-    }
 
     /** @param {EtablissementData} etablissement */
     initCard(etablissement) {
@@ -188,15 +149,7 @@ class EtablissementFormController extends Controller {
      * @return {string} HTML
      */
     renderCard(etablissement) {
-        function optional(value, text) {
-            return value ? (text || `${value}`) : ""
-        }
-
-        function join(delimiter, ...items) {
-            return items.filter(it => !!it.length).join(delimiter)
-        }
-
-        // languague=HTML
+        // language=HTML
         return `<div class="etablissement-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
@@ -205,10 +158,10 @@ class EtablissementFormController extends Controller {
                     </h3>
                     <div class="fr-card__desc">
                         <address class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v adresse">
-                            ${join(" | ", etablissement.departement, etablissement.commune)}
+                            ${this.joinText(" | ", etablissement.departement, etablissement.commune)}
                         </address>
-                        ${optional(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
-                        ${optional(
+                        ${this.optionalText(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
+                        ${this.optionalText(
             etablissement.type_etablissement,
             `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`
         )}
@@ -239,49 +192,14 @@ class EtablissementFormController extends Controller {
         </div>`
     }
 
-    /**
-     * @param {EtablissementData} etablissement
-     * @return {string} HTML
-     */
-    renderDeleteConfirmationDialog(etablissement) {
-        // languague=HTML
-        return `<button class="fr-btn fr-hidden" data-fr-opened="false" aria-controls="${this.formPrefixValue}-delete-modal"></button>
-            <dialog
-                id="${this.formPrefixValue}-delete-modal"
-                class="fr-modal delete-modal"
-                aria-labelledby="delete-modal-title"
-                aria-modal="true"
-                data-${this.identifier}-target="deleteModal"
-            >
-                <div class="fr-container fr-container--fluid">
-                    <div class="fr-grid-row fr-grid-row--center">
-                        <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-                            <div class="fr-modal__body">
-                                <div class="fr-modal__content">
-                                    <h3 id="delete-modal-title" class="fr-modal__title">
-                                        <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
-                                        Suppression d'un établisssment
-                                    </h3>
-                                    <p>Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale}</p>
-                                </div>
-                                <div class="fr-modal__footer">
-                                    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
-                                        <button
-                                            class="fr-btn fr-btn--secondary delete-cancel"
-                                            data-action="${this.identifier}#onCancelDelete:prevent:default"
-                                        >Annuler</button>
-                                        <button
-                                            class="fr-btn delete-confirmation"
-                                            data-action="${this.identifier}#onDeleteConfirm:prevent:default"
-                                        >Supprimer</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </dialog>`
+    getDeleteConfirmationSentence(etablissement){
+        return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
+
+    getDeleteConfirmationTitle(etablissement){
+        return "Suppression d'un établissement"
+    }
+
 
     /**
      * @param {EtablissementData} etablissement
