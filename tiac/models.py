@@ -17,7 +17,14 @@ from core.mixins import (
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
-from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp, Motif, TypeRepas
+from tiac.constants import (
+    ModaliteDeclarationEvenement,
+    EvenementOrigin,
+    EvenementFollowUp,
+    Motif,
+    TypeRepas,
+    TypeCollectivite,
+)
 from .constants import DangersSyndromiques
 from .managers import EvenementSimpleManager, InvestigationTiacManager
 from .model_mixins import WithSharedNumeroMixin
@@ -377,3 +384,12 @@ class RepasSuspect(models.Model):
         null=True,
     )
     type_repas = models.CharField(max_length=255, choices=TypeRepas.choices, blank=True)
+    type_collectivite = models.CharField(max_length=255, choices=TypeCollectivite.choices, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(type_repas=TypeRepas.RESTAURATION_COLLECTIVE) | Q(type_collectivite="")),
+                name="collectivite_only_if_repas_restauration_collective",
+            )
+        ]

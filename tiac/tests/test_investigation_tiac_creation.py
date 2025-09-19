@@ -4,7 +4,7 @@ from core.factories import DepartementFactory
 from core.models import Contact
 from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques
+from ..constants import DangersSyndromiques, TypeCollectivite, TypeRepas
 from ..models import InvestigationTiac, RepasSuspect
 
 fields_to_exclude_repas = [
@@ -198,3 +198,28 @@ def test_can_create_investigation_tiac_with_mutliple_repas_and_delete(
     assert investigation.repas.count() == 2
     assert investigation.repas.first().denomination == "Foo"
     assert investigation.repas.last().denomination == "Buzz"
+
+
+def test_can_create_investigation_tiac_with_repas_for_collectivite(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    departement = DepartementFactory()
+    input_data: RepasSuspect = RepasSuspectFactory.build(
+        departement=departement,
+        type_repas=TypeRepas.RESTAURATION_COLLECTIVE,
+        type_collectivite=TypeCollectivite.JEUNES_ENFANTS,
+    )
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+    creation_page.add_repas(input_data)
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.repas.count() == 1
+    assert_models_are_equal(
+        input_data, investigation.repas.get(), to_exclude=fields_to_exclude_repas, ignore_array_order=True
+    )
