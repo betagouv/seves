@@ -18,6 +18,12 @@ class Motif(TextChoices):
     RISQUE = "repas risque", "Car repas comportant un aliment à risque particulier"
 
 
+class MotifAliment(TextChoices):
+    CONSOMME = "aliment consomme", "Aliment consommé par la plupart des malades"
+    RISQUE = "aliment risque", "Aliment ou ingrédient à risque particulier"
+    ANALYSE = "aliment analyse", "Aliment analysé et résultats positifs"
+
+
 class TypeRepas(TextChoices):
     DOMICILE = "elabore a domicile", "Élaboré à domicile"
     EMBALLE = "emballe a la demande", "Élaboré à la demande à emporter ou livré"
@@ -34,6 +40,11 @@ class TypeCollectivite(TextChoices):
     PERSONNES_AGEES = "personnes agees", "Personnes agées"
     DIVERS_PUBLICS_SENSIBLES = "divers publics sensibles", "Divers publics sensibles"
     DIVERS_PUBLICS = "divers publics", "Divers publics"
+
+
+class TypeAliment(TextChoices):
+    CUISINE = "aliment cuisine", "Aliment cuisiné"
+    SIMPLE = "aliment simple", "Aliment simple/ingrédient"
 
 
 class ModaliteDeclarationEvenement(TextChoices):

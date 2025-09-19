@@ -6,7 +6,8 @@ from django.urls import reverse
 from playwright.sync_api import Page
 
 from tiac.constants import TypeRepas
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect
+from ssa.tests.pages import WithTreeSelect
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
 
 
 class EvenementSimpleFormPage:
@@ -228,7 +229,7 @@ class EvenementSimpleDetailsPage:
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage:
+class InvestigationTiacFormPage(WithTreeSelect):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -315,10 +316,43 @@ class InvestigationTiacFormPage:
         self.current_modal.locator('[id$="type_repas"]').select_option(f"{repas.type_repas}")
         if repas.type_repas == TypeRepas.RESTAURATION_COLLECTIVE:
             self.current_modal.locator('[id$="type_collectivite"]').select_option(f"{repas.type_collectivite}")
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def add_aliment_simple(self, aliment: AlimentSuspect):
+        self.page.get_by_test_id("add-aliment").click()
+
+        self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
+        self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
+
+        for field in ["denomination", "description_produit"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
+
+        for motif in aliment.motif_suspicion:
+            checkbox = self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]')
+            self.current_modal.locator(f'label[for="{checkbox.get_attribute("id")}"]').click()
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def add_aliment_cuisine(self, aliment: AlimentSuspect):
+        self.page.get_by_test_id("add-aliment").click()
+
+        self.current_modal.get_by_label("Aliment cuisiné").click(force=True)
+
+        for field in ["denomination", "description_composition"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
+
+        for motif in aliment.motif_suspicion:
+            checkbox = self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]')
+            self.current_modal.locator(f'label[for="{checkbox.get_attribute("id")}"]').click()
+
         self.current_modal.get_by_role("button", name="Enregistrer").click()
 
     def get_repas_card(self, card_index):
         return self.page.locator(".modal-repas-container").all()[card_index].locator(".repas-card")
+
+    def get_aliment_card(self, card_index):
+        return self.page.locator(".modal-aliment-container").all()[card_index].locator(".aliment-card")
 
     def edit_repas(self, index, **kwargs):
         card = self.get_repas_card(index)
@@ -326,6 +360,16 @@ class InvestigationTiacFormPage:
 
         for k, v in kwargs.items():
             self.page.locator(".repas-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def edit_aliment(self, index, **kwargs):
+        card = self.get_aliment_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".aliment-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
 
         self.current_modal.get_by_role("button", name="Enregistrer").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
@@ -339,6 +383,10 @@ class InvestigationTiacFormPage:
         self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()
         self.current_modal.get_by_role("button", name="Supprimer").click()
 
+    def delete_aliment(self, index):
+        self.page.locator(".aliment-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
     @property
     def nb_dangers(self):
         return self.page.locator(".etiologie-card-container").locator("visible=true").count()
@@ -346,6 +394,10 @@ class InvestigationTiacFormPage:
     @property
     def nb_repas(self):
         return self.page.locator(".repas-card").locator("visible=true").count()
+
+    @property
+    def nb_aliments(self):
+        return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
