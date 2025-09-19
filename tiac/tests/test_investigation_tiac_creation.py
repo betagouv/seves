@@ -1,6 +1,7 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import DepartementFactory
+from core.models import Contact
 from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory
 from .pages import InvestigationTiacFormPage
 from ..constants import DangersSyndromiques
@@ -29,6 +30,23 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
     assert investigation.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    object = InvestigationTiac.objects.get()
+    assert object.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in object.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in object.contacts.all()
 
 
 def test_can_create_investigation_tiac_with_all_fields(
