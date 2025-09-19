@@ -183,7 +183,9 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
+class InvestigationTiacCreationView(
+    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
 
@@ -240,6 +242,7 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
         self.object = form.save()
         self.repas_formset.instance = self.object
         self.repas_formset.save()
+        self.add_user_contacts(self.object)
 
         if self.object.is_published:
             messages.success(self.request, "L’évènement a été publié avec succès.")
