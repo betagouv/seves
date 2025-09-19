@@ -17,6 +17,7 @@ from core.mixins import (
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
+from ssa.models import CategorieProduit
 from tiac.constants import (
     ModaliteDeclarationEvenement,
     EvenementOrigin,
@@ -24,6 +25,8 @@ from tiac.constants import (
     Motif,
     TypeRepas,
     TypeCollectivite,
+    TypeAliment,
+    MotifAliment,
 )
 from .constants import DangersSyndromiques
 from .managers import EvenementSimpleManager, InvestigationTiacManager
@@ -392,4 +395,38 @@ class RepasSuspect(models.Model):
                 condition=(Q(type_repas=TypeRepas.RESTAURATION_COLLECTIVE) | Q(type_collectivite="")),
                 name="collectivite_only_if_repas_restauration_collective",
             )
+        ]
+
+
+class AlimentSuspect(models.Model):
+    investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
+    denomination = models.CharField(max_length=255, verbose_name="Dénomination de l'aliment")
+    type_aliment = models.CharField(max_length=255, choices=TypeAliment.choices, blank=True)
+
+    description_composition = models.TextField(verbose_name="Description de la composition de l'aliment", blank=True)
+
+    categorie_produit = models.CharField(
+        max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
+    )
+    description_produit = models.TextField(verbose_name="Description produit et emballage", blank=True)
+
+    motif_suspicion = ArrayField(
+        models.CharField(max_length=255, choices=MotifAliment.choices),
+        verbose_name="Motif de suspicion de l'aliment",
+        default=list,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
+                | ~Q(type_aliment=TypeAliment.SIMPLE),
+                name="produit_simple_constraint",
+            ),
+            models.CheckConstraint(
+                check=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
+                | ~Q(type_aliment=TypeAliment.CUISINE),
+                name="cuisiné_pas_de_categorie_emballage",
+            ),
         ]

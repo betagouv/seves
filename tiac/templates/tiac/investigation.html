@@ -3,7 +3,10 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation.css' %}">
-{% endblock extrahead %}
+    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
+{% endblock %}
+
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
@@ -118,13 +121,13 @@
 
 
             </fieldset>
-
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v">
                 <h3 class="fr-fieldset__legend fr-h3">Éléments de l'investigation</h3>
                 <div>
                     {% dsfr_notice title="Pour les TIAC confirmées ou fortement suspectées, seul l'enregistrement des éléments conclusifs est requis.<br/> Vous pouvez ajouter d'autres éléments si cela vous aide dans l'investigation (ces données ne seront pas valorisées dans les bilans nationaux)" %}
                 </div>
                 {{ repas_formset }}
+                {{ aliment_formset }}
             </fieldset>
 
         </main>
