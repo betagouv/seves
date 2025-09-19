@@ -26,6 +26,16 @@ class TypeRepas(TextChoices):
     RESTAURATION_COMMERCIALE = "restauration commerciale", "Servi sur place restauration commerciale"
 
 
+class TypeCollectivite(TextChoices):
+    JEUNES_ENFANTS = "jeunes enfants", "Jeunes enfants (0-5)"
+    ENFANTS = "enfants", "Enfants (6-16)"
+    ACCUEILS_MEDICALISES = "accueil medicalises", "Accueils médicalisés"
+    ENTREPRISE = "entreprise", "Entreprise"
+    PERSONNES_AGEES = "personnes agees", "Personnes agées"
+    DIVERS_PUBLICS_SENSIBLES = "divers publics sensibles", "Divers publics sensibles"
+    DIVERS_PUBLICS = "divers publics", "Divers publics"
+
+
 class ModaliteDeclarationEvenement(TextChoices):
     SIGNAL_CONSO = "signalconso", "SignalConso"
     OTHER = "autre", "Autre"
