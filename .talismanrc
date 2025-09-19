@@ -66,4 +66,4 @@ fileignoreconfig:
 - filename: tiac/models.py
   checksum: b8102cec36b18d9e8caa975aaf5d4c745e2606d8d3ec45cf37da1df1517a84db
 - filename: tiac/tests/test_investigation_tiac_creation.py
-  checksum: 1bddd7da43a4b5709a46d99e1ca1d278ecfc791b135a0a036ad23e2052481d1d
+  checksum: 196568476526faea3adb5f423bea7345e4098501b7d3061406d7db800a493626

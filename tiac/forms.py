@@ -13,9 +13,10 @@ from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
 from django.conf import settings
 from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp, TypeRepas, Motif
+from tiac.constants import EvenementOrigin, EvenementFollowUp, TypeRepas, Motif, TypeCollectivite
 from tiac.constants import ModaliteDeclarationEvenement
 from tiac.constants import DangersSyndromiques
+from tiac.fields import SelectWithAttributeField
 from tiac.models import (
     EvenementSimple,
     Etablissement,
@@ -353,7 +354,10 @@ class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         label="Département",
         empty_label=settings.SELECT_EMPTY_CHOICE,
     )
-    type_repas = SEVESChoiceField(required=False, choices=TypeRepas.choices, label="Type de repas")
+    type_repas = SEVESChoiceField(
+        required=False, choices=TypeRepas.choices, label="Type de repas", widget=SelectWithAttributeField
+    )
+    type_collectivite = SEVESChoiceField(required=False, choices=TypeCollectivite.choices, label="Type de collectivité")
 
     class Meta:
         model = RepasSuspect
@@ -365,4 +369,5 @@ class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "nombre_participant",
             "departement",
             "type_repas",
+            "type_collectivite",
         ]

@@ -5,6 +5,7 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Page
 
+from tiac.constants import TypeRepas
 from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect
 
 
@@ -312,6 +313,8 @@ class InvestigationTiacFormPage:
         self.current_modal.locator('[id$="-datetime_repas"]').fill(repas.datetime_repas.strftime("%Y-%m-%dT%H:%M"))
         self.current_modal.locator('[id$="-departement"]').select_option(f"{repas.departement}")
         self.current_modal.locator('[id$="type_repas"]').select_option(f"{repas.type_repas}")
+        if repas.type_repas == TypeRepas.RESTAURATION_COLLECTIVE:
+            self.current_modal.locator('[id$="type_collectivite"]').select_option(f"{repas.type_collectivite}")
         self.current_modal.get_by_role("button", name="Enregistrer").click()
 
     def get_repas_card(self, card_index):

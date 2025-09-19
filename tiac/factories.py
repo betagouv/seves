@@ -11,7 +11,14 @@ from factory.fuzzy import FuzzyChoice
 
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
-from tiac.constants import EvenementOrigin, ModaliteDeclarationEvenement, EvenementFollowUp, TypeRepas, Motif
+from tiac.constants import (
+    EvenementOrigin,
+    ModaliteDeclarationEvenement,
+    EvenementFollowUp,
+    TypeRepas,
+    Motif,
+    TypeCollectivite,
+)
 from tiac.models import EvenementSimple, Etablissement, Evaluation, InvestigationTiac, TypeEvenement, RepasSuspect
 
 fake = Faker()
@@ -107,3 +114,10 @@ class RepasSuspectFactory(DjangoModelFactory):
     departement = factory.SubFactory("core.factories.DepartementFactory")
 
     type_repas = FuzzyChoice([choice[0] for choice in TypeRepas.choices])
+
+    @factory.post_generation
+    def type_collectivite(self, create, extracted, **kwargs):
+        if extracted:
+            self.type_collectivite = extracted
+        elif self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE:
+            self.type_collectivite = random.choice([c[0] for c in TypeCollectivite.choices])
