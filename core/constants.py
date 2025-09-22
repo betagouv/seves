@@ -184,7 +184,7 @@ class Domains(StrEnum, ExtendedChoices):
         "label": "TIAC & plaintes",
         "icon": "fr-icon-restaurant-line ",
         "url": reverse_lazy("tiac:evenement-liste"),
-        "help_url": "https://doc-ssa.seves.beta.gouv.fr",
+        "help_url": "https://doc-tiac.seves.beta.gouv.fr/",
     }
 
     @enum_property
