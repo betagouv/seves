@@ -91,7 +91,7 @@ django-reversion==5.1.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-django-template-partials==25.1
+django-template-partials==25.2
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
