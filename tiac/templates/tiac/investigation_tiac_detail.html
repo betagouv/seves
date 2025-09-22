@@ -31,6 +31,11 @@
       <div class="details-top-row">
         <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
 
+        {% if can_be_deleted %}
+          {% url 'tiac:evenement-liste' as next_url %}
+          {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+        {% endif %}
+
         <div class="details-top-row--actions">
           <ul class="fr-btns-group fr-btns-group--inline-md">
             {% if can_publish %}
@@ -44,6 +49,9 @@
                 </form>
               </li>
             {% endif %}
+            <li>
+              {% include "tiac/_investigation_action_navigation.html" %}
+            </li>
           </ul>
         </div>
 
