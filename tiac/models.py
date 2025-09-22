@@ -19,7 +19,7 @@ from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
 from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp, Motif, TypeRepas
 from .constants import DangersSyndromiques
-from .managers import EvenementSimpleManager
+from .managers import EvenementSimpleManager, InvestigationTiacManager
 from .model_mixins import WithSharedNumeroMixin
 
 
@@ -269,6 +269,8 @@ class InvestigationTiac(
     )
     precisions = models.CharField(max_length=255, verbose_name="Précisions", blank=True)
 
+    objects = InvestigationTiacManager()
+
     def save(self, *args, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():
@@ -318,6 +320,24 @@ class InvestigationTiac(
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_success_message(self):
+        return f"L'investigation TIAC {self.numero} a bien été supprimée"
+
+    def get_soft_delete_permission_error_message(self):
+        return "Vous n'avez pas les droits pour supprimer cette investigation"
+
+    def get_soft_delete_attribute_error_message(self):
+        return f"L'investigation {self.numero} ne peut pas être supprimé"
+
+    def get_soft_delete_confirm_title(self):
+        return "Supprimer cette investigation"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation ?"
+
     def get_email_subject(self):
         return f"{self.numero}"
 
@@ -332,6 +352,9 @@ class InvestigationTiac(
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"
+
+    def __str__(self):
+        return self.numero
 
 
 class RepasSuspect(models.Model):

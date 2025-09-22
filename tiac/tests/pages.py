@@ -346,3 +346,17 @@ class InvestigationTiacFormPage:
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+
+
+class InvestigationTiacDetailsPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self, object):
+        return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'investigation", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()

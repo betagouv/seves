@@ -286,6 +286,7 @@ class InvestigationTiacDetailView(
         context = super().get_context_data(**kwargs)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
 
     def get_publish_success_message(self):
