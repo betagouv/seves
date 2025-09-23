@@ -432,3 +432,8 @@ class InvestigationTiacDetailsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_text("Supprimer l'investigation", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
+
+    def cloturer(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Clôturer l'investigation").click()
+        self.page.get_by_role("button", name="Clôturer").click()

@@ -351,6 +351,9 @@ class InvestigationTiac(
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation ?"
 
+    def get_cloture_confirm_message(self):
+        return f"L'investigation n°{self.numero} a bien été clôturée."
+
     def get_email_subject(self):
         return f"{self.numero}"
 
