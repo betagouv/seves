@@ -132,7 +132,14 @@ export class BaseFormInModal extends Controller {
                     <div class="fr-grid-row fr-grid-row--center">
                         <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
                             <div class="fr-modal__body">
-                                <div class="fr-modal__header"></div>
+                                <div class="fr-modal__header">
+                                    <button
+                                        class="fr-btn--close fr-btn"
+                                        title="Fermer"
+                                        aria-controls="${this.formPrefixValue}-delete-modal"
+                                        type="button"
+                                    >Fermer</button>
+                                </div>
                                 <div class="fr-modal__content">
                                     <h3 id="delete-modal-title" class="fr-modal__title">
                                         <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
