@@ -372,6 +372,18 @@ class InvestigationTiac(
     def __str__(self):
         return self.numero
 
+    @property
+    def numero(self):
+        return f"T-{self.numero_annee}.{self.numero_evenement}"
+
+    @property
+    def type_evenement_display(self):
+        if self.type_evenement == TypeEvenement.INVESTIGATION_DD:
+            return "Invest. locale"
+        if self.type_evenement == TypeEvenement.INVESTIGATION_COORDONNEE:
+            return "Invest. coord. / MUS informée"
+        return "-"
+
 
 class RepasSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="repas")

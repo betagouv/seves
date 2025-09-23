@@ -6,7 +6,7 @@ app_name = "tiac"
 urlpatterns = [
     path(
         "evenements/",
-        views.EvenementListView.as_view(),
+        views.TiacListView.as_view(),
         name="evenement-liste",
     ),
     path(

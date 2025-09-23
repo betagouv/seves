@@ -27,7 +27,8 @@ from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
 from .constants import DangersSyndromiques
-from .filters import EvenementSimpleFilter
+from .display import DisplayItem
+from .filters import TiacFilter
 from .forms import EvenementSimpleTransferForm
 from .formsets import EtablissementFormSet, RepasFormSet, AlimentFormSet
 
@@ -173,25 +174,29 @@ class EvenementSimpleDetailView(
         return context
 
 
-class EvenementListView(WithFilteredListMixin, ListView):
-    model = EvenementSimple
+class TiacListView(WithFilteredListMixin, ListView):
     paginate_by = 100
+    context_object_name = "objects"
+
+    def get_template_names(self):
+        return ["tiac/tiac_list.html"]
 
     def get_queryset(self):
-        queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementSimpleFilter(self.request.GET, queryset=queryset)
+        queryset = self.apply_ordering(self.get_raw_queryset)
+        self.filter = TiacFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        object_list = []
         for evenement in context["object_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
+            object_list.append(DisplayItem.from_object(evenement))
 
-        context["total_object_count"] = self.get_raw_queryset().count()
-
+        context["total_object_count"] = self.get_raw_queryset.count()
+        context["object_list"] = object_list
         return context
 
 

@@ -4,9 +4,9 @@
 {% block content %}
     <main class="main-container">
         <div class="evenements_liste__table--header">
-            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
+            <div>{{ object_list|length }} sur un total de {{ total_object_count }}</div>
         </div>
-        {% if object_list.count %}
+        {% if object_list|length %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table>
                     <thead>
@@ -23,19 +23,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for evenement in evenementsimple_list %}
+                        {% for evenement in object_list %}
                             <tr class="evenements__list-row">
-                                <td><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
+                                <td><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
                                 <td>{{ evenement.createur }}</td>
-                                <td>{{ evenement.date_reception|date:"d/m/Y" }}</td>
+                                <td>{{ evenement.date_reception }}</td>
                                 <td>-</td>
-                                <td>{% if evenement.nb_sick_persons >= 0 %}{{ evenement.nb_sick_persons }}{% else %}-{% endif %}</td>
-                                <td>Enr. simple / {{ evenement.get_follow_up_display }}</td>
+                                <td>{{ evenement.nb_sick_persons }}</td>
+                                <td>{{ evenement.type_evenement }}</td>
                                 <td>-</td>
                                 <td>-</td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
-
                         {% endfor %}
                     </tbody>
                 </table>
