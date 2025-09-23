@@ -87,11 +87,10 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
 
     assert content == [
         etablissement.raison_sociale,
-        f"{etablissement.departement} | {etablissement.commune}",
+        f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,
-        f"Voir les informations de l'établissement {etablissement.raison_sociale}",
-        f"Modifier l'établissement {etablissement.raison_sociale}",
-        f"Supprimer l'établissement {etablissement.raison_sociale}",
+        "Modifier",
+        "Supprimer",
     ]
 
     # Check that modifying the form modifies the card
@@ -102,11 +101,10 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
 
     assert content == [
         raison_sociale,
-        f"{etablissement.departement} | {etablissement.commune}",
+        f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,
-        f"Voir les informations de l'établissement {raison_sociale}",
-        f"Modifier l'établissement {raison_sociale}",
-        f"Supprimer l'établissement {raison_sociale}",
+        "Modifier",
+        "Supprimer",
     ]
 
 
@@ -132,68 +130,6 @@ def test_can_delete_etablissements(live_server, page: Page, ensure_departements,
     etablissements = Etablissement.objects.all()
 
     assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
-
-
-def test_show_etablissement_detail(live_server, page: Page, ensure_departements):
-    departement, *_ = ensure_departements("Paris")
-    evenement: EvenementSimple = EvenementSimpleFactory()
-
-    etablissement: Etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement)
-
-    creation_page = EvenementSimpleFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.fill_required_fields(evenement)
-    creation_page.add_etablissement(etablissement)
-
-    assert creation_page.get_detail_modal_content(0) == [
-        etablissement.raison_sociale,
-        "Type d'établissement",
-        etablissement.type_etablissement,
-        "SIRET",
-        "Enseigne usuelle",
-        etablissement.raison_sociale,
-        "Adresse",
-        etablissement.adresse_lieu_dit,
-        "Commune",
-        etablissement.commune,
-        "Departement",
-        str(etablissement.departement),
-        "Numéro Resytal",
-        *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
-        "Date d'inspection",
-        *([etablissement.date_inspection] if etablissement.date_inspection else []),
-        "Évaluation globale",
-        *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
-        "Commentaire",
-        *([etablissement.commentaire] if etablissement.commentaire else []),
-    ]
-
-    # Check that the detail modal gets updated
-    raison_sociale = "Ascaponts"
-    creation_page.edit_etablissement(0, raison_sociale=raison_sociale)
-
-    assert creation_page.get_detail_modal_content(0) == [
-        raison_sociale,
-        "Type d'établissement",
-        etablissement.type_etablissement,
-        "SIRET",
-        "Enseigne usuelle",
-        raison_sociale,
-        "Adresse",
-        etablissement.adresse_lieu_dit,
-        "Commune",
-        etablissement.commune,
-        "Departement",
-        str(etablissement.departement),
-        "Numéro Resytal",
-        *([etablissement.numero_resytal] if etablissement.numero_resytal else []),
-        "Date d'inspection",
-        *([etablissement.date_inspection] if etablissement.date_inspection else []),
-        "Évaluation globale",
-        *([etablissement.get_evaluation_display()] if etablissement.evaluation else []),
-        "Commentaire",
-        *([etablissement.commentaire] if etablissement.commentaire else []),
-    ]
 
 
 def test_cancel_add_etablissement(live_server, page: Page, ensure_departements):

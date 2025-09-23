@@ -35,7 +35,6 @@ import {BaseFormInModal} from "BaseFormInModal"
  * @property {HTMLDialogElement} dialogTarget
  * @property {HTMLElement[]} cardContainerTargets
  * @property {HTMLDialogElement} deleteModalTarget
- * @property {HTMLElement[]} detailModalContainerTargets
  * @property {HTMLDialogElement} detailModalTarget
  * @property {HTMLInputElement} hasInspectionTarget
  * @property {HTMLElement} inspectionFieldsTarget
@@ -53,7 +52,6 @@ class EtablissementFormController extends BaseFormInModal {
         "typeEtablissementInput",
         "codeInseeInput",
         "siretInput",
-        "detailModalContainer",
         "detailModal",
         "hasInspection",
         "inspectionFields",
@@ -122,10 +120,6 @@ class EtablissementFormController extends BaseFormInModal {
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onDetailDisplay() {
-        dsfr(this.detailModalTarget).modal.disclose()
-    }
-
     onInspectionToggle({target: {checked}}) {
         if (checked) {
             this.inspectionFieldsTarget.classList.remove("fr-hidden")
@@ -138,8 +132,6 @@ class EtablissementFormController extends BaseFormInModal {
     initCard(etablissement) {
         this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
-        this.detailModalContainerTargets.forEach(it => it.remove())
-        this.element.insertAdjacentHTML("beforeend", this.renderCardDetailModal(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderCard(etablissement))
         requestAnimationFrame(() => dsfr(this.dialogTarget).modal.conceal())
@@ -159,31 +151,26 @@ class EtablissementFormController extends BaseFormInModal {
                     </h3>
                     <div class="fr-card__desc">
                         <address class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v adresse">
-                            ${this.joinText(" | ", etablissement.departement, etablissement.commune)}
+                            ${this.joinText(" | ", etablissement.commune, etablissement.departement)}
                         </address>
                         ${this.optionalText(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
-                        ${this.optionalText(etablissement.type_etablissement, `<p class="fr-badge fr-badge--info">${etablissement.type_etablissement}</p>`)}
+                        ${this.optionalText(etablissement.type_etablissement, `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-badge--sm fr-my-2v">${etablissement.type_etablissement}</p>`)}
                     </div>
                 </div>
                 <div class="fr-card__footer">
-                    <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-btns-group--right">
+                    <div class="fr-btns-group fr-btns-group--inline-lg fr-btns-group--icon-left fr-btns-group--sm fr-btns-group--right">
                         <button
-                            class="fr-btn fr-icon-search-line fr-mb-0 detail-display"
+                            class="fr-btn fr-btn--secondary fr-icon-edit-line modify-button"
                             type="button"
-                            data-action="${this.identifier}#onDetailDisplay:prevent:default"
-                        >
-                            Voir les informations de l'établissement ${etablissement.raison_sociale}
-                        </button>
-                        <button
-                            class="fr-btn fr-btn--secondary fr-icon-edit-line fr-mb-0 modify-button"
-                            type="button"
+                            title="Modifier l'établissement ${etablissement.raison_sociale}"
                             data-action="${this.identifier}#onModify:prevent:default"
-                        >Modifier l'établissement ${etablissement.raison_sociale}</button>
+                        >Modifier</button>
                         <button
-                            class="fr-btn fr-btn--secondary fr-icon-delete-bin-line fr-mb-0 delete-button"
+                            class="fr-btn fr-btn--secondary fr-icon-delete-bin-line delete-button"
                             type="button"
+                            title="Supprimer l'établissement ${etablissement.raison_sociale}"
                             data-action="${this.identifier}#onDelete:prevent:default"
-                        >Supprimer l'établissement ${etablissement.raison_sociale}</button>
+                        >Supprimer</button>
                     </div>
                 </div>
             </div>
@@ -196,95 +183,6 @@ class EtablissementFormController extends BaseFormInModal {
 
     getDeleteConfirmationTitle(etablissement){
         return "Suppression d'un établissement"
-    }
-
-
-    /**
-     * @param {EtablissementData} etablissement
-     * @return {string} HTML
-     */
-    renderCardDetailModal(etablissement) {
-        // languague=HTML
-        return `<div data-${this.identifier}-target="detailModalContainer">
-            <button class="fr-btn fr-hidden" data-fr-opened="false" aria-controls="${this.formPrefixValue}-detail-modal"></button>
-            <dialog
-                id="${this.formPrefixValue}-detail-modal"
-                class="fr-modal detail-modal"
-                aria-labelledby="detail-modal-title"
-                aria-modal="true"
-                data-${this.identifier}-target="detailModal"
-            >
-                <div class="fr-container fr-container--fluid">
-                    <div class="fr-grid-row">
-                        <div class="fr-col">
-                            <div class="fr-modal__body">
-                                <div class="fr-modal__header">
-                                <button
-                                    class="fr-btn--close fr-btn"
-                                    title="Fermer" aria-controls="${this.formPrefixValue}-detail-modal"
-                                    type="button"
-                                >Fermer</button>
-                                </div>
-                                <div class="fr-modal__content">
-                                    <h3 id="detail-modal-title" class="fr-modal__title">
-                                        <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
-                                        ${etablissement.raison_sociale}
-                                    </h3>
-                                    <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--border">
-                                        <div class="fr-col fr-col-md-6">
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Type d'établissement</p>
-                                                <p class="fr-col fr-col-md-6">
-                                                    ${etablissement.type_etablissement ? `<span class="fr-badge fr-badge--info">${etablissement.type_etablissement}</span>` : ""}
-                                                </p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">SIRET</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.siret}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Enseigne usuelle</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.raison_sociale}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Adresse</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.adresse_lieu_dit}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Commune</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.commune}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Departement</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.departement}</p>
-                                            </div>
-                                        </div>
-                                        <div class="fr-col fr-col-md-6">
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Numéro Resytal</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.numero_resytal}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Date d'inspection</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.date_inspection}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Évaluation globale</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.evaluation}</p>
-                                            </div>
-                                            <div class="fr-grid-row">
-                                                <p class="fr-col fr-col-md-6 fr-text--bold">Commentaire</p>
-                                                <p class="fr-col fr-col-md-6">${etablissement.commentaire}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </dialog>
-        </div>`
     }
 }
 
