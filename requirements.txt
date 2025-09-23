@@ -65,6 +65,7 @@ django==5.2.6
     #   django-dsfr
     #   django-filter
     #   django-post-office
+    #   django-querysetsequence
     #   django-reversion
     #   django-storages
     #   django-template-partials
@@ -86,6 +87,8 @@ django-environ==0.12.0
 django-filter==25.1
     # via -r requirements.in
 django-post-office==3.10.1
+    # via -r requirements.in
+django-querysetsequence==0.18
     # via -r requirements.in
 django-reversion==5.1.0
     # via -r requirements.in
