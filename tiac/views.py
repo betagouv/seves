@@ -30,7 +30,7 @@ from .constants import DangersSyndromiques
 from .display import DisplayItem
 from .filters import TiacFilter
 from .forms import EvenementSimpleTransferForm
-from .formsets import EtablissementFormSet, RepasFormSet, AlimentFormSet
+from .formsets import EtablissementFormSet, InvestigationTiacMultiForm
 
 
 class EvenementSimpleManipulationMixin(
@@ -217,27 +217,16 @@ class InvestigationTiacCreationView(
     WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
 ):
     template_name = "tiac/investigation.html"
-    form_class = forms.InvestigationTiacForm
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.request.POST:
-            self.repas_formset = RepasFormSet(data=self.request.POST)
-            self.aliment_formset = AlimentFormSet(data=self.request.POST)
-        else:
-            self.repas_formset = RepasFormSet()
-            self.aliment_formset = AlimentFormSet()
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_media(self, **context_data) -> Media:
-        media = super().get_media(**context_data)
-        for key, value in context_data.items():
-            if key.endswith("formset"):
-                media += value.media
-        return media
+    form_class = InvestigationTiacMultiForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
+        kwargs["form_kwargs"] = {
+            "investigation_form": {
+                "instance": kwargs.pop("instance", None),
+                "user": self.request.user,
+            }
+        }
         return kwargs
 
     def get_success_url(self):
@@ -247,10 +236,6 @@ class InvestigationTiacCreationView(
         context = super().get_context_data(**kwargs)
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
-        context["repas_formset"] = RepasFormSet()
-        context["aliment_formset"] = AlimentFormSet()
-        context["empty_repas_form"] = context["repas_formset"].empty_form
-        context["empty_aliment_form"] = context["aliment_formset"].empty_form
         return context
 
     def formset_invalid(self, formset, msg_1, msg_2):
@@ -264,28 +249,17 @@ class InvestigationTiacCreationView(
 
         return self.render_to_response(self.get_context_data())
 
-    def post(self, request, *args, **kwargs):
-        if not self.repas_formset.is_valid():
-            return self.formset_invalid(
-                self.repas_formset, "Erreurs dans le(s) formulaire(s) Repas", "Erreur dans le formulaire repas"
-            )
+    def form_invalid(self, form):
+        for name, msg in (("repas_formset", "Repas"), ("aliment_formset", "Aliments")):
+            if not form[name].is_valid():
+                return self.formset_invalid(
+                    form[name], f"Erreurs dans le(s) formulaire(s) {msg}", f"Erreur dans le formulaire {msg.casefold()}"
+                )
 
-        if not self.aliment_formset.is_valid():
-            return self.formset_invalid(
-                self.aliment_formset, "Erreurs dans le(s) formulaire(s) Aliments", "Erreur dans le formulaire aliment"
-            )
-
-        form = self.get_form()
-        if not form.is_valid():
-            return self.form_invalid(form)
-        return self.form_valid(form)
+        return super().form_invalid(form)
 
     def form_valid(self, form):
-        self.object = form.save()
-        self.repas_formset.instance = self.object
-        self.repas_formset.save()
-        self.aliment_formset.instance = self.object
-        self.aliment_formset.save()
+        self.object = form.save()["investigation_form"]
         self.add_user_contacts(self.object)
 
         if self.object.is_published:

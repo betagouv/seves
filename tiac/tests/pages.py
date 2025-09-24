@@ -269,33 +269,33 @@ class InvestigationTiacFormPage(WithTreeSelect):
         self.page = page
         self.base_url = base_url
         for field in self.fields:
-            setattr(self, field, page.locator(f"#id_{field}"))
+            setattr(self, field, page.locator(f"#id_multiform-investigation_form-{field}"))
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:investigation-tiac-creation')}")
 
     def set_modalites_declaration(self, value):
-        self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
-            force=True
-        )
+        self.page.locator("#radio-id_multiform-investigation_form-modalites_declaration").locator(
+            f"input[type='radio'][value='{value}']"
+        ).check(force=True)
 
     def set_will_trigger_inquiry(self, value):
-        self.page.locator("#radio-id_will_trigger_inquiry").locator(
+        self.page.locator("#radio-id_multiform-investigation_form-will_trigger_inquiry").locator(
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
     def set_notify_ars(self, value):
-        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
-            force=True
-        )
+        self.page.locator("#radio-id_multiform-investigation_form-notify_ars").locator(
+            f"input[type='radio'][value='{str(value).lower()}']"
+        ).check(force=True)
 
     def set_type_evenement(self, value):
-        self.page.locator("#radio-id_type_evenement").locator(
+        self.page.locator("#radio-id_multiform-investigation_form-type_evenement").locator(
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
     def set_analyses(self, value):
-        self.page.locator("#radio-id_analyses_sur_les_malades").locator(
+        self.page.locator("#radio-id_multiform-investigation_form-analyses_sur_les_malades").locator(
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
