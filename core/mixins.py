@@ -1,7 +1,7 @@
 import datetime
 import logging
 from collections import defaultdict
-from typing import Mapping
+from typing import Mapping, Iterable
 
 from celery.exceptions import OperationalError
 from django.conf import settings
@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
 from django.db.models import Q
-from django.forms.utils import RenderableMixin
+from django.forms.utils import RenderableMixin, ErrorDict
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -479,13 +479,24 @@ class EmailNotificationMixin:
 
 class WithFormErrorsAsMessagesMixin(FormView):
     def form_invalid(self, form):
-        for _, errors in form.errors.as_data().items():
-            for error in errors:
-                if error.code == "blocking_error":
-                    messages.error(self.request, error.message, extra_tags="blocking")
-                else:
-                    messages.error(self.request, error.message)
+        for error in self._iter_errors(form):
+            if error.code == "blocking_error":
+                messages.error(self.request, error.message, extra_tags="blocking")
+            else:
+                messages.error(self.request, error.message)
         return super().form_invalid(form)
+
+    def _iter_errors(self, form):
+        from core.form_mixins import BaseMultiForm
+
+        subforms = form if isinstance(form, BaseMultiForm) else [form]
+        for subform in subforms:
+            errors = subform.errors.as_data().values() if isinstance(subform.errors, ErrorDict) else subform.errors
+            for error in errors:
+                if isinstance(error, Iterable):
+                    yield from error
+                else:
+                    yield error
 
 
 class WithNumeroMixin(models.Model):

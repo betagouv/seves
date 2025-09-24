@@ -14,20 +14,20 @@
             <div class="evenement-produit-form-header fr-grid-row">
                 <h1 class="fr-col-6">Création d'une investigation de TIAC</h1>
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
-                    {% if form.instance and form.instance.is_draft %}
+                    {% if form.investigation_form.instance and form.investigation_form.instance.is_draft %}
                         <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
                             Enregistrer le brouillon
                         </button>
                     {% endif %}
                     <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-                        {% if form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
+                        {% if form.investigation_form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
                     </button>
                 </div>
             </div>
 
-            {% if form.non_field_errors %}
+            {% if form.investigation_form.non_field_errors %}
                 <section class="fr-my-4v fr-input-group fr-input-group--error">
-                    {{ form.non_field_errors }}
+                    {{ form.investigation_form.non_field_errors }}
                 </section>
             {% endif %}
 
@@ -38,22 +38,22 @@
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="fr-input-group">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
-                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.investigation_form.instance.date_creation %}{{ form.investigation_form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
-                        {% dsfr_form_field form.date_reception %}
-                        {% dsfr_form_field form.evenement_origin %}
-                        {% dsfr_inline_radio_field form.modalites_declaration %}
+                        {% dsfr_form_field form.investigation_form.date_reception %}
+                        {% dsfr_form_field form.investigation_form.evenement_origin %}
+                        {% dsfr_inline_radio_field form.investigation_form.modalites_declaration %}
                     </div>
 
                     <div class="fr-col-12 fr-col-lg-4">
-                        {% dsfr_form_field form.contenu %}
+                        {% dsfr_form_field form.investigation_form.contenu %}
                     </div>
 
                     <div class="fr-col-12 fr-col-lg-4">
-                        {% dsfr_inline_radio_field form.notify_ars %}
-                        {% dsfr_inline_radio_field form.will_trigger_inquiry %}
-                        {% dsfr_form_field form.numero_sivss %}
-                        {% dsfr_form_field form.type_evenement %}
+                        {% dsfr_inline_radio_field form.investigation_form.notify_ars %}
+                        {% dsfr_inline_radio_field form.investigation_form.will_trigger_inquiry %}
+                        {% dsfr_form_field form.investigation_form.numero_sivss %}
+                        {% dsfr_form_field form.investigation_form.type_evenement %}
                     </div>
                 </div>
             </fieldset>
@@ -63,19 +63,19 @@
                 <legend class="fr-fieldset__legend fr-h3">Cas</legend>
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-2">
-                        {% dsfr_form_field form.nb_sick_persons %}
+                        {% dsfr_form_field form.investigation_form.nb_sick_persons %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-2">
-                        {% dsfr_form_field form.nb_sick_persons_to_hospital %}
+                        {% dsfr_form_field form.investigation_form.nb_sick_persons_to_hospital %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-2">
-                        {% dsfr_form_field form.nb_dead_persons %}
+                        {% dsfr_form_field form.investigation_form.nb_dead_persons %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-3">
-                        {% dsfr_form_field form.datetime_first_symptoms %}
+                        {% dsfr_form_field form.investigation_form.datetime_first_symptoms %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-3">
-                        {% dsfr_form_field form.datetime_last_symptoms %}
+                        {% dsfr_form_field form.investigation_form.datetime_last_symptoms %}
                     </div>
                 </div>
 
@@ -107,15 +107,15 @@
 
                 {% include "tiac/_etilogie_modal.html" %}
                 {% include "tiac/_etilogie_modal_confirmation.html" %}
-                {% dsfr_form_field form.danger_syndromiques_suspectes|set_data:"etiologie-form-target:hiddenField" %}
+                {% dsfr_form_field form.investigation_form.danger_syndromiques_suspectes|set_data:"etiologie-form-target:hiddenField" %}
                 {% for danger in dangers %}
                     {% include "tiac/_etilogie_template.html" with id=danger.html_id titre=danger.name_display help_text=danger.help_text description=danger.description %}
                 {% endfor %}
 
-                {% dsfr_form_field form.analyses_sur_les_malades|dsfr_inline %}
+                {% dsfr_form_field form.investigation_form.analyses_sur_les_malades|dsfr_inline %}
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-6">
-                        {% dsfr_form_field form.precisions %}
+                        {% dsfr_form_field form.investigation_form.precisions %}
                     </div>
                 </div>
 
@@ -126,8 +126,8 @@
                 <div>
                     {% dsfr_notice title="Pour les TIAC confirmées ou fortement suspectées, seul l'enregistrement des éléments conclusifs est requis.<br/> Vous pouvez ajouter d'autres éléments si cela vous aide dans l'investigation (ces données ne seront pas valorisées dans les bilans nationaux)" %}
                 </div>
-                {{ repas_formset }}
-                {{ aliment_formset }}
+                {{ form.repas_formset }}
+                {{ form.aliment_formset }}
             </fieldset>
 
         </main>

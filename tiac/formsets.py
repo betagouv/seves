@@ -2,11 +2,11 @@ import json
 
 from django.forms import inlineformset_factory, BaseInlineFormSet, Media
 
-from core.form_mixins import js_module
+from core.form_mixins import js_module, BaseModelMultiForm
 from core.mixins import WithCommonContextVars
 from ssa.models import CategorieProduit
 from .constants import TypeAliment
-from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm
+from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm, InvestigationTiacForm
 from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
 from django import forms
 
@@ -70,3 +70,24 @@ AlimentFormSet = inlineformset_factory(
     extra=0,
     can_delete=True,
 )
+
+
+class InvestigationTiacMultiForm(BaseModelMultiForm):
+    investigation_form = InvestigationTiacForm
+    repas_formset = RepasFormSet
+    aliment_formset = AlimentFormSet
+
+    def get_form_kwargs(self, name, form_class):
+        investigation_form_kwargs = super().get_form_kwargs("investigation_form", form_class)
+        if name == "investigation_form":
+            return investigation_form_kwargs
+        else:
+            return {**super().get_form_kwargs(name, form_class), "instance": investigation_form_kwargs["instance"]}
+
+    def save_repas_formset(self, form, commit):
+        form.instance = self["investigation_form"].instance
+        return form.save(commit=commit)
+
+    def save_aliment_formset(self, form, commit):
+        form.instance = self["investigation_form"].instance
+        return form.save(commit=commit)

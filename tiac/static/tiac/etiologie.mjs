@@ -20,7 +20,7 @@ class EtiologieFormController  extends Controller {
 
     onShowFirstModal() {
         dsfr(this.etiologieModalTarget).modal.disclose();
-        document.querySelectorAll('input[name="danger_syndromiques_suspectes_display"]').forEach(el => {
+        document.querySelectorAll('input[name*="danger_syndromiques_suspectes_display"]').forEach(el => {
             el.disabled = this.selectedValuesValue.includes(el.value)
         })
     }
@@ -66,7 +66,7 @@ class EtiologieFormController  extends Controller {
     }
 
     onChooseOption(){
-        const checked = document.querySelector('input[name="danger_syndromiques_suspectes_display"]:checked');
+        const checked = document.querySelector('input[name*="danger_syndromiques_suspectes_display"]:checked');
         if (!checked){return;}
         this.currentOption = checked.value
         this.etiologieModalConfirmationContentTarget.innerHTML = document.querySelector("#" + this.currentOption.replaceAll(" ", "-")).innerHTML
