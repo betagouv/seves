@@ -242,7 +242,7 @@ def test_add_contact_agent_without_value_shows_front_error(live_server, page: Pa
     assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
 
 
-def test_cant_see_add_contact_form_if_evenement_is_cloturer(live_server, page, goto_contacts):
+def test_cant_see_add_contact_form_if_evenement_is_cloture(live_server, page, goto_contacts):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -252,7 +252,7 @@ def test_cant_see_add_contact_form_if_evenement_is_cloturer(live_server, page, g
     expect(page.locator("#add-contact-structure-form")).not_to_be_visible()
 
 
-def test_cant_forge_add_agent_if_evenement_is_cloturer(client):
+def test_cant_forge_add_agent_if_evenement_is_cloture(client):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     payload = {
@@ -267,7 +267,7 @@ def test_cant_forge_add_agent_if_evenement_is_cloturer(client):
     assert evenement.contacts.count() == 0
 
 
-def test_cant_forge_add_structure_if_evenement_is_cloturer(client):
+def test_cant_forge_add_structure_if_evenement_is_cloture(client):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     payload = {

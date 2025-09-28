@@ -419,7 +419,7 @@ class CloturerView(View):
         object = content_type.model_class().objects.get(pk=pk)
         redirect_url = object.get_absolute_url()
 
-        can_cloturer, error_message = object.can_be_cloturer(request.user)
+        can_cloturer, error_message = object.can_be_cloture(request.user)
         if not can_cloturer:
             messages.error(request, error_message)
             return redirect(redirect_url)
