@@ -369,19 +369,19 @@ class WithEtatMixin(models.Model):
     def can_publish(self, user):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
-    def can_be_cloturer_by(self, user):
+    def can_be_cloture_by(self, user):
         return user.agent.structure.is_ac
 
     def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
         return len(contacts_not_in_fin_suivi) == 1 and contacts_not_in_fin_suivi[0].structure == user.agent.structure
 
-    def can_be_cloturer(self, user) -> tuple[bool, str]:
+    def can_be_cloture(self, user) -> tuple[bool, str]:
         if self.is_draft:
             return False, "L'événement est en brouillon et ne peut pas être clôturé."
         if self.is_cloture:
             return False, f"L'événement n°{self.numero} est déjà clôturé."
-        if not self.can_be_cloturer_by(user):
+        if not self.can_be_cloture_by(user):
             return False, "Vous n'avez pas les droits pour clôturer cet événement."
         return True, ""
 
@@ -568,7 +568,7 @@ class WithClotureContextMixin:
         context["contacts_not_in_fin_suivi"] = contacts_structures_not_in_fin_suivi = (
             object.get_contacts_structures_not_in_fin_suivi()
         )
-        context["is_evenement_can_be_cloturer"], _ = object.can_be_cloturer(user)
+        context["is_evenement_can_be_cloture"], _ = object.can_be_cloture(user)
         context["is_the_only_remaining_structure"] = object.is_the_only_remaining_structure(
             user, contacts_structures_not_in_fin_suivi
         )
