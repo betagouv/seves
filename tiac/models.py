@@ -17,9 +17,19 @@ from core.mixins import (
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
-from tiac.constants import ModaliteDeclarationEvenement, EvenementOrigin, EvenementFollowUp, Motif, TypeRepas
+from ssa.models import CategorieProduit
+from tiac.constants import (
+    ModaliteDeclarationEvenement,
+    EvenementOrigin,
+    EvenementFollowUp,
+    Motif,
+    TypeRepas,
+    TypeCollectivite,
+    TypeAliment,
+    MotifAliment,
+)
 from .constants import DangersSyndromiques
-from .managers import EvenementSimpleManager
+from .managers import EvenementSimpleManager, InvestigationTiacManager
 from .model_mixins import WithSharedNumeroMixin
 
 
@@ -105,6 +115,9 @@ class EvenementSimple(
 
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
+
+    def can_be_modified(self, user):
+        return self.can_user_access(user) and not self.is_cloture
 
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
@@ -269,6 +282,8 @@ class InvestigationTiac(
     )
     precisions = models.CharField(max_length=255, verbose_name="Précisions", blank=True)
 
+    objects = InvestigationTiacManager()
+
     def save(self, *args, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():
@@ -318,6 +333,27 @@ class InvestigationTiac(
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_success_message(self):
+        return f"L'investigation TIAC {self.numero} a bien été supprimée"
+
+    def get_soft_delete_permission_error_message(self):
+        return "Vous n'avez pas les droits pour supprimer cette investigation"
+
+    def get_soft_delete_attribute_error_message(self):
+        return f"L'investigation {self.numero} ne peut pas être supprimé"
+
+    def get_soft_delete_confirm_title(self):
+        return "Supprimer cette investigation"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation ?"
+
+    def get_cloture_confirm_message(self):
+        return f"L'investigation n°{self.numero} a bien été clôturée."
+
     def get_email_subject(self):
         return f"{self.numero}"
 
@@ -332,6 +368,21 @@ class InvestigationTiac(
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"
+
+    def __str__(self):
+        return self.numero
+
+    @property
+    def numero(self):
+        return f"T-{self.numero_annee}.{self.numero_evenement}"
+
+    @property
+    def type_evenement_display(self):
+        if self.type_evenement == TypeEvenement.INVESTIGATION_DD:
+            return "Invest. locale"
+        if self.type_evenement == TypeEvenement.INVESTIGATION_COORDONNEE:
+            return "Invest. coord. / MUS informée"
+        return "-"
 
 
 class RepasSuspect(models.Model):
@@ -354,3 +405,46 @@ class RepasSuspect(models.Model):
         null=True,
     )
     type_repas = models.CharField(max_length=255, choices=TypeRepas.choices, blank=True)
+    type_collectivite = models.CharField(max_length=255, choices=TypeCollectivite.choices, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(type_repas=TypeRepas.RESTAURATION_COLLECTIVE) | Q(type_collectivite="")),
+                name="collectivite_only_if_repas_restauration_collective",
+            )
+        ]
+
+
+class AlimentSuspect(models.Model):
+    investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
+    denomination = models.CharField(max_length=255, verbose_name="Dénomination de l'aliment")
+    type_aliment = models.CharField(max_length=255, choices=TypeAliment.choices, blank=True)
+
+    description_composition = models.TextField(verbose_name="Description de la composition de l'aliment", blank=True)
+
+    categorie_produit = models.CharField(
+        max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
+    )
+    description_produit = models.TextField(verbose_name="Description produit et emballage", blank=True)
+
+    motif_suspicion = ArrayField(
+        models.CharField(max_length=255, choices=MotifAliment.choices),
+        verbose_name="Motif de suspicion de l'aliment",
+        default=list,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
+                | ~Q(type_aliment=TypeAliment.SIMPLE),
+                name="produit_simple_constraint",
+            ),
+            models.CheckConstraint(
+                check=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
+                | ~Q(type_aliment=TypeAliment.CUISINE),
+                name="cuisiné_pas_de_categorie_emballage",
+            ),
+        ]

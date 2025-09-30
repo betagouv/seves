@@ -12,10 +12,19 @@ from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
 from django.conf import settings
-from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp, TypeRepas, Motif
+from ssa.models import EvenementProduit, CategorieProduit
+from tiac.constants import (
+    EvenementOrigin,
+    EvenementFollowUp,
+    TypeRepas,
+    Motif,
+    MotifAliment,
+    TypeAliment,
+    TypeCollectivite,
+)
 from tiac.constants import ModaliteDeclarationEvenement
 from tiac.constants import DangersSyndromiques
+from tiac.fields import SelectWithAttributeField
 from tiac.models import (
     EvenementSimple,
     Etablissement,
@@ -24,14 +33,14 @@ from tiac.models import (
     Analyses,
     validate_resytal,
     RepasSuspect,
+    AlimentSuspect,
 )
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     date_reception = forms.DateTimeField(
-        required=False,
         label="Date de réception à la DD(ETS)PP",
-        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -61,7 +70,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "follow_up",
         )
         widgets = {
-            "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+            "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
 
     @property
@@ -178,6 +187,8 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
                 "placeholder": "25-000000",
             }
         )
+        if self.instance and self.instance.siret:
+            self["siret"].field.widget.choices = ((self.instance.siret, f"{self.instance.siret} (Forcer la valeur)"),)
 
     class Meta:
         model = Etablissement
@@ -323,7 +334,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         return instance
 
 
-class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/repas_suspect.html"
 
     denomination = forms.CharField(
@@ -353,7 +364,10 @@ class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         label="Département",
         empty_label=settings.SELECT_EMPTY_CHOICE,
     )
-    type_repas = SEVESChoiceField(required=False, choices=TypeRepas.choices, label="Type de repas")
+    type_repas = SEVESChoiceField(
+        required=False, choices=TypeRepas.choices, label="Type de repas", widget=SelectWithAttributeField
+    )
+    type_collectivite = SEVESChoiceField(required=False, choices=TypeCollectivite.choices, label="Type de collectivité")
 
     class Meta:
         model = RepasSuspect
@@ -365,4 +379,45 @@ class RepasSuspectForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "nombre_participant",
             "departement",
             "type_repas",
+            "type_collectivite",
+        ]
+
+
+class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "tiac/forms/aliment_suspect.html"
+
+    denomination = forms.CharField(
+        label="Dénomination de l'aliment", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    type_aliment = forms.ChoiceField(
+        label="Type d'aliment prélevé", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
+    )
+    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
+    description_composition = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
+        label="Description de la composition de l'aliment",
+        required=False,
+    )
+    description_produit = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
+        label="Description produit et emballage",
+        required=False,
+        help_text="Marque, n° de lot, DLC ...",
+    )
+    motif_suspicion = forms.MultipleChoiceField(
+        choices=MotifAliment.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Motif de suspicion de l'aliment",
+    )
+
+    class Meta:
+        model = AlimentSuspect
+        fields = [
+            "denomination",
+            "type_aliment",
+            "categorie_produit",
+            "description_composition",
+            "description_produit",
+            "motif_suspicion",
         ]

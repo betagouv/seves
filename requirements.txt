@@ -65,6 +65,7 @@ django==5.2.6
     #   django-dsfr
     #   django-filter
     #   django-post-office
+    #   django-querysetsequence
     #   django-reversion
     #   django-storages
     #   django-template-partials
@@ -87,11 +88,13 @@ django-filter==25.1
     # via -r requirements.in
 django-post-office==3.10.1
     # via -r requirements.in
+django-querysetsequence==0.18
+    # via -r requirements.in
 django-reversion==6.0.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-django-template-partials==25.1
+django-template-partials==25.2
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
@@ -200,11 +203,11 @@ requests==2.32.4
     #   requests-mock
 requests-mock==1.12.1
     # via -r requirements.in
-ruff==0.13.0
+ruff==0.13.2
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.35.2
+sentry-sdk[django]==2.38.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -245,7 +248,7 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-whitenoise==6.10.0
+whitenoise==6.11.0
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:

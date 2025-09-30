@@ -1,4 +1,4 @@
-{% if can_be_deleted or is_evenement_can_be_cloturer or can_be_updated %}
+{% if can_be_deleted or is_evenement_can_be_cloture or can_be_updated %}
     <nav role="navigation" class="fr-translate fr-nav">
         <div class="fr-nav__item">
             <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
@@ -11,7 +11,7 @@
                     {% if can_be_deleted %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
                     {% endif %}
-                    {%  if is_evenement_can_be_cloturer %}
+                    {%  if is_evenement_can_be_cloture %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                     {% endif %}
                 </ul>

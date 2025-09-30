@@ -6,7 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404
 from django.http import HttpResponseRedirect
+from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic.edit import ProcessFormView
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -25,28 +27,58 @@ from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
 from .constants import DangersSyndromiques
-from .filters import EvenementSimpleFilter
+from .display import DisplayItem
+from .filters import TiacFilter
 from .forms import EvenementSimpleTransferForm
-from .formsets import EtablissementFormSet, RepasFormSet
+from .formsets import EtablissementFormSet, RepasFormSet, AlimentFormSet
 
 
-class EvenementSimpleCreationView(
-    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+class EvenementSimpleManipulationMixin(
+    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, MediaDefiningMixin, ProcessFormView
 ):
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
+    etablissement_formset_class = EtablissementFormSet
+    success_message = gettext_lazy("L’évènement a été créé avec succès.")
 
-    def dispatch(self, request, *args, **kwargs):
-        if self.request.POST:
-            self.etablissement_formset = EtablissementFormSet(data=self.request.POST)
-        else:
-            self.etablissement_formset = EtablissementFormSet()
-        return super().dispatch(request, *args, **kwargs)
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["etablissement_formset"].media
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
+
+    def get_etablissement_formset_kwargs(self):
+        kwargs = {}
+        if self.request.method in ("POST", "PUT"):
+            kwargs.update(
+                {
+                    "data": self.request.POST,
+                    "files": self.request.FILES,
+                }
+            )
+        return kwargs
+
+    def get_etablissement_formset(self):
+        if not hasattr(self, "etablissement_formset"):
+            self.etablissement_formset = self.etablissement_formset_class(**self.get_etablissement_formset_kwargs())
+        return self.etablissement_formset
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.get_etablissement_formset().instance = self.object
+        self.get_etablissement_formset().save()
+
+        self.add_user_contacts(self.object)
+        if self.object.is_published:
+            messages.success(self.request, "L’évènement a été publié avec succès.")
+        else:
+            messages.success(self.request, self.success_message)
+        return super().form_valid(form)
 
     def formset_invalid(self):
         self.object = None
@@ -54,7 +86,7 @@ class EvenementSimpleCreationView(
             self.request,
             "Erreurs dans le(s) formulaire(s) Etablissement",
         )
-        for i, form in enumerate(self.etablissement_formset):
+        for i, form in enumerate(self.get_etablissement_formset()):
             if not form.is_valid():
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -66,37 +98,30 @@ class EvenementSimpleCreationView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["etablissement_formset"] = EtablissementFormSet()
-        context["empty_form"] = context["etablissement_formset"].empty_form
+        context["etablissement_formset"] = self.get_etablissement_formset()
         return context
 
-    def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["etablissement_formset"].media
-
     def post(self, request, *args, **kwargs):
-        if not self.etablissement_formset.is_valid():
+        if not self.get_etablissement_formset().is_valid():
             return self.formset_invalid()
+        return super().post(request, *args, **kwargs)
 
-        form = self.get_form()
-        if not form.is_valid():
-            return self.form_invalid(form)
-        return self.form_valid(form)
 
-    def form_valid(self, form):
-        self.object = form.save()
-        self.etablissement_formset.instance = self.object
-        self.etablissement_formset.save()
-
-        self.add_user_contacts(self.object)
-        if self.object.is_published:
-            messages.success(self.request, "L’évènement a été publié avec succès.")
-        else:
-            messages.success(self.request, "L’évènement a été créé avec succès.")
-        return HttpResponseRedirect(self.object.get_absolute_url())
-
+class EvenementSimpleCreationView(EvenementSimpleManipulationMixin, CreateView):
     def form_invalid(self, form):
         self.object = None
         return super().form_invalid(form)
+
+
+class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulationMixin, UpdateView):
+    model = EvenementSimple
+    success_message = gettext_lazy("L’évènement a été mis à jour avec succès.")
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)
+
+    def get_etablissement_formset_kwargs(self):
+        return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}
 
 
 class EvenementSimpleDetailView(
@@ -142,31 +167,36 @@ class EvenementSimpleDetailView(
         context = super().get_context_data(**kwargs)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
+        context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["transfer_form"] = EvenementSimpleTransferForm()
         return context
 
 
-class EvenementListView(WithFilteredListMixin, ListView):
-    model = EvenementSimple
+class TiacListView(WithFilteredListMixin, ListView):
     paginate_by = 100
+    context_object_name = "objects"
+
+    def get_template_names(self):
+        return ["tiac/tiac_list.html"]
 
     def get_queryset(self):
-        queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementSimpleFilter(self.request.GET, queryset=queryset)
+        queryset = self.apply_ordering(self.get_raw_queryset)
+        self.filter = TiacFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        object_list = []
         for evenement in context["object_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
+            object_list.append(DisplayItem.from_object(evenement))
 
-        context["total_object_count"] = self.get_raw_queryset().count()
-
+        context["total_object_count"] = self.get_raw_queryset.count()
+        context["object_list"] = object_list
         return context
 
 
@@ -183,19 +213,27 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
+class InvestigationTiacCreationView(
+    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
 
     def dispatch(self, request, *args, **kwargs):
         if self.request.POST:
             self.repas_formset = RepasFormSet(data=self.request.POST)
+            self.aliment_formset = AlimentFormSet(data=self.request.POST)
         else:
             self.repas_formset = RepasFormSet()
+            self.aliment_formset = AlimentFormSet()
         return super().dispatch(request, *args, **kwargs)
 
     def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["repas_formset"].media
+        media = super().get_media(**context_data)
+        for key, value in context_data.items():
+            if key.endswith("formset"):
+                media += value.media
+        return media
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -210,26 +248,32 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
         context["repas_formset"] = RepasFormSet()
+        context["aliment_formset"] = AlimentFormSet()
         context["empty_repas_form"] = context["repas_formset"].empty_form
+        context["empty_aliment_form"] = context["aliment_formset"].empty_form
         return context
 
-    def formset_invalid(self):
+    def formset_invalid(self, formset, msg_1, msg_2):
         self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Repas",
-        )
-        for i, form in enumerate(self.repas_formset):
+        messages.error(self.request, msg_1)
+        for i, form in enumerate(formset):
             if not form.is_valid():
                 for field, errors in form.errors.items():
                     for error in errors:
-                        messages.error(self.request, f"Erreur dans le formulaire repas #{i + 1} : '{field}': {error}")
+                        messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
 
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
         if not self.repas_formset.is_valid():
-            return self.formset_invalid()
+            return self.formset_invalid(
+                self.repas_formset, "Erreurs dans le(s) formulaire(s) Repas", "Erreur dans le formulaire repas"
+            )
+
+        if not self.aliment_formset.is_valid():
+            return self.formset_invalid(
+                self.aliment_formset, "Erreurs dans le(s) formulaire(s) Aliments", "Erreur dans le formulaire aliment"
+            )
 
         form = self.get_form()
         if not form.is_valid():
@@ -240,6 +284,9 @@ class InvestigationTiacCreationView(WithFormErrorsAsMessagesMixin, MediaDefining
         self.object = form.save()
         self.repas_formset.instance = self.object
         self.repas_formset.save()
+        self.aliment_formset.instance = self.object
+        self.aliment_formset.save()
+        self.add_user_contacts(self.object)
 
         if self.object.is_published:
             messages.success(self.request, "L’évènement a été publié avec succès.")
@@ -286,6 +333,7 @@ class InvestigationTiacDetailView(
         context = super().get_context_data(**kwargs)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
 
     def get_publish_success_message(self):

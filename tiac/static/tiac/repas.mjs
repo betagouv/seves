@@ -7,10 +7,23 @@ class RepasFormController extends BaseFormInModal {
     static targets = [
         ...BaseFormInModal.targets,
         "denominationInput",
+        "typeCollectiviteInputContainer",
+        "typeCollectiviteInput",
     ]
 
     connect() {
         this.openDialog()
+    }
+
+    onTypeRepasChoice(event){
+        const selectedOption = event.target.options[event.target.selectedIndex]
+        if (selectedOption.getAttribute('data-needs-type-collectivite') === 'true') {
+            this.typeCollectiviteInputContainerTarget.classList.remove("fr-hidden")
+        } else {
+            this.typeCollectiviteInputContainerTarget.classList.add("fr-hidden")
+            this.typeCollectiviteInputTarget.value = ""
+        }
+
     }
 
     initCard(repas) {

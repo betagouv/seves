@@ -1,12 +1,20 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import DepartementFactory
-from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory
+from core.models import Contact
+from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques
-from ..models import InvestigationTiac, RepasSuspect
+from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
+from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect
 
 fields_to_exclude_repas = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "investigation_id",
+]
+
+fields_to_exclude_aliment = [
     "_prefetched_objects_cache",
     "_state",
     "id",
@@ -29,6 +37,23 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
     assert investigation.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    object = InvestigationTiac.objects.get()
+    assert object.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in object.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in object.contacts.all()
 
 
 def test_can_create_investigation_tiac_with_all_fields(
@@ -120,7 +145,7 @@ def test_can_create_investigation_tiac_with_repas(
     creation_page.fill_required_fields(input_data.investigation)
     creation_page.add_repas(input_data)
     expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
-    expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display(), exact=True)).to_be_visible()
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display())).to_be_visible()
     expect(
         creation_page.get_repas_card(0).get_by_text(f"{input_data.nombre_participant} participant(s)", exact=True)
     ).to_be_visible()
@@ -135,9 +160,7 @@ def test_can_create_investigation_tiac_with_repas(
     )
 
 
-def test_can_create_investigation_tiac_with_repas_and_edit(
-    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
-):
+def test_can_create_investigation_tiac_with_repas_and_edit(live_server, mocked_authentification_user, page: Page):
     departement = DepartementFactory()
     input_data: RepasSuspect = RepasSuspectFactory.build(departement=departement)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -155,7 +178,7 @@ def test_can_create_investigation_tiac_with_repas_and_edit(
 
 
 def test_can_create_investigation_tiac_with_mutliple_repas_and_delete(
-    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+    live_server, mocked_authentification_user, page: Page
 ):
     departement = DepartementFactory()
     input_data_1: RepasSuspect = RepasSuspectFactory.build(departement=departement, denomination="Foo")
@@ -180,3 +203,116 @@ def test_can_create_investigation_tiac_with_mutliple_repas_and_delete(
     assert investigation.repas.count() == 2
     assert investigation.repas.first().denomination == "Foo"
     assert investigation.repas.last().denomination == "Buzz"
+
+
+def test_can_create_investigation_tiac_with_repas_for_collectivite(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    departement = DepartementFactory()
+    input_data: RepasSuspect = RepasSuspectFactory.build(
+        departement=departement,
+        type_repas=TypeRepas.RESTAURATION_COLLECTIVE,
+        type_collectivite=TypeCollectivite.JEUNES_ENFANTS,
+    )
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+    creation_page.add_repas(input_data)
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.repas.count() == 1
+    assert_models_are_equal(
+        input_data, investigation.repas.get(), to_exclude=fields_to_exclude_repas, ignore_array_order=True
+    )
+
+
+def test_can_create_investigation_tiac_with_aliment_simple(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(simple=True)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+
+    creation_page.add_aliment_simple(input_data)
+    card = creation_page.get_aliment_card(0)
+    expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
+    for motif in input_data.motif_suspicion:
+        expect(card.get_by_text(MotifAliment(motif).label)).to_be_visible()
+    expect(card.get_by_text("Aliment simple/ingrédient", exact=True)).to_be_visible()
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.aliments.count() == 1
+    assert_models_are_equal(
+        input_data, investigation.aliments.get(), to_exclude=fields_to_exclude_aliment, ignore_array_order=True
+    )
+
+
+def test_can_create_investigation_tiac_with_aliment_cuisine(
+    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
+):
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+
+    creation_page.add_aliment_cuisine(input_data)
+    card = creation_page.get_aliment_card(0)
+    expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
+    for motif in input_data.motif_suspicion:
+        expect(card.get_by_text(MotifAliment(motif).label)).to_be_visible()
+    expect(card.get_by_text("Aliment cuisiné", exact=True)).to_be_visible()
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.aliments.count() == 1
+    assert_models_are_equal(
+        input_data, investigation.aliments.get(), to_exclude=fields_to_exclude_aliment, ignore_array_order=True
+    )
+
+
+def test_can_create_investigation_tiac_with_aliment_and_edit(live_server, mocked_authentification_user, page: Page):
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+    creation_page.add_aliment_cuisine(input_data)
+    assert creation_page.nb_aliments == 1
+    creation_page.edit_aliment(0, denomination="Ma nouvelle dénomination")
+    assert creation_page.nb_aliments == 1
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.createur == mocked_authentification_user.agent.structure
+    assert investigation.aliments.get().denomination == "Ma nouvelle dénomination"
+
+
+def test_can_create_investigation_tiac_with_mutliple_aliments_and_delete(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data_1: RepasSuspect = AlimentSuspectFactory.build(cuisine=True, denomination="Foo")
+    input_data_2: RepasSuspect = AlimentSuspectFactory.build(cuisine=True, denomination="Bar")
+    input_data_3: RepasSuspect = AlimentSuspectFactory.build(cuisine=True, denomination="Buzz")
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data_1.investigation)
+    creation_page.add_aliment_cuisine(input_data_1)
+    creation_page.add_aliment_cuisine(input_data_2)
+    creation_page.add_aliment_cuisine(input_data_3)
+
+    assert creation_page.nb_aliments == 3
+    creation_page.delete_aliment(1)
+    assert creation_page.nb_aliments == 2
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.aliments.count() == 2
+    assert investigation.aliments.first().denomination == "Foo"
+    assert investigation.aliments.last().denomination == "Buzz"

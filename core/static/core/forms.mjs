@@ -18,22 +18,26 @@ export function formIsValid(element) {
  *
  * @param {HTMLFormElement|HTMLFieldSetElement} formLike
  * @param {(string) => string} [nameTransform] Optionnaly transform the collected input's `name` attribute.
- *              Useful when the input is part of a Django formset; this allow you to remove the formset prefix.
+ *              Useful when the input is part of a Django formset; this allows you to remove the formset prefix.
  * @return {Object|undefined} Form element values or undefined if form or fieldset is invalid
  */
-export function collectFormValues(formLike, nameTransform) {
-    nameTransform = nameTransform || ((name) => name)
+export function collectFormValues(formLike, {nameTransform, skipValidation} = {
+    nameTransform: ((name) => name),
+    skipValidation: false
+}) {
     const result = {}
 
     for (const element of formLike.elements) {
-        // Clear any previously set custom validity before rechecking
-        element.setCustomValidity("")
-        if (!element.checkValidity()) {
-            if (element.dataset.errormessage) {
-                element.setCustomValidity(element.dataset.errormessage)
+        if (!skipValidation) {
+            // Clear any previously set custom validity before rechecking
+            element.setCustomValidity("")
+            if (!element.checkValidity()) {
+                if (element.dataset.errormessage) {
+                    element.setCustomValidity(element.dataset.errormessage)
+                }
+                element.reportValidity()
+                return undefined
             }
-            element.reportValidity()
-            return undefined
         }
 
 
@@ -45,16 +49,30 @@ export function collectFormValues(formLike, nameTransform) {
         if (element instanceof HTMLSelectElement && element.dataset.choice === undefined && inputValue !== "") {
             const option = element.options[element.selectedIndex]
             result[inputName] = option ? option.innerText.trim() : ""
-        } else {
+        }
+        else if (element.type === "checkbox") {
+            if (element.checked) {
+                if (!Array.isArray(result[inputName])) result[inputName] = []
+                result[inputName].push(document.querySelector(`label[for="${element.id}"]`).innerText.trim())
+            }
+        }
+        else if (element.type === "radio") {
+            if (element.checked) {
+                result[inputName] = document.querySelector(`label[for="${element.id}"]`).innerText.trim()
+            }
+        }
+        else {
             result[inputName] = element.value
         }
     }
     return result
 }
 
+/** @param {HTMLElement} element */
 export function removeRequired(element) {
-    element.querySelectorAll('[required]').forEach(field => {
+    element.querySelectorAll('[required], [pattern]').forEach(field => {
         field.required = false
+        field.removeAttribute("pattern")
     })
 }
 
