@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from enum import auto
 
 from django.db.models import TextChoices
 from django.utils.safestring import mark_safe
+
+from ssa.models import CategorieDanger
 
 
 class EvenementOrigin(TextChoices):
@@ -181,3 +184,28 @@ Envoi direct au LNR pour analyse.
             cls.TOXINE_DES_POISSONS,
             cls.AUTRE,
         ]
+
+
+class EtatPrelevement(TextChoices):
+    ENVIRONNEMENT_SURFACE = auto(), "Environnement/surface"
+    AUTRE_LOT = auto(), "Plat ou ingrédient autre lot"
+    MEME_LOT = auto(), "Plat ou ingrédient même lot"
+    PLAT_TEMOIN = auto(), "Plat témoin"
+    RESTE_REPAS = auto(), "Reste de repas"
+    RESTE_INGREDIENT = auto(), "Reste d'ingrédient"
+
+
+DANGERS_COURANTS = (
+    CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+    CategorieDanger.BACILLUS_CEREUS,
+    CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
+    CategorieDanger.CAMPYLOBACTER_COLI,
+    CategorieDanger.CAMPYLOBACTER_JEJUNI,
+    CategorieDanger.SALMONELLA_ENTERITIDIS,
+    CategorieDanger.SALMONELLA_TYPHIMURIUM,
+    CategorieDanger.SHIGELLA,
+    CategorieDanger.YERSINIA_ENTEROCOLITICA,
+    CategorieDanger.HISTAMINE,
+    CategorieDanger.TOXINE_DSP,
+    CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+)

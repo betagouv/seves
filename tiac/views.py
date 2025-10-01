@@ -35,6 +35,7 @@ from .formsets import (
     RepasFormSet,
     AlimentFormSet,
     InvestigationTiacEtablissementFormSet,
+    AnalysesAlimentairesFormSet,
 )
 
 
@@ -243,6 +244,7 @@ class InvestigationTiacCreationView(
             self.aliment_formset = AlimentFormSet()
 
         self.etablissement_formset = self.get_etablissement_formset()
+        self.analyse_alimentaire_formset = self.get_analyse_alimentaire_formset()
         return super().dispatch(request, *args, **kwargs)
 
     def get_media(self, **context_data) -> Media:
@@ -266,6 +268,15 @@ class InvestigationTiacCreationView(
 
         return InvestigationTiacEtablissementFormSet(**kwargs)
 
+    def get_analyse_alimentaire_formset(self):
+        kwargs = {}
+        if hasattr(self, "object"):
+            kwargs.update({"instance": self.object})
+        if self.request.POST:
+            kwargs["data"] = self.request.POST
+
+        return AnalysesAlimentairesFormSet(**kwargs)
+
     def get_success_url(self):
         return self.object.get_absolute_url()
 
@@ -278,6 +289,7 @@ class InvestigationTiacCreationView(
         context["empty_repas_form"] = context["repas_formset"].empty_form
         context["empty_aliment_form"] = context["aliment_formset"].empty_form
         context["etablissement_formset"] = self.etablissement_formset
+        context["analyse_alimentaire_formset"] = self.analyse_alimentaire_formset
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
         context["danger_plus_courant"] = InvestigationTiac.danger_plus_courants()
         return context
@@ -311,6 +323,13 @@ class InvestigationTiacCreationView(
                 "Erreur dans le formulaire établissement",
             )
 
+        if not self.analyse_alimentaire_formset.is_valid():
+            return self.formset_invalid(
+                self.analyse_alimentaire_formset,
+                "Erreurs dans le(s) formulaire(s) Analyses alimentaires",
+                "Erreur dans le formulaire analyses alimentaires",
+            )
+
         form = self.get_form()
         if not form.is_valid():
             return self.form_invalid(form)
@@ -324,6 +343,8 @@ class InvestigationTiacCreationView(
         self.aliment_formset.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
+        self.analyse_alimentaire_formset.instance = self.object
+        self.analyse_alimentaire_formset.save()
         self.add_user_contacts(self.object)
 
         if self.object.is_published:

@@ -1,3 +1,5 @@
+import "TreeSelect"
+
 export function patchItems(element){
     setTimeout(() => {
         element.querySelectorAll('.treeselect-list__item').forEach(itemElement => {

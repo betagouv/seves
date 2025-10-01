@@ -1,8 +1,7 @@
 import {BaseFormSetController} from "BaseFormset"
 import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
-import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
-import "TreeSelect"
+import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
 
 class AlimentFormController extends BaseFormInModal {
     static targets = [

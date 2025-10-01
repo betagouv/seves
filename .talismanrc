@@ -1,5 +1,6 @@
 allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
+- '(from|import)[\w\s\.]+'  # Allow python imports
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -66,15 +67,15 @@ fileignoreconfig:
 - filename: tiac/formsets.py
   checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
 - filename: tiac/models.py
-  checksum: 4edda7d8028ba41cdc836a9867f44e3d6f25bb8f0c258518f2e2e3d28e92955a
+  checksum: 8bcc091f6dfea82beb791cba84368527360450279b467db823e3b3a50c6c3ad4
 - filename: tiac/forms.py
   checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
 - filename: tiac/admin.py
   checksum: be86624d7fd8ef05cb4ff81c8c90010d2f28b55ce054b861f3c5d61fc9042596
 - filename: tiac/tests/pages.py
-  checksum: 4c60d8d5e703622c010ba919827f5fda1000e1f0f0f607e1eadc0673698b11b2
+  checksum: 913119c2ce1ceecf27cd00881e415b7d90432ec5d1acf9eabbe97f2db67c3ab8
 - filename: tiac/tests/test_investigation_tiac_creation.py
-  checksum: 20d45b7457f86a1f29c4acdc0e2392dd3ec0ccd626e4f3ec33b22062ee173a2a
+  checksum: bb0a966dd5280ae5c10907e2e9c7535a234a5277ded36049fc2742c55f459f66
 - filename: tiac/tests/test_investigation_tiac_details.py
   checksum: 74e11044dc9b7e42c20d38a7fb1578d846f191d0c995668dd80d8a98858200a0
 version: "1.0"
