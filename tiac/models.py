@@ -27,6 +27,8 @@ from tiac.constants import (
     TypeCollectivite,
     TypeAliment,
     MotifAliment,
+    EtatPrelevement,
+    DANGERS_COURANTS,
 )
 from .constants import DangersSyndromiques
 from .managers import EvenementSimpleManager, InvestigationTiacManager
@@ -404,20 +406,7 @@ class InvestigationTiac(
 
     @classmethod
     def danger_plus_courants(self):
-        return [
-            CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
-            CategorieDanger.BACILLUS_CEREUS,
-            CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
-            CategorieDanger.CAMPYLOBACTER_COLI,
-            CategorieDanger.CAMPYLOBACTER_JEJUNI,
-            CategorieDanger.SALMONELLA_ENTERITIDIS,
-            CategorieDanger.SALMONELLA_TYPHIMURIUM,
-            CategorieDanger.SHIGELLA,
-            CategorieDanger.YERSINIA_ENTEROCOLITICA,
-            CategorieDanger.HISTAMINE,
-            CategorieDanger.TOXINE_DSP,
-            CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
-        ]
+        return DANGERS_COURANTS
 
 
 class RepasSuspect(models.Model):
@@ -491,3 +480,14 @@ class AlimentSuspect(models.Model):
     @property
     def motif_suspicion_labels(self):
         return ", ".join(MotifAliment(m).label for m in self.motif_suspicion)
+
+
+class AnalyseAlimentaire(models.Model):
+    investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="analyses_alimentaires")
+
+    reference_prelevement = models.CharField("Référence du prélèvement")
+    etat_prelevement = models.CharField("État du prélèvement", choices=EtatPrelevement.choices)
+    categorie_danger = models.CharField("Catégorie de danger", choices=CategorieDanger.choices, blank=True)
+    comments = models.TextField("Commentaires liés à l’analyse", blank=True)
+    sent_to_lnr_cnr = models.BooleanField("Envoyé au LNR/CNR")
+    reference_souche = models.CharField("Référence souche", blank=True)

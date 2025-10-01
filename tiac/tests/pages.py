@@ -3,11 +3,18 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, expect, Locator
 
 from tiac.constants import TypeRepas
 from ssa.tests.pages import WithTreeSelect
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
+from tiac.models import (
+    EvenementSimple,
+    Etablissement,
+    InvestigationTiac,
+    RepasSuspect,
+    AlimentSuspect,
+    AnalyseAlimentaire,
+)
 
 
 class WithEtablissementMixin:
@@ -84,6 +91,32 @@ class WithEtablissementMixin:
             ).locator(f'[id$="{k}"]').fill(v)
 
         self.close_etablissement_modal()
+
+
+class WithAnalyseAlimentaireMixin(WithTreeSelect):
+    def open_analyse_alimentaire_modal(self):
+        self.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def fill_analyse_alimentaire(self, modal: Locator, analyse: AnalyseAlimentaire):
+        modal.locator('[id$="reference_prelevement"]').fill(analyse.reference_prelevement)
+        modal.locator('[id$="etat_prelevement"]').select_option(analyse.etat_prelevement)
+        self._set_treeselect_option("categorie-danger", analyse.get_categorie_danger_display())
+        modal.locator('[id$="comments"]').fill(analyse.comments)
+        modal.locator('[id$="reference_souche"]').fill(analyse.reference_souche)
+        modal.locator(f"[id$='sent_to_lnr_cnr'] input[type='radio'][value='{str(analyse.sent_to_lnr_cnr)}']").check(
+            force=True
+        )
+
+    def close_analyse_alimentaire_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_analyse_alimentaire(self, analyse: AnalyseAlimentaire):
+        modal = self.open_analyse_alimentaire_modal()
+        self.fill_analyse_alimentaire(modal, analyse)
+        self.close_analyse_alimentaire_modal()
 
 
 class EvenementSimpleFormPage(WithEtablissementMixin):
@@ -284,7 +317,7 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
+class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
     fields = [
         "date_reception",
         "evenement_origin",

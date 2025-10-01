@@ -6,8 +6,8 @@ from core.form_mixins import js_module
 from core.mixins import WithCommonContextVars
 from ssa.models import CategorieProduit
 from .constants import TypeAliment
-from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm
-from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
+from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm, AnalyseAlimentaireForm
+from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect, AnalyseAlimentaire
 from django import forms
 
 
@@ -80,6 +80,27 @@ AlimentFormSet = inlineformset_factory(
     AlimentSuspect,
     form=AlimentSuspectForm,
     formset=AlimentSuspectBaseFormSet,
+    extra=0,
+    can_delete=True,
+)
+
+
+class AnalysesAlimentairesBaseFormSet(BaseInlineFormSet):
+    template_name = "tiac/forms/analyse_alimentaire_base_set.html"
+    deletion_widget = forms.HiddenInput
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("tiac/analyse_alimentaire.mjs"),),
+        )
+
+
+AnalysesAlimentairesFormSet = inlineformset_factory(
+    InvestigationTiac,
+    AnalyseAlimentaire,
+    form=AnalyseAlimentaireForm,
+    formset=AnalysesAlimentairesBaseFormSet,
     extra=0,
     can_delete=True,
 )

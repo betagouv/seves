@@ -5,10 +5,16 @@ from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.models import CategorieDanger
-from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory, EvenementSimpleFactory
+from tiac.factories import (
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
+    AlimentSuspectFactory,
+    EvenementSimpleFactory,
+    AnalyseAlimentaireFactory,
+)
 from .pages import InvestigationTiacFormPage
 from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
-from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple
+from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",
@@ -347,3 +353,26 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement, evenement]
     expected = sorted([other_event_1.numero, other_event_2.numero, other_event_3.numero])
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "investigation_id",
+]
+
+
+def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    analyse: AnalyseAlimentaire = AnalyseAlimentaireFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+    creation_page.add_analyse_alimentaire(analyse)
+    creation_page.submit_as_draft()
+
+    analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
+    assert len(analyses) == 1
+    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE)

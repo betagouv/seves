@@ -1,4 +1,6 @@
+import json
 import re
+from functools import cached_property
 
 from django import forms
 from django.conf import settings
@@ -12,8 +14,8 @@ from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
-from ssa.models import EvenementProduit, CategorieProduit
-from tiac.constants import DangersSyndromiques
+from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
+from tiac.constants import DangersSyndromiques, DANGERS_COURANTS
 from tiac.constants import (
     EvenementOrigin,
     EvenementFollowUp,
@@ -34,6 +36,7 @@ from tiac.models import (
     validate_resytal,
     RepasSuspect,
     AlimentSuspect,
+    AnalyseAlimentaire,
 )
 
 
@@ -471,3 +474,23 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
             "description_produit",
             "motif_suspicion",
         ]
+
+
+class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "tiac/forms/analyse_alimentaire.html"
+
+    @cached_property
+    def categorie_danger_json(self):
+        return json.dumps(CategorieDanger.build_options())
+
+    @cached_property
+    def common_danger(self):
+        return DANGERS_COURANTS
+
+    class Meta:
+        model = AnalyseAlimentaire
+        exclude = ("investigation",)
+        widgets = {
+            "sent_to_lnr_cnr": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
+            "categorie_danger": forms.HiddenInput(),
+        }

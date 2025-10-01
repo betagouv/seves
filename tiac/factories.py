@@ -20,6 +20,7 @@ from tiac.constants import (
     Motif,
     TypeCollectivite,
     DangersSyndromiques,
+    EtatPrelevement,
 )
 from tiac.models import (
     AlimentSuspect,
@@ -31,6 +32,7 @@ from tiac.models import (
     InvestigationTiac,
     TypeEvenement,
     RepasSuspect,
+    AnalyseAlimentaire,
 )
 
 fake = Faker()
@@ -195,3 +197,17 @@ class AlimentSuspectFactory(DjangoModelFactory):
             categorie_produit=FuzzyChoice(CategorieProduit.values),
             description_produit=factory.Faker("paragraph"),
         )
+
+
+class AnalyseAlimentaireFactory(DjangoModelFactory):
+    class Meta:
+        model = AnalyseAlimentaire
+
+    investigation = factory.SubFactory("tiac.factories.InvestigationTiacFactory")
+
+    reference_prelevement = factory.Faker("numerify", text="####-###")
+    etat_prelevement = FuzzyChoice(EtatPrelevement.values)
+    categorie_danger = FuzzyChoice(CategorieDanger.values)
+    comments = factory.Faker("paragraph")
+    sent_to_lnr_cnr = factory.Faker("boolean")
+    reference_souche = factory.Faker("sentence", nb_words=1)
