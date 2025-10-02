@@ -1,7 +1,28 @@
 {% extends "tiac/base.html" %}
-{% load static etat_tags %}
+{% load static etat_tags dsfr_tags widget_tweaks %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/list.css' %}">
+{% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}
+    <form id="search-form" method="get" data-controller="search-form">
+        <div class="fr-p-4v evenements_liste__header">
+            <div class="evenements_liste__header--title">
+                <h2 class="fr-h3">Rechercher un événement</h2>
+            </div>
+            <div class="evenements_liste__search-form">
+                {% for field in filter.form %}
+                    {% with data_target=field.name|strfmt:"search-form-target:{0}" %}
+                        {% dsfr_form_field field|set_data:data_target  %}
+                    {% endwith %}
+                {% endfor %}
+                <div class="fr-fieldset__element evenements_liste__header--actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="search-form#onReset:stop:prevent">Effacer</button>
+                    <button type="submit" class="fr-btn">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    </form>
     <main class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ object_list|length }} sur un total de {{ total_object_count }}</div>

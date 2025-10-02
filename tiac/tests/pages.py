@@ -166,6 +166,29 @@ class EvenementListPage:
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
 
+    @property
+    def numero_field(self):
+        return self.page.locator("#id_numero")
+
+    @property
+    def start_date_field(self):
+        return self.page.locator("#id_start_date")
+
+    @property
+    def end_date_field(self):
+        return self.page.locator("#id_end_date")
+
+    def set_agent_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_agent_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def set_structure_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_structure_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def submit_search(self):
+        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
 

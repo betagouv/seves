@@ -2,55 +2,6 @@ body{
     background-color: var(--background-default-grey);
 }
 
-.evenements__header {
-    background-color: var(--background-open-blue-france);
-}
-.evenement__header--actions {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.evenements__search-form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 0.5rem;
-}
-.evenements__search-form .fr-fieldset__element{
-    flex: 1 1 200px;
-    max-width: 300px;
-}
-.evenements__search-form input, .evenements__search-form select, .evenements__search-form .fr-radio-group {
-    margin-top: .5rem;
-}
-
-.choices__list--single{
-    overflow: hidden;
-    max-height: 1.5rem;
-}
-.fr-fieldset__element:has(.fr-fieldset__element--inline){
-    display: flex;
-    flex-wrap: wrap;
-}
-.fr-fieldset__element:has(.fr-fieldset__element--inline) label{
-    flex-basis: 100%;
-}
-.fr-fieldset__element--inline .fr-radio-group label{
-    font-size: 0.9rem;
-}
-
-
-.evenements__list-container {
-    margin: 2rem;
-}
-.evenements__list-header {
-    display: flex;
-    justify-content: space-between;
-}
-.evenements__count {
-    font-weight: bold;
-}
-
 .evenements__list-table{
     border-collapse: collapse;
 }
@@ -90,7 +41,4 @@ body{
 }
 .evenements__list-row .fr-checkbox-group input[type="checkbox"] + label::before{
     top: -10px !important;
-}
-.ri-node-tree {
-    font-size: 1.5rem;
 }
