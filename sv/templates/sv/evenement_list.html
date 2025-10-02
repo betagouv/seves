@@ -5,6 +5,7 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
+    <link rel="stylesheet" href="{% static 'core/list.css' %}">
 {% endblock %}
 
 {% block scripts %}
@@ -16,33 +17,35 @@
 {% block content %}
     {% include "sv/_extract_modal.html" %}
     <form id="search-form" method="get" >
-        <div class="evenements__header fr-p-4v">
-            <h2 class="fr-h3">Rechercher un évènement</h2>
-            <div class="evenements__search-form">
-                {{ filter.form.as_dsfr_div }}
+        <div class="fr-p-4v evenements_liste__header">
+            <div class="evenements_liste__header--title">
+                <h2 class="fr-h3">Rechercher un événement</h2>
             </div>
-            <div class="evenements__search-form">
+            <div class="evenements_liste__search-form">
+                {{ filter.form.as_dsfr_div }}
                 <div class="fr-fieldset__element">
                     {% render_field filter.form.structure_contact %}
                 </div>
                 <div class="fr-fieldset__element">
                     {% render_field filter.form.agent_contact %}
                 </div>
-            </div>
-            <div class="fr-fieldset__element evenement__header--actions">
-                <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w">Effacer</button>
-                <button type="submit" class="fr-btn">Rechercher</button>
+                <div class="fr-fieldset__element evenements_liste__header--actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn">Effacer</button>
+                    <button type="submit" class="fr-btn">Rechercher</button>
+                </div>
             </div>
         </div>
+
     </form>
 
-    <div class="evenements__list-container">
-        <div class="evenements__list-header">
-            <span class="evenements__count">{{ evenement_list.count }} sur un total de {{ total_object_count }}</span>
+    <div class="main-container">
+        <div class="evenements_liste__table--header">
+            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
             <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
                 Extraire
             </button>
         </div>
+
         {% if evenement_list|length > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="evenements__list-table">

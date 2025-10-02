@@ -29,7 +29,7 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     """Test que le formulaire de recherche de fiche de détection contient tous les champs nécessaires."""
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
-    expect(page.get_by_role("heading", name="Rechercher un évènement")).to_be_visible()
+    expect(page.get_by_role("heading", name="Rechercher un événement")).to_be_visible()
     expect(page.get_by_label("Numéro évènement")).to_be_visible()
     expect(page.get_by_label("Numéro évènement")).to_be_empty()
     expect(page.locator("#search-form").get_by_text("Région")).to_be_visible()
