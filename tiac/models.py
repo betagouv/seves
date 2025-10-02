@@ -186,7 +186,12 @@ validate_resytal = RegexValidator(
 
 @reversion.register()
 class Etablissement(BaseEtablissement, models.Model):
-    evenement_simple = models.ForeignKey(EvenementSimple, on_delete=models.PROTECT, related_name="etablissements")
+    evenement_simple = models.ForeignKey(
+        EvenementSimple, null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
+    )
+    investigation_tiac = models.ForeignKey(
+        "tiac.InvestigationTiac", null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
+    )
 
     type_etablissement = models.CharField(max_length=45, verbose_name="Type d'établissement", blank=True)
 
@@ -211,6 +216,13 @@ class Etablissement(BaseEtablissement, models.Model):
                     | (Q(numero_resytal="") & Q(evaluation="") & Q(commentaire="") & Q(date_inspection=None))
                 ),
                 name="inspection_required_for_inspection_related_fields",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(evenement_simple__isnull=True) & Q(investigation_tiac__isnull=False))
+                    | (Q(evenement_simple__isnull=False) & Q(investigation_tiac__isnull=True))
+                ),
+                name="is_related_to_either_evenement_simple_or_investigation_tiac",
             ),
         ]
 

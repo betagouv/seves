@@ -17,7 +17,9 @@
     width: 100%;
 }
 
-fieldset.form-fieldset.repas-fieldset, fieldset.form-fieldset.aliment-fieldset  {
+fieldset.form-fieldset.repas-fieldset,
+fieldset.form-fieldset.aliment-fieldset,
+fieldset.form-fieldset.etablissement-fieldset  {
     border: 1px var(--grey-975-100-active) solid;
 }
 
