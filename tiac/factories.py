@@ -39,12 +39,21 @@ def random_datetime_utc():
     return fake.date_time_this_decade(tzinfo=ZoneInfo(settings.TIME_ZONE)).replace(second=0, microsecond=0)
 
 
+def parse_date(value):
+    if isinstance(value, str):
+        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+    if isinstance(value, datetime.datetime):
+        return value.date()
+    if isinstance(value, datetime.date):
+        return value
+    return None
+
+
 class BaseTiacFactory(DjangoModelFactory):
     class Meta:
         abstract = True
 
     date_creation = factory.Faker("date_this_decade")
-    date_reception = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
@@ -65,9 +74,19 @@ class BaseTiacFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
+    @factory.lazy_attribute
+    def date_reception(self):
+        return parse_date(fake.date_this_decade())
+
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if "date_reception" in kwargs:
+            kwargs["date_reception"] = parse_date(kwargs["date_reception"])
+        return super()._create(model_class, *args, **kwargs)
 
 
 class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):

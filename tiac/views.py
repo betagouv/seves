@@ -174,12 +174,15 @@ class EvenementSimpleDetailView(
         return context
 
 
-class TiacListView(WithFilteredListMixin, ListView):
+class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
     paginate_by = 100
     context_object_name = "objects"
 
     def get_template_names(self):
         return ["tiac/tiac_list.html"]
+
+    def get_media(self, **context_data) -> Media:
+        return context_data["filter"].form.media if "filter" in context_data else Media()
 
     def get_queryset(self):
         queryset = self.apply_ordering(self.get_raw_queryset)
@@ -197,6 +200,7 @@ class TiacListView(WithFilteredListMixin, ListView):
 
         context["total_object_count"] = self.get_raw_queryset.count()
         context["object_list"] = object_list
+        context["filter"] = self.filter
         return context
 
 
