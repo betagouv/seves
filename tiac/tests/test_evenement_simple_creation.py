@@ -3,7 +3,7 @@ from playwright.sync_api import Page, expect
 from core.models import LienLibre, Contact
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from tiac.factories import EvenementSimpleFactory
+from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory
 from .pages import EvenementSimpleFormPage
 from ..models import EvenementSimple
 
@@ -45,6 +45,7 @@ def test_can_create_evenement_simple_with_all_fields(
     input_data = EvenementSimpleFactory.build()
     other_evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    investigation_tiac = InvestigationTiacFactory(etat=EvenementProduit.Etat.EN_COURS)
 
     creation_page = EvenementSimpleFormPage(page, live_server.url)
     creation_page.navigate()
@@ -55,14 +56,15 @@ def test_can_create_evenement_simple_with_all_fields(
     creation_page.set_notify_ars(input_data.notify_ars)
     creation_page.nb_sick_persons.fill(str(input_data.nb_sick_persons))
     creation_page.add_free_link(other_evenement.numero, choice_js_fill)
-    creation_page.add_free_link(evenement_produit.numero, choice_js_fill, link_label="Évenement produit : ")
+    creation_page.add_free_link(evenement_produit.numero, choice_js_fill, link_label="Événement produit : ")
+    creation_page.add_free_link(investigation_tiac.numero, choice_js_fill, link_label="Investigation de tiac : ")
     creation_page.submit_as_draft()
 
     evenement = EvenementSimple.objects.last()
     assert_models_are_equal(
         input_data, evenement, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
     )
-    assert LienLibre.objects.count() == 2
+    assert LienLibre.objects.count() == 3
 
 
 def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):

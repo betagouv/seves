@@ -112,12 +112,19 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             .get_user_can_view(self.user)
             .exclude(etat=EvenementProduit.Etat.BROUILLON)
         )
+        queryset_investigation_tiac = (
+            InvestigationTiac.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
         self.fields["free_link"] = MultiModelChoiceField(
             required=False,
             label="Sélectionner un objet",
             model_choices=[
                 ("Enregistrement simple", queryset),
-                ("Évenement produit", queryset_evenement_produit),
+                ("Événement produit", queryset_evenement_produit),
+                ("Investigation de tiac", queryset_investigation_tiac),
             ],
         )
 
@@ -322,6 +329,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self._add_free_links()
         self.initial["danger_syndromiques_suspectes"] = []
 
     def save(self, commit=True):
@@ -331,7 +339,42 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
+        self.save_free_links(instance)
         return instance
+
+    def _add_free_links(self, model=None):
+        instance = getattr(self, "instance", None)
+
+        queryset = (
+            InvestigationTiac.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementSimple.Etat.BROUILLON)
+        )
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        queryset_evenement_produit = (
+            EvenementProduit.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
+        queryset_evenement_simple = (
+            EvenementSimple.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=[
+                ("Investigation de tiac", queryset),
+                ("Enregistrement simple", queryset_evenement_simple),
+                ("Événement produit", queryset_evenement_produit),
+            ],
+        )
 
 
 class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
