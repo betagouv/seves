@@ -1,11 +1,13 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import DepartementFactory
-from core.models import Contact
-from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory
+from core.models import Contact, LienLibre
+from ssa.factories import EvenementProduitFactory
+from ssa.models import EvenementProduit
+from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory, EvenementSimpleFactory
 from .pages import InvestigationTiacFormPage
 from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
-from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect
+from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",
@@ -316,3 +318,26 @@ def test_can_create_investigation_tiac_with_mutliple_aliments_and_delete(
     assert investigation.aliments.count() == 2
     assert investigation.aliments.first().denomination == "Foo"
     assert investigation.aliments.last().denomination == "Buzz"
+
+
+def test_can_add_free_links(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationTiacFactory.build()
+    other_event_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    other_event_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    other_event_3 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(other_event_1.numero, choice_js_fill)
+    creation_page.add_free_link(other_event_2.numero, choice_js_fill, link_label="Enregistrement simple : ")
+    creation_page.add_free_link(other_event_3.numero, choice_js_fill, link_label="Événement produit : ")
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    evenement = InvestigationTiac.objects.exclude(id=other_event_1.id).get()
+    assert LienLibre.objects.count() == 3
+
+    assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement, evenement]
+    expected = sorted([other_event_1.numero, other_event_2.numero, other_event_3.numero])
+    assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected

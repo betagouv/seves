@@ -74,6 +74,5 @@ fileignoreconfig:
 - filename: tiac/tests/pages.py
   checksum: 4c60d8d5e703622c010ba919827f5fda1000e1f0f0f607e1eadc0673698b11b2
 - filename: tiac/tests/test_investigation_tiac_creation.py
-  checksum: 196568476526faea3adb5f423bea7345e4098501b7d3061406d7db800a493626
-  checksum: 20d45b7457f86a1f29c4acdc0e2392dd3ec0ccd626e4f3ec33b22062ee173a2a
+  checksum: 91853f8d50c79914c242736f87adfaf98e71eb4758ba87a3b689d9086ec066cc
 version: "1.0"

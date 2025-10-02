@@ -63,6 +63,8 @@
     </div>
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
 
+    {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
+
     {% if not object.is_draft %}
       {% include "core/_fiche_bloc_commun.html" with object=object %}
     {% endif %}
