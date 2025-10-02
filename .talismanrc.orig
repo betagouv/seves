@@ -66,7 +66,7 @@ fileignoreconfig:
 - filename: tiac/formsets.py
   checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
 - filename: tiac/models.py
-  checksum: 4edda7d8028ba41cdc836a9867f44e3d6f25bb8f0c258518f2e2e3d28e92955a
+  checksum: a7573c54e278943191c331e703ae17bf6d0ff1f776706fd44b050453eef50d76
 - filename: tiac/forms.py
   checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
 - filename: tiac/admin.py
@@ -74,5 +74,9 @@ fileignoreconfig:
 - filename: tiac/tests/pages.py
   checksum: 4c60d8d5e703622c010ba919827f5fda1000e1f0f0f607e1eadc0673698b11b2
 - filename: tiac/tests/test_investigation_tiac_creation.py
+<<<<<<< HEAD
+  checksum: 91853f8d50c79914c242736f87adfaf98e71eb4758ba87a3b689d9086ec066cc
+=======
   checksum: 20d45b7457f86a1f29c4acdc0e2392dd3ec0ccd626e4f3ec33b22062ee173a2a
+>>>>>>> 37248a8 (feat(TIAC): Add etablissements to TIAC investigation)
 version: "1.0"

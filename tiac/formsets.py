@@ -19,7 +19,16 @@ class EtablissementBaseFormSet(WithCommonContextVars, BaseInlineFormSet):
     def media(self):
         return super().media + Media(
             js=(js_module("tiac/etablissements.mjs"),),
+            css={"all": ("tiac/etablissements.css",)},
         )
+
+    def __init__(self, *args, title_level=None, title_classes=None, **kwargs):
+        self.title_level = title_level or "h3"
+        self.title_classes = title_classes or ""
+        super().__init__(*args, **kwargs)
+
+    def get_context(self):
+        return {**super().get_context(), "title_level": self.title_level, "title_classes": self.title_classes}
 
 
 class RepasSuspectBaseFormSet(BaseInlineFormSet):
@@ -54,8 +63,12 @@ class AlimentSuspectBaseFormSet(BaseInlineFormSet):
         return form
 
 
-EtablissementFormSet = inlineformset_factory(
+EvenementSimpleEtablissementFormSet = inlineformset_factory(
     EvenementSimple, Etablissement, form=EtablissementForm, formset=EtablissementBaseFormSet, extra=0, can_delete=True
+)
+
+InvestigationTiacEtablissementFormSet = inlineformset_factory(
+    InvestigationTiac, Etablissement, form=EtablissementForm, formset=EtablissementBaseFormSet, extra=0, can_delete=True
 )
 
 RepasFormSet = inlineformset_factory(

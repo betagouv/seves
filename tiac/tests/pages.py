@@ -10,7 +10,83 @@ from ssa.tests.pages import WithTreeSelect
 from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
 
 
-class EvenementSimpleFormPage:
+class WithEtablissementMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    @property
+    def etablissement_modal(self):
+        return self.page.locator(".fr-modal").locator("visible=true")
+
+    def get_etablissement_card(self, card_index=0):
+        return self.page.locator(".modal-etablissement-container").all()[card_index].locator(".etablissement-card")
+
+    def etablissement_open_modal(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
+
+    def open_etablissement_modal(self):
+        self.page.locator(".etablissement-header").get_by_role("button", name="Ajouter").click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    @property
+    def current_modal_address_field(self):
+        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
+
+    def force_etablissement_adresse(self, adresse, mock_call=False):
+        if mock_call:
+
+            def handle(route):
+                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
+
+            self.page.route(
+                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                handle,
+            )
+
+        self.current_modal_address_field.click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(adresse)
+        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
+
+    def fill_etablissement(self, modal, etablissement: Etablissement):
+        modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
+        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
+        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
+        modal.locator('[id$="-commune"]').fill(etablissement.commune)
+        modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
+        modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
+
+    def close_etablissement_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_etablissement(self, etablissement: Etablissement):
+        modal = self.open_etablissement_modal()
+        self.fill_etablissement(modal, etablissement)
+        self.close_etablissement_modal()
+
+    def delete_etablissement(self, card_index):
+        self.get_etablissement_card(card_index).locator(".delete-button").click()
+        modal = self.page.locator(".delete-modal").locator("visible=true")
+        modal.locator(".delete-confirmation").click()
+        modal.wait_for(state="hidden")
+
+    def edit_etablissement(self, index, **kwargs):
+        card = self.get_etablissement_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".modal-etablissement-container").all()[index].locator(".modal-etablissement").locator(
+                "visible=true"
+            ).locator(f'[id$="{k}"]').fill(v)
+
+        self.close_etablissement_modal()
+
+
+class EvenementSimpleFormPage(WithEtablissementMixin):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -59,54 +135,8 @@ class EvenementSimpleFormPage:
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
-    def open_etablissement_modal(self):
-        self.page.get_by_role("button", name="Ajouter").click()
-        self.current_modal.wait_for(state="visible")
-        return self.current_modal
-
-    @property
-    def current_modal_address_field(self):
-        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
-
-    def force_etablissement_adresse(self, adresse, mock_call=False):
-        if mock_call:
-
-            def handle(route):
-                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
-
-            self.page.route(
-                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
-                handle,
-            )
-
-        self.current_modal_address_field.click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill(adresse)
-        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
-
-    def fill_etablissement(self, modal, etablissement: Etablissement):
-        modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
-        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
-        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
-        modal.locator('[id$="-commune"]').fill(etablissement.commune)
-        modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
-        modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
-
-    def close_etablissement_modal(self):
-        self.current_modal.locator(".save-btn").click()
-        self.current_modal.wait_for(state="hidden", timeout=2_000)
-
-    def add_etablissement(self, etablissement: Etablissement):
-        modal = self.open_etablissement_modal()
-        self.fill_etablissement(modal, etablissement)
-        self.close_etablissement_modal()
-
     def publish(self):
         self.page.locator("#submit_publish").click()
-
-    def get_etablissement_card(self, card_index):
-        return self.page.locator(".modal-etablissement-container").all()[card_index].locator(".etablissement-card")
 
     def get_detail_modal_content(self, index):
         self.get_etablissement_card(index).locator(".detail-display").click()
@@ -115,23 +145,6 @@ class EvenementSimpleFormPage:
         modal.locator(".fr-btn--close").click()
         modal.wait_for(state="hidden")
         return content
-
-    def delete_etablissement(self, card_index):
-        self.get_etablissement_card(card_index).locator(".delete-button").click()
-        modal = self.page.locator(".delete-modal").locator("visible=true")
-        modal.locator(".delete-confirmation").click()
-        modal.wait_for(state="hidden")
-
-    def edit_etablissement(self, index, **kwargs):
-        card = self.get_etablissement_card(index)
-        card.locator(".modify-button").click()
-
-        for k, v in kwargs.items():
-            self.page.locator(".modal-etablissement-container").all()[index].locator(".modal-etablissement").locator(
-                "visible=true"
-            ).locator(f'[id$="{k}"]').fill(v)
-
-        self.close_etablissement_modal()
 
 
 class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
@@ -184,7 +197,7 @@ class EvenementListPage:
         return self._cell_content(line_index, 9)
 
 
-class EvenementSimpleDetailsPage:
+class EvenementSimpleDetailsPage(WithEtablissementMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -216,6 +229,9 @@ class EvenementSimpleDetailsPage:
     def links_block(self):
         return self.page.get_by_role("heading", name="Événements liés").locator("..")
 
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
     def delete(self):
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_text("Supprimer l'événement", exact=True).click()
@@ -232,21 +248,11 @@ class EvenementSimpleDetailsPage:
         choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
         self.page.get_by_role("button", name="Transférer").click()
 
-    def etablissement_card(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index)
-
-    def etablissement_open_modal(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
-
-    @property
-    def etablissement_modal(self):
-        return self.page.locator(".fr-modal").locator("visible=true")
-
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage(WithTreeSelect):
+class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
     fields = [
         "date_reception",
         "evenement_origin",
