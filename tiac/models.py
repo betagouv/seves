@@ -17,7 +17,7 @@ from core.mixins import (
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
-from ssa.models import CategorieProduit
+from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     ModaliteDeclarationEvenement,
     EvenementOrigin,
@@ -294,6 +294,12 @@ class InvestigationTiac(
     )
     precisions = models.CharField(max_length=255, verbose_name="Précisions", blank=True)
 
+    agents_confirmes_ars = ArrayField(
+        models.CharField(max_length=255, choices=CategorieDanger.choices),
+        default=list,
+        blank=True,
+    )
+
     objects = InvestigationTiacManager()
 
     def save(self, *args, **kwargs):
@@ -395,6 +401,22 @@ class InvestigationTiac(
         if self.type_evenement == TypeEvenement.INVESTIGATION_COORDONNEE:
             return "Invest. coord. / MUS informée"
         return "-"
+
+    @classmethod
+    def danger_plus_courants(self):
+        return [
+            CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+            CategorieDanger.BACILLUS_CEREUS,
+            CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
+            CategorieDanger.CAMPYLOBACTER_COLI,
+            CategorieDanger.CAMPYLOBACTER_JEJUNI,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SHIGELLA,
+            CategorieDanger.YERSINIA_ENTEROCOLITICA,
+            CategorieDanger.HISTAMINE,
+            CategorieDanger.TOXINE_DSP,
+            CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+        ]
 
 
 class RepasSuspect(models.Model):

@@ -23,6 +23,7 @@ from core.mixins import (
     WithAddUserContactsMixin,
 )
 from core.views import MediaDefiningMixin
+from ssa.models import CategorieDanger
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
@@ -268,6 +269,8 @@ class InvestigationTiacCreationView(
         context["empty_repas_form"] = context["repas_formset"].empty_form
         context["empty_aliment_form"] = context["aliment_formset"].empty_form
         context["etablissement_formset"] = self.etablissement_formset
+        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
+        context["danger_plus_courant"] = InvestigationTiac.danger_plus_courants()
         return context
 
     def formset_invalid(self, formset, msg_1, msg_2):

@@ -309,6 +309,10 @@ class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
         self.contenu.fill(object.contenu)
         self.set_type_evenement(object.type_evenement)
 
+    def add_agent_pathogene_confirme(self, label):
+        self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
+        self._set_treeselect_option("agents-pathogene", label)
+
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
