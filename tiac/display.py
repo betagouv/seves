@@ -16,12 +16,13 @@ class DisplayItem:
 
     @classmethod
     def from_evenement_simple(cls, evenement_simple: EvenementSimple):
+        nb_sick_persons = evenement_simple.nb_sick_persons
         return cls(
             numero=evenement_simple.numero,
             absolute_url=evenement_simple.get_absolute_url(),
             createur=str(evenement_simple.createur),
             date_reception=evenement_simple.date_reception.strftime("%d/%m/%Y"),
-            nb_sick_persons=str(evenement_simple.nb_sick_persons or "-"),
+            nb_sick_persons=str(nb_sick_persons if nb_sick_persons is not None else "-"),
             type_evenement=f"Enr. simple / {evenement_simple.get_follow_up_display() if evenement_simple.get_follow_up_display() else '-'}",
             etat=evenement_simple.etat,
             readable_etat=evenement_simple.readable_etat,
