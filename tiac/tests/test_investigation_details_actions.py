@@ -36,7 +36,7 @@ def test_can_cloturer_investigation(live_server, page, mocked_authentification_u
     evenement.refresh_from_db()
     assert evenement.etat == InvestigationTiac.Etat.CLOTURE
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
-    expect(page.get_by_text(f"L'investigation n°{evenement.numero} a bien été clôturée.")).to_be_visible()
+    expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
 
 
 def test_can_cloturer_investigation_if_last_remaining_structure(live_server, page, mocked_authentification_user):
@@ -53,4 +53,4 @@ def test_can_cloturer_investigation_if_last_remaining_structure(live_server, pag
     evenement.refresh_from_db()
     assert evenement.etat == InvestigationTiac.Etat.CLOTURE
     expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
-    expect(page.get_by_text(f"L'investigation n°{evenement.numero} a bien été clôturée.")).to_be_visible()
+    expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()

@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block aside %}
-  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url %}
+  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url extra_classes="modal-needs-required" %}
   {% include "core/_document_warning_modal.html" %}
   {% include "core/_message_update_forms.html" with object=object %}
   {% for message in message_list %}

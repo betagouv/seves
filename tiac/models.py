@@ -358,13 +358,13 @@ class InvestigationTiac(
         return f"L'investigation {self.numero} ne peut pas être supprimé"
 
     def get_soft_delete_confirm_title(self):
-        return "Supprimer cette investigation"
+        return "Supprimer l'événement"
 
     def get_soft_delete_confirm_message(self):
-        return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation ?"
+        return "Cette action est irréversible. Confirmez-vous la suppression de cet événement ?"
 
     def get_cloture_confirm_message(self):
-        return f"L'investigation n°{self.numero} a bien été clôturée."
+        return f"L'événement n°{self.numero} a bien été clôturé."
 
     def get_email_subject(self):
         return f"{self.numero}"
