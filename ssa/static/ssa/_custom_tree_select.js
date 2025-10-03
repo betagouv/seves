@@ -65,6 +65,19 @@ export function isLevel2WithChildren(data, value) {
     return false;
 }
 
+export function showHeader(element, headerClass){
+    element.querySelectorAll(headerClass).forEach(el => {
+        el.removeAttribute("hidden");
+        el.removeAttribute("aria-hidden");
+    })
+}
+export function hideHeader(element, headerClass){
+    element.querySelectorAll(headerClass).forEach(el => {
+        el.setAttribute("hidden", "hidden");
+        el.setAttribute("aria-hidden", "true");
+    })
+}
+
 
 export const tsDefaultOptions = {
     showTags: false,

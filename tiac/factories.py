@@ -11,7 +11,7 @@ from faker import Faker
 
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
-from ssa.models import CategorieProduit
+from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     EvenementOrigin,
     ModaliteDeclarationEvenement,
@@ -114,6 +114,10 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
+
+    agents_confirmes_ars = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
+    )
 
 
 class RepasSuspectFactory(DjangoModelFactory):
