@@ -1,0 +1,8 @@
+.danger-emphasis {
+    font-weight: bold;
+    font-style: italic;
+}
+.etiologie-card-container {
+    background-color: var(--background-alt-grey);
+    width: 100%;
+}

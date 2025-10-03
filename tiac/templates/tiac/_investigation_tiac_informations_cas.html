@@ -1,0 +1,28 @@
+{% load or_empty_value_tag %}
+<div class="white-container detail-content fr-mt-2w">
+    <h2 class="fr-h6">Cas</h2>
+    <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-2">
+                <div class="bold">Nombre de malades total</div>
+                <div>{{ object.nb_sick_persons|or_empty_value_tag }}</div>
+            </div>
+            <div class="fr-col-2">
+                <div class="bold">Dont conduits à l'hôpital</div>
+                <div>{{ object.nb_sick_persons_to_hospital|or_empty_value_tag }}</div>
+            </div>
+            <div class="fr-col-2">
+                <div class="bold">Dont décédés</div>
+                <div>{{ object.nb_dead_persons|or_empty_value_tag }}</div>
+            </div>
+            <div class="fr-col-3">
+                <div class="bold">Première date et heure d'apparition des symptômes</div>
+                <div>{{ object.datetime_first_symptoms|date:"d/m/Y à H:i" }}</div>
+            </div>
+            <div class="fr-col-3">
+                <div class="bold">Dernière date et heure d'apparition des symptômes</div>
+                <div>{{ object.datetime_last_symptoms|date:"d/m/Y à H:i" }}</div>
+            </div>
+        </div>
+    </div>
+</div>

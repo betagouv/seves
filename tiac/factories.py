@@ -19,6 +19,7 @@ from tiac.constants import (
     TypeRepas,
     Motif,
     TypeCollectivite,
+    DangersSyndromiques,
 )
 from tiac.models import (
     AlimentSuspect,
@@ -117,6 +118,9 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
 
     agents_confirmes_ars = factory.LazyFunction(
         lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
+    )
+    danger_syndromiques_suspectes = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in DangersSyndromiques.choices], k=random.randint(1, 3))
     )
 
 
