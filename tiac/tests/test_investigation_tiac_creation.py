@@ -4,6 +4,7 @@ from core.factories import DepartementFactory
 from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
+from ssa.models import CategorieDanger
 from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory, EvenementSimpleFactory
 from .pages import InvestigationTiacFormPage
 from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
@@ -78,6 +79,8 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.nb_dead_persons.fill(str(input_data.nb_dead_persons))
     creation_page.datetime_first_symptoms.fill(input_data.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
     creation_page.datetime_last_symptoms.fill(input_data.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
+    for danger in input_data.agents_confirmes_ars:
+        creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.last()

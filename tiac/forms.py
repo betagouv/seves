@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.conf import settings
 from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
@@ -11,8 +12,8 @@ from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
-from django.conf import settings
 from ssa.models import EvenementProduit, CategorieProduit
+from tiac.constants import DangersSyndromiques
 from tiac.constants import (
     EvenementOrigin,
     EvenementFollowUp,
@@ -23,7 +24,6 @@ from tiac.constants import (
     TypeCollectivite,
 )
 from tiac.constants import ModaliteDeclarationEvenement
-from tiac.constants import DangersSyndromiques
 from tiac.fields import SelectWithAttributeField
 from tiac.models import (
     EvenementSimple,
@@ -293,6 +293,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
     )
     precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+    agents_confirmes_ars = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = InvestigationTiac
@@ -314,6 +315,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "danger_syndromiques_suspectes",
             "analyses_sur_les_malades",
             "precisions",
+            "agents_confirmes_ars",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
@@ -323,7 +325,11 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"), js_module("tiac/etiologie.mjs")),
+            js=(
+                js_module("core/free_links.mjs"),
+                js_module("tiac/etiologie.mjs"),
+                js_module("tiac/agents_pathogene.mjs"),
+            ),
         )
 
     def __init__(self, *args, **kwargs):
@@ -331,6 +337,9 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._add_free_links()
         self.initial["danger_syndromiques_suspectes"] = []
+
+    def clean_agents_confirmes_ars(self):
+        return [v for v in self.cleaned_data["agents_confirmes_ars"].split("||") if v]
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
