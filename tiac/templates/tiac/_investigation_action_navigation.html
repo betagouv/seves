@@ -6,7 +6,7 @@
             <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
                 <ul class="fr-menu__list">
                     {% if can_be_deleted %}
-                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'investigation</a></li>
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" data-testid="delete-nav" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
                     {% endif %}
                     {%  if is_evenement_can_be_cloture %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'investigation</a></li>

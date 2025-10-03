@@ -439,7 +439,7 @@ class InvestigationTiacDetailsPage:
 
     def delete(self):
         self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Supprimer l'investigation", exact=True).click()
+        self.page.get_by_test_id("delete-nav").click()
         self.page.get_by_test_id("submit-delete-modal").click()
 
     def cloturer(self):
