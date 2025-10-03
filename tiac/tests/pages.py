@@ -438,6 +438,34 @@ class InvestigationTiacDetailsPage:
         self.page = page
         self.base_url = base_url
 
+    @property
+    def title(self):
+        return self.page.locator(".details-top-row h1").nth(0)
+
+    @property
+    def last_modification(self):
+        return self.page.locator(".last-modification")
+
+    @property
+    def context_block(self):
+        return self.page.get_by_role("heading", name="Le contexte").locator("..")
+
+    @property
+    def origin(self):
+        return self.page.get_by_test_id("origin")
+
+    @property
+    def modalite(self):
+        return self.page.get_by_test_id("modalite")
+
+    @property
+    def cas_block(self):
+        return self.page.get_by_role("heading", name="Cas").locator("..")
+
+    @property
+    def etiologie_block(self):
+        return self.page.get_by_role("heading", name="Étiologie").locator("..")
+
     def navigate(self, object):
         return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
 

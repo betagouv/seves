@@ -1,0 +1,26 @@
+{% load or_empty_value_tag %}
+<div class="white-container detail-content fr-mt-2w">
+    <h2 class="fr-h6">Étiologie</h2>
+    {% for danger in dangers %}
+        <div class="etiologie-card-container fr-p-4w fr-mb-2w">
+            <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                <div class="fr-col-12 fr-col-lg-4">{{ danger.name|safe }}</div>
+                <div class="fr-col-12 fr-col-lg-6">{{ danger.help_text }}</div>
+                <div class="fr-col-12 fr-col-lg-2">Recommandations
+                    <button aria-describedby="tooltip-toxi-{{ forloop.counter0 }}" type="button" class="fr-btn--tooltip fr-btn" data-fr-js-tooltip-referent="true">infobulle</button>
+                    <span class="fr-tooltip fr-placement fr-placement--top fr-placement--center" id="tooltip-toxi-{{ forloop.counter0 }}" role="tooltip" data-fr-js-tooltip="true">
+                        {{ danger.description }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="empty-value fr-mb-2w">Vide</div>
+    {% endfor %}
+
+    <div class="bold fr-mb-2v">Analyses engagées sur les malades</div>
+    <div>{{ form.analyses_sur_les_malades|yesno:"Oui,Non,Vide" }}</div>
+
+    <div class="bold fr-mb-2v fr-mt-4v">Précisions</div>
+    <div>{{ form.precisions|or_empty_value_tag }}</div>
+</div>

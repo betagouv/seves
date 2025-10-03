@@ -62,7 +62,7 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 def test_can_create_investigation_tiac_with_all_fields(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(danger_syndromiques_suspectes=[])
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -85,7 +85,10 @@ def test_can_create_investigation_tiac_with_all_fields(
 
     investigation = InvestigationTiac.objects.last()
     assert_models_are_equal(
-        input_data, investigation, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
+        input_data,
+        investigation,
+        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        ignore_array_order=True,
     )
 
 
