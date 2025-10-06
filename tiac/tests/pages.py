@@ -3,7 +3,7 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from tiac.constants import TypeRepas
 from ssa.tests.pages import WithTreeSelect
@@ -156,6 +156,12 @@ class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
         return self.page.goto(
             f"{self.base_url}{reverse('tiac:evenement-simple-edition', kwargs={'pk': self.event.pk})}"
         )
+
+    def delete_evenement_lie(self, index=0):
+        locator = self.page.locator("#liens-libre .choices__button")
+        previous = locator.count()
+        locator.all()[index].click()
+        expect(locator).to_have_count(previous - 1)
 
 
 class EvenementListPage:

@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 from collections import defaultdict
 from typing import Mapping
@@ -424,6 +425,14 @@ class WithFreeLinkIdsMixin:
             else:
                 link_ids.append(f"{link.content_type_1.pk}-{link.object_id_1}")
         return link_ids
+
+    @property
+    def free_link_ids_json(self):
+        try:
+            return json.dumps(self.free_link_ids)
+        except Exception as e:
+            logger.exception(e)
+            return json.dumps([])
 
 
 class CanUpdateVisibiliteRequiredMixin:
