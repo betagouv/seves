@@ -1,0 +1,82 @@
+allowed_patterns:
+- 'class[^:]*:'  # Allow python classes
+fileignoreconfig:
+- filename: core/models.py
+  checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
+- filename: ssa/models/evenement_produit.py
+  checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+- filename: ssa/views/produit.py
+  checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
+- filename: seves/settings.py
+  checksum: 9b3a3ee11c6e7fd8b54bb235d7626d68c4e3648fa65edf6afa03fdd2ef240b72
+- filename: ssa/static/ssa/_etablissement_form.js
+  checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
+- filename: bin/fetch_contacts_agricoll_and_key.sh
+  checksum: ef99932c5e588d09fdc080f07054dc3374eeeafbec4b7de2fee45a71d2c731ef
+- filename: sv/views.py
+  checksum: 17381b88af7a141fb85a3ee9607583404107a063715bed7c406d53d397c63345
+- filename: ssa/static/ssa/_rappel_conso_form.js
+  checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
+- filename: core/views.py
+  checksum: 7bee100011c8e54e27854f48acc05e4018f381d5ccdbd7fb635983a0327f54d2
+- filename: sv/static/sv/fichedetection_lieux_form.js
+  checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
+- filename: core/templates/core/_tableau_fil_de_suivi.html
+  checksum: a2e29ecc50a1417f69a383adb1228a8c26d35980fa3ee3d2dfb7f0f416f14186
+- filename: ssa/tests/pages.py
+  checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09
+- filename: sv/templates/sv/_evenement_sort_link.html
+  checksum: 2d2d55ba063f2c815925d845ef860354398ad2830f36e0e5429163fd0131c101
+- filename: sv/tests/test_evenement_list_order.py
+  checksum: 8f9ff88f349a3e8be0d00903d6a9ccaa81db3c8c825a4feaccbb45042b641542
+- filename: core/mixins.py
+  checksum: a3e7662dc5fd7531847d3aea99bbd0b34e90b7b1fd3a9f57b25037fee28fb857
+- filename: conftest.py
+  checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
+- filename: core/pages.py
+  checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
+- filename: ssa/static/ssa/treeselectjs.umd.js
+  checksum: 3b66810a7309dce6fc4415cad1e05ff05ff1f756ae18be46fec6d30655066872
+- filename: sv/tests/test_evenement_message.py
+  checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
+- filename: ssa/forms.py
+  checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a
+- filename: core/migrations/0034_alter_document_document_type.py
+  checksum: ad80322fb2dab542fe667054b83761da8e386ce7357b123b2e30a0fea28f1f10
+- filename: .github/workflows/django.yml
+  checksum: bb2812e864802e3e55d05b28f6da146973a78b382dad3d94d1de8d4f10430657
+- filename: ssa/models/mixins.py
+  checksum: fde55f93bb5c2f6d49a9808e1953bc51488b4df5926146e6325daf6d2d6e104e
+- filename: core/migrations/0036_alter_document_document_type.py
+  checksum: 2e8699e33c60f9a9449163078d9171b0186bb7d490e72cf926d15b6833eda02e
+- filename: core/templates/core/_documents.html
+  checksum: dcfbe5645e746a88ab08eb84661bd4f8f78c9a40d7b8eafa85608253d68554c6
+- filename: core/signals.py
+  checksum: cc815105e3512722970c0210b92e488988efc161f76eacbc1d7de914af9c8de0
+- filename: sv/static/sv/fichezone_form.mjs
+  checksum: fc941aa06b62bbd429a0b06f5c2f937e7ab8b204deb09605e242900cf695795d
+- filename: core/migrations/0038_alter_document_document_type.py
+  checksum: 163863b4e81f98815cb80de9e583ef6ba786b924936087630a4fe27dfa7ad05d
+- filename: tiac/static/tiac/etablissements.mjs
+  checksum: 47e4768c4bea879aa0043812662bb786bedd8a87eaa241029f762214ac4bad1e
+- filename: .env.dist
+  checksum: 71e0c291bc6cb34a0deee34ad3c4e16dd41b5348484af207e4e6148b368f5b7b
+- filename: tiac/views.py
+  checksum: f13c23b34151467f9e8a458221573f6dc6371799d0b8969b18c2d71082d293b9
+- filename: tiac/formsets.py
+  checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
+- filename: tiac/models.py
+  checksum: a7573c54e278943191c331e703ae17bf6d0ff1f776706fd44b050453eef50d76
+- filename: tiac/forms.py
+  checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
+- filename: tiac/admin.py
+  checksum: be86624d7fd8ef05cb4ff81c8c90010d2f28b55ce054b861f3c5d61fc9042596
+- filename: tiac/tests/pages.py
+  checksum: 4c60d8d5e703622c010ba919827f5fda1000e1f0f0f607e1eadc0673698b11b2
+- filename: tiac/tests/test_investigation_tiac_creation.py
+<<<<<<< HEAD
+  checksum: 91853f8d50c79914c242736f87adfaf98e71eb4758ba87a3b689d9086ec066cc
+=======
+  checksum: 20d45b7457f86a1f29c4acdc0e2392dd3ec0ccd626e4f3ec33b22062ee173a2a
+>>>>>>> 37248a8 (feat(TIAC): Add etablissements to TIAC investigation)
+version: "1.0"

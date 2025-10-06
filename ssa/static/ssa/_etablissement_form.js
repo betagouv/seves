@@ -61,10 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupSiretBlock(modal, addressChoices){
         const siretSelect = modal.querySelector("[id^=search-siret-input-]")
-        if (!siretSelect.dataset.token){
-            return
-        }
-
         configureSiretField(siretSelect, addressChoices, siretSelect.dataset.communesApi)
     }
 

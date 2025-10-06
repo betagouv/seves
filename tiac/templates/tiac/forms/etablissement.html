@@ -1,4 +1,4 @@
-{% load dsfr_tags widget_tweaks %}
+{% load widget_tweaks %}
 
 <div class="fr-input-group">
     {{ form.type_etablissement.label_tag }}
@@ -6,9 +6,7 @@
 </div>
 <div class="fr-input-group">
     {{ form.siret.label_tag }}
-    {% with data_token=sirene_token|strfmt:"token:{0}" %}
-        {{ form.siret|set_data:"etablissement-form-target:siretInput"|set_data:data_token|set_data:"action:choice->etablissement-form#onSiretChoice" }}
-    {% endwith %}
+    {{ form.siret|set_data:"etablissement-form-target:siretInput"|set_data:"action:choice->etablissement-form#onSiretChoice" }}
 </div>
 <div class="fr-input-group">
     {{ form.raison_sociale.label_tag }}
@@ -34,5 +32,47 @@
     {{ form.pays.label_tag }}
     {{ form.pays|set_data:"etablissement-form-target:paysInput" }}
 </div>
+<fieldset class="fr-fieldset fr-fieldset__content form-fieldset fr-background-alt--grey">
+    <div class="fr-fieldset__element">
+        <div class="fr-input-group">
+            <div class="fr-toggle">
+                {{ form.has_inspection|add_class:"fr-toggle__input"|set_data:"action:etablissement-form#onInspectionToggle"|set_data:"etablissement-form-target:hasInspection" }}
+                <label
+                    class="fr-toggle__label"
+                    for="{{ form.has_inspection.auto_id }}"
+                    data-fr-checked-label="Activé"
+                    data-fr-unchecked-label="Désactivé"
+                >{{ form.has_inspection.label }}</label>
+            </div>
+        </div>
+    </div>
+    <fieldset class="fr-col" data-etablissement-form-target="inspectionFields">
+        <div class="fr-fieldset__element">
+            <div class="fr-input-group">
+                {{ form.numero_resytal.label_tag }}
+                {{ form.numero_resytal }}
+            </div>
+        </div>
+        <div class="fr-fieldset__element">
+            <div class="fr-input-group">
+                {{ form.date_inspection.label_tag }}
+                {{ form.date_inspection }}
+            </div>
+        </div>
+        <div class="fr-fieldset__element">
+            <div class="fr-input-group">
+                {{ form.evaluation.label_tag }}
+                {{ form.evaluation }}
+            </div>
+        </div>
+        <div class="fr-fieldset__element">
+            <div class="fr-input-group">
+                {{ form.commentaire.label_tag }}
+                {{ form.commentaire }}
+            </div>
+        </div>
+    </fieldset>
+</fieldset>
 {{ form.code_insee|set_data:"etablissement-form-target:codeInseeInput" }}
 {{ form.DELETE|set_data:"etablissement-form-target:deleteInput" }}
+{{ form.id }}

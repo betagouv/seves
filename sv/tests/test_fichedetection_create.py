@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from unittest import mock
 
 import pytest
 from django.conf import settings
@@ -649,43 +648,28 @@ def test_create_fiche_detection_with_lieu_using_siret(
         libelle_long="Mon ON",
     )
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.is_etablissement_checkbox.click()
+    lieu_form_elements.sirene_btn.click()
+    choice_js_fill(
+        page,
+        "#header-search-0 .fr-select .choices__list--single",
+        "120 079 017",
+        "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
     )
+    assert call_count["count"] == 1
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-        mock_post.assert_called_once_with(
-            "https://api.insee.fr/token",
-            headers={"Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic Rk9POkJBUg=="},
-            data={
-                "grant_type": "client_credentials",
-                "validity_period": 3600,
-            },
-            timeout=0.2,
-        )
-        expect(form_elements.add_prelevement_btn).to_be_disabled()
-        choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
-        form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-
-        form_elements.add_lieu_btn.click()
-        page.wait_for_timeout(200)
-        lieu_form_elements.nom_input.fill("Mon lieu")
-        lieu_form_elements.is_etablissement_checkbox.click()
-        lieu_form_elements.sirene_btn.click()
-        choice_js_fill(
-            page,
-            "#header-search-0 .fr-select .choices__list--single",
-            "120 079 017",
-            "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
-        )
-        assert call_count["count"] == 1
-
-        lieu_form_elements.save_btn.click()
-        form_elements.publish_btn.click()
-        page.wait_for_timeout(1000)
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+    page.wait_for_timeout(1000)
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()

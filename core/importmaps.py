@@ -7,10 +7,12 @@ importmaps = {
     "Application": static("core/stimulus_app.mjs"),
     "choicesDefaults": static("core/choices.mjs"),
     "BaseFormset": static("core/base_formset.mjs"),
+    "BaseFormInModal": static("core/base_form_in_modal.mjs"),
     "dsfr": static("dsfr/dist/dsfr.module.min.js"),
     "BanAutocomplete": static("core/ban_autocomplete.js"),
     "Forms": static("core/forms.mjs"),
     "ViewManager": static("core/view_manager.js"),
     "CustomTreeSelect": static("ssa/_custom_tree_select.js"),
     "siret": static("core/siret.mjs"),
+    "TreeSelect": static("ssa/treeselectjs.umd.js"),
 }

@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "numero_resytal",
-                    models.CharField(blank=True, verbose_name="Numéro Résytal"),
+                    models.CharField(blank=True, verbose_name="Numéro Resytal"),
                 ),
                 (
                     "evaluation",

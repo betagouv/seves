@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 from django.http import JsonResponse
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
@@ -12,7 +13,7 @@ from ssa.models import EvenementProduit, Etablissement
 from ssa.models import TypeEvenement, Source
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
-from tiac.factories import EvenementSimpleFactory
+from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",
@@ -360,6 +361,22 @@ def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_
     assert lien.related_object_2 == evenement_simple
 
 
+def test_can_add_free_links_to_investigation_tiac(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory.build()
+    investigation = InvestigationTiacFactory(etat=EvenementProduit.Etat.EN_COURS)
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(investigation.numero, choice_js_fill, link_label="Investigation de tiac : ")
+    creation_page.submit_as_draft()
+    creation_page.page.wait_for_timeout(600)
+
+    evenement = EvenementProduit.objects.get()
+    lien = LienLibre.objects.get()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == investigation
+
+
 def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
     evenement = EvenementProduitFactory()
     evenement_1 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
@@ -550,10 +567,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A120079017*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
         data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
@@ -570,14 +584,8 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     mocked_view = mock.Mock()
     mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
 
-    with (
-        mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view),
-        mock.patch("core.mixins.requests.post") as mock_post,
-    ):
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-
+    with mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view):
         creation_page.navigate()
-        mock_post.assert_called_once()
 
         creation_page.fill_required_fields(evenement)
 
@@ -620,10 +628,7 @@ def test_can_create_etablissement_with_force_siret_value(
         route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
 
     handle_insee_commune = Mock(side_effect=Exception("Shound not be called"))
 
@@ -633,12 +638,7 @@ def test_can_create_etablissement_with_force_siret_value(
     )
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
-
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        creation_page.navigate()
-        mock_post.assert_called_once()
-
+    creation_page.navigate()
     creation_page.fill_required_fields(evenement)
 
     creation_page.open_etablissement_modal()
@@ -718,10 +718,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
         call_count["count"] += 1
 
-    page.route(
-        "https://api.insee.fr/entreprises/sirene/siret?nombre=100&q=siren%3A123123123*%20AND%20-periode(etatAdministratifEtablissement:F)",
-        handle_insee_siret,
-    )
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
         data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
@@ -735,10 +732,7 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        creation_page.navigate()
-        mock_post.assert_called_once()
+    creation_page.navigate()
 
     creation_page.fill_required_fields(evenement)
 

@@ -1,20 +1,19 @@
-import base64
 import datetime
+import logging
 from collections import defaultdict
-from json import JSONDecodeError
 from typing import Mapping
 
-import requests
+from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, transaction
+from django.db.models import Q
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from requests import ConnectTimeout, ReadTimeout
 from django.views.generic import FormView
 
 from core.forms import (
@@ -24,15 +23,12 @@ from core.forms import (
     StructureAddForm,
     AgentAddForm,
 )
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
+from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from core.models import user_is_referent_national
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
 from .notifications import notify_message
 from .redirect import safe_redirect
-from celery.exceptions import OperationalError
-import logging
-
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
 logger = logging.getLogger(__name__)
@@ -113,7 +109,7 @@ class WithMessageMixin:
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         message_list = (
-            obj.messages.all()
+            obj.messages.filter(Q(status=Message.Status.FINALISE) | Q(sender=self.request.user.agent.contact_set.get()))
             .select_related("sender__agent__structure", "sender_structure")
             .prefetch_related(
                 "recipients__agent",
@@ -373,19 +369,19 @@ class WithEtatMixin(models.Model):
     def can_publish(self, user):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
-    def can_be_cloturer_by(self, user):
+    def can_be_cloture_by(self, user):
         return user.agent.structure.is_ac
 
     def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
         return len(contacts_not_in_fin_suivi) == 1 and contacts_not_in_fin_suivi[0].structure == user.agent.structure
 
-    def can_be_cloturer(self, user) -> tuple[bool, str]:
+    def can_be_cloture(self, user) -> tuple[bool, str]:
         if self.is_draft:
             return False, "L'événement est en brouillon et ne peut pas être clôturé."
         if self.is_cloture:
             return False, f"L'événement n°{self.numero} est déjà clôturé."
-        if not self.can_be_cloturer_by(user):
+        if not self.can_be_cloture_by(user):
             return False, "Vous n'avez pas les droits pour clôturer cet événement."
         return True, ""
 
@@ -481,35 +477,6 @@ class EmailNotificationMixin:
         return f"{self.get_absolute_url()}?message={message_id}"
 
 
-class WithSireneTokenMixin:
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return self._siren_token_context(**context)
-
-    def get_context(self):
-        context = super().get_context()
-        return self._siren_token_context(**context)
-
-    def _siren_token_context(self, **context):
-        if not (settings.SIRENE_CONSUMER_KEY and settings.SIRENE_CONSUMER_SECRET):
-            return context
-        basic_auth = f"{settings.SIRENE_CONSUMER_KEY}:{settings.SIRENE_CONSUMER_SECRET}"
-        auth_header = base64.b64encode(basic_auth.encode()).decode()
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {auth_header}",
-        }
-        data = {"grant_type": "client_credentials", "validity_period": 60 * 60}
-
-        try:
-            response = requests.post("https://api.insee.fr/token", headers=headers, data=data, timeout=0.200)
-            context["sirene_token"] = response.json()["access_token"]
-        except (KeyError, ConnectionError, ConnectTimeout, ReadTimeout, JSONDecodeError):
-            pass
-
-        return context
-
-
 class WithFormErrorsAsMessagesMixin(FormView):
     def form_invalid(self, form):
         for _, errors in form.errors.as_data().items():
@@ -601,7 +568,7 @@ class WithClotureContextMixin:
         context["contacts_not_in_fin_suivi"] = contacts_structures_not_in_fin_suivi = (
             object.get_contacts_structures_not_in_fin_suivi()
         )
-        context["is_evenement_can_be_cloturer"], _ = object.can_be_cloturer(user)
+        context["is_evenement_can_be_cloture"], _ = object.can_be_cloture(user)
         context["is_the_only_remaining_structure"] = object.is_the_only_remaining_structure(
             user, contacts_structures_not_in_fin_suivi
         )

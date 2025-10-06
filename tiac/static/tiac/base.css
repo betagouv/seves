@@ -13,14 +13,14 @@ label:has(+ .choices select[data-required="true"])::after,
 
 /* Except in modals because the field is marked as not required in the form class but the required attribute is
 added via JS when opening the modal */
-.modal-etablissement label:has(+ input:required)::after,
-.modal-etablissement label:has(+ input[data-required="true"])::after,
-.modal-etablissement label:has(+ select:required)::after,
-.modal-etablissement label:has(+ select[data-required="true"])::after,
-.modal-etablissement label:has(+ textarea:required)::after,
-.modal-etablissement label:has(+ textarea[data-required="true"])::after,
-.modal-etablissement label:has(+ .choices select:required)::after,
-.modal-etablissement label:has(+ .choices select[data-required="true"])::after,
+.modal-needs-required label:has(+ input:required)::after,
+.modal-needs-required label:has(+ input[data-required="true"])::after,
+.modal-needs-required label:has(+ select:required)::after,
+.modal-needs-required label:has(+ select[data-required="true"])::after,
+.modal-needs-required label:has(+ textarea:required)::after,
+.modal-needs-required label:has(+ textarea[data-required="true"])::after,
+.modal-needs-required label:has(+ .choices select:required)::after,
+.modal-needs-required label:has(+ .choices select[data-required="true"])::after,
 .required-field::after {
     content: "*";
 }
@@ -42,4 +42,14 @@ fieldset.form-fieldset .fr-fieldset__legend {
     margin-right: 0;
     padding-left: 0;
     padding-right: 0;
+}
+
+
+.btn-add-group .fr-menu {
+    margin: 0;
+}
+
+.btn-add-group .fr-translate .fr-translate__btn::before {
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }

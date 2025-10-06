@@ -6,7 +6,7 @@ app_name = "tiac"
 urlpatterns = [
     path(
         "evenements/",
-        views.EvenementListView.as_view(),
+        views.TiacListView.as_view(),
         name="evenement-liste",
     ),
     path(
@@ -25,13 +25,18 @@ urlpatterns = [
         name="evenement-simple-details",
     ),
     path(
-        "investigation-tiac/<str:numero>/",
-        views.InvestigationTiacDetailView.as_view(),
-        name="investigation-tiac-details",
-    ),
-    path(
         "evenement-simple/<int:pk>/transfer",
         views.EvenementSimpleTransferView.as_view(),
         name="evenement-simple-transfer",
+    ),
+    path(
+        "evenement-simple/<int:pk>/edition",
+        views.EvenementSimpleUpdateView.as_view(),
+        name="evenement-simple-edition",
+    ),
+    path(
+        "investigation-tiac/<str:numero>/",
+        views.InvestigationTiacDetailView.as_view(),
+        name="investigation-tiac-details",
     ),
 ]

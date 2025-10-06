@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.forms import Media
 from django.utils import timezone
@@ -8,19 +10,37 @@ from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.mixins import WithSireneTokenMixin
-from core.models import Contact, Message, Structure
-from ssa.models import EvenementProduit
-from tiac.constants import EvenementOrigin, EvenementFollowUp
+from core.models import Contact, Message, Structure, Departement
+from django.conf import settings
+from ssa.models import EvenementProduit, CategorieProduit
+from tiac.constants import (
+    EvenementOrigin,
+    EvenementFollowUp,
+    TypeRepas,
+    Motif,
+    MotifAliment,
+    TypeAliment,
+    TypeCollectivite,
+)
 from tiac.constants import ModaliteDeclarationEvenement
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, TypeEvenement
+from tiac.constants import DangersSyndromiques
+from tiac.fields import SelectWithAttributeField
+from tiac.models import (
+    EvenementSimple,
+    Etablissement,
+    InvestigationTiac,
+    TypeEvenement,
+    Analyses,
+    validate_resytal,
+    RepasSuspect,
+    AlimentSuspect,
+)
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     date_reception = forms.DateTimeField(
-        required=False,
         label="Date de réception à la DD(ETS)PP",
-        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -50,7 +70,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "follow_up",
         )
         widgets = {
-            "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+            "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
 
     @property
@@ -92,12 +112,19 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             .get_user_can_view(self.user)
             .exclude(etat=EvenementProduit.Etat.BROUILLON)
         )
+        queryset_investigation_tiac = (
+            InvestigationTiac.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
         self.fields["free_link"] = MultiModelChoiceField(
             required=False,
             label="Sélectionner un objet",
             model_choices=[
                 ("Enregistrement simple", queryset),
-                ("Évenement produit", queryset_evenement_produit),
+                ("Événement produit", queryset_evenement_produit),
+                ("Investigation de tiac", queryset_investigation_tiac),
             ],
         )
 
@@ -137,7 +164,7 @@ class MessageForm(BaseMessageForm):
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
 
 
-class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
+class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     template_name = "tiac/forms/etablissement.html"
 
     siret = forms.CharField(
@@ -149,8 +176,26 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
     )
     type_etablissement = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition..."}),
+        widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition…"}),
     )
+
+    date_inspection = forms.DateTimeField(
+        required=False,
+        label="Date d'inspection",
+        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": ""}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self["numero_resytal"].field.widget.attrs.update(
+            {
+                "pattern": re.sub(r"\\+", r"\\", validate_resytal.regex.pattern),
+                "data-errormessage": validate_resytal.message,
+                "placeholder": "25-000000",
+            }
+        )
+        if self.instance and self.instance.siret:
+            self["siret"].field.widget.choices = ((self.instance.siret, f"{self.instance.siret} (Forcer la valeur)"),)
 
     class Meta:
         model = Etablissement
@@ -164,6 +209,11 @@ class EtablissementForm(WithSireneTokenMixin, DsfrBaseForm, BaseEtablissementFor
             "code_insee",
             "departement",
             "pays",
+            "has_inspection",
+            "numero_resytal",
+            "date_inspection",
+            "evaluation",
+            "commentaire",
         ]
         widgets = {"code_insee": forms.HiddenInput}
 
@@ -197,6 +247,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         widget=forms.RadioSelect,
         label="Modalités de déclaration",
     )
+    numero_sivss = forms.CharField(
+        required=False,
+        label="N° SIVSS de l'ARS",
+        widget=forms.TextInput(
+            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+        ),
+    )
     type_evenement = forms.ChoiceField(
         choices=TypeEvenement.choices, widget=forms.RadioSelect, label="Type d'événement", required=True
     )
@@ -228,6 +285,15 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         ),
     )
 
+    danger_syndromiques_suspectes_display = forms.ChoiceField(
+        choices=DangersSyndromiques.choices, widget=forms.RadioSelect, label="", required=False
+    )
+    danger_syndromiques_suspectes = forms.CharField(widget=forms.HiddenInput, required=False)
+    analyses_sur_les_malades = forms.ChoiceField(
+        choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
+    )
+    precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+
     class Meta:
         model = InvestigationTiac
         fields = (
@@ -244,6 +310,10 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "nb_dead_persons",
             "datetime_first_symptoms",
             "datetime_last_symptoms",
+            "danger_syndromiques_suspectes_display",
+            "danger_syndromiques_suspectes",
+            "analyses_sur_les_malades",
+            "precisions",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
@@ -253,12 +323,14 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"),),
+            js=(js_module("core/free_links.mjs"), js_module("tiac/etiologie.mjs")),
         )
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self._add_free_links()
+        self.initial["danger_syndromiques_suspectes"] = []
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -267,4 +339,128 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
+        self.save_free_links(instance)
         return instance
+
+    def _add_free_links(self, model=None):
+        instance = getattr(self, "instance", None)
+
+        queryset = (
+            InvestigationTiac.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementSimple.Etat.BROUILLON)
+        )
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        queryset_evenement_produit = (
+            EvenementProduit.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
+        queryset_evenement_simple = (
+            EvenementSimple.objects.all()
+            .order_by_numero()
+            .get_user_can_view(self.user)
+            .exclude(etat=EvenementProduit.Etat.BROUILLON)
+        )
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=[
+                ("Investigation de tiac", queryset),
+                ("Enregistrement simple", queryset_evenement_simple),
+                ("Événement produit", queryset_evenement_produit),
+            ],
+        )
+
+
+class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "tiac/forms/repas_suspect.html"
+
+    denomination = forms.CharField(
+        label="Dénomination", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    menu = forms.CharField(widget=forms.Textarea(attrs={"cols": 30, "rows": 3}), label="Menu", required=False)
+    motif_suspicion = forms.MultipleChoiceField(
+        choices=Motif.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Motif de suspicion du repas",
+    )
+    datetime_repas = forms.DateTimeField(
+        required=False,
+        label="Date et heure du repas",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={
+                "type": "datetime-local",
+            },
+        ),
+    )
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        label="Département",
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
+    type_repas = SEVESChoiceField(
+        required=False, choices=TypeRepas.choices, label="Type de repas", widget=SelectWithAttributeField
+    )
+    type_collectivite = SEVESChoiceField(required=False, choices=TypeCollectivite.choices, label="Type de collectivité")
+
+    class Meta:
+        model = RepasSuspect
+        fields = [
+            "denomination",
+            "menu",
+            "motif_suspicion",
+            "datetime_repas",
+            "nombre_participant",
+            "departement",
+            "type_repas",
+            "type_collectivite",
+        ]
+
+
+class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "tiac/forms/aliment_suspect.html"
+
+    denomination = forms.CharField(
+        label="Dénomination de l'aliment", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    type_aliment = forms.ChoiceField(
+        label="Type d'aliment prélevé", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
+    )
+    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
+    description_composition = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
+        label="Description de la composition de l'aliment",
+        required=False,
+    )
+    description_produit = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
+        label="Description produit et emballage",
+        required=False,
+        help_text="Marque, n° de lot, DLC ...",
+    )
+    motif_suspicion = forms.MultipleChoiceField(
+        choices=MotifAliment.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Motif de suspicion de l'aliment",
+    )
+
+    class Meta:
+        model = AlimentSuspect
+        fields = [
+            "denomination",
+            "type_aliment",
+            "categorie_produit",
+            "description_composition",
+            "description_produit",
+            "motif_suspicion",
+        ]

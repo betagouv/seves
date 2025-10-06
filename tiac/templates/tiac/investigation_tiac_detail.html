@@ -3,14 +3,71 @@
 {% load etat_tags %}
 {% load or_empty_value_tag %}
 
+{% block extrahead %}
+  <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
+{% endblock extrahead %}
+{% block scripts %}
+  <script type="module" src="{% static 'core/sidebar.js' %}"></script>
+  <script type="module" src="{% static 'core/message_form.js' %}"></script>
+  <script type="module" src="{% static 'core/document_form.js' %}"></script>
+  <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+{% endblock %}
+
+{% block aside %}
+  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url extra_classes="modal-needs-required" %}
+  {% include "core/_document_warning_modal.html" %}
+  {% include "core/_message_update_forms.html" with object=object %}
+  {% for message in message_list %}
+    {% if not message.is_draft %}
+      {% include "core/_sidebar_message_details.html" %}
+    {% endif %}
+  {% endfor %}
+{% endblock aside %}
 
 
 {% block content %}
   <main class="main-container">
     <div>
       <div class="details-top-row">
-        <h1 class="fr-mb-0-5v">Investigation TIAC {{ object.numero }}</h1>
+        <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+
+        {% if can_be_deleted %}
+          {% url 'tiac:evenement-liste' as next_url %}
+          {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+        {% endif %}
+        {% if is_evenement_can_be_cloture %}
+          {% include "core/_cloturer_modal.html" with evenement=object %}
+        {% endif %}
+
+        <div class="details-top-row--actions">
+          <ul class="fr-btns-group fr-btns-group--inline-md">
+            {% if can_publish %}
+              <li>
+                <form action="{% url 'publish' %}" method="post">
+                  {% csrf_token %}
+                  <input type="hidden" value="{{ object.get_absolute_url }}" name="next">
+                  <input type="hidden" value="{{ content_type.id }}" name="content_type_id">
+                  <input type="hidden" value="{{ object.pk }}" name="content_id">
+                  <input type="submit" class="fr-btn fr-btn--secondary" value="Publier"/>
+                </form>
+              </li>
+            {% endif %}
+            <li>
+              {% include "tiac/_investigation_action_navigation.html" %}
+            </li>
+          </ul>
+        </div>
+
       </div>
+      <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
+
+    {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
+
+    {% if not object.is_draft %}
+      {% include "core/_fiche_bloc_commun.html" with object=object %}
+    {% endif %}
+
   </main>
 {% endblock %}

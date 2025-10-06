@@ -1,5 +1,3 @@
-from unittest import mock
-
 from playwright.sync_api import expect
 
 from core.factories import StructureFactory, DepartementFactory
@@ -178,10 +176,8 @@ def test_can_see_and_edit_etablissement_on_evenement_produit_update(
     departement = DepartementFactory()
     wanted_values = EtablissementFactory.build(departement=departement)
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        update_page = EvenementProduitFormPage(page, live_server.url)
-        update_page.navigate_update_page(evenement)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
 
     etablissement_card = update_page.etablissement_card()
     assert_etablissement_card_is_correct(etablissement_card, etablissement_1)
@@ -209,10 +205,8 @@ def test_can_add_etablissement_on_evenement_produit_update(live_server, page, se
     departement = DepartementFactory()
     wanted_values = EtablissementFactory.build(departement=departement)
 
-    with mock.patch("core.mixins.requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"access_token": "FAKE_TOKEN"}
-        update_page = EvenementProduitFormPage(page, live_server.url)
-        update_page.navigate_update_page(evenement)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
 
     update_page.add_etablissement(wanted_values)
     update_page.publish()

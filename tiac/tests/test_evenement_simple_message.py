@@ -12,6 +12,8 @@ from core.tests.generic_tests.messages import (
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
+    generic_test_cant_see_drafts_from_other_users,
+    generic_test_structure_show_only_one_entry_in_select,
 )
 from tiac.factories import EvenementSimpleFactory
 from tiac.models import EvenementSimple
@@ -20,6 +22,11 @@ from tiac.models import EvenementSimple
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
+
+
+def test_cant_see_drafts_from_other_users(live_server, page: Page):
+    evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    generic_test_cant_see_drafts_from_other_users(live_server, page, evenement_produit)
 
 
 def test_can_update_draft_note(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
@@ -108,3 +115,8 @@ def test_can_see_and_delete_documents_from_draft_message(
 def test_only_displays_ssa_contacts(live_server, page: Page, mocked_authentification_user):
     evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_only_displays_app_contacts(live_server, page, evenement_produit, "ssa")
+
+
+def test_structure_show_only_one_entry_in_select(live_server, page: Page):
+    evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement_produit)

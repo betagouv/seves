@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import auth_views
 from .views import (
     DocumentUploadView,
@@ -15,6 +16,7 @@ from .views import (
     PublishAndACNotificationView,
     EvenementOuvrirView,
     MessageUpdateView,
+    sirene_api,
 )
 
 urlpatterns = [
@@ -97,5 +99,10 @@ urlpatterns = [
         "evenement/<int:pk>/ouvrir/",
         EvenementOuvrirView.as_view(),
         name="evenement-ouvrir",
+    ),
+    path(
+        "siret/<str:siret>/",
+        sirene_api,
+        name="siret-api",
     ),
 ]

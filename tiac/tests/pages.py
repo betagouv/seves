@@ -5,60 +5,29 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Page
 
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac
+from tiac.constants import TypeRepas
+from ssa.tests.pages import WithTreeSelect
+from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
 
 
-class EvenementSimpleFormPage:
-    fields = [
-        "date_reception",
-        "evenement_origin",
-        "modalites_declaration",
-        "contenu",
-        "notify_ars",
-        "nb_sick_persons",
-        "follow_up",
-    ]
-
-    def __init__(self, page: Page, base_url):
-        self.page = page
-        self.base_url = base_url
-        for field in self.fields:
-            setattr(self, field, page.locator(f"#id_{field}"))
-
-    def navigate(self):
-        self.page.goto(f"{self.base_url}{reverse('tiac:evenement-simple-creation')}")
-
-    def set_follow_up(self, value):
-        self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
-
-    def set_modalites_declaration(self, value):
-        self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
-            force=True
-        )
-
-    def set_notify_ars(self, value):
-        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
-            force=True
-        )
-
-    def fill_required_fields(self, evenement: EvenementSimple):
-        self.contenu.fill(evenement.contenu)
-        self.set_follow_up(evenement.follow_up)
-
-    def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
-        redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
-        self.page.wait_for_url(f"**{redirect}")
-
-    def add_free_link(self, numero, choice_js_fill, link_label="Enregistrement simple : "):
-        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
-
+class WithEtablissementMixin:
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
+    @property
+    def etablissement_modal(self):
+        return self.page.locator(".fr-modal").locator("visible=true")
+
+    def get_etablissement_card(self, card_index=0):
+        return self.page.locator(".modal-etablissement-container").all()[card_index].locator(".etablissement-card")
+
+    def etablissement_open_modal(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
+
     def open_etablissement_modal(self):
-        self.page.get_by_role("button", name="Ajouter").click()
+        self.page.locator(".etablissement-header").get_by_role("button", name="Ajouter").click()
+        self.current_modal.wait_for(state="visible")
         return self.current_modal
 
     @property
@@ -99,19 +68,11 @@ class EvenementSimpleFormPage:
         self.fill_etablissement(modal, etablissement)
         self.close_etablissement_modal()
 
-    def publish(self):
-        self.page.locator("#submit_publish").click()
-
-    def get_etablissement_card(self, card_index):
-        return self.page.locator(".modal-etablissement-container").all()[card_index].locator(".etablissement-card")
-
-    def get_detail_modal_content(self, index):
-        self.get_etablissement_card(index).locator(".detail-display").click()
-        modal = self.page.locator(".detail-modal").locator("visible=true")
-        content = [it for it in re.split(r"\s*\n\s*", modal.locator(".fr-modal__content").text_content()) if it]
-        modal.locator(".fr-btn--close").click()
+    def delete_etablissement(self, card_index):
+        self.get_etablissement_card(card_index).locator(".delete-button").click()
+        modal = self.page.locator(".delete-modal").locator("visible=true")
+        modal.locator(".delete-confirmation").click()
         modal.wait_for(state="hidden")
-        return content
 
     def edit_etablissement(self, index, **kwargs):
         card = self.get_etablissement_card(index)
@@ -123,6 +84,78 @@ class EvenementSimpleFormPage:
             ).locator(f'[id$="{k}"]').fill(v)
 
         self.close_etablissement_modal()
+
+
+class EvenementSimpleFormPage(WithEtablissementMixin):
+    fields = [
+        "date_reception",
+        "evenement_origin",
+        "modalites_declaration",
+        "contenu",
+        "notify_ars",
+        "nb_sick_persons",
+        "follow_up",
+    ]
+
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+        for field in self.fields:
+            setattr(self, field, page.locator(f"#id_{field}"))
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('tiac:evenement-simple-creation')}")
+
+    def set_follow_up(self, value):
+        self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
+
+    def set_modalites_declaration(self, value):
+        self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
+            force=True
+        )
+
+    def set_notify_ars(self, value):
+        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}' i]").check(
+            force=True
+        )
+
+    def fill_required_fields(self, evenement: EvenementSimple):
+        self.contenu.fill(evenement.contenu)
+        self.set_follow_up(evenement.follow_up)
+
+    def submit_as_draft(self):
+        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
+        self.page.wait_for_url(f"**{redirect}")
+
+    def add_free_link(self, numero, choice_js_fill, link_label="Enregistrement simple : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
+
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def publish(self):
+        self.page.locator("#submit_publish").click()
+
+    def get_detail_modal_content(self, index):
+        self.get_etablissement_card(index).locator(".detail-display").click()
+        modal = self.page.locator(".detail-modal").locator("visible=true")
+        content = [it for it in re.split(r"\s*\n\s*", modal.locator(".fr-modal__content").text_content()) if it]
+        modal.locator(".fr-btn--close").click()
+        modal.wait_for(state="hidden")
+        return content
+
+
+class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
+    def __init__(self, page: Page, base_url, event: EvenementSimple):
+        super().__init__(page, base_url)
+        self.event = event
+
+    def navigate(self):
+        return self.page.goto(
+            f"{self.base_url}{reverse('tiac:evenement-simple-edition', kwargs={'pk': self.event.pk})}"
+        )
 
 
 class EvenementListPage:
@@ -164,7 +197,7 @@ class EvenementListPage:
         return self._cell_content(line_index, 9)
 
 
-class EvenementSimpleDetailsPage:
+class EvenementSimpleDetailsPage(WithEtablissementMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -196,6 +229,9 @@ class EvenementSimpleDetailsPage:
     def links_block(self):
         return self.page.get_by_role("heading", name="Événements liés").locator("..")
 
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
     def delete(self):
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_text("Supprimer l'événement", exact=True).click()
@@ -212,21 +248,11 @@ class EvenementSimpleDetailsPage:
         choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
         self.page.get_by_role("button", name="Transférer").click()
 
-    def etablissement_card(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index)
-
-    def etablissement_open_modal(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index).get_by_text("Voir le détail", exact=True).click()
-
-    @property
-    def etablissement_modal(self):
-        return self.page.locator(".fr-modal").locator("visible=true")
-
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage:
+class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -241,6 +267,8 @@ class InvestigationTiacFormPage:
         "nb_dead_persons",
         "datetime_first_symptoms",
         "datetime_last_symptoms",
+        "analyses_sur_les_malades",
+        "precisions",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -272,9 +300,149 @@ class InvestigationTiacFormPage:
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
+    def set_analyses(self, value):
+        self.page.locator("#radio-id_analyses_sur_les_malades").locator(
+            f"input[type='radio'][value='{str(value).lower()}']"
+        ).check(force=True)
+
     def fill_required_fields(self, object: InvestigationTiac):
         self.contenu.fill(object.contenu)
         self.set_type_evenement(object.type_evenement)
 
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def find_label_for_danger(self, text):
+        return self.current_modal.get_by_text(text[:25])
+
+    def open_danger_modal(self):
+        self.page.get_by_test_id("add-etiologie").click()
+
+    def add_danger_syndromique(self, text):
+        self.open_danger_modal()
+        self.find_label_for_danger(text).click()
+        self.current_modal.get_by_role("button", name="Vérifier").click()
+        self.current_modal.get_by_role("button", name="Confirmer").click()
+
+    def add_repas(self, repas: RepasSuspect):
+        self.page.get_by_test_id("add-repas").click()
+
+        for field in ["denomination", "menu", "nombre_participant"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(repas, field)))
+
+        for motif in repas.motif_suspicion:
+            self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]').check(force=True)
+
+        self.current_modal.locator('[id$="-datetime_repas"]').fill(repas.datetime_repas.strftime("%Y-%m-%dT%H:%M"))
+        self.current_modal.locator('[id$="-departement"]').select_option(f"{repas.departement}")
+        self.current_modal.locator('[id$="type_repas"]').select_option(f"{repas.type_repas}")
+        if repas.type_repas == TypeRepas.RESTAURATION_COLLECTIVE:
+            self.current_modal.locator('[id$="type_collectivite"]').select_option(f"{repas.type_collectivite}")
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def add_aliment_simple(self, aliment: AlimentSuspect):
+        self.page.get_by_test_id("add-aliment").click()
+
+        self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
+        self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
+
+        for field in ["denomination", "description_produit"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
+
+        for motif in aliment.motif_suspicion:
+            checkbox = self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]')
+            self.current_modal.locator(f'label[for="{checkbox.get_attribute("id")}"]').click()
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def add_aliment_cuisine(self, aliment: AlimentSuspect):
+        self.page.get_by_test_id("add-aliment").click()
+
+        self.current_modal.get_by_label("Aliment cuisiné").click(force=True)
+
+        for field in ["denomination", "description_composition"]:
+            self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
+
+        for motif in aliment.motif_suspicion:
+            checkbox = self.current_modal.locator(f'input[type="checkbox"][value="{motif}"]')
+            self.current_modal.locator(f'label[for="{checkbox.get_attribute("id")}"]').click()
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    def get_repas_card(self, card_index):
+        return self.page.locator(".modal-repas-container").all()[card_index].locator(".repas-card")
+
+    def get_aliment_card(self, card_index):
+        return self.page.locator(".modal-aliment-container").all()[card_index].locator(".aliment-card")
+
+    def edit_repas(self, index, **kwargs):
+        card = self.get_repas_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".repas-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def edit_aliment(self, index, **kwargs):
+        card = self.get_aliment_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".aliment-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def delete_danger_syndromique(self, index):
+        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role(
+            "button", name="Supprimer"
+        ).click()
+
+    def delete_repas(self, index):
+        self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def delete_aliment(self, index):
+        self.page.locator(".aliment-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    @property
+    def nb_dangers(self):
+        return self.page.locator(".etiologie-card-container").locator("visible=true").count()
+
+    @property
+    def nb_repas(self):
+        return self.page.locator(".repas-card").locator("visible=true").count()
+
+    @property
+    def nb_aliments(self):
+        return self.page.locator(".aliment-card").locator("visible=true").count()
+
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+
+    def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
+
+
+class InvestigationTiacDetailsPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self, object):
+        return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_test_id("delete-nav").click()
+        self.page.get_by_test_id("submit-delete-modal").click()
+
+    def cloturer(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Clôturer l'investigation").click()
+        self.page.get_by_role("button", name="Clôturer").click()

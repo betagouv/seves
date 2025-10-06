@@ -19,7 +19,7 @@
         {% endif %}
     </div>
 </div>
-{% include "core/_modale_ajout_document.html" %}
+{% include "core/_modale_ajout_document.html" with extra_classes="modal-needs-required" %}
 <div class="fr-container--fluid">
     {% if document_filter.qs %}
         <div class="fr-table fr-table" id="table-component">

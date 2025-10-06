@@ -20,6 +20,7 @@ django-dsfr
 dj-importmap
 django-template-partials
 django-waffle
+django-querysetsequence
 # Dev
 djhtml
 django-debug-toolbar
@@ -33,3 +34,4 @@ pytest-split
 pytest-rerunfailures
 playwright
 ruff
+requests-mock

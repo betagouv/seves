@@ -1,0 +1,57 @@
+.cas-fieldset .fr-grid-row {
+    align-items: end;
+}
+
+.danger-emphasis {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.etiologie-card-container {
+    background-color: var(--background-alt-grey);
+    width: 100%;
+}
+
+.form-fieldset {
+    display: block;
+    width: 100%;
+}
+
+fieldset.form-fieldset.repas-fieldset,
+fieldset.form-fieldset.aliment-fieldset,
+fieldset.form-fieldset.etablissement-fieldset  {
+    border: 1px var(--grey-975-100-active) solid;
+}
+
+fieldset.form-fieldset .fr-fieldset__legend{
+    float: unset;
+}
+
+.fieldset-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.etiologie-info {
+    color: var(--text-default-info);
+}
+
+.etiologie-template {
+    border: 1px solid  var(--text-default-info);
+    border-radius: 20px;
+}
+
+#radio-id_danger_syndromiques_suspectes_display .fr-label {
+    display: block !important;
+}
+
+.repas-modal, .aliment-modal .fr-checkbox-group {
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 78em) {
+    .fr-container {
+        max-width: unset;
+    }
+}
