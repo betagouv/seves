@@ -378,6 +378,7 @@ class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
+        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
         self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
 
