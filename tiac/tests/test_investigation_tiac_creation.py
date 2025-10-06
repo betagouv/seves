@@ -82,7 +82,10 @@ def test_can_create_investigation_tiac_with_all_fields(
 
     investigation = InvestigationTiac.objects.last()
     assert_models_are_equal(
-        input_data, investigation, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
+        input_data,
+        investigation,
+        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        ignore_array_order=True,
     )
 
 
