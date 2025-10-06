@@ -107,7 +107,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-simple-creation')}")
 
     def set_follow_up(self, value):
-        self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
+        self.follow_up.select_option(value)
 
     def set_modalites_declaration(self, value):
         self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
