@@ -201,8 +201,31 @@ def generic_test_can_update_draft_fin_suivi(live_server, page: Page, mocked_auth
     assert len(mailoutbox) == 0
 
 
-def generic_test_can_send_draft_element_suivi(
-    live_server, page: Page, mocked_authentification_user, object, mailoutbox, message_type
+def generic_test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    object.contacts.add(contact)
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.MESSAGE,
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    message_page.open_message()
+    message_page.submit_message()
+
+    # Wait for the page to confirm message was sent
+    expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
+
+    message.refresh_from_db()
+    assert message.status == Message.Status.FINALISE
+    assert len(mailoutbox) == 1
+
+
+def generic_test_can_send_draft_demande_intervention(
+    live_server, page: Page, mocked_authentification_user, object, mailoutbox
 ):
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     object.contacts.add(contact)
@@ -222,7 +245,32 @@ def generic_test_can_send_draft_element_suivi(
         content_object=object,
         status=Message.Status.BROUILLON,
         sender=mocked_authentification_user.agent.contact_set.get(),
-        message_type=message_type,
+        message_type=Message.DEMANDE_INTERVENTION,
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, message.id)
+    message_page.open_message()
+    message_page.submit_message()
+
+    # Wait for the page to confirm message was sent
+    expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
+
+    message.refresh_from_db()
+    assert message.status == Message.Status.FINALISE
+    assert len(mailoutbox) == 1
+
+
+def generic_test_can_send_draft_point_de_situation(
+    live_server, page: Page, mocked_authentification_user, object, mailoutbox
+):
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    object.contacts.add(contact)
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.POINT_DE_SITUATION,
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
