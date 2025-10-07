@@ -53,16 +53,16 @@ class RepasFormController extends BaseFormInModal {
                       ${repas.denomination}
                     </h3>
                     <div class="fr-card__desc">
-                        ${this.optionalText(repas.datetime_repas, `<p>${this.formatDate(repas.datetime_repas)}</p>`)}
+                        ${this.optionalText(repas.datetime_repas, `<p class="fr-card__detail fr-icon-calendar-2-line fr-my-2v">${this.formatDate(repas.datetime_repas)}</p>`)}
                         ${this.optionalText(repas.type_repas, `<p>${repas.type_repas}</p>`)}
                         ${this.optionalText(
                             repas.nombre_participant,
-                            `<p class="fr-badge fr-badge--info">${repas.nombre_participant} participant(s)</p>`
+                            `<p class="fr-badge fr-badge--info fr-badge--no-icon">${repas.nombre_participant} participant(s)</p>`
                         )}
                     </div>
                 </div>
                 <div class="fr-card__footer">
-                    <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-btns-group--right">
+                    <div class="fr-btns-group fr-btns-group--inline-lg fr-btns-group--icon-left fr-btns-group--sm fr-btns-group--right">
                         <button
                             class="fr-btn fr-btn--secondary fr-icon-edit-line fr-mb-0 modify-button"
                             type="button"
