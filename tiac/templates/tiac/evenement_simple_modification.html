@@ -1,0 +1,13 @@
+{% extends "tiac/evenement_simple.html" %}
+{% load dsfr_tags widget_tweaks static %}
+
+
+{% block title %}<h1 class="fr-col-6">Modification d'un enregistrement simple</h1>{% endblock %}
+{% block buttons %}
+    <div class="fr-links-group fr-links-group--inline">
+        <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
+        <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+            Enregistrer
+        </button>
+    </div>
+{% endblock %}
