@@ -1,0 +1,43 @@
+{% load or_empty_value_tag dsfr_tags %}
+<dialog aria-labelledby="fr-modal-title-modal-aliment-{{ aliment.pk }}" role="dialog"
+        id="fr-modal-aliment-{{ aliment.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-aliment-{{ aliment.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-aliment-{{ aliment.pk }}"
+                            class="fr-modal__title">{{ aliment.denomination }}</h1>
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Type d'aliment</div>
+                                <div class="fr-col-3">
+                                    {%  if aliment.type_aliment %}
+                                        <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ aliment.get_type_aliment_display }}</span>
+                                    {% else %}
+                                        <span class="empty-value">Vide</span>
+                                    {% endif %}
+                                </div>
+                                <div class="fr-col-3 bold">Description de la composition</div>
+                                <div class="fr-col-3">{{ aliment.description_composition|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Catégorie du produit</div>
+                                <div class="fr-col-3">{{ aliment.get_categorie_produit_display|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Description du produit</div>
+                                <div class="fr-col-3">{{ aliment.description_produit|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Motifs de suspicion</div>
+                                <div class="fr-col-3">{{ aliment.motif_suspicion_labels|or_empty_value_tag }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

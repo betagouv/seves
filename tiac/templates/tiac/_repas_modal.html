@@ -1,0 +1,52 @@
+{% load or_empty_value_tag dsfr_tags %}
+<dialog aria-labelledby="fr-modal-title-modal-repas-{{ repas.pk }}" role="dialog"
+        id="fr-modal-repas-{{ repas.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-repas-{{ repas.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-repas-{{ repas.pk }}"
+                            class="fr-modal__title">{{ repas.denomination }}</h1>
+
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Menu</div>
+                                <div class="fr-col-3">{{ repas.menu|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Motifs de suspicion</div>
+                                <div class="fr-col-3">{{ repas.motif_suspicion_labels|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Date du repas</div>
+                                <div class="fr-col-3">{{ repas.datetime_repas|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Nombre de participants</div>
+                                <div class="fr-col-3">
+                                    {%  if repas.nombre_participant >= 0 %}
+                                        <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }} participants</span>
+                                    {% else %}
+                                        <span class="empty-value">Vide</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Département</div>
+                                <div class="fr-col-3">{{ repas.departement|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Type de repas</div>
+                                <div class="fr-col-3">{{ repas.get_type_repas_display|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Type de collectivité</div>
+                                <div class="fr-col-3">{{ repas.type_collectivite|or_empty_value_tag }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

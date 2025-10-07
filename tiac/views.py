@@ -347,7 +347,11 @@ class InvestigationTiacDetailView(
         return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
-        return InvestigationTiac.objects.all().select_related("createur")
+        return (
+            InvestigationTiac.objects.all()
+            .select_related("createur")
+            .prefetch_related("repas__departement", "documents")
+        )
 
     def get_object(self, queryset=None):
         if hasattr(self, "object"):

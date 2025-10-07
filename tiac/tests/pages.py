@@ -501,3 +501,25 @@ class InvestigationTiacDetailsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_role("link", name="Clôturer l'investigation").click()
         self.page.get_by_role("button", name="Clôturer").click()
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
+    def aliment_card(self, index=0):
+        return self.page.locator(".aliment-card").nth(index)
+
+    def repas_card(self, index=0):
+        return self.page.locator(".repas-card").nth(index)
+
+    def etablissement_open_modal(self, index=0):
+        return self.etablissement_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def aliment_open_modal(self, index=0):
+        return self.aliment_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def repas_open_modal(self, index=0):
+        return self.repas_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")

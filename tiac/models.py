@@ -449,6 +449,10 @@ class RepasSuspect(models.Model):
             )
         ]
 
+    @property
+    def motif_suspicion_labels(self):
+        return ", ".join(Motif(m).label for m in self.motif_suspicion)
+
 
 class AlimentSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
@@ -482,3 +486,7 @@ class AlimentSuspect(models.Model):
                 name="cuisiné_pas_de_categorie_emballage",
             ),
         ]
+
+    @property
+    def motif_suspicion_labels(self):
+        return ", ".join(MotifAliment(m).label for m in self.motif_suspicion)
