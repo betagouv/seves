@@ -95,15 +95,15 @@ class AlimentFormController extends BaseFormInModal {
                       ${aliment.denomination}
                     </h3>
                     <div class="fr-card__desc">
-                        ${this.optionalText(aliment.motif_suspicion, `<p>${aliment.motif_suspicion}</p>`)}
+                        ${this.optionalText(aliment.motif_suspicion, `<p>${this.joinText(', ', ...aliment.motif_suspicion)}</p>`)}
                         ${this.optionalText(
                             aliment.type_aliment,
-                            `<p class="fr-badge fr-badge--info">${aliment.type_aliment}</p>`
+                            `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-badge--sm">${aliment.type_aliment}</p>`
                         )}
                     </div>
                 </div>
                 <div class="fr-card__footer">
-                    <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-btns-group--right">
+                    <div class="fr-btns-group fr-btns-group--inline-lg fr-btns-group--icon-left fr-btns-group--sm fr-btns-group--right">
                         <button
                             class="fr-btn fr-btn--secondary fr-icon-edit-line fr-mb-0 modify-button"
                             type="button"

@@ -13,9 +13,9 @@ class EvenementOrigin(TextChoices):
 
 
 class Motif(TextChoices):
-    PARTAGE = "repas partage", "Car repas partagé par la plupart des malades"
-    COMPATIBLE = "repas compatible", "Car repas compatible avec les délais d'incubations"
-    RISQUE = "repas risque", "Car repas comportant un aliment à risque particulier"
+    PARTAGE = "repas partage", "Repas partagé par la plupart des malades"
+    COMPATIBLE = "repas compatible", "Repas compatible avec les délais d'incubations"
+    RISQUE = "repas risque", "Repas comportant un aliment à risque particulier"
 
 
 class MotifAliment(TextChoices):
