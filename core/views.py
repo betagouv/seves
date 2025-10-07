@@ -462,7 +462,7 @@ def sirene_api(request, siret: str):
     try:
         response = requests.get(
             f"{settings.SIRENE_API_BASE.removesuffix('/')}/siret",
-            params={"q": f"siren:{siret}* AND -periode(etatAdministratifEtablissement:F)"},
+            params={"q": f"siren:{siret}* AND -periode(etatAdministratifEtablissement:F)", "nombre": "100"},
             headers={"X-INSEE-Api-Key-Integration": settings.SIRENE_API_KEY},
             timeout=4,
         )
