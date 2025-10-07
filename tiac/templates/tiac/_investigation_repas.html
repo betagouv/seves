@@ -1,0 +1,34 @@
+{% load or_empty_value_tag dsfr_tags %}
+<h2 class="fr-h6">Repas suspectés</h2>
+<div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+        {% for repas in object.repas.all %}
+            <div class="fr-col-3">
+                {% include "tiac/_repas_modal.html" %}
+                <div class="repas-card fr-card">
+                    <div class="fr-card__body">
+                        <div class="fr-card__content">
+                            <div>
+                                <p class="fr-card__title">{{ repas.denomination }}</p>
+                            </div>
+                            {% if repas.datetime_repas %}
+                                <p class="fr-pt-4v"><span class="fr-icon-calendar-2-line fr-pr-2v" aria-hidden="true"></span>{{ repas.datetime_repas }}</p>
+                            {% endif %}
+                            {% if repas.type_repas %}
+                                <p>{{ repas.get_type_repas_display }}</p>
+                            {% endif %}
+                            {%  if repas.nombre_participant >= 0 %}
+                                <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }} participants</span>
+                            {% endif %}
+                            <div class="fr-btns-group--right">
+                                <button data-fr-opened="false" aria-controls="fr-modal-repas-{{ repas.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="fr-mt-2v fr-ml-4v">Aucun repas enregistré</p>
+        {% endfor %}
+    </div>
+</div>

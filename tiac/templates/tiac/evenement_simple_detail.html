@@ -80,7 +80,13 @@
     <div class="detail-content">
       {% include "tiac/_evenement_simple_informations.html" %}
       <div class="fr-container--fluid fr-mt-2w detail-content">
-        {% include "tiac/_evenement_simple_etablissements.html" %}
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12">
+            <div class="white-container">
+              {% include "tiac/_etablissements.html" %}
+            </div>
+          </div>
+        </div>
         {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
       </div>
     </div>

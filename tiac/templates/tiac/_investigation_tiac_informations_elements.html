@@ -1,0 +1,13 @@
+{% load or_empty_value_tag %}
+<div class="white-container detail-content fr-mt-2w">
+    <h2 class="fr-h6">Éléments de l'investigation</h2>
+    <div class="generic-card-container">
+        {% include "tiac/_etablissements.html" %}
+    </div>
+    <div class="generic-card-container">
+        {% include "tiac/_investigation_repas.html" %}
+    </div>
+    <div class="generic-card-container">
+        {% include "tiac/_investigation_aliments.html" %}
+    </div>
+</div>
