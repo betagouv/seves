@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404
 from django.http import HttpResponseRedirect
-from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView
 
@@ -45,7 +44,6 @@ class EvenementSimpleManipulationMixin(
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
     etablissement_formset_class = EvenementSimpleEtablissementFormSet
-    success_message = gettext_lazy("L’évènement a été créé avec succès.")
 
     def get_media(self, **context_data) -> Media:
         return super().get_media(**context_data) + context_data["etablissement_formset"].media
@@ -74,16 +72,20 @@ class EvenementSimpleManipulationMixin(
     def get_success_url(self):
         return self.object.get_absolute_url()
 
+    def get_success_message(self):
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object.is_published
+            else "L’évènement a été créé avec succès."
+        )
+
     def form_valid(self, form):
         self.object = form.save()
         self.get_etablissement_formset().instance = self.object
         self.get_etablissement_formset().save()
 
         self.add_user_contacts(self.object)
-        if self.object.is_published:
-            messages.success(self.request, "L’évènement a été publié avec succès.")
-        else:
-            messages.success(self.request, self.success_message)
+        messages.success(self.request, self.get_success_message())
         return super().form_valid(form)
 
     def formset_invalid(self):
@@ -121,10 +123,13 @@ class EvenementSimpleCreationView(EvenementSimpleManipulationMixin, CreateView):
 
 class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulationMixin, UpdateView):
     model = EvenementSimple
-    success_message = gettext_lazy("L’évènement a été mis à jour avec succès.")
+    template_name = "tiac/evenement_simple_modification.html"
 
     def test_func(self):
         return self.get_object().can_user_access(self.request.user)
+
+    def get_success_message(self):
+        return "L’évènement a été mis à jour avec succès."
 
     def get_etablissement_formset_kwargs(self):
         return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}

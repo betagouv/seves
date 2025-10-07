@@ -44,7 +44,7 @@ def test_can_modify_evenement_simple(
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(new_etablissement)
 
-    creation_page.submit_as_draft()
+    creation_page.submit()
     evenement.refresh_from_db()
 
     assert evenement.contenu != previous_contenu

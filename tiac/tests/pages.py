@@ -124,7 +124,10 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.set_follow_up(evenement.follow_up)
 
     def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        self.submit("Enregistrer le brouillon")
+
+    def submit(self, btn_txt="Enregistrer"):
+        self.page.get_by_role("button", name=btn_txt).click()
         redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
         self.page.wait_for_url(f"**{redirect}")
 
