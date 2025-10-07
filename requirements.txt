@@ -84,7 +84,7 @@ django-dsfr==3.1.0
     # via -r requirements.in
 django-environ==0.12.0
     # via -r requirements.in
-django-filter==25.1
+django-filter==25.2
     # via -r requirements.in
 django-post-office==3.10.1
     # via -r requirements.in
