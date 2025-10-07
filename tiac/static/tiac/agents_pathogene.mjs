@@ -42,6 +42,7 @@ class AgentsPathogeneController extends Controller {
             value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
             options: options,
             isSingleSelect: false,
+            isIndependentNodes: true,
             openCallback() {
                 patchItems(treeselect.srcElement)
                 if (this._customHeaderAdded) {
@@ -70,7 +71,11 @@ class AgentsPathogeneController extends Controller {
             patchItems(treeselect.srcElement)
         })
         treeselect.srcElement.addEventListener('input', (e) => {
-            if (!!e.detail) {
+            if (e.detail.length === 0) {
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox =>{
+                    checkbox.checked = false
+                })
+            } else {
                 this.categorieDangerInputTarget.value = e.detail.join("||")
             }
         })

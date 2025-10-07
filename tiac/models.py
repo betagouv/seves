@@ -411,6 +411,7 @@ class InvestigationTiac(
             CategorieDanger.CAMPYLOBACTER_COLI,
             CategorieDanger.CAMPYLOBACTER_JEJUNI,
             CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
             CategorieDanger.SHIGELLA,
             CategorieDanger.YERSINIA_ENTEROCOLITICA,
             CategorieDanger.HISTAMINE,
