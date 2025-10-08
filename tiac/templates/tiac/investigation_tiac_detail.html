@@ -13,6 +13,7 @@
   <script type="module" src="{% static 'core/message_form.js' %}"></script>
   <script type="module" src="{% static 'core/document_form.js' %}"></script>
   <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+  <script type="module" src="{% static 'tiac/investigation_tiac_details.js' %}"></script>
 {% endblock %}
 
 {% block aside %}
@@ -32,6 +33,9 @@
     <div>
       <div class="details-top-row">
         <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+        {% if not object.is_draft %}
+          {% include "core/_details_toogle.html" with pk=object.pk %}
+        {% endif %}
 
         {% if can_be_deleted %}
           {% url 'tiac:evenement-liste' as next_url %}
@@ -64,6 +68,10 @@
       <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
+
+    <div class="white-container fr-hidden synthese-content">
+      {% include "tiac/_investigation_tiac_informations_synthese.html" %}
+    </div>
 
     <div class="detail-content">
       {% include "tiac/_investigation_tiac_informations.html" %}

@@ -1,0 +1,78 @@
+{% load or_empty_value_tag %}
+<div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-3">
+            <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-7 bold">Créateur</div>
+                    <div class="fr-col-5">{{ object.createur }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-7 bold">Date de création</div>
+                    <div class="fr-col-5">{{ object.date_creation|date:"d/m/Y" }}</div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-7 bold">Date de réception à la DD(ETS)PP</div>
+                    <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="fr-col-4">
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-7 bold">Date du/des repas</div>
+                {% if dates_repas|length == 0 %}
+                    <div class="fr-col-5"><span class="empty-value">Vide</span></div>
+                {% elif dates_repas|length == 1 %}
+                    <div class="fr-col-5">{{ dates_repas.0 }}</div>
+                {% else %}
+                    <div class="fr-col-5">{{ dates_repas.0 }}
+                        <button class="fr-btn--tooltip fr-btn" type="button" id="button-repas" aria-describedby="tooltip-repas">
+                            Information contextuelle
+                        </button>
+                        <span class="fr-tooltip fr-placement" id="tooltip-repas" role="tooltip" aria-hidden="true">Dates des autres repas : {{ dates_repas|slice:"1:"|join:', ' }}</span>
+                    </div>
+                {% endif%}
+            </div>
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-7 bold">Etablissement(s)</div>
+                {% if raisons_sociales|length == 0 %}
+                    <div class="fr-col-5"><span class="empty-value">Vide</span></div>
+                {% elif raisons_sociales|length == 1 %}
+                    <div class="fr-col-5">{{ raisons_sociales.0 }}</div>
+                {% else %}
+                    <div class="fr-col-5">{{ raisons_sociales.0 }}
+                        <button class="fr-btn--tooltip fr-btn" type="button" id="button-raisons-sociales" aria-describedby="tooltip-raisons-sociales">
+                            Information contextuelle
+                        </button>
+                        <span class="fr-tooltip fr-placement" id="tooltip-raisons-sociales" role="tooltip" aria-hidden="true">Autres établissements : {{ raisons_sociales|slice:"1:"|join:', ' }}</span>
+                    </div>
+                {% endif%}
+            </div>
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-7 bold">Commune(s)</div>
+                <div class="fr-col-5">
+                    {% if communes|length == 0 %}
+                        <div class="fr-col-5"><span class="empty-value">Vide</span></div>
+                    {% elif communes|length == 1 %}
+                        <div class="fr-col-5">{{ communes.0 }}</div>
+                    {% else %}
+                        <div class="fr-col-5">{{ communes.0 }}
+                            <button class="fr-btn--tooltip fr-btn" type="button" id="button-communes" aria-describedby="tooltip-communes">
+                                Information contextuelle
+                            </button>
+                            <span class="fr-tooltip fr-placement" id="tooltip-communes" role="tooltip" aria-hidden="true">Autre communes : {{ communes|slice:"1:"|join:', ' }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="fr-col-5">
+            <div class="fr-container--fluid">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-5 bold">Contenu du signalement</div>
+                    <div class="fr-col-7">{{ object.contenu|linebreaksbr }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
