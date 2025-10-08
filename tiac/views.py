@@ -183,6 +183,7 @@ class EvenementSimpleDetailView(
         context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["transfer_form"] = EvenementSimpleTransferForm()
+        context["etablissements"] = self.get_object().etablissements.all()
         return context
 
 
@@ -399,6 +400,12 @@ class InvestigationTiacDetailView(
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["dangers"] = [
             d.to_dict() for d in DangersSyndromiques.as_list() if d.value in self.object.danger_syndromiques_suspectes
+        ]
+        context["etablissements"] = self.get_object().etablissements.all()
+        context["raisons_sociales"] = [e.raison_sociale for e in context["etablissements"]]
+        context["communes"] = [e.commune for e in context["etablissements"] if e.commune]
+        context["dates_repas"] = [
+            r.datetime_repas.strftime("%d/%m/%Y %Hh%M") for r in self.get_object().repas.all() if r.datetime_repas
         ]
         return context
 
