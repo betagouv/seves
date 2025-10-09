@@ -1,7 +1,9 @@
+import json
 from dataclasses import dataclass
 from enum import auto
 
 from django.db.models import TextChoices
+from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 
 from ssa.models import CategorieDanger
@@ -209,3 +211,21 @@ DANGERS_COURANTS = (
     CategorieDanger.TOXINE_DSP,
     CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
 )
+
+
+class SuspicionConclusion(TextChoices):
+    CONFIRMED = auto(), "TIAC à agent confirmé"
+    UNKNOWN = auto(), "TIAC à agent inconnu"
+    SUSPECTED = auto(), "TIAC à agent suspecté"
+    DISCARDED = auto(), "TIAC non retenue"
+
+    @classproperty
+    def no_clue(self):
+        return tuple(item for item in self if item not in (self.CONFIRMED, self.SUSPECTED))
+
+    @classmethod
+    def as_json(cls):
+        return json.dumps({item.name: {"value": item.value, "label": item.label} for item in cls})
+
+
+SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices, *CategorieDanger.choices)

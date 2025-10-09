@@ -67,7 +67,7 @@ fileignoreconfig:
 - filename: tiac/formsets.py
   checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
 - filename: tiac/models.py
-  checksum: 8bcc091f6dfea82beb791cba84368527360450279b467db823e3b3a50c6c3ad4
+  checksum: 76047aecf44585f19dde6f13870aacf1282b9600edc6e479cffca80e1c85b4c9
 - filename: tiac/forms.py
   checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
 - filename: tiac/admin.py

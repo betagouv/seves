@@ -13,7 +13,7 @@ from tiac.factories import (
     AnalyseAlimentaireFactory,
 )
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
+from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas, SuspicionConclusion
 from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
@@ -85,8 +85,14 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.nb_dead_persons.fill(str(input_data.nb_dead_persons))
     creation_page.datetime_first_symptoms.fill(input_data.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
     creation_page.datetime_last_symptoms.fill(input_data.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
+
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
+
+    creation_page.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
+    creation_page.selected_hazard.select_option(input_data.selected_hazard)
+    creation_page.conclusion_comment.fill(input_data.conclusion_comment)
+
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.last()
@@ -380,6 +386,9 @@ FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE = [
     "_state",
     "id",
     "investigation_id",
+    "suspicion_conclusion",
+    "selected_hazard",
+    "conclusion_comment",
 ]
 
 
@@ -397,3 +406,20 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
     assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
+
+
+def test_conclusion_behavior(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.SUSPECTED)
+    assert str(CategorieDanger.NOIX_DE_CAJOU.label) not in creation_page.selected_hazard.text_content()
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
+    assert str(CategorieDanger.NOIX_DE_CAJOU.label) in creation_page.selected_hazard.text_content()
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.DISCARDED)
+    expect(creation_page.selected_hazard).to_be_disabled()

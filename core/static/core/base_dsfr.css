@@ -56,3 +56,17 @@
 .fr-grid-row--border > [class*=" fr-col-"]:not(:first-child) {
     border-left: 1px solid var(--border-default-grey);
 }
+
+.fr-flex {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+}
+
+.fr-flex--row {
+    flex-direction: row !important;
+}
+
+.fr-flex--align-normal {
+    align-items: normal !important;
+}

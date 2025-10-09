@@ -157,6 +157,65 @@
                     </div>
                 </template>
             </fieldset>
+            <fieldset
+                class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
+                data-controller="conclusion-form"
+                data-conclusion-form-suspicion-conclusion-value="{{ form.SuspicionConclusion.as_json }}"
+            >
+                <legend class="fr-h3 fr-fieldset__legend">Conclusion</legend>
+
+                <div class="fr-notice fr-notice--info">
+                    <div class="fr-container">
+                        <div class="fr-notice__body">
+                            <p>
+                                <span class="fr-notice__title">
+                                    Afin de préciser le scénario (établissement/repas/aliment/prélèvement), il est
+                                    nécessaire d’avoir préalablement publié ou enregistré vos ajouts/modifications pour
+                                    pouvoir les sélectionner dans les menus déroulants ci-dessous
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
+                    <div class="fr-col-6">
+                        {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
+                        {% dsfr_form_field form.selected_hazard|set_data:"conclusion-form-target:selectedHazard" %}
+                    </div>
+                    <div class="fr-col-6 conclusion-comment">
+                        {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
+                    </div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
+                    <div class="fr-col-3">
+                        {% dsfr_form_field form.conclusion_etablissement %}
+                    </div>
+                    <div class="fr-col-3">
+                        {% dsfr_form_field form.conclusion_repas %}
+                    </div>
+                    <div class="fr-col-3">
+                        {% dsfr_form_field form.conclusion_aliment %}
+                    </div>
+                    <div class="fr-col-3">
+                        {% dsfr_form_field form.conclusion_analyse %}
+                    </div>
+                </div>
+                <template data-conclusion-form-target="selectedHazardConfirmedSelect">
+                    {% for subwidget in form.selected_hazard_confirmed.subwidgets %}
+                        {{ subwidget }}
+                    {% endfor %}
+                </template>
+                <template data-conclusion-form-target="selectedHazardSuspectedSelect">
+                    {% for subwidget in form.selected_hazard_suspected.subwidgets %}
+                        {{ subwidget }}
+                    {% endfor %}
+                </template>
+                <template data-conclusion-form-target="selectedHazardOtherSelect">
+                    {% for subwidget in form.selected_hazard_other.subwidgets %}
+                        {{ subwidget }}
+                    {% endfor %}
+                </template>
+            </fieldset>
             <fieldset id="liens-libre" class="fr-fieldset form-fieldset fr-mt-2w">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
@@ -166,7 +225,6 @@
                     {{ form.free_link|set_data:"free-links-target:select"  }}
                 </div>
             </fieldset>
-            <div class="fr-mb-16w"></div>
         </main>
     </form>
 {% endblock %}
