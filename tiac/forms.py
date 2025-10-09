@@ -1,6 +1,8 @@
 import json
 import re
 from functools import cached_property
+from copy import deepcopy
+
 
 from django import forms
 from django.conf import settings
@@ -15,7 +17,13 @@ from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
 from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
-from tiac.constants import DangersSyndromiques, DANGERS_COURANTS, EtatPrelevement
+from tiac.constants import (
+    DangersSyndromiques,
+    DANGERS_COURANTS,
+    EtatPrelevement,
+    SuspicionConclusion,
+    SELECTED_HAZARD_CHOICES,
+)
 from tiac.constants import (
     EvenementOrigin,
     EvenementFollowUp,
@@ -232,6 +240,10 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
 
 
 class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+    SuspicionConclusion = SuspicionConclusion
+    CategorieDanger = CategorieDanger
+    DangersSyndromiques = DangersSyndromiques
+
     date_reception = forms.DateTimeField(
         required=False,
         label="Date de réception à la DD(ETS)PP",
@@ -294,6 +306,11 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
     agents_confirmes_ars = forms.CharField(required=False, widget=forms.HiddenInput)
 
+    suspicion_conclusion = SEVESChoiceField(
+        label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
+    )
+    selected_hazard = SEVESChoiceField(label="Danger retenu", choices=SELECTED_HAZARD_CHOICES, required=False)
+
     class Meta:
         model = InvestigationTiac
         fields = (
@@ -315,6 +332,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "analyses_sur_les_malades",
             "precisions",
             "agents_confirmes_ars",
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_etablissement",
+            "conclusion_repas",
+            "conclusion_aliment",
+            "conclusion_analyse",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
@@ -328,17 +352,62 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 js_module("core/free_links.mjs"),
                 js_module("tiac/etiologie.mjs"),
                 js_module("tiac/agents_pathogene.mjs"),
+                js_module("tiac/tiac_conclusion.mjs"),
             ),
         )
+
+    @cached_property
+    def selected_hazard_confirmed(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.choices = (("", settings.SELECT_EMPTY_CHOICE), *CategorieDanger.choices)
+        return bf
+
+    @cached_property
+    def selected_hazard_suspected(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE), *DangersSyndromiques.choices)
+        return bf
+
+    @cached_property
+    def selected_hazard_other(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE),)
+        return bf
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
         self.initial["danger_syndromiques_suspectes"] = []
+        for field in ("conclusion_etablissement", "conclusion_repas", "conclusion_aliment", "conclusion_analyse"):
+            self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
+            queryset = self[field].field.queryset
+            if not self.instance.pk:
+                self[field].field.queryset = queryset.none()
 
     def clean_agents_confirmes_ars(self):
         return [v for v in self.cleaned_data["agents_confirmes_ars"].split("||") if v]
+
+    def clean_suspicion_conclusion_and_selected_hazard(self):
+        suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
+        selected_hazard = self.cleaned_data.get("selected_hazard")
+
+        if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
+            self.cleaned_data["selected_hazard"] = ""
+        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and selected_hazard not in CategorieDanger.values:
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
+            )
+        elif (
+            suspicion_conclusion == SuspicionConclusion.SUSPECTED and selected_hazard not in DangersSyndromiques.values
+        ):
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
+            )
+
+    def clean(self):
+        self.clean_suspicion_conclusion_and_selected_hazard()
+        return super().clean()
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":

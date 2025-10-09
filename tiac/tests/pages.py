@@ -413,6 +413,9 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "datetime_last_symptoms",
         "analyses_sur_les_malades",
         "precisions",
+        "suspicion_conclusion",
+        "selected_hazard",
+        "conclusion_comment",
     ]
 
     def __init__(self, page: Page, base_url):

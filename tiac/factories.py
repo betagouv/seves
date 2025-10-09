@@ -21,6 +21,7 @@ from tiac.constants import (
     TypeCollectivite,
     DangersSyndromiques,
     EtatPrelevement,
+    SuspicionConclusion,
 )
 from tiac.models import (
     AlimentSuspect,
@@ -143,6 +144,18 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     danger_syndromiques_suspectes = factory.LazyFunction(
         lambda: random.sample([choice[0] for choice in DangersSyndromiques.choices], k=random.randint(1, 3))
     )
+
+    suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
+
+    conclusion_comment = factory.Faker("paragraph")
+
+    @factory.lazy_attribute
+    def selected_hazard(self):
+        if self.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
+            return random.choices(CategorieDanger.values)[0]
+        if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
+            return random.choices(DangersSyndromiques.values)[0]
+        return ""
 
 
 class RepasSuspectFactory(DjangoModelFactory):

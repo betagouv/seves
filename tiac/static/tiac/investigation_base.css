@@ -6,3 +6,11 @@
     background-color: var(--background-alt-grey);
     width: 100%;
 }
+.conclusion-comment .fr-input-group {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+.conclusion-comment textarea {
+    flex-grow: 1;
+}

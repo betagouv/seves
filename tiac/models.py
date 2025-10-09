@@ -29,8 +29,9 @@ from tiac.constants import (
     MotifAliment,
     EtatPrelevement,
     DANGERS_COURANTS,
+    SELECTED_HAZARD_CHOICES,
 )
-from .constants import DangersSyndromiques
+from .constants import DangersSyndromiques, SuspicionConclusion
 from .managers import EvenementSimpleManager, InvestigationTiacManager
 from .model_mixins import WithSharedNumeroMixin
 
@@ -302,6 +303,31 @@ class InvestigationTiac(
         blank=True,
     )
 
+    # Conclusion block
+    suspicion_conclusion = models.CharField(
+        "Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, null=True, default=None, blank=True
+    )
+    selected_hazard = models.CharField(
+        "Danger retenu",
+        choices=SELECTED_HAZARD_CHOICES,
+        default="",
+        blank=True,
+    )
+    conclusion_comment = models.TextField("Commentaire", default="", blank=True)
+
+    conclusion_etablissement = models.ForeignKey(
+        "tiac.Etablissement", on_delete=models.PROTECT, null=True, default=None, blank=True
+    )
+    conclusion_repas = models.ForeignKey(
+        "tiac.RepasSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
+    )
+    conclusion_aliment = models.ForeignKey(
+        "tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
+    )
+    conclusion_analyse = models.ForeignKey(
+        "tiac.AnalyseAlimentaire", on_delete=models.PROTECT, null=True, default=None, blank=True
+    )
+
     objects = InvestigationTiacManager()
 
     def save(self, *args, **kwargs):
@@ -407,6 +433,32 @@ class InvestigationTiac(
     @classmethod
     def danger_plus_courants(self):
         return DANGERS_COURANTS
+
+    class Meta:
+        constraints = (
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        suspicion_conclusion=SuspicionConclusion.CONFIRMED.value,
+                        selected_hazard__in=CategorieDanger.values,
+                    )
+                    | models.Q(
+                        suspicion_conclusion=SuspicionConclusion.SUSPECTED.value,
+                        selected_hazard__in=DangersSyndromiques.values,
+                    )
+                    | (
+                        ~models.Q(
+                            suspicion_conclusion__in=[
+                                SuspicionConclusion.SUSPECTED.value,
+                                SuspicionConclusion.CONFIRMED.value,
+                            ]
+                        )
+                        & models.Q(selected_hazard="")
+                    )
+                ),
+                name="selected_hazard_constraints",
+            ),
+        )
 
 
 class RepasSuspect(models.Model):
