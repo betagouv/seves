@@ -87,10 +87,10 @@ def test_list_can_filter_by_date(live_server, mocked_authentification_user, page
 
 
 def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
-    evenement_1 = EvenementSimpleFactory()
-    evenement_2 = InvestigationTiacFactory()
-    evenement_3 = EvenementSimpleFactory()
-    evenement_4 = InvestigationTiacFactory()
+    evenement_1 = EvenementSimpleFactory(numero_annee=2024)
+    evenement_2 = InvestigationTiacFactory(numero_annee=2025)
+    evenement_3 = EvenementSimpleFactory(numero_annee=2026)
+    evenement_4 = InvestigationTiacFactory(numero_annee=2027)
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
     evenement_1.contacts.add(contact_structure)
     evenement_2.contacts.add(contact_structure)
