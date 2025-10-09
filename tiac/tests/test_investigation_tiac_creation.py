@@ -238,6 +238,26 @@ def test_can_create_investigation_tiac_with_repas_for_collectivite(
     )
 
 
+def test_can_create_investigation_tiac_with_aliment_with_denomination_only(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(simple=True)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+
+    creation_page.page.get_by_test_id("add-aliment").click()
+    creation_page.current_modal.locator("[id$=denomination]").fill(input_data.denomination)
+    creation_page.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    card = creation_page.get_aliment_card(0)
+    expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.aliments.count() == 1
+
+
 def test_can_create_investigation_tiac_with_aliment_simple(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
