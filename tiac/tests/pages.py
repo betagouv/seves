@@ -612,6 +612,9 @@ class InvestigationTiacDetailsPage:
     def repas_card(self, index=0):
         return self.page.locator(".repas-card").nth(index)
 
+    def analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
     def etablissement_open_modal(self, index=0):
         return self.etablissement_card(index).get_by_text("Voir le détail", exact=True).click()
 
@@ -620,6 +623,9 @@ class InvestigationTiacDetailsPage:
 
     def repas_open_modal(self, index=0):
         return self.repas_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def analyse_open_modal(self, index=0):
+        return self.analyse_card(index).get_by_text("Voir le détail", exact=True).click()
 
     @property
     def current_modal(self):
