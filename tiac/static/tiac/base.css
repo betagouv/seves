@@ -57,3 +57,7 @@ fieldset.form-fieldset .fr-fieldset__legend {
 textarea {
     resize: vertical;
 }
+
+.etablissment-filters {
+    background-color: var(--background-alt-grey);
+}
