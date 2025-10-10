@@ -495,3 +495,7 @@ class AnalyseAlimentaire(models.Model):
     comments = models.TextField("Commentaires liés à l’analyse", blank=True)
     sent_to_lnr_cnr = models.BooleanField("Envoyé au LNR/CNR")
     reference_souche = models.CharField("Référence souche", blank=True)
+
+    @property
+    def categorie_danger_labels(self):
+        return [CategorieDanger(cd).label.split(">")[-1] for cd in self.categorie_danger]

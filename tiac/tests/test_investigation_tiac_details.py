@@ -1,7 +1,13 @@
 from playwright.sync_api import Page, expect
 
 from tiac.constants import DangersSyndromiques
-from tiac.factories import InvestigationTiacFactory, EtablissementFactory, AlimentSuspectFactory, RepasSuspectFactory
+from tiac.factories import (
+    InvestigationTiacFactory,
+    EtablissementFactory,
+    AlimentSuspectFactory,
+    RepasSuspectFactory,
+    AnalyseAlimentaireFactory,
+)
 from tiac.tests.pages import InvestigationTiacDetailsPage
 
 
@@ -126,3 +132,25 @@ def test_evenement_produit_detail_page_content_repas(live_server, page: Page):
     expect(
         details_page.current_modal.get_by_text(f"{repas.nombre_participant} participants", exact=True)
     ).to_be_visible()
+
+
+def test_evenement_produit_detail_page_content_analyse_alimentaires(live_server, page: Page):
+    evenement = InvestigationTiacFactory()
+    analyse = AnalyseAlimentaireFactory(investigation=evenement)
+
+    details_page = InvestigationTiacDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    card = details_page.analyse_card()
+    expect(card.get_by_text(analyse.reference_prelevement, exact=True)).to_be_visible()
+    expect(card.get_by_text(analyse.get_etat_prelevement_display(), exact=True)).to_be_visible()
+    for danger in analyse.categorie_danger_labels:
+        expect(card.get_by_text(danger, exact=True)).to_be_visible()
+
+    details_page.analyse_open_modal()
+    expect(details_page.current_modal.get_by_text(analyse.reference_prelevement, exact=True)).to_be_visible()
+    expect(details_page.current_modal.get_by_text(analyse.get_etat_prelevement_display(), exact=True)).to_be_visible()
+    for danger in analyse.categorie_danger_labels:
+        expect(details_page.current_modal.get_by_text(danger, exact=True)).to_be_visible()
+    expect(details_page.current_modal.get_by_text(analyse.comments, exact=True)).to_be_visible()
+    expect(details_page.current_modal.get_by_text(analyse.reference_souche, exact=True)).to_be_visible()

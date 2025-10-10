@@ -1,0 +1,9 @@
+{% load or_empty_value_tag %}
+<div class="white-container detail-content fr-mt-2w">
+    <h2 class="fr-h6">Agents pathogènes confirmés par l'ARS</h2>
+    {% if object.agents_confirmes_ars %}
+        {{ object.agents_confirmes_ars|join:", " }}
+    {% else %}
+        <div class="empty-value fr-mb-2w">Vide</div>
+    {% endif %}
+</div>

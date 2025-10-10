@@ -70,9 +70,8 @@
       {% include "tiac/_investigation_tiac_informations_cas.html" %}
       {% include "tiac/_investigation_tiac_informations_etiologie.html" %}
       {% include "tiac/_investigation_tiac_informations_elements.html" %}
-      <div class="fr-container--fluid fr-mt-2w detail-content">
-        {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
-      </div>
+      {% include "tiac/_investigation_tiac_informations_agents_pathogenes.html" %}
+      {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
     </div>
 
     {% if not object.is_draft %}
