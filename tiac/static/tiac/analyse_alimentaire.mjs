@@ -141,7 +141,7 @@ class AlimentFormController extends BaseFormInModal {
     renderCard(analyse) {
         // language=HTML
         return `
-            <div class="aliment-card fr-card" data-${this.identifier}-target="cardContainer">
+            <div class="analyse-card fr-card" data-${this.identifier}-target="cardContainer">
                 <div class="fr-card__body">
                     <div class="fr-card__content">
                         <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
@@ -149,9 +149,7 @@ class AlimentFormController extends BaseFormInModal {
                         </h3>
                         <div class="fr-card__desc">
                             <p class="fr-mb-4v">${analyse.etat_prelevement}</p>
-                            <p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon">
-                                ${analyse.categorie_danger}
-                            </p>
+                            ${this.optionalText(analyse.categorie_danger, `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon">${this.joinText(', ', analyse.categorie_danger.split("||"))}</p>`)}
                         </div>
                     </div>
                     <div class="fr-card__footer">

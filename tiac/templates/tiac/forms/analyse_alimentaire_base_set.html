@@ -3,7 +3,7 @@
 
 {% partialdef form-dialog %}
     <div
-        class="modal-aliment-container fr-col-12 fr-col-lg-6 fr-col-xl-2"
+        class="modal-analyse-container fr-col-12 fr-col-lg-6 fr-col-xl-3"
         data-controller="analyse-alimentaire-form"
         data-analyse-alimentaire-form-form-prefix-value="{{ form.prefix }}"
         data-analyse-alimentaire-form-should-immediately-show-value="True"
@@ -13,7 +13,7 @@
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
             id="fr-modal-{{ form.prefix }}"
-            class="fr-modal modal-needs-required aliment-modal"
+            class="fr-modal analyse-modal"
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-analyse-alimentaire-form-target="dialog"

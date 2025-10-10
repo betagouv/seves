@@ -391,8 +391,9 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     creation_page.navigate()
     creation_page.fill_required_fields(investigation)
     creation_page.add_analyse_alimentaire(analyse)
-    creation_page.submit_as_draft()
+    assert creation_page.nb_analyse == 1
 
+    creation_page.submit_as_draft()
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
-    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE)
+    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
