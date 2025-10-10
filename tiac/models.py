@@ -487,7 +487,11 @@ class AnalyseAlimentaire(models.Model):
 
     reference_prelevement = models.CharField("Référence du prélèvement")
     etat_prelevement = models.CharField("État du prélèvement", choices=EtatPrelevement.choices)
-    categorie_danger = models.CharField("Catégorie de danger", choices=CategorieDanger.choices, blank=True)
+    categorie_danger = ArrayField(
+        models.CharField(max_length=255, choices=CategorieDanger.choices),
+        default=list,
+        blank=True,
+    )
     comments = models.TextField("Commentaires liés à l’analyse", blank=True)
     sent_to_lnr_cnr = models.BooleanField("Envoyé au LNR/CNR")
     reference_souche = models.CharField("Référence souche", blank=True)

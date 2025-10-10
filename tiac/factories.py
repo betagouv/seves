@@ -207,7 +207,9 @@ class AnalyseAlimentaireFactory(DjangoModelFactory):
 
     reference_prelevement = factory.Faker("numerify", text="####-###")
     etat_prelevement = FuzzyChoice(EtatPrelevement.values)
-    categorie_danger = FuzzyChoice(CategorieDanger.values)
+    categorie_danger = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
+    )
     comments = factory.Faker("paragraph")
     sent_to_lnr_cnr = factory.Faker("boolean")
     reference_souche = factory.Faker("sentence", nb_words=1)
