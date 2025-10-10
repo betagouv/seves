@@ -1,7 +1,8 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory, EtablissementFactory
+from core.models import Departement
+from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory, EtablissementFactory, RepasSuspectFactory
 from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
 from tiac.tests.pages import EvenementListPage
 
@@ -126,3 +127,163 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_commune(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(commune="Paris")
+    not_to_be_found_1 = EtablissementFactory(commune="")
+    not_to_be_found_2 = EtablissementFactory(commune="Bordeaux")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.commune.fill("Paris")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(siret="12345678912345")
+    not_to_be_found_1 = EtablissementFactory(siret="")
+    not_to_be_found_2 = EtablissementFactory(siret="9" * 14)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.siret.fill("12345678")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_departement(live_server, ensure_departements, mocked_authentification_user, page: Page):
+    ensure_departements("Cantal", "Aveyron")
+    to_be_found = EtablissementFactory(departement=Departement.objects.get(nom="Cantal"))
+    not_to_be_found_1 = EtablissementFactory(departement=Departement.objects.get(nom="Aveyron"))
+    not_to_be_found_2 = EtablissementFactory(departement=None)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.departement.select_option("15 - Cantal")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Page):
+    to_be_found = EtablissementFactory(pays="FR")
+    not_to_be_found_1 = EtablissementFactory(pays="BE")
+    not_to_be_found_2 = EtablissementFactory(pays="")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.pays.select_option("France")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, numero_annee=2020)
+    to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS, numero_annee=2021)
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
+    not_to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.CLOTURE, numero_annee=2023)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.etat.select_option("En cours")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_numero_sivss(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(numero_annee=2020, numero_sivss="111111")
+    not_to_be_found_1 = EvenementSimpleFactory(numero_annee=2021)
+    not_to_be_found_2 = InvestigationTiacFactory(numero_annee=2022, numero_sivss="")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numero_sivss.fill("111111")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_nb_sick_persons(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(numero_annee=2020, nb_sick_persons=6)
+    to_be_found_2 = EvenementSimpleFactory(numero_annee=2021, nb_sick_persons=8)
+    not_to_be_found_1 = EvenementSimpleFactory(numero_annee=2022, nb_sick_persons=0)
+    not_to_be_found_2 = InvestigationTiacFactory(numero_annee=2023, nb_sick_persons=50)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.nb_sick_persons.select_option("[6-10]")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_nb_dead_persons(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(numero_annee=2020, nb_dead_persons=6)
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022, nb_dead_persons=0)
+    not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2023)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.nb_dead_persons.select_option("[1+]")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_repas_nb_particpants(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(numero_annee=2020)
+    RepasSuspectFactory(investigation=to_be_found_1, nombre_participant=2)
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
+    RepasSuspectFactory(investigation=not_to_be_found_1, nombre_participant=10)
+    not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2023)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.nb_participants.select_option("[0-5]")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()

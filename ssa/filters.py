@@ -42,8 +42,29 @@ class EvenementProduitFilterForm(DSFRForm):
     ]
 
 
+class WithEtablissementFilterMixin(django_filters.FilterSet):
+    siret = django_filters.CharFilter(
+        field_name="etablissements__siret", lookup_expr="contains", distinct=True, label="Siren/Siret"
+    )
+    commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
+    departement = django_filters.ModelChoiceFilter(
+        label="Département",
+        queryset=Departement.objects.order_by("numero").all(),
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        field_name="etablissements__departement",
+        distinct=True,
+    )
+    pays = django_filters.ChoiceFilter(
+        choices=Countries, field_name="etablissements__pays", distinct=True, label="Pays"
+    )
+
+
 class EvenementProduitFilter(
-    WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin, django_filters.FilterSet
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtablissementFilterMixin,
+    django_filters.FilterSet,
 ):
     with_free_links = django_filters.BooleanFilter(
         label="", method="filter_with_free_links", widget=DSFRCheckboxInput(label="Inclure les liaisons")
@@ -85,22 +106,8 @@ class EvenementProduitFilter(
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
-    siret = django_filters.CharFilter(
-        field_name="etablissements__siret", lookup_expr="contains", distinct=True, label="Siren/Siret"
-    )
     numero_agrement = django_filters.CharFilter(
         field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
-    )
-    commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
-    departement = django_filters.ModelChoiceFilter(
-        label="Département",
-        queryset=Departement.objects.order_by("numero").all(),
-        empty_label=settings.SELECT_EMPTY_CHOICE,
-        field_name="etablissements__departement",
-        distinct=True,
-    )
-    pays = django_filters.ChoiceFilter(
-        choices=Countries, field_name="etablissements__pays", distinct=True, label="Pays"
     )
     categorie_produit = CharInFilter(field_name="categorie_produit", lookup_expr="in")
     categorie_danger = CharInFilter(field_name="categorie_danger", lookup_expr="in")

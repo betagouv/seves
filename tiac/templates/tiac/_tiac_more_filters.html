@@ -1,0 +1,32 @@
+{% load render_field dsfr_tags %}
+<aside id="sidebar" class="sidebar white-container--lite" data-search-form-target="sidebar">
+    <div class="more-filters-title">
+        <h4 class="fr-h4">Filtres avancés</h4>
+        <a href="#" class="fr-link close-sidebar fr-mb-2v">Fermer</a>
+    </div>
+    <div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.etat %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.numero_sivss %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_sick_persons %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_dead_persons %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_aliment %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_personnes_repas %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_repas %}</div>
+
+        <div class="fr-fieldset__element">
+            <div class="fr-p-2v etablissment-filters ">
+                <h5 class="fr-h5 fr-mb-2v">Établissements</h5>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.siret %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.numero_resytal %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.commune %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.departement %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.pays %}</div>
+            </div>
+        </div>
+
+        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+            <button class="fr-btn fr-btn--secondary clear-btn" data-action="search-form#onSidebarClear:stop:prevent">Effacer</button>
+            <button class="fr-btn add-btn" data-action="search-form#onSidebarAdd:stop:prevent">Ajouter</button>
+        </div>
+    </div>
+</aside>

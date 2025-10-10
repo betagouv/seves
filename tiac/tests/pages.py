@@ -261,6 +261,57 @@ class EvenementListPage:
     def etat_cell(self, line_index=1):
         return self._cell_content(line_index, 9)
 
+    def open_sidebar(self):
+        self.page.locator(".open-sidebar").click()
+
+    def close_sidebar(self):
+        self.page.locator(".close-sidebar").click()
+
+    def reset_more_filters(self):
+        self.page.locator(".clear-btn").click()
+
+    def reset_search(self):
+        return self.page.locator("#reset-btn").click()
+
+    def add_filters(self):
+        return self.page.locator(".add-btn").click()
+
+    @property
+    def etat(self):
+        return self.page.locator("#id_etat")
+
+    @property
+    def numero_sivss(self):
+        return self.page.locator("#id_numero_sivss")
+
+    @property
+    def nb_sick_persons(self):
+        return self.page.locator("#id_nb_sick_persons")
+
+    @property
+    def nb_dead_persons(self):
+        return self.page.locator("#id_nb_dead_persons")
+
+    @property
+    def nb_participants(self):
+        return self.page.locator("#id_nb_personnes_repas")
+
+    @property
+    def siret(self):
+        return self.page.locator("#id_siret")
+
+    @property
+    def commune(self):
+        return self.page.locator("#id_commune")
+
+    @property
+    def departement(self):
+        return self.page.locator("#id_departement")
+
+    @property
+    def pays(self):
+        return self.page.locator("#id_pays")
+
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin):
     def __init__(self, page: Page, base_url):
