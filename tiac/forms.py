@@ -15,7 +15,7 @@ from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
 from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
-from tiac.constants import DangersSyndromiques, DANGERS_COURANTS
+from tiac.constants import DangersSyndromiques, DANGERS_COURANTS, EtatPrelevement
 from tiac.constants import (
     EvenementOrigin,
     EvenementFollowUp,
@@ -479,6 +479,18 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
 class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/analyse_alimentaire.html"
 
+    reference_prelevement = forms.CharField(
+        label="Référence du prélèvement", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    etat_prelevement = SEVESChoiceField(
+        label="État du prélèvement",
+        required=True,
+        choices=EtatPrelevement.choices,
+        widget=forms.Select(attrs={"required": "required"}),
+    )
+
+    categorie_danger = forms.CharField(widget=forms.HiddenInput())
+
     @cached_property
     def categorie_danger_json(self):
         return json.dumps(CategorieDanger.build_options())
@@ -492,5 +504,7 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         exclude = ("investigation",)
         widgets = {
             "sent_to_lnr_cnr": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
-            "categorie_danger": forms.HiddenInput(),
         }
+
+    def clean_categorie_danger(self):
+        return [v for v in self.cleaned_data["categorie_danger"].split("||") if v]

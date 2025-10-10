@@ -5,8 +5,9 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Page, expect, Locator
 
-from tiac.constants import TypeRepas
+from ssa.models import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
+from tiac.constants import TypeRepas
 from tiac.models import (
     EvenementSimple,
     Etablissement,
@@ -102,7 +103,9 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
     def fill_analyse_alimentaire(self, modal: Locator, analyse: AnalyseAlimentaire):
         modal.locator('[id$="reference_prelevement"]').fill(analyse.reference_prelevement)
         modal.locator('[id$="etat_prelevement"]').select_option(analyse.etat_prelevement)
-        self._set_treeselect_option("categorie-danger", analyse.get_categorie_danger_display())
+        modal.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+        for categorie_danger in analyse.categorie_danger:
+            self._set_treeselect_option("categorie-danger", CategorieDanger(categorie_danger).label)
         modal.locator('[id$="comments"]').fill(analyse.comments)
         modal.locator('[id$="reference_souche"]').fill(analyse.reference_souche)
         modal.locator(f"[id$='sent_to_lnr_cnr'] input[type='radio'][value='{str(analyse.sent_to_lnr_cnr)}']").check(
@@ -117,6 +120,10 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         modal = self.open_analyse_alimentaire_modal()
         self.fill_analyse_alimentaire(modal, analyse)
         self.close_analyse_alimentaire_modal()
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").locator("visible=true").count()
 
 
 class EvenementSimpleFormPage(WithEtablissementMixin):
