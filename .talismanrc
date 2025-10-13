@@ -79,5 +79,5 @@ fileignoreconfig:
 - filename: tiac/tests/test_investigation_tiac_details.py
   checksum: 74e11044dc9b7e42c20d38a7fb1578d846f191d0c995668dd80d8a98858200a0
 - filename: tiac/tests/test_evenement_list.py
-  checksum: a8f75b7754acdfc632c9bfbd60e6d88cb662bda57bce0c6b23f98eb725e11bfa
+  checksum: ab9f28eca856095d4967bd52b084bb0b2d1c55da191eb7ad7fb98725b337b604
 version: "1.0"

@@ -1,0 +1,12 @@
+.evenements_liste__search-form .fr-checkbox-group {
+    margin-bottom: auto !important;
+    margin-top: auto;
+}
+
+.fr-input-group {
+    padding-right: 1rem;
+}
+
+#id_full_text_search {
+    min-width: 500px;
+}

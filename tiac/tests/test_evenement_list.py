@@ -1,8 +1,16 @@
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import Departement
-from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory, EtablissementFactory, RepasSuspectFactory
+from core.models import Departement, LienLibre
+from tiac.constants import DangersSyndromiques
+from tiac.factories import (
+    EvenementSimpleFactory,
+    InvestigationTiacFactory,
+    EtablissementFactory,
+    RepasSuspectFactory,
+    AlimentSuspectFactory,
+    AnalyseAlimentaireFactory,
+)
 from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
 from tiac.tests.pages import EvenementListPage
 
@@ -287,3 +295,149 @@ def test_can_filter_by_repas_nb_particpants(live_server, mocked_authentification
     expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_danger_syndromique(
+    live_server, mocked_authentification_user, page: Page, choice_js_fill_from_element_with_value
+):
+    to_be_found_1 = InvestigationTiacFactory(
+        numero_annee=2020, danger_syndromiques_suspectes=[DangersSyndromiques.HISTAMINE, DangersSyndromiques.AUTRE]
+    )
+    not_to_be_found_1 = InvestigationTiacFactory(
+        numero_annee=2022, danger_syndromiques_suspectes=[DangersSyndromiques.BACTERIE_INTESTINALE]
+    )
+    not_to_be_found_2 = InvestigationTiacFactory(numero_annee=2023, danger_syndromiques_suspectes=[])
+    not_to_be_found_3 = InvestigationTiacFactory(
+        numero_annee=2024,
+        danger_syndromiques_suspectes=[DangersSyndromiques.HISTAMINE, DangersSyndromiques.BACTERIE_INTESTINALE],
+    )
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.select_danger_syndromiques(
+        [DangersSyndromiques.HISTAMINE, DangersSyndromiques.AUTRE], choice_js_fill_from_element_with_value
+    )
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_with_free_links(live_server, mocked_authentification_user, page: Page):
+    to_be_found = InvestigationTiacFactory(numero_annee=2025, numero_evenement=2)
+    linked_evenement = InvestigationTiacFactory(numero_annee=2025, numero_evenement=1)
+    LienLibre.objects.create(related_object_1=linked_evenement, related_object_2=to_be_found)
+    linked_evenement_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
+    LienLibre.objects.create(related_object_1=linked_evenement_2, related_object_2=to_be_found)
+
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2024, numero_evenement=2)
+    not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2024, numero_evenement=1)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.numero_field.fill("2025.2")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(linked_evenement_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+    search_page.numero_field.fill("2025.2")
+    search_page.with_links.check()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
+    to_be_found = InvestigationTiacFactory(
+        numero_annee=2025, numero_evenement=2, type_evenement=TypeEvenement.INVESTIGATION_COORDONNEE
+    )
+    not_to_be_found_1 = InvestigationTiacFactory(
+        numero_annee=2025, numero_evenement=1, type_evenement=TypeEvenement.INVESTIGATION_DD
+    )
+    not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.type_evenement.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked_authentification_user, page: Page):
+    evenement_1 = InvestigationTiacFactory(contenu="Morbier")
+    evenement_2 = InvestigationTiacFactory(precisions="Morbier")
+    evenement_3 = InvestigationTiacFactory()
+    EtablissementFactory(raison_sociale="Morbier", investigation_tiac=evenement_3, evenement_simple=None)
+    evenement_4 = InvestigationTiacFactory()
+    EtablissementFactory(enseigne_usuelle="Morbier", investigation_tiac=evenement_4, evenement_simple=None)
+
+    evenement_5 = InvestigationTiacFactory()
+    RepasSuspectFactory(investigation=evenement_5, denomination="Morbier")
+    evenement_6 = InvestigationTiacFactory()
+    RepasSuspectFactory(investigation=evenement_6, menu="Morbier")
+
+    evenement_7 = InvestigationTiacFactory()
+    AlimentSuspectFactory(investigation=evenement_7, simple=True, denomination="Morbier")
+    evenement_8 = InvestigationTiacFactory()
+    AlimentSuspectFactory(investigation=evenement_8, simple=True, description_produit="Morbier")
+
+    evenement_9 = InvestigationTiacFactory()
+    AnalyseAlimentaireFactory(investigation=evenement_9, reference_prelevement="Morbier")
+    evenement_10 = InvestigationTiacFactory()
+    AnalyseAlimentaireFactory(investigation=evenement_10, comments="Morbier")
+
+    evenement_11 = InvestigationTiacFactory()
+    evenement_12 = InvestigationTiacFactory()
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.full_text_field.fill("Morbier")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_5.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_6.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_8.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_9.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_11.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_12.numero)).not_to_be_visible()
+
+
+def test_list_can_filter_with_free_search_evenement_simple(live_server, mocked_authentification_user, page: Page):
+    evenement_1 = EvenementSimpleFactory(contenu="Morbier")
+    evenement_2 = EvenementSimpleFactory()
+    EtablissementFactory(raison_sociale="Morbier", evenement_simple=evenement_2)
+    evenement_3 = EvenementSimpleFactory()
+    EtablissementFactory(enseigne_usuelle="Morbier", evenement_simple=evenement_3)
+
+    evenement_4 = EvenementSimpleFactory()
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.full_text_field.fill("Morbier")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero)).not_to_be_visible()
