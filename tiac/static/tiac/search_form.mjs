@@ -5,12 +5,13 @@ import choicesDefaults from "choicesDefaults"
 
 
 class SearchFormController extends Controller {
-  static targets = ["agent_contact", "structure_contact", "sidebar", "counter"]
+  static targets = ["agent_contact", "structure_contact", "sidebar", "counter", "dangerSyndromique", "with_free_links", "numero"]
 
   onReset(){
     resetForm(this.element)
     this.choicesAgentContact.setChoiceByValue('');
     this.choicesStructureContact.setChoiceByValue('');
+    this.dangerSyndromique.setChoiceByValue('');
     this.element.submit()
   }
 
@@ -21,6 +22,10 @@ class SearchFormController extends Controller {
   onSidebarAdd() {
     this.sidebarTarget.classList.toggle('open');
     document.querySelector('.main-container').classList.toggle('open')
+  }
+
+  disableCheckboxIfNeeded(){
+    this.with_free_linksTarget.disabled = !this.numeroTarget.value
   }
 
   updateFilterCounter(){
@@ -36,8 +41,11 @@ class SearchFormController extends Controller {
   }
 
   connect(){
-    this.choicesAgentContact = new Choices(this.agent_contactTarget, choicesDefaults);
-    this.choicesStructureContact = new Choices(this.structure_contactTarget, choicesDefaults);
+    this.choicesAgentContact = new Choices(this.agent_contactTarget, choicesDefaults)
+    this.choicesStructureContact = new Choices(this.structure_contactTarget, choicesDefaults)
+    this.dangerSyndromique = new Choices(this.dangerSyndromiqueTarget, choicesDefaults)
+    this.disableCheckboxIfNeeded()
+
     this.updateFilterCounter()
 
     const sidebarClosingObserver = new MutationObserver((mutations) => {

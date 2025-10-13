@@ -1,4 +1,4 @@
-{% load render_field dsfr_tags %}
+{% load render_field dsfr_tags widget_tweaks %}
 <aside id="sidebar" class="sidebar white-container--lite" data-search-form-target="sidebar">
     <div class="more-filters-title">
         <h4 class="fr-h4">Filtres avancés</h4>
@@ -9,6 +9,7 @@
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.numero_sivss %}</div>
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_sick_persons %}</div>
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_dead_persons %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.danger_syndromiques_suspectes|set_data:"search-form-target:dangerSyndromique" %}</div>
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_aliment %}</div>
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_personnes_repas %}</div>
         <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_repas %}</div>

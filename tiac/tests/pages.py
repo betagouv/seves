@@ -220,12 +220,24 @@ class EvenementListPage:
         return self.page.locator("#id_numero")
 
     @property
+    def type_evenement(self):
+        return self.page.locator("#id_type_evenement")
+
+    @property
+    def with_links(self):
+        return self.page.locator('label[for="id_with_free_links"]')
+
+    @property
     def start_date_field(self):
         return self.page.locator("#id_start_date")
 
     @property
     def end_date_field(self):
         return self.page.locator("#id_end_date")
+
+    @property
+    def full_text_field(self):
+        return self.page.locator("#id_full_text_search")
 
     def set_agent_filter(self, value, choice_js_fill_from_element):
         element = self.page.locator("#id_agent_contact").locator("..")
@@ -318,6 +330,11 @@ class EvenementListPage:
     @property
     def pays(self):
         return self.page.locator("#id_pays")
+
+    def select_danger_syndromiques(self, dangers, choice_js_fill_from_element_with_value):
+        field = self.page.locator("#id_danger_syndromiques_suspectes")
+        choices = [(d, d) for d in dangers]
+        choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
 
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin):

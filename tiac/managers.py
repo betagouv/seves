@@ -18,6 +18,17 @@ class EvenementSimpleQueryset(EvenementManagerMixin, models.QuerySet):
 
         return self._with_fin_de_suivi(contact, EvenementSimple)
 
+    def search(self, query):
+        fields = [
+            "contenu",
+            "etablissements__raison_sociale",
+            "etablissements__enseigne_usuelle",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+        return self.filter(query_object)
+
 
 class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
     def order_by_numero(self):
@@ -32,6 +43,25 @@ class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
         from .models import InvestigationTiac
 
         return self._with_fin_de_suivi(contact, InvestigationTiac)
+
+    def search(self, query):
+        fields = [
+            "contenu",
+            "precisions",
+            "etablissements__raison_sociale",
+            "etablissements__enseigne_usuelle",
+            "repas__denomination",
+            "repas__menu",
+            "aliments__denomination",
+            "aliments__categorie_produit",
+            "aliments__description_produit",
+            "analyses_alimentaires__reference_prelevement",
+            "analyses_alimentaires__comments",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+        return self.filter(query_object)
 
 
 class EvenementSimpleManager(models.Manager):

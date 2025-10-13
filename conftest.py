@@ -106,6 +106,19 @@ def choice_js_fill_from_element(db, page):
 
 
 @pytest.fixture
+def choice_js_fill_from_element_with_value(db, page):
+    def _choice_js_fill(page, element, choices):
+        element.click()
+        page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+
+        for fill_content, value in choices:
+            page.locator("*:focus").fill(fill_content)
+            page.locator(f"[data-value={value}]").click()
+
+    return _choice_js_fill
+
+
+@pytest.fixture
 def choice_js_cant_pick(db, page):
     def _choice_js_cant_pick(page, locator, fill_content, exact_name):
         page.query_selector(locator).click()

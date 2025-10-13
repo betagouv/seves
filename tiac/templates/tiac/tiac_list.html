@@ -3,6 +3,7 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
@@ -20,6 +21,7 @@
                 </button>
             </div>
             <div class="evenements_liste__search-form">
+                {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
                 {% for field in filter.form %}
                     {% if field.name in filter.form.main_filters %}
                         {% with data_target=field.name|strfmt:"search-form-target:{0}" %}
