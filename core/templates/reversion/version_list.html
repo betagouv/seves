@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+
+{% load static or_empty_value_tag %}
+
+{% block content %}
+    <main class="main-container">
+        <a href="{{ object.get_absolute_url }}" class="fr-btn fr-btn--sm fr-btn--secondary fr-mb-2w" target="_blank">Ouvrir la fiche {{ object.numero }}</a>
+        <h1 class="fr-mb-0-5v">Historique de la fiche {{ object.numero }}</h1>
+        {% if patches %}
+            <div class="fr-table">
+                <div class="fr-table__wrapper">
+                    <div class="fr-table__container">
+                        <div class="fr-table__content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Agent</th>
+                                        <th scope="col">Structure</th>
+                                        <th scope="col">Date modif.</th>
+                                        <th scope="col">Champ modif.</th>
+                                        <th scope="col">Ancienne valeur</th>
+                                        <th scope="col">Nouvelle valeur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for patch in patches %}
+                                        <tr>
+                                            <td>{{ patch.revision.user.agent }}</td>
+                                            <td>{{ patch.revision.user.agent.structure }}</td>
+                                            <td>{{ patch.revision.date_created }}</td>
+                                            <td>{{ patch.field.name|title }}</td>
+                                            <td class="history-removed">{{ patch.old|or_empty_value_tag  }}</td>
+                                            <td class="history-added">{{ patch.new|or_empty_value_tag  }}</td>
+                                        </tr>
+                                    {% endfor %}
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="fr-mt-1w">Il n'y a pas encore d'historique pour cet objet.</p>
+        {% endif %}
+
+    </main>
+{% endblock content %}

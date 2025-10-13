@@ -15,9 +15,11 @@ from django.http.response import HttpResponse, HttpResponseServerError, JsonResp
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
-from django.views.generic import DetailView
+from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
+from reversion.models import Version
+from core.diffs import CompareMixin
 
 from .forms import (
     DocumentUploadForm,
@@ -473,3 +475,35 @@ def sirene_api(request, siret: str):
     except Exception as e:
         logger.exception(e)
         return HttpResponseServerError()
+
+
+class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
+    compare_exclude = [
+        "date_derniere_mise_a_jour",
+    ]
+
+    def dispatch(self, request, *args, **kwargs):
+        content_type = ContentType.objects.get(id=kwargs["content_type"])
+        self.object = content_type.model_class().objects.get(pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
+
+    def get_queryset(self):
+        return Version.objects.get_for_object(self.object).select_related(
+            "revision", "revision__user__agent__structure"
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+
+        versions = context["object_list"]
+        context["patches"] = []
+        for i in range(1, len(versions)):
+            diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
+            for diff in diffs:
+                diff["revision"] = versions[i].revision
+                context["patches"].append(diff)
+        return context

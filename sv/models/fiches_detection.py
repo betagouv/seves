@@ -170,6 +170,9 @@ class FicheDetection(
     def get_absolute_url(self):
         return self.evenement.get_absolute_url()
 
+    def can_user_access(self, user):
+        return self.evenement.can_user_access(user)
+
     def get_update_url(self):
         return reverse("sv:fiche-detection-modification", kwargs={"pk": self.pk})
 
