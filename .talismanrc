@@ -9,7 +9,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 9b3a3ee11c6e7fd8b54bb235d7626d68c4e3648fa65edf6afa03fdd2ef240b72
+  checksum: eb1d939db46b8e8a63875f28db26507c064c0e62096c9b2c05a8522cbff01ddf
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
@@ -80,4 +80,6 @@ fileignoreconfig:
   checksum: 74e11044dc9b7e42c20d38a7fb1578d846f191d0c995668dd80d8a98858200a0
 - filename: tiac/tests/test_evenement_list.py
   checksum: ab9f28eca856095d4967bd52b084bb0b2d1c55da191eb7ad7fb98725b337b604
+- filename: core/diffs.py
+  checksum: 72445e535b3b7db796d3b41523bce006fd2e827847fde0e241d8181902122638
 version: "1.0"

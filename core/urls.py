@@ -17,6 +17,7 @@ from .views import (
     EvenementOuvrirView,
     MessageUpdateView,
     sirene_api,
+    RevisionsListView,
 )
 
 urlpatterns = [
@@ -104,5 +105,10 @@ urlpatterns = [
         "siret/<str:siret>/",
         sirene_api,
         name="siret-api",
+    ),
+    path(
+        "revisions/<int:content_type>/<int:pk>/",
+        RevisionsListView.as_view(),
+        name="revision-list",
     ),
 ]

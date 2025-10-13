@@ -51,6 +51,8 @@ cryptography==44.0.1
     #   josepy
     #   mozilla-django-oidc
     #   pyopenssl
+diff-match-patch==20241021
+    # via django-reversion-compare
 distlib==0.3.8
     # via virtualenv
 dj-importmap==0.0.3
@@ -67,6 +69,7 @@ django==5.2.7
     #   django-post-office
     #   django-querysetsequence
     #   django-reversion
+    #   django-reversion-compare
     #   django-storages
     #   django-template-partials
     #   django-waffle
@@ -91,6 +94,10 @@ django-post-office==3.10.1
 django-querysetsequence==0.18
     # via -r requirements.in
 django-reversion==6.0.0
+    # via
+    #   -r requirements.in
+    #   django-reversion-compare
+django-reversion-compare==0.19.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -130,6 +137,10 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.5.2
     # via celery
+markdown-it-py==4.0.0
+    # via rich
+mdurl==0.1.2
+    # via markdown-it-py
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
 nodeenv==1.8.0
@@ -159,7 +170,9 @@ pycparser==2.22
 pyee==13.0.0
     # via playwright
 pygments==2.19.2
-    # via pytest
+    # via
+    #   pytest
+    #   rich
 pyopenssl==25.0.0
     # via josepy
 pytest==8.4.2
@@ -205,7 +218,9 @@ requests==2.32.4
     #   requests-mock
 requests-mock==1.12.1
     # via -r requirements.in
-ruff==0.14.0
+rich==14.2.0
+    # via django-reversion-compare
+ruff==0.13.3
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
