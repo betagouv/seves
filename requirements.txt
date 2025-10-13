@@ -158,9 +158,11 @@ pycparser==2.22
     # via cffi
 pyee==13.0.0
     # via playwright
+pygments==2.19.2
+    # via pytest
 pyopenssl==25.0.0
     # via josepy
-pytest==8.3.3
+pytest==8.4.2
     # via
     #   pytest-base-url
     #   pytest-django
@@ -173,7 +175,7 @@ pytest-base-url==2.1.0
     # via pytest-playwright
 pytest-django==4.11.1
     # via -r requirements.in
-pytest-env==1.1.5
+pytest-env==1.2.0
     # via -r requirements.in
 pytest-playwright==0.7.1
     # via -r requirements.in
