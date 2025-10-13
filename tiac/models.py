@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import reversion
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
@@ -17,6 +19,7 @@ from core.mixins import (
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
+from core.versions import get_versions_from_ids
 from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     ModaliteDeclarationEvenement,
@@ -103,14 +106,21 @@ class EvenementSimple(
             return True
         return not self.is_draft
 
-    @property
+    @cached_property
     def latest_version(self):
-        return (
+        etablissements_versions = get_versions_from_ids([e.id for e in self.etablissements.all()], Etablissement)
+        instance_version = (
             Version.objects.get_for_object(self)
             .select_related("revision")
             .select_related("revision__user__agent__structure")
             .first()
         )
+
+        versions = list(etablissements_versions) + [instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
