@@ -100,7 +100,7 @@ django-waffle==5.0.0
     # via -r requirements.in
 django-widget-tweaks==1.5.0
     # via django-dsfr
-djhtml==3.0.9
+djhtml==3.0.10
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
