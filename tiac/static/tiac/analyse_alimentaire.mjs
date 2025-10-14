@@ -63,6 +63,7 @@ class AlimentFormController extends BaseFormInModal {
             options: this.categorieDangerValue,
             isSingleSelect: false,
             openCallback: this.treeselectOpenCallback.bind(this),
+            placeholder: "Chercher ou choisir dans la liste",
             searchCallback: item => {
                 if (item.length === 0) {
                     showHeader(this.treeselect.srcElement, ".categorie-danger-header")
@@ -75,10 +76,15 @@ class AlimentFormController extends BaseFormInModal {
             patchItems(this.treeselect.srcElement)
         })
         this.treeselect.srcElement.addEventListener('input', (e) => {
-            if (!!e.detail) {
+            if (e.detail.length === 0) {
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox =>{
+                    checkbox.checked = false
+                })
+            } else {
                 this.categorieDangerInputTarget.value = e.detail.join("||")
             }
         })
+        this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
     }
 
     onShortcut(event) {
@@ -149,7 +155,7 @@ class AlimentFormController extends BaseFormInModal {
                         </h3>
                         <div class="fr-card__desc">
                             <p class="fr-mb-4v">${analyse.etat_prelevement}</p>
-                            ${this.optionalText(analyse.categorie_danger, `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon">${this.joinText(', ', analyse.categorie_danger.split("||"))}</p>`)}
+                            ${this.optionalText(analyse.categorie_danger, this.renderBadges(analyse.categorie_danger.split("||")))}
                         </div>
                     </div>
                     <div class="fr-card__footer">

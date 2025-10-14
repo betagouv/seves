@@ -486,7 +486,7 @@ class AnalyseAlimentaire(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="analyses_alimentaires")
 
     reference_prelevement = models.CharField("Référence du prélèvement")
-    etat_prelevement = models.CharField("État du prélèvement", choices=EtatPrelevement.choices)
+    etat_prelevement = models.CharField("État du prélèvement", choices=EtatPrelevement.choices, blank=True)
     categorie_danger = ArrayField(
         models.CharField(max_length=255, choices=CategorieDanger.choices),
         default=list,
