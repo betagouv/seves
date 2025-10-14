@@ -484,12 +484,12 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
     )
     etat_prelevement = SEVESChoiceField(
         label="État du prélèvement",
-        required=True,
+        required=False,
         choices=EtatPrelevement.choices,
-        widget=forms.Select(attrs={"required": "required"}),
+        widget=forms.Select,
     )
 
-    categorie_danger = forms.CharField(widget=forms.HiddenInput())
+    categorie_danger = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     @cached_property
     def categorie_danger_json(self):
