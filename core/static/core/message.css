@@ -6,6 +6,12 @@
     align-items: center;
     justify-content: space-between
 }
+.message-document-container .fr-btn--tertiary{
+    margin-bottom: 0;
+}
+.message-document-container .fr-btns-group{
+    min-width: 115px;
+}
 label[for=id_recipients]::after, label[for=id_recipients_structures_only]::after{
     content: none !important;
 }
@@ -35,4 +41,14 @@ label[for=id_recipients]::after, label[for=id_recipients_structures_only]::after
 .message-draft, .message-draft .fr-tag {
     font-style: italic;
     color: var(--text-disabled-grey);
+}
+
+.message-date {
+    font-size: 0.75rem;
+    color: var(--text-mention-grey);
+    text-align: right;
+}
+
+.fil-de-suivi [target="_blank"]::after{
+    display: none;
 }
