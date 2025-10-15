@@ -269,7 +269,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             format="%Y-%m-%dT%H:%M",
             attrs={
                 "type": "datetime-local",
-                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
             },
         ),
     )
@@ -281,7 +280,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             format="%Y-%m-%dT%H:%M",
             attrs={
                 "type": "datetime-local",
-                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
             },
         ),
     )
