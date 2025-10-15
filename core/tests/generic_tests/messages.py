@@ -429,3 +429,42 @@ def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page
 
     dropdown_items = [item.inner_text() for item in message_page.recipents_dropdown_items.all()]
     assert len(dropdown_items) == 3
+
+
+def generic_test_can_add_and_see_message_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, object, mocked_authentification_user
+):
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+    message_page.pick_recipient(active_contact, choice_js_fill)
+    expect(message_page.message_form_title).to_have_text("message")
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == str(active_contact)
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Message"
+
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(
+        new_page.get_by_text(
+            f"De : {mocked_authentification_user.agent.contact_set.get().display_with_agent_unit}", exact=True
+        )
+    ).to_be_visible()
+    expect(
+        new_page.get_by_text(f"À : {active_contact.contact_set.get().display_with_agent_unit}", exact=True)
+    ).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()

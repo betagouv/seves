@@ -311,9 +311,6 @@ class Message(models.Model):
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
 
-    def get_fiche_url(self):
-        return self.content_object.get_absolute_url()
-
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
         match self.message_type:
