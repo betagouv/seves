@@ -1,4 +1,5 @@
 from playwright.sync_api import Page
+from waffle.testutils import override_flag
 
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_message_without_document,
@@ -15,6 +16,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_message,
     generic_test_can_send_draft_demande_intervention,
     generic_test_can_send_draft_point_de_situation,
+    generic_test_can_add_and_see_message_in_new_tab_without_document,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -23,6 +25,16 @@ from tiac.models import InvestigationTiac
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_message_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_in_new_tab_without_document(
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user
+    )
 
 
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
