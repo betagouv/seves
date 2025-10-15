@@ -19,49 +19,50 @@
         </div>
         <div class="fr-col-4">
             <div class="fr-grid-row fr-grid-row--gutters">
-                <div class="fr-col-7 bold">Date du/des repas</div>
-                {% if dates_repas|length == 0 %}
-                    <div class="fr-col-5"><span class="empty-value">Vide</span></div>
-                {% elif dates_repas|length == 1 %}
-                    <div class="fr-col-5">{{ dates_repas.0 }}</div>
-                {% else %}
-                    <div class="fr-col-5">{{ dates_repas.0 }}
-                        <button class="fr-btn--tooltip fr-btn" type="button" id="button-repas" aria-describedby="tooltip-repas">
-                            Information contextuelle
-                        </button>
-                        <span class="fr-tooltip fr-placement" id="tooltip-repas" role="tooltip" aria-hidden="true">Dates des autres repas : {{ dates_repas|slice:"1:"|join:', ' }}</span>
-                    </div>
-                {% endif%}
-            </div>
-            <div class="fr-grid-row fr-grid-row--gutters">
-                <div class="fr-col-7 bold">Etablissement(s)</div>
-                {% if raisons_sociales|length == 0 %}
-                    <div class="fr-col-5"><span class="empty-value">Vide</span></div>
-                {% elif raisons_sociales|length == 1 %}
-                    <div class="fr-col-5">{{ raisons_sociales.0 }}</div>
-                {% else %}
-                    <div class="fr-col-5">{{ raisons_sociales.0 }}
-                        <button class="fr-btn--tooltip fr-btn" type="button" id="button-raisons-sociales" aria-describedby="tooltip-raisons-sociales">
-                            Information contextuelle
-                        </button>
-                        <span class="fr-tooltip fr-placement" id="tooltip-raisons-sociales" role="tooltip" aria-hidden="true">Autres établissements : {{ raisons_sociales|slice:"1:"|join:', ' }}</span>
-                    </div>
-                {% endif%}
-            </div>
-            <div class="fr-grid-row fr-grid-row--gutters">
-                <div class="fr-col-7 bold">Commune(s)</div>
-                <div class="fr-col-5">
-                    {% if communes|length == 0 %}
-                        <div class="fr-col-5"><span class="empty-value">Vide</span></div>
-                    {% elif communes|length == 1 %}
-                        <div class="fr-col-5">{{ communes.0 }}</div>
+                <div class="fr-col-4 bold">Date du/des repas</div>
+                <div class="fr-col-8">
+                    {% if dates_repas|length == 0 %}
+                        <span class="empty-value">Vide</span>
+                    {% elif dates_repas|length == 1 %}
+                        {{ dates_repas.0 }}
                     {% else %}
-                        <div class="fr-col-5">{{ communes.0 }}
-                            <button class="fr-btn--tooltip fr-btn" type="button" id="button-communes" aria-describedby="tooltip-communes">
-                                Information contextuelle
-                            </button>
-                            <span class="fr-tooltip fr-placement" id="tooltip-communes" role="tooltip" aria-hidden="true">Autre communes : {{ communes|slice:"1:"|join:', ' }}</span>
-                        </div>
+                        {{ dates_repas.0 }}
+                        {% with rest_length=dates_repas|length|add:"-1" %}
+                            <p class="fr-tag" aria-describedby="message-tooltip-repas">et {{ rest_length }} autre{{ rest_length|pluralize }}</p>
+                        {% endwith %}
+                        <span class="fr-tooltip fr-placement" id="message-tooltip-repas" role="tooltip" aria-hidden="true">Dates des autres repas : {{ dates_repas|slice:"1:"|join:', ' }}</span>
+                    {% endif%}
+                </div>
+            </div>
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-4 bold">Etablissement(s)</div>
+                <div class="fr-col-8">
+                    {% if raisons_sociales|length == 0 %}
+                        <span class="empty-value">Vide</span>
+                    {% elif raisons_sociales|length == 1 %}
+                        {{ raisons_sociales.0 }}
+                    {% else %}
+                        {{ raisons_sociales.0 }}
+                        {% with rest_length=raisons_sociales|length|add:"-1" %}
+                            <p class="fr-tag" aria-describedby="message-tooltip-raisons">et {{ rest_length }} autre{{ rest_length|pluralize }}</p>
+                        {% endwith %}
+                        <span class="fr-tooltip fr-placement" id="message-tooltip-raisons" role="tooltip" aria-hidden="true">Autres établissements : {{ raisons_sociales|slice:"1:"|join:', ' }}</span>
+                    {% endif%}
+                </div>
+            </div>
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-4 bold">Commune(s)</div>
+                <div class="fr-col-8">
+                    {% if communes|length == 0 %}
+                        <span class="empty-value">Vide</span>
+                    {% elif communes|length == 1 %}
+                        {{ communes.0 }}
+                    {% else %}
+                        {{ communes.0 }}
+                        {% with rest_length=communes|length|add:"-1" %}
+                            <p class="fr-tag" aria-describedby="message-tooltip-communes">et {{ rest_length }} autre{{ rest_length|pluralize }}</p>
+                        {% endwith %}
+                        <span class="fr-tooltip fr-placement" id="message-tooltip-communes" role="tooltip" aria-hidden="true">Autre communes : {{ communes|slice:"1:"|join:', ' }}</span>
                     {% endif %}
                 </div>
             </div>

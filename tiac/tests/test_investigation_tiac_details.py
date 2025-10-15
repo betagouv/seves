@@ -22,9 +22,6 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
 
     expect(details_page.context_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
     expect(
-        details_page.context_block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)
-    ).to_be_visible()
-    expect(
         details_page.context_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
     ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()

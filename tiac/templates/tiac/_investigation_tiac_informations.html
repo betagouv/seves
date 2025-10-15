@@ -10,10 +10,6 @@
             <div class="fr-col-5">{{ object.createur }}</div>
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-7 bold">Date de création</div>
-            <div class="fr-col-5">{{ object.date_creation|date:"d/m/Y" }}</div>
-          </div>
-          <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-7 bold">Date de réception à la DD(ETS)PP</div>
             <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
           </div>

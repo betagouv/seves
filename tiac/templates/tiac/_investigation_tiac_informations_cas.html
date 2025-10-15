@@ -17,11 +17,11 @@
             </div>
             <div class="fr-col-3">
                 <div class="bold">Première date et heure d'apparition des symptômes</div>
-                <div>{{ object.datetime_first_symptoms|date:"d/m/Y à H:i" }}</div>
+                <div>{{ object.datetime_first_symptoms|date:"d/m/Y à H:i"|or_empty_value_tag }}</div>
             </div>
             <div class="fr-col-3">
                 <div class="bold">Dernière date et heure d'apparition des symptômes</div>
-                <div>{{ object.datetime_last_symptoms|date:"d/m/Y à H:i" }}</div>
+                <div>{{ object.datetime_last_symptoms|date:"d/m/Y à H:i"|or_empty_value_tag }}</div>
             </div>
         </div>
     </div>
