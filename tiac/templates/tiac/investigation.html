@@ -130,9 +130,9 @@
                 <div>
                     {% dsfr_notice title="Pour les TIAC confirmées ou fortement suspectées, seul l'enregistrement des éléments conclusifs est requis.<br/> Vous pouvez ajouter d'autres éléments si cela vous aide dans l'investigation (ces données ne seront pas valorisées dans les bilans nationaux)" %}
                 </div>
+                {{ etablissement_formset }}
                 {{ repas_formset }}
                 {{ aliment_formset }}
-                {{ etablissement_formset }}
                 {{ analyse_alimentaire_formset }}
             </fieldset>
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v form-fieldset" data-controller="agents-pathogene" id="agents-pathogene">
