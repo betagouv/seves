@@ -310,6 +310,9 @@ class EvenementProduit(
     def can_be_updated(self, user):
         return self._user_can_interact(user)
 
+    def can_be_downloaded(self, user):
+        return self._user_can_interact(user)
+
     def can_user_delete(self, user):
         return self.can_user_access(user)
 

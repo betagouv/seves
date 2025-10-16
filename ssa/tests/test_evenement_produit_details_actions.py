@@ -78,3 +78,15 @@ def test_can_edit_evenement_produit(live_server, page: Page, mocked_authentifica
     details_page.navigate(evenement)
     details_page.edit()
     page.wait_for_url(f"**{evenement.get_update_url()}")
+
+
+def test_can_download_document_evenement_produit(live_server, page):
+    evenement = EvenementProduitFactory()
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    with page.expect_download() as download_info:
+        details_page.download()
+
+    download = download_info.value
+    assert download.suggested_filename == f"evenement_produit_{evenement.numero}.docx"

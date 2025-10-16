@@ -1,3 +1,4 @@
+import io
 import json
 from urllib.parse import urlencode
 
@@ -5,10 +6,11 @@ from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from docxtpl import DocxTemplate
 
 from core.mixins import WithClotureContextMixin
 from core.mixins import (
@@ -22,7 +24,7 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.models import Export
+from core.models import Export, LienLibre
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, CategorieDanger, Etablissement
@@ -137,6 +139,7 @@ class EvenementProduitDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["can_be_updated"] = self.get_object().can_be_updated(self.request.user)
+        context["can_be_downloaded"] = self.get_object().can_be_downloaded(self.request.user)
         return context
 
 
@@ -237,3 +240,38 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
         return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")
+
+
+class EvenementProduitDocumentExportView(View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, numero=None, *args, **kwargs):
+        annee, numero_evenement = numero.replace("A-", "").split(".")
+        self.object = EvenementProduit.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("ssa/doc_templates/evenement_produit.docx")
+        free_links = LienLibre.objects.for_object(self.object)
+        free_links_numbers = []
+        for link in free_links:
+            if link.related_object_1 == self.object and link.related_object_2.is_deleted is False:
+                free_links_numbers.append(str(link.related_object_2))
+            if link.related_object_2 == self.object and link.related_object_1.is_deleted is False:
+                free_links_numbers.append(str(link.related_object_1))
+        context = {"object": self.object, "free_links": free_links_numbers}
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
