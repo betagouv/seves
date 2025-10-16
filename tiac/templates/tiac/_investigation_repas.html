@@ -18,7 +18,7 @@
                                 <p>{{ repas.get_type_repas_display }}</p>
                             {% endif %}
                             {%  if repas.nombre_participant >= 0 %}
-                                <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }} participants</span>
+                                <span class="fr-badge fr-badge--info fr-badge--sm fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }} participants</span>
                             {% endif %}
                             <div class="fr-btns-group--right">
                                 <button data-fr-opened="false" aria-controls="fr-modal-repas-{{ repas.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>

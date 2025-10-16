@@ -443,6 +443,10 @@ class RepasSuspect(models.Model):
     def motif_suspicion_labels(self):
         return ", ".join(Motif(m).label for m in self.motif_suspicion)
 
+    @property
+    def show_type_collectivite(self):
+        return self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE
+
 
 class AlimentSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
@@ -480,6 +484,14 @@ class AlimentSuspect(models.Model):
     @property
     def motif_suspicion_labels(self):
         return ", ".join(MotifAliment(m).label for m in self.motif_suspicion)
+
+    @property
+    def is_aliment_simple(self):
+        return self.type_aliment == TypeAliment.SIMPLE
+
+    @property
+    def is_aliment_cuisine(self):
+        return self.type_aliment == TypeAliment.CUISINE
 
 
 class AnalyseAlimentaire(models.Model):
