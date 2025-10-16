@@ -19,7 +19,6 @@ class EtablissementBaseFormSet(WithCommonContextVars, BaseInlineFormSet):
     def media(self):
         return super().media + Media(
             js=(js_module("tiac/etablissements.mjs"),),
-            css={"all": ("tiac/etablissements.css",)},
         )
 
     def __init__(self, *args, title_level=None, title_classes=None, **kwargs):

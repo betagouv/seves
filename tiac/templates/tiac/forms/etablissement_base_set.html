@@ -66,7 +66,7 @@
 {% endpartialdef %}
 
 <fieldset class="fr-fieldset form-fieldset etablissement-fieldset fr-mt-4v" data-controller="etablissement-formset">
-    <div class="etablissement-header">
+    <div class="etablissement-header fieldset-header">
         <{{ title_level }}{% if title_classes %} class="{{ title_classes }}"{% endif %}>Établissements</{{ title_level }}>
     <button
         type="button"
@@ -76,7 +76,7 @@
 </div>
 {{ formset.non_form_errors }}
 <div
-    id="etablissement" class="fr-col-12 fr-grid-row fr-grid-row--gutters"
+    id="etablissement" class="fr-col-12 fr-grid-row fr-grid-row--gutters fr-m-0"
     data-etablissement-formset-target="formsetContainer"
 >
     {% for field in formset.management_form %}

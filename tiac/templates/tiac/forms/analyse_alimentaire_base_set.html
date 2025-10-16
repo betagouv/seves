@@ -72,7 +72,7 @@
         >Ajouter</button>
     </div>
     {{ formset.non_form_errors }}
-    <div class="fr-col-12 fr-grid-row fr-grid-row--gutters" data-analyse-alimentaire-formset-target="formsetContainer">
+    <div class="fr-col-12 fr-grid-row fr-grid-row--gutters fr-m-0" data-analyse-alimentaire-formset-target="formsetContainer">
         {% for field in formset.management_form %}
             {% with data_target=field.name|strfmt:"analyse-alimentaire-formset-target:{0}" %}
                 {{ field|set_data:data_target }}
