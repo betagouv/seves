@@ -15,7 +15,7 @@
                                 <p class="fr-pt-4v">{{ analyse.get_etat_prelevement_display }}</p>
                             {% endif %}
                             {% for danger in analyse.categorie_danger_labels %}
-                                <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0 fr-mt-2v">{{ danger }}</span>
+                                <span class="fr-badge fr-badge--info fr-badge--sm fr-badge--no-icon fr-m-0 fr-mt-2v">{{ danger }}</span>
                             {% endfor %}
                             <div class="fr-btns-group--right">
                                 <button data-fr-opened="false" aria-controls="fr-modal-analyse-{{ analyse.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>

@@ -95,10 +95,7 @@ class AlimentFormController extends BaseFormInModal {
                     </h3>
                     <div class="fr-card__desc">
                         ${this.optionalText(aliment.motif_suspicion, `<p>${this.joinText(', ', ...aliment.motif_suspicion)}</p>`)}
-                        ${this.optionalText(
-                            aliment.type_aliment,
-                            `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-badge--sm">${aliment.type_aliment}</p>`
-                        )}
+                        ${this.optionalText(aliment.type_aliment, this.renderBadges([aliment.type_aliment]))}
                     </div>
                 </div>
                 <div class="fr-card__footer">

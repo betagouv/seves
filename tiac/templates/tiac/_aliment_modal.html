@@ -17,20 +17,22 @@
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Type d'aliment</div>
                                 <div class="fr-col-3">
-                                    {%  if aliment.type_aliment %}
+                                    {% if aliment.type_aliment %}
                                         <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ aliment.get_type_aliment_display }}</span>
                                     {% else %}
                                         <span class="empty-value">Vide</span>
                                     {% endif %}
                                 </div>
-                                <div class="fr-col-3 bold">Description de la composition</div>
-                                <div class="fr-col-3">{{ aliment.description_composition|or_empty_value_tag }}</div>
-                                <div class="fr-col-3 bold">Catégorie du produit</div>
-                                <div class="fr-col-3">{{ aliment.get_categorie_produit_display|or_empty_value_tag }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-3 bold">Description du produit</div>
-                                <div class="fr-col-3">{{ aliment.description_produit|or_empty_value_tag }}</div>
+                                {% if aliment.is_aliment_cuisine %}
+                                    <div class="fr-col-3 bold">Description de la composition</div>
+                                    <div class="fr-col-3">{{ aliment.description_composition|or_empty_value_tag }}</div>
+                                {% endif %}
+                                {% if aliment.is_aliment_simple %}
+                                    <div class="fr-col-3 bold">Catégorie du produit</div>
+                                    <div class="fr-col-3">{{ aliment.get_categorie_produit_display|or_empty_value_tag }}</div>
+                                    <div class="fr-col-3 bold">Description du produit</div>
+                                    <div class="fr-col-3">{{ aliment.description_produit|or_empty_value_tag }}</div>
+                                {% endif %}
                                 <div class="fr-col-3 bold">Motifs de suspicion</div>
                                 <div class="fr-col-3">{{ aliment.motif_suspicion_labels|or_empty_value_tag }}</div>
                             </div>
