@@ -12,6 +12,8 @@ asgiref==3.8.1
     #   django-countries
 async-timeout==5.0.1
     # via -r requirements.in
+babel==2.17.0
+    # via docxcompose
 billiard==4.2.1
     # via celery
 bleach[css]==6.1.0
@@ -109,6 +111,10 @@ django-widget-tweaks==1.5.0
     # via django-dsfr
 djhtml==3.0.10
     # via -r requirements.in
+docxcompose==1.4.0
+    # via docxtpl
+docxtpl==0.20.1
+    # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
@@ -129,6 +135,8 @@ idna==3.7
     # via requests
 iniconfig==2.0.0
     # via pytest
+jinja2==3.1.6
+    # via docxtpl
 jmespath==1.0.1
     # via
     #   boto3
@@ -137,8 +145,15 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.5.2
     # via celery
+lxml==6.0.2
+    # via
+    #   docxcompose
+    #   docxtpl
+    #   python-docx
 markdown-it-py==4.0.0
     # via rich
+markupsafe==3.0.3
+    # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
 mozilla-django-oidc==4.0.1
@@ -202,6 +217,10 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   celery
+python-docx==1.2.0
+    # via
+    #   docxcompose
+    #   docxtpl
 python-magic==0.4.27
     # via -r requirements.in
 python-slugify==8.0.4
@@ -229,6 +248,7 @@ sentry-sdk[django]==2.38.0
 six==1.16.0
     # via
     #   bleach
+    #   docxcompose
     #   python-dateutil
 sqlparse==0.5.3
     # via
@@ -243,6 +263,7 @@ typing-extensions==4.11.0
     #   django-countries
     #   pyee
     #   pyopenssl
+    #   python-docx
 tzdata==2025.2
     # via
     #   faker
