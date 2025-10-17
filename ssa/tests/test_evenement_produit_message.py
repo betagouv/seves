@@ -1,4 +1,5 @@
 from playwright.sync_api import Page, expect
+from waffle.testutils import override_flag
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactStructureFactory, MessageFactory
@@ -18,6 +19,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_message,
     generic_test_can_send_draft_point_de_situation,
     generic_test_can_send_draft_demande_intervention,
+    generic_test_can_add_and_see_message_in_new_tab_without_document,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -48,6 +50,16 @@ def test_can_add_and_see_compte_rendu(live_server, page: Page, choice_js_fill):
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_message_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_in_new_tab_without_document(
+        live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
+    )
 
 
 def test_cant_see_drafts_from_other_users(live_server, page: Page):

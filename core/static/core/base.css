@@ -45,6 +45,12 @@ fieldset {
 .main-container {
     margin: 2rem 1.5rem;
 }
+.fr-container-xxl {
+    max-width: 90rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
 #en-tete{
     display: flex;
     align-items: center;
