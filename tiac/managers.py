@@ -27,7 +27,7 @@ class EvenementSimpleQueryset(EvenementManagerMixin, models.QuerySet):
         query_object = Q()
         for f in fields:
             query_object |= Q(**{f"{f}__unaccent__icontains": query})
-        return self.filter(query_object)
+        return self.filter(query_object).distinct()
 
 
 class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
@@ -55,13 +55,14 @@ class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
             "aliments__denomination",
             "aliments__categorie_produit",
             "aliments__description_produit",
+            "aliments__description_composition",
             "analyses_alimentaires__reference_prelevement",
             "analyses_alimentaires__comments",
         ]
         query_object = Q()
         for f in fields:
             query_object |= Q(**{f"{f}__unaccent__icontains": query})
-        return self.filter(query_object)
+        return self.filter(query_object).distinct()
 
 
 class EvenementSimpleManager(models.Manager):
