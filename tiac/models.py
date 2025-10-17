@@ -434,6 +434,16 @@ class InvestigationTiac(
     def danger_plus_courants(self):
         return DANGERS_COURANTS
 
+    @property
+    def short_conclusion_selected_hazard(self):
+        if not self.selected_hazard:
+            return ""
+        return (
+            DangersSyndromiques(self.selected_hazard).short_name
+            if self.selected_hazard in DangersSyndromiques.values
+            else CategorieDanger(self.selected_hazard).label
+        )
+
     class Meta:
         constraints = (
             models.CheckConstraint(
