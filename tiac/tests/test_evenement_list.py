@@ -396,32 +396,35 @@ def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked
     AlimentSuspectFactory(investigation=evenement_7, simple=True, denomination="Morbier")
     evenement_8 = InvestigationTiacFactory()
     AlimentSuspectFactory(investigation=evenement_8, simple=True, description_produit="Morbier")
-
     evenement_9 = InvestigationTiacFactory()
-    AnalyseAlimentaireFactory(investigation=evenement_9, reference_prelevement="Morbier")
-    evenement_10 = InvestigationTiacFactory()
-    AnalyseAlimentaireFactory(investigation=evenement_10, comments="Morbier")
+    AlimentSuspectFactory(investigation=evenement_9, cuisine=True, description_composition="Morbier")
 
+    evenement_10 = InvestigationTiacFactory()
+    AnalyseAlimentaireFactory(investigation=evenement_10, reference_prelevement="Morbier")
     evenement_11 = InvestigationTiacFactory()
+    AnalyseAlimentaireFactory(investigation=evenement_11, comments="Morbier")
+
     evenement_12 = InvestigationTiacFactory()
+    evenement_13 = InvestigationTiacFactory()
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
     search_page.full_text_field.fill("Morbier")
     search_page.submit_search()
-    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_4.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_5.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_6.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_8.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_9.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_11.numero)).not_to_be_visible()
-    expect(search_page.page.get_by_text(evenement_12.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_5.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_6.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_7.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_8.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_9.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_10.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_11.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_12.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_13.numero, exact=True)).not_to_be_visible()
 
 
 def test_list_can_filter_with_free_search_evenement_simple(live_server, mocked_authentification_user, page: Page):
@@ -441,3 +444,18 @@ def test_list_can_filter_with_free_search_evenement_simple(live_server, mocked_a
     expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_4.numero)).not_to_be_visible()
+
+
+def test_list_can_filter_with_free_search_investigation_tiac_is_disctinct(
+    live_server, mocked_authentification_user, page: Page
+):
+    evenement_3 = InvestigationTiacFactory()
+    EtablissementFactory(raison_sociale="Morbier", investigation_tiac=evenement_3, evenement_simple=None)
+    RepasSuspectFactory(investigation=evenement_3)
+    RepasSuspectFactory(investigation=evenement_3)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.full_text_field.fill("Morbier")
+    search_page.submit_search()
+    assert search_page.nb_lines == 1

@@ -79,7 +79,7 @@ fileignoreconfig:
 - filename: tiac/tests/test_investigation_tiac_details.py
   checksum: 74e11044dc9b7e42c20d38a7fb1578d846f191d0c995668dd80d8a98858200a0
 - filename: tiac/tests/test_evenement_list.py
-  checksum: ab9f28eca856095d4967bd52b084bb0b2d1c55da191eb7ad7fb98725b337b604
+  checksum: 5b73564cf12aa39cf5ae426b81d378706992f1249a848ea9290b42db72529f1a
 - filename: core/diffs.py
   checksum: 72445e535b3b7db796d3b41523bce006fd2e827847fde0e241d8181902122638
 version: "1.0"

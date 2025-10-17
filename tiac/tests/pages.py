@@ -253,6 +253,10 @@ class EvenementListPage:
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
 
+    @property
+    def nb_lines(self):
+        return self.page.locator("tbody tr").count()
+
     def numero_cell(self, line_index=1):
         return self._cell_content(line_index, 1)
 
