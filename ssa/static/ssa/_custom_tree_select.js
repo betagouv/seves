@@ -81,6 +81,30 @@ export function hideHeader(element, headerClass){
 }
 
 
+export function shortcutClicked(event, treeselect, input){
+    const label = event.target.getElementsByTagName("label")[0]
+    const value = label.textContent.trim()
+    const checkbox = treeselect.srcElement.querySelector('[id$=' + label.getAttribute("for") + ']')
+    checkbox.checked = !checkbox.checked
+
+    let valuesToSet = treeselect.value
+    if (checkbox.checked){
+        valuesToSet.push(value)
+    } else {
+        valuesToSet.pop(value)
+    }
+
+    treeselect.updateValue(valuesToSet)
+    input.value = valuesToSet.join("||")
+    let text = ""
+    if (valuesToSet.length === 1){
+        text = valuesToSet[0]
+    } else {
+        text = `${valuesToSet.length} ${treeselect.tagsCountText}`
+    }
+    treeselect.srcElement.querySelector(".treeselect-input__tags-count").innerText = text
+}
+
 export const tsDefaultOptions = {
     showTags: false,
     clearable: false,

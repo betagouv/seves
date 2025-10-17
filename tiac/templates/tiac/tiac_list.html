@@ -4,9 +4,12 @@
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
+    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
+    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}

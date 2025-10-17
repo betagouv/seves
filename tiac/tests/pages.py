@@ -207,7 +207,7 @@ class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
         expect(locator).to_have_count(previous - 1)
 
 
-class EvenementListPage:
+class EvenementListPage(WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -339,6 +339,23 @@ class EvenementListPage:
         field = self.page.locator("#id_danger_syndromiques_suspectes")
         choices = [(d, d) for d in dangers]
         choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
+
+    def set_agents_pathogenes_from_shortcut(self, label):
+        container = self.page.locator("#id_agents_pathogenes").locator("..")
+        container.locator(".treeselect-input__edit").click()
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".shortcut", has_text=label).locator("..").click()
+
+    def set_analyse_danger_from_shortcut(self, label):
+        container = self.page.locator("#id_analyse_categorie_danger").locator("..")
+        container.locator(".treeselect-input__edit").click()
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".shortcut", has_text=label).locator("..").click()
+
+    def set_categorie_produit(self, aliment):
+        label = aliment.get_categorie_produit_display()
+        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
+        self._set_treeselect_option("categorie-produit", label)
 
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin):

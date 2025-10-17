@@ -22,7 +22,7 @@ from core.mixins import (
     WithAddUserContactsMixin,
 )
 from core.views import MediaDefiningMixin
-from ssa.models import CategorieDanger
+from ssa.models import CategorieDanger, CategorieProduit
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
@@ -214,6 +214,8 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         context["total_object_count"] = self.get_raw_queryset.count()
         context["object_list"] = object_list
         context["filter"] = self.filter
+        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
+        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
         return context
 
 
