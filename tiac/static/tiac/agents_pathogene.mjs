@@ -1,7 +1,7 @@
 import {applicationReady} from "Application"
 import "TreeSelect"
 import {Controller} from "Stimulus";
-import {patchItems, showHeader, hideHeader, tsDefaultOptions, findPath} from "CustomTreeSelect"
+import {patchItems, showHeader, hideHeader, tsDefaultOptions, findPath, shortcutClicked} from "CustomTreeSelect"
 
 class AgentsPathogeneController extends Controller {
     static targets = ["jsonConfig", "categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
@@ -11,27 +11,7 @@ class AgentsPathogeneController extends Controller {
     }
 
     onShortcut(event){
-        const label = event.target.getElementsByTagName("label")[0]
-        const value = label.textContent.trim()
-        const checkbox = this.element.querySelector('[id$=' + label.getAttribute("for") + ']')
-        checkbox.checked = !checkbox.checked
-
-        let valuesToSet = this.treeselect.value
-        if (checkbox.checked){
-            valuesToSet.push(value)
-        } else {
-            valuesToSet.pop(value)
-        }
-
-        this.treeselect.updateValue(valuesToSet)
-        this.categorieDangerInputTarget.value = valuesToSet.join("||")
-        let text = ""
-        if (valuesToSet.length === 1){
-            text = valuesToSet[0]
-        } else {
-            text = `${valuesToSet.length} ${this.treeselect.tagsCountText}`
-        }
-        this.element.querySelector(".treeselect-input__tags-count").innerText = text
+        shortcutClicked(event, this.element, this.treeselect, this.categorieDangerInputTarget)
     }
 
     setupCategorieDanger() {

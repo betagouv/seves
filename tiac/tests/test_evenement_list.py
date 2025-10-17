@@ -2,6 +2,7 @@ from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Departement, LienLibre
+from ssa.models import CategorieDanger, CategorieProduit
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
     EvenementSimpleFactory,
@@ -459,3 +460,60 @@ def test_list_can_filter_with_free_search_investigation_tiac_is_disctinct(
     search_page.full_text_field.fill("Morbier")
     search_page.submit_search()
     assert search_page.nb_lines == 1
+
+
+def test_list_can_filter_by_agents_pathogenes(live_server, page: Page):
+    EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
+    InvestigationTiacFactory(
+        agents_confirmes_ars=[CategorieDanger.BACILLUS_CEREUS], numero_annee=2025, numero_evenement=2
+    )
+    InvestigationTiacFactory(agents_confirmes_ars=[], numero_annee=2025, numero_evenement=4)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.set_agents_pathogenes_from_shortcut(CategorieDanger.BACILLUS_CEREUS)
+    search_page.add_filters()
+    search_page.submit_search()
+
+    assert search_page.numero_cell().text_content() == "T-2025.2"
+    expect(search_page.page.get_by_text("2025.3")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
+
+
+def test_list_can_filter_by_analyse_danger(live_server, page: Page):
+    evenement_1 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=3)
+    AnalyseAlimentaireFactory(categorie_danger=[CategorieDanger.BACILLUS_CEREUS], investigation=evenement_1)
+    _evenement_2 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=2)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=1)
+    AnalyseAlimentaireFactory(categorie_danger=[], investigation=evenement_3)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.set_analyse_danger_from_shortcut(CategorieDanger.BACILLUS_CEREUS)
+    search_page.add_filters()
+    search_page.submit_search()
+
+    assert search_page.numero_cell().text_content() == "T-2025.3"
+    expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_can_filter_by_aliment_categorie_produit(live_server, page: Page):
+    evenement_1 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=3)
+    aliment = AlimentSuspectFactory(categorie_produit=CategorieProduit.ESCARGOT, simple=True, investigation=evenement_1)
+    _evenement_2 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=2)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2025, numero_evenement=1)
+    AlimentSuspectFactory(categorie_produit=[], simple=True, investigation=evenement_3)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.set_categorie_produit(aliment)
+    search_page.add_filters()
+    search_page.submit_search()
+
+    assert search_page.numero_cell().text_content() == "T-2025.3"
+    expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()

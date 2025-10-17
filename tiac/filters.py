@@ -1,15 +1,17 @@
+from functools import cached_property
+
 import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import DateInput, Media, CheckboxInput, TextInput
+from django.forms import DateInput, Media, CheckboxInput, TextInput, HiddenInput
 from dsfr.forms import DsfrBaseForm
 
 from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
 from core.form_mixins import js_module
 from core.models import LienLibre
-from ssa.filters import WithEtablissementFilterMixin
-from tiac.constants import TypeRepas, TypeAliment, DangersSyndromiques, EvenementFollowUp
+from ssa.filters import WithEtablissementFilterMixin, CharInFilter
+from tiac.constants import TypeRepas, TypeAliment, DangersSyndromiques, EvenementFollowUp, DANGERS_COURANTS
 from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
 
 
@@ -39,6 +41,10 @@ class TiacFilterForm(DsfrBaseForm):
             (f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in TypeEvenement.choices
         ]
         self.fields["type_evenement"].choices = simple_choices + investigation_choices
+
+    @cached_property
+    def common_danger(self):
+        return DANGERS_COURANTS
 
 
 class TiacFilter(
@@ -102,6 +108,30 @@ class TiacFilter(
         label="Danger syndromique suspecté",
         method="filter_danger_syndromiques_suspectes",
     )
+    agents_pathogenes = CharInFilter(
+        label="Agent pathogène confirmé par l'ARS",
+        field_name="agents_confirmes_ars",
+        lookup_expr="contains",
+        widget=HiddenInput,
+    )
+    analyse_categorie_danger = CharInFilter(
+        label="Analyse - Danger détecté",
+        field_name="analyses_alimentaires__categorie_danger",
+        lookup_expr="contains",
+        widget=HiddenInput,
+    )
+    type_aliment = django_filters.ChoiceFilter(
+        choices=TypeAliment,
+        label="Aliment - Type d'aliment",
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        field_name="aliments__type_aliment",
+    )
+    aliment_categorie_produit = CharInFilter(
+        label="Aliment - Catégorie de produit",
+        field_name="aliments__categorie_produit",
+        lookup_expr="in",
+        widget=HiddenInput,
+    )
     nb_personnes_repas = django_filters.ChoiceFilter(
         choices=[
             ("0-5", "[0-5]"),
@@ -112,12 +142,6 @@ class TiacFilter(
         label="Repas - Nombre de participants",
         empty_label=settings.SELECT_EMPTY_CHOICE,
         method="filter_nb_personnes_repas",
-    )
-    type_aliment = django_filters.ChoiceFilter(
-        choices=TypeAliment,
-        label="Type d'aliment",
-        empty_label=settings.SELECT_EMPTY_CHOICE,
-        field_name="aliments__type_aliment",
     )
     type_repas = django_filters.ChoiceFilter(
         choices=TypeRepas,
@@ -136,6 +160,9 @@ class TiacFilter(
         "type_aliment",
         "type_repas",
         "danger_syndromiques_suspectes",
+        "aliment_categorie_produit",
+        "analyse_categorie_danger",
+        "agents_pathogenes",
     ]
 
     def _apply_free_links(self, queryset, queryset_type):
