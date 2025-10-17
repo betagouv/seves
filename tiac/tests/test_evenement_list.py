@@ -58,8 +58,8 @@ def test_row_content_investigation_tiac(live_server, mocked_authentification_use
     assert search_page.etablissement_cell().text_content() == f"{etablissement.raison_sociale} {etablissement.commune}"
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == "Invest. coord. / MUS informée"
-    assert search_page.conclusion_cell().text_content() == "-"
-    assert search_page.danger_cell().text_content() == "-"
+    assert search_page.conclusion_cell().text_content() == evenement.get_suspicion_conclusion_display()
+    assert search_page.danger_cell().text_content() == evenement.short_conclusion_selected_hazard or "-"
     assert search_page.etat_cell().text_content() == "Brouillon"
 
 
@@ -404,8 +404,10 @@ def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked
     evenement_11 = InvestigationTiacFactory()
     AnalyseAlimentaireFactory(investigation=evenement_11, comments="Morbier")
 
-    evenement_12 = InvestigationTiacFactory()
-    evenement_13 = InvestigationTiacFactory()
+    evenement_12 = InvestigationTiacFactory(conclusion_comment="Morbier")
+
+    evenement_other_1 = InvestigationTiacFactory()
+    evenement_other_2 = InvestigationTiacFactory()
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
@@ -423,8 +425,9 @@ def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked
     expect(search_page.page.get_by_text(evenement_9.numero, exact=True)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_10.numero, exact=True)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_11.numero, exact=True)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_12.numero, exact=True)).not_to_be_visible()
-    expect(search_page.page.get_by_text(evenement_13.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_12.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_other_1.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_other_2.numero, exact=True)).not_to_be_visible()
 
 
 def test_list_can_filter_with_free_search_evenement_simple(live_server, mocked_authentification_user, page: Page):

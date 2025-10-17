@@ -58,6 +58,7 @@ class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
             "aliments__description_composition",
             "analyses_alimentaires__reference_prelevement",
             "analyses_alimentaires__comments",
+            "conclusion_comment",
         ]
         query_object = Q()
         for f in fields:

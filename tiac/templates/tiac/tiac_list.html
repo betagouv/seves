@@ -65,8 +65,8 @@
                                 <td>{{ evenement.etablissement }}</td>
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
-                                <td>-</td>
-                                <td>-</td>
+                                <td>{{ evenement.conclusion }}</td>
+                                <td>{{ evenement.danger_retenu }}</td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
                         {% endfor %}
