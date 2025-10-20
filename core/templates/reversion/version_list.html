@@ -11,7 +11,7 @@
                 <div class="fr-table__wrapper">
                     <div class="fr-table__container">
                         <div class="fr-table__content">
-                            <table>
+                            <table class="fr-table--multiline">
                                 <thead>
                                     <tr>
                                         <th scope="col">Agent</th>
@@ -25,12 +25,12 @@
                                 <tbody>
                                     {% for patch in patches %}
                                         <tr>
-                                            <td>{{ patch.revision.user.agent }}</td>
-                                            <td>{{ patch.revision.user.agent.structure }}</td>
-                                            <td>{{ patch.revision.date_created }}</td>
-                                            <td>{{ patch.field.name|title }}</td>
-                                            <td class="history-removed">{{ patch.old|or_empty_value_tag  }}</td>
-                                            <td class="history-added">{{ patch.new|or_empty_value_tag  }}</td>
+                                            <td class="fr-cell--multiline">{{ patch.revision.user.agent }}</td>
+                                            <td class="fr-cell--multiline">{{ patch.revision.user.agent.structure }}</td>
+                                            <td class="fr-cell--multiline">{{ patch.revision.date_created }}</td>
+                                            <td class="fr-cell--multiline">{{ patch.pretty_field|title }}</td>
+                                            <td class="history-removed fr-cell--multiline">{{ patch.old|or_empty_value_tag  }}</td>
+                                            <td class="history-added fr-cell--multiline">{{ patch.new|or_empty_value_tag  }}</td>
                                         </tr>
                                     {% endfor %}
 

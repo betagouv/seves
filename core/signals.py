@@ -1,13 +1,14 @@
-from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_migrate
-
-from core.models import Document
-from django.conf import settings
-
-from .tasks import scan_for_viruses
-from celery.exceptions import OperationalError
-from django.db import transaction
 import logging
+
+import reversion
+from celery.exceptions import OperationalError
+from django.conf import settings
+from django.db import transaction
+from django.db.models.signals import pre_save, post_save, post_migrate, pre_delete
+from django.dispatch import receiver
+
+from core.models import Document, LienLibre
+from .tasks import scan_for_viruses
 
 logger = logging.getLogger(__name__)
 
@@ -37,3 +38,25 @@ def tiac_feature_flag(sender, app_config, **kwargs):
         from waffle import get_waffle_flag_model
 
         get_waffle_flag_model().objects.get_or_create(name="tiac", defaults={"everyone": None, "superusers": True})
+
+
+@receiver([post_save], sender=LienLibre)
+def link_added(sender, instance, **kwargs):
+    with transaction.atomic():
+        with reversion.create_revision():
+            reversion.set_comment(f"Le lien '{str(instance.related_object_2)}' a été ajouté à la fiche")
+            reversion.add_to_revision(instance.related_object_1)
+        with reversion.create_revision():
+            reversion.set_comment(f"Le lien '{str(instance.related_object_1)}' a été ajouté à la fiche")
+            reversion.add_to_revision(instance.related_object_2)
+
+
+@receiver([pre_delete], sender=LienLibre)
+def link_deleted(sender, instance, **kwargs):
+    with transaction.atomic():
+        with reversion.create_revision():
+            reversion.set_comment(f"Le lien '{str(instance.related_object_2)}' a été supprimé à la fiche")
+            reversion.add_to_revision(instance.related_object_1)
+        with reversion.create_revision():
+            reversion.set_comment(f"Le lien '{str(instance.related_object_1)}' a été supprimé à la fiche")
+            reversion.add_to_revision(instance.related_object_2)
