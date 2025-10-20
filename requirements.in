@@ -22,7 +22,7 @@ django-template-partials
 django-waffle
 django-querysetsequence
 django-reversion-compare
-docxtpl
+docxtpl[subdoc]
 # Dev
 djhtml
 django-debug-toolbar
