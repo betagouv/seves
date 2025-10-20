@@ -12,7 +12,7 @@
                                 <p class="fr-card__title">{{ repas.denomination }}</p>
                             </div>
                             {% if repas.datetime_repas %}
-                                <p class="fr-pt-4v"><span class="fr-icon-calendar-2-line fr-pr-2v" aria-hidden="true"></span>{{ repas.datetime_repas }}</p>
+                                <p class="fr-card__detail fr-icon-calendar-2-line fr-mb-2v fr-mt-4v">{{ repas.datetime_repas }}</p>
                             {% endif %}
                             {% if repas.type_repas %}
                                 <p>{{ repas.get_type_repas_display }}</p>
