@@ -136,7 +136,7 @@ class QuantificationUnite(models.TextChoices):
         ]
 
 
-@reversion.register()
+@reversion.register(follow=["contacts"])
 class EvenementProduit(
     AllowsSoftDeleteMixin,
     WithBlocCommunFieldsMixin,

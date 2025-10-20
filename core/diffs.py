@@ -52,26 +52,32 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 # Skip all fields that aren't changed
                 continue
 
-            old = ""
-            new = ""
             if is_reversed:
                 change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:
-                    new += f"Objet supprimé : {item._object_version.object.__class__.__name__} {item}"
+                    new = f"Objet supprimé : {item._object_version.object.__class__.__name__} {item}"
+                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
                 for item in change["added_items"]:
-                    new += f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
+                    new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
+                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
                 for item_1, _item_2 in change["changed_items"]:
-                    new += f"Objet modifié : {item_1._object_version.object.__class__.__name__} {item_1}"
+                    new = f"Objet modifié : {item_1._object_version.object.__class__.__name__} {item_1}"
+                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:
-                    new += f"Élement(s) retiré(s) {', '.join([str(item) for item in change['removed_items']])}"
+                    new = f"Élement(s) retiré(s) {', '.join([str(item) for item in change['removed_items']])}"
+                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
                 if change["added_items"] or change["added_missing_objects"]:
                     items = change["added_items"] + change["added_missing_objects"]
-                    new += f"Élement(s) ajouté(s) {', '.join([str(item) for item in items])}"
+                    new = f"Élement(s) ajouté(s) {', '.join([str(item) for item in items])}"
+                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
             else:
                 old = obj_compare.compare_obj1.to_string()
                 new = obj_compare.compare_obj2.to_string()
+                diff.append({"field": field, "is_related": is_related, "follow": follow, "old": old, "new": new})
 
-            diff.append({"field": field, "is_related": is_related, "follow": follow, "old": old, "new": new})
+        if comment := version1.revision.get_comment():
+            diff.append({"field": "", "is_related": None, "follow": None, "old": "", "new": comment})
+
         return diff, has_unfollowed_fields

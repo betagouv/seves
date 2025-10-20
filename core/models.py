@@ -338,6 +338,7 @@ class Message(models.Model):
         return self.content_object.get_allowed_document_types()
 
 
+@reversion.register()
 class LienLibre(models.Model):
     content_type_1 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_1")
     object_id_1 = models.PositiveIntegerField()
