@@ -268,13 +268,35 @@ class MessageUpdateView(
         return self.handle_message_form(form)
 
 
-class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):
+class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, DetailView):
     model = Message
 
-    def get_fiche_object(self):
+    def get_queryset(self):
+        return Message.objects.select_related("sender__agent__structure", "sender_structure").prefetch_related(
+            "recipients__agent",
+            "recipients__structure",
+            "recipients__agent__structure",
+            "recipients_copy__agent",
+            "recipients_copy__structure",
+            "recipients_copy__agent__structure",
+            "documents",
+        )
+
+    def dispatch(self, request, *args, **kwargs):
         message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
-        fiche = message.content_object
-        return fiche
+        self.fiche = message.content_object
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.fiche.can_user_access(self.request.user)
+
+    def get_fiche_object(self):
+        return self.fiche
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_download_document"] = self.fiche.can_download_document(self.request.user)
+        return context
 
 
 class SoftDeleteView(View):

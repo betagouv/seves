@@ -16,6 +16,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
+from waffle import flag_is_active
 
 from core.forms import (
     DocumentUploadForm,
@@ -124,6 +125,7 @@ class WithMessageMixin:
         )
         context["message_list"] = message_list
         context["message_update_forms"] = self._get_message_update_forms(message_list)
+        context["message_v2"] = flag_is_active(self.request, "message_v2")
         return context
 
 

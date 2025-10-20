@@ -18,6 +18,7 @@ from .views import (
     MessageUpdateView,
     sirene_api,
     RevisionsListView,
+    MessageDetailsView,
 )
 
 urlpatterns = [
@@ -110,5 +111,10 @@ urlpatterns = [
         "revisions/<int:content_type>/<int:pk>/",
         RevisionsListView.as_view(),
         name="revision-list",
+    ),
+    path(
+        "message/<int:pk>/",
+        MessageDetailsView.as_view(),
+        name="message-view",
     ),
 ]
