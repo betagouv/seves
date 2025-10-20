@@ -192,7 +192,7 @@ class Etablissement(BaseEtablissement, models.Model):
     evenement_simple = models.ForeignKey(
         EvenementSimple, null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
     )
-    investigation_tiac = models.ForeignKey(
+    investigation = models.ForeignKey(
         "tiac.InvestigationTiac", null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
     )
 
@@ -222,8 +222,8 @@ class Etablissement(BaseEtablissement, models.Model):
             ),
             models.CheckConstraint(
                 condition=(
-                    (Q(evenement_simple__isnull=True) & Q(investigation_tiac__isnull=False))
-                    | (Q(evenement_simple__isnull=False) & Q(investigation_tiac__isnull=True))
+                    (Q(evenement_simple__isnull=True) & Q(investigation__isnull=False))
+                    | (Q(evenement_simple__isnull=False) & Q(investigation__isnull=True))
                 ),
                 name="is_related_to_either_evenement_simple_or_investigation_tiac",
             ),
