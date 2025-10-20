@@ -3,6 +3,7 @@ import {applicationReady} from "Application";
 import {resetForm} from "Forms"
 import choicesDefaults from "choicesDefaults"
 import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked} from "CustomTreeSelect"
+import {collectFormValues} from "Forms"
 
 
 class SearchFormController extends Controller {
@@ -32,8 +33,18 @@ class SearchFormController extends Controller {
     }
 
     onSidebarAdd() {
-        this.sidebarTarget.classList.toggle('open');
-        document.querySelector('.main-container').classList.toggle('open')
+        const inputs = this.sidebarTarget.querySelectorAll('input, textarea, select');
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!input.checkValidity()) {
+                input.reportValidity();
+                isValid = false;
+            }
+        });
+        if (isValid){
+            this.sidebarTarget.classList.toggle('open');
+            document.querySelector('.main-container').classList.toggle('open')
+        }
     }
 
     disableCheckboxIfNeeded(){

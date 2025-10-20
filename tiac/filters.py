@@ -81,8 +81,15 @@ class TiacFilter(
         choices=EvenementSimple.Etat, label="État", empty_label=settings.SELECT_EMPTY_CHOICE
     )
     numero_sivss = django_filters.CharFilter(
-        field_name="numero_sivss", lookup_expr="contains", distinct=True, label="Numéro SIVSS"
+        field_name="numero_sivss",
+        lookup_expr="contains",
+        distinct=True,
+        label="Numéro SIVSS",
+        widget=TextInput(
+            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+        ),
     )
+
     nb_sick_persons = django_filters.ChoiceFilter(
         choices=[
             ("0-5", "[0-5]"),
@@ -104,7 +111,7 @@ class TiacFilter(
         method="filter_nb_dead_persons",
     )
     danger_syndromiques_suspectes = django_filters.MultipleChoiceFilter(
-        choices=DangersSyndromiques.choices,
+        choices=[(c[0], DangersSyndromiques(c[0]).short_name) for c in DangersSyndromiques.choices],
         label="Danger syndromique suspecté",
         method="filter_danger_syndromiques_suspectes",
     )
