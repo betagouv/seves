@@ -12,7 +12,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "id",
     "code_insee",
     "evenement_simple_id",
-    "investigation_tiac_id",
+    "investigation_id",
     "siret",
 ]
 
@@ -20,7 +20,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
 def test_form_validation(live_server, page: Page, ensure_departements):
     departement, *_ = ensure_departements("Paris")
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
-    etablissement: Etablissement = EtablissementFactory.build(investigation_tiac=investigation, departement=departement)
+    etablissement: Etablissement = EtablissementFactory.build(investigation=investigation, departement=departement)
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
 
@@ -57,7 +57,7 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
 
     etablissement_1, etablissement_2 = EtablissementFactory.build_batch(
-        2, investigation_tiac=investigation, departement=departement
+        2, investigation=investigation, departement=departement
     )
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -77,7 +77,7 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
     departement, *_ = ensure_departements("Paris")
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
 
-    etablissement: Etablissement = EtablissementFactory.build(investigation_tiac=investigation, departement=departement)
+    etablissement: Etablissement = EtablissementFactory.build(investigation=investigation, departement=departement)
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -114,7 +114,7 @@ def test_can_delete_etablissements(live_server, page: Page, ensure_departements,
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
 
     etablissement_1, etablissement_2 = EtablissementFactory.build_batch(
-        2, investigation_tiac=investigation, departement=departement
+        2, investigation=investigation, departement=departement
     )
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -137,7 +137,7 @@ def test_cancel_add_etablissement(live_server, page: Page, ensure_departements):
     departement, *_ = ensure_departements("Paris")
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
 
-    etablissement: Etablissement = EtablissementFactory.build(investigation_tiac=investigation, departement=departement)
+    etablissement: Etablissement = EtablissementFactory.build(investigation=investigation, departement=departement)
 
     # Create a first etablissment
     creation_page = InvestigationTiacFormPage(page, live_server.url)
