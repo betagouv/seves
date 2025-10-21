@@ -39,4 +39,9 @@ urlpatterns = [
         views.InvestigationTiacDetailView.as_view(),
         name="investigation-tiac-details",
     ),
+    path(
+        "evenement-simple/<str:numero>/document/",
+        views.EvenementSimpleDocumentExportView.as_view(),
+        name="export-evenement-simple-document",
+    ),
 ]
