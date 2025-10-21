@@ -118,13 +118,13 @@ class TiacFilter(
     agents_pathogenes = CharInFilter(
         label="Agent pathogène confirmé par l'ARS",
         field_name="agents_confirmes_ars",
-        lookup_expr="contains",
+        lookup_expr="overlap",
         widget=HiddenInput,
     )
     analyse_categorie_danger = CharInFilter(
         label="Analyse - Danger détecté",
         field_name="analyses_alimentaires__categorie_danger",
-        lookup_expr="contains",
+        lookup_expr="overlap",
         widget=HiddenInput,
     )
     type_aliment = django_filters.ChoiceFilter(

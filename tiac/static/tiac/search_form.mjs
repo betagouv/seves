@@ -24,12 +24,15 @@ class SearchFormController extends Controller {
         resetForm(this.element)
         this.choicesAgentContact.setChoiceByValue('');
         this.choicesStructureContact.setChoiceByValue('');
-        this.dangerSyndromique.setChoiceByValue('');
         this.element.submit()
     }
 
     onSidebarClear(){
         resetForm(this.sidebarTarget)
+        this.dangerSyndromique.removeActiveItems();
+        this.treeselectAgentsPathogenes.updateValue()
+        this.treeselectDanger.updateValue()
+        this.treeselectCategorieProduit.updateValue()
     }
 
     onSidebarAdd() {
@@ -71,6 +74,11 @@ class SearchFormController extends Controller {
         const list = this.categorieDangerAnalyseContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true);
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label =>{
+                if (this.treeselectDanger.value.includes(label.innerText)){
+                    fragment.querySelector(`[id='${label.getAttribute('for')}']`).checked = true
+                }
+            })
             list.prepend(fragment);
             this.customHeaderAddedValue = true
         }
@@ -85,6 +93,11 @@ class SearchFormController extends Controller {
         const list = this.agentsPathogenesContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.agentsPathogenesHeaderTarget.content.cloneNode(true);
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label =>{
+                if (this.treeselectAgentsPathogenes.value.includes(label.innerText)){
+                    fragment.querySelector(`[id='${label.getAttribute('for')}']`).checked = true
+                }
+            })
             list.prepend(fragment);
             this.customHeaderAddedValueAgentsPathogeneValue = true
         }
@@ -168,21 +181,22 @@ class SearchFormController extends Controller {
     setupCategorieProduit(){
         const options = JSON.parse(this.jsonConfigTarget.textContent)
         const selectedValues = this.categorieProduitInputTarget.value.split("||").map(v => v.trim())
-        const treeselect = new Treeselect({
+        const treeselectCategorieProduit = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: selectedValues,
             options: options,
             isSingleSelect: false,
             openCallback() {
-                patchItems(treeselect.srcElement)
+                patchItems(treeselectCategorieProduit.srcElement)
             },
             ...tsDefaultOptions
         })
-        patchItems(treeselect.srcElement)
-        treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
+        this.treeselectCategorieProduit = treeselectCategorieProduit
+        patchItems(this.treeselectCategorieProduit.srcElement)
+        this.treeselectCategorieProduit.srcElement.addEventListener("update-dom", ()=>{patchItems(this.treeselectCategorieProduit.srcElement)})
         this.categorieProduitContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
 
-        treeselect.srcElement.addEventListener('input', (e) => {
+        this.treeselectCategorieProduit.srcElement.addEventListener('input', (e) => {
             if (!e.detail) return
             const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
             this.categorieProduitInputTarget.value = values.join("||")

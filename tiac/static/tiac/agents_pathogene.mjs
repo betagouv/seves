@@ -11,7 +11,7 @@ class AgentsPathogeneController extends Controller {
     }
 
     onShortcut(event){
-        shortcutClicked(event, this.element, this.treeselect, this.categorieDangerInputTarget)
+        shortcutClicked(event, this.treeselect, this.categorieDangerInputTarget)
     }
 
     setupCategorieDanger() {
