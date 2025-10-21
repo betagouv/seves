@@ -90,7 +90,8 @@ def test_can_create_investigation_tiac_with_all_fields(
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
 
     creation_page.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
-    creation_page.selected_hazard.select_option(input_data.selected_hazard)
+    if input_data.suspicion_conclusion in [SuspicionConclusion.SUSPECTED, SuspicionConclusion.CONFIRMED]:
+        creation_page.selected_hazard.select_option(input_data.selected_hazard)
     creation_page.conclusion_comment.fill(input_data.conclusion_comment)
 
     creation_page.submit_as_draft()
