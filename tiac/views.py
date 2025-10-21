@@ -1,13 +1,17 @@
+import io
 import json
+import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.http import HttpResponseRedirect
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView
+from docxtpl import DocxTemplate
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -20,6 +24,7 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithAddUserContactsMixin,
+    WithDocumentExportContextMixin,
 )
 from core.views import MediaDefiningMixin
 from ssa.models import CategorieDanger, CategorieProduit
@@ -413,3 +418,35 @@ class InvestigationTiacDetailView(
 
     def get_publish_success_message(self):
         return "L’évènement a été publié avec succès."
+
+
+class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, numero=None, *args, **kwargs):
+        annee, numero_evenement = numero.replace("T-", "").split(".")
+        self.object = EvenementSimple.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("tiac/doc_templates/evenement_simple.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {"object": self.object, "free_links": self.get_free_links_numbers(), "bloc_commun": sub_doc}
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)

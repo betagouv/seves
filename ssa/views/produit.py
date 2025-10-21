@@ -243,7 +243,7 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
         return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")
 
 
-class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, View):
+class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
     def dispatch(self, request, numero=None, *args, **kwargs):
