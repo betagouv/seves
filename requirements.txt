@@ -12,6 +12,8 @@ asgiref==3.8.1
     #   django-countries
 async-timeout==5.0.1
     # via -r requirements.in
+babel==2.17.0
+    # via docxcompose
 billiard==4.2.1
     # via celery
 bleach[css]==6.1.0
@@ -51,11 +53,13 @@ cryptography==44.0.1
     #   josepy
     #   mozilla-django-oidc
     #   pyopenssl
+diff-match-patch==20241021
+    # via django-reversion-compare
 distlib==0.3.8
     # via virtualenv
 dj-importmap==0.0.3
     # via -r requirements.in
-django==5.2.6
+django==5.2.7
     # via
     #   -r requirements.in
     #   dj-importmap
@@ -67,6 +71,7 @@ django==5.2.6
     #   django-post-office
     #   django-querysetsequence
     #   django-reversion
+    #   django-reversion-compare
     #   django-storages
     #   django-template-partials
     #   django-waffle
@@ -80,17 +85,21 @@ django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==6.0.0
     # via -r requirements.in
-django-dsfr==3.1.0
+django-dsfr==3.2.0
     # via -r requirements.in
 django-environ==0.12.0
     # via -r requirements.in
-django-filter==25.1
+django-filter==25.2
     # via -r requirements.in
 django-post-office==3.10.1
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
 django-reversion==6.0.0
+    # via
+    #   -r requirements.in
+    #   django-reversion-compare
+django-reversion-compare==0.19.0
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -100,7 +109,11 @@ django-waffle==5.0.0
     # via -r requirements.in
 django-widget-tweaks==1.5.0
     # via django-dsfr
-djhtml==3.0.9
+djhtml==3.0.10
+    # via -r requirements.in
+docxcompose==1.4.0
+    # via docxtpl
+docxtpl==0.20.1
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
@@ -122,6 +135,8 @@ idna==3.7
     # via requests
 iniconfig==2.0.0
     # via pytest
+jinja2==3.1.6
+    # via docxtpl
 jmespath==1.0.1
     # via
     #   boto3
@@ -130,6 +145,17 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.5.2
     # via celery
+lxml==6.0.2
+    # via
+    #   docxcompose
+    #   docxtpl
+    #   python-docx
+markdown-it-py==4.0.0
+    # via rich
+markupsafe==3.0.3
+    # via jinja2
+mdurl==0.1.2
+    # via markdown-it-py
 mozilla-django-oidc==4.0.1
     # via -r requirements.in
 nodeenv==1.8.0
@@ -152,15 +178,19 @@ pre-commit==4.3.0
     # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.11
     # via -r requirements.in
 pycparser==2.22
     # via cffi
 pyee==13.0.0
     # via playwright
+pygments==2.19.2
+    # via
+    #   pytest
+    #   rich
 pyopenssl==25.0.0
     # via josepy
-pytest==8.3.3
+pytest==8.4.2
     # via
     #   pytest-base-url
     #   pytest-django
@@ -173,11 +203,11 @@ pytest-base-url==2.1.0
     # via pytest-playwright
 pytest-django==4.11.1
     # via -r requirements.in
-pytest-env==1.1.5
+pytest-env==1.2.0
     # via -r requirements.in
 pytest-playwright==0.7.1
     # via -r requirements.in
-pytest-rerunfailures==16.0.1
+pytest-rerunfailures==16.1
     # via -r requirements.in
 pytest-split==0.10.0
     # via -r requirements.in
@@ -187,6 +217,10 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   celery
+python-docx==1.2.0
+    # via
+    #   docxcompose
+    #   docxtpl
 python-magic==0.4.27
     # via -r requirements.in
 python-slugify==8.0.4
@@ -203,15 +237,18 @@ requests==2.32.4
     #   requests-mock
 requests-mock==1.12.1
     # via -r requirements.in
-ruff==0.13.2
+rich==14.2.0
+    # via django-reversion-compare
+ruff==0.14.1
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.38.0
+sentry-sdk[django]==2.42.1
     # via -r requirements.in
 six==1.16.0
     # via
     #   bleach
+    #   docxcompose
     #   python-dateutil
 sqlparse==0.5.3
     # via
@@ -226,6 +263,7 @@ typing-extensions==4.11.0
     #   django-countries
     #   pyee
     #   pyopenssl
+    #   python-docx
 tzdata==2025.2
     # via
     #   faker

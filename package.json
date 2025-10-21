@@ -10,6 +10,7 @@
     "CustomTreeSelect": "file:./ssa/static/ssa/_custom_tree_select.js",
     "Forms": "file:./core/static/core/forms.mjs",
     "BaseFormset": "file:./core/static/core/base_formset.mjs",
-    "BaseFormInModal": "file:./core/static/core/base_form_in_modal.mjs"
+    "BaseFormInModal": "file:./core/static/core/base_form_in_modal.mjs",
+    "TreeSelect": "file:./ssa/static/ssa/treeselectjs.umd.js"
   }
 }

@@ -1,0 +1,36 @@
+{% load or_empty_value_tag dsfr_tags %}
+<h2 class="fr-h6">Établissements impliqués</h2>
+<div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+        {% for etablissement in etablissements %}
+            <div class="fr-col-3">
+                {% include "tiac/_etablissement_modal.html" %}
+                <div class="etablissement-card fr-card">
+                    <div class="fr-card__body">
+                        <div class="fr-card__content">
+                            <div>
+                                <p class="fr-card__title">{{ etablissement.raison_sociale }}</p>
+                            </div>
+                            {% if etablissement.address_summary %}
+                                <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v">{{ etablissement.address_summary }}</p>
+
+                            {% endif %}
+                            {% if etablissement.siret %}
+                                <p>Siret : {{ etablissement.siret }}</p>
+                            {% endif %}
+                            {% if etablissement.type_etablissement %}
+                                {% dsfr_badge label=etablissement.type_etablissement extra_classes="fr-badge--info fr-badge--no-icon fr-badge--sm fr-m-0" %}
+                            {% endif %}
+
+                            <div class="fr-btns-group--right">
+                                <button data-fr-opened="false" aria-controls="fr-modal-etablissement-{{ etablissement.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="fr-mt-2v fr-ml-4v">Aucun établissement enregistré</p>
+        {% endfor %}
+    </div>
+</div>

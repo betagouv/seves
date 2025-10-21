@@ -1,6 +1,11 @@
+import json
 import re
+from functools import cached_property
+from copy import deepcopy
+
 
 from django import forms
+from django.conf import settings
 from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
@@ -11,8 +16,14 @@ from core.forms import BaseEtablissementForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
-from django.conf import settings
-from ssa.models import EvenementProduit, CategorieProduit
+from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
+from tiac.constants import (
+    DangersSyndromiques,
+    DANGERS_COURANTS,
+    EtatPrelevement,
+    SuspicionConclusion,
+    SELECTED_HAZARD_CHOICES,
+)
 from tiac.constants import (
     EvenementOrigin,
     EvenementFollowUp,
@@ -23,7 +34,6 @@ from tiac.constants import (
     TypeCollectivite,
 )
 from tiac.constants import ModaliteDeclarationEvenement
-from tiac.constants import DangersSyndromiques
 from tiac.fields import SelectWithAttributeField
 from tiac.models import (
     EvenementSimple,
@@ -34,6 +44,7 @@ from tiac.models import (
     validate_resytal,
     RepasSuspect,
     AlimentSuspect,
+    AnalyseAlimentaire,
 )
 
 
@@ -48,9 +59,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         required=False,
     )
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
-    follow_up = forms.ChoiceField(
-        choices=EvenementFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée par la DD", required=True
-    )
+    follow_up = SEVESChoiceField(choices=EvenementFollowUp.choices, label="Suite donnée par la DD", required=True)
     modalites_declaration = forms.ChoiceField(
         required=False,
         choices=ModaliteDeclarationEvenement.choices,
@@ -231,6 +240,10 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
 
 
 class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+    SuspicionConclusion = SuspicionConclusion
+    CategorieDanger = CategorieDanger
+    DangersSyndromiques = DangersSyndromiques
+
     date_reception = forms.DateTimeField(
         required=False,
         label="Date de réception à la DD(ETS)PP",
@@ -268,7 +281,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             format="%Y-%m-%dT%H:%M",
             attrs={
                 "type": "datetime-local",
-                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
             },
         ),
     )
@@ -280,7 +292,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             format="%Y-%m-%dT%H:%M",
             attrs={
                 "type": "datetime-local",
-                "value": timezone.now().strftime("%Y-%m-%dT%H:%M"),
             },
         ),
     )
@@ -293,6 +304,12 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
     )
     precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+    agents_confirmes_ars = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    suspicion_conclusion = SEVESChoiceField(
+        label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
+    )
+    selected_hazard = SEVESChoiceField(label="Danger retenu", choices=SELECTED_HAZARD_CHOICES, required=False)
 
     class Meta:
         model = InvestigationTiac
@@ -314,6 +331,14 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "danger_syndromiques_suspectes",
             "analyses_sur_les_malades",
             "precisions",
+            "agents_confirmes_ars",
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_etablissement",
+            "conclusion_repas",
+            "conclusion_aliment",
+            "conclusion_analyse",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
@@ -323,14 +348,66 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"), js_module("tiac/etiologie.mjs")),
+            js=(
+                js_module("core/free_links.mjs"),
+                js_module("tiac/etiologie.mjs"),
+                js_module("tiac/agents_pathogene.mjs"),
+                js_module("tiac/tiac_conclusion.mjs"),
+            ),
         )
+
+    @cached_property
+    def selected_hazard_confirmed(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.choices = (("", settings.SELECT_EMPTY_CHOICE), *CategorieDanger.choices)
+        return bf
+
+    @cached_property
+    def selected_hazard_suspected(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE), *DangersSyndromiques.choices)
+        return bf
+
+    @cached_property
+    def selected_hazard_other(self):
+        bf = deepcopy(self["selected_hazard"])
+        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE),)
+        return bf
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
         self.initial["danger_syndromiques_suspectes"] = []
+        for field in ("conclusion_etablissement", "conclusion_repas", "conclusion_aliment", "conclusion_analyse"):
+            self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
+            queryset = self[field].field.queryset
+            if not self.instance.pk:
+                self[field].field.queryset = queryset.none()
+
+    def clean_agents_confirmes_ars(self):
+        return [v for v in self.cleaned_data["agents_confirmes_ars"].split("||") if v]
+
+    def clean_suspicion_conclusion_and_selected_hazard(self):
+        suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
+        selected_hazard = self.cleaned_data.get("selected_hazard")
+
+        if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
+            self.cleaned_data["selected_hazard"] = ""
+        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and selected_hazard not in CategorieDanger.values:
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
+            )
+        elif (
+            suspicion_conclusion == SuspicionConclusion.SUSPECTED and selected_hazard not in DangersSyndromiques.values
+        ):
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
+            )
+
+    def clean(self):
+        self.clean_suspicion_conclusion_and_selected_hazard()
+        return super().clean()
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -464,3 +541,37 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
             "description_produit",
             "motif_suspicion",
         ]
+
+
+class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "tiac/forms/analyse_alimentaire.html"
+
+    reference_prelevement = forms.CharField(
+        label="Référence du prélèvement", required=True, widget=forms.TextInput(attrs={"required": "required"})
+    )
+    etat_prelevement = SEVESChoiceField(
+        label="État du prélèvement",
+        required=False,
+        choices=EtatPrelevement.choices,
+        widget=forms.Select,
+    )
+
+    categorie_danger = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    @cached_property
+    def categorie_danger_json(self):
+        return json.dumps(CategorieDanger.build_options())
+
+    @cached_property
+    def common_danger(self):
+        return DANGERS_COURANTS
+
+    class Meta:
+        model = AnalyseAlimentaire
+        exclude = ("investigation",)
+        widgets = {
+            "sent_to_lnr_cnr": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
+        }
+
+    def clean_categorie_danger(self):
+        return [v for v in self.cleaned_data["categorie_danger"].split("||") if v]

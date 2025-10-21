@@ -1,0 +1,39 @@
+{% load dsfr_tags widget_tweaks %}
+
+{% dsfr_form_field form.reference_prelevement %}
+{% dsfr_form_field form.etat_prelevement %}
+<div class="fr-input-group" id="categorie-danger">
+    <label>Dangers détectés</label>
+    <div data-analyse-alimentaire-form-target="categorieDangerContainer"></div>
+</div>
+{% dsfr_form_field form.comments %}
+{% dsfr_form_field form.sent_to_lnr_cnr|dsfr_inline %}
+{% dsfr_form_field form.reference_souche %}
+{% dsfr_notice title="Ajoutez vos documents dans l'onglet documents après publication de la fiche." %}
+{{ form.DELETE|set_data:"analyse-alimentaire-form-target:deleteInput" }}
+{{ form.categorie_danger|set_data:"analyse-alimentaire-form-target:categorieDangerInput" }}
+
+<template data-analyse-alimentaire-form-target="categorieDangerHeader">
+    <div class="categorie-danger-header">
+        <div class="fr-ml-1v">Danger les plus courants</div>
+        {% for danger in form.common_danger %}
+            <div
+                class="treeselect-list__item"
+                level="0"
+                group="false"
+                data-action="mousedown->analyse-alimentaire-form#onShortcut:prevent:stop"
+            >
+                <input
+                    type="checkbox"
+                    id="shortcut_{{ forloop.counter0 }}"
+                    class="treeselect-list__item-checkbox-container"
+                >
+                <label
+                    class="treeselect-list__item-label shortcut"
+                    for="shortcut_{{ forloop.counter0 }}"
+                >{{ danger }}</label>
+            </div>
+        {% endfor %}
+        <div class="fr-ml-1v">Liste complète des dangers</div>
+    </div>
+</template>

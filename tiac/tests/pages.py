@@ -3,11 +3,19 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect, Locator
 
-from tiac.constants import TypeRepas
+from ssa.models import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
-from tiac.models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect
+from tiac.constants import TypeRepas
+from tiac.models import (
+    EvenementSimple,
+    Etablissement,
+    InvestigationTiac,
+    RepasSuspect,
+    AlimentSuspect,
+    AnalyseAlimentaire,
+)
 
 
 class WithEtablissementMixin:
@@ -86,6 +94,38 @@ class WithEtablissementMixin:
         self.close_etablissement_modal()
 
 
+class WithAnalyseAlimentaireMixin(WithTreeSelect):
+    def open_analyse_alimentaire_modal(self):
+        self.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def fill_analyse_alimentaire(self, modal: Locator, analyse: AnalyseAlimentaire):
+        modal.locator('[id$="reference_prelevement"]').fill(analyse.reference_prelevement)
+        modal.locator('[id$="etat_prelevement"]').select_option(analyse.etat_prelevement)
+        modal.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+        for categorie_danger in analyse.categorie_danger:
+            self._set_treeselect_option("categorie-danger", CategorieDanger(categorie_danger).label)
+        modal.locator('[id$="comments"]').fill(analyse.comments)
+        modal.locator('[id$="reference_souche"]').fill(analyse.reference_souche)
+        modal.locator(f"[id$='sent_to_lnr_cnr'] input[type='radio'][value='{str(analyse.sent_to_lnr_cnr)}']").check(
+            force=True
+        )
+
+    def close_analyse_alimentaire_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_analyse_alimentaire(self, analyse: AnalyseAlimentaire):
+        modal = self.open_analyse_alimentaire_modal()
+        self.fill_analyse_alimentaire(modal, analyse)
+        self.close_analyse_alimentaire_modal()
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").locator("visible=true").count()
+
+
 class EvenementSimpleFormPage(WithEtablissementMixin):
     fields = [
         "date_reception",
@@ -107,7 +147,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-simple-creation')}")
 
     def set_follow_up(self, value):
-        self.page.locator(f"input[type='radio'][value='{value}']").check(force=True)
+        self.follow_up.select_option(value)
 
     def set_modalites_declaration(self, value):
         self.page.locator("#radio-id_modalites_declaration").locator(f"input[type='radio'][value='{value}']").check(
@@ -124,7 +164,10 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.set_follow_up(evenement.follow_up)
 
     def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        self.submit("Enregistrer le brouillon")
+
+    def submit(self, btn_txt="Enregistrer"):
+        self.page.get_by_role("button", name=btn_txt).click()
         redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
         self.page.wait_for_url(f"**{redirect}")
 
@@ -157,8 +200,14 @@ class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
             f"{self.base_url}{reverse('tiac:evenement-simple-edition', kwargs={'pk': self.event.pk})}"
         )
 
+    def delete_evenement_lie(self, index=0):
+        locator = self.page.locator("#liens-libre .choices__button")
+        previous = locator.count()
+        locator.all()[index].click()
+        expect(locator).to_have_count(previous - 1)
 
-class EvenementListPage:
+
+class EvenementListPage(WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -166,8 +215,47 @@ class EvenementListPage:
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
 
+    @property
+    def numero_field(self):
+        return self.page.locator("#id_numero")
+
+    @property
+    def type_evenement(self):
+        return self.page.locator("#id_type_evenement")
+
+    @property
+    def with_links(self):
+        return self.page.locator('label[for="id_with_free_links"]')
+
+    @property
+    def start_date_field(self):
+        return self.page.locator("#id_start_date")
+
+    @property
+    def end_date_field(self):
+        return self.page.locator("#id_end_date")
+
+    @property
+    def full_text_field(self):
+        return self.page.locator("#id_full_text_search")
+
+    def set_agent_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_agent_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def set_structure_filter(self, value, choice_js_fill_from_element):
+        element = self.page.locator("#id_structure_contact").locator("..")
+        choice_js_fill_from_element(self.page, element, value, value)
+
+    def submit_search(self):
+        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
+
+    @property
+    def nb_lines(self):
+        return self.page.locator("tbody tr").count()
 
     def numero_cell(self, line_index=1):
         return self._cell_content(line_index, 1)
@@ -195,6 +283,79 @@ class EvenementListPage:
 
     def etat_cell(self, line_index=1):
         return self._cell_content(line_index, 9)
+
+    def open_sidebar(self):
+        self.page.locator(".open-sidebar").click()
+
+    def close_sidebar(self):
+        self.page.locator(".close-sidebar").click()
+
+    def reset_more_filters(self):
+        self.page.locator(".clear-btn").click()
+
+    def reset_search(self):
+        return self.page.locator("#reset-btn").click()
+
+    def add_filters(self):
+        return self.page.locator(".add-btn").click()
+
+    @property
+    def etat(self):
+        return self.page.locator("#id_etat")
+
+    @property
+    def numero_sivss(self):
+        return self.page.locator("#id_numero_sivss")
+
+    @property
+    def nb_sick_persons(self):
+        return self.page.locator("#id_nb_sick_persons")
+
+    @property
+    def nb_dead_persons(self):
+        return self.page.locator("#id_nb_dead_persons")
+
+    @property
+    def nb_participants(self):
+        return self.page.locator("#id_nb_personnes_repas")
+
+    @property
+    def siret(self):
+        return self.page.locator("#id_siret")
+
+    @property
+    def commune(self):
+        return self.page.locator("#id_commune")
+
+    @property
+    def departement(self):
+        return self.page.locator("#id_departement")
+
+    @property
+    def pays(self):
+        return self.page.locator("#id_pays")
+
+    def select_danger_syndromiques(self, dangers, choice_js_fill_from_element_with_value):
+        field = self.page.locator("#id_danger_syndromiques_suspectes")
+        choices = [(d, d) for d in dangers]
+        choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
+
+    def set_agents_pathogenes_from_shortcut(self, label):
+        container = self.page.locator("#id_agents_pathogenes").locator("..")
+        container.locator(".treeselect-input__edit").click()
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".shortcut", has_text=label).locator("..").click()
+
+    def set_analyse_danger_from_shortcut(self, label):
+        container = self.page.locator("#id_analyse_categorie_danger").locator("..")
+        container.locator(".treeselect-input__edit").click()
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".shortcut", has_text=label).locator("..").click()
+
+    def set_categorie_produit(self, aliment):
+        label = aliment.get_categorie_produit_display()
+        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
+        self._set_treeselect_option("categorie-produit", label)
 
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin):
@@ -252,7 +413,7 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
+class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -269,6 +430,9 @@ class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
         "datetime_last_symptoms",
         "analyses_sur_les_malades",
         "precisions",
+        "suspicion_conclusion",
+        "selected_hazard",
+        "conclusion_comment",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -309,6 +473,10 @@ class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
         self.contenu.fill(object.contenu)
         self.set_type_evenement(object.type_evenement)
 
+    def add_agent_pathogene_confirme(self, label):
+        self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
+        self._set_treeselect_option("agents-pathogene", label)
+
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
@@ -345,6 +513,7 @@ class InvestigationTiacFormPage(WithTreeSelect, WithEtablissementMixin):
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
+        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
         self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
 
@@ -434,6 +603,34 @@ class InvestigationTiacDetailsPage:
         self.page = page
         self.base_url = base_url
 
+    @property
+    def title(self):
+        return self.page.locator(".details-top-row h1").nth(0)
+
+    @property
+    def last_modification(self):
+        return self.page.locator(".last-modification")
+
+    @property
+    def context_block(self):
+        return self.page.get_by_role("heading", name="Le contexte").locator("..")
+
+    @property
+    def origin(self):
+        return self.page.get_by_test_id("origin")
+
+    @property
+    def modalite(self):
+        return self.page.get_by_test_id("modalite")
+
+    @property
+    def cas_block(self):
+        return self.page.get_by_role("heading", name="Cas").locator("..")
+
+    @property
+    def etiologie_block(self):
+        return self.page.get_by_role("heading", name="Étiologie").locator("..")
+
     def navigate(self, object):
         return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
 
@@ -446,3 +643,31 @@ class InvestigationTiacDetailsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_role("link", name="Clôturer l'investigation").click()
         self.page.get_by_role("button", name="Clôturer").click()
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
+    def aliment_card(self, index=0):
+        return self.page.locator(".aliment-card").nth(index)
+
+    def repas_card(self, index=0):
+        return self.page.locator(".repas-card").nth(index)
+
+    def analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
+    def etablissement_open_modal(self, index=0):
+        return self.etablissement_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def aliment_open_modal(self, index=0):
+        return self.aliment_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def repas_open_modal(self, index=0):
+        return self.repas_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    def analyse_open_modal(self, index=0):
+        return self.analyse_card(index).get_by_text("Voir le détail", exact=True).click()
+
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")

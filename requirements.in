@@ -21,6 +21,8 @@ dj-importmap
 django-template-partials
 django-waffle
 django-querysetsequence
+django-reversion-compare
+docxtpl
 # Dev
 djhtml
 django-debug-toolbar

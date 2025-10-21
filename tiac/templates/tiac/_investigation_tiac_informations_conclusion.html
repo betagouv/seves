@@ -1,0 +1,37 @@
+{% load or_empty_value_tag %}
+
+<div class="white-container fr-mt-2w">
+    <h2 class="fr-h6">Conclusion</h2>
+    <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
+        <div class="fr-col-6">
+            <div class="bold">Conclusion de la suspicion de TIAC</div>
+            {{ object.get_suspicion_conclusion_display|or_empty_value_tag }}
+
+            <div class="bold fr-mt-2w">Danger retenu</div>
+            {{ object.short_conclusion_selected_hazard|or_empty_value_tag }}
+        </div>
+        <div class="fr-col-6">
+            <div class="bold">Commentaire</div>
+            {{ object.conclusion_comment|or_empty_value_tag }}
+        </div>
+    </div>
+    <span class="bold fr-text--lead">Scénario retenu</span>
+    <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
+        <div class="fr-col-3">
+            <div class="bold fr-mt-1w">Établissement</div>
+            {{ object.conclusion_etablissement|or_empty_value_tag }}
+        </div>
+        <div class="fr-col-3">
+            <div class="bold fr-mt-1w">Date et heure du repas</div>
+            {{ object.conclusion_repas.datetime_repas|or_empty_value_tag }}
+        </div>
+        <div class="fr-col-3">
+            <div class="bold fr-mt-1w">Aliment</div>
+            {{ object.conclusion_aliment.denomination|or_empty_value_tag }}
+        </div>
+        <div class="fr-col-3">
+            <div class="bold fr-mt-1w">Analyse</div>
+            {{ object.conclusion_analyse.reference_prelevement|or_empty_value_tag }}
+        </div>
+    </div>
+</div>

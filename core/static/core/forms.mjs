@@ -51,8 +51,10 @@ export function collectFormValues(formLike, {nameTransform, skipValidation} = {
             result[inputName] = option ? option.innerText.trim() : ""
         }
         else if (element.type === "checkbox") {
+            if (!Array.isArray(result[inputName])) {
+                result[inputName] = [];
+            }
             if (element.checked) {
-                if (!Array.isArray(result[inputName])) result[inputName] = []
                 result[inputName].push(document.querySelector(`label[for="${element.id}"]`).innerText.trim())
             }
         }
@@ -81,4 +83,15 @@ export function getSelectedLabel(element) {
         return null
     }
     return element.options[element.selectedIndex].innerText;
+}
+
+
+export function resetForm(element){
+    element.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = false;
+        } else {
+            field.value = '';
+        }
+    });
 }

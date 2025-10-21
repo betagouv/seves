@@ -154,7 +154,7 @@ class EtablissementFormController extends BaseFormInModal {
                             ${this.joinText(" | ", etablissement.commune, etablissement.departement)}
                         </address>
                         ${this.optionalText(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
-                        ${this.optionalText(etablissement.type_etablissement, `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-badge--sm fr-my-2v">${etablissement.type_etablissement}</p>`)}
+                        ${this.optionalText(etablissement.type_etablissement, this.renderBadges([etablissement.type_etablissement]))}
                     </div>
                 </div>
                 <div class="fr-card__footer">

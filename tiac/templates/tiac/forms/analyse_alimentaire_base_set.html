@@ -1,0 +1,90 @@
+{% load partials dsfr_tags widget_tweaks %}
+
+
+{% partialdef form-dialog %}
+    <div
+        class="modal-analyse-container fr-col-12 fr-col-lg-6 fr-col-xl-3"
+        data-controller="analyse-alimentaire-form"
+        data-analyse-alimentaire-form-form-prefix-value="{{ form.prefix }}"
+        data-analyse-alimentaire-form-should-immediately-show-value="True"
+        data-analyse-alimentaire-form-categorie-danger-value="{{ form.categorie_danger_json }}"
+        data-action="dsfr.conceal->analyse-alimentaire-form#onCloseForm"
+    >
+        <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
+        <dialog
+            id="fr-modal-{{ form.prefix }}"
+            class="fr-modal analyse-modal"
+            role="alertdialog"
+            aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
+            data-analyse-alimentaire-form-target="dialog"
+        >
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button
+                                    class="fr-btn--close fr-btn"
+                                    title="Fermer la fenêtre modale"
+                                    aria-controls="fr-modal-{{ form.prefix }}"
+                                    type="button"
+                                >Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="fr-modal-title-modal--{{ form.prefix }}" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
+                                    Ajouter une analyse concernée
+                                </h1>
+                                <fieldset data-analyse-alimentaire-form-target="fieldset">
+                                    {{ form }}
+                                </fieldset>
+                            </div>
+                            <div class="fr-modal__footer">
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                                    <button
+                                        class="fr-btn fr-btn--secondary"
+                                        aria-controls="fr-modal-{{ form.prefix }}"
+                                        type="button"
+                                    >Annuler</button>
+                                    <button
+                                        type="submit"
+                                        class="fr-btn save-btn"
+                                        data-action="analyse-alimentaire-form#onValidateForm:prevent:stop"
+                                    >Enregistrer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </div>
+{% endpartialdef %}
+
+<fieldset class="fr-fieldset form-fieldset analyses-alimentaires-fieldset fr-mt-4v" data-controller="analyse-alimentaire-formset">
+    <div class="fieldset-header">
+        <h4 class="fr-h5">Analyses alimentaires</h4>
+        <button
+            type="button"
+            class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+            data-action="analyse-alimentaire-formset#onAddForm:prevent:stop"
+            data-testid="add-analyses-alimentaires"
+        >Ajouter</button>
+    </div>
+    {{ formset.non_form_errors }}
+    <div class="fr-col-12 fr-grid-row fr-grid-row--gutters fr-m-0" data-analyse-alimentaire-formset-target="formsetContainer">
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"analyse-alimentaire-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        {% for form in formset %}
+            {% partial form-dialog %}
+        {% endfor %}
+    </div>
+    <template data-analyse-alimentaire-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form %}{% partial form-dialog %}{% endwith %}
+    </template>
+
+</fieldset>

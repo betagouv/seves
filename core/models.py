@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import reversion
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -81,6 +82,7 @@ class Structure(models.Model):
         return self.niveau2 in [MUS_STRUCTURE, BSV_STRUCTURE]
 
 
+@reversion.register()
 class Contact(models.Model):
     class Meta:
         verbose_name = "Contact"
@@ -149,6 +151,7 @@ class FinSuiviContact(models.Model):
             )
 
 
+@reversion.register()
 class Document(models.Model):
     class TypeDocument(models.TextChoices):
         ARRETE = "arrete_prefectoral_ministériel", "Arrêté préfectoral/ministériel"
@@ -255,6 +258,7 @@ class Document(models.Model):
                 raise ValidationError(e.message)
 
 
+@reversion.register()
 class Message(models.Model):
     MESSAGE = "message"
     NOTE = "note"

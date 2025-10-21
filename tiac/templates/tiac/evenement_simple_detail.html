@@ -71,7 +71,7 @@
       <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
     </div>
 
-    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version %}
+    {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version content_type_pk=content_type.pk object_pk=object.pk %}
 
     <div class="white-container fr-hidden synthese-content">
       {% include "tiac/_evenement_simple_informations_synthese.html" %}
@@ -80,7 +80,13 @@
     <div class="detail-content">
       {% include "tiac/_evenement_simple_informations.html" %}
       <div class="fr-container--fluid fr-mt-2w detail-content">
-        {% include "tiac/_evenement_simple_etablissements.html" %}
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12">
+            <div class="white-container">
+              {% include "tiac/_etablissements.html" %}
+            </div>
+          </div>
+        </div>
         {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
       </div>
     </div>

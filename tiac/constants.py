@@ -1,7 +1,12 @@
+import json
 from dataclasses import dataclass
+from enum import auto
 
 from django.db.models import TextChoices
+from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
+
+from ssa.models import CategorieDanger
 
 
 class EvenementOrigin(TextChoices):
@@ -13,9 +18,9 @@ class EvenementOrigin(TextChoices):
 
 
 class Motif(TextChoices):
-    PARTAGE = "repas partage", "Car repas partagé par la plupart des malades"
-    COMPATIBLE = "repas compatible", "Car repas compatible avec les délais d'incubations"
-    RISQUE = "repas risque", "Car repas comportant un aliment à risque particulier"
+    PARTAGE = "repas partage", "Repas partagé par la plupart des malades"
+    COMPATIBLE = "repas compatible", "Repas compatible avec les délais d'incubations"
+    RISQUE = "repas risque", "Repas comportant un aliment à risque particulier"
 
 
 class MotifAliment(TextChoices):
@@ -55,6 +60,8 @@ class ModaliteDeclarationEvenement(TextChoices):
 class EvenementFollowUp(TextChoices):
     NONE = "aucune suite", "Aucune suite"
     INSPECTION = "programmation futur controle", "Programmation d’un futur contrôle"
+    TRANSMISSION_DELEGATAIRE = "programmation au delegataire pour controle", "Transmission au délégataire pour contrôle"
+    TRANSMISSION_DD = "programmation a une autre DD", "Transmission à une autre DD"
 
 
 @dataclass
@@ -62,6 +69,7 @@ class ChoiceData:
     value: str
     name: str
     help_text: str
+    short_name: str
     description: str = ""
     html_id: str = ""
 
@@ -73,6 +81,7 @@ class SafeTextChoices(TextChoices):
         obj.name_display = data.name
         obj.help_text = data.help_text
         obj.description = data.description
+        obj.short_name = data.short_name
         obj.html_id = data.value.replace(" ", "-")
         return obj
 
@@ -95,6 +104,7 @@ class DangersSyndromiques(SafeTextChoices):
         value="intoxination bacillus cereus",
         name="Intoxination à toxine émétique thermostable préformée dans l'aliment à <span class='danger-emphasis'>bacillus cereus - staphylococcus aureus</span>",
         help_text="Incubation courte (30min - 8h) - nausées vomissements prédominants",
+        short_name="Bacillus Cereus - Staphylococcus Aureus",
         description="""Attention, autres toxines possibles notamment si haricots rouges, courges, produits de la mer, betterave crue... : conserver des échantillons pour d'autres analyses. <br/><br/>
 Pour rappel : si les aliments ou ingrédients sont cuits, l'absence de la bactérie ne signifie pas l'absence de toxine (ces toxines sont thermostables). Si les aliments sont crus, en l'absence de la bactérie, il est inutile de rechercher les toxines. <br/><br/>
 Staphylocoques : en première intention, recherche de la bactérie et des toxines A à E. Pour rechercher les autres toxines (si suspicion forte), envoi de la souche au LNR. Attention : l'absence de toxines A à E ne signifie pas l'absence de toxines staphylococciques. En l'absence de la bactérie, impossible de poursuivre les analyses. <br/><br/>
@@ -104,12 +114,14 @@ Bacillus cereus : en première intention, recherce de la bactérie. Pour recherc
     TOXI_INFECTION_BACILLUS = ChoiceData(
         value="toxi infection bacillus cereus",
         name="Toxi-infection à toxine diarrhéique de <span class='danger-emphasis'>bacillus cereus - clostridium perfringens</span>",
+        short_name="Bacillus Cereus - Clostridium Perfringen",
         help_text="Incubation moyenne (6h - 24h) - diarrhées aqueuses et douleurs abdominales prédominantes",
         description="Une contamination bactérienne importante des plats est attendue. Il est inutile de rechercher les toxines (sauf dossiers à enjeux particuliers). ",
     )
     BACTERIE_INTESTINALE = ChoiceData(
         value="bactérie intestinale",
         name="Infection bactérienne intestinale à <span class='danger-emphasis'>salmonella - campylobacter - yersinia enterocolitica - shigella - E. Coli</span> pathogènes",
+        short_name="Infection bactérienne intestinale",
         help_text="Incubation longue (Salmonella: 6 à 72 heures, Campylobacter: 2 à 5 jours, Yersinia enterocolitica: 3 à 7 jours, Shigella : 1 à 4 jours) - fièvre et diarrhées prédominants",
         description="""
         Compte tenu des délais d'incubation, les dates et heures d'apparition des symptômes sont étalées dans le temps, et les repas suspects sont aussi anciens.<br/><br/>
@@ -120,6 +132,7 @@ Les souches sont à envoyer aux LNR.""",
     SHU = ChoiceData(
         value="shu",
         name="Infection à <span class='danger-emphasis'>E. coli</span> STEC avec cas de syndrome hémolytique et urémique (SHU)",
+        short_name="STEC avec cas de syndrome hémolytique et urémique (SHU)",
         help_text="Incubation longue (1 à 10 jours) - diarrhées souvent sanglantes - puis complications en Syndrôme hémolytique et urémique",
         description="""
         Bien récupérer et transmettre les informations de traçabilité si un ingrédient (fromage au lait cru, crudité, viande hachée, pâte crue...) est suspecté. <br/><br/>Les souches sont à envoyer au LNR.""",
@@ -127,6 +140,7 @@ Les souches sont à envoyer aux LNR.""",
     GASTRO = ChoiceData(
         value="gastro-enterite",
         name="Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
+        short_name="Gastro-entérite aigüe",
         help_text="Incubation longue (10h - 50h) - tous symptômes de gastro-entérite, vomissements très fréquents, fièvre ~50% des cas - cas secondaires fréquents (transmission inter-humaine)",
         description="""Attention, une infection bactérienne à Salmonella etc. ou par vibrio parahaemolyticus est aussi à envisager.<br/><br/>
 Bien récupérer et transmettre les informations de traçabilité si un ingrédient (coquillages, fruits rouges, crudité…) est suspecté.
@@ -135,6 +149,7 @@ Bien récupérer et transmettre les informations de traçabilité si un ingrédi
     VIBRIO_PARAHAEMOLYTICUS = ChoiceData(
         value="vibrio parahmeolyticus",
         name="Infection à <span class='danger-emphasis'>vibrio parahaemolyticus</span> (poissons ou fruits de mer crus ou peu cuits)",
+        short_name="Vibrio Parahaemolyticus",
         help_text="Incubation variable (2h à 48h) - diarrhées, douleurs abdominales, vomissements",
         description="""Bien récupérer et transmettre les informations de traçabilité des poissons ou fruits de mer qui ont été consommés crus ou peu cuits.<br/><br/>
 Envoi direct au LNR pour analyse.
@@ -143,24 +158,28 @@ Envoi direct au LNR pour analyse.
     HISTAMINE = ChoiceData(
         value="histamine",
         name="Intoxination à l'histamine",
+        short_name="Intoxination à l'histamine",
         help_text="Incubation courte (1 minute à 3 heures) - urticaire, flush, sensation de brulure de la peau, de la bouche et/ou de la gorge, goût de poivre dans la bouche, palpitations cardiaques",
         description="""Principalement poissons (thon, maquereau, bonite...)  et aliments fermentés (fromages, boissons alcoolisées, charcuterie, fruits et légumes).""",
     )
     TOXINE_DES_COQUILLAGES = ChoiceData(
         value="toxine des coquillages",
         name="Intoxination par des coquillages : toxines lipophiles, PSP et autres toxines",
+        short_name="Intoxination par des coquillages",
         help_text="Incubation courte (30 minutes à 3 heures) - Consommation de coquillages ou plats cuisinés comportant des coquillages - Toxines lipophiles : nausées, diarrhées, douleurs abdominales - Toxines PSP : diarrhées, nausées, vomissements, paresthésie de la bouche, des lèvres, dysphasie, paralysie respiratoire",
         description="",
     )
     TOXINE_DES_POISSONS = ChoiceData(
         value="toxine des poissons",
         name="Intoxination par des poissons coralliens : ciguatoxine",
+        short_name="Intoxination par des poissons coralliens",
         help_text="Incubation courte (2 à 6 heures) - douleurs abdominales, nausées, vomissements, diarrhées, prurit, hypotension artérielle, bradycardie, symptômes neurologiques (parésthésies, faiblesse musculaire, etc)",
         description="Poissons des récifs coralliens (carangues, mérou, murènes, barracuda...) ",
     )
     AUTRE = ChoiceData(
         value="autre",
         name="Autres cas",
+        short_name="Autres cas",
         help_text="Préciser les symptômes et les investigations médicales dans la description de l'évènement et dans le fil de suivi. ",
         description="",
     )
@@ -179,3 +198,46 @@ Envoi direct au LNR pour analyse.
             cls.TOXINE_DES_POISSONS,
             cls.AUTRE,
         ]
+
+
+class EtatPrelevement(TextChoices):
+    ENVIRONNEMENT_SURFACE = auto(), "Environnement/surface"
+    AUTRE_LOT = auto(), "Plat ou ingrédient autre lot"
+    MEME_LOT = auto(), "Plat ou ingrédient même lot"
+    PLAT_TEMOIN = auto(), "Plat témoin"
+    RESTE_REPAS = auto(), "Reste de repas"
+    RESTE_INGREDIENT = auto(), "Reste d'ingrédient"
+
+
+DANGERS_COURANTS = (
+    CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+    CategorieDanger.BACILLUS_CEREUS,
+    CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
+    CategorieDanger.CAMPYLOBACTER_COLI,
+    CategorieDanger.CAMPYLOBACTER_JEJUNI,
+    CategorieDanger.SALMONELLA_ENTERITIDIS,
+    CategorieDanger.SALMONELLA_TYPHIMURIUM,
+    CategorieDanger.SHIGELLA,
+    CategorieDanger.YERSINIA_ENTEROCOLITICA,
+    CategorieDanger.HISTAMINE,
+    CategorieDanger.TOXINE_DSP,
+    CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+)
+
+
+class SuspicionConclusion(TextChoices):
+    CONFIRMED = auto(), "TIAC à agent confirmé"
+    UNKNOWN = auto(), "TIAC à agent inconnu"
+    SUSPECTED = auto(), "TIAC à agent suspecté"
+    DISCARDED = auto(), "TIAC non retenue"
+
+    @classproperty
+    def no_clue(self):
+        return tuple(item for item in self if item not in (self.CONFIRMED, self.SUSPECTED))
+
+    @classmethod
+    def as_json(cls):
+        return json.dumps({item.name: {"value": item.value, "label": item.label} for item in cls})
+
+
+SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices, *CategorieDanger.choices)

@@ -28,7 +28,6 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_point_situation,
     generic_test_can_update_draft_demande_intervention,
     generic_test_can_update_draft_fin_suivi,
-    generic_test_can_send_draft_element_suivi,
     generic_test_can_finaliser_draft_note,
     generic_test_can_send_draft_fin_suivi,
     generic_test_can_only_see_own_document_types_in_message_form,
@@ -36,6 +35,8 @@ from core.tests.generic_tests.messages import (
     generic_test_only_displays_app_contacts,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_structure_show_only_one_entry_in_select,
+    generic_test_can_send_draft_message,
+    generic_test_can_send_draft_point_de_situation,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1578,17 +1579,13 @@ def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentifica
     )
 
 
-@pytest.mark.parametrize(
-    "message_type",
-    [
-        Message.MESSAGE,
-        Message.POINT_DE_SITUATION,
-        Message.DEMANDE_INTERVENTION,
-    ],
-)
-def test_can_send_draft_element_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox, message_type):
-    generic_test_can_send_draft_element_suivi(
-        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox, message_type
+def test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
+
+
+def test_can_send_draft_point_de_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_point_de_situation(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
 
 

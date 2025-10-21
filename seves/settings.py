@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "csp",
     "django_countries",
     "django.contrib.postgres",
+    "reversion_compare",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -324,3 +325,5 @@ if ENVIRONMENT != "test":
 SIRENE_API_KEY = env("SIRENE_API_KEY", default="")
 SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-sirene/3.11/")
 COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")
+
+REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = True

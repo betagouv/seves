@@ -105,6 +105,13 @@ export class BaseFormInModal extends Controller {
         return items.filter(it => !!it.length).join(delimiter)
     }
 
+    renderBadges(items) {
+        return items
+            .filter(it => !!it?.length)
+            .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
+            .join('')
+    }
+
     formatDate(value){
         const [date, time] = value.split("T");
         const [year, month, day] = date.split("-");

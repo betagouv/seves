@@ -1,7 +1,44 @@
 {% extends "tiac/base.html" %}
-{% load static etat_tags %}
+{% load static etat_tags dsfr_tags widget_tweaks %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/list.css' %}">
+    <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
+    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
+    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
+{% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}
+    <form id="search-form" method="get" data-controller="search-form">
+        {% include "tiac/_tiac_more_filters.html" %}
+        <div class="fr-p-4v evenements_liste__header">
+            <div class="evenements_liste__header--title">
+                <h2 class="fr-h3">Rechercher un événement</h2>
+                <button  class="open-sidebar fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-filter-line">
+                    Filtres avancés
+                    <span id="more-filters-btn-counter" class="fr-tag fr-tag--sm fr-hidden fr-ml-2v" data-search-form-target="counter"></span>
+                </button>
+            </div>
+            <div class="evenements_liste__search-form">
+                {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
+                {% for field in filter.form %}
+                    {% if field.name in filter.form.main_filters %}
+                        {% with data_target=field.name|strfmt:"search-form-target:{0}" %}
+                            {% dsfr_form_field field|set_data:data_target  %}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+                <div class="fr-fieldset__element evenements_liste__header--actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="search-form#onReset:stop:prevent">Effacer</button>
+                    <button type="submit" class="fr-btn">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    </form>
     <main class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ object_list|length }} sur un total de {{ total_object_count }}</div>
@@ -28,11 +65,11 @@
                                 <td><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
                                 <td>{{ evenement.createur }}</td>
                                 <td>{{ evenement.date_reception }}</td>
-                                <td>-</td>
+                                <td>{{ evenement.etablissement }}</td>
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
-                                <td>-</td>
-                                <td>-</td>
+                                <td>{{ evenement.conclusion }}</td>
+                                <td>{{ evenement.danger_retenu }}</td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
                         {% endfor %}

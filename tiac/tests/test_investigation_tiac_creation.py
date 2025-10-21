@@ -4,10 +4,17 @@ from core.factories import DepartementFactory
 from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory, EvenementSimpleFactory
+from ssa.models import CategorieDanger
+from tiac.factories import (
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
+    AlimentSuspectFactory,
+    EvenementSimpleFactory,
+    AnalyseAlimentaireFactory,
+)
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
-from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple
+from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas, SuspicionConclusion
+from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",
@@ -61,7 +68,7 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 def test_can_create_investigation_tiac_with_all_fields(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(danger_syndromiques_suspectes=[])
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -78,11 +85,22 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.nb_dead_persons.fill(str(input_data.nb_dead_persons))
     creation_page.datetime_first_symptoms.fill(input_data.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
     creation_page.datetime_last_symptoms.fill(input_data.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
+
+    for danger in input_data.agents_confirmes_ars:
+        creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
+
+    creation_page.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
+    creation_page.selected_hazard.select_option(input_data.selected_hazard)
+    creation_page.conclusion_comment.fill(input_data.conclusion_comment)
+
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.last()
     assert_models_are_equal(
-        input_data, investigation, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
+        input_data,
+        investigation,
+        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        ignore_array_order=True,
     )
 
 
@@ -232,6 +250,26 @@ def test_can_create_investigation_tiac_with_repas_for_collectivite(
     )
 
 
+def test_can_create_investigation_tiac_with_aliment_with_denomination_only(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(simple=True)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data.investigation)
+
+    creation_page.page.get_by_test_id("add-aliment").click()
+    creation_page.current_modal.locator("[id$=denomination]").fill(input_data.denomination)
+    creation_page.current_modal.get_by_role("button", name="Enregistrer").click()
+
+    card = creation_page.get_aliment_card(0)
+    expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.aliments.count() == 1
+
+
 def test_can_create_investigation_tiac_with_aliment_simple(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
@@ -341,3 +379,47 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement, evenement]
     expected = sorted([other_event_1.numero, other_event_2.numero, other_event_3.numero])
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE = [
+    "_prefetched_objects_cache",
+    "_state",
+    "id",
+    "investigation_id",
+    "suspicion_conclusion",
+    "selected_hazard",
+    "conclusion_comment",
+]
+
+
+def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    analyse: AnalyseAlimentaire = AnalyseAlimentaireFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+    creation_page.add_analyse_alimentaire(analyse)
+    assert creation_page.nb_analyse == 1
+
+    creation_page.submit_as_draft()
+    analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
+    assert len(analyses) == 1
+    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
+
+
+def test_conclusion_behavior(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.SUSPECTED)
+    assert str(CategorieDanger.NOIX_DE_CAJOU.label) not in creation_page.selected_hazard.text_content()
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
+    assert str(CategorieDanger.NOIX_DE_CAJOU.label) in creation_page.selected_hazard.text_content()
+
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.DISCARDED)
+    expect(creation_page.selected_hazard).to_be_disabled()

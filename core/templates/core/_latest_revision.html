@@ -1,8 +1,12 @@
+{% load waffle_tags %}
 {% if latest_version %}
     <div class="fr-pl-1v fr-mt-2v last-modification fr-text--xs">
         Dernière mise à jour le {{ date_derniere_mise_a_jour }}
         {% if latest_version.revision.user %}
             par {{ latest_version.revision.user.agent.agent_with_structure }}
+            {% flag "with_revision_page" %}
+                <a href="{% url "revision-list" content_type_pk object_pk %}" class="fr-link">Voir l'historique</a>
+            {% endflag %}
         {% endif %}
     </div>
 {% endif %}

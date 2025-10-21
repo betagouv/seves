@@ -1,5 +1,6 @@
 allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
+- '(from|import)[\w\s\.]+'  # Allow python imports
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -8,7 +9,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 9b3a3ee11c6e7fd8b54bb235d7626d68c4e3648fa65edf6afa03fdd2ef240b72
+  checksum: eb1d939db46b8e8a63875f28db26507c064c0e62096c9b2c05a8522cbff01ddf
 - filename: ssa/static/ssa/_etablissement_form.js
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
@@ -66,13 +67,19 @@ fileignoreconfig:
 - filename: tiac/formsets.py
   checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
 - filename: tiac/models.py
-  checksum: 4edda7d8028ba41cdc836a9867f44e3d6f25bb8f0c258518f2e2e3d28e92955a
+  checksum: 76047aecf44585f19dde6f13870aacf1282b9600edc6e479cffca80e1c85b4c9
 - filename: tiac/forms.py
   checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
 - filename: tiac/admin.py
-  checksum: be86624d7fd8ef05cb4ff81c8c90010d2f28b55ce054b861f3c5d61fc9042596
+  checksum: 7f02122d7c32f3553b3e8661efb194b6647b37c5bdc05834ae3e6bb73b6fcdc6
 - filename: tiac/tests/pages.py
-  checksum: 4c60d8d5e703622c010ba919827f5fda1000e1f0f0f607e1eadc0673698b11b2
+  checksum: 913119c2ce1ceecf27cd00881e415b7d90432ec5d1acf9eabbe97f2db67c3ab8
 - filename: tiac/tests/test_investigation_tiac_creation.py
-  checksum: 20d45b7457f86a1f29c4acdc0e2392dd3ec0ccd626e4f3ec33b22062ee173a2a
+  checksum: bb0a966dd5280ae5c10907e2e9c7535a234a5277ded36049fc2742c55f459f66
+- filename: tiac/tests/test_investigation_tiac_details.py
+  checksum: 74e11044dc9b7e42c20d38a7fb1578d846f191d0c995668dd80d8a98858200a0
+- filename: tiac/tests/test_evenement_list.py
+  checksum: 5b73564cf12aa39cf5ae426b81d378706992f1249a848ea9290b42db72529f1a
+- filename: core/diffs.py
+  checksum: 72445e535b3b7db796d3b41523bce006fd2e827847fde0e241d8181902122638
 version: "1.0"

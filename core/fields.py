@@ -71,10 +71,8 @@ class ContactModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 class SEVESChoiceField(forms.ChoiceField):
     def __init__(self, *args, **kwargs):
         empty_label = kwargs.pop("empty_label", settings.SELECT_EMPTY_CHOICE)
-        choices = kwargs.get("choices", [])
-        choices.insert(0, ("", empty_label))
-        kwargs["choices"] = choices
         super().__init__(*args, **kwargs)
+        self.choices = (("", empty_label), *self.choices)
 
 
 class AdresseLieuDitField(forms.ChoiceField):

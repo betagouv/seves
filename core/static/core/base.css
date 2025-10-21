@@ -241,3 +241,17 @@ label:has(+ .choices select[data-required="true"])::after,
 .fieldset-flex-options {
     display: flex;
 }
+
+.generic-card-container {
+    padding : 1.5rem;
+    border: 1px var(--grey-975-100-hover) solid;
+    margin-bottom: 2rem;
+}
+
+.history-removed {
+    color : var(--red-marianne-main-472);
+}
+
+.history-added{
+    color : var(--success-425-625);
+}

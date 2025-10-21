@@ -1,3 +1,5 @@
+import "TreeSelect"
+
 export function patchItems(element){
     setTimeout(() => {
         element.querySelectorAll('.treeselect-list__item').forEach(itemElement => {
@@ -65,6 +67,43 @@ export function isLevel2WithChildren(data, value) {
     return false;
 }
 
+export function showHeader(element, headerClass){
+    element.querySelectorAll(headerClass).forEach(el => {
+        el.removeAttribute("hidden");
+        el.removeAttribute("aria-hidden");
+    })
+}
+export function hideHeader(element, headerClass){
+    element.querySelectorAll(headerClass).forEach(el => {
+        el.setAttribute("hidden", "hidden");
+        el.setAttribute("aria-hidden", "true");
+    })
+}
+
+
+export function shortcutClicked(event, treeselect, input){
+    const label = event.target.getElementsByTagName("label")[0]
+    const value = label.textContent.trim()
+    const checkbox = treeselect.srcElement.querySelector('[id$=' + label.getAttribute("for") + ']')
+    checkbox.checked = !checkbox.checked
+
+    let valuesToSet = treeselect.value
+    if (checkbox.checked){
+        valuesToSet.push(value)
+    } else {
+        valuesToSet.pop(value)
+    }
+
+    treeselect.updateValue(valuesToSet)
+    input.value = valuesToSet.join("||")
+    let text = ""
+    if (valuesToSet.length === 1){
+        text = valuesToSet[0]
+    } else {
+        text = `${valuesToSet.length} ${treeselect.tagsCountText}`
+    }
+    treeselect.srcElement.querySelector(".treeselect-input__tags-count").innerText = text
+}
 
 export const tsDefaultOptions = {
     showTags: false,

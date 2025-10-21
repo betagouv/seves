@@ -11,7 +11,7 @@ from faker import Faker
 
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
-from ssa.models import CategorieProduit
+from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     EvenementOrigin,
     ModaliteDeclarationEvenement,
@@ -19,6 +19,9 @@ from tiac.constants import (
     TypeRepas,
     Motif,
     TypeCollectivite,
+    DangersSyndromiques,
+    EtatPrelevement,
+    SuspicionConclusion,
 )
 from tiac.models import (
     AlimentSuspect,
@@ -30,6 +33,7 @@ from tiac.models import (
     InvestigationTiac,
     TypeEvenement,
     RepasSuspect,
+    AnalyseAlimentaire,
 )
 
 fake = Faker()
@@ -39,12 +43,21 @@ def random_datetime_utc():
     return fake.date_time_this_decade(tzinfo=ZoneInfo(settings.TIME_ZONE)).replace(second=0, microsecond=0)
 
 
+def parse_date(value):
+    if isinstance(value, str):
+        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+    if isinstance(value, datetime.datetime):
+        return value.date()
+    if isinstance(value, datetime.date):
+        return value
+    return None
+
+
 class BaseTiacFactory(DjangoModelFactory):
     class Meta:
         abstract = True
 
     date_creation = factory.Faker("date_this_decade")
-    date_reception = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
@@ -65,9 +78,19 @@ class BaseTiacFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
+    @factory.lazy_attribute
+    def date_reception(self):
+        return parse_date(fake.date_this_decade())
+
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if "date_reception" in kwargs:
+            kwargs["date_reception"] = parse_date(kwargs["date_reception"])
+        return super()._create(model_class, *args, **kwargs)
 
 
 class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):
@@ -114,6 +137,25 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
+
+    agents_confirmes_ars = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
+    )
+    danger_syndromiques_suspectes = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in DangersSyndromiques.choices], k=random.randint(1, 3))
+    )
+
+    suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
+
+    conclusion_comment = factory.Faker("paragraph")
+
+    @factory.lazy_attribute
+    def selected_hazard(self):
+        if self.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
+            return random.choices(CategorieDanger.values)[0]
+        if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
+            return random.choices(DangersSyndromiques.values)[0]
+        return ""
 
 
 class RepasSuspectFactory(DjangoModelFactory):
@@ -168,3 +210,19 @@ class AlimentSuspectFactory(DjangoModelFactory):
             categorie_produit=FuzzyChoice(CategorieProduit.values),
             description_produit=factory.Faker("paragraph"),
         )
+
+
+class AnalyseAlimentaireFactory(DjangoModelFactory):
+    class Meta:
+        model = AnalyseAlimentaire
+
+    investigation = factory.SubFactory("tiac.factories.InvestigationTiacFactory")
+
+    reference_prelevement = factory.Faker("numerify", text="####-###")
+    etat_prelevement = FuzzyChoice(EtatPrelevement.values)
+    categorie_danger = factory.LazyFunction(
+        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
+    )
+    comments = factory.Faker("paragraph")
+    sent_to_lnr_cnr = factory.Faker("boolean")
+    reference_souche = factory.Faker("sentence", nb_words=1)

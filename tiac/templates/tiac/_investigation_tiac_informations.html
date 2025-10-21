@@ -1,0 +1,56 @@
+{% load or_empty_value_tag %}
+<div class="white-container detail-content">
+  <h2 class="fr-h6">Le contexte</h2>
+  <div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-3">
+        <div class="fr-container--fluid">
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-7 bold">Créateur</div>
+            <div class="fr-col-5">{{ object.createur }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-7 bold">Date de réception à la DD(ETS)PP</div>
+            <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters" data-testid="origin">
+            <div class="fr-col-7 bold">Signalement déclaré par</div>
+            <div class="fr-col-5">{{ object.get_evenement_origin_display|or_empty_value_tag }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters" data-testid="modalite">
+            <div class="fr-col-7 bold">Modalités de déclaration</div>
+            <div class="fr-col-5">{{ object.get_modalites_declaration_display|or_empty_value_tag }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="fr-col-6">
+        <div class="fr-container--fluid">
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">Contenu du signalement</div>
+            <div class="fr-col-7">{{ object.contenu|linebreaksbr }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="fr-col-3">
+        <div class="fr-container--fluid">
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">ARS informée</div>
+            <div class="fr-col-7">{{ object.notify_ars|yesno:"Oui,Non,Vide" }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">Enquêtes auprès des cas</div>
+            <div class="fr-col-7">{{ object.will_trigger_inquiry|yesno:"Oui,Non,Vide" }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">N° SIVSS de l'ARS</div>
+            <div class="fr-col-7">{{ object.numero_sivss|or_empty_value_tag }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-5 bold">Type d'événement</div>
+            <div class="fr-col-7">Investigation de TIAC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

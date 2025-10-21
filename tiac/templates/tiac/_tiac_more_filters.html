@@ -1,0 +1,100 @@
+{% load render_field dsfr_tags widget_tweaks %}
+<template data-search-form-target="categorieDangerHeader">
+    <div class="categorie-danger-header">
+        <div class="fr-ml-1v">Danger les plus courants</div>
+        {% for danger in filter.form.common_danger %}
+            <div
+                class="treeselect-list__item"
+                level="0"
+                group="false"
+                data-action="click->search-form#onShortcut:prevent:stop"
+            >
+                <input
+                    type="checkbox"
+                    id="shortcut_{{ forloop.counter0 }}"
+                    class="treeselect-list__item-checkbox-container"
+                >
+                <label
+                    class="treeselect-list__item-label shortcut"
+                    for="shortcut_{{ forloop.counter0 }}"
+                >{{ danger }}</label>
+            </div>
+        {% endfor %}
+        <div class="fr-ml-1v">Liste complète des dangers</div>
+    </div>
+</template>
+<template data-search-form-target="agentsPathogenesHeader">
+    <div class="categorie-danger-header">
+        <div class="fr-ml-1v">Danger les plus courants</div>
+        {% for danger in filter.form.common_danger %}
+            <div
+                class="treeselect-list__item"
+                level="0"
+                group="false"
+                data-action="click->search-form#onShortcutAgentsPathogenes:prevent:stop"
+            >
+                <input
+                    type="checkbox"
+                    id="shortcut_{{ forloop.counter0 }}"
+                    class="treeselect-list__item-checkbox-container"
+                >
+                <label
+                    class="treeselect-list__item-label shortcut"
+                    for="shortcut_{{ forloop.counter0 }}"
+                >{{ danger }}</label>
+            </div>
+        {% endfor %}
+        <div class="fr-ml-1v">Liste complète des dangers</div>
+    </div>
+</template>
+
+<aside id="sidebar" class="sidebar white-container--lite" data-search-form-target="sidebar">
+    <div class="more-filters-title">
+        <h4 class="fr-h4">Filtres avancés</h4>
+        <a href="#" class="fr-link close-sidebar fr-mb-2v">Fermer</a>
+    </div>
+    <div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.etat %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.numero_sivss %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_sick_persons %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_dead_persons %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.danger_syndromiques_suspectes|set_data:"search-form-target:dangerSyndromique" %}</div>
+        <div class=" fr-fieldset__element">
+            <label>Agent pathogène confirmé par l'ARS </label>
+            {% dsfr_form_field filter.form.agents_pathogenes|set_data:"search-form-target:agentsPathogenesInput" %}
+            <div data-search-form-target="agentsPathogenesContainer"></div>
+            <div data-search-form-target="jsonConfigAgents" class="fr-hidden">{{ categorie_danger_data|safe }}</div>
+        </div>
+        <div class=" fr-fieldset__element">
+            <label>Analyse - Danger détecté</label>
+            {% dsfr_form_field filter.form.analyse_categorie_danger|set_data:"search-form-target:categorieDangerAnalyseInput" %}
+            <div data-search-form-target="categorieDangerAnalyseContainer"></div>
+            <div data-search-form-target="jsonConfigAnalyse" class="fr-hidden">{{ categorie_danger_data|safe }}</div>
+        </div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_aliment %}</div>
+        <div class=" fr-fieldset__element" id="categorie-produit">
+            <label>Aliment - Catégorie de produit</label>
+            {% dsfr_form_field filter.form.aliment_categorie_produit|set_data:"search-form-target:categorieProduitInput" %}
+            <div data-search-form-target="categorieProduitContainer"></div>
+            <div data-search-form-target="jsonConfig" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
+        </div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.nb_personnes_repas %}</div>
+        <div class="fr-fieldset__element">{% dsfr_form_field filter.form.type_repas %}</div>
+
+        <div class="fr-fieldset__element">
+            <div class="fr-p-2v etablissment-filters ">
+                <h5 class="fr-h5 fr-mb-2v">Établissements</h5>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.siret %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.numero_resytal %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.commune %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.departement %}</div>
+                <div class="fr-fieldset__element">{% dsfr_form_field filter.form.pays %}</div>
+            </div>
+        </div>
+
+        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+            <button class="fr-btn fr-btn--secondary clear-btn" data-action="search-form#onSidebarClear:stop:prevent">Effacer</button>
+            <button class="fr-btn add-btn" data-action="search-form#onSidebarAdd:stop:prevent">Ajouter</button>
+        </div>
+    </div>
+</aside>
