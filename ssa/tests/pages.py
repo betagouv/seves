@@ -3,7 +3,7 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from ssa.models import Etablissement
 
@@ -12,7 +12,7 @@ class WithTreeSelect:
     def _set_treeselect_option(self, container_id, label, clear_input=False):
         if clear_input:
             self.clear_treeselect(container_id)
-        self.page.locator(f"#{container_id} .treeselect-input__edit").click()
+        self.page.locator(f"#{container_id} .treeselect-input__edit").click(force=True)
         parts = re.split(r"\s*>\s*", label)
         for idx, part in enumerate(parts, start=1):
             if idx == len(parts):  # last element
@@ -23,7 +23,13 @@ class WithTreeSelect:
                     .click(force=True)
                 )
             else:
-                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
+                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click(
+                    force=True
+                )
+
+        # language=js
+        self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')
+        expect(self.page.locator(f"#{container_id} .treeselect-list"), "Treeselect wasn't closed").to_have_count(0)
 
     def get_treeselect_options(self, container_id):
         elements = self.page.locator(f"#{container_id} .treeselect-input__tags-count")

@@ -8,7 +8,13 @@
             {{ object.get_suspicion_conclusion_display|or_empty_value_tag }}
 
             <div class="bold fr-mt-2w">Danger retenu</div>
-            {{ object.short_conclusion_selected_hazard|or_empty_value_tag }}
+            {% for short_conclusion_selected_hazard in object.short_conclusion_selected_hazard %}
+                <span class="fr-badge fr-badge--info fr-badge--no-icon fr-badge--sm fr-m-0">
+                    {{ short_conclusion_selected_hazard }}
+                </span>
+            {% empty %}
+                <span class="empty-value">Vide</span>
+            {% endfor %}
         </div>
         <div class="fr-col-6">
             <div class="bold">Commentaire</div>

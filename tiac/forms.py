@@ -358,9 +358,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
     @cached_property
     def selected_hazard_confirmed(self):
-        bf = deepcopy(self["selected_hazard"])
-        bf.field.choices = (("", settings.SELECT_EMPTY_CHOICE), *CategorieDanger.choices)
-        return bf
+        return json.dumps(self.CategorieDanger.build_options())
 
     @cached_property
     def selected_hazard_suspected(self):
@@ -388,18 +386,23 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     def clean_agents_confirmes_ars(self):
         return [v for v in self.cleaned_data["agents_confirmes_ars"].split("||") if v]
 
+    def clean_selected_hazard(self):
+        return [v for v in self.cleaned_data.get("selected_hazard", "").split("||") if v]
+
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
         selected_hazard = self.cleaned_data.get("selected_hazard")
 
         if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
-            self.cleaned_data["selected_hazard"] = ""
-        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and selected_hazard not in CategorieDanger.values:
+            self.cleaned_data["selected_hazard"] = []
+        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and any(
+            item not in CategorieDanger.values for item in selected_hazard
+        ):
             self.add_error(
                 "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
             )
-        elif (
-            suspicion_conclusion == SuspicionConclusion.SUSPECTED and selected_hazard not in DangersSyndromiques.values
+        elif suspicion_conclusion == SuspicionConclusion.SUSPECTED and any(
+            item not in DangersSyndromiques.values for item in selected_hazard
         ):
             self.add_error(
                 "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"

@@ -307,10 +307,10 @@ class InvestigationTiac(
     suspicion_conclusion = models.CharField(
         "Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, null=True, default=None, blank=True
     )
-    selected_hazard = models.CharField(
-        "Danger retenu",
-        choices=SELECTED_HAZARD_CHOICES,
-        default="",
+    selected_hazard = ArrayField(
+        models.CharField(max_length=255, choices=SELECTED_HAZARD_CHOICES),
+        verbose_name="Danger retenu",
+        default=list,
         blank=True,
     )
     conclusion_comment = models.TextField("Commentaire", default="", blank=True)
@@ -436,13 +436,14 @@ class InvestigationTiac(
 
     @property
     def short_conclusion_selected_hazard(self):
-        if not self.selected_hazard:
-            return ""
-        return (
-            DangersSyndromiques(self.selected_hazard).short_name
-            if self.selected_hazard in DangersSyndromiques.values
-            else CategorieDanger(self.selected_hazard).label
-        )
+        return [
+            (
+                DangersSyndromiques(selected_hazard).short_name
+                if selected_hazard in DangersSyndromiques.values
+                else CategorieDanger(selected_hazard).label
+            )
+            for selected_hazard in self.selected_hazard
+        ]
 
     class Meta:
         constraints = (
@@ -450,11 +451,12 @@ class InvestigationTiac(
                 condition=(
                     models.Q(
                         suspicion_conclusion=SuspicionConclusion.CONFIRMED.value,
-                        selected_hazard__in=CategorieDanger.values,
+                        selected_hazard__contained_by=CategorieDanger.values,
                     )
                     | models.Q(
                         suspicion_conclusion=SuspicionConclusion.SUSPECTED.value,
-                        selected_hazard__in=DangersSyndromiques.values,
+                        selected_hazard__contained_by=DangersSyndromiques.values,
+                        selected_hazard__len=1,
                     )
                     | (
                         ~models.Q(
@@ -463,7 +465,7 @@ class InvestigationTiac(
                                 SuspicionConclusion.CONFIRMED.value,
                             ]
                         )
-                        & models.Q(selected_hazard="")
+                        & models.Q(selected_hazard__len=0)
                     )
                 ),
                 name="selected_hazard_constraints",

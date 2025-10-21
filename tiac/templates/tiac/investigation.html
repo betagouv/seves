@@ -161,6 +161,7 @@
                 class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
                 data-controller="conclusion-form"
                 data-conclusion-form-suspicion-conclusion-value="{{ form.SuspicionConclusion.as_json }}"
+                data-conclusion-form-selected-hazard-confirmed-value="{{ form.selected_hazard_confirmed }}"
             >
                 <legend class="fr-h3 fr-fieldset__legend">Conclusion</legend>
 
@@ -180,7 +181,14 @@
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
                     <div class="fr-col-6">
                         {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
-                        {% dsfr_form_field form.selected_hazard|set_data:"conclusion-form-target:selectedHazard" %}
+                        {% dsfr_form_field form.selected_hazard|set_data:"conclusion-form-target:selectedHazardSelect" %}
+                        <div id="selected_hazard-treeselect" class="fr-input-group fr-hidden">
+                            {{ form.selected_hazard.label_tag }}
+                            {% with hidden_selected_hazard=form.selected_hazard|attr:"disabled"|set_data:"conclusion-form-target:selectedHazardTreeselectInput" %}
+                                {{ hidden_selected_hazard.as_hidden }}
+                            {% endwith %}
+                            <div data-conclusion-form-target="selectedHazardTreeselect"></div>
+                        </div>
                     </div>
                     <div class="fr-col-6 conclusion-comment">
                         {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
@@ -200,17 +208,12 @@
                         {% dsfr_form_field form.conclusion_analyse %}
                     </div>
                 </div>
-                <template data-conclusion-form-target="selectedHazardConfirmedSelect">
-                    {% for subwidget in form.selected_hazard_confirmed.subwidgets %}
-                        {{ subwidget }}
-                    {% endfor %}
-                </template>
-                <template data-conclusion-form-target="selectedHazardSuspectedSelect">
+                <template data-conclusion-form-target="selectedHazardSuspectedOptions">
                     {% for subwidget in form.selected_hazard_suspected.subwidgets %}
                         {{ subwidget }}
                     {% endfor %}
                 </template>
-                <template data-conclusion-form-target="selectedHazardOtherSelect">
+                <template data-conclusion-form-target="selectedHazardOtherOptions">
                     {% for subwidget in form.selected_hazard_other.subwidgets %}
                         {{ subwidget }}
                     {% endfor %}

@@ -314,6 +314,7 @@ class InvestigationTiacCreationView(
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
+        self.object = None
         if not self.repas_formset.is_valid():
             return self.formset_invalid(
                 self.repas_formset, "Erreurs dans le(s) formulaire(s) Repas", "Erreur dans le formulaire repas"

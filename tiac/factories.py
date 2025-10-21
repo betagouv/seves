@@ -152,10 +152,10 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     @factory.lazy_attribute
     def selected_hazard(self):
         if self.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
-            return random.choices(CategorieDanger.values)[0]
+            return random.choices(CategorieDanger.values)
         if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
-            return random.choices(DangersSyndromiques.values)[0]
-        return ""
+            return random.choices(DangersSyndromiques.values)
+        return []
 
 
 class RepasSuspectFactory(DjangoModelFactory):
