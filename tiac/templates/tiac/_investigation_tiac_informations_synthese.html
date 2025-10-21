@@ -30,7 +30,11 @@
                         {% with rest_length=dates_repas|length|add:"-1" %}
                             <p class="fr-tag" aria-describedby="message-tooltip-repas">et {{ rest_length }} autre{{ rest_length|pluralize }}</p>
                         {% endwith %}
-                        <span class="fr-tooltip fr-placement" id="message-tooltip-repas" role="tooltip" aria-hidden="true">Dates des autres repas : {{ dates_repas|slice:"1:"|join:', ' }}</span>
+                        <span class="fr-tooltip fr-placement" id="message-tooltip-repas" role="tooltip" aria-hidden="true">Dates des autres repas :
+                            {% for d in dates_repas|slice:"1:" %}
+                                {{ d }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
                     {% endif%}
                 </div>
             </div>
