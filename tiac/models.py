@@ -239,7 +239,7 @@ class Etablissement(BaseEtablissement, models.Model):
         return value
 
 
-class TypeEvenement(models.TextChoices):
+class InvestigationFollowUp(models.TextChoices):
     INVESTIGATION_DD = "investigation par ma dd", "Investigation par ma DD"
     INVESTIGATION_COORDONNEE = "investigation coordonnée", "Investigation coordonnée / MUS informée"
 
@@ -271,8 +271,8 @@ class InvestigationTiac(
         blank=True,
         validators=[RegexValidator(r"^\d{6}$", "Doit contenir exactement 6 chiffres")],
     )
-    type_evenement = models.CharField(
-        max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement", blank=True
+    follow_up = models.CharField(
+        max_length=100, choices=InvestigationFollowUp.choices, verbose_name="Suite donnée par la DD", blank=True
     )
 
     # Cas
@@ -424,9 +424,9 @@ class InvestigationTiac(
 
     @property
     def type_evenement_display(self):
-        if self.type_evenement == TypeEvenement.INVESTIGATION_DD:
+        if self.follow_up == InvestigationFollowUp.INVESTIGATION_DD:
             return "Invest. locale"
-        if self.type_evenement == TypeEvenement.INVESTIGATION_COORDONNEE:
+        if self.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
             return "Invest. coord. / MUS informée"
         return "-"
 

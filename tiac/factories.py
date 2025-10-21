@@ -31,9 +31,9 @@ from tiac.models import (
     Etablissement,
     Evaluation,
     InvestigationTiac,
-    TypeEvenement,
     RepasSuspect,
     AnalyseAlimentaire,
+    InvestigationFollowUp,
 )
 
 fake = Faker()
@@ -130,7 +130,7 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
 
     will_trigger_inquiry = factory.Faker("boolean")
     numero_sivss = factory.Faker("numerify", text="######")
-    type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
+    follow_up = FuzzyChoice([choice[0] for choice in InvestigationFollowUp.choices])
 
     nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
     nb_sick_persons_to_hospital = factory.Faker("pyint", min_value=0, max_value=10)

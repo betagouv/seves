@@ -220,8 +220,8 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_numero")
 
     @property
-    def type_evenement(self):
-        return self.page.locator("#id_type_evenement")
+    def follow_up(self):
+        return self.page.locator("#id_follow_up")
 
     @property
     def with_links(self):
@@ -421,7 +421,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "contenu",
         "will_trigger_inquiry",
         "numero_sivss",
-        "type_evenement",
+        "follow_up",
         "notify_ars",
         "nb_sick_persons",
         "nb_sick_persons_to_hospital",
@@ -459,10 +459,10 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
             force=True
         )
 
-    def set_type_evenement(self, value):
-        self.page.locator("#radio-id_type_evenement").locator(
-            f"input[type='radio'][value='{str(value).lower()}']"
-        ).check(force=True)
+    def set_follow_up(self, value):
+        self.page.locator("#radio-id_follow_up").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+            force=True
+        )
 
     def set_analyses(self, value):
         self.page.locator("#radio-id_analyses_sur_les_malades").locator(
@@ -471,7 +471,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
 
     def fill_required_fields(self, object: InvestigationTiac):
         self.contenu.fill(object.contenu)
-        self.set_type_evenement(object.type_evenement)
+        self.set_follow_up(object.follow_up)
 
     def add_agent_pathogene_confirme(self, label):
         self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")

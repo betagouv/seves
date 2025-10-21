@@ -39,7 +39,7 @@ from tiac.models import (
     EvenementSimple,
     Etablissement,
     InvestigationTiac,
-    TypeEvenement,
+    InvestigationFollowUp,
     Analyses,
     validate_resytal,
     RepasSuspect,
@@ -267,8 +267,8 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
         ),
     )
-    type_evenement = forms.ChoiceField(
-        choices=TypeEvenement.choices, widget=forms.RadioSelect, label="Type d'événement", required=True
+    follow_up = forms.ChoiceField(
+        choices=InvestigationFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée par la DD", required=True
     )
 
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
@@ -321,7 +321,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "notify_ars",
             "will_trigger_inquiry",
             "numero_sivss",
-            "type_evenement",
+            "follow_up",
             "nb_sick_persons",
             "nb_sick_persons_to_hospital",
             "nb_dead_persons",
