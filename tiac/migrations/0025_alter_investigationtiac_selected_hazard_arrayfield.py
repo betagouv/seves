@@ -5,9 +5,11 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    atomic = False
+
     dependencies = [
         ("core", "0038_alter_document_document_type"),
-        ("tiac", "0023_rename_investigation_tiac_etablissement_investigation"),
+        ("tiac", "0024_remove_investigationtiac_type_evenement_and_more"),
     ]
 
     operations = [
