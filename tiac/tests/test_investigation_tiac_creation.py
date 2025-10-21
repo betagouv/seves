@@ -40,7 +40,7 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
 
     investigation = InvestigationTiac.objects.get()
     assert investigation.createur == mocked_authentification_user.agent.structure
-    assert investigation.type_evenement == input_data.type_evenement
+    assert investigation.follow_up == input_data.follow_up
     assert investigation.contenu == input_data.contenu
     assert investigation.numero is not None
     assert investigation.is_draft is True

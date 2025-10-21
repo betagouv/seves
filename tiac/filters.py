@@ -12,7 +12,7 @@ from core.form_mixins import js_module
 from core.models import LienLibre
 from ssa.filters import WithEtablissementFilterMixin, CharInFilter
 from tiac.constants import TypeRepas, TypeAliment, DangersSyndromiques, EvenementFollowUp, DANGERS_COURANTS
-from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 
 
 class TiacFilterForm(DsfrBaseForm):
@@ -30,7 +30,7 @@ class TiacFilterForm(DsfrBaseForm):
         "end_date",
         "structure_contact",
         "agent_contact",
-        "type_evenement",
+        "follow_up",
         "full_text_search",
     ]
 
@@ -38,9 +38,9 @@ class TiacFilterForm(DsfrBaseForm):
         super().__init__(*args, **kwargs)
         simple_choices = [(f"simple-{value}", f"Enr. simple / {label}") for value, label in EvenementFollowUp.choices]
         investigation_choices = [
-            (f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in TypeEvenement.choices
+            (f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in InvestigationFollowUp.choices
         ]
-        self.fields["type_evenement"].choices = simple_choices + investigation_choices
+        self.fields["follow_up"].choices = simple_choices + investigation_choices
 
     @cached_property
     def common_danger(self):
@@ -66,10 +66,10 @@ class TiacFilter(
     end_date = django_filters.DateFilter(
         field_name="date_reception", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
     )
-    type_evenement = django_filters.ChoiceFilter(
+    follow_up = django_filters.ChoiceFilter(
         label="Type d'événement/suites",
         empty_label=settings.SELECT_EMPTY_CHOICE,
-        method="filter_type_evenement",
+        method="filter_follow_up",
     )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
@@ -235,14 +235,14 @@ class TiacFilter(
                 queryset = self.queryset._querysets[1]
                 queryset_type = "tiac"
 
-        if self.form.cleaned_data["type_evenement"].startswith("simple"):
+        if self.form.cleaned_data["follow_up"].startswith("simple"):
             if queryset_type == "combined":
                 queryset_type = "simple"
                 queryset = self.queryset._querysets[0]
             elif queryset_type == "tiac":
                 return self.queryset._querysets[0].none()
 
-        if self.form.cleaned_data["type_evenement"].startswith("tiac"):
+        if self.form.cleaned_data["follow_up"].startswith("tiac"):
             if queryset_type == "combined":
                 queryset_type = "tiac"
                 queryset = self.queryset._querysets[1]
@@ -295,11 +295,9 @@ class TiacFilter(
     def filter_with_free_links(self, queryset, name, value):
         return queryset
 
-    def filter_type_evenement(self, queryset, name, value):
+    def filter_follow_up(self, queryset, name, value):
         type_fiche, cleaned_value = value.split("-")
-        if type_fiche == "simple":
-            return queryset.filter(follow_up=cleaned_value)
-        return queryset.filter(type_evenement=cleaned_value)
+        return queryset.filter(follow_up=cleaned_value)
 
     def filter_full_text_search(self, queryset, name, value):
         return queryset
@@ -313,7 +311,7 @@ class TiacFilter(
             "end_date",
             "structure_contact",
             "agent_contact",
-            "type_evenement",
+            "follow_up",
             "full_text_search",
             "etat",
         ]

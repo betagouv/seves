@@ -12,7 +12,7 @@ from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 from tiac.tests.pages import EvenementListPage
 
 
@@ -48,7 +48,7 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
 
 
 def test_row_content_investigation_tiac(live_server, mocked_authentification_user, page: Page):
-    evenement: InvestigationTiac = InvestigationTiacFactory(type_evenement=TypeEvenement.INVESTIGATION_COORDONNEE)
+    evenement: InvestigationTiac = InvestigationTiacFactory(follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE)
     etablissement = EtablissementFactory(evenement_simple=None, investigation=evenement)
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
@@ -361,18 +361,18 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
-def test_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
+def test_can_filter_by_follow_up(live_server, mocked_authentification_user, page: Page):
     to_be_found = InvestigationTiacFactory(
-        numero_annee=2025, numero_evenement=2, type_evenement=TypeEvenement.INVESTIGATION_COORDONNEE
+        numero_annee=2025, numero_evenement=2, follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE
     )
     not_to_be_found_1 = InvestigationTiacFactory(
-        numero_annee=2025, numero_evenement=1, type_evenement=TypeEvenement.INVESTIGATION_DD
+        numero_annee=2025, numero_evenement=1, follow_up=InvestigationFollowUp.INVESTIGATION_DD
     )
     not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.type_evenement.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
+    search_page.follow_up.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
