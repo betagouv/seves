@@ -42,5 +42,4 @@ rm -f clevercloud_known_hosts \
       sftp_data_output.txt \
       "${ENCRYPTED_SYMMETRIC_KEY_FILENAME}" \
       "${ENCRYPTED_DATA_FILENAME}" \
-      "${SYMMETRIC_KEY_FILENAME}" \
-      "${DATA_ZIP_FILENAME}"
+      "${SYMMETRIC_KEY_FILENAME}"
