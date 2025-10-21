@@ -1,39 +1,78 @@
 import {Controller} from "Stimulus";
 import {applicationReady} from "Application";
+import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 
 /**
  * @property {Object.<string, {value: string, label: string}>} suspicionConclusionValue
+ * @property {Object[]} selectedHazardConfirmedValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
- * @property {HTMLSelectElement} selectedHazardTarget
- * @property {HTMLTemplateElement} selectedHazardConfirmedSelectTarget
- * @property {HTMLTemplateElement} selectedHazardSuspectedSelectTarget
- * @property {HTMLTemplateElement} selectedHazardOtherSelectTarget
+ * @property {HTMLSelectElement} selectedHazardSelectTarget
+ * @property {HTMLDivElement} selectedHazardTreeselectTarget
+ * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
+ * @property {HTMLTemplateElement} selectedHazardSuspectedOptionsTarget
+ * @property {HTMLTemplateElement} selectedHazardOtherOptionsTarget
  */
 class ConclusionFormController extends Controller {
-    static targets = ["suspicionConclusion", "selectedHazard", "selectedHazardConfirmedSelect", "selectedHazardSuspectedSelect", "selectedHazardOtherSelect"]
-    static values = {suspicionConclusion: Object}
+    static targets = [
+        "suspicionConclusion",
+        "selectedHazardSelect",
+        "selectedHazardTreeselect",
+        "selectedHazardTreeselectInput",
+        "selectedHazardSuspectedOptions",
+        "selectedHazardOtherOptions"
+    ]
+    static values = {suspicionConclusion: Object, selectedHazardConfirmed: Array}
 
-    suspicionConclusionTargetConnected(el) {
-        el.dispatchEvent(new Event("change"))
+    /** @param {HTMLSelectElement} el */
+    selectedHazardTreeselectTargetConnected(el) {
+        this.treeselect = new Treeselect({
+            parentHtmlContainer: el,
+            value: [],
+            options: this.selectedHazardConfirmedValue,
+            isSingleSelect: false,
+            openCallback: () => patchItems(this.treeselect.srcElement),
+            ...tsDefaultOptions
+        })
+        this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
+        patchItems(this.treeselect.srcElement)
+        this.treeselect.srcElement.addEventListener("update-dom", ()=> patchItems(this.treeselect.srcElement))
+        this.treeselect.srcElement.addEventListener('input', e => {
+            if (!e.detail) return
+            this.selectedHazardTreeselectInputTarget.value = e.detail.join("||")
+        })
+    }
+
+    /** @param {HTMLDivElement} el */
+    selectedHazardTreeselectTargetDiconnected(el) {
+        this.treeselect.destroy()
+        this.treeselect = undefined
+    }
+
+    connect () {
+        this.suspicionConclusionTarget.dispatchEvent(new Event("change"))
     }
 
     onSuspicionConclusionChanged({target: {value}}) {
-        if(value === this.suspicionConclusionValue.CONFIRMED.value) {
-            this.selectedHazardTarget.innerHTML = this.selectedHazardConfirmedSelectTarget.innerHTML;
-        } else if (value === this.suspicionConclusionValue.SUSPECTED.value) {
-            this.selectedHazardTarget.innerHTML = this.selectedHazardSuspectedSelectTarget.innerHTML;
+        if (value === this.suspicionConclusionValue.SUSPECTED.value) {
+            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardSuspectedOptionsTarget.innerHTML;
+            this.selectedHazardSelectTarget.disabled = false;
         } else {
-            this.selectedHazardTarget.innerHTML = this.selectedHazardOtherSelectTarget.innerHTML;
+            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardOtherOptionsTarget.innerHTML;
+            this.selectedHazardSelectTarget.disabled = true;
         }
 
-        this.selectedHazardTarget.value = "";
+        if (value === this.suspicionConclusionValue.CONFIRMED.value) {
+            this.selectedHazardTreeselectTarget.parentElement.classList.remove("fr-hidden")
+            this.selectedHazardTreeselectInputTarget.disabled = false
+            this.selectedHazardSelectTarget.parentElement.classList.add("fr-hidden")
+        } else {
+            this.selectedHazardTreeselectTarget.parentElement.classList.add("fr-hidden")
+            this.selectedHazardTreeselectInputTarget.disabled = true
+            this.selectedHazardSelectTarget.parentElement.classList.remove("fr-hidden")
+        }
 
-        if (value === this.suspicionConclusionValue.UNKNOWN.value
-            || value === this.suspicionConclusionValue.DISCARDED.value) {
-                this.selectedHazardTarget.setAttribute("disabled", "disabled");
-            } else {
-                this.selectedHazardTarget.removeAttribute("disabled");
-            }
+        this.treeselect.updateValue("")
+        this.selectedHazardSelectTarget.value = "";
     }
 }
 

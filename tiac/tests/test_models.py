@@ -17,10 +17,12 @@ test_data = [
 @pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
 def test_investigation_tiac_selected_hazard_constraints(db, suspicion_conclusion, selected_hazard):
     with pytest.raises(IntegrityError):
-        InvestigationTiacFactory(suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard)
+        InvestigationTiacFactory(suspicion_conclusion=suspicion_conclusion, selected_hazard=[selected_hazard])
 
-    InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED, selected_hazard=CategorieDanger.VIBRIO)
     InvestigationTiacFactory(
-        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=DangersSyndromiques.AUTRE
+        suspicion_conclusion=SuspicionConclusion.CONFIRMED, selected_hazard=[CategorieDanger.VIBRIO]
     )
-    InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.UNKNOWN, selected_hazard="")
+    InvestigationTiacFactory(
+        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=[DangersSyndromiques.AUTRE]
+    )
+    InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.UNKNOWN, selected_hazard=[])

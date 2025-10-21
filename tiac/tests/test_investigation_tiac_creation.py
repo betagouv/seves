@@ -13,7 +13,7 @@ from tiac.factories import (
     AnalyseAlimentaireFactory,
 )
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas, SuspicionConclusion
+from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
 from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
@@ -89,9 +89,7 @@ def test_can_create_investigation_tiac_with_all_fields(
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
 
-    creation_page.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
-    creation_page.selected_hazard.select_option(input_data.selected_hazard)
-    creation_page.conclusion_comment.fill(input_data.conclusion_comment)
+    creation_page.fill_conlusion(input_data)
 
     creation_page.submit_as_draft()
 
@@ -406,20 +404,3 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
     assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
-
-
-def test_conclusion_behavior(live_server, page: Page, assert_models_are_equal):
-    investigation: InvestigationTiac = InvestigationTiacFactory.build()
-
-    creation_page = InvestigationTiacFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.fill_required_fields(investigation)
-
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.SUSPECTED)
-    assert str(CategorieDanger.NOIX_DE_CAJOU.label) not in creation_page.selected_hazard.text_content()
-
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
-    assert str(CategorieDanger.NOIX_DE_CAJOU.label) in creation_page.selected_hazard.text_content()
-
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.DISCARDED)
-    expect(creation_page.selected_hazard).to_be_disabled()
