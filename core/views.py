@@ -19,8 +19,8 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
-from core.diffs import CompareMixin
 
+from core.diffs import CompareMixin
 from .forms import (
     DocumentUploadForm,
     MessageDocumentForm,
@@ -505,7 +505,5 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             for diff in diffs:
                 diff["revision"] = versions[i].revision
-                if diff["field"]:
-                    diff["pretty_field"] = self.object._meta.get_field(diff["field"].name).verbose_name
                 context["patches"].append(diff)
         return context

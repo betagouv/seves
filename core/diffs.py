@@ -1,10 +1,21 @@
 from django.db import models
+from django.db.models import ManyToOneRel
 from reversion_compare.compare import CompareObjects
 from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin
 from reversion_compare.mixins import CompareMixin as OriginalCompareMixin
 
 
 class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
+    def _get_pretty_field(self, field, prefix=""):
+        value = str(field)
+        if hasattr(field, "verbose_name"):
+            value = field.verbose_name
+        elif isinstance(field, ManyToOneRel):
+            value = str(field.related_model.__name__)
+        if prefix:
+            return f"{prefix} - {value}"
+        return value
+
     def compare(self, obj, version1, version2):
         """
         Taken from OriginalCompareMixin with a small twist to get the original and new value in the diff
@@ -56,28 +67,36 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:
                     new = f"Objet supprimé : {item._object_version.object.__class__.__name__} {item}"
-                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
+                    diff.append({"field": self._get_pretty_field(field), "old": "", "new": new})
                 for item in change["added_items"]:
                     new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
-                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
+                    diff.append({"field": self._get_pretty_field(field), "old": "", "new": new})
                 for item_1, _item_2 in change["changed_items"]:
-                    new = f"Objet modifié : {item_1._object_version.object.__class__.__name__} {item_1}"
-                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
+                    prefix = item_1._object_version.object._meta.model_name.title()
+                    nested_diff = self.compare(item_1._object_version.object, item_1, _item_2)[0]
+                    for change in nested_diff:
+                        diff.append(
+                            {
+                                "field": self._get_pretty_field(change["field"], prefix=prefix),
+                                "old": change["old"],
+                                "new": change["new"],
+                            }
+                        )
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:
                     new = f"Élement(s) retiré(s) {', '.join([str(item) for item in change['removed_items']])}"
-                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
+                    diff.append({"field": self._get_pretty_field(field), "old": "", "new": new})
                 if change["added_items"] or change["added_missing_objects"]:
                     items = change["added_items"] + change["added_missing_objects"]
                     new = f"Élement(s) ajouté(s) {', '.join([str(item) for item in items])}"
-                    diff.append({"field": field, "is_related": is_related, "follow": follow, "old": "", "new": new})
+                    diff.append({"field": self._get_pretty_field(field), "old": "", "new": new})
             else:
                 old = obj_compare.compare_obj1.to_string()
                 new = obj_compare.compare_obj2.to_string()
-                diff.append({"field": field, "is_related": is_related, "follow": follow, "old": old, "new": new})
+                diff.append({"field": self._get_pretty_field(field), "old": old, "new": new})
 
         if comment := version1.revision.get_comment():
-            diff.append({"field": "", "is_related": None, "follow": None, "old": "", "new": comment})
+            diff.append({"field": "", "old": "", "new": comment})
 
         return diff, has_unfollowed_fields
