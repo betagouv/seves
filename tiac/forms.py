@@ -1,8 +1,6 @@
 import json
 import re
 from functools import cached_property
-from copy import deepcopy
-
 
 from django import forms
 from django.conf import settings
@@ -22,7 +20,6 @@ from tiac.constants import (
     DANGERS_COURANTS,
     EtatPrelevement,
     SuspicionConclusion,
-    SELECTED_HAZARD_CHOICES,
 )
 from tiac.constants import (
     EvenementOrigin,
@@ -309,7 +306,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
     )
-    selected_hazard = SEVESChoiceField(label="Danger retenu", choices=SELECTED_HAZARD_CHOICES, required=False)
+    selected_hazard = forms.CharField(label="Dangers retenus", required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = InvestigationTiac
@@ -357,20 +354,12 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         )
 
     @cached_property
-    def selected_hazard_confirmed(self):
+    def selected_hazard_confirmed_choices(self):
         return json.dumps(self.CategorieDanger.build_options())
 
     @cached_property
-    def selected_hazard_suspected(self):
-        bf = deepcopy(self["selected_hazard"])
-        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE), *DangersSyndromiques.choices_short_names)
-        return bf
-
-    @cached_property
-    def selected_hazard_other(self):
-        bf = deepcopy(self["selected_hazard"])
-        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE),)
-        return bf
+    def selected_hazard_suspected_choices(self):
+        return json.dumps([{"name": label, "value": value} for value, label in DangersSyndromiques.choices_short_names])
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
