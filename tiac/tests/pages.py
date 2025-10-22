@@ -232,6 +232,10 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_start_date")
 
     @property
+    def conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
+
+    @property
     def end_date_field(self):
         return self.page.locator("#id_end_date")
 
@@ -339,6 +343,9 @@ class EvenementListPage(WithTreeSelect):
         field = self.page.locator("#id_danger_syndromiques_suspectes")
         choices = [(d, d) for d in dangers]
         choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
+
+    def select_hazard(self, label):
+        self._set_treeselect_option("danger-retenu", label)
 
     def set_agents_pathogenes_from_shortcut(self, label):
         container = self.page.locator("#id_agents_pathogenes").locator("..")

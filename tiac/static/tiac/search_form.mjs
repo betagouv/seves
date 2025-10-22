@@ -3,7 +3,6 @@ import {applicationReady} from "Application";
 import {resetForm} from "Forms"
 import choicesDefaults from "choicesDefaults"
 import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked} from "CustomTreeSelect"
-import {collectFormValues} from "Forms"
 
 
 class SearchFormController extends Controller {
@@ -18,12 +17,16 @@ class SearchFormController extends Controller {
         "agentsPathogenesInput",
         "agentsPathogenesContainer",
         "agentsPathogenesHeader",
+        "jsonConfigSelectedHazard",
+        "selectedHazardInput",
+        "selectedHazardContainer",
     ]
 
     onReset(){
         resetForm(this.element)
         this.choicesAgentContact.setChoiceByValue('');
         this.choicesStructureContact.setChoiceByValue('');
+        this.treeselectSelectedHazard.updateValue()
         this.element.submit()
     }
 
@@ -203,12 +206,38 @@ class SearchFormController extends Controller {
         })
     }
 
+    setupSelectedHazard(){
+        const options = JSON.parse(this.jsonConfigSelectedHazardTarget.textContent)
+        const selectedValues = this.selectedHazardInputTarget.value.split("||").map(v => v.trim())
+        const treeselectSelectedHazard = new Treeselect({
+            parentHtmlContainer: this.selectedHazardContainerTarget,
+            value: selectedValues,
+            options: options,
+            isSingleSelect: false,
+            openCallback() {
+                patchItems(treeselectSelectedHazard.srcElement)
+            },
+            ...tsDefaultOptions
+        })
+        this.treeselectSelectedHazard = treeselectSelectedHazard
+        patchItems(this.treeselectSelectedHazard.srcElement)
+        this.treeselectSelectedHazard.srcElement.addEventListener("update-dom", ()=>{patchItems(this.treeselectSelectedHazard.srcElement)})
+        this.selectedHazardContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
+
+        this.treeselectSelectedHazard.srcElement.addEventListener('input', (e) => {
+            if (!e.detail) return
+            const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
+            this.selectedHazardInputTarget.value = values.join("||")
+        })
+    }
+
 
     connect(){
         this.choicesAgentContact = new Choices(this.agent_contactTarget, choicesDefaults)
         this.choicesStructureContact = new Choices(this.structure_contactTarget, choicesDefaults)
         this.dangerSyndromique = new Choices(this.dangerSyndromiqueTarget, choicesDefaults)
         this.disableCheckboxIfNeeded()
+        this.setupSelectedHazard()
         this.setupCategorieProduit()
         this.setupCategorieDanger()
         this.setupAgentsPathogenes()

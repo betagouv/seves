@@ -7,6 +7,7 @@ from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 
 from ssa.models import CategorieDanger
+from ssa.models.mixins import WithChoicesToJS
 
 
 class EvenementOrigin(TextChoices):
@@ -99,7 +100,7 @@ class SafeTextChoices(TextChoices):
         }
 
 
-class DangersSyndromiques(SafeTextChoices):
+class DangersSyndromiques(WithChoicesToJS, SafeTextChoices):
     INTOXINATION_BACILLUS = ChoiceData(
         value="intoxination bacillus cereus",
         name="Intoxination à toxine émétique thermostable préformée dans l'aliment à <span class='danger-emphasis'>bacillus cereus - staphylococcus aureus</span>",

@@ -32,6 +32,14 @@
                         {% endwith %}
                     {% endif %}
                 {% endfor %}
+
+                <div class="fr-select-group" id="danger-retenu">
+                    <label>Danger retenu</label>
+                    {% dsfr_form_field filter.form.selected_hazard|set_data:"search-form-target:selectedHazardInput" %}
+                    <div data-search-form-target="selectedHazardContainer"></div>
+                    <div data-search-form-target="jsonConfigSelectedHazard" class="fr-hidden">{{ selected_hazard_data|safe }}</div>
+                </div>
+                {% dsfr_form_field filter.form.full_text_search  %}
                 <div class="fr-fieldset__element evenements_liste__header--actions">
                     <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="search-form#onReset:stop:prevent">Effacer</button>
                     <button type="submit" class="fr-btn">Rechercher</button>

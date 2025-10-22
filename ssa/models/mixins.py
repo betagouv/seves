@@ -12,6 +12,15 @@ def sort_tree(tree):
             sort_tree(node["children"])
 
 
+def build_combined_options(*enums, sorted_results=False):
+    all_options = []
+    for enum in enums:
+        all_options.extend(enum.build_options(sorted_results=False))
+    if sorted_results:
+        sort_tree(all_options)
+    return all_options
+
+
 class WithChoicesToJS:
     @classmethod
     def build_options(cls, sorted_results=False):
@@ -27,7 +36,10 @@ class WithChoicesToJS:
 
         options = []
         for option in cls:
-            path = [p.strip() for p in option.label.split(">")]
+            if hasattr(option, "short_name"):
+                path = [p.strip() for p in option.short_name.split(">")]
+            else:
+                path = [p.strip() for p in option.label.split(">")]
             insert_node(path, option.value, options)
 
         for option in options:
