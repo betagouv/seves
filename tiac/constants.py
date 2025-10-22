@@ -200,6 +200,14 @@ Envoi direct au LNR pour analyse.
             cls.AUTRE,
         ]
 
+    @classproperty
+    def short_names(cls):
+        return [item.short_name for item in cls]
+
+    @classproperty
+    def choices_short_names(cls):
+        return [(item.value, item.short_name) for item in cls]
+
 
 class EtatPrelevement(TextChoices):
     ENVIRONNEMENT_SURFACE = auto(), "Environnement/surface"
@@ -241,4 +249,4 @@ class SuspicionConclusion(TextChoices):
         return json.dumps({item.name: {"value": item.value, "label": item.label} for item in cls})
 
 
-SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices, *CategorieDanger.choices)
+SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices_short_names, *CategorieDanger.choices)

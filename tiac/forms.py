@@ -363,7 +363,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @cached_property
     def selected_hazard_suspected(self):
         bf = deepcopy(self["selected_hazard"])
-        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE), *DangersSyndromiques.choices)
+        bf.field.widget.choices = (("", settings.SELECT_EMPTY_CHOICE), *DangersSyndromiques.choices_short_names)
         return bf
 
     @cached_property
