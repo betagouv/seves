@@ -77,7 +77,24 @@
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
                                 <td>{{ evenement.conclusion }}</td>
-                                <td>{{ evenement.danger_retenu }}</td>
+                                <td>
+                                    {% if evenement.danger_retenu|length == 0 %}
+                                        -
+                                    {% else %}
+                                        {{ evenement.danger_retenu.0 }}
+                                    {% endif %}
+                                    {% with rest=evenement.danger_retenu|slice:"1:" aria_describedby=evenement.numero|strfmt:"message-tooltip-dangers-{}" %}
+                                        {% if rest %}
+                                            <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
+                                            <span
+                                                class="fr-tooltip fr-placement"
+                                                id="{{ aria_describedby }}"
+                                                role="tooltip"
+                                                aria-hidden="true"
+                                            >Autres dangers : {{ rest|join:", " }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
                         {% endfor %}

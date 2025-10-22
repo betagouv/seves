@@ -440,7 +440,7 @@ class InvestigationTiac(
             (
                 DangersSyndromiques(selected_hazard).short_name
                 if selected_hazard in DangersSyndromiques.values
-                else CategorieDanger(selected_hazard).label
+                else CategorieDanger(selected_hazard).uncategorized_label
             )
             for selected_hazard in self.selected_hazard
         ]
