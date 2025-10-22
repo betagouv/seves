@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import ManyToOneRel
 from django.forms import Media
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
@@ -506,6 +507,12 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             for diff in diffs:
                 diff["revision"] = versions[i].revision
                 if diff["field"]:
-                    diff["pretty_field"] = self.object._meta.get_field(diff["field"].name).verbose_name
+                    field_object = self.object._meta.get_field(diff["field"].name)
+                    if hasattr(field_object, "verbose_name"):
+                        diff["pretty_field"] = field_object.verbose_name
+                    elif isinstance(field_object, ManyToOneRel):
+                        diff["pretty_field"] = str(field_object.related_model.__name__)
+                    else:
+                        diff["pretty_field"] = str(field_object)
                 context["patches"].append(diff)
         return context
