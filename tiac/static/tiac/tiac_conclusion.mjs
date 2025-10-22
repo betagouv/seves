@@ -4,9 +4,10 @@ import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 
 /**
  * @property {Object.<string, {value: string, label: string}>} suspicionConclusionValue
- * @property {Object[]} selectedHazardConfirmedValue
+ * @property {Object[]} selectedHazardConfirmedChoicesValue
+ * @property {Object[]} selectedHazardSuspectedChoicesValue
+ * @property {string} selectedHazardIdValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
- * @property {HTMLSelectElement} selectedHazardSelectTarget
  * @property {HTMLDivElement} selectedHazardTreeselectTarget
  * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
  * @property {HTMLTemplateElement} selectedHazardSuspectedOptionsTarget
@@ -15,20 +16,19 @@ import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 class ConclusionFormController extends Controller {
     static targets = [
         "suspicionConclusion",
-        "selectedHazardSelect",
         "selectedHazardTreeselect",
         "selectedHazardTreeselectInput",
         "selectedHazardSuspectedOptions",
         "selectedHazardOtherOptions"
     ]
-    static values = {suspicionConclusion: Object, selectedHazardConfirmed: Array}
+    static values = {suspicionConclusion: Object, selectedHazardConfirmedChoices: Array, selectedHazardSuspectedChoices: Array}
 
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
         this.treeselect = new Treeselect({
             parentHtmlContainer: el,
             value: [],
-            options: this.selectedHazardConfirmedValue,
+            options: [],
             isSingleSelect: false,
             isIndependentNodes: true,
             openCallback: () => patchItems(this.treeselect.srcElement),
@@ -36,11 +36,6 @@ class ConclusionFormController extends Controller {
         })
         this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
         patchItems(this.treeselect.srcElement)
-        this.treeselect.srcElement.addEventListener("update-dom", ()=> patchItems(this.treeselect.srcElement))
-        this.treeselect.srcElement.addEventListener('input', e => {
-            if (!e.detail) return
-            this.selectedHazardTreeselectInputTarget.value = e.detail.join("||")
-        })
     }
 
     /** @param {HTMLDivElement} el */
@@ -53,27 +48,31 @@ class ConclusionFormController extends Controller {
         this.suspicionConclusionTarget.dispatchEvent(new Event("change"))
     }
 
-    onSuspicionConclusionChanged({target: {value}}) {
-        if (value === this.suspicionConclusionValue.SUSPECTED.value) {
-            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardSuspectedOptionsTarget.innerHTML;
-            this.selectedHazardSelectTarget.disabled = false;
-        } else {
-            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardOtherOptionsTarget.innerHTML;
-            this.selectedHazardSelectTarget.disabled = true;
-        }
+    onUpdateDom() {
+        if(this.treeselect === undefined) return;
+        patchItems(this.treeselect.srcElement)
+    }
 
+    onTreeselectInput({detail}) {
+        this.selectedHazardTreeselectInputTarget.value = detail?.join("||") ?? ""
+    }
+
+    onSuspicionConclusionChanged({target: {value}}) {
         if (value === this.suspicionConclusionValue.CONFIRMED.value) {
-            this.selectedHazardTreeselectTarget.parentElement.classList.remove("fr-hidden")
-            this.selectedHazardTreeselectInputTarget.disabled = false
-            this.selectedHazardSelectTarget.parentElement.classList.add("fr-hidden")
+            this.treeselect.disabled = false;
+            this.treeselect.options = this.selectedHazardConfirmedChoicesValue;
+            this.treeselect.mount()
+        } else if (value === this.suspicionConclusionValue.SUSPECTED.value) {
+            this.treeselect.disabled = false;
+            this.treeselect.options = this.selectedHazardSuspectedChoicesValue;
+            this.treeselect.mount()
         } else {
-            this.selectedHazardTreeselectTarget.parentElement.classList.add("fr-hidden")
-            this.selectedHazardTreeselectInputTarget.disabled = true
-            this.selectedHazardSelectTarget.parentElement.classList.remove("fr-hidden")
+            this.treeselect.options = [];
+            this.treeselect.disabled = true;
+            this.treeselect.mount()
         }
 
         this.treeselect.updateValue("")
-        this.selectedHazardSelectTarget.value = "";
     }
 }
 

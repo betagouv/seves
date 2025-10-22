@@ -452,11 +452,12 @@ class InvestigationTiac(
                     models.Q(
                         suspicion_conclusion=SuspicionConclusion.CONFIRMED.value,
                         selected_hazard__contained_by=CategorieDanger.values,
+                        selected_hazard__len__gt=0,
                     )
                     | models.Q(
                         suspicion_conclusion=SuspicionConclusion.SUSPECTED.value,
                         selected_hazard__contained_by=DangersSyndromiques.values,
-                        selected_hazard__len=1,
+                        selected_hazard__len__gt=0,
                     )
                     | (
                         ~models.Q(
