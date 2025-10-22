@@ -596,6 +596,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
 
     def submit_as_draft(self):
         self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
