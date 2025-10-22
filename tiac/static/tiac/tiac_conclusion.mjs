@@ -30,6 +30,7 @@ class ConclusionFormController extends Controller {
             value: [],
             options: this.selectedHazardConfirmedValue,
             isSingleSelect: false,
+            isIndependentNodes: true,
             openCallback: () => patchItems(this.treeselect.srcElement),
             ...tsDefaultOptions
         })
