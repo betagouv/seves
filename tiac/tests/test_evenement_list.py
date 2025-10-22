@@ -3,7 +3,7 @@ from playwright.sync_api import Page, expect
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Departement, LienLibre
 from ssa.models import CategorieDanger, CategorieProduit
-from tiac.constants import DangersSyndromiques
+from tiac.constants import DangersSyndromiques, SuspicionConclusion
 from tiac.factories import (
     EvenementSimpleFactory,
     InvestigationTiacFactory,
@@ -133,6 +133,40 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()
+
+
+def test_search_with_conclusion(live_server, page: Page):
+    evenement_1 = EvenementSimpleFactory()
+    evenement_2 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED)
+    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.conclusion_field.select_option("TIAC à agent confirmé")
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+
+
+def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_from_element_with_value):
+    evenement_1 = EvenementSimpleFactory()
+    evenement_2 = InvestigationTiacFactory(
+        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS]
+    )
+    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+    evenement_4 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.DISCARDED)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.select_hazard("Bacillus Cereus - Staphylococcus Aureus")
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()

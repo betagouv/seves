@@ -11,7 +11,14 @@ from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilte
 from core.form_mixins import js_module
 from core.models import LienLibre
 from ssa.filters import WithEtablissementFilterMixin, CharInFilter
-from tiac.constants import TypeRepas, TypeAliment, DangersSyndromiques, EvenementFollowUp, DANGERS_COURANTS
+from tiac.constants import (
+    TypeRepas,
+    TypeAliment,
+    DangersSyndromiques,
+    EvenementFollowUp,
+    DANGERS_COURANTS,
+    SuspicionConclusion,
+)
 from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 
 
@@ -31,7 +38,7 @@ class TiacFilterForm(DsfrBaseForm):
         "structure_contact",
         "agent_contact",
         "follow_up",
-        "full_text_search",
+        "suspicion_conclusion",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -70,6 +77,17 @@ class TiacFilter(
         label="Type d'événement/suites",
         empty_label=settings.SELECT_EMPTY_CHOICE,
         method="filter_follow_up",
+    )
+    suspicion_conclusion = django_filters.ChoiceFilter(
+        label="Conclusion",
+        choices=SuspicionConclusion.choices,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
+    selected_hazard = CharInFilter(
+        label="Danger retenu",
+        field_name="selected_hazard",
+        lookup_expr="overlap",
+        widget=HiddenInput,
     )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
@@ -161,6 +179,7 @@ class TiacFilter(
     )
 
     INVESTIGATION_TIAC_FILTERS = [
+        "suspicion_conclusion",
         "numero_sivss",
         "nb_dead_persons",
         "nb_personnes_repas",
@@ -170,6 +189,7 @@ class TiacFilter(
         "aliment_categorie_produit",
         "analyse_categorie_danger",
         "agents_pathogenes",
+        "selected_hazard",
     ]
 
     def _apply_free_links(self, queryset, queryset_type):
@@ -312,6 +332,8 @@ class TiacFilter(
             "structure_contact",
             "agent_contact",
             "follow_up",
+            "suspicion_conclusion",
+            "selected_hazard",
             "full_text_search",
             "etat",
         ]

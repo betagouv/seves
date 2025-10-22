@@ -28,6 +28,7 @@ from core.mixins import (
 )
 from core.views import MediaDefiningMixin
 from ssa.models import CategorieDanger, CategorieProduit
+from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
@@ -221,6 +222,7 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         context["filter"] = self.filter
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
+        context["selected_hazard_data"] = json.dumps(build_combined_options(DangersSyndromiques, CategorieDanger))
         return context
 
 
