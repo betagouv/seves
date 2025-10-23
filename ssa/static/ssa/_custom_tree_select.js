@@ -108,7 +108,7 @@ export function shortcutClicked(event, treeselect, input){
 export const tsDefaultOptions = {
     showTags: false,
     clearable: false,
-    placeholder: "Choisir",
+    placeholder: "Choisir dans la liste",
     emptyText: "Pas de résultat",
     direction: "bottom",
     tagsCountText: "éléments sélectionnés"

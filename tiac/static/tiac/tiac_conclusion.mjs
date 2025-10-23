@@ -34,7 +34,6 @@ class ConclusionFormController extends Controller {
             openCallback: () => patchItems(this.treeselect.srcElement),
             ...tsDefaultOptions
         })
-        this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
         patchItems(this.treeselect.srcElement)
     }
 
