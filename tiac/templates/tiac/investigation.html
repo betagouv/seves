@@ -144,7 +144,7 @@
                 {% dsfr_form_field form.agents_confirmes_ars|set_data:"agents-pathogene-target:categorieDangerInput" %}
                 <div data-agents-pathogene-target="categorieDangerContainer"></div>
 
-                <template data-agents-pathogene-target="categorieDangerHeader">
+                <template data-agents-pathogene-target="selectedHazardTreeselectHeaderTarget">
                     <div class="categorie-danger-header">
                         <div class="fr-ml-1v">Danger les plus courants</div>
                         {% for danger in danger_plus_courant %}
@@ -160,7 +160,7 @@
             <fieldset
                 class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
                 data-controller="conclusion-form"
-                data-conclusion-form-suspicion-conclusion-value="{{ form.SuspicionConclusion.as_json }}"
+                data-conclusion-form-suspicion-conclusion-choices-value="{{ form.SuspicionConclusion.as_json }}"
                 data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
                 data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
             >
@@ -189,6 +189,30 @@
                                 data-conclusion-form-target="selectedHazardTreeselect"
                                 data-action="input->conclusion-form#onTreeselectInput update-dom->conclusion-form#onUpdateDom"
                             ></div>
+                            <template data-conclusion-form-target="selectedHazardTreeselectHeader">
+                                <div class="categorie-danger-header">
+                                    <div class="fr-ml-1v">Danger les plus courants</div>
+                                    {% for danger in form.common_danger %}
+                                        <div
+                                            class="treeselect-list__item"
+                                            level="0"
+                                            group="false"
+                                            data-action="mousedown->conclusion-form#onShortcut:prevent:stop"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                id="shortcut_{{ forloop.counter0 }}"
+                                                class="treeselect-list__item-checkbox-container"
+                                            >
+                                            <label
+                                                class="treeselect-list__item-label shortcut"
+                                                for="shortcut_{{ forloop.counter0 }}"
+                                            >{{ danger }}</label>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="fr-ml-1v">Liste complète des dangers</div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <div class="fr-col-6 conclusion-comment">
