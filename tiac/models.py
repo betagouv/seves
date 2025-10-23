@@ -309,7 +309,7 @@ class InvestigationTiac(
     )
     selected_hazard = ArrayField(
         models.CharField(max_length=255, choices=SELECTED_HAZARD_CHOICES),
-        verbose_name="Danger retenu",
+        verbose_name="Dangers retenus",
         default=list,
         blank=True,
     )

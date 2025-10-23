@@ -84,7 +84,7 @@ class TiacFilter(
         empty_label=settings.SELECT_EMPTY_CHOICE,
     )
     selected_hazard = CharInFilter(
-        label="Danger retenu",
+        label="Dangers retenus",
         field_name="selected_hazard",
         lookup_expr="overlap",
         widget=HiddenInput,
