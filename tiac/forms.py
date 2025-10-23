@@ -354,6 +354,10 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         )
 
     @cached_property
+    def common_danger(self):
+        return DANGERS_COURANTS
+
+    @cached_property
     def selected_hazard_confirmed_choices(self):
         return json.dumps(self.CategorieDanger.build_options())
 
