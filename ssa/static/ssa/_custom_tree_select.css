@@ -1,13 +1,47 @@
 .treeselect-input {
-    padding-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-left: 0 !important;
+    --idle: transparent;
+    --hover: var(--background-contrast-grey-hover);
+    --active: var(--background-contrast-grey-active);
+    --data-uri-svg: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23161616' d='m12 13.1 5-4.9 1.4 1.4-6.4 6.3-6.4-6.4L7 8.1l5 5z'/%3E%3C/svg%3E");
+    --treeselect-text-color: var(--text-default-grey);
+    appearance: none;
+    background-color: var(--background-contrast-grey) !important;
+    background-image: var(--data-uri-svg);
+    background-position: calc(100% - 1rem) 50%;
+    background-repeat: no-repeat;
+    background-size: 1rem 1rem;
+    border: 0 !important;
+    border-radius: .25rem .25rem 0 0 !important;
+    box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+    color: var(--treeselect-text-color) !important;
+    display: block;
+    font-size: 1rem !important;
+    line-height: 1.5rem;
+    padding: .5rem 2.5rem .5rem 1rem !important;
+    margin-top: .5rem !important;
+    width: 100%;
 }
 
 .treeselect-input input::placeholder {
-    color: var(--text-mention-grey) !important;
-    font-style: italic !important;
-    opacity: 1 !important;
+    color: var(--treeselect-text-color) !important;
+    font-size: 1rem !important;
+}
+
+.treeselect.treeselect--disabled .treeselect-input {
+    --treeselect-text-color: var(--text-disabled-grey);
+    background-image: var(--data-uri-svg);
+    box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
+    cursor: not-allowed !important;
+}
+
+.treeselect-input__operators {
+    display: none !important;
+}
+
+.treeselect-list {
+    border: 1px solid var(--border-default-grey) !important;
+    border-radius: .25rem !important;
+    margin-top: 0.125rem;
 }
 
 .treeselect-list__group-container {
@@ -19,11 +53,11 @@
 }
 
 .treeselect-list__item {
-    height: 40px !important;
+    height: 2.25rem !important;
 }
 
 .treeselect-list__item-label{
-    font-size: 16px !important;
+    font-size: 1rem !important;
     margin-bottom: 0 !important;
     padding-left: 0 !important;
 }
@@ -45,15 +79,9 @@
     padding-left: 40px !important;
 }
 
-.treeselect-input {
-    background-color: var(--background-contrast-grey) !important;
-    border-radius: 0px !important;
-}
-
 .treeselect-list__group-container .treeselect-list__item--focused {
     background-color : #dfdfdf !important
 }
-
 
 .treeselect-list__item--checked .treeselect-list__item-checkbox-container {
     background-color: var(--background-action-high-blue-france) !important;
@@ -72,8 +100,4 @@
 
 .treeselect-list__item-checkbox-container {
     margin-right: 10px;
-}
-
-.treeselect-input__tags {
-    padding: .5rem 1rem !important;
 }
