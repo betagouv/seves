@@ -7,7 +7,7 @@
             <div class="bold">Conclusion de la suspicion de TIAC</div>
             {{ object.get_suspicion_conclusion_display|or_empty_value_tag }}
 
-            <div class="bold fr-mt-2w">Danger retenu</div>
+            <div class="bold fr-mt-2w">Dangers retenus</div>
             <div>
                 {% if object.short_conclusion_selected_hazard|length == 0 %}
                     -
