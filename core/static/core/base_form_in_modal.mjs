@@ -18,7 +18,7 @@ export class BaseFormInModal extends Controller {
         "cardContainer",
         "deleteModal",
     ]
-    static values = {formPrefix: String}
+    static values = {formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
 
     openDialog() {
         dsfr(this.dialogTarget).modal.disclose()
@@ -52,7 +52,6 @@ export class BaseFormInModal extends Controller {
     onCancelDelete() {
         dsfr(this.deleteModalTarget).modal.conceal()
     }
-
 
     forceDelete() {
         this.deleteInputTarget.value = "on"
