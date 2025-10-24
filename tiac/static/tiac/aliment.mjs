@@ -2,6 +2,7 @@ import {BaseFormSetController} from "BaseFormset"
 import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
 import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
+import {collectFormValues} from 'Forms'
 
 class AlimentFormController extends BaseFormInModal {
     static targets = [
@@ -19,8 +20,17 @@ class AlimentFormController extends BaseFormInModal {
 
     connect() {
         this.setupCategorieProduit()
-        this.openDialog()
-        this.handleConditionalFields(this.typeAlimentInputContainerTarget.querySelector(":checked").value)
+        if (this.shouldImmediatelyShowValue) {
+            this.openDialog()
+            this.handleConditionalFields(this.typeAlimentInputContainerTarget.querySelector(":checked").value)
+        } else {
+            this.initCard(
+                collectFormValues(this.fieldsetTarget, {
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true
+                })
+            )
+        }
     }
 
     setupCategorieProduit(){
@@ -48,6 +58,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     initCard(aliment) {
+        this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(aliment))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(aliment))
@@ -68,6 +79,12 @@ class AlimentFormController extends BaseFormInModal {
             this.descriptionCompositionInputContainerTarget.classList.add("fr-hidden")
             this.descriptionCompositionInputTarget.value =""
         }
+    }
+
+    onCloseForm() {
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
     onTypeAlimentChange(event){
