@@ -408,6 +408,29 @@ def test_can_create_investigation_tiac_with_aliment_and_edit(live_server, mocked
     assert investigation.aliments.get().denomination == "Ma nouvelle dénomination"
 
 
+def test_can_add_and_cancel_aliment(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+
+    # Open modal, fill and delete
+    creation_page.add_aliment_cuisine(input_data)
+    creation_page.page.locator(".aliment-card").all()[0].get_by_role("button", name="Supprimer").click()
+    creation_page.current_modal.get_by_role("button", name="Supprimer").click()
+
+    # Open modal and cancel
+    creation_page.page.get_by_test_id("add-aliment").click()
+    creation_page.current_modal.wait_for(state="visible")
+    creation_page.current_modal.get_by_role("button", name="Annuler").click()
+    creation_page.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    creation_page.submit_as_draft()
+    assert InvestigationTiac.objects.get().repas.count() == 0
+
+
 def test_can_create_investigation_tiac_with_mutliple_aliments_and_delete(
     live_server, mocked_authentification_user, page: Page
 ):
@@ -476,6 +499,7 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     creation_page.navigate()
     creation_page.fill_required_fields(investigation)
     creation_page.add_analyse_alimentaire(analyse)
+
     assert creation_page.nb_analyse == 1
 
     creation_page.submit_as_draft()
@@ -484,3 +508,26 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     assert_models_are_equal(
         analyse, analyses[0], to_exclude=FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True
     )
+
+
+def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    analyse: AnalyseAlimentaire = AnalyseAlimentaireFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+
+    # Open modal, fill and delete
+    creation_page.add_analyse_alimentaire(analyse)
+    creation_page.page.locator(".analyse-card").all()[0].get_by_role("button", name="Supprimer").click()
+    creation_page.current_modal.get_by_role("button", name="Supprimer").click()
+
+    # Open modal and cancel
+    creation_page.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
+    creation_page.current_modal.wait_for(state="visible")
+    creation_page.current_modal.get_by_role("button", name="Annuler").click()
+    creation_page.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    creation_page.submit_as_draft()
+    assert InvestigationTiac.objects.get().analyses_alimentaires.count() == 0
