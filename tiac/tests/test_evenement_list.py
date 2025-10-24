@@ -43,7 +43,7 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == f"Enr. simple / {evenement.get_follow_up_display()}"
     assert search_page.conclusion_cell().text_content() == "-"
-    assert search_page.danger_cell().text_content() == "-"
+    assert search_page.danger_cell().text_content().strip() == "-"
     assert search_page.etat_cell().text_content() == "Brouillon"
 
 

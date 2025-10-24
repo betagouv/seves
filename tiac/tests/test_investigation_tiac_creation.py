@@ -1,3 +1,6 @@
+import random
+
+import pytest
 from playwright.sync_api import Page, expect
 
 from core.factories import DepartementFactory
@@ -13,7 +16,14 @@ from tiac.factories import (
     AnalyseAlimentaireFactory,
 )
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas
+from ..constants import (
+    DangersSyndromiques,
+    MotifAliment,
+    TypeCollectivite,
+    TypeRepas,
+    SuspicionConclusion,
+    DANGERS_COURANTS,
+)
 from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
@@ -98,6 +108,74 @@ def test_can_create_investigation_tiac_with_all_fields(
         input_data,
         investigation,
         to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        ignore_array_order=True,
+    )
+
+
+test_data = [
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.choices(CategorieDanger.values),
+        id=f"{SuspicionConclusion.CONFIRMED}-single",
+    ),
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.choices(CategorieDanger.values, k=2),
+        id=f"{SuspicionConclusion.CONFIRMED}-multiple",
+    ),
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.choices(DANGERS_COURANTS),
+        id=f"{SuspicionConclusion.CONFIRMED}-common-choices",
+    ),
+    pytest.param(
+        SuspicionConclusion.SUSPECTED.value,
+        random.choices(DangersSyndromiques.values),
+        id=f"{SuspicionConclusion.SUSPECTED}-single",
+    ),
+    pytest.param(
+        SuspicionConclusion.SUSPECTED.value,
+        random.choices(DangersSyndromiques.values, k=2),
+        id=f"{SuspicionConclusion.SUSPECTED}-multiple",
+    ),
+    *[(item.value, []) for item in SuspicionConclusion.no_clue],
+]
+
+
+@pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
+def test_can_create_investigation_tiac_conlusion(
+    live_server,
+    mocked_authentification_user,
+    page: Page,
+    assert_models_are_equal,
+    suspicion_conclusion,
+    selected_hazard,
+):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(
+        danger_syndromiques_suspectes=[], suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard
+    )
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+
+    creation_page.fill_conlusion(input_data)
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert_models_are_equal(
+        input_data,
+        investigation,
+        fields=[
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_etablissement",
+            "conclusion_repas",
+            "conclusion_aliment",
+            "conclusion_analyse",
+        ],
         ignore_array_order=True,
     )
 
@@ -403,4 +481,6 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     creation_page.submit_as_draft()
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
-    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
+    assert_models_are_equal(
+        analyse, analyses[0], to_exclude=FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True
+    )

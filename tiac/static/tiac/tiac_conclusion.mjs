@@ -1,45 +1,46 @@
 import {Controller} from "Stimulus";
 import {applicationReady} from "Application";
-import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
+import {findPath, hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 
 /**
- * @property {Object.<string, {value: string, label: string}>} suspicionConclusionValue
- * @property {Object[]} selectedHazardConfirmedValue
+ * @property {Object.<string, {value: string, label: string}>} suspicionConclusionChoicesValue
+ * @property {string} suspicionConclusionValue
+ * @property {Object[]} selectedHazardConfirmedChoicesValue
+ * @property {Object[]} selectedHazardSuspectedChoicesValue
+ * @property {string} selectedHazardIdValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
- * @property {HTMLSelectElement} selectedHazardSelectTarget
  * @property {HTMLDivElement} selectedHazardTreeselectTarget
  * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
- * @property {HTMLTemplateElement} selectedHazardSuspectedOptionsTarget
- * @property {HTMLTemplateElement} selectedHazardOtherOptionsTarget
+ * @property {HTMLTemplateElement} selectedHazardTreeselectHeaderTarget
  */
 class ConclusionFormController extends Controller {
     static targets = [
         "suspicionConclusion",
-        "selectedHazardSelect",
         "selectedHazardTreeselect",
         "selectedHazardTreeselectInput",
-        "selectedHazardSuspectedOptions",
-        "selectedHazardOtherOptions"
+        "selectedHazardTreeselectHeader",
     ]
-    static values = {suspicionConclusion: Object, selectedHazardConfirmed: Array}
+    static values = {suspicionConclusionChoices: Object, suspicionConclusion: String, selectedHazardConfirmedChoices: Array, selectedHazardSuspectedChoices: Array}
 
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
         this.treeselect = new Treeselect({
+            ...tsDefaultOptions,
             parentHtmlContainer: el,
             value: [],
-            options: this.selectedHazardConfirmedValue,
+            options: [],
             isSingleSelect: false,
-            openCallback: () => patchItems(this.treeselect.srcElement),
-            ...tsDefaultOptions
+            isIndependentNodes: true,
+            openCallback: this.treeselectOpenCallback.bind(this),
+            searchCallback: item => {
+                if (item.length === 0) {
+                    showHeader(this.treeselect.srcElement, ".categorie-danger-header")
+                } else {
+                    hideHeader(this.treeselect.srcElement, ".categorie-danger-header")
+                }
+            },
         })
-        this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
         patchItems(this.treeselect.srcElement)
-        this.treeselect.srcElement.addEventListener("update-dom", ()=> patchItems(this.treeselect.srcElement))
-        this.treeselect.srcElement.addEventListener('input', e => {
-            if (!e.detail) return
-            this.selectedHazardTreeselectInputTarget.value = e.detail.join("||")
-        })
     }
 
     /** @param {HTMLDivElement} el */
@@ -52,27 +53,78 @@ class ConclusionFormController extends Controller {
         this.suspicionConclusionTarget.dispatchEvent(new Event("change"))
     }
 
-    onSuspicionConclusionChanged({target: {value}}) {
-        if (value === this.suspicionConclusionValue.SUSPECTED.value) {
-            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardSuspectedOptionsTarget.innerHTML;
-            this.selectedHazardSelectTarget.disabled = false;
+    onUpdateDom() {
+        if(this.treeselect === undefined) return;
+        patchItems(this.treeselect.srcElement)
+    }
+
+    onTreeselectInput({detail}) {
+        if (detail.length === 0) {
+            this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
+                checkbox.checked = false
+            })
         } else {
-            this.selectedHazardSelectTarget.innerHTML = this.selectedHazardOtherOptionsTarget.innerHTML;
-            this.selectedHazardSelectTarget.disabled = true;
+            this.selectedHazardTreeselectInputTarget.value = detail.join("||")
+        }
+    }
+
+    treeselectOpenCallback () {
+        if (this.suspicionConclusionValue === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
+            patchItems(this.treeselect.srcElement)
+            if (this.treeselect.srcElement.querySelectorAll(".categorie-danger-header").length !== 0) {
+                showHeader(this.treeselect.srcElement, ".categorie-danger-header")
+                return;
+            }
+            const list = this.selectedHazardTreeselectTarget.querySelector(".treeselect-list")
+            if (list) {
+                const fragment = this.selectedHazardTreeselectHeaderTarget.content.cloneNode(true);
+                list.prepend(fragment);
+                this.customHeaderAddedValue = true
+            }
+        }
+    }
+
+    onShortcut({target}) {
+        const label = target.getElementsByTagName("label")[0]
+        const value = label.textContent.trim()
+        const checkbox = this.selectedHazardTreeselectTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
+        checkbox.checked = !checkbox.checked
+
+        let valuesToSet = this.treeselect.value
+        if (checkbox.checked) {
+            valuesToSet.push(value)
+        } else {
+            valuesToSet.pop(value)
         }
 
-        if (value === this.suspicionConclusionValue.CONFIRMED.value) {
-            this.selectedHazardTreeselectTarget.parentElement.classList.remove("fr-hidden")
-            this.selectedHazardTreeselectInputTarget.disabled = false
-            this.selectedHazardSelectTarget.parentElement.classList.add("fr-hidden")
+        this.treeselect.updateValue(valuesToSet)
+        this.selectedHazardTreeselectInputTarget.value = valuesToSet.join("||")
+        let text = ""
+        if (valuesToSet.length === 1) {
+            text = valuesToSet[0]
         } else {
-            this.selectedHazardTreeselectTarget.parentElement.classList.add("fr-hidden")
-            this.selectedHazardTreeselectInputTarget.disabled = true
-            this.selectedHazardSelectTarget.parentElement.classList.remove("fr-hidden")
+            text = `${valuesToSet.length} ${this.treeselect.tagsCountText}`
+        }
+        this.selectedHazardTreeselectTarget.querySelector(".treeselect-input__tags-count").innerText = text
+    }
+
+    onSuspicionConclusionChanged({target: {value}}) {
+        this.suspicionConclusionValue = value
+        if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
+            this.treeselect.disabled = false;
+            this.treeselect.options = this.selectedHazardConfirmedChoicesValue;
+            this.treeselect.mount()
+        } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
+            this.treeselect.disabled = false;
+            this.treeselect.options = this.selectedHazardSuspectedChoicesValue;
+            this.treeselect.mount()
+        } else {
+            this.treeselect.options = [];
+            this.treeselect.disabled = true;
+            this.treeselect.mount()
         }
 
         this.treeselect.updateValue("")
-        this.selectedHazardSelectTarget.value = "";
     }
 }
 

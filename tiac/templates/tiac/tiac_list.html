@@ -34,7 +34,7 @@
                 {% endfor %}
 
                 <div class="fr-select-group" id="danger-retenu">
-                    <label>Danger retenu</label>
+                    <label>Dangers retenus</label>
                     {% dsfr_form_field filter.form.selected_hazard|set_data:"search-form-target:selectedHazardInput" %}
                     <div data-search-form-target="selectedHazardContainer"></div>
                     <div data-search-form-target="jsonConfigSelectedHazard" class="fr-hidden">{{ selected_hazard_data|safe }}</div>
@@ -63,7 +63,7 @@
                             <th class="fr-col-1" scope="col">Malades</th>
                             <th class="fr-col-2" scope="col">Type d'événement/suites</th>
                             <th class="fr-col-2" scope="col">Conclusion</th>
-                            <th class="fr-col-2" scope="col">Danger retenu</th>
+                            <th class="fr-col-2" scope="col">Dangers retenus</th>
                             <th class="fr-col-2" scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
                         </tr>
                     </thead>
@@ -77,7 +77,24 @@
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
                                 <td>{{ evenement.conclusion }}</td>
-                                <td>{{ evenement.danger_retenu }}</td>
+                                <td>
+                                    {% if evenement.danger_retenu|length == 0 %}
+                                        -
+                                    {% else %}
+                                        {{ evenement.danger_retenu.0 }}
+                                    {% endif %}
+                                    {% with rest=evenement.danger_retenu|slice:"1:" aria_describedby=evenement.numero|strfmt:"message-tooltip-dangers-{}" %}
+                                        {% if rest %}
+                                            <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
+                                            <span
+                                                class="fr-tooltip fr-placement"
+                                                id="{{ aria_describedby }}"
+                                                role="tooltip"
+                                                aria-hidden="true"
+                                            >Autres dangers : {{ rest|join:", " }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
                         {% endfor %}

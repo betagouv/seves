@@ -228,12 +228,14 @@ def ensure_departements(db):
 
 @pytest.fixture
 def assert_models_are_equal():
-    def _assert_models_are_equal(obj_1, obj_2, to_exclude=None, ignore_array_order=False):
-        if not to_exclude:
-            to_exclude = []
+    def _assert_models_are_equal(obj_1, obj_2, *, fields=None, to_exclude=None, ignore_array_order=False):
+        to_exclude = to_exclude or []
 
-        obj_1_data = {k: v for k, v in obj_1.__dict__.items() if k not in to_exclude}
-        obj_2_data = {k: v for k, v in obj_2.__dict__.items() if k not in to_exclude}
+        def __pick(k):
+            return k in fields if fields else k not in to_exclude
+
+        obj_1_data = {k: v for k, v in obj_1.__dict__.items() if __pick(k)}
+        obj_2_data = {k: v for k, v in obj_2.__dict__.items() if __pick(k)}
 
         if ignore_array_order:
             array_fields = [f.name for f in obj_1._meta.get_fields() if isinstance(f, ArrayField)]

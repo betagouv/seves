@@ -309,7 +309,7 @@ class InvestigationTiac(
     )
     selected_hazard = ArrayField(
         models.CharField(max_length=255, choices=SELECTED_HAZARD_CHOICES),
-        verbose_name="Danger retenu",
+        verbose_name="Dangers retenus",
         default=list,
         blank=True,
     )
@@ -440,7 +440,7 @@ class InvestigationTiac(
             (
                 DangersSyndromiques(selected_hazard).short_name
                 if selected_hazard in DangersSyndromiques.values
-                else CategorieDanger(selected_hazard).label
+                else CategorieDanger(selected_hazard).uncategorized_label
             )
             for selected_hazard in self.selected_hazard
         ]
@@ -452,11 +452,12 @@ class InvestigationTiac(
                     models.Q(
                         suspicion_conclusion=SuspicionConclusion.CONFIRMED.value,
                         selected_hazard__contained_by=CategorieDanger.values,
+                        selected_hazard__len__gt=0,
                     )
                     | models.Q(
                         suspicion_conclusion=SuspicionConclusion.SUSPECTED.value,
                         selected_hazard__contained_by=DangersSyndromiques.values,
-                        selected_hazard__len=1,
+                        selected_hazard__len__gt=0,
                     )
                     | (
                         ~models.Q(

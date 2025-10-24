@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect, Locator
 
 from ssa.models import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
-from tiac.constants import TypeRepas, SuspicionConclusion
+from tiac.constants import TypeRepas, SuspicionConclusion, DangersSyndromiques
 from tiac.models import (
     EvenementSimple,
     Etablissement,
@@ -438,12 +438,9 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "analyses_sur_les_malades",
         "precisions",
         "suspicion_conclusion",
+        "selected_hazard",
         "conclusion_comment",
     ]
-
-    @property
-    def selected_hazard(self):
-        return self.page.locator("#id_selected_hazard").locator("visible=true")
 
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -615,9 +612,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
                 self._set_treeselect_option("selected_hazard-treeselect", CategorieDanger(item).label)
         elif input_data.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
             for item in input_data.selected_hazard:
-                self.selected_hazard.select_option(item)
-        else:
-            expect(self.selected_hazard).to_be_disabled()
+                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
 
         self.conclusion_comment.fill(input_data.conclusion_comment)
 
