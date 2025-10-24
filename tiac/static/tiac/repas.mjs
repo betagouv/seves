@@ -1,18 +1,33 @@
 import {BaseFormSetController} from "BaseFormset"
 import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application";
+import {collectFormValues} from 'Forms'
 
 
 class RepasFormController extends BaseFormInModal {
     static targets = [
-        ...BaseFormInModal.targets,
         "denominationInput",
         "typeCollectiviteInputContainer",
         "typeCollectiviteInput",
     ]
 
     connect() {
-        this.openDialog()
+        if (this.shouldImmediatelyShowValue) {
+            this.openDialog()
+        } else {
+            this.initCard(
+                collectFormValues(this.fieldsetTarget, {
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true
+                })
+            )
+        }
+    }
+
+    onCloseForm() {
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
     onTypeRepasChoice(event){
@@ -27,6 +42,7 @@ class RepasFormController extends BaseFormInModal {
     }
 
     initCard(repas) {
+        this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(repas))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(repas))
