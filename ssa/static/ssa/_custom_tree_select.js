@@ -105,6 +105,18 @@ export function shortcutClicked(event, treeselect, input){
     treeselect.srcElement.querySelector(".treeselect-input__tags-count").innerText = text
 }
 
+export function addCategoryHeader(element, text, position) {
+    if (element.dataset.headerAdded === "true"){
+        return
+    }
+    let list = element.querySelector(".treeselect-list")
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.classList.add("fr-ml-1v")
+    list.insertBefore(div, list.children[position]);
+}
+
+
 export const tsDefaultOptions = {
     showTags: false,
     clearable: false,
