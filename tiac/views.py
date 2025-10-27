@@ -400,7 +400,7 @@ class InvestigationTiacDetailView(
             annee, numero_evenement = self.kwargs["numero"].split(".")
             self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
             return self.object
-        except (ValueError, EvenementSimple.DoesNotExist):
+        except (ValueError, InvestigationTiac.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
 
     def get_context_data(self, **kwargs):
