@@ -39,7 +39,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),
         evenement.get_source_display(),
-        str(evenement.aliments_animaux),
+        "Oui" if evenement.aliments_animaux else "Non",
         evenement.description,
         evenement.get_categorie_produit_display(),
         evenement.denomination,

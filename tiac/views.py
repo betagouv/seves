@@ -1,6 +1,7 @@
 import io
 import json
 import os
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -8,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404, HttpResponse
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView
@@ -26,6 +28,7 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
 )
+from core.models import Export
 from core.views import MediaDefiningMixin
 from ssa.models import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
@@ -43,6 +46,7 @@ from .formsets import (
     InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
 )
+from tiac.tasks import export_tiac_task
 
 
 class EvenementSimpleManipulationMixin(
@@ -451,3 +455,24 @@ class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPass
 
     def test_func(self):
         return self.object.can_user_access(self.request.user)
+
+
+class TiacExportView(WithFilteredListMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        queryset = self.get_queryset()
+        serialized_queryset_sequence = []
+        for qs in queryset._querysets:
+            model_label = f"{qs.model._meta.app_label}.{qs.model._meta.model_name}"
+            ids = list(qs.values_list("id", flat=True))
+            serialized_queryset_sequence.append({"model": model_label, "ids": ids})
+
+        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
+        export_tiac_task.delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{reverse('tiac:evenement-liste')}?{urlencode(allowed_params)}")

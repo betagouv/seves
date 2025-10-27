@@ -63,7 +63,7 @@ fileignoreconfig:
 - filename: .env.dist
   checksum: 71e0c291bc6cb34a0deee34ad3c4e16dd41b5348484af207e4e6148b368f5b7b
 - filename: tiac/views.py
-  checksum: f13c23b34151467f9e8a458221573f6dc6371799d0b8969b18c2d71082d293b9
+  checksum: e1a3e8db3108b7f6770c4d69cc16c2c72d8ea02b12a448e0c145df807c43c356
 - filename: tiac/formsets.py
   checksum: a52998ca8601874c3c277f93741ff653652662f175e3b0b19662b7c6122b6423
 - filename: tiac/models.py
@@ -82,4 +82,8 @@ fileignoreconfig:
   checksum: 5b73564cf12aa39cf5ae426b81d378706992f1249a848ea9290b42db72529f1a
 - filename: core/diffs.py
   checksum: 72445e535b3b7db796d3b41523bce006fd2e827847fde0e241d8181902122638
+- filename: tiac/tests/test_evenement_export.py
+  checksum: 81fc205d819a3c14459b42424a400d3f8ab55d3ad1e3116f6dcc83bfa299393f
+- filename: tiac/export.py
+  checksum: f13f0a927917a063b11ccb4e13c29d3e705d27ca3f80394e5671043c7e5fa23e
 version: "1.0"

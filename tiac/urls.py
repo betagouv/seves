@@ -1,6 +1,7 @@
 from django.urls import path
 
 from tiac import views
+from tiac.views import TiacExportView
 
 app_name = "tiac"
 urlpatterns = [
@@ -43,5 +44,10 @@ urlpatterns = [
         "evenement-simple/<str:numero>/document/",
         views.EvenementSimpleDocumentExportView.as_view(),
         name="export-evenement-simple-document",
+    ),
+    path(
+        "export/tiac/",
+        TiacExportView.as_view(),
+        name="export-tiac",
     ),
 ]

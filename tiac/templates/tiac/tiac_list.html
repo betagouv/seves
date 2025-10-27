@@ -55,6 +55,10 @@
     <main class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ object_list|length }} sur un total de {{ total_object_count }}</div>
+            <form action="{% url 'tiac:export-tiac' %}?{{ request.GET.urlencode }}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">Extraire</button>
+            </form>
         </div>
         {% if object_list|length %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
