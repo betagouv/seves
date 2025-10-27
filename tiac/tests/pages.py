@@ -254,6 +254,9 @@ class EvenementListPage(WithTreeSelect):
     def submit_search(self):
         return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
 
+    def submit_export(self):
+        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
 

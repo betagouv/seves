@@ -401,11 +401,12 @@ class Visibilite(models.TextChoices):
 
 
 class Export(models.Model):
-    object_ids = ArrayField(models.BigIntegerField())
+    object_ids = ArrayField(models.BigIntegerField(), null=True)
     task_done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to=get_timestamped_filename_export)
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="exports")
+    queryset_sequence = models.JSONField(default=dict)
 
 
 class Region(models.Model):
