@@ -115,27 +115,27 @@ def test_can_create_investigation_tiac_with_all_fields(
 test_data = [
     pytest.param(
         SuspicionConclusion.CONFIRMED.value,
-        random.choices(CategorieDanger.values),
+        random.sample(CategorieDanger.values, k=1),
         id=f"{SuspicionConclusion.CONFIRMED}-single",
     ),
     pytest.param(
         SuspicionConclusion.CONFIRMED.value,
-        random.choices(CategorieDanger.values, k=2),
+        random.sample(CategorieDanger.values, k=2),
         id=f"{SuspicionConclusion.CONFIRMED}-multiple",
     ),
     pytest.param(
         SuspicionConclusion.CONFIRMED.value,
-        random.choices(DANGERS_COURANTS),
+        random.sample(DANGERS_COURANTS, k=1),
         id=f"{SuspicionConclusion.CONFIRMED}-common-choices",
     ),
     pytest.param(
         SuspicionConclusion.SUSPECTED.value,
-        random.choices(DangersSyndromiques.values),
+        random.sample(DangersSyndromiques.values, k=1),
         id=f"{SuspicionConclusion.SUSPECTED}-single",
     ),
     pytest.param(
         SuspicionConclusion.SUSPECTED.value,
-        random.choices(DangersSyndromiques.values, k=2),
+        random.sample(DangersSyndromiques.values, k=2),
         id=f"{SuspicionConclusion.SUSPECTED}-multiple",
     ),
     *[(item.value, []) for item in SuspicionConclusion.no_clue],
