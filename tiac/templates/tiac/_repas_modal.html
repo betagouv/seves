@@ -26,8 +26,8 @@
                                 <div class="fr-col-3">{{ repas.datetime_repas|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Nombre de participants</div>
                                 <div class="fr-col-3">
-                                    {%  if repas.nombre_participant >= 0 %}
-                                        <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }} participants</span>
+                                    {%  if repas.nombre_participant %}
+                                        <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0">{{ repas.nombre_participant }}</span>
                                     {% else %}
                                         <span class="empty-value">Vide</span>
                                     {% endif %}

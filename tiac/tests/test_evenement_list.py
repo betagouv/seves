@@ -315,15 +315,15 @@ def test_can_filter_by_nb_dead_persons(live_server, mocked_authentification_user
 
 def test_can_filter_by_repas_nb_particpants(live_server, mocked_authentification_user, page: Page):
     to_be_found_1 = InvestigationTiacFactory(numero_annee=2020)
-    RepasSuspectFactory(investigation=to_be_found_1, nombre_participant=2)
+    RepasSuspectFactory(investigation=to_be_found_1, nombre_participant="environ 200")
     not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
-    RepasSuspectFactory(investigation=not_to_be_found_1, nombre_participant=10)
+    RepasSuspectFactory(investigation=not_to_be_found_1, nombre_participant="une cinquantaine")
     not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2023)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
     search_page.open_sidebar()
-    search_page.nb_participants.select_option("[0-5]")
+    search_page.nb_participants.fill("200")
     search_page.add_filters()
     search_page.submit_search()
 
