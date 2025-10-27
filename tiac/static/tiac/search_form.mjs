@@ -2,7 +2,7 @@ import {Controller} from "Stimulus";
 import {applicationReady} from "Application";
 import {resetForm} from "Forms"
 import choicesDefaults from "choicesDefaults"
-import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked} from "CustomTreeSelect"
+import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked, addCategoryHeader} from "CustomTreeSelect"
 
 
 class SearchFormController extends Controller {
@@ -216,6 +216,9 @@ class SearchFormController extends Controller {
             isSingleSelect: false,
             openCallback() {
                 patchItems(treeselectSelectedHazard.srcElement)
+                addCategoryHeader(treeselectSelectedHazard.srcElement, "Dangers syndromiques", 0)
+                addCategoryHeader(treeselectSelectedHazard.srcElement, "Liste complète des dangers alimentaires", 11)
+                treeselectSelectedHazard.srcElement.dataset.headerAdded = "true"
             },
             ...tsDefaultOptions
         })
