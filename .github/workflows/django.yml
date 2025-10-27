@@ -35,7 +35,9 @@ jobs:
           python-version: 3.11.1
           cache: pip
       - name: Install dependencies
-        run: pip install pip-tools && pip-sync
+        run: |
+          pip install --upgrade "pip!=25.3" pip-tools
+          pip-sync
       - name: Check no missing migrations
         run: python manage.py makemigrations --check --dry-run >  /dev/null
       - name: Run ruff
@@ -78,6 +80,10 @@ jobs:
         with:
           python-version: 3.11.1
           cache: pip
+      - name: Install dependencies
+        run: |
+          pip install --upgrade "pip!=25.3" pip-tools
+          pip-sync
       - name: Install dependencies
         run: pip install pip-tools && pip-sync
       - name: Playwright version
