@@ -109,7 +109,7 @@ class DangersSyndromiques(WithChoicesToJS, SafeTextChoices):
         description="""Attention, autres toxines possibles notamment si haricots rouges, courges, produits de la mer, betterave crue... : conserver des échantillons pour d'autres analyses. <br/><br/>
 Pour rappel : si les aliments ou ingrédients sont cuits, l'absence de la bactérie ne signifie pas l'absence de toxine (ces toxines sont thermostables). Si les aliments sont crus, en l'absence de la bactérie, il est inutile de rechercher les toxines. <br/><br/>
 Staphylocoques : en première intention, recherche de la bactérie et des toxines A à E. Pour rechercher les autres toxines (si suspicion forte), envoi de la souche au LNR. Attention : l'absence de toxines A à E ne signifie pas l'absence de toxines staphylococciques. En l'absence de la bactérie, impossible de poursuivre les analyses. <br/><br/>
-Bacillus cereus : en première intention, recherce de la bactérie. Pour rechercher ou doser les céréulides, envoi de la souche à l'ANSES. En l'absence de la bactérie, impossible de poursuivre les analyses.
+Bacillus cereus : en première intention, recherche de la bactérie. Pour rechercher ou doser les céréulides, envoi de la souche à l'ANSES. En l'absence de la bactérie, impossible de poursuivre les analyses.
         """,
     )
     TOXI_INFECTION_BACILLUS = ChoiceData(
