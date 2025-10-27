@@ -99,7 +99,7 @@ django-reversion==6.0.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
-django-reversion-compare==0.19.0
+django-reversion-compare==0.19.1
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -262,6 +262,7 @@ typing-extensions==4.11.0
     # via
     #   django-countries
     #   pyee
+    #   pyopenssl
     #   python-docx
 tzdata==2025.2
     # via
