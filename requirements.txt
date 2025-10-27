@@ -30,7 +30,7 @@ certifi==2025.1.31
     # via
     #   requests
     #   sentry-sdk
-cffi==1.16.0
+cffi==2.0.0
     # via cryptography
 cfgv==3.4.0
     # via pre-commit
