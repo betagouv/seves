@@ -169,7 +169,7 @@ class RepasSuspectFactory(DjangoModelFactory):
         lambda: random.sample([choice[0] for choice in Motif.choices], k=random.randint(1, 3))
     )
     datetime_repas = factory.LazyFunction(random_datetime_utc)
-    nombre_participant = factory.Faker("pyint", min_value=0, max_value=10)
+    nombre_participant = factory.Faker("numerify", text="## participants")
     departement = factory.SubFactory("core.factories.DepartementFactory")
 
     type_repas = FuzzyChoice([choice[0] for choice in TypeRepas.choices])

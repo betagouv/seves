@@ -157,16 +157,11 @@ class TiacFilter(
         lookup_expr="in",
         widget=HiddenInput,
     )
-    nb_personnes_repas = django_filters.ChoiceFilter(
-        choices=[
-            ("0-5", "[0-5]"),
-            ("6-10", "[6-10]"),
-            ("11-50", "[11-50]"),
-            ("51-+", "[51+]"),
-        ],
+    nb_personnes_repas = django_filters.CharFilter(
+        field_name="repas__nombre_participant",
+        lookup_expr="contains",
+        distinct=True,
         label="Repas - Nombre de participants",
-        empty_label=settings.SELECT_EMPTY_CHOICE,
-        method="filter_nb_personnes_repas",
     )
     type_repas = django_filters.ChoiceFilter(
         choices=TypeRepas,
@@ -305,9 +300,6 @@ class TiacFilter(
 
     def filter_nb_dead_persons(self, queryset, name, value):
         return self._range_filter(value, "nb_dead_persons", queryset)
-
-    def filter_nb_personnes_repas(self, queryset, name, value):
-        return self._range_filter(value, "repas__nombre_participant", queryset)
 
     def filter_danger_syndromiques_suspectes(self, queryset, name, value):
         return queryset.filter(danger_syndromiques_suspectes__contains=value)

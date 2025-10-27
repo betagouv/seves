@@ -242,9 +242,7 @@ def test_can_create_investigation_tiac_with_repas(
     creation_page.add_repas(input_data)
     expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
     expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display())).to_be_visible()
-    expect(
-        creation_page.get_repas_card(0).get_by_text(f"{input_data.nombre_participant} participant(s)", exact=True)
-    ).to_be_visible()
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.nombre_participant, exact=True)).to_be_visible()
 
     creation_page.submit_as_draft()
 

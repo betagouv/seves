@@ -485,7 +485,7 @@ class RepasSuspect(models.Model):
         blank=True,
     )
     datetime_repas = models.DateTimeField(verbose_name="Date et heure du repas", blank=True, null=True)
-    nombre_participant = models.IntegerField(verbose_name="Nombre de participant(e)s", blank=True, null=True)
+    nombre_participant = models.CharField(verbose_name="Nombre de participant(e)s", blank=True, null=True)
     departement = models.ForeignKey(
         Departement,
         on_delete=models.PROTECT,
