@@ -46,6 +46,11 @@ urlpatterns = [
         name="export-evenement-simple-document",
     ),
     path(
+        "investigation-tiac/<str:numero>/document/",
+        views.InvestigationTiacExportView.as_view(),
+        name="export-investigation-tiac-document",
+    ),
+    path(
         "export/tiac/",
         TiacExportView.as_view(),
         name="export-tiac",
