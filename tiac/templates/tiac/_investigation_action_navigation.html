@@ -4,6 +4,17 @@
                 aria-expanded="false" title="Sélectionner une action">Actions</button>
         <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
             <ul class="fr-menu__list">
+                {% if can_be_modified %}
+                    <li>
+                        <a
+                            class="fr-translate__language fr-nav__link"
+                            href="{% url 'tiac:investigation-tiac-edition' numero=object.pk %}"
+                        >
+                            <span class="fr-icon-edit-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span>
+                            Modifier l'événement
+                        </a>
+                    </li>
+                {% endif %}
                 {% if can_be_deleted %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" data-testid="delete-nav" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
                 {% endif %}

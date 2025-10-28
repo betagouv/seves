@@ -111,9 +111,14 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
-    evenement_simple = factory.SubFactory("tiac.factories.EvenementSimpleFactory")
-
     type_etablissement = factory.Faker("sentence", nb_words=2)
+    investigation = None
+
+    @factory.lazy_attribute
+    def evenement_simple(self):
+        if not self.investigation:
+            return EvenementSimpleFactory()
+        return None
 
     class Params:
         inspection = factory.Trait(
@@ -138,11 +143,9 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
 
-    agents_confirmes_ars = factory.LazyFunction(
-        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
-    )
+    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
     danger_syndromiques_suspectes = factory.LazyFunction(
-        lambda: random.sample([choice[0] for choice in DangersSyndromiques.choices], k=random.randint(1, 3))
+        lambda: random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
     )
 
     suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
@@ -152,10 +155,42 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     @factory.lazy_attribute
     def selected_hazard(self):
         if self.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
-            return random.choices(CategorieDanger.values)
+            return random.sample(CategorieDanger.values, k=random.randint(1, 3))
         if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
-            return random.choices(DangersSyndromiques.values)
+            return random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
         return []
+
+    @factory.post_generation
+    def with_etablissements(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            EtablissementFactory(investigation=self)
+
+    @factory.post_generation
+    def with_repas(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            RepasSuspectFactory(investigation=self)
+
+    @factory.post_generation
+    def with_analyse_alimentaires(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            AnalyseAlimentaireFactory(investigation=self)
+
+    @factory.post_generation
+    def with_aliment_suspect(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            AlimentSuspectFactory(investigation=self, cuisine=True)
 
 
 class RepasSuspectFactory(DjangoModelFactory):

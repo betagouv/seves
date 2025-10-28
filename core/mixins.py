@@ -424,6 +424,19 @@ class WithEtatMixin(models.Model):
         return "L'objet a bien été cloturé."
 
 
+class AllowModificationMixin(WithEtatMixin):
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
+
+    def can_be_modified(self, user):
+        return self.can_user_access(user) and not self.is_cloture
+
+    class Meta:
+        abstract = True
+
+
 class WithFreeLinkIdsMixin:
     @property
     def free_link_ids(self):
