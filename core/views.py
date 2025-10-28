@@ -19,6 +19,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
+from waffle import flag_is_active
 
 from core.diffs import CompareMixin
 from .forms import (
@@ -27,6 +28,7 @@ from .forms import (
     DocumentEditForm,
     StructureAddForm,
     AgentAddForm,
+    BasicMessageForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -185,9 +187,10 @@ class MessageCreateView(
     CreateView,
 ):
     model = Message
-    http_method_names = ["post"]
 
     def get_form_class(self):
+        if flag_is_active(self.request, "message_v2"):
+            return BasicMessageForm
         return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
@@ -203,19 +206,29 @@ class MessageCreateView(
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update(
-            {
-                "obj": self.obj,
-                "next": self.obj.get_absolute_url(),
-                "sender": self.request.user.agent.contact_set.get(),
-            }
-        )
+        if flag_is_active(self.request, "message_v2"):
+            kwargs.update(
+                {
+                    "obj": self.obj,
+                    "sender": self.request.user.agent.contact_set.get(),
+                }
+            )
+        else:
+            kwargs.update(
+                {
+                    "obj": self.obj,
+                    "next": self.obj.get_absolute_url(),
+                    "sender": self.request.user.agent.contact_set.get(),
+                }
+            )
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
         context["add_document_form"] = MessageDocumentForm(object=self.obj)
+        context["message_status"] = Message.Status
+        context["object"] = self.obj
         return context
 
     def get_success_url(self):

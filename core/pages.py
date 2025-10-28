@@ -113,6 +113,13 @@ class BaseMessagePage(ABC):
         )
         self.page.locator(f"{self.container_id} #message-add-document").click()
 
+    def add_basic_message(self, contact, choice_js_fill):
+        self.pick_recipient(contact, choice_js_fill)
+        expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
+
+        self.message_title.fill("Title of the message")
+        self.message_content.fill("My content \n with a line return")
+
     def remove_document(self, index):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
 
@@ -144,7 +151,13 @@ class BaseMessagePage(ABC):
 
 
 class CreateMessagePage(BaseMessagePage):
-    container_id = "#sidebar"
+    def __init__(self, page: Page, container_id="#sidebar"):
+        super().__init__(page)
+        self._container_id = container_id
+
+    @property
+    def container_id(self):
+        return self._container_id
 
 
 class UpdateMessagePage(BaseMessagePage):

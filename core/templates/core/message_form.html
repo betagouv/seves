@@ -1,0 +1,53 @@
+{% extends 'core/base.html' %}
+{% load static dsfr_tags widget_tweaks %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'core/message_form_page.mjs' %}"></script>
+{% endblock %}
+
+{#TODO add css and #}
+{#label:has(+ input:required)::after,#}
+{#label:has(+ input[data-required="true"])::after,#}
+{#label:has(+ select:required)::after,#}
+{#label:has(+ select[data-required="true"])::after,#}
+{#label:has(+ textarea:required)::after,#}
+{#label:has(+ textarea[data-required="true"])::after,#}
+{#label:has(+ .choices select:required)::after,#}
+{#label:has(+ .choices select[data-required="true"])::after,#}
+{#.required-field::after {#}
+{#    content: none;#}
+{##}
+
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" action="" id="message-form">
+        {% csrf_token %}
+        <div class="fr-container-xxl fr-pt-4w" data-controller="message-form">
+            <a href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
+               target="_blank">Ouvrir la fiche {{ object.numero }}</a>
+
+            <div class="fr-flex fr-flex--row fr-flex--space-between">
+                <h1 class="fr-mt-2w">Nouveau message</h1>
+                <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
+            </div>
+            <div class="white-container--lite">
+                {% for field in form %}
+                    <div class="fr-fieldset__element">
+                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                            {% dsfr_form_field field|set_data:data_target  %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
+                <li>
+                    <button type="submit" value="{{ message_status.BROUILLON }}" name="action" class="fr-btn fr-btn--secondary" data-testid="draft-fildesuivi-add-submit">Enregistrer comme brouillon</button>
+                </li>
+                <li>
+                    <button type="submit" value="{{ message_status.FINALISE }}" name="action" class="fr-btn" data-testid="fildesuivi-add-submit">Envoyer</button>
+                </li>
+            </ul>
+        </div>
+    </form>
+{% endblock %}

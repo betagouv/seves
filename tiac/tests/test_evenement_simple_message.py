@@ -17,6 +17,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_demande_intervention,
     generic_test_can_send_draft_point_de_situation,
     generic_test_can_add_and_see_message_in_new_tab_without_document,
+    generic_test_can_add_in_new_tab_without_document_in_draft,
 )
 from tiac.factories import EvenementSimpleFactory
 from tiac.models import EvenementSimple
@@ -33,6 +34,16 @@ def test_can_add_and_see_message_in_new_tab_without_document(
 ):
     evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_can_add_and_see_message_in_new_tab_without_document(
+        live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_message_in_new_tab_without_document_in_draft(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    evenement_produit = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    generic_test_can_add_in_new_tab_without_document_in_draft(
         live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
     )
 

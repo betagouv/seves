@@ -437,13 +437,9 @@ def generic_test_can_add_and_see_message_in_new_tab_without_document(
     active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = CreateMessagePage(page)
+    message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_message()
-    message_page.pick_recipient(active_contact, choice_js_fill)
-    expect(message_page.message_form_title).to_have_text("message")
-
-    message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.add_basic_message(active_contact, choice_js_fill)
     message_page.submit_message()
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
@@ -468,3 +464,20 @@ def generic_test_can_add_and_see_message_in_new_tab_without_document(
         new_page.get_by_text(f"À : {active_contact.contact_set.get().display_with_agent_unit}", exact=True)
     ).to_be_visible()
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_in_new_tab_without_document_in_draft(
+    live_server, page: Page, choice_js_fill, object, mocked_authentification_user
+):
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_message()
+    message_page.add_basic_message(active_contact, choice_js_fill)
+    message_page.save_as_draft_message()
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    message = Message.objects.get()
+    assert message.is_draft
+    assert message_page.message_type_in_table() == "Message [BROUILLON]"

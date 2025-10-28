@@ -71,6 +71,10 @@
     align-items: normal !important;
 }
 
+.fr-flex--space-between {
+    justify-content: space-between;
+}
+
 .fr-container-xxl {
     max-width: 90rem;
     margin-left: auto;

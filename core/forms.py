@@ -3,9 +3,11 @@ from typing import Literal
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
+from dsfr.forms import DsfrBaseForm
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField, AdresseLieuDitField
@@ -70,40 +72,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
-    recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label="Destinataires*"
-    )
-    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
-    recipients_copy_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), required=False, label="Copie"
-    )
-
-    message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
-    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
-
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-    ]
-
-    class Meta:
-        model = Message
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
+class CommonMessageMixin:
     def _add_files_inputs(self, data, files):
         document_types = {k: v for k, v in data.items() if k.startswith("document_type_")}
         documents = {k: v for k, v in files.items() if k.startswith("document_file_")}
@@ -131,20 +100,18 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         self._contacts = self._contacts.select_related("agent__structure")
         return self._contacts
 
-    def _build_label_with_shortcuts(
-        self, label_text, structure_ids, contact_ids=None, css_class_prefix="destinataires"
-    ):
+    def _build_label_with_shortcuts(self, label_text, structure_ids, contact_ids=None, prefix="destinataires"):
         html_parts = [f"{label_text}"]
         if contact_ids:
             html_parts.append(
                 f"<p class='fr-mb-1v'>"
-                f"<a href='#' class='fr-link {css_class_prefix}-contacts-shortcut' "
+                f"<a href='#' data-action='message-form#onShortcut{prefix.title()}:stop:prevent' class='fr-link {prefix}-contacts-shortcut' "
                 f"data-contacts='{contact_ids}'>Ajouter tous les contacts de la fiche</a></p>"
             )
         html_parts.append(
             f"<p class='fr-mb-2v'>"
-            f"<a href='#' class='fr-link {css_class_prefix}-shortcut' "
-            f"data-structures='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
+            f"<a href='#' data-action='message-form#onShortcut{prefix.title()}:stop:prevent' class='fr-link {prefix}-shortcut' "
+            f"data-structures='{structure_ids}' data-contacts='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
         )
         return mark_safe("\n".join(html_parts))
 
@@ -160,11 +127,97 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
 
     def _get_recipients_structures_only_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Destinataires*", structure_ids, css_class_prefix="destinataires")
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, prefix="destinataires")
 
     def _get_recipients_copy_structures_only_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Copie", structure_ids, css_class_prefix="copie")
+        return self._build_label_with_shortcuts("Copie", structure_ids, prefix="copie")
+
+
+class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
+
+    def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+
+        if limit_contacts_to:
+            queryset = queryset.for_apps(limit_contacts_to).distinct()
+
+        self.fields["recipients"].queryset = queryset
+        self.fields["recipients_copy"].queryset = queryset
+
+        if self._get_structures(obj):
+            self.fields["recipients"].label = self._get_recipients_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
+
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def clean(self):
+        super().clean()
+        if self.data["action"] not in Message.Status:
+            raise NotImplementedError
+
+        self.instance.status = self.data["action"]
+        self.instance.message_type = Message.MESSAGE
+        self.instance.sender = self.sender
+        self.instance.sender_structure = self.sender.agent.structure
+        self.instance.object_id = self.obj.id
+        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "title",
+            "content",
+        ]
+
+
+class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMessageMixin, forms.ModelForm):
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
+    recipients_structures_only = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), label="Destinataires*"
+    )
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+    recipients_copy_structures_only = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), required=False, label="Copie"
+    )
+
+    message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
+
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+    ]
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
 
     def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
         obj = kwargs.pop("obj", None)
