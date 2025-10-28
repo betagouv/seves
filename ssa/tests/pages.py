@@ -23,9 +23,14 @@ class WithTreeSelect:
                     .click(force=True)
                 )
             else:
-                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click(
-                    force=True
-                )
+                # Make sure we only click on this part if the part is not yet open. This will handle the case where
+                # we call this method multiple time on the same objects with a common parent.
+                # For example, we want to click on A > B and A > C, we need to open A the first time this method is used
+                # but not the second time to avoid closing the block instead of opening it
+                part = self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon")
+                parent = part.locator("..")
+                if "treeselect-list__item--closed" in parent.get_attribute("class"):
+                    part.click(force=True)
 
         # language=js
         self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')
