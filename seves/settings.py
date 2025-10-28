@@ -105,7 +105,7 @@ ROOT_URLCONF = "seves.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "seves/templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
