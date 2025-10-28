@@ -445,6 +445,18 @@ class InvestigationTiac(
             for selected_hazard in self.selected_hazard
         ]
 
+    @property
+    def danger_syndromiques_suspectes_labels(self):
+        return ", ".join(DangersSyndromiques(d).label for d in self.danger_syndromiques_suspectes)
+
+    @property
+    def analyses_sur_les_malades_labels(self):
+        return ", ".join(Analyses(a).label for a in self.analyses_sur_les_malades)
+
+    @property
+    def agents_confirmes_ars_labels(self):
+        return ", ".join(CategorieDanger(d).label for d in self.agents_confirmes_ars)
+
     class Meta:
         constraints = (
             models.CheckConstraint(

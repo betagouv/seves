@@ -457,6 +457,38 @@ class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPass
         return self.object.can_user_access(self.request.user)
 
 
+class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, numero=None, *args, **kwargs):
+        annee, numero_evenement = numero.replace("T-", "").split(".")
+        self.object = InvestigationTiac.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("tiac/doc_templates/investigation_tiac.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {"object": self.object, "free_links": self.get_free_links_numbers(), "bloc_commun": sub_doc}
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
+
+
 class TiacExportView(WithFilteredListMixin, View):
     http_method_names = ["post"]
 
