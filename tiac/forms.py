@@ -4,6 +4,7 @@ from functools import cached_property
 
 from django import forms
 from django.conf import settings
+from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
@@ -245,7 +246,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     date_reception = forms.DateTimeField(
         required=False,
         label="Date de réception à la DD(ETS)PP",
-        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -302,12 +303,14 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
     )
     precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
-    agents_confirmes_ars = forms.CharField(required=False, widget=forms.HiddenInput)
+    agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
 
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
     )
-    selected_hazard = forms.CharField(label="Dangers retenus", required=False, widget=forms.HiddenInput)
+    selected_hazard = SimpleArrayField(
+        forms.CharField(), delimiter="||", label="Dangers retenus", required=False, widget=forms.HiddenInput
+    )
 
     class Meta:
         model = InvestigationTiac
@@ -339,8 +342,8 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "conclusion_analyse",
         )
         widgets = {
-            "notify_ars": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
-            "will_trigger_inquiry": forms.RadioSelect(choices=(("true", "Oui"), ("false", "Non"))),
+            "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
+            "will_trigger_inquiry": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
 
     @property
@@ -374,14 +377,9 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         for field in ("conclusion_etablissement", "conclusion_repas", "conclusion_aliment", "conclusion_analyse"):
             self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
             queryset = self[field].field.queryset
-            if not self.instance.pk:
-                self[field].field.queryset = queryset.none()
-
-    def clean_agents_confirmes_ars(self):
-        return [v for v in self.cleaned_data["agents_confirmes_ars"].split("||") if v]
-
-    def clean_selected_hazard(self):
-        return [v for v in self.cleaned_data.get("selected_hazard", "").split("||") if v]
+            self[field].field.queryset = (
+                queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
+            )
 
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")

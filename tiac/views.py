@@ -1,6 +1,7 @@
 import io
 import json
 import os
+from functools import cached_property
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -12,7 +13,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
-from django.views.generic.edit import ProcessFormView
+from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
 
 from core.mixins import (
@@ -243,23 +244,37 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class InvestigationTiacCreationView(
-    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+class InvestigationTiacBaseView(
+    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, ModelFormMixin, ProcessFormView
 ):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
+    model = InvestigationTiac
 
-    def dispatch(self, request, *args, **kwargs):
+    @cached_property
+    def repas_formset(self):
+        return RepasFormSet(**self.get_formset_kwargs())
+
+    @cached_property
+    def aliment_formset(self):
+        return AlimentFormSet(**self.get_formset_kwargs())
+
+    @cached_property
+    def etablissement_formset(self):
+        return InvestigationTiacEtablissementFormSet(**self.get_formset_kwargs(title_level="h4", title_classes="fr-h5"))
+
+    @cached_property
+    def analyse_alimentaire_formset(self):
+        return AnalysesAlimentairesFormSet(**self.get_formset_kwargs())
+
+    def get_formset_kwargs(self, **kwargs):
+        result = kwargs.copy()
+
+        if self.object:
+            result.setdefault("instance", self.object)
         if self.request.POST:
-            self.repas_formset = RepasFormSet(data=self.request.POST)
-            self.aliment_formset = AlimentFormSet(data=self.request.POST)
-        else:
-            self.repas_formset = RepasFormSet()
-            self.aliment_formset = AlimentFormSet()
-
-        self.etablissement_formset = self.get_etablissement_formset()
-        self.analyse_alimentaire_formset = self.get_analyse_alimentaire_formset()
-        return super().dispatch(request, *args, **kwargs)
+            result.setdefault("data", self.request.POST)
+        return result
 
     def get_media(self, **context_data) -> Media:
         media = super().get_media(**context_data)
@@ -298,18 +313,21 @@ class InvestigationTiacCreationView(
         context = super().get_context_data(**kwargs)
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
-        context["repas_formset"] = RepasFormSet()
-        context["aliment_formset"] = AlimentFormSet()
-        context["empty_repas_form"] = context["repas_formset"].empty_form
-        context["empty_aliment_form"] = context["aliment_formset"].empty_form
+        context["repas_formset"] = self.repas_formset
+        context["aliment_formset"] = self.aliment_formset
         context["etablissement_formset"] = self.etablissement_formset
         context["analyse_alimentaire_formset"] = self.analyse_alimentaire_formset
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
         context["danger_plus_courant"] = InvestigationTiac.danger_plus_courants()
         return context
 
+    def get_object(self, queryset=None):
+        if not self.kwargs.get(self.pk_url_kwarg) and not self.kwargs.get(self.slug_url_kwarg):
+            # Case where we're on a creation view
+            return None
+        return super().get_object(queryset)
+
     def formset_invalid(self, formset, msg_1, msg_2):
-        self.object = None
         messages.error(self.request, msg_1)
         for i, form in enumerate(formset):
             if not form.is_valid():
@@ -320,7 +338,9 @@ class InvestigationTiacCreationView(
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
-        self.object = None
+        if not hasattr(self, "object"):
+            self.object = self.get_object()
+
         if not self.repas_formset.is_valid():
             return self.formset_invalid(
                 self.repas_formset, "Erreurs dans le(s) formulaire(s) Repas", "Erreur dans le formulaire repas"
@@ -369,6 +389,14 @@ class InvestigationTiacCreationView(
         return HttpResponseRedirect(self.object.get_absolute_url())
 
 
+class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
+    pass
+
+
+class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
+    pk_url_kwarg = "numero"
+
+
 class InvestigationTiacDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
@@ -411,6 +439,7 @@ class InvestigationTiacDetailView(
         context = super().get_context_data(**kwargs)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["dangers"] = [
             d.to_dict() for d in DangersSyndromiques.as_list() if d.value in self.object.danger_syndromiques_suspectes

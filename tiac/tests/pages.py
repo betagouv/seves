@@ -460,14 +460,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         )
 
     def set_will_trigger_inquiry(self, value):
-        self.page.locator("#radio-id_will_trigger_inquiry").locator(
-            f"input[type='radio'][value='{str(value).lower()}']"
-        ).check(force=True)
-
-    def set_notify_ars(self, value):
-        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+        self.page.locator("#radio-id_will_trigger_inquiry").locator(f"input[type='radio'][value='{value}']").check(
             force=True
         )
+
+    def set_notify_ars(self, value):
+        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{value}']").check(force=True)
 
     def set_follow_up(self, value):
         self.page.locator("#radio-id_follow_up").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
@@ -479,9 +477,24 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
-    def fill_required_fields(self, object: InvestigationTiac):
-        self.contenu.fill(object.contenu)
-        self.set_follow_up(object.follow_up)
+    def fill_required_fields(self, obj: InvestigationTiac):
+        self.contenu.fill(obj.contenu)
+        self.set_follow_up(obj.follow_up)
+
+    def fill_context_block(self, obj: InvestigationTiac):
+        self.fill_required_fields(obj)
+        self.date_reception.fill(obj.date_reception.strftime("%Y-%m-%d"))
+        self.evenement_origin.select_option(obj.evenement_origin)
+        self.set_modalites_declaration(obj.modalites_declaration)
+        self.set_notify_ars(obj.notify_ars)
+        self.set_will_trigger_inquiry(obj.will_trigger_inquiry)
+        self.numero_sivss.fill(obj.numero_sivss)
+
+        self.nb_sick_persons.fill(str(obj.nb_sick_persons))
+        self.nb_sick_persons_to_hospital.fill(str(obj.nb_sick_persons_to_hospital))
+        self.nb_dead_persons.fill(str(obj.nb_dead_persons))
+        self.datetime_first_symptoms.fill(obj.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
+        self.datetime_last_symptoms.fill(obj.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
 
     def add_agent_pathogene_confirme(self, label):
         self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
@@ -601,9 +614,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def nb_aliments(self):
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
-    def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+    def submit(self, btn_label="Enregistrer"):
+        self.page.get_by_role("button", name=btn_label, exact=True).click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
+    def submit_as_draft(self):
+        self.submit("Enregistrer le brouillon")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
@@ -618,6 +634,17 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
                 self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
 
         self.conclusion_comment.fill(input_data.conclusion_comment)
+
+
+class InvestigationTiacEditPage(InvestigationTiacFormPage):
+    def __init__(self, page: Page, base_url, investigation: InvestigationTiac):
+        self.investigation = investigation
+        super().__init__(page, base_url)
+
+    def navigate(self):
+        self.page.goto(
+            f"{self.base_url}{reverse('tiac:investigation-tiac-edition', kwargs={'numero': self.investigation.pk})}"
+        )
 
 
 class InvestigationTiacDetailsPage:

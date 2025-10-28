@@ -14,6 +14,7 @@ from core.mixins import (
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
+    AllowModificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
@@ -59,6 +60,7 @@ class BaseTiacModel(models.Model):
 @reversion.register()
 class EvenementSimple(
     AllowsSoftDeleteMixin,
+    AllowModificationMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
     WithSharedNumeroMixin,
@@ -99,11 +101,6 @@ class EvenementSimple(
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:evenement-simple-details", kwargs={"numero": numero})
 
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
     @property
     def latest_version(self):
         return (
@@ -118,9 +115,6 @@ class EvenementSimple(
 
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
-
-    def can_be_modified(self, user):
-        return self.can_user_access(user) and not self.is_cloture
 
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
@@ -253,6 +247,7 @@ class Analyses(models.TextChoices):
 @reversion.register()
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
+    AllowModificationMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
     WithSharedNumeroMixin,

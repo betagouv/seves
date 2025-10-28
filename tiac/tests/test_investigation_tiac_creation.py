@@ -82,19 +82,7 @@ def test_can_create_investigation_tiac_with_all_fields(
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
-    creation_page.fill_required_fields(input_data)
-    creation_page.date_reception.fill(input_data.date_reception.strftime("%Y-%m-%d"))
-    creation_page.evenement_origin.select_option(input_data.evenement_origin)
-    creation_page.set_modalites_declaration(input_data.modalites_declaration)
-    creation_page.set_notify_ars(input_data.notify_ars)
-    creation_page.set_will_trigger_inquiry(input_data.will_trigger_inquiry)
-    creation_page.numero_sivss.fill(input_data.numero_sivss)
-
-    creation_page.nb_sick_persons.fill(str(input_data.nb_sick_persons))
-    creation_page.nb_sick_persons_to_hospital.fill(str(input_data.nb_sick_persons_to_hospital))
-    creation_page.nb_dead_persons.fill(str(input_data.nb_dead_persons))
-    creation_page.datetime_first_symptoms.fill(input_data.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
-    creation_page.datetime_last_symptoms.fill(input_data.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
+    creation_page.fill_context_block(input_data)
 
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
