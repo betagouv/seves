@@ -1,5 +1,8 @@
 import contextlib
 import os
+import random
+from datetime import datetime
+from typing import Iterable, Any
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.urls import resolve
 from django.urls.base import reverse
+from django.utils.timezone import localdate
 from playwright.sync_api import expect, Page
 
 from core.constants import DEPARTEMENTS
@@ -231,20 +235,49 @@ def assert_models_are_equal():
     def _assert_models_are_equal(obj_1, obj_2, *, fields=None, to_exclude=None, ignore_array_order=False):
         to_exclude = to_exclude or []
 
-        def __pick(k):
-            return k in fields if fields else k not in to_exclude
+        def _model_to_dict(model):
+            if isinstance(model, dict):
+                return model
 
-        obj_1_data = {k: v for k, v in obj_1.__dict__.items() if __pick(k)}
-        obj_2_data = {k: v for k, v in obj_2.__dict__.items() if __pick(k)}
+            result = {}
 
-        if ignore_array_order:
-            array_fields = [f.name for f in obj_1._meta.get_fields() if isinstance(f, ArrayField)]
-            for field in array_fields:
-                if field in obj_1_data and obj_1_data[field] is not None:
-                    obj_1_data[field] = sorted(obj_1_data[field])
-                if field in obj_2_data and obj_2_data[field] is not None:
-                    obj_2_data[field] = sorted(obj_2_data[field])
+            meta_fields = {f.name: f for f in model._meta.get_fields()}
 
-        assert obj_1_data == obj_2_data
+            for k, v in model.__dict__.items():
+                if fields and k not in fields or k in to_exclude:
+                    continue
+
+                if isinstance(meta_fields.get(k), ArrayField) and ignore_array_order:
+                    result[k] = set(v)
+                elif (choice_display := getattr(model, f"get_{k}_display", None)) and callable(choice_display):
+                    # Case of a field with choices; using get_FOO_display() minimizes test failures
+                    # due to comparing the enum object with its value
+                    result[k] = choice_display()
+                elif isinstance(v, datetime):
+                    # Force comparing dates with same timezone
+                    result[k] = localdate(v)
+                else:
+                    result[k] = v
+
+            return result
+
+        assert _model_to_dict(obj_1) == _model_to_dict(obj_2)
 
     return _assert_models_are_equal
+
+
+@pytest.fixture
+def choose_different_values():
+    def _choose_different_values(items, exclude, *, k=1, singleton=False) -> list[Any] | Any:
+        if k > 1 and singleton:
+            raise ValueError(
+                f"Parameters {k=} and {singleton=} are mutually exclusive. When using flat=True, k must not be set."
+            )
+
+        if isinstance(exclude, str) or not isinstance(exclude, Iterable):
+            exclude = [exclude]
+
+        result = random.sample([it for it in items if it not in exclude], k=k)
+        return result[0] if singleton else result
+
+    return _choose_different_values

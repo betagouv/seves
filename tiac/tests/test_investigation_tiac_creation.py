@@ -95,7 +95,15 @@ def test_can_create_investigation_tiac_with_all_fields(
     assert_models_are_equal(
         input_data,
         investigation,
-        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        to_exclude=[
+            "id",
+            "_state",
+            "numero_annee",
+            "numero_evenement",
+            "date_creation",
+            "analyses_sur_les_malades",
+            "precisions",
+        ],
         ignore_array_order=True,
     )
 

@@ -86,4 +86,6 @@ fileignoreconfig:
   checksum: 81fc205d819a3c14459b42424a400d3f8ab55d3ad1e3116f6dcc83bfa299393f
 - filename: tiac/export.py
   checksum: f13f0a927917a063b11ccb4e13c29d3e705d27ca3f80394e5671043c7e5fa23e
+- filename: tiac/factories.py
+  checksum: 91fd35ee203dc1d0aa870ba8f8a430fc2bb1960601c556238cdb49d427f5a532
 version: "1.0"
