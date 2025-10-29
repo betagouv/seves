@@ -48,7 +48,7 @@ def test_evenement_produit_detail_page_content_etablissement(
     live_server, page: Page, assert_etablissement_card_is_correct
 ):
     evenement = InvestigationTiacFactory()
-    etablissement = EtablissementFactory(evenement_simple=None, investigation=evenement, inspection=True)
+    etablissement = EtablissementFactory(investigation=evenement, inspection=True)
 
     details_page = InvestigationTiacDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

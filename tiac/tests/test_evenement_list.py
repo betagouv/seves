@@ -49,7 +49,7 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
 
 def test_row_content_investigation_tiac(live_server, mocked_authentification_user, page: Page):
     evenement: InvestigationTiac = InvestigationTiacFactory(follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE)
-    etablissement = EtablissementFactory(evenement_simple=None, investigation=evenement)
+    etablissement = EtablissementFactory(investigation=evenement)
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
@@ -418,9 +418,9 @@ def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked
     evenement_1 = InvestigationTiacFactory(contenu="Morbier")
     evenement_2 = InvestigationTiacFactory(precisions="Morbier")
     evenement_3 = InvestigationTiacFactory()
-    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3, evenement_simple=None)
+    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     evenement_4 = InvestigationTiacFactory()
-    EtablissementFactory(enseigne_usuelle="Morbier", investigation=evenement_4, evenement_simple=None)
+    EtablissementFactory(enseigne_usuelle="Morbier", investigation=evenement_4)
 
     evenement_5 = InvestigationTiacFactory()
     RepasSuspectFactory(investigation=evenement_5, denomination="Morbier")
@@ -488,7 +488,7 @@ def test_list_can_filter_with_free_search_investigation_tiac_is_disctinct(
     live_server, mocked_authentification_user, page: Page
 ):
     evenement_3 = InvestigationTiacFactory()
-    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3, evenement_simple=None)
+    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     RepasSuspectFactory(investigation=evenement_3)
     RepasSuspectFactory(investigation=evenement_3)
 
