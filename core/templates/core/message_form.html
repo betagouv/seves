@@ -1,23 +1,11 @@
 {% extends 'core/base.html' %}
 {% load static dsfr_tags widget_tweaks %}
-
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/message_page.css' %}">
+{% endblock %}
 {% block scripts %}
     <script type="module" src="{% static 'core/message_form_page.mjs' %}"></script>
 {% endblock %}
-
-{#TODO add css and #}
-{#label:has(+ input:required)::after,#}
-{#label:has(+ input[data-required="true"])::after,#}
-{#label:has(+ select:required)::after,#}
-{#label:has(+ select[data-required="true"])::after,#}
-{#label:has(+ textarea:required)::after,#}
-{#label:has(+ textarea[data-required="true"])::after,#}
-{#label:has(+ .choices select:required)::after,#}
-{#label:has(+ .choices select[data-required="true"])::after,#}
-{#.required-field::after {#}
-{#    content: none;#}
-{##}
-
 
 {% block content %}
     <form method="post" enctype="multipart/form-data" action="" id="message-form">
@@ -27,7 +15,12 @@
                target="_blank">Ouvrir la fiche {{ object.numero }}</a>
 
             <div class="fr-flex fr-flex--row fr-flex--space-between">
-                <h1 class="fr-mt-2w">Nouveau message</h1>
+                <div>
+                    <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">{{ form.page_title }}</h1>
+                    {% if form.help_text %}
+                        <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
+                    {% endif %}
+                </div>
                 <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
             </div>
             <div class="white-container--lite">

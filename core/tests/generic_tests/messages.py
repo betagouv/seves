@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact
+from core.models import Message, FinSuiviContact, Contact
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -466,8 +466,8 @@ def generic_test_can_add_and_see_message_in_new_tab_without_document(
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
 
 
-def generic_test_can_add_in_new_tab_without_document_in_draft(
-    live_server, page: Page, choice_js_fill, object, mocked_authentification_user
+def generic_test_can_add_see_message_in_new_tab_without_document_in_draft(
+    live_server, page: Page, choice_js_fill, object
 ):
     active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
 
@@ -481,3 +481,134 @@ def generic_test_can_add_in_new_tab_without_document_in_draft(
     message = Message.objects.get()
     assert message.is_draft
     assert message_page.message_type_in_table() == "Message [BROUILLON]"
+
+
+def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_note()
+    expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == ""
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Note"
+
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, object, mocked_authentification_user
+):
+    contact, contact_cc = ContactStructureFactory.create_batch(2, with_one_active_agent=True)
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_demande_intervention()
+    message_page.pick_recipient(contact.structure, choice_js_fill)
+    page.keyboard.press("Escape")
+    message_page.pick_recipient_copy(contact_cc.structure, choice_js_fill)
+    message_page.save_as_draft_message()
+
+    expect((message_page.page.get_by_text("Nouvelle demande d'intervention"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == str(contact.structure)
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Demande d'intervention"
+
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+    expect(
+        new_page.get_by_text(
+            f"De : {mocked_authentification_user.agent.contact_set.get().display_with_agent_unit}", exact=True
+        )
+    ).to_be_visible()
+    expect(new_page.get_by_text(f"À : {contact.display_with_agent_unit}", exact=True)).to_be_visible()
+    expect(new_page.get_by_text(f"CC : {contact_cc.display_with_agent_unit}", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_point_de_situation()
+    expect((message_page.page.get_by_text("Nouveau point de situation"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == ""
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Point de situation"
+
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
+    live_server, page: Page, object, mocked_authentification_user
+):
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    object.contacts.add(user_contact_agent)
+    object.contacts.add(user_contact_structure)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_fin_de_suivi()
+    expect((message_page.page.get_by_text("Signaler la fin de suivi"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    expect(page.get_by_role("paragraph").filter(has_text="Fin de suivi")).to_be_visible()
+    page.get_by_test_id("contacts").click()
+    expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
+    page.get_by_test_id("fil-de-suivi").click()
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == ""
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Fin de suivi"
+
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()

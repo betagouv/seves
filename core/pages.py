@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from django.conf import settings
 from playwright.sync_api import Page, expect
 
-from core.models import Document
+from core.models import Document, Agent, Structure
 
 
 class BaseMessagePage(ABC):
@@ -28,14 +28,41 @@ class BaseMessagePage(ABC):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
 
+    def new_note(self):
+        self.page.get_by_test_id("element-actions").click()
+        self.page.get_by_role("link", name="Note").click()
+
+    def new_point_de_situation(self):
+        self.page.get_by_test_id("element-actions").click()
+        self.page.get_by_role("link", name="Point de situation").click()
+
+    def new_fin_de_suivi(self):
+        self.page.get_by_test_id("element-actions").click()
+        self.page.get_by_role("link", name="Signaler la fin de suivi").click()
+
+    def new_demande_intervention(self):
+        self.page.get_by_test_id("element-actions").click()
+        self.page.get_by_role("link", name="Demande d'intervention").click()
+
     def pick_recipient(self, contact, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            self.recipients_locator,
-            contact.nom,
-            contact.contact_set.get().display_with_agent_unit,
-            use_locator_as_parent_element=True,
-        )
+        if isinstance(contact, Agent):
+            choice_js_fill(
+                self.page,
+                self.recipients_locator,
+                contact.nom,
+                contact.contact_set.get().display_with_agent_unit,
+                use_locator_as_parent_element=True,
+            )
+        elif isinstance(contact, Structure):
+            choice_js_fill(
+                self.page,
+                self.recipients_locator,
+                contact.libelle,
+                contact.libelle,
+                use_locator_as_parent_element=True,
+            )
+        else:
+            raise NotImplementedError
 
     def pick_recipient_structure_only(self, structure, choice_js_fill):
         choice_js_fill(
@@ -47,13 +74,24 @@ class BaseMessagePage(ABC):
         )
 
     def pick_recipient_copy(self, contact, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
-            contact.nom,
-            contact.contact_set.get().display_with_agent_unit,
-            use_locator_as_parent_element=True,
-        )
+        if isinstance(contact, Agent):
+            choice_js_fill(
+                self.page,
+                f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
+                contact.nom,
+                contact.contact_set.get().display_with_agent_unit,
+                use_locator_as_parent_element=True,
+            )
+        elif isinstance(contact, Structure):
+            choice_js_fill(
+                self.page,
+                f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
+                contact.libelle,
+                contact.libelle,
+                use_locator_as_parent_element=True,
+            )
+        else:
+            raise NotImplementedError
 
     def pick_recipient_copy_structure_only(self, structure, choice_js_fill):
         choice_js_fill(

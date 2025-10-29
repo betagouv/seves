@@ -678,18 +678,24 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
     def _mark_contact_as_fin_suivi(self, form):
         if form.instance.status == Message.Status.BROUILLON:
             return
-        message_type = form.cleaned_data.get("message_type")
-        if message_type == Message.FIN_SUIVI:
+        message_type = form.cleaned_data.get("message_type") or form.instance.message_type
+        if message_type != Message.FIN_SUIVI:
+            return
+
+        if form.cleaned_data.get("content_type"):
             content_type = form.cleaned_data.get("content_type")
             object_id = form.cleaned_data.get("object_id")
+        else:
+            content_type = form.instance.content_type
+            object_id = form.instance.object_id
 
-            fin_suivi_contact = FinSuiviContact(
-                content_type=content_type,
-                object_id=object_id,
-                contact=Contact.objects.get(structure=self.request.user.agent.structure),
-            )
-            fin_suivi_contact.full_clean()
-            fin_suivi_contact.save()
+        fin_suivi_contact = FinSuiviContact(
+            content_type=content_type,
+            object_id=object_id,
+            contact=Contact.objects.get(structure=self.request.user.agent.structure),
+        )
+        fin_suivi_contact.full_clean()
+        fin_suivi_contact.save()
 
     def _is_internal_communication(self, structures):
         """
