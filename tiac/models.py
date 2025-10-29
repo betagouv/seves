@@ -249,7 +249,6 @@ class InvestigationTiac(
     AllowsSoftDeleteMixin,
     AllowModificationMixin,
     WithContactPermissionMixin,
-    WithEtatMixin,
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     WithBlocCommunFieldsMixin,
@@ -337,11 +336,6 @@ class InvestigationTiac(
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
-
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
 
     def get_message_form(self):
         from tiac.forms import MessageForm

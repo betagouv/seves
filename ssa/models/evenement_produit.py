@@ -6,7 +6,6 @@ from django.utils.safestring import mark_safe
 from reversion.models import Version
 
 from core.mixins import (
-    WithEtatMixin,
     WithNumeroMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
@@ -14,6 +13,7 @@ from core.mixins import (
     EmailNotificationMixin,
     AllowsSoftDeleteMixin,
     WithFreeLinkIdsMixin,
+    AllowModificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, Document, LienLibre
@@ -144,7 +144,7 @@ class EvenementProduit(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     WithContactPermissionMixin,
-    WithEtatMixin,
+    AllowModificationMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
     models.Model,
@@ -301,11 +301,6 @@ class EvenementProduit(
         links = LienLibre.objects.for_object(self)
         objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
         return [str(o) for o in objects if not o.is_deleted]
-
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
 
     def can_be_updated(self, user):
         return self._user_can_interact(user)

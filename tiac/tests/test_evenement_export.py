@@ -55,7 +55,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     RepasSuspectFactory(investigation=evenement)
     AlimentSuspectFactory(investigation=evenement, cuisine=True)
     AnalyseAlimentaireFactory(investigation=evenement)
-    EtablissementFactory(investigation=evenement, evenement_simple=None)
+    EtablissementFactory(investigation=evenement)
     task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
 
     with django_assert_num_queries(16):
