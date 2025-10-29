@@ -16,8 +16,12 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_message,
     generic_test_can_send_draft_demande_intervention,
     generic_test_can_send_draft_point_de_situation,
-    generic_test_can_add_in_new_tab_without_document_in_draft,
     generic_test_can_add_and_see_message_in_new_tab_without_document,
+    generic_test_can_add_and_see_note_in_new_tab_without_document,
+    generic_test_can_add_see_message_in_new_tab_without_document_in_draft,
+    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
+    generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
+    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -39,12 +43,46 @@ def test_can_add_and_see_message_in_new_tab_without_document(
 
 
 @override_flag("message_v2", active=True)
-def test_can_add_in_new_tab_without_document_in_draft(
+def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_see_message_in_new_tab_without_document_in_draft(live_server, page, choice_js_fill, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_note_in_new_tab_without_document(
+    live_server,
+    page: Page,
+):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_point_de_situation_in_new_tab_without_document(
+    live_server,
+    page: Page,
+):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
-    generic_test_can_add_in_new_tab_without_document_in_draft(
+    generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
         live_server, page, choice_js_fill, evenement, mocked_authentification_user
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
+        live_server, page, evenement, mocked_authentification_user
     )
 
 

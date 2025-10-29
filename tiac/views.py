@@ -188,6 +188,8 @@ class EvenementSimpleDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
@@ -441,6 +443,8 @@ class InvestigationTiacDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)

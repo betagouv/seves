@@ -29,6 +29,10 @@ from .forms import (
     StructureAddForm,
     AgentAddForm,
     BasicMessageForm,
+    NoteForm,
+    PointDeSituationForm,
+    DemandeInterventionForm,
+    FinDeSuiviForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -190,7 +194,14 @@ class MessageCreateView(
 
     def get_form_class(self):
         if flag_is_active(self.request, "message_v2"):
-            return BasicMessageForm
+            mapping = {
+                "message": BasicMessageForm,
+                "note": NoteForm,
+                "point_situation": PointDeSituationForm,
+                "demande_intervention": DemandeInterventionForm,
+                "fin_suivi": FinDeSuiviForm,
+            }
+            return mapping.get(self.request.GET.get("type"))
         return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):

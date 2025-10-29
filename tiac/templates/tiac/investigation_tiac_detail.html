@@ -65,7 +65,7 @@
         </div>
 
       </div>
-      <p class="fr-badge fr-badge--{{object.etat|etat_color}} fr-badge--no-icon">{{ object.get_etat_display }}</p>
+      <p class="fr-badge fr-badge--{{etat.etat|etat_color}} fr-badge--no-icon">{{ etat.readable_etat }}</p>
     </div>
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version content_type_pk=content_type.pk object_pk=object.pk %}
 

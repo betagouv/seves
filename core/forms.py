@@ -133,13 +133,26 @@ class CommonMessageMixin:
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         return self._build_label_with_shortcuts("Copie", structure_ids, prefix="copie")
 
+    def _add_related_objects(self):
+        self.instance.status = self.status
+        self.instance.sender = self.sender
+        self.instance.sender_structure = self.sender.agent.structure
+        self.instance.object_id = self.obj.id
+        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
+
+    def clean(self):
+        super().clean()
+        self.status = self.data.get("action", self.data.get("status"))
+        if self.status not in Message.Status:
+            raise NotImplementedError
+
 
 class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau message"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
 
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
-    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
 
     def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
         obj = kwargs.pop("obj", None)
@@ -166,21 +179,144 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
 
     def clean(self):
         super().clean()
-        if self.data["action"] not in Message.Status:
-            raise NotImplementedError
-
-        self.instance.status = self.data["action"]
         self.instance.message_type = Message.MESSAGE
-        self.instance.sender = self.sender
-        self.instance.sender_structure = self.sender.agent.structure
-        self.instance.object_id = self.obj.id
-        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
+        self._add_related_objects()
 
     class Meta:
         model = Message
         fields = [
             "recipients",
             "recipients_copy",
+            "title",
+            "content",
+        ]
+
+
+class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouvelle note"
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.NOTE
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = ["title", "content"]
+
+
+class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau point de situation"
+    help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.POINT_DE_SITUATION
+        self._add_related_objects()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            instance.recipients.set(self.obj.contacts.all())
+        return instance
+
+    class Meta:
+        model = Message
+        fields = ["title", "content"]
+
+
+class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouvelle demande d'intervention"
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+
+        queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
+        self.fields["recipients"].queryset = queryset_structures
+        self.fields["recipients_copy"].queryset = queryset_structures
+
+        if self._get_structures(obj):
+            self.fields["recipients"].label = self._get_recipients_structures_only_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(obj)
+
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.DEMANDE_INTERVENTION
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "title",
+            "content",
+        ]
+
+
+class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Signaler la fin de suivi"
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.FIN_SUIVI
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
             "title",
             "content",
         ]
