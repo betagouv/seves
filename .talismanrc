@@ -90,4 +90,6 @@ fileignoreconfig:
   checksum: b7cf1979c07b1f2e5d0e555ba000788754142961414d00670aa14ef228622169
 - filename: tiac/tests/test_investigation_tiac_edition.py
   checksum: 7558c2812b5e924536c570c673a923f1af7944bb5ad70e168a379283e29e836f
+- filename: core/tests/generic_tests/messages.py
+  checksum: bbc64023bfba80eb2a88b3bc67a5b8da607e59888ffacca42e75758c054e14fe
 version: "1.0"
