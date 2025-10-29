@@ -182,6 +182,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     )
     type_etablissement = forms.CharField(
         required=False,
+        label="Type d'établissement",
         widget=forms.TextInput(attrs={"placeholder": "Lieu d'achat, restaurant, centre d'expédition…"}),
     )
 

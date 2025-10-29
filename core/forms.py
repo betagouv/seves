@@ -339,7 +339,7 @@ class BaseEtablissementForm(forms.ModelForm):
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
-    pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
+    pays = CountryField(blank=True).formfield(label="Pays", widget=forms.Select(attrs={"class": "fr-select"}))
     departement = forms.ModelChoiceField(
         queryset=Departement.objects.order_by("numero").all(),
         to_field_name="numero",
@@ -349,6 +349,7 @@ class BaseEtablissementForm(forms.ModelForm):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.fields["pays"].label_suffix = ""
 
         if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
             self.fields["adresse_lieu_dit"].choices = [(self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)]
