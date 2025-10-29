@@ -263,7 +263,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         required=False,
         label="N° SIVSS de l'ARS",
         widget=forms.TextInput(
-            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+            attrs={"placeholder": "000000", "pattern": r"\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
         ),
     )
     follow_up = forms.ChoiceField(
@@ -298,7 +298,9 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     danger_syndromiques_suspectes_display = forms.ChoiceField(
         choices=DangersSyndromiques.choices, widget=forms.RadioSelect, label="", required=False
     )
-    danger_syndromiques_suspectes = forms.CharField(widget=forms.HiddenInput, required=False)
+    danger_syndromiques_suspectes = SimpleArrayField(
+        forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput
+    )
     analyses_sur_les_malades = forms.ChoiceField(
         choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
     )
@@ -373,7 +375,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
-        self.initial["danger_syndromiques_suspectes"] = []
         for field in ("conclusion_etablissement", "conclusion_repas", "conclusion_aliment", "conclusion_analyse"):
             self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
             queryset = self[field].field.queryset

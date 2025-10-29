@@ -2,6 +2,7 @@ import json
 import re
 from urllib.parse import quote
 
+from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Page, expect, Locator
 
@@ -505,7 +506,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
     def find_label_for_danger(self, text):
-        return self.current_modal.get_by_text(text[:25])
+        return self.current_modal.get_by_text(striptags(text)[:25])
 
     def open_danger_modal(self):
         self.page.get_by_test_id("add-etiologie").click()
@@ -589,10 +590,11 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.current_modal.get_by_role("button", name="Enregistrer").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
 
+    def get_dangers_syndromiques(self):
+        return self.page.locator(".etiologie-card-container").locator("visible=true")
+
     def delete_danger_syndromique(self, index):
-        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role(
-            "button", name="Supprimer"
-        ).click()
+        self.get_dangers_syndromiques().nth(index).get_by_role("button", name="Supprimer").click()
 
     def delete_repas(self, index):
         self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()

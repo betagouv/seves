@@ -34,6 +34,7 @@ from tiac.models import (
     RepasSuspect,
     AnalyseAlimentaire,
     InvestigationFollowUp,
+    Analyses,
 )
 
 fake = Faker()
@@ -133,23 +134,29 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     class Meta:
         model = InvestigationTiac
 
+    # Contexte
     will_trigger_inquiry = factory.Faker("boolean")
     numero_sivss = factory.Faker("numerify", text="######")
-    follow_up = FuzzyChoice([choice[0] for choice in InvestigationFollowUp.choices])
+    follow_up = FuzzyChoice(InvestigationFollowUp.values)
 
+    # Cas
     nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
     nb_sick_persons_to_hospital = factory.Faker("pyint", min_value=0, max_value=10)
     nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
 
-    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+    # Etiologie
     danger_syndromiques_suspectes = factory.LazyFunction(
         lambda: random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
     )
+    analyses_sur_les_malades = FuzzyChoice(Analyses.values)
+    precisions = factory.Faker("sentence")
 
+    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+
+    # Conclusion
     suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
-
     conclusion_comment = factory.Faker("paragraph")
 
     @factory.lazy_attribute
@@ -161,36 +168,39 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
         return []
 
     @factory.post_generation
+    def with_danger_syndromiques_suspectes_count(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        self.danger_syndromiques_suspectes = random.sample(DangersSyndromiques.values, k=extracted)
+
+    @factory.post_generation
     def with_etablissements(self, create, extracted, **_):
         if not create or not extracted:
             return
 
-        for _ in range(extracted):
-            EtablissementFactory(investigation=self)
+        EtablissementFactory.create_batch(extracted, investigation=self)
 
     @factory.post_generation
     def with_repas(self, create, extracted, **_):
         if not create or not extracted:
             return
 
-        for _ in range(extracted):
-            RepasSuspectFactory(investigation=self)
+        RepasSuspectFactory.create_batch(extracted, investigation=self)
 
     @factory.post_generation
     def with_analyse_alimentaires(self, create, extracted, **_):
         if not create or not extracted:
             return
 
-        for _ in range(extracted):
-            AnalyseAlimentaireFactory(investigation=self)
+        AnalyseAlimentaireFactory.create_batch(extracted, investigation=self)
 
     @factory.post_generation
     def with_aliment_suspect(self, create, extracted, **_):
         if not create or not extracted:
             return
 
-        for _ in range(extracted):
-            AlimentSuspectFactory(investigation=self, cuisine=True)
+        AlimentSuspectFactory.create_batch(extracted, investigation=self, cuisine=True)
 
 
 class RepasSuspectFactory(DjangoModelFactory):

@@ -104,7 +104,7 @@ class TiacFilter(
         distinct=True,
         label="Numéro SIVSS",
         widget=TextInput(
-            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+            attrs={"placeholder": "000000", "pattern": r"\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
         ),
     )
 
