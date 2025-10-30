@@ -96,6 +96,9 @@ class WithEtablissementMixin:
 
 
 class WithAnalyseAlimentaireMixin(WithTreeSelect):
+    def get_analyse_alimentaire_card(self, index):
+        return self.page.locator(".analyse-card").nth(index)
+
     def open_analyse_alimentaire_modal(self):
         self.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
         self.current_modal.wait_for(state="visible")
@@ -121,6 +124,24 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         modal = self.open_analyse_alimentaire_modal()
         self.fill_analyse_alimentaire(modal, analyse)
         self.close_analyse_alimentaire_modal()
+
+    def delete_analyse_alimentaire(self, index):
+        self.get_analyse_alimentaire_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_analyse_alimentaire(self, index, **kwargs):
+        card = self.get_analyse_alimentaire_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".analyse-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def _analyse_alimentaire(self, index):
+        self.page.locator(".analyse-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
 
     @property
     def nb_analyse(self):
@@ -543,7 +564,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
-        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
+        self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
         self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
 
