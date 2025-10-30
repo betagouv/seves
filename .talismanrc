@@ -37,7 +37,7 @@ fileignoreconfig:
 - filename: core/pages.py
   checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
 - filename: ssa/static/ssa/treeselectjs.umd.js
-  checksum: 3b66810a7309dce6fc4415cad1e05ff05ff1f756ae18be46fec6d30655066872
+  checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: sv/tests/test_evenement_message.py
   checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
 - filename: ssa/forms.py
