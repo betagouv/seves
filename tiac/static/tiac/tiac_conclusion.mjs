@@ -8,6 +8,7 @@ import {findPath, hideHeader, patchItems, showHeader, tsDefaultOptions} from "Cu
  * @property {Object[]} selectedHazardConfirmedChoicesValue
  * @property {Object[]} selectedHazardSuspectedChoicesValue
  * @property {string} selectedHazardIdValue
+ * @property {boolean} selectedHazardTreeselectInitializedValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
  * @property {HTMLDivElement} selectedHazardTreeselectTarget
  * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
@@ -20,7 +21,13 @@ class ConclusionFormController extends Controller {
         "selectedHazardTreeselectInput",
         "selectedHazardTreeselectHeader",
     ]
-    static values = {suspicionConclusionChoices: Object, suspicionConclusion: String, selectedHazardConfirmedChoices: Array, selectedHazardSuspectedChoices: Array}
+    static values = {
+        suspicionConclusionChoices: Object,
+        suspicionConclusion: String,
+        selectedHazardConfirmedChoices: Array,
+        selectedHazardSuspectedChoices: Array,
+        selectedHazardTreeselectInitialized: {type: Boolean, default: false}
+    }
 
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
@@ -124,7 +131,12 @@ class ConclusionFormController extends Controller {
             this.treeselect.mount()
         }
 
-        this.treeselect.updateValue("")
+        if(this.selectedHazardTreeselectInitializedValue) {
+            this.treeselect.updateValue("")
+        } else {
+            this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
+            this.selectedHazardTreeselectInitializedValue = true
+        }
     }
 }
 

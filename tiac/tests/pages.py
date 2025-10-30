@@ -653,6 +653,9 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
+    def remove_free_link(self, index):
+        self.page.locator("#liens-libre").get_by_role("button", name="Remove item").nth(index).click()
+
     def fill_conlusion(self, input_data):
         self.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
         if input_data.suspicion_conclusion == SuspicionConclusion.CONFIRMED:

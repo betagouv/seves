@@ -1,16 +1,20 @@
 from faker import Faker
 from playwright.sync_api import Page
 
+from core.models import LienLibre
+from ssa.factories import EvenementProduitFactory
+from ssa.models import EvenementProduit
 from tiac.factories import (
     InvestigationTiacFactory,
     EtablissementFactory,
     RepasSuspectFactory,
     AnalyseAlimentaireFactory,
     AlimentSuspectFactory,
+    EvenementSimpleFactory,
 )
 from .pages import InvestigationTiacEditPage
 from ..constants import SuspicionConclusion, DangersSyndromiques
-from ..models import InvestigationTiac, Analyses
+from ..models import InvestigationTiac, Analyses, EvenementSimple
 
 
 def test_can_edit_required_fields(live_server, page: Page, assert_models_are_equal):
@@ -101,9 +105,7 @@ COMMON_FIELDS_TO_EXCLUDE = [
 ]
 
 
-def test_can_edit_investigation_elements(
-    live_server, page: Page, ensure_departements, assert_models_are_equal, choose_different_values
-):
+def test_can_edit_investigation_elements(live_server, page: Page, ensure_departements, assert_models_are_equal):
     departement, *_ = ensure_departements("Paris")
 
     investigation: InvestigationTiac = InvestigationTiacFactory(
@@ -185,5 +187,53 @@ def test_can_edit_investigation_elements(
         investigation.analyses_alimentaires.order_by("pk").last(),
         new_analyse_alimentaire,
         to_exclude=[*COMMON_FIELDS_TO_EXCLUDE],
+        ignore_array_order=True,
+    )
+
+
+def test_can_edit_etiologie_conclusion_and_freelinks(
+    live_server, page: Page, ensure_departements, assert_models_are_equal, choose_different_values, choice_js_fill
+):
+    investigation: InvestigationTiac = InvestigationTiacFactory(with_liens_libres=2)
+    other_event_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    other_event_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    other_event_3 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+
+    new_investigation: InvestigationTiac = InvestigationTiacFactory(
+        agents_confirmes_ars=choose_different_values(SuspicionConclusion.values, investigation.agents_confirmes_ars),
+        suspicion_conclusion=choose_different_values(
+            SuspicionConclusion.values, [investigation.suspicion_conclusion], singleton=True
+        ),
+    )
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+    edit_page.remove_free_link(1)
+    edit_page.remove_free_link(0)
+    edit_page.add_free_link(other_event_1.numero, choice_js_fill)
+    edit_page.add_free_link(other_event_2.numero, choice_js_fill, link_label="Enregistrement simple : ")
+    edit_page.add_free_link(other_event_3.numero, choice_js_fill, link_label="Événement produit : ")
+    edit_page.fill_conlusion(new_investigation)
+
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+    assert set(lien.related_object_2 for lien in LienLibre.objects.for_object(investigation)) == {
+        other_event_1,
+        other_event_2,
+        other_event_3,
+    }
+    assert_models_are_equal(
+        investigation,
+        new_investigation,
+        fields=[
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_etablissement",
+            "conclusion_repas",
+            "conclusion_aliment",
+            "conclusion_analyse",
+        ],
         ignore_array_order=True,
     )
