@@ -7,9 +7,9 @@
         data-controller="aliment-form"
         data-aliment-form-form-prefix-value="{{ form.prefix }}"
         data-aliment-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-aliment-form-categorie-produit-value="{{ form.categorie_produit_json }}"
         data-action="dsfr.conceal->aliment-form#onCloseForm"
     >
-        <div data-aliment-form-target="jsonConfig" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
             id="fr-modal-{{ form.prefix }}"
@@ -83,7 +83,7 @@
         {% endfor %}
     </div>
     <template data-aliment-formset-target="emptyFormTpl">
-        {% with form=formset.empty_form categorie_produit_data=formset.categorie_produit_data should_immediately_show=True %}
+        {% with form=formset.empty_form should_immediately_show=True %}
             {% partial form-dialog %}
         {% endwith %}
     </template>

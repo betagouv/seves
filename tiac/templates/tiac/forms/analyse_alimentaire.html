@@ -4,6 +4,7 @@
 {% dsfr_form_field form.etat_prelevement %}
 <div class="fr-input-group" id="categorie-danger">
     <label>Dangers détectés</label>
+    {{ form.categorie_danger|set_data:"analyse-alimentaire-form-target:categorieDangerInput" }}
     <div data-analyse-alimentaire-form-target="categorieDangerContainer"></div>
 </div>
 {% dsfr_form_field form.comments %}
@@ -11,7 +12,7 @@
 {% dsfr_form_field form.reference_souche %}
 {% dsfr_notice title="Ajoutez vos documents dans l'onglet documents après publication de la fiche." %}
 {{ form.DELETE|set_data:"analyse-alimentaire-form-target:deleteInput" }}
-{{ form.categorie_danger|set_data:"analyse-alimentaire-form-target:categorieDangerInput" }}
+{{ form.id }}
 
 <template data-analyse-alimentaire-form-target="categorieDangerHeader">
     <div class="categorie-danger-header">

@@ -12,7 +12,7 @@ class WithTreeSelect:
     def _set_treeselect_option(self, container_id, label, clear_input=False):
         if clear_input:
             self.clear_treeselect(container_id)
-        self.page.locator(f"#{container_id} .treeselect-input__edit").click(force=True)
+        self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").click(force=True)
         parts = re.split(r"\s*>\s*", label)
         for idx, part in enumerate(parts, start=1):
             if idx == len(parts):  # last element

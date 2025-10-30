@@ -17,6 +17,7 @@ class AlimentFormController extends BaseFormInModal {
         "categorieProduitRootContainer",
         "jsonConfig",
     ]
+    static values = {categorieProduit: Array}
 
     connect() {
         this.setupCategorieProduit()
@@ -34,11 +35,10 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     setupCategorieProduit(){
-        const options = JSON.parse(this.jsonConfigTarget.textContent)
         const treeselect = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: this.categorieProduitInputTarget.value,
-            options: options,
+            options: this.categorieProduitValue,
             isSingleSelect: true,
             openCallback() {
                 patchItems(treeselect.srcElement)
@@ -51,7 +51,7 @@ class AlimentFormController extends BaseFormInModal {
 
         treeselect.srcElement.addEventListener('input', (e) => {
             if (!e.detail) return
-            const result = findPath(e.detail, options)
+            const result = findPath(e.detail, this.categorieProduitValue)
             this.categorieProduitInputTarget.value = e.detail
             this.categorieProduitContainerTarget.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
         })

@@ -518,7 +518,7 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
         label="Description produit et emballage",
         required=False,
-        help_text="Marque, n° de lot, DLC ...",
+        help_text="Marque, n° de lot, DLC…",
     )
     motif_suspicion = forms.MultipleChoiceField(
         choices=MotifAliment.choices,
@@ -526,6 +526,10 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Motif de suspicion de l'aliment",
     )
+
+    @cached_property
+    def categorie_produit_json(self):
+        return json.dumps(CategorieProduit.build_options())
 
     class Meta:
         model = AlimentSuspect
@@ -552,7 +556,7 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.Select,
     )
 
-    categorie_danger = forms.CharField(widget=forms.HiddenInput(), required=False)
+    categorie_danger = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
 
     @cached_property
     def categorie_danger_json(self):
@@ -568,6 +572,3 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         widgets = {
             "sent_to_lnr_cnr": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
-
-    def clean_categorie_danger(self):
-        return [v for v in self.cleaned_data["categorie_danger"].split("||") if v]

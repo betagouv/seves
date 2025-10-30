@@ -175,32 +175,36 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
         self.danger_syndromiques_suspectes = random.sample(DangersSyndromiques.values, k=extracted)
 
     @factory.post_generation
-    def with_etablissements(self, create, extracted, **_):
+    def with_etablissements(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
 
-        EtablissementFactory.create_batch(extracted, investigation=self)
+        kwargs["investigation"] = self
+        EtablissementFactory.create_batch(extracted, **kwargs)
 
     @factory.post_generation
-    def with_repas(self, create, extracted, **_):
+    def with_repas(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
 
-        RepasSuspectFactory.create_batch(extracted, investigation=self)
+        kwargs["investigation"] = self
+        RepasSuspectFactory.create_batch(extracted, **kwargs)
 
     @factory.post_generation
-    def with_analyse_alimentaires(self, create, extracted, **_):
+    def with_analyse_alimentaires(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
 
-        AnalyseAlimentaireFactory.create_batch(extracted, investigation=self)
+        kwargs["investigation"] = self
+        AnalyseAlimentaireFactory.create_batch(extracted, **kwargs)
 
     @factory.post_generation
-    def with_aliment_suspect(self, create, extracted, **_):
+    def with_aliment_suspect(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
 
-        AlimentSuspectFactory.create_batch(extracted, investigation=self, cuisine=True)
+        kwargs.update({"investigation": self, "cuisine": True})
+        AlimentSuspectFactory.create_batch(extracted, **kwargs)
 
 
 class RepasSuspectFactory(DjangoModelFactory):
