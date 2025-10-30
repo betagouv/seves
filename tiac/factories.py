@@ -10,7 +10,9 @@ from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from core.factories import BaseEtablissementFactory
-from core.models import Structure
+from core.mixins import WithEtatMixin
+from core.models import Structure, LienLibre
+from ssa.factories import EvenementProduitFactory
 from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     EvenementOrigin,
@@ -205,6 +207,17 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
 
         kwargs.update({"investigation": self, "cuisine": True})
         AlimentSuspectFactory.create_batch(extracted, **kwargs)
+
+    @factory.post_generation
+    def with_liens_libres(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            lien_libre = random.choice([EvenementSimpleFactory, EvenementProduitFactory])(
+                etat=WithEtatMixin.Etat.EN_COURS
+            )
+            LienLibre.objects.create(related_object_1=self, related_object_2=lien_libre)
 
 
 class RepasSuspectFactory(DjangoModelFactory):
