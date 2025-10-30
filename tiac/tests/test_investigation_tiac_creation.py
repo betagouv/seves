@@ -168,6 +168,19 @@ def test_can_create_investigation_tiac_conlusion(
     )
 
 
+def test_can_create_investigation_tiac_with_agents_pathogenes_shortcut(live_server, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert investigation.agents_confirmes_ars == ["Shigella"]
+
+
 def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 

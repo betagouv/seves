@@ -500,6 +500,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("agents-pathogene", label)
 
+    def add_agent_pathogene_confirme_via_shortcut(self, label):
+        container = self.page.locator("#agents-pathogene")
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".treeselect-input__edit").click()
+        container.locator(".shortcut", has_text=label).locator("..").click()
+
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
