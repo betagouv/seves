@@ -43,3 +43,7 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
         max-width: unset;
     }
 }
+
+#id_selected_hazard {
+    display: none;
+}
