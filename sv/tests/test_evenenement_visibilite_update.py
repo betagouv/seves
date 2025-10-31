@@ -196,8 +196,8 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
     page.goto(f"{live_server.url}{url}")
 
     # Vérifier que les structures AC sont cochées et désactivées
-    mus_checkbox = page.get_by_label(str(mus_structure))
-    bsv_checkbox = page.get_by_label(str(bsv_structure))
+    mus_checkbox = page.get_by_role("checkbox", name=str(mus_structure), exact=True)
+    bsv_checkbox = page.get_by_role("checkbox", name=str(bsv_structure), exact=True)
     expect(mus_checkbox).to_be_checked()
     expect(mus_checkbox).to_be_disabled()
     expect(bsv_checkbox).to_be_checked()
