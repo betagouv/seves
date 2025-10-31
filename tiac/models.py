@@ -139,6 +139,15 @@ class EvenementSimple(
 
         return MessageForm
 
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
+
     def get_publish_success_message(self):
         return "Événement simple publié avec succès"
 
@@ -352,6 +361,15 @@ class InvestigationTiac(
         from tiac.forms import MessageForm
 
         return MessageForm
+
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
 
     def get_allowed_document_types(self):
         return [

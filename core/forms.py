@@ -146,6 +146,14 @@ class CommonMessageMixin:
         if self.status not in Message.Status:
             raise NotImplementedError
 
+    def handle_files(self, kwargs):
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+    def set_labels(self):
+        for field in self:
+            field.label = self.fields[field.name].label
+
 
 class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouveau message"
@@ -154,15 +162,15 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
 
     content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
 
-    def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
+    def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
-        if limit_contacts_to:
-            queryset = queryset.for_apps(limit_contacts_to).distinct()
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
 
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
@@ -171,11 +179,8 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
             self.fields["recipients"].label = self._get_recipients_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
-
-        for field in self:
-            field.label = self.fields[field.name].label
+        self.handle_files(kwargs)
+        self.set_labels()
 
     def clean(self):
         super().clean()
@@ -202,11 +207,8 @@ class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         self.sender = sender
         super().__init__(*args, **kwargs)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
-
-        for field in self:
-            field.label = self.fields[field.name].label
+        self.handle_files(kwargs)
+        self.set_labels()
 
     def clean(self):
         super().clean()
@@ -229,11 +231,8 @@ class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         self.sender = sender
         super().__init__(*args, **kwargs)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
-
-        for field in self:
-            field.label = self.fields[field.name].label
+        self.handle_files(kwargs)
+        self.set_labels()
 
     def clean(self):
         super().clean()
@@ -265,6 +264,9 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
         super().__init__(*args, **kwargs)
 
         queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset_structures = queryset_structures.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+
         self.fields["recipients"].queryset = queryset_structures
         self.fields["recipients_copy"].queryset = queryset_structures
 
@@ -272,11 +274,8 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
             self.fields["recipients"].label = self._get_recipients_structures_only_label(obj)
             self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(obj)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
-
-        for field in self:
-            field.label = self.fields[field.name].label
+        self.handle_files(kwargs)
+        self.set_labels()
 
     def clean(self):
         super().clean()
@@ -303,11 +302,8 @@ class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         self.sender = sender
         super().__init__(*args, **kwargs)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
-
-        for field in self:
-            field.label = self.fields[field.name].label
+        self.handle_files(kwargs)
+        self.set_labels()
 
     def clean(self):
         super().clean()
@@ -317,6 +313,34 @@ class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     class Meta:
         model = Message
         fields = [
+            "title",
+            "content",
+        ]
+
+
+class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau compte rendu sur demande d'intervention"
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.COMPTE_RENDU
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
             "title",
             "content",
         ]
@@ -380,8 +404,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMe
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
             self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_structures_only_label(obj)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+        self.handle_files(kwargs)
 
         if self.instance.pk:
             if self.instance.message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
