@@ -107,6 +107,29 @@ def test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_stat
     )
 
 
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    ContactStructureFactory(
+        structure__niveau2=MUS_STRUCTURE, structure__niveau1=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.page.get_by_test_id("element-actions").click()
+    details_page.page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+    expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
+    details_page.add_recipient_to_message(MUS_STRUCTURE, choice_js_fill)
+    details_page.add_message_content_and_send()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert details_page.fil_de_suivi_sender == "Structure Test"
+    assert details_page.fil_de_suivi_recipients == "MUS"
+    assert details_page.fil_de_suivi_title == "Title of the message"
+    assert details_page.fil_de_suivi_type == "Compte rendu sur demande d'intervention"
+
+
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_cant_see_drafts_from_other_users(live_server, page, evenement_produit)

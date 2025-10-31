@@ -21,6 +21,9 @@ class WithBlocCommunFieldsMixin(models.Model):
     def get_message_form(self):
         raise NotImplementedError
 
+    def get_crdi_form(self):
+        raise NotImplementedError
+
     def add_fin_suivi(self, user):
         with transaction.atomic():
             FinSuiviContact.objects.create(

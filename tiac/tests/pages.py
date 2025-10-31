@@ -444,6 +444,36 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
 
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_message_content_and_send(self):
+        self.page.locator("#id_title").fill("Title of the message")
+        self.page.locator("#id_content").fill("My content \n with a line return")
+        self.page.get_by_test_id("fildesuivi-add-submit").click()
+
+    @property
+    def fil_de_suivi_sender(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
+
+    @property
+    def fil_de_suivi_recipients(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
+
+    @property
+    def fil_de_suivi_title(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
+
+    @property
+    def fil_de_suivi_type(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
+
 
 class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
     fields = [
@@ -752,3 +782,33 @@ class InvestigationTiacDetailsPage:
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_message_content_and_send(self):
+        self.page.locator("#id_title").fill("Title of the message")
+        self.page.locator("#id_content").fill("My content \n with a line return")
+        self.page.get_by_test_id("fildesuivi-add-submit").click()
+
+    @property
+    def fil_de_suivi_sender(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
+
+    @property
+    def fil_de_suivi_recipients(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
+
+    @property
+    def fil_de_suivi_title(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
+
+    @property
+    def fil_de_suivi_type(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")

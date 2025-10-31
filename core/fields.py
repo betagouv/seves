@@ -26,6 +26,7 @@ class MultiModelChoiceField(forms.MultipleChoiceField):
 
 
 class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    template_name = "forms/checkbox_select.html"
     option_template_name = "forms/dsfr_checkbox_option.html"
 
     def __init__(self, *args, **kwargs):
