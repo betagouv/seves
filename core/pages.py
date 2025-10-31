@@ -42,7 +42,7 @@ class BaseMessagePage(ABC):
 
     def new_demande_intervention(self):
         self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_role("link", name="Demande d'intervention").click()
+        self.page.get_by_role("link", name="Demande d'intervention", exact=True).click()
 
     def pick_recipient(self, contact, choice_js_fill):
         if isinstance(contact, Agent):

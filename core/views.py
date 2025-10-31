@@ -199,6 +199,7 @@ class MessageCreateView(
                 "note": NoteForm,
                 "point_situation": PointDeSituationForm,
                 "demande_intervention": DemandeInterventionForm,
+                "cr_demande_intervention": self.obj.get_crdi_form(),
                 "fin_suivi": FinDeSuiviForm,
             }
             return mapping.get(self.request.GET.get("type"))

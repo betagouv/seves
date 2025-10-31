@@ -11,7 +11,7 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
-from core.forms import BaseEtablissementForm
+from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
@@ -169,6 +169,12 @@ class MessageForm(BaseMessageForm):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
+
+
+class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
+    recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.get_tiac_structures(), label="Destinataires", required=True
+    )
 
 
 class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):

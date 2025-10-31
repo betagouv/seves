@@ -512,7 +512,9 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, object, mocked_authentification_user
 ):
-    contact, contact_cc = ContactStructureFactory.create_batch(2, with_one_active_agent=True)
+    contact, contact_cc = ContactStructureFactory.create_batch(
+        2, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+    )
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_demande_intervention()

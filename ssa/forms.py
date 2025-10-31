@@ -3,7 +3,7 @@ from django.contrib.postgres.forms import SimpleArrayField
 
 from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
-from core.forms import BaseMessageForm, BaseEtablissementForm
+from core.forms import BaseMessageForm, BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
@@ -207,3 +207,9 @@ class MessageForm(BaseMessageForm):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
+
+
+class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
+    recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.get_ssa_structures(), label="Destinataires", required=True
+    )

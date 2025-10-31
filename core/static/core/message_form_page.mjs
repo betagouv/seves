@@ -6,7 +6,7 @@ export class MessageFormController extends Controller {
     static targets = ["recipients", "recipients_copy"]
 
     configureChoicesForRecipients(){
-        if(this.hasRecipientsTarget){
+        if(this.hasRecipientsTarget && this.recipientsTarget instanceof HTMLSelectElement){
             this.recipientChoices = new Choices(this.recipientsTarget, {
                 ...choicesDefaults,
                 removeItemButton: true,

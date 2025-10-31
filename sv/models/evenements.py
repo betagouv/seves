@@ -201,6 +201,15 @@ class Evenement(
 
         return MessageForm
 
+    def get_crdi_form(self):
+        from ..forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "sv"
+
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.ARRETE,
