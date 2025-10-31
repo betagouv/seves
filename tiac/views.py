@@ -382,19 +382,23 @@ class InvestigationTiacBaseView(
         self.analyse_alimentaire_formset.save()
         self.add_user_contacts(self.object)
 
-        if self.object.is_published:
-            messages.success(self.request, "L’évènement a été publié avec succès.")
-        else:
-            messages.success(self.request, "L’évènement a été créé avec succès.")
+        messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
 
 class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
-    pass
+    def get_success_message(self):
+        if self.object.is_published:
+            messages.success(self.request, "L’évènement a été publié avec succès.")
+        else:
+            messages.success(self.request, "L’évènement a été créé avec succès.")
 
 
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
     pk_url_kwarg = "numero"
+
+    def get_success_message(self):
+        return "L’évènement a été mis à jour avec succès."
 
 
 class InvestigationTiacDetailView(

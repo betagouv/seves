@@ -13,7 +13,13 @@
         {% csrf_token %}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
-                <h1 class="fr-col-6">Création d'une investigation de TIAC</h1>
+                <h1 class="fr-col-6">
+                    {% if form.instance.pk %}
+                        Modification d'une investigation de TIAC
+                    {% else %}
+                        Création d'une investigation de TIAC
+                    {% endif %}
+                </h1>
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
                     {% if form.instance and form.instance.is_draft %}
                         <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">

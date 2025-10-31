@@ -513,6 +513,9 @@ class RepasSuspect(models.Model):
     def show_type_collectivite(self):
         return self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE
 
+    def __str__(self):
+        return self.denomination
+
 
 class AlimentSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
@@ -559,6 +562,9 @@ class AlimentSuspect(models.Model):
     def is_aliment_cuisine(self):
         return self.type_aliment == TypeAliment.CUISINE
 
+    def __str__(self):
+        return self.denomination
+
 
 class AnalyseAlimentaire(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="analyses_alimentaires")
@@ -577,3 +583,6 @@ class AnalyseAlimentaire(models.Model):
     @property
     def categorie_danger_labels(self):
         return [CategorieDanger(cd).label.split(">")[-1] for cd in self.categorie_danger]
+
+    def __str__(self):
+        return self.reference_prelevement
