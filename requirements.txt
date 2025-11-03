@@ -227,7 +227,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.0.0
+redis==7.0.1
     # via -r requirements.in
 requests==2.32.4
     # via
