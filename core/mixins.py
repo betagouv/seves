@@ -832,7 +832,7 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
             "messages": messages,
             "agents": self.get_agents(obj),
             "structures": self.get_structures(obj),
-            "documents": obj.documents.all(),
+            "documents": Document.objects.for_fiche(obj).prefetch_related("created_by_structure"),
         }
         sub_template.render(context)
         sub_doc_file = f"subdoc_{obj}.docx"
