@@ -12,15 +12,15 @@ label:has(+ .choices select[data-required="true"])::after,
 }
 
 /* Except in modals because the field is marked as not required in the form class but the required attribute is
-added via JS when opening the modal */
-.modal-needs-required label:has(+ input:required)::after,
-.modal-needs-required label:has(+ input[data-required="true"])::after,
-.modal-needs-required label:has(+ select:required)::after,
-.modal-needs-required label:has(+ select[data-required="true"])::after,
-.modal-needs-required label:has(+ textarea:required)::after,
-.modal-needs-required label:has(+ textarea[data-required="true"])::after,
-.modal-needs-required label:has(+ .choices select:required)::after,
-.modal-needs-required label:has(+ .choices select[data-required="true"])::after,
+added via JS when opening the modal, also used for conditional fields */
+.needs-required label:has(+ input:required)::after,
+.needs-required label:has(+ input[data-required="true"])::after,
+.needs-required label:has(+ select:required)::after,
+.needs-required label:has(+ select[data-required="true"])::after,
+.needs-required label:has(+ textarea:required)::after,
+.needs-required label:has(+ textarea[data-required="true"])::after,
+.needs-required label:has(+ .choices select:required)::after,
+.needs-required label:has(+ .choices select[data-required="true"])::after,
 .required-field::after {
     content: "*";
 }
