@@ -3,6 +3,15 @@ import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
 import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
 import {collectFormValues} from 'Forms'
+/**
+ * @typedef AlimentData
+ * @property {string} categorie_produit
+ * @property {string} denomination
+ * @property {string} description_composition
+ * @property {string} description_produit
+ * @property {string[]} motif_suspicion
+ * @property {string} type_aliment
+ */
 
 class AlimentFormController extends BaseFormInModal {
     static targets = [
@@ -92,7 +101,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     getDeleteConfirmationSentence(aliment){
-        return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
+        return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
     }
 
     getDeleteConfirmationTitle(aliment){
@@ -100,6 +109,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     /**
+     * @param {AlimentData} aliment
      * @return {string} HTML
      */
     renderCard(aliment) {
