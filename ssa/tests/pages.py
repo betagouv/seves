@@ -379,6 +379,15 @@ class EvenementProduitDetailsPage:
             use_locator_as_parent_element=True,
         )
 
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
     def add_message_content_and_send(self):
         self.page.locator("#id_title").fill("Title of the message")
         self.page.locator("#id_content").fill("My content \n with a line return")

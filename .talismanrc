@@ -38,8 +38,6 @@ fileignoreconfig:
   checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 3b66810a7309dce6fc4415cad1e05ff05ff1f756ae18be46fec6d30655066872
-- filename: sv/tests/test_evenement_message.py
-  checksum: 1314596f364b4ad7da911e291af1d6224cf310254b567e31066fb48837474dfe
 - filename: ssa/forms.py
   checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a
 - filename: core/migrations/0034_alter_document_document_type.py
@@ -72,8 +70,6 @@ fileignoreconfig:
   checksum: 8c19fddd35c2dbb64ec6a699845f0b7179305072502d480febc2e5830b5e642b
 - filename: tiac/admin.py
   checksum: 7f02122d7c32f3553b3e8661efb194b6647b37c5bdc05834ae3e6bb73b6fcdc6
-- filename: tiac/tests/pages.py
-  checksum: 913119c2ce1ceecf27cd00881e415b7d90432ec5d1acf9eabbe97f2db67c3ab8
 - filename: tiac/tests/test_investigation_tiac_creation.py
   checksum: bb0a966dd5280ae5c10907e2e9c7535a234a5277ded36049fc2742c55f459f66
 - filename: tiac/tests/test_investigation_tiac_details.py
@@ -88,4 +84,8 @@ fileignoreconfig:
   checksum: f13f0a927917a063b11ccb4e13c29d3e705d27ca3f80394e5671043c7e5fa23e
 - filename: core/tests/generic_tests/messages.py
   checksum: bbc64023bfba80eb2a88b3bc67a5b8da607e59888ffacca42e75758c054e14fe
+- filename: sv/tests/test_evenement_message.py
+  checksum: 5d49d7d908b7b31757e8159f443975dc7306f69a1b41a5a8dbea44e8541d926c
+- filename: tiac/tests/pages.py
+  checksum: 880d365707e90649dfc1257a80cf957db5425338c7d5e9502626c3aa6fdd625e
 version: "1.0"
