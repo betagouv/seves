@@ -397,6 +397,7 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
 
 
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
+    template_name = "tiac/investigation_modification.html"
     pk_url_kwarg = "numero"
 
     def get_success_message(self):

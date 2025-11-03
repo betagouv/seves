@@ -1,0 +1,6 @@
+{% extends "tiac/investigation.html" %}
+
+{% block buttons %}
+    <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
+    {{ block.super }}
+{% endblock %}
