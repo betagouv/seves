@@ -10,7 +10,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
-            "subject": f"[Sèves] {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()}",
+            "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()}",
             "html_content": """
                 <!DOCTYPE html>
                 <html>

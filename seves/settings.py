@@ -237,6 +237,7 @@ if DEBUG and ENVIRONMENT != "test":
     INTERNAL_IPS = ["127.0.0.1"]
 
 DEFAULT_FROM_EMAIL = "Sèves <no-reply@seves.beta.gouv.fr>"
+EMAIL_SUBJECT_PREFIX = "[Sèves]"
 POST_OFFICE = {
     "BACKENDS": {
         "default": env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"),
