@@ -186,7 +186,7 @@
                     </div>
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
-                    <div class="fr-col-6">
+                    <div class="fr-col-6 needs-required">
                         {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
                         <div id="selected_hazard-treeselect" class="fr-input-group">
                             {{ form.selected_hazard.label_tag }}
