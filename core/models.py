@@ -313,13 +313,17 @@ class Message(models.Model):
 
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
-        match self.message_type:
-            case self.DEMANDE_INTERVENTION:
+        return Message.get_email_type_display_from_value(self.message_type)
+
+    @classmethod
+    def get_email_type_display_from_value(cls, value) -> str:
+        match value:
+            case cls.DEMANDE_INTERVENTION:
                 return "DI"
-            case self.COMPTE_RENDU:
+            case cls.COMPTE_RENDU:
                 return "CR sur DI"
             case _:
-                return self.get_message_type_display()
+                return dict(cls.MESSAGE_TYPE_CHOICES).get(value)
 
     @property
     def is_draft(self):

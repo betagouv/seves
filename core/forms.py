@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Literal
 
 from django import forms
@@ -10,7 +11,14 @@ from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
-from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField, AdresseLieuDitField
+from core.fields import (
+    DSFRRadioButton,
+    ContactModelMultipleChoiceField,
+    SEVESChoiceField,
+    AdresseLieuDitField,
+    MessageObjectField,
+    MessageContentField,
+)
 from core.models import Document, Contact, Message, Visibilite, Structure, Departement
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -154,19 +162,28 @@ class CommonMessageMixin:
         for field in self:
             field.label = self.fields[field.name].label
 
+    def _add_object_field(self, obj, message_type):
+        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type))
+        new_field = ("message_object", field)
+        fields = list(self.fields.items())
+        index = next(i for i, (name, _) in enumerate(fields) if name == "title")
+        fields.insert(index, new_field)
+        self.fields = OrderedDict(fields)
+
 
 class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouveau message"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
-
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    message_object = None
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.MESSAGE)
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
         if hasattr(obj, "limit_contacts_to_user_from_app"):
@@ -199,13 +216,14 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
 
 class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouvelle note"
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.NOTE)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -223,13 +241,14 @@ class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
 class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouveau point de situation"
     help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.POINT_DE_SITUATION)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -255,13 +274,14 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
     page_title = "Nouvelle demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.DEMANDE_INTERVENTION)
 
         queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
         if hasattr(obj, "limit_contacts_to_user_from_app"):
@@ -294,13 +314,14 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
 
 class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Signaler la fin de suivi"
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.FIN_SUIVI)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -321,13 +342,14 @@ class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
 class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouveau compte rendu sur demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    content = MessageContentField()
 
     def __init__(self, *args, sender, **kwargs):
         obj = kwargs.pop("obj", None)
         self.obj = obj
         self.sender = sender
         super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.COMPTE_RENDU)
 
         self.handle_files(kwargs)
         self.set_labels()
