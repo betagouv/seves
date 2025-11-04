@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.html import strip_tags
 from reversion.models import Version
 
 from core.mixins import (
@@ -454,7 +455,7 @@ class InvestigationTiac(
 
     @property
     def danger_syndromiques_suspectes_labels(self):
-        return ", ".join(DangersSyndromiques(d).label for d in self.danger_syndromiques_suspectes)
+        return ", ".join(strip_tags(DangersSyndromiques(d).name_display) for d in self.danger_syndromiques_suspectes)
 
     @property
     def agents_confirmes_ars_labels(self):
@@ -597,6 +598,10 @@ class AnalyseAlimentaire(models.Model):
     @property
     def categorie_danger_labels(self):
         return [CategorieDanger(cd).label.split(">")[-1] for cd in self.categorie_danger]
+
+    @property
+    def categorie_danger_full_labels(self):
+        return ", ".join([CategorieDanger(cd).label for cd in self.categorie_danger])
 
     def __str__(self):
         return self.reference_prelevement
