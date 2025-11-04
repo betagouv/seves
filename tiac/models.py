@@ -175,6 +175,10 @@ class EvenementSimple(
     def get_email_subject(self):
         return f"{self.numero}"
 
+    @property
+    def type_evenement(self):
+        return "Enregistrement simple"
+
 
 class Evaluation(models.TextChoices):
     SATISFAISANTE = "satisfaisante", "A - Maîtrise des risques satisfaisante"
@@ -460,6 +464,10 @@ class InvestigationTiac(
     @property
     def agents_confirmes_ars_labels(self):
         return ", ".join(CategorieDanger(d).label for d in self.agents_confirmes_ars)
+
+    @property
+    def type_evenement(self):
+        return "Investigation de TIAC"
 
     class Meta:
         constraints = (

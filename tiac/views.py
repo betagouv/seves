@@ -16,6 +16,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
+from queryset_sequence import QuerySetSequence
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -544,10 +545,12 @@ class TiacExportView(WithFilteredListMixin, View):
     def post(self, request):
         queryset = self.get_queryset()
         serialized_queryset_sequence = []
-        for qs in queryset._querysets:
-            model_label = f"{qs.model._meta.app_label}.{qs.model._meta.model_name}"
-            ids = list(qs.values_list("id", flat=True))
-            serialized_queryset_sequence.append({"model": model_label, "ids": ids})
+
+        if isinstance(queryset, QuerySetSequence):
+            for qs in queryset._querysets:
+                serialized_queryset_sequence.append(Export.from_queryset(qs))
+        else:
+            serialized_queryset_sequence = [Export.from_queryset(queryset)]
 
         task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
         export_tiac_task.delay(task.id)

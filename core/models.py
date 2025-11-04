@@ -405,6 +405,11 @@ class Export(models.Model):
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="exports")
     queryset_sequence = models.JSONField(default=dict)
 
+    @classmethod
+    def from_queryset(cls, queryset):
+        model_label = f"{queryset.model._meta.app_label}.{queryset.model._meta.model_name}"
+        return {"model": model_label, "ids": list(queryset.values_list("id", flat=True))}
+
 
 class Region(models.Model):
     class Meta:
