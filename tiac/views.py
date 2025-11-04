@@ -514,7 +514,12 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
         sub_doc_file = self.create_document_bloc_commun()
         sub_doc = doc.new_subdoc(sub_doc_file)
 
-        context = {"object": self.object, "free_links": self.get_free_links_numbers(), "bloc_commun": sub_doc}
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
         doc.render(context)
 
         file_stream = io.BytesIO()
