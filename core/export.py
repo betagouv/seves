@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import FieldDoesNotExist
+
 from core.models import Departement
 
 
@@ -12,9 +15,16 @@ class BaseExport:
                 display_method = f"get_{attr}_display"
                 if hasattr(instance, display_method):
                     return getattr(instance, display_method)()
+            try:
+                model_field = instance._meta.get_field(attr)
+            except FieldDoesNotExist:
+                model_field = None
             value = getattr(instance, attr, None)
             if value is None:
                 return ""
+            if model_field and isinstance(model_field, ArrayField) and getattr(model_field.base_field, "choices", None):
+                choices_dict = dict(model_field.base_field.choices)
+                return ", ".join(choices_dict.get(v, v) for v in value or [])
             if isinstance(value, list):
                 return ",".join(value) if value else None
             if isinstance(value, datetime):
