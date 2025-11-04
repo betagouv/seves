@@ -44,7 +44,7 @@ def test_notification_is_send_when_add_permission(live_server, page: Page, mailo
     normalized_expected = re.sub(pattern, "", expected_content)
     assert normalized_expected == normalized_content
     assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
     assert mail.subject == "[Sèves SV] - Droits d'accès"
 
 
@@ -81,7 +81,7 @@ def test_notification_is_send_when_add_permission_for_several_groups(
     normalized_expected = re.sub(pattern, "", expected_content)
     assert normalized_expected == normalized_content
     assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
     assert mail.subject == "[Sèves SV/SSA] - Droits d'accès"
 
 
@@ -119,7 +119,7 @@ def test_notification_is_send_when_remove_permission(live_server, page: Page, ma
     normalized_expected = re.sub(pattern, "", expected_content)
     assert normalized_expected == normalized_content
     assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
     assert mail.subject == "[Sèves SV] - Droits d'accès"
 
 
@@ -160,5 +160,5 @@ def test_notification_is_send_when_remove_permission_for_several_groups(
     normalized_expected = re.sub(pattern, "", expected_content)
     assert normalized_expected == normalized_content
     assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
     assert mail.subject == "[Sèves SV/SSA] - Droits d'accès"
