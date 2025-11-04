@@ -21,7 +21,7 @@ urlpatterns = [
         name="investigation-tiac-creation",
     ),
     path(
-        "investigation-tiac/edition/<str:numero>",
+        "investigation-tiac/edition/<int:pk>",
         views.InvestigationTiacUpdateView.as_view(),
         name="investigation-tiac-edition",
     ),
@@ -34,6 +34,11 @@ urlpatterns = [
         "evenement-simple/<int:pk>/transfer",
         views.EvenementSimpleTransferView.as_view(),
         name="evenement-simple-transfer",
+    ),
+    path(
+        "evenement-simple/<int:pk>/transform-investigation",
+        views.EvenementTransformView.as_view(),
+        name="transform-investigation",
     ),
     path(
         "evenement-simple/<int:pk>/edition",

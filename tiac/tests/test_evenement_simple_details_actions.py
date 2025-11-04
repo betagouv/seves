@@ -1,9 +1,9 @@
 from playwright.sync_api import expect, Page
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import Structure, Contact
-from tiac.factories import EvenementSimpleFactory
-from tiac.models import EvenementSimple
+from core.models import Structure, Contact, LienLibre
+from tiac.factories import EvenementSimpleFactory, EtablissementFactory
+from tiac.models import EvenementSimple, InvestigationTiac
 from .pages import EvenementSimpleDetailsPage
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 
@@ -65,3 +65,45 @@ def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill):
     expect(page.get_by_text("L’évènement a bien été transféré à la DDPP52")).to_be_visible()
     assert evenement.transfered_to == contact.structure
     assert contact in evenement.contacts.all()
+
+
+def test_can_transform_evenement_simple_into_investigation_tiac(live_server, page: Page, choice_js_fill):
+    assert InvestigationTiac.objects.count() == 0
+    evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    other_evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    LienLibre.objects.create(related_object_1=evenement, related_object_2=other_evenement)
+    EtablissementFactory(evenement_simple=evenement)
+    EtablissementFactory(evenement_simple=evenement)
+    assert EvenementSimple.objects.count() == 2
+
+    details_page = EvenementSimpleDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.transform()
+
+    expect(page.get_by_text("L'événement a bien été passé en investigation de TIAC.")).to_be_visible()
+
+    assert EvenementSimple.objects.count() == 2
+    evenement.refresh_from_db()
+    assert evenement.is_cloture is True
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.is_draft is True
+    fields_to_compare = [
+        "date_reception",
+        "evenement_origin",
+        "modalites_declaration",
+        "contenu",
+        "notify_ars",
+        "nb_sick_persons",
+    ]
+    for field in fields_to_compare:
+        assert getattr(investigation, field) == getattr(evenement, field)
+    assert investigation.etablissements.count() == 2
+
+    linked_objects = set(
+        [
+            link.related_object_1 if link.related_object_1 != investigation else link.related_object_2
+            for link in LienLibre.objects.for_object(investigation)
+        ]
+    )
+    assert linked_objects == {evenement, other_evenement}

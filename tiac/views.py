@@ -31,13 +31,14 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
 )
-from core.models import Export
+from core.models import Export, FinSuiviContact, LienLibre
 from core.views import MediaDefiningMixin
 from ssa.models import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
+from tiac.tasks import export_tiac_task
 from .constants import DangersSyndromiques
 from .display import DisplayItem
 from .filters import TiacFilter
@@ -49,7 +50,6 @@ from .formsets import (
     InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
 )
-from tiac.tasks import export_tiac_task
 
 
 class EvenementSimpleManipulationMixin(
@@ -196,6 +196,9 @@ class EvenementSimpleDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
+        context["can_be_changed_in_investigation"] = self.get_object().can_be_changed_in_investigation(
+            self.request.user
+        )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["transfer_form"] = EvenementSimpleTransferForm()
         context["etablissements"] = self.get_object().etablissements.all()
@@ -246,6 +249,56 @@ class EvenementSimpleTransferView(UpdateView):
         messages.success(self.request, f"L’évènement a bien été transféré à la {self.object.transfered_to}")
         self.object.contacts.add(self.object.transfered_to.contact_set.get())
         return response
+
+
+class EvenementTransformView(UpdateView):
+    def get_queryset(self):
+        return EvenementSimple.objects.all()
+
+    def _create_investigation_tiac(self):
+        fields_to_copy = [
+            "date_reception",
+            "evenement_origin",
+            "modalites_declaration",
+            "contenu",
+            "notify_ars",
+            "nb_sick_persons",
+        ]
+        self.investigation = InvestigationTiac(createur=self.request.user.agent.structure)
+        for field in fields_to_copy:
+            setattr(self.investigation, field, getattr(self.object, field))
+        self.investigation.save()
+
+    def _copy_etablissements(self):
+        for etablissement in self.object.etablissements.all():
+            etablissement.pk = None
+            etablissement.evenement_simple = None
+            etablissement.investigation = self.investigation
+            etablissement.save()
+
+    def _copy_and_add_free_links(self):
+        for free_link in LienLibre.objects.for_object(self.object):
+            if self.object == free_link.related_object_1:
+                free_link.pk = None
+                free_link.related_object_1 = self.investigation
+                free_link.save()
+            else:
+                free_link.pk = None
+                free_link.related_object_2 = self.investigation
+                free_link.save()
+
+        LienLibre.objects.create(related_object_1=self.object, related_object_2=self.investigation)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        for contact in self.object.get_contacts_structures_not_in_fin_suivi():
+            FinSuiviContact.objects.create(content_object=self.object, contact=contact)
+        self._create_investigation_tiac()
+        self.object.cloturer()
+        self._copy_etablissements()
+        self._copy_and_add_free_links()
+        messages.success(self.request, "L'événement a bien été passé en investigation de TIAC.")
+        return HttpResponseRedirect(reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.investigation.pk}))
 
 
 class InvestigationTiacBaseView(
@@ -400,7 +453,6 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
 
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
     template_name = "tiac/investigation_modification.html"
-    pk_url_kwarg = "numero"
 
     def get_success_message(self):
         return "L’évènement a été mis à jour avec succès."

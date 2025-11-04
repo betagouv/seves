@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="{% static 'tiac/evenement_simple.css' %}">
 {% endblock extrahead %}
 {% block content %}
-    <form class="fr-container--fluid fr-background-alt--grey" method="post">
+    <form class="fr-container--fluid fr-background-alt--grey" method="post" data-controller="evenement-simple-form">
         {% csrf_token %}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
@@ -50,10 +50,14 @@
                         {% dsfr_form_field form.contenu %}
                     </div>
 
-                    <div class="fr-col-12 fr-col-lg-4">
+                    <div class="fr-col-12 fr-col-lg-4 needs-required">
                         {% dsfr_form_field form.notify_ars|dsfr_inline %}
                         {% dsfr_form_field form.nb_sick_persons|dsfr_inline %}
-                        {% dsfr_form_field form.follow_up|dsfr_inline %}
+                        <div class="required-field">{{ form.follow_up.label_tag }}</div>
+                        {{ form.follow_up|set_data:"action:change->evenement-simple-form#onFollowUpChange" }}
+                        <div class="fr-hidden fr-mt-1w" data-evenement-simple-form-target="notice">
+                            {% dsfr_notice title='Publiez la fiche, puis passez-la en investigation de TIAC depuis le menu "+ Action"' %}
+                        </div>
                     </div>
                 </div>
             </fieldset>

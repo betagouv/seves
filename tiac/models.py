@@ -117,6 +117,9 @@ class EvenementSimple(
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
 
+    def can_be_changed_in_investigation(self, user):
+        return self.can_user_access(user)
+
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 
@@ -178,6 +181,10 @@ class EvenementSimple(
     @property
     def type_evenement(self):
         return "Enregistrement simple"
+
+    @property
+    def display_transfer_notice(self):
+        return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
 
 class Evaluation(models.TextChoices):

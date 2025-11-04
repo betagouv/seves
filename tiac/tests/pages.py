@@ -441,6 +441,11 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
         choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
         self.page.get_by_role("button", name="Transférer").click()
 
+    def transform(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Passer en investigation").click()
+        self.page.get_by_role("button", name="Confirmer").click()
+
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
 
@@ -705,7 +710,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
 
     def navigate(self):
         self.page.goto(
-            f"{self.base_url}{reverse('tiac:investigation-tiac-edition', kwargs={'numero': self.investigation.pk})}"
+            f"{self.base_url}{reverse('tiac:investigation-tiac-edition', kwargs={'pk': self.investigation.pk})}"
         )
 
 

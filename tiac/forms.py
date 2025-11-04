@@ -83,7 +83,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"),),
+            js=(js_module("core/free_links.mjs"), js_module("tiac/evenement_simple.mjs")),
         )
 
     def __init__(self, *args, **kwargs):
