@@ -530,7 +530,7 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
             file_stream.getvalue(),
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
-        response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
+        response["Content-Disposition"] = f"attachment; filename=investigation_tiac_{self.object.numero}.docx"
         os.remove(sub_doc_file)
         return response
 
