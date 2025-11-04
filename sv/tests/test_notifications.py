@@ -34,7 +34,7 @@ def assert_mail_common(mails, message, evenement):
     mail = mails[0]
     message_type = message.get_email_type_display()
     assert mail.subject == f"[Sèves] {evenement.organisme_nuisible.code_oepp} {evenement.numero} - {message_type}"
-    assert mail.from_email == "no-reply@beta.gouv.fr"
+    assert mail.from_email == "no-reply@seves.beta.gouv.fr"
     assert message.sender.agent.prenom in mail.body
     assert message.sender.agent.nom in mail.body
     assert str(message.sender.agent.structure) in mail.body

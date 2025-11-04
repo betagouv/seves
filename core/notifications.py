@@ -28,7 +28,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
     send(
         recipients=recipients,
         cc=copy,
-        sender="no-reply@beta.gouv.fr",
+        sender="no-reply@seves.beta.gouv.fr",
         template=template,
         context={
             "message_obj": message_obj,

@@ -335,5 +335,5 @@ def test_notification_is_send_when_adding_contact_agent(live_server, page, choic
     normalized_expected = re.sub(pattern, "", expected_content)
     assert normalized_expected == normalized_content
     assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@beta.gouv.fr>"
+    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
     assert mail.subject == f"[Sèves SV] {evenement.organisme_nuisible.code_oepp} {evenement.numero}"
