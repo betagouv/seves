@@ -1,23 +1,28 @@
 {% load dsfr_tags widget_tweaks %}
 
 <div class="fr-input-group">
-    {% dsfr_form_field form.denomination|set_data:"aliment-form-target:denominationInput" %}
+    {{ form.denomination.label_tag }}
+    {{ form.denomination|set_data:"aliment-form-target:denominationInput" }}
 </div>
 <div class="fr-input-group" data-aliment-form-target="typeAlimentInputContainer">
-    {% dsfr_form_field form.type_aliment|set_data:"action:change->aliment-form#onTypeAlimentChange" %}
+    {{ form.type_aliment.label_tag }}
+    {{ form.type_aliment|set_data:"action:change->aliment-form#onTypeAlimentChange" }}
 </div>
 <div class="fr-input-group" data-aliment-form-target="descriptionCompositionInputContainer">
-    {% dsfr_form_field form.description_composition|set_data:"aliment-form-target:descriptionCompositionInput" %}
+    {{ form.description_composition.label_tag }}
+    {{ form.description_composition|set_data:"aliment-form-target:descriptionCompositionInput" }}
 </div>
 <div class="fr-input-group" id="categorie-produit" data-aliment-form-target="categorieProduitRootContainer">
     <label>Catégorie de produit</label>
     <div data-aliment-form-target="categorieProduitContainer"></div>
 </div>
 <div class="fr-input-group" data-aliment-form-target="descriptionProduitInputContainer">
-    {% dsfr_form_field form.description_produit|set_data:"aliment-form-target:descriptionProduitInput" %}
+    {{ form.description_produit.label_tag }}
+    {{ form.description_produit|set_data:"aliment-form-target:descriptionProduitInput" }}
 </div>
 <div class="fr-input-group">
-    {% dsfr_form_field form.motif_suspicion %}
+    {{ form.motif_suspicion.label_tag }}
+    {{ form.motif_suspicion }}
 </div>
 
 {% dsfr_notice title="Ajoutez vos documents dans l'onglet documents après publication de la fiche." %}
