@@ -27,6 +27,19 @@
                         </a>
                     </li>
                 {% endif %}
+                {% if can_be_changed_in_investigation %}
+                    <li>
+                        <a
+                            class="fr-translate__language fr-nav__link"
+                            href="#"
+                            data-fr-opened="false"
+                            aria-controls="fr-modal-investigation"
+                        >
+                            <span class="fr-icon-arrow-right-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span>
+                            Passer en investigation
+                        </a>
+                    </li>
+                {% endif %}
                 {% if can_be_deleted %}
                     <li>
                         <a

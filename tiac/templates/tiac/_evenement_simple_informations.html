@@ -1,4 +1,4 @@
-{% load or_empty_value_tag %}
+{% load or_empty_value_tag dsfr_tags %}
 <div class="white-container detail-content">
   <h2 class="fr-h6">Le contexte</h2>
   <div class="fr-container--fluid">
@@ -56,6 +56,9 @@
           <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-5 bold">Suite donnée par la DD</div>
             <div class="fr-col-7">{{ object.get_follow_up_display }}</div>
+            {% if object.display_transfer_notice %}
+              {% dsfr_notice title='Publiez la fiche, puis passez-la en investigation de TIAC depuis le menu "+ Action"' %}
+            {% endif %}
           </div>
         </div>
       </div>
