@@ -674,7 +674,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit(self, btn_label="Enregistrer"):
-        self.page.get_by_role("button", name=btn_label, exact=True).click()
+        self.page.get_by_role("button", name=btn_label, exact=True).first.click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
