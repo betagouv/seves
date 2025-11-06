@@ -1,9 +1,10 @@
 import {Controller} from "Stimulus";
 import choicesDefaults from "choicesDefaults"
 import {applicationReady} from "Application"
+import {collectFormValues} from "Forms"
 
 export class MessageFormController extends Controller {
-    static targets = ["recipients", "recipients_copy"]
+    static targets = ["recipients", "recipients_copy", "draftBtn", "sendBtn"]
 
     configureChoicesForRecipients(){
         if(this.hasRecipientsTarget && this.recipientsTarget instanceof HTMLSelectElement){
@@ -11,6 +12,11 @@ export class MessageFormController extends Controller {
                 ...choicesDefaults,
                 removeItemButton: true,
                 searchResultLimit: 500,
+                callbackOnInit: function() {
+                    this.passedElement.element.addEventListener('change', () => {
+                        this.hideDropdown(true);
+                    });
+                }
             })
         }
     }
@@ -20,8 +26,28 @@ export class MessageFormController extends Controller {
                 ...choicesDefaults,
                 removeItemButton: true,
                 searchResultLimit: 500,
+                callbackOnInit: function() {
+                    this.passedElement.element.addEventListener('change', () => {
+                        this.hideDropdown(true);
+                    });
+                }
             })
         }
+    }
+
+    onSend(event){
+        if (event.isTrusted === false){
+            return
+        }
+
+        event.preventDefault()
+        const formValues = collectFormValues(this.element)
+        if (formValues === undefined) {
+            return
+        }
+        event.target.click()
+        this.draftBtnTarget.disabled = true
+        this.sendBtnTarget.disabled = true
     }
 
     onShortcutDestinataires(event){
