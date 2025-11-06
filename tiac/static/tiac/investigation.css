@@ -47,5 +47,5 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
 #id_selected_hazard {
     opacity: 0;
     height: 0;
-    padding: 0;
+    padding: 1px;
 }
