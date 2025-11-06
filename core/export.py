@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import FieldDoesNotExist
+from django.utils.html import strip_tags
 
 from core.models import Departement
 
@@ -24,7 +25,7 @@ class BaseExport:
                 return ""
             if model_field and isinstance(model_field, ArrayField) and getattr(model_field.base_field, "choices", None):
                 choices_dict = dict(model_field.base_field.choices)
-                return ", ".join(choices_dict.get(v, v) for v in value or [])
+                return ", ".join(strip_tags(choices_dict.get(v, v)) for v in value or [])
             if isinstance(value, list):
                 return ",".join(value) if value else None
             if isinstance(value, datetime):
