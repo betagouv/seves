@@ -550,7 +550,6 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         context["patches"] = []
         for i in range(1, len(versions)):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
-            for diff in diffs:
-                diff["revision"] = versions[i].revision
-                context["patches"].append(diff)
+            context["patches"].extend(diffs)
+
         return context
