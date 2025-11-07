@@ -465,11 +465,11 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
         label="Dénomination", required=True, widget=forms.TextInput(attrs={"required": "required"})
     )
     menu = forms.CharField(widget=forms.Textarea(attrs={"cols": 30, "rows": 3}), label="Menu", required=False)
-    motif_suspicion = forms.MultipleChoiceField(
-        choices=Motif.choices,
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-        label="Motif de suspicion du repas",
+    type_repas = SEVESChoiceField(
+        required=True,
+        choices=TypeRepas.choices,
+        label="Type de repas",
+        widget=SelectWithAttributeField(attrs={"required": "required"}),
     )
     datetime_repas = forms.DateTimeField(
         required=False,
@@ -488,22 +488,25 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
         label="Département",
         empty_label=settings.SELECT_EMPTY_CHOICE,
     )
-    type_repas = SEVESChoiceField(
-        required=False, choices=TypeRepas.choices, label="Type de repas", widget=SelectWithAttributeField
-    )
     type_collectivite = SEVESChoiceField(required=False, choices=TypeCollectivite.choices, label="Type de collectivité")
+    motif_suspicion = forms.MultipleChoiceField(
+        choices=Motif.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Motif de suspicion du repas",
+    )
 
     class Meta:
         model = RepasSuspect
         fields = [
             "denomination",
             "menu",
-            "motif_suspicion",
+            "type_repas",
             "datetime_repas",
             "nombre_participant",
             "departement",
-            "type_repas",
             "type_collectivite",
+            "motif_suspicion",
         ]
 
 
