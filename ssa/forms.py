@@ -122,6 +122,29 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     class Meta:
         model = EvenementProduit
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
+        fields = [
+            "numero_rasff",
+            "type_evenement",
+            "source",
+            "description",
+            "aliments_animaux",
+            "categorie_produit",
+            "denomination",
+            "marque",
+            "lots",
+            "description_complementaire",
+            "temperature_conservation",
+            "categorie_danger",
+            "precision_danger",
+            "quantification",
+            "quantification_unite",
+            "evaluation",
+            "produit_pret_a_manger",
+            "reference_souches",
+            "reference_clusters",
+            "actions_engagees",
+            "numeros_rappel_conso",
+        ]
         widgets = {
             "evaluation": forms.Textarea(
                 attrs={

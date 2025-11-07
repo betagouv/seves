@@ -1,6 +1,6 @@
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory, DepartementFactory
+from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement, CategorieDanger, CategorieProduit
@@ -135,7 +135,11 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
     evenement: EvenementProduit = EvenementProduitFactory(
         createur=createur, not_bacterie=True, etat=EvenementProduit.Etat.EN_COURS
     )
-    assert evenement.contacts.count() == 0
+    structure = ContactStructureFactory()
+    agent = ContactAgentFactory()
+    evenement.contacts.add(structure)
+    evenement.contacts.add(agent)
+    assert evenement.contacts.count() == 2
 
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
@@ -144,9 +148,12 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
 
     expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
-    assert evenement.contacts.count() == 2
-    assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
-    assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
+    assert set(evenement.contacts.all()) == {
+        agent,
+        structure,
+        mocked_authentification_user.agent.contact_set.get(),
+        mocked_authentification_user.agent.structure.contact_set.get(),
+    }
 
 
 def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_server, page):
