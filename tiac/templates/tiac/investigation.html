@@ -158,7 +158,7 @@
 
                 <template data-agents-pathogene-target="categorieDangerHeader">
                     <div class="categorie-danger-header">
-                        <div class="fr-ml-1v">Danger les plus courants</div>
+                        <div class="fr-ml-1v">Dangers les plus courants</div>
                         {% for danger in danger_plus_courant %}
                             <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
                                 <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
@@ -203,7 +203,7 @@
                             {{ form.selected_hazard|set_data:"conclusion-form-target:selectedHazardTreeselectInput" }}
                             <template data-conclusion-form-target="selectedHazardTreeselectHeader">
                                 <div class="categorie-danger-header">
-                                    <div class="fr-ml-1v">Danger les plus courants</div>
+                                    <div class="fr-ml-1v">Dangers les plus courants</div>
                                     {% for danger in form.common_danger %}
                                         <div
                                             class="treeselect-list__item"

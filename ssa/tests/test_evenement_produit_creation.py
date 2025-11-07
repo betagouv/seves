@@ -785,7 +785,7 @@ def test_categorie_danger_dont_show(live_server, mocked_authentification_user, p
     # Force open the dropdown by clicking it
     dropdown.get_by_placeholder("Choisir").click()
     expect(dropdown.locator(".categorie-danger-header")).to_be_visible()
-    assert "Danger les plus courants" in dropdown.inner_text()
+    assert "Dangers les plus courants" in dropdown.inner_text()
     page.keyboard.type("Sal")
     expect(dropdown.locator(".categorie-danger-header")).to_be_hidden()
-    assert "Danger les plus courants" not in dropdown.inner_text()
+    assert "Dangers les plus courants" not in dropdown.inner_text()
