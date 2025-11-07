@@ -336,6 +336,13 @@ class FicheDetectionCreateView(
             return self.form_invalid(form)
 
         if not lieu_formset.is_valid():
+            for i, lieu_form in enumerate(lieu_formset):
+                if not lieu_form.is_valid():
+                    for field, errors in lieu_form.errors.items():
+                        for error in errors:
+                            messages.error(
+                                self.request, f"Erreur dans le formulaire de lieu #{i + 1} : '{field}': {error}"
+                            )
             return self.form_invalid(form)
 
         if not evenement_form.is_valid():
