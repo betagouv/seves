@@ -351,6 +351,10 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
             "will_trigger_inquiry": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
+        labels = {
+            "conclusion_etablissement": "Conclusion établissement",
+            "conclusion_analyse": "Conclusion d'analyse alimentaire et d’environnement",
+        }
 
     @property
     def media(self):

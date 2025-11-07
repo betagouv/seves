@@ -141,8 +141,8 @@ Les souches sont à envoyer aux LNR.""",
     )
     GASTRO = ChoiceData(
         value="gastro-enterite",
-        name="Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
-        short_name="Gastro-entérite aigüe",
+        name="Virus de la Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
+        short_name="Virus de la Gastro-entérite aigüe",
         help_text="Incubation longue (10h - 50h) - tous symptômes de gastro-entérite, vomissements très fréquents, fièvre ~50% des cas - cas secondaires fréquents (transmission inter-humaine)",
         description="""Attention, une infection bactérienne à Salmonella etc. ou par vibrio parahaemolyticus est aussi à envisager.<br/><br/>
 Bien récupérer et transmettre les informations de traçabilité si un ingrédient (coquillages, fruits rouges, crudité…) est suspecté.
@@ -176,13 +176,13 @@ Envoi direct au LNR pour analyse.
         name="Intoxination par des poissons coralliens : ciguatoxine",
         short_name="Intoxination par des poissons coralliens",
         help_text="Incubation courte (2 à 6 heures) - douleurs abdominales, nausées, vomissements, diarrhées, prurit, hypotension artérielle, bradycardie, symptômes neurologiques (parésthésies, faiblesse musculaire, etc)",
-        description="Poissons des récifs coralliens (carangues, mérou, murènes, barracuda...) ",
+        description="Poissons des récifs coralliens (carangues, mérous, murènes, barracudas…) ",
     )
     AUTRE = ChoiceData(
         value="autre",
         name="Autres cas",
         short_name="Autres cas",
-        help_text="Préciser les symptômes et les investigations médicales dans la description de l'évènement et dans le fil de suivi. ",
+        help_text="Préciser les symptômes et les investigations médicales dans le contenu du signalement et dans le fil de suivi.",
         description="",
     )
 
