@@ -57,7 +57,7 @@ class WithTreeSelect:
 
 
 class EvenementProduitFormPage(WithTreeSelect):
-    info_fields = ["numero_rasff", "type_evenement", "source", "description", "numero_rasff"]
+    info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
         "marque",

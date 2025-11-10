@@ -15,6 +15,7 @@ class EvenementProduitExport(BaseExport):
         ("etat", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
+        ("date_reception", "Date de réception"),
         ("numero_rasff", "Numéro RASFF"),
         ("type_evenement", "Type d'événement"),
         ("source", "Source"),
