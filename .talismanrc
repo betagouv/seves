@@ -94,4 +94,6 @@ fileignoreconfig:
   checksum: a35ffe3d0d72de42ec8af3cb6c3b700d6ec4117077f2215100cb9d0a7381ee82
 - filename: core/static/core/message_form_page.mjs
   checksum: 790a1175b5ee54efbf8e2c4fdf98bf77491842f4837c9e72ca54ec28db55edf6
+- filename: core/migrations/0040_alter_document_document_type.py
+  checksum: 5159796f7b12df27546e95a32fa6d591d607fd2fee496179607ca48ac31b3172
 version: "1.0"

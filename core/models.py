@@ -177,6 +177,7 @@ class Document(models.Model):
         TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
         TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
         TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
+        TRACABILITE_AVAL_GENERAL = "tracabilite_aval_general", "Traçabilité aval"
         TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
         DSCE_CHED = "dsce_ched", "DSCE/CHED"
         ETIQUETAGE = "etiquetage", "Étiquetage"

@@ -57,6 +57,25 @@ class BaseTiacModel(models.Model):
     class Meta:
         abstract = True
 
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_GENERAL,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AUTRE,
+        ]
+
 
 @reversion.register()
 class EvenementSimple(
@@ -148,29 +167,6 @@ class EvenementSimple(
 
     def get_publish_success_message(self):
         return "Événement simple publié avec succès"
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
 
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
@@ -371,29 +367,6 @@ class InvestigationTiac(
     @property
     def limit_contacts_to_user_from_app(self):
         return "ssa"
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
 
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
