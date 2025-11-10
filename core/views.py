@@ -24,7 +24,6 @@ from waffle import flag_is_active
 from core.diffs import CompareMixin
 from .forms import (
     DocumentUploadForm,
-    MessageDocumentForm,
     DocumentEditForm,
     StructureAddForm,
     AgentAddForm,
@@ -33,6 +32,7 @@ from .forms import (
     PointDeSituationForm,
     DemandeInterventionForm,
     FinDeSuiviForm,
+    DocumentInMessageUploadForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -45,6 +45,7 @@ from .mixins import (
 from .models import Document, Message, Contact, user_is_referent_national
 from .notifications import notify_contact_agent
 from .redirect import safe_redirect
+from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,9 @@ class MessageCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = MessageDocumentForm(object=self.obj)
+        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["object"] = self.obj
         return context

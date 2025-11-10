@@ -143,6 +143,9 @@ class BaseMessagePage(ABC):
     def open_message(self, index=1):
         self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
 
+    def delete_document(self, nth):
+        self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
+
     def add_document(self):
         self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
         self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
@@ -157,6 +160,13 @@ class BaseMessagePage(ABC):
 
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
+
+    def add_basic_document(self, suffix=""):
+        self.page.locator("#id_nom").fill(f"Mon document{suffix}")
+        self.page.locator("#id_document_type").select_option("Autre document")
+        self.page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
+        self.page.locator("#id_description").fill(f"Ma description {suffix}")
+        self.page.get_by_role("button", name="Valider l'ajout du document").click()
 
     def remove_document(self, index):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
