@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("tiac", "0029_alter_evenementsimple_follow_up"),
+        ("tiac", "0030_alter_investigationtiac_danger_syndromiques_suspectes_and_more"),
     ]
 
     operations = [
