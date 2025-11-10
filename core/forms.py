@@ -64,6 +64,44 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         return file
 
 
+class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+    nom = forms.CharField(
+        help_text="",
+        label="Intitulé du document",
+        widget=forms.TextInput(attrs={"maxlength": 256, "required": True}),
+    )
+    document_type = SEVESChoiceField(
+        choices=Document.TypeDocument.choices, label="Type de document", widget=forms.Select(attrs={"required": True})
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
+    )
+    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget(attrs={"disabled": True}))
+
+    class Meta:
+        model = Document
+        fields = ["nom", "document_type", "description", "file", "content_type", "object_id"]
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("obj")
+        super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+        ]
+        self.add_content_type_fields(obj)
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if not file:
+            return
+        if file.size > MAX_UPLOAD_SIZE_BYTES:
+            raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
+        if document_type := self.cleaned_data.get("document_type"):
+            Document.validate_file_extention_for_document_type(file, document_type)
+        return file
+
+
 class DocumentEditForm(DSFRForm, forms.ModelForm):
     nom = forms.CharField(
         help_text="Nommer le document de manière claire et compréhensible pour tous",
@@ -93,6 +131,14 @@ class CommonMessageMixin:
             document_number = key.split("_")[-1]
             document_field = forms.FileField(initial=documents[f"document_file_{document_number}"])
             self.fields[f"document_{document_number}"] = document_field
+
+            if data.get(f"document_name_{document_number}"):
+                document_name = forms.CharField(initial=data.get(f"document_name_{document_number}"))
+                self.fields[f"document_name_{document_number}"] = document_name
+
+            if data.get(f"document_comment_{document_number}"):
+                document_comment = forms.CharField(initial=data.get(f"document_comment_{document_number}"))
+                self.fields[f"document_comment_{document_number}"] = document_comment
 
     def _get_structures(self, obj):
         if hasattr(self, "_structures"):

@@ -15,4 +15,5 @@ importmaps = {
     "CustomTreeSelect": static("ssa/_custom_tree_select.js"),
     "siret": static("core/siret.mjs"),
     "TreeSelect": static("ssa/treeselectjs.umd.js"),
+    "Document": static("core/document.js"),
 }

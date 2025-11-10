@@ -102,6 +102,18 @@ fieldset {
         padding: 2rem !important;
     }
 }
+
+.grey-container {
+    background-color: var(--grey-975-100-active);
+    padding: 1.5rem !important;
+}
+@media (min-width: 992px) {
+    .grey-container {
+        padding: 2rem !important;
+    }
+}
+
+
 .white-container--lite {
     background-color: white;
     padding: 1rem !important;

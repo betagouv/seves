@@ -614,3 +614,30 @@ def generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_al
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, object):
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_message()
+    message_page.add_basic_message(active_contact, choice_js_fill)
+    message_page.add_basic_document()
+    assert message_page.page.locator(".document-to-add").count() == 1
+
+    message_page.add_basic_document(suffix=" numero 2")
+    message_page.add_basic_document(suffix=" numero 3")
+    assert message_page.page.locator(".document-to-add").count() == 3
+
+    message_page.delete_document(nth=1)
+    assert message_page.page.locator(".document-to-add").count() == 2
+
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    message = Message.objects.get()
+    assert message.documents.count() == 2
+    assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}

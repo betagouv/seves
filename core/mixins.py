@@ -760,12 +760,13 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
             try:
                 Document.objects.create(
                     file=form.cleaned_data[f"document_{i}"],
-                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    nom=form.cleaned_data.get(f"document_name_{i}", form.cleaned_data[f"document_{i}"]._name),
                     document_type=form.cleaned_data[f"document_type_{i}"],
                     content_type=content_type,
                     object_id=message.pk,
                     created_by=self.request.user.agent,
                     created_by_structure=self.request.user.agent.structure,
+                    description=form.cleaned_data.get(f"document_comment_{i}", ""),
                 )
             except OperationalError:
                 logger.error("Could not connect to Redis")
