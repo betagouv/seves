@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import FieldDoesNotExist
@@ -30,6 +30,8 @@ class BaseExport:
                 return ",".join(value) if value else None
             if isinstance(value, datetime):
                 return value.strftime("%d/%m/%Y %Hh%M")
+            if isinstance(value, date):
+                return value.strftime("%d/%m/%Y")
             if isinstance(value, Departement):
                 return str(value)
             if isinstance(value, bool):

@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from django.utils import timezone
 
 from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
@@ -15,6 +16,10 @@ from ssa.widgets import PositionDossierWidget
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.ModelForm):
+    date_reception = forms.DateTimeField(
+        label="Date de réception",
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+    )
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     numero_rasff = forms.CharField(
         required=False,
@@ -123,6 +128,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         model = EvenementProduit
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
         fields = [
+            "date_reception",
             "numero_rasff",
             "type_evenement",
             "source",

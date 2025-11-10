@@ -30,7 +30,8 @@ class EvenementProduitFactory(DjangoModelFactory):
     class Meta:
         model = EvenementProduit
 
-    date_creation = factory.Faker("date_this_decade")
+    date_creation = factory.Faker("date_time_this_decade")
+    date_reception = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
