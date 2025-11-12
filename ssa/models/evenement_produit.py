@@ -67,9 +67,10 @@ class TemperatureConservation(models.TextChoices):
 
 class ActionEngagees(models.TextChoices):
     PAS_DE_MESURE = "pas_de_mesure", "Pas de mesure de retrait ou rappel"
-    RETRAIT = "retrait_marche", "Retrait du marché (sans information des consommateurs)"
-    RETRAIT_RAPPEL = "retrait_rappel", "Retrait et rappel"
+    RETRAIT = "retrait_marche", "Retrait du marché sans information des consommateurs"
+    RETRAIT_RAPPEL = "retrait_rappel", "Retrait et information du consommateur / rappel "
     RETRAIT_RAPPEL_CP = "retrait_rappel_communique_presse", "Retrait et rappel avec communiqué de presse"
+    RETRAIT_CONTROLE = "retrait_rappel_controle_effectivite", "Retrait et rappel avec contrôle de l'effectivité"
 
 
 class QuantificationUnite(models.TextChoices):
