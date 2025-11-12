@@ -189,6 +189,7 @@ class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
         model = Etablissement
         fields = [
             "siret",
+            "autre_identifiant",
             "numero_agrement",
             "raison_sociale",
             "enseigne_usuelle",

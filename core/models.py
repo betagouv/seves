@@ -456,6 +456,7 @@ class BaseEtablissement(models.Model):
             ),
         ],
     )
+    autre_identifiant = models.CharField(max_length=255, verbose_name="Autre identifiant", blank=True)
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
     enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
 

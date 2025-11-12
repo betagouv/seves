@@ -30,6 +30,10 @@
                                 <div class="fr-col-7">{{ etablissement.siret|or_empty_value_tag }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-5 bold">Autre identifiant</div>
+                                <div class="fr-col-7">{{ etablissement.autre_identifiant|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-5 bold">N° agrément</div>
                                 <div class="fr-col-7">{{ etablissement.numero_agrement|or_empty_value_tag }}</div>
                             </div>

@@ -62,6 +62,7 @@ class WithEtablissementMixin:
     def fill_etablissement(self, modal, etablissement: Etablissement):
         modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="autre_identifiant"]').fill(etablissement.autre_identifiant)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)

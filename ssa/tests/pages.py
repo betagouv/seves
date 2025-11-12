@@ -254,6 +254,7 @@ class EvenementProduitFormPage(WithTreeSelect):
     def _fill_etablissement(self, modal, etablissement: Etablissement):
         self.force_siret(etablissement.siret)
         modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
+        modal.locator('[id$="-autre_identifiant"]').fill(etablissement.autre_identifiant)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
