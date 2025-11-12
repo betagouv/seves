@@ -51,10 +51,10 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
 
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
-    assert search_page.description_cell().text_content() == evenement.product_description
+    assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.etat_cell().text_content() == "Brouillon"
-    assert search_page.liens_cell().text_content() == "2"
 
 
 def test_list_can_filter_by_numero(live_server, mocked_authentification_user, page: Page):

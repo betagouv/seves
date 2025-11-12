@@ -2,12 +2,33 @@
     display: None;
 }
 
-.ellipsis {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .etablissment-filters {
     background-color: var(--background-alt-grey);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 1rem;
+    align-items: stretch
+}
+
+.filter-grid-2 { grid-column: span 2; }
+.filter-grid-4 { grid-column: span 4; }
+
+.with_free_links .fr-checkbox-group {
+    margin-bottom: 0 !important;
+}
+
+.choices {
+    margin-top: 0.5rem;
+}
+
+.ellipsis {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
 }
