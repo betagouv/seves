@@ -267,7 +267,7 @@ def test_create_fiche_detection_with_lieu_in_corsica(
     choice_js_fill,
     ensure_departements,
 ):
-    ensure_departements("Haute-Corse")
+    ensure_departements("Corse-du-Sud")
     organisme_nuisible = OrganismeNuisibleFactory()
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
