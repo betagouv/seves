@@ -337,7 +337,7 @@ def test_can_filter_by_actions_engagees(live_server, mocked_authentification_use
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
     search_page.open_sidebar()
-    search_page.actions_engagees.select_option("Retrait du marché (sans information des consommateurs)")
+    search_page.actions_engagees.select_option("Retrait du marché sans information des consommateurs")
     search_page.add_filters()
     search_page.submit_search()
 
