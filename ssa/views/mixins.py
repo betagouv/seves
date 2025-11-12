@@ -26,7 +26,6 @@ class WithFilteredListMixin(WithOrderingMixin):
             .select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
-            .with_nb_liens_libres()
         )
 
     def get_queryset(self):

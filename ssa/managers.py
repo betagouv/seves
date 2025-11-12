@@ -30,11 +30,6 @@ class EvenementProduitQueryset(EvenementManagerMixin, models.QuerySet):
 
         return self._with_fin_de_suivi(contact, EvenementProduit)
 
-    def with_nb_liens_libres(self):
-        from ssa.models import EvenementProduit
-
-        return self._with_nb_liens_libres(EvenementProduit)
-
     def search(self, query):
         fields = [
             "description",

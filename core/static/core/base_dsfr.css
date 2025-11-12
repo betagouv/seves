@@ -74,6 +74,9 @@
 .fr-flex--space-between {
     justify-content: space-between;
 }
+.fr-flex--align-end{
+    align-self: flex-end;
+}
 
 .fr-container-xxl {
     max-width: 90rem;
