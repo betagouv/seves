@@ -54,6 +54,7 @@ class TiacExport(BaseExport):
 
     etablissement_fields = [
         ("siret", "Numéro SIRET"),
+        ("autre_identifiant", "Autre identifiant"),
         ("raison_sociale", "Raison sociale"),
         ("enseigne_usuelle", "Enseigne usuelle"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),

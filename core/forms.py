@@ -617,6 +617,7 @@ class BaseEtablissementForm(forms.ModelForm):
         max_length=14,
         widget=forms.HiddenInput,
     )
+    autre_identifiant = forms.CharField(required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     pays = CountryField(blank=True).formfield(label="Pays", widget=forms.Select(attrs={"class": "fr-select"}))
