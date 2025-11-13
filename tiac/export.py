@@ -45,6 +45,10 @@ class TiacExport(BaseExport):
         ("suspicion_conclusion", "Conclusion de la suspicion de TIAC"),
         ("selected_hazard", "Dangers retenus"),
         ("conclusion_comment", "Commentaire"),
+        ("conclusion_etablissement", " Scénario retenu - Établissement"),
+        ("conclusion_repas", " Scénario retenu - Repas"),
+        ("conclusion_aliment", " Scénario retenu - Aliment"),
+        ("conclusion_analyse", " Scénario retenu - Analyse"),
         ("list_of_linked_objects_as_str", "Événements liés"),
     ]
 
