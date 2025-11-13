@@ -2,8 +2,7 @@ import {Controller} from "Stimulus";
 import {applicationReady} from "Application";
 import {resetForm} from "Forms"
 import choicesDefaults from "choicesDefaults"
-import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked} from "CustomTreeSelect"
-import {collectFormValues} from "Forms"
+import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildrenAreSelected, shortcutClicked, addCategoryHeader} from "CustomTreeSelect"
 
 
 class SearchFormController extends Controller {
@@ -18,18 +17,25 @@ class SearchFormController extends Controller {
         "agentsPathogenesInput",
         "agentsPathogenesContainer",
         "agentsPathogenesHeader",
+        "jsonConfigSelectedHazard",
+        "selectedHazardInput",
+        "selectedHazardContainer",
     ]
 
     onReset(){
         resetForm(this.element)
         this.choicesAgentContact.setChoiceByValue('');
         this.choicesStructureContact.setChoiceByValue('');
-        this.dangerSyndromique.setChoiceByValue('');
+        this.treeselectSelectedHazard.updateValue()
         this.element.submit()
     }
 
     onSidebarClear(){
         resetForm(this.sidebarTarget)
+        this.dangerSyndromique.removeActiveItems();
+        this.treeselectAgentsPathogenes.updateValue()
+        this.treeselectDanger.updateValue()
+        this.treeselectCategorieProduit.updateValue()
     }
 
     onSidebarAdd() {
@@ -71,6 +77,11 @@ class SearchFormController extends Controller {
         const list = this.categorieDangerAnalyseContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true);
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label =>{
+                if (this.treeselectDanger.value.includes(label.innerText)){
+                    fragment.querySelector(`[id='${label.getAttribute('for')}']`).checked = true
+                }
+            })
             list.prepend(fragment);
             this.customHeaderAddedValue = true
         }
@@ -85,6 +96,11 @@ class SearchFormController extends Controller {
         const list = this.agentsPathogenesContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.agentsPathogenesHeaderTarget.content.cloneNode(true);
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label =>{
+                if (this.treeselectAgentsPathogenes.value.includes(label.innerText)){
+                    fragment.querySelector(`[id='${label.getAttribute('for')}']`).checked = true
+                }
+            })
             list.prepend(fragment);
             this.customHeaderAddedValueAgentsPathogeneValue = true
         }
@@ -168,24 +184,53 @@ class SearchFormController extends Controller {
     setupCategorieProduit(){
         const options = JSON.parse(this.jsonConfigTarget.textContent)
         const selectedValues = this.categorieProduitInputTarget.value.split("||").map(v => v.trim())
-        const treeselect = new Treeselect({
+        const treeselectCategorieProduit = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: selectedValues,
             options: options,
             isSingleSelect: false,
             openCallback() {
-                patchItems(treeselect.srcElement)
+                patchItems(treeselectCategorieProduit.srcElement)
             },
             ...tsDefaultOptions
         })
-        patchItems(treeselect.srcElement)
-        treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
+        this.treeselectCategorieProduit = treeselectCategorieProduit
+        patchItems(this.treeselectCategorieProduit.srcElement)
+        this.treeselectCategorieProduit.srcElement.addEventListener("update-dom", ()=>{patchItems(this.treeselectCategorieProduit.srcElement)})
         this.categorieProduitContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
 
-        treeselect.srcElement.addEventListener('input', (e) => {
+        this.treeselectCategorieProduit.srcElement.addEventListener('input', (e) => {
             if (!e.detail) return
             const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
             this.categorieProduitInputTarget.value = values.join("||")
+        })
+    }
+
+    setupSelectedHazard(){
+        const options = JSON.parse(this.jsonConfigSelectedHazardTarget.textContent)
+        const selectedValues = this.selectedHazardInputTarget.value.split("||").map(v => v.trim())
+        const treeselectSelectedHazard = new Treeselect({
+            parentHtmlContainer: this.selectedHazardContainerTarget,
+            value: selectedValues,
+            options: options,
+            isSingleSelect: false,
+            openCallback() {
+                patchItems(treeselectSelectedHazard.srcElement)
+                addCategoryHeader(treeselectSelectedHazard.srcElement, "Dangers syndromiques", 0)
+                addCategoryHeader(treeselectSelectedHazard.srcElement, "Liste complète des dangers alimentaires", 11)
+                treeselectSelectedHazard.srcElement.dataset.headerAdded = "true"
+            },
+            ...tsDefaultOptions
+        })
+        this.treeselectSelectedHazard = treeselectSelectedHazard
+        patchItems(this.treeselectSelectedHazard.srcElement)
+        this.treeselectSelectedHazard.srcElement.addEventListener("update-dom", ()=>{patchItems(this.treeselectSelectedHazard.srcElement)})
+        this.selectedHazardContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
+
+        this.treeselectSelectedHazard.srcElement.addEventListener('input', (e) => {
+            if (!e.detail) return
+            const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
+            this.selectedHazardInputTarget.value = values.join("||")
         })
     }
 
@@ -195,6 +240,7 @@ class SearchFormController extends Controller {
         this.choicesStructureContact = new Choices(this.structure_contactTarget, choicesDefaults)
         this.dangerSyndromique = new Choices(this.dangerSyndromiqueTarget, choicesDefaults)
         this.disableCheckboxIfNeeded()
+        this.setupSelectedHazard()
         this.setupCategorieProduit()
         this.setupCategorieDanger()
         this.setupAgentsPathogenes()

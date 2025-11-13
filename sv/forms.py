@@ -15,7 +15,7 @@ from dsfr.forms import DsfrBaseForm
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple, AdresseLieuDitField
 from core.form_mixins import DSFRForm, js_module
-from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm
+from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm, BaseCompteRenduDemandeInterventionForm
 from core.models import Structure, Visibilite, Message, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
@@ -656,3 +656,26 @@ class MessageForm(BaseMessageForm):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self._convert_checkboxes_to_contacts()
+
+
+class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
+    recipients = forms.MultipleChoiceField(
+        choices=[("mus", "MUS"), ("bsv", "BSV")],
+        label="Destinataires",
+        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
+    )
+
+    def _convert_checkboxes_to_contacts(self):
+        try:
+            checkboxes = copy(self.cleaned_data["recipients"])
+        except KeyError:
+            raise ValidationError("Au moins un destinataire doit être sélectionné.")
+        self.cleaned_data["recipients"] = []
+        if "mus" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
+        if "bsv" in checkboxes:
+            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
+
+    def clean(self):
+        super().clean()
+        self._convert_checkboxes_to_contacts()

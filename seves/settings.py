@@ -105,7 +105,7 @@ ROOT_URLCONF = "seves.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "seves/templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -236,7 +236,8 @@ if DEBUG and ENVIRONMENT != "test":
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INTERNAL_IPS = ["127.0.0.1"]
 
-DEFAULT_FROM_EMAIL = "Sèves <no-reply@beta.gouv.fr>"
+DEFAULT_FROM_EMAIL = "Sèves <no-reply@seves.beta.gouv.fr>"
+EMAIL_SUBJECT_PREFIX = "[Sèves]"
 POST_OFFICE = {
     "BACKENDS": {
         "default": env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"),

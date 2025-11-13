@@ -5,7 +5,7 @@
         {% if latest_version.revision.user %}
             par {{ latest_version.revision.user.agent.agent_with_structure }}
             {% flag "with_revision_page" %}
-                <a href="{% url "revision-list" content_type_pk object_pk %}" class="fr-link">Voir l'historique</a>
+                <a href="{% url "revision-list" content_type_pk object_pk %}" class="fr-link" target="_blank" rel="noopener">Voir l'historique</a>
             {% endflag %}
         {% endif %}
     </div>

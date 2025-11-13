@@ -1,5 +1,8 @@
+import re
+
 from django.db import models
 from .mixins import WithChoicesToJS
+from enum import property as enum_property
 
 
 class CategorieDanger(WithChoicesToJS, models.TextChoices):
@@ -594,3 +597,9 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     @classmethod
     def dangers_bacteriens(cls):
         return [choice.value for choice in cls if choice.label.startswith("Bactérie >")]
+
+    @enum_property
+    def uncategorized_label(self):
+        if not hasattr(self, "_uncategorized_label_"):
+            self._uncategorized_label_ = re.split(r"\s*>\s*", self.label)[-1]
+        return self._uncategorized_label_

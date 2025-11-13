@@ -1,4 +1,4 @@
-import itertools
+import random
 
 import pytest
 from django.db import IntegrityError
@@ -7,20 +7,36 @@ from ssa.models import CategorieDanger
 from tiac.constants import SuspicionConclusion, DangersSyndromiques
 from tiac.factories import InvestigationTiacFactory
 
-test_data = [
-    *itertools.product([SuspicionConclusion.CONFIRMED], [*DangersSyndromiques.values, ""]),
-    *itertools.product([SuspicionConclusion.SUSPECTED], [*CategorieDanger.values, ""]),
-    *itertools.product([*SuspicionConclusion.no_clue, ""], [*DangersSyndromiques.values, *CategorieDanger.values]),
-]
 
+def test_investigation_tiac_selected_hazard_constraints(db):
+    def choices(choice_enum):
+        return random.choices(choice_enum.values, k=random.randint(2, len(choice_enum)))
 
-@pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
-def test_investigation_tiac_selected_hazard_constraints(db, suspicion_conclusion, selected_hazard):
-    with pytest.raises(IntegrityError):
-        InvestigationTiacFactory(suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard)
+    for suspicion_conclusion, selected_hazard in (
+        (SuspicionConclusion.CONFIRMED, choices(DangersSyndromiques)),
+        (SuspicionConclusion.CONFIRMED, []),
+        (SuspicionConclusion.SUSPECTED, choices(CategorieDanger)),
+        (SuspicionConclusion.SUSPECTED, []),
+        (random.choice(SuspicionConclusion.no_clue), choices(DangersSyndromiques)),
+        (random.choice(SuspicionConclusion.no_clue), choices(CategorieDanger)),
+        ("", choices(DangersSyndromiques)),
+        ("", choices(CategorieDanger)),
+    ):
+        with pytest.raises(IntegrityError):
+            InvestigationTiacFactory(suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard)
+            pytest.fail(
+                f"InvestigationTiac did not raise IntegrityError for parameters: {suspicion_conclusion=}, {selected_hazard=}"
+            )
 
-    InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED, selected_hazard=CategorieDanger.VIBRIO)
-    InvestigationTiacFactory(
-        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=DangersSyndromiques.AUTRE
-    )
-    InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.UNKNOWN, selected_hazard="")
+    # Test I can create InvestigationTiacFactory with multiple selected_hazard values
+    for suspicion_conclusion, selected_hazard in (
+        (SuspicionConclusion.CONFIRMED, choices(CategorieDanger)),
+        (SuspicionConclusion.SUSPECTED, choices(DangersSyndromiques)),
+        (random.choice(SuspicionConclusion.no_clue), []),
+    ):
+        try:
+            InvestigationTiacFactory(suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard)
+        except IntegrityError:
+            pytest.fail(
+                f"InvestigationTiac raised exception for parameters: {suspicion_conclusion=}, {selected_hazard=}"
+            )

@@ -6,7 +6,6 @@ from django.utils.safestring import mark_safe
 from reversion.models import Version
 
 from core.mixins import (
-    WithEtatMixin,
     WithNumeroMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
@@ -14,6 +13,7 @@ from core.mixins import (
     EmailNotificationMixin,
     AllowsSoftDeleteMixin,
     WithFreeLinkIdsMixin,
+    AllowModificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, Document, LienLibre
@@ -136,7 +136,7 @@ class QuantificationUnite(models.TextChoices):
         ]
 
 
-@reversion.register()
+@reversion.register(follow=["contacts"])
 class EvenementProduit(
     AllowsSoftDeleteMixin,
     WithBlocCommunFieldsMixin,
@@ -144,13 +144,14 @@ class EvenementProduit(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     WithContactPermissionMixin,
-    WithEtatMixin,
+    AllowModificationMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
     models.Model,
 ):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_reception = models.DateField(verbose_name="Date de réception")
     numero_rasff = models.CharField(
         max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
     )
@@ -302,11 +303,6 @@ class EvenementProduit(
         objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
         return [str(o) for o in objects if not o.is_deleted]
 
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
     def can_be_updated(self, user):
         return self._user_can_interact(user)
 
@@ -344,6 +340,15 @@ class EvenementProduit(
         from ssa.forms import MessageForm
 
         return MessageForm
+
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
 
     def get_allowed_document_types(self):
         return [

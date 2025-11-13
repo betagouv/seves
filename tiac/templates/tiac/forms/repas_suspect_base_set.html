@@ -6,14 +6,17 @@
         class="modal-repas-container fr-col-12 fr-col-md-6 fr-col-xl-3"
         data-controller="repas-form"
         data-repas-form-form-prefix-value="{{ form.prefix }}"
+        data-repas-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-action="dsfr.conceal->repas-form#onCloseForm"
     >
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
             id="fr-modal-{{ form.prefix }}"
-            class="fr-modal modal-needs-required repas-modal"
+            class="fr-modal needs-required repas-modal"
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-repas-form-target="dialog"
+            data-action="dsfr.conceal->repas-form#onCloseForm"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
@@ -80,7 +83,9 @@
         {% endfor %}
     </div>
     <template data-repas-formset-target="emptyFormTpl">
-        {% with form=formset.empty_form %}{% partial form-dialog %}{% endwith %}
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
     </template>
 
 </fieldset>

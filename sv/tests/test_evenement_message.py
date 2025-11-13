@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.models import Group
 from django.utils import timezone
 from playwright.sync_api import Page, expect
+from waffle.testutils import override_flag
 
 from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
 from core.factories import (
@@ -37,6 +38,12 @@ from core.tests.generic_tests.messages import (
     generic_test_structure_show_only_one_entry_in_select,
     generic_test_can_send_draft_message,
     generic_test_can_send_draft_point_de_situation,
+    generic_test_can_add_and_see_message_in_new_tab_without_document,
+    generic_test_can_add_see_message_in_new_tab_without_document_in_draft,
+    generic_test_can_add_and_see_note_in_new_tab_without_document,
+    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
+    generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
+    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -48,6 +55,90 @@ User = get_user_model()
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_message_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_message_in_new_tab_without_document(
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, choice_js_fill):
+    evenement = EvenementFactory()
+    generic_test_can_add_see_message_in_new_tab_without_document_in_draft(live_server, page, choice_js_fill, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
+    live_server, page: Page, mocked_authentification_user
+):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
+        live_server, page, evenement, mocked_authentification_user
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
+    Contact.objects.create(structure=structure, email="bar@example.com")
+    structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
+    Contact.objects.create(structure=structure, email="foo@example.com")
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+
+    expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
+    page.get_by_text("MUS", exact=True).click()
+    page.get_by_text("BSV", exact=True).click()
+    page.locator("#id_title").fill("Title of the message")
+    page.locator("#id_content").fill("My content \n with a line return")
+    page.get_by_test_id("fildesuivi-add-submit").click()
+
+    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({2}) a"
+    assert page.text_content(cell_selector) == "Structure Test"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({3}) a"
+    assert " ".join(page.text_content(cell_selector).strip().split()) == "MUS et 1 autre"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
+    assert page.text_content(cell_selector) == "Title of the message"
+
+    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
+    assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention"
+
+    assert evenement.messages.get().status == Message.Status.FINALISE
 
 
 def test_can_add_and_see_demande_intervention(live_server, page: Page, choice_js_fill):

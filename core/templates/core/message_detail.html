@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% for document in message.documents.all %}
+        {% if document.is_cartographie %}
+            <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" role="dialog" id="fr-document-image-table-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
+                <div class="fr-container fr-container--fluid fr-container-md">
+                    <div class="fr-grid-row fr-grid-row--center">
+                        <div class="fr-col-12 fr-col-md-12 fr-col-lg-12">
+                            <div class="fr-modal__body">
+                                <div class="fr-modal__header">
+                                    <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-document-image-table-{{ document.pk }}">Fermer</button>
+                                </div>
+                                <div class="fr-modal__content">
+                                    <div class="img-modal">
+                                        <img src="{{ document.file.url }}" loading="lazy"  alt="{{ document.nom }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </dialog>
+        {% endif %}
+    {% endfor %}
+
+    <div class="fr-container--fluid">
+        <div class="fr-grid-row">
+            <div class="fr-col-1"></div>
+            <div class="fr-col-10">
+                <div class="fr-pt-4w">
+                    <a href="{{ message.content_object.get_absolute_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
+                       target="_blank">Ouvrir la fiche {{ message.content_object.numero }}</a>
+
+                    <h1 class="fr-mt-2w">{{ message.title }}</h1>
+                    <div class="fr-container--fluid">
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-8">
+                                <div class="white-container">
+                                    <div class="fr-container--fluid">
+                                        <div class="fr-grid-row">
+                                            <div class="fr-col-9">
+                                                <div><span class="fr-text--bold">De : </span>{{ message.sender.display_with_agent_unit }}</div>
+                                                {% if message.recipients.all|length %}
+                                                    <div><span class="fr-text--bold">À : </span>
+                                                        {% for recipient in message.recipients.all %}
+                                                            {{ recipient.display_with_agent_unit }}{% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                                {% if message.recipients_copy.all|length %}
+                                                    <div>
+                                                        <span class="fr-text--bold">CC : </span>
+                                                        {% for recipient in message.recipients_copy.all %}
+                                                            {{ recipient.display_with_agent_unit }}{% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+
+                                            </div>
+                                            <div class="fr-col-3 message-date">
+                                                {{ message.date_creation }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="fr-hr-or fr-mt-2w">
+                                    {{ message.content|linebreaksbr }}
+                                </div>
+                            </div>
+                            <div class="fr-col-4 white-container">
+                                <h5>Documents</h5>
+                                {% if message.documents.all %}
+                                    <p class="fr-hint-text">Pièces jointes. Retrouvez l'ensemble des documents dans l'onglet "Documents" du bloc de suivi.</p>
+                                    {% for document in message.documents.all %}
+                                        <div class="fr-card--shadow fr-mb-1w">
+                                            <div class="fr-px-2w fr-py-1w message-document-container">
+                                                {% if document.is_deleted %}
+                                                    Document supprimé
+                                                {% else %}
+
+                                                    {% if document.is_infected is False %}
+                                                        {% if can_download_document %}
+                                                            {{ document.nom }}
+                                                            <ul class="fr-btns-group fr-btns-group--inline-reverse fr-btns-group--inline">
+                                                                {% if document.is_cartographie %}
+                                                                    <li>
+                                                                        <button href="#" data-fr-opened="false" aria-controls="fr-document-image-table-{{ document.pk }}" class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-mr-1w"></button>
+                                                                    </li>
+                                                                {% else %}
+                                                                    <li>
+                                                                        <button class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-mr-1w no-border" disabled="true"></button>
+                                                                    </li>
+                                                                {% endif %}
+                                                                <li>
+                                                                    <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w"></a>
+                                                                </li>
+                                                            </ul>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Document en cours d'analyse antivirus
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="empty-value">Aucun document ajouté</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="fr-col-1"></div>
+        </div>
+    </div>
+
+
+
+{% endblock content %}

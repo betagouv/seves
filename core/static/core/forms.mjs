@@ -55,12 +55,18 @@ export function collectFormValues(formLike, {nameTransform, skipValidation} = {
                 result[inputName] = [];
             }
             if (element.checked) {
-                result[inputName].push(document.querySelector(`label[for="${element.id}"]`).innerText.trim())
+                try {
+                    result[inputName].push(element.labels[0].textContent.trim())
+                } catch (_) {}
             }
         }
         else if (element.type === "radio") {
             if (element.checked) {
-                result[inputName] = document.querySelector(`label[for="${element.id}"]`).innerText.trim()
+                try {
+                    result[inputName] = element.labels[0].textContent.trim()
+                } catch (_) {
+                    result[inputName] = ""
+                }
             }
         }
         else {

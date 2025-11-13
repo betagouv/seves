@@ -3,7 +3,7 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from ssa.models import Etablissement
 
@@ -12,7 +12,7 @@ class WithTreeSelect:
     def _set_treeselect_option(self, container_id, label, clear_input=False):
         if clear_input:
             self.clear_treeselect(container_id)
-        self.page.locator(f"#{container_id} .treeselect-input__edit").click()
+        self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").click(force=True)
         parts = re.split(r"\s*>\s*", label)
         for idx, part in enumerate(parts, start=1):
             if idx == len(parts):  # last element
@@ -23,7 +23,18 @@ class WithTreeSelect:
                     .click(force=True)
                 )
             else:
-                self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon").click()
+                # Make sure we only click on this part if the part is not yet open. This will handle the case where
+                # we call this method multiple time on the same objects with a common parent.
+                # For example, we want to click on A > B and A > C, we need to open A the first time this method is used
+                # but not the second time to avoid closing the block instead of opening it
+                part = self.page.get_by_title(part.strip(), exact=True).locator(".treeselect-list__item-icon")
+                parent = part.locator("..")
+                if "treeselect-list__item--closed" in parent.get_attribute("class"):
+                    part.click(force=True)
+
+        # language=js
+        self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')
+        expect(self.page.locator(f"#{container_id} .treeselect-list"), "Treeselect wasn't closed").to_have_count(0)
 
     def get_treeselect_options(self, container_id):
         elements = self.page.locator(f"#{container_id} .treeselect-input__tags-count")
@@ -46,7 +57,7 @@ class WithTreeSelect:
 
 
 class EvenementProduitFormPage(WithTreeSelect):
-    info_fields = ["numero_rasff", "type_evenement", "source", "description", "numero_rasff"]
+    info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
         "marque",
@@ -363,6 +374,15 @@ class EvenementProduitDetailsPage:
         choice_js_fill(
             self.page,
             ".choices:has(#id_recipients_limited_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
             contact,
             contact,
             use_locator_as_parent_element=True,

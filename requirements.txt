@@ -30,7 +30,7 @@ certifi==2025.1.31
     # via
     #   requests
     #   sentry-sdk
-cffi==1.16.0
+cffi==2.0.0
     # via cryptography
 cfgv==3.4.0
     # via pre-commit
@@ -59,7 +59,7 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==0.0.3
     # via -r requirements.in
-django==5.2.7
+django==5.2.8
     # via
     #   -r requirements.in
     #   dj-importmap
@@ -77,13 +77,13 @@ django==5.2.7
     #   django-waffle
     #   mozilla-django-oidc
     #   sentry-sdk
-django-countries==7.6.1
+django-countries==8.0.0
     # via -r requirements.in
 django-crispy-forms==2.4
     # via django-dsfr
 django-csp==4.0
     # via -r requirements.in
-django-debug-toolbar==6.0.0
+django-debug-toolbar==6.1.0
     # via -r requirements.in
 django-dsfr==3.2.0
     # via -r requirements.in
@@ -99,7 +99,7 @@ django-reversion==6.0.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
-django-reversion-compare==0.19.0
+django-reversion-compare==0.19.1
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -113,13 +113,13 @@ djhtml==3.0.10
     # via -r requirements.in
 docxcompose==1.4.0
     # via docxtpl
-docxtpl==0.20.1
+docxtpl[subdoc]==0.20.1
     # via -r requirements.in
 execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
     # via -r requirements.in
-faker==37.5.3
+faker==37.12.0
     # via
     #   -r requirements.in
     #   factory-boy
@@ -227,7 +227,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==6.4.0
+redis==7.0.0
     # via -r requirements.in
 requests==2.32.4
     # via
@@ -239,7 +239,7 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.14.1
+ruff==0.14.4
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3

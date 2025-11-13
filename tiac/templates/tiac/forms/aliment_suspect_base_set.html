@@ -6,12 +6,14 @@
         class="modal-aliment-container fr-col-12 fr-col-md-6 fr-col-xl-3"
         data-controller="aliment-form"
         data-aliment-form-form-prefix-value="{{ form.prefix }}"
+        data-aliment-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-aliment-form-categorie-produit-value="{{ form.categorie_produit_json }}"
+        data-action="dsfr.conceal->aliment-form#onCloseForm"
     >
-        <div data-aliment-form-target="jsonConfig" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
             id="fr-modal-{{ form.prefix }}"
-            class="fr-modal modal-needs-required aliment-modal"
+            class="fr-modal needs-required aliment-modal"
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-aliment-form-target="dialog"
@@ -60,7 +62,7 @@
 
 <fieldset class="fr-fieldset form-fieldset aliment-fieldset fr-mt-4v" data-controller="aliment-formset">
     <div class="fieldset-header">
-        <h4 class="fr-h5">Aliment suspectés</h4>
+        <h4 class="fr-h5">Aliments suspectés</h4>
         <button
             type="button"
             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
@@ -81,7 +83,9 @@
         {% endfor %}
     </div>
     <template data-aliment-formset-target="emptyFormTpl">
-        {% with form=formset.empty_form categorie_produit_data=formset.categorie_produit_data %}{% partial form-dialog %}{% endwith %}
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
     </template>
 
 </fieldset>

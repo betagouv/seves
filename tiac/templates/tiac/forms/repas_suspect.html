@@ -9,8 +9,8 @@
     {{ form.menu }}
 </div>
 <div class="fr-input-group">
-    {{ form.motif_suspicion.label_tag }}
-    {{ form.motif_suspicion }}
+    {{ form.type_repas.label_tag }}
+    {{ form.type_repas|set_data:"action:change->repas-form#onTypeRepasChoice" }}
 </div>
 <div class="fr-input-group">
     {{ form.datetime_repas.label_tag }}
@@ -24,13 +24,14 @@
     {{ form.departement.label_tag }}
     {{ form.departement }}
 </div>
-<div class="fr-input-group">
-    {{ form.type_repas.label_tag }}
-    {{ form.type_repas|set_data:"action:change->repas-form#onTypeRepasChoice" }}
-</div>
 <div class="fr-input-group fr-hidden" data-repas-form-target="typeCollectiviteInputContainer">
     {{ form.type_collectivite.label_tag }}
     {{ form.type_collectivite|set_data:"repas-form-target:typeCollectiviteInput" }}
 </div>
+<div class="fr-input-group">
+    {{ form.motif_suspicion.label_tag }}
+    {{ form.motif_suspicion }}
+</div>
 {% dsfr_notice title="Ajoutez vos documents dans l'onglet documents après publication de la fiche." %}
 {{ form.DELETE|set_data:"repas-form-target:deleteInput" }}
+{{ form.id }}

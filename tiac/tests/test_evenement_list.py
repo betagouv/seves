@@ -3,7 +3,7 @@ from playwright.sync_api import Page, expect
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Departement, LienLibre
 from ssa.models import CategorieDanger, CategorieProduit
-from tiac.constants import DangersSyndromiques
+from tiac.constants import DangersSyndromiques, SuspicionConclusion
 from tiac.factories import (
     EvenementSimpleFactory,
     InvestigationTiacFactory,
@@ -12,7 +12,7 @@ from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 from tiac.tests.pages import EvenementListPage
 
 
@@ -43,13 +43,13 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == f"Enr. simple / {evenement.get_follow_up_display()}"
     assert search_page.conclusion_cell().text_content() == "-"
-    assert search_page.danger_cell().text_content() == "-"
+    assert search_page.danger_cell().text_content().strip() == "-"
     assert search_page.etat_cell().text_content() == "Brouillon"
 
 
 def test_row_content_investigation_tiac(live_server, mocked_authentification_user, page: Page):
-    evenement: InvestigationTiac = InvestigationTiacFactory(type_evenement=TypeEvenement.INVESTIGATION_COORDONNEE)
-    etablissement = EtablissementFactory(evenement_simple=None, investigation_tiac=evenement)
+    evenement: InvestigationTiac = InvestigationTiacFactory(follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE)
+    etablissement = EtablissementFactory(investigation=evenement)
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
@@ -119,10 +119,10 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
 
 
 def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
-    evenement_1 = EvenementSimpleFactory()
-    evenement_2 = InvestigationTiacFactory()
-    evenement_3 = EvenementSimpleFactory()
-    evenement_4 = InvestigationTiacFactory()
+    evenement_1 = EvenementSimpleFactory(numero_annee=2000)
+    evenement_2 = InvestigationTiacFactory(numero_annee=2001)
+    evenement_3 = EvenementSimpleFactory(numero_annee=2002)
+    evenement_4 = InvestigationTiacFactory(numero_annee=2003)
     contact_agent = ContactAgentFactory(with_active_agent=True)
     evenement_1.contacts.add(contact_agent)
     evenement_2.contacts.add(contact_agent)
@@ -133,6 +133,40 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()
+
+
+def test_search_with_conclusion(live_server, page: Page):
+    evenement_1 = EvenementSimpleFactory()
+    evenement_2 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED)
+    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.conclusion_field.select_option("TIAC à agent confirmé")
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+
+
+def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_from_element_with_value):
+    evenement_1 = EvenementSimpleFactory()
+    evenement_2 = InvestigationTiacFactory(
+        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS]
+    )
+    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+    evenement_4 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.DISCARDED)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.select_hazard("Bacillus Cereus - Staphylococcus Aureus")
+    search_page.submit_search()
+
+    expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()
@@ -281,15 +315,15 @@ def test_can_filter_by_nb_dead_persons(live_server, mocked_authentification_user
 
 def test_can_filter_by_repas_nb_particpants(live_server, mocked_authentification_user, page: Page):
     to_be_found_1 = InvestigationTiacFactory(numero_annee=2020)
-    RepasSuspectFactory(investigation=to_be_found_1, nombre_participant=2)
+    RepasSuspectFactory(investigation=to_be_found_1, nombre_participant="environ 200")
     not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
-    RepasSuspectFactory(investigation=not_to_be_found_1, nombre_participant=10)
+    RepasSuspectFactory(investigation=not_to_be_found_1, nombre_participant="une cinquantaine")
     not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2023)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
     search_page.open_sidebar()
-    search_page.nb_participants.select_option("[0-5]")
+    search_page.nb_participants.fill("200")
     search_page.add_filters()
     search_page.submit_search()
 
@@ -361,18 +395,18 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
-def test_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
+def test_can_filter_by_follow_up(live_server, mocked_authentification_user, page: Page):
     to_be_found = InvestigationTiacFactory(
-        numero_annee=2025, numero_evenement=2, type_evenement=TypeEvenement.INVESTIGATION_COORDONNEE
+        numero_annee=2025, numero_evenement=2, follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE
     )
     not_to_be_found_1 = InvestigationTiacFactory(
-        numero_annee=2025, numero_evenement=1, type_evenement=TypeEvenement.INVESTIGATION_DD
+        numero_annee=2025, numero_evenement=1, follow_up=InvestigationFollowUp.INVESTIGATION_DD
     )
     not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.type_evenement.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
+    search_page.follow_up.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
@@ -384,9 +418,9 @@ def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked
     evenement_1 = InvestigationTiacFactory(contenu="Morbier")
     evenement_2 = InvestigationTiacFactory(precisions="Morbier")
     evenement_3 = InvestigationTiacFactory()
-    EtablissementFactory(raison_sociale="Morbier", investigation_tiac=evenement_3, evenement_simple=None)
+    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     evenement_4 = InvestigationTiacFactory()
-    EtablissementFactory(enseigne_usuelle="Morbier", investigation_tiac=evenement_4, evenement_simple=None)
+    EtablissementFactory(enseigne_usuelle="Morbier", investigation=evenement_4)
 
     evenement_5 = InvestigationTiacFactory()
     RepasSuspectFactory(investigation=evenement_5, denomination="Morbier")
@@ -454,7 +488,7 @@ def test_list_can_filter_with_free_search_investigation_tiac_is_disctinct(
     live_server, mocked_authentification_user, page: Page
 ):
     evenement_3 = InvestigationTiacFactory()
-    EtablissementFactory(raison_sociale="Morbier", investigation_tiac=evenement_3, evenement_simple=None)
+    EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     RepasSuspectFactory(investigation=evenement_3)
     RepasSuspectFactory(investigation=evenement_3)
 

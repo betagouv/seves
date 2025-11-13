@@ -7,6 +7,7 @@ from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 
 from ssa.models import CategorieDanger
+from ssa.models.mixins import WithChoicesToJS
 
 
 class EvenementOrigin(TextChoices):
@@ -59,9 +60,10 @@ class ModaliteDeclarationEvenement(TextChoices):
 
 class EvenementFollowUp(TextChoices):
     NONE = "aucune suite", "Aucune suite"
-    INSPECTION = "programmation futur controle", "Programmation d’un futur contrôle"
-    TRANSMISSION_DELEGATAIRE = "programmation au delegataire pour controle", "Transmission au délégataire pour contrôle"
-    TRANSMISSION_DD = "programmation a une autre DD", "Transmission à une autre DD"
+    INSPECTION = "programmation futur controle", "Futur contrôle programmé"
+    TRANSMISSION_DELEGATAIRE = "programmation au delegataire pour controle", "Transmis au délégataire pour contrôle"
+    TRANSMISSION_DD = "programmation a une autre DD", "Transféré à une autre DD"
+    INVESGTIGATION_TIAC = "investigation tiac", "Passé en investigation de TIAC"
 
 
 @dataclass
@@ -99,7 +101,7 @@ class SafeTextChoices(TextChoices):
         }
 
 
-class DangersSyndromiques(SafeTextChoices):
+class DangersSyndromiques(WithChoicesToJS, SafeTextChoices):
     INTOXINATION_BACILLUS = ChoiceData(
         value="intoxination bacillus cereus",
         name="Intoxination à toxine émétique thermostable préformée dans l'aliment à <span class='danger-emphasis'>bacillus cereus - staphylococcus aureus</span>",
@@ -108,7 +110,7 @@ class DangersSyndromiques(SafeTextChoices):
         description="""Attention, autres toxines possibles notamment si haricots rouges, courges, produits de la mer, betterave crue... : conserver des échantillons pour d'autres analyses. <br/><br/>
 Pour rappel : si les aliments ou ingrédients sont cuits, l'absence de la bactérie ne signifie pas l'absence de toxine (ces toxines sont thermostables). Si les aliments sont crus, en l'absence de la bactérie, il est inutile de rechercher les toxines. <br/><br/>
 Staphylocoques : en première intention, recherche de la bactérie et des toxines A à E. Pour rechercher les autres toxines (si suspicion forte), envoi de la souche au LNR. Attention : l'absence de toxines A à E ne signifie pas l'absence de toxines staphylococciques. En l'absence de la bactérie, impossible de poursuivre les analyses. <br/><br/>
-Bacillus cereus : en première intention, recherce de la bactérie. Pour rechercher ou doser les céréulides, envoi de la souche à l'ANSES. En l'absence de la bactérie, impossible de poursuivre les analyses.
+Bacillus cereus : en première intention, recherche de la bactérie. Pour rechercher ou doser les céréulides, envoi de la souche à l'ANSES. En l'absence de la bactérie, impossible de poursuivre les analyses.
         """,
     )
     TOXI_INFECTION_BACILLUS = ChoiceData(
@@ -139,8 +141,8 @@ Les souches sont à envoyer aux LNR.""",
     )
     GASTRO = ChoiceData(
         value="gastro-enterite",
-        name="Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
-        short_name="Gastro-entérite aigüe",
+        name="Virus de la Gastro-entérite aigüe virale à norovirus, <span class='danger-emphasis'>sapovirus</span> etc.",
+        short_name="Virus de la Gastro-entérite aigüe",
         help_text="Incubation longue (10h - 50h) - tous symptômes de gastro-entérite, vomissements très fréquents, fièvre ~50% des cas - cas secondaires fréquents (transmission inter-humaine)",
         description="""Attention, une infection bactérienne à Salmonella etc. ou par vibrio parahaemolyticus est aussi à envisager.<br/><br/>
 Bien récupérer et transmettre les informations de traçabilité si un ingrédient (coquillages, fruits rouges, crudité…) est suspecté.
@@ -174,13 +176,13 @@ Envoi direct au LNR pour analyse.
         name="Intoxination par des poissons coralliens : ciguatoxine",
         short_name="Intoxination par des poissons coralliens",
         help_text="Incubation courte (2 à 6 heures) - douleurs abdominales, nausées, vomissements, diarrhées, prurit, hypotension artérielle, bradycardie, symptômes neurologiques (parésthésies, faiblesse musculaire, etc)",
-        description="Poissons des récifs coralliens (carangues, mérou, murènes, barracuda...) ",
+        description="Poissons des récifs coralliens (carangues, mérous, murènes, barracudas…) ",
     )
     AUTRE = ChoiceData(
         value="autre",
         name="Autres cas",
         short_name="Autres cas",
-        help_text="Préciser les symptômes et les investigations médicales dans la description de l'évènement et dans le fil de suivi. ",
+        help_text="Préciser les symptômes et les investigations médicales dans le contenu du signalement et dans le fil de suivi.",
         description="",
     )
 
@@ -198,6 +200,14 @@ Envoi direct au LNR pour analyse.
             cls.TOXINE_DES_POISSONS,
             cls.AUTRE,
         ]
+
+    @classproperty
+    def short_names(cls):
+        return [item.short_name for item in cls]
+
+    @classproperty
+    def choices_short_names(cls):
+        return [(item.value, item.short_name) for item in cls]
 
 
 class EtatPrelevement(TextChoices):
@@ -240,4 +250,4 @@ class SuspicionConclusion(TextChoices):
         return json.dumps({item.name: {"value": item.value, "label": item.label} for item in cls})
 
 
-SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices, *CategorieDanger.choices)
+SELECTED_HAZARD_CHOICES = (*DangersSyndromiques.choices_short_names, *CategorieDanger.choices)

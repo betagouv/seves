@@ -1,18 +1,33 @@
 import {BaseFormSetController} from "BaseFormset"
 import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application";
+import {collectFormValues} from 'Forms'
 
 
 class RepasFormController extends BaseFormInModal {
     static targets = [
-        ...BaseFormInModal.targets,
         "denominationInput",
         "typeCollectiviteInputContainer",
         "typeCollectiviteInput",
     ]
 
     connect() {
-        this.openDialog()
+        if (this.shouldImmediatelyShowValue) {
+            this.openDialog()
+        } else {
+            this.initCard(
+                collectFormValues(this.fieldsetTarget, {
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true
+                })
+            )
+        }
+    }
+
+    onCloseForm() {
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
     onTypeRepasChoice(event){
@@ -27,6 +42,7 @@ class RepasFormController extends BaseFormInModal {
     }
 
     initCard(repas) {
+        this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(repas))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(repas))
@@ -55,7 +71,7 @@ class RepasFormController extends BaseFormInModal {
                     <div class="fr-card__desc">
                         ${this.optionalText(repas.datetime_repas, `<p class="fr-card__detail fr-icon-calendar-2-line fr-my-2v">${this.formatDate(repas.datetime_repas)}</p>`)}
                         ${this.optionalText(repas.type_repas, `<p>${repas.type_repas}</p>`)}
-                        ${this.optionalText(repas.nombre_participant, this.renderBadges([`${repas.nombre_participant} participant(s)`]))}
+                        ${this.optionalText(repas.nombre_participant, this.renderBadges([repas.nombre_participant]))}
                     </div>
                 </div>
                 <div class="fr-card__footer">

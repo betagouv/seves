@@ -19,14 +19,20 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
-from core.diffs import CompareMixin
+from waffle import flag_is_active
 
+from core.diffs import CompareMixin
 from .forms import (
     DocumentUploadForm,
     MessageDocumentForm,
     DocumentEditForm,
     StructureAddForm,
     AgentAddForm,
+    BasicMessageForm,
+    NoteForm,
+    PointDeSituationForm,
+    DemandeInterventionForm,
+    FinDeSuiviForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -185,9 +191,18 @@ class MessageCreateView(
     CreateView,
 ):
     model = Message
-    http_method_names = ["post"]
 
     def get_form_class(self):
+        if flag_is_active(self.request, "message_v2"):
+            mapping = {
+                "message": BasicMessageForm,
+                "note": NoteForm,
+                "point_situation": PointDeSituationForm,
+                "demande_intervention": DemandeInterventionForm,
+                "cr_demande_intervention": self.obj.get_crdi_form(),
+                "fin_suivi": FinDeSuiviForm,
+            }
+            return mapping.get(self.request.GET.get("type"))
         return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
@@ -203,19 +218,29 @@ class MessageCreateView(
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update(
-            {
-                "obj": self.obj,
-                "next": self.obj.get_absolute_url(),
-                "sender": self.request.user.agent.contact_set.get(),
-            }
-        )
+        if flag_is_active(self.request, "message_v2"):
+            kwargs.update(
+                {
+                    "obj": self.obj,
+                    "sender": self.request.user.agent.contact_set.get(),
+                }
+            )
+        else:
+            kwargs.update(
+                {
+                    "obj": self.obj,
+                    "next": self.obj.get_absolute_url(),
+                    "sender": self.request.user.agent.contact_set.get(),
+                }
+            )
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
         context["add_document_form"] = MessageDocumentForm(object=self.obj)
+        context["message_status"] = Message.Status
+        context["object"] = self.obj
         return context
 
     def get_success_url(self):
@@ -268,13 +293,35 @@ class MessageUpdateView(
         return self.handle_message_form(form)
 
 
-class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, DetailView):
+class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, DetailView):
     model = Message
 
-    def get_fiche_object(self):
+    def get_queryset(self):
+        return Message.objects.select_related("sender__agent__structure", "sender_structure").prefetch_related(
+            "recipients__agent",
+            "recipients__structure",
+            "recipients__agent__structure",
+            "recipients_copy__agent",
+            "recipients_copy__structure",
+            "recipients_copy__agent__structure",
+            "documents",
+        )
+
+    def dispatch(self, request, *args, **kwargs):
         message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
-        fiche = message.content_object
-        return fiche
+        self.fiche = message.content_object
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.fiche.can_user_access(self.request.user)
+
+    def get_fiche_object(self):
+        return self.fiche
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_download_document"] = self.fiche.can_download_document(self.request.user)
+        return context
 
 
 class SoftDeleteView(View):
@@ -503,7 +550,6 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         context["patches"] = []
         for i in range(1, len(versions)):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
-            for diff in diffs:
-                diff["revision"] = versions[i].revision
-                context["patches"].append(diff)
+            context["patches"].extend(diffs)
+
         return context

@@ -1,5 +1,6 @@
 import io
 import json
+import os
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -12,7 +13,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 
-from core.mixins import WithClotureContextMixin
+from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -24,7 +25,7 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.models import Export, LienLibre
+from core.models import Export
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, CategorieDanger, Etablissement
@@ -135,6 +136,8 @@ class EvenementProduitDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
@@ -242,7 +245,7 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
         return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")
 
 
-class EvenementProduitDocumentExportView(View):
+class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
     def dispatch(self, request, numero=None, *args, **kwargs):
@@ -252,14 +255,10 @@ class EvenementProduitDocumentExportView(View):
 
     def post(self, request):
         doc = DocxTemplate("ssa/doc_templates/evenement_produit.docx")
-        free_links = LienLibre.objects.for_object(self.object)
-        free_links_numbers = []
-        for link in free_links:
-            if link.related_object_1 == self.object and link.related_object_2.is_deleted is False:
-                free_links_numbers.append(str(link.related_object_2))
-            if link.related_object_2 == self.object and link.related_object_1.is_deleted is False:
-                free_links_numbers.append(str(link.related_object_1))
-        context = {"object": self.object, "free_links": free_links_numbers}
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {"object": self.object, "free_links": self.get_free_links_numbers(), "bloc_commun": sub_doc}
         doc.render(context)
 
         file_stream = io.BytesIO()
@@ -271,6 +270,7 @@ class EvenementProduitDocumentExportView(View):
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
         return response
 
     def test_func(self):

@@ -259,6 +259,49 @@ def test_create_fiche_detection_with_lieu(
 
 
 @pytest.mark.django_db
+def test_create_fiche_detection_with_lieu_in_corsica(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    ensure_departements,
+):
+    ensure_departements("Haute-Corse")
+    organisme_nuisible = OrganismeNuisibleFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    page.wait_for_timeout(200)
+    lieu_form_elements.nom_input.fill("Test")
+    lieu_form_elements.force_commune(
+        config={
+            "search_text": "Ajac",
+            "option_name": "Ajaccio (2A)",
+            "response_body": """[{"nom":"Ajaccio","code":"2A004","_score":1.8106081554689044,"departement":{"code":"2A","nom":"Corse-du-Sud"}}]""",
+        }
+    )
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    page.wait_for_timeout(1000)
+
+    fiche_detection = FicheDetection.objects.get()
+    lieu_from_db = fiche_detection.lieux.get()
+    assert lieu_from_db.nom == "Test"
+    assert lieu_from_db.commune == "Ajaccio"
+    assert lieu_from_db.code_insee == "2A004"
+    assert lieu_from_db.departement.nom == "Corse-du-Sud"
+
+
+@pytest.mark.django_db
 def test_create_fiche_detection_with_lieu_not_etablissement(
     live_server,
     page: Page,

@@ -1,5 +1,5 @@
 {% extends "tiac/base.html" %}
-{% load dsfr_tags widget_tweaks static render_field_with_inline_label %}
+{% load dsfr_tags widget_tweaks static render_field_with_inline_label partials %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation_base.css' %}">
@@ -13,16 +13,28 @@
         {% csrf_token %}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
-                <h1 class="fr-col-6">Création d'une investigation de TIAC</h1>
-                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
-                    {% if form.instance and form.instance.is_draft %}
-                        <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
-                            Enregistrer le brouillon
-                        </button>
+                <h1 class="fr-col-6">
+                    {% if form.instance.pk %}
+                        Modification d'une investigation de TIAC
+                    {% else %}
+                        Création d'une investigation de TIAC
                     {% endif %}
-                    <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-                        {% if form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
-                    </button>
+                </h1>
+                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
+                    <div class="fr-links-group fr-links-group--inline">
+                        {% block buttons %}
+                            {% partialdef buttons inline %}
+                                {% if form.instance and form.instance.is_draft %}
+                                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary">
+                                        Enregistrer le brouillon
+                                    </button>
+                                {% endif %}
+                                <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+                                    {% if form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
+                                </button>
+                            {% endpartialdef %}
+                        {% endblock %}
+                    </div>
                 </div>
             </div>
 
@@ -55,7 +67,7 @@
                         {% dsfr_inline_radio_field form.notify_ars %}
                         {% dsfr_inline_radio_field form.will_trigger_inquiry %}
                         {% dsfr_form_field form.numero_sivss %}
-                        {% dsfr_form_field form.type_evenement %}
+                        {% dsfr_form_field form.follow_up %}
                     </div>
                 </div>
             </fieldset>
@@ -126,7 +138,7 @@
 
             </fieldset>
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v">
-                <h3 class="fr-fieldset__legend fr-h3">Éléments de l'investigation</h3>
+                <h3 class="fr-h3">Éléments de l'investigation</h3>
                 <div>
                     {% dsfr_notice title="Pour les TIAC confirmées ou fortement suspectées, seul l'enregistrement des éléments conclusifs est requis.<br/> Vous pouvez ajouter d'autres éléments si cela vous aide dans l'investigation (ces données ne seront pas valorisées dans les bilans nationaux)" %}
                 </div>
@@ -146,7 +158,7 @@
 
                 <template data-agents-pathogene-target="categorieDangerHeader">
                     <div class="categorie-danger-header">
-                        <div class="fr-ml-1v">Danger les plus courants</div>
+                        <div class="fr-ml-1v">Dangers les plus courants</div>
                         {% for danger in danger_plus_courant %}
                             <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
                                 <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
@@ -160,7 +172,9 @@
             <fieldset
                 class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
                 data-controller="conclusion-form"
-                data-conclusion-form-suspicion-conclusion-value="{{ form.SuspicionConclusion.as_json }}"
+                data-conclusion-form-suspicion-conclusion-choices-value="{{ form.SuspicionConclusion.as_json }}"
+                data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
+                data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
             >
                 <legend class="fr-h3 fr-fieldset__legend">Conclusion</legend>
 
@@ -178,9 +192,40 @@
                     </div>
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
-                    <div class="fr-col-6">
+                    <div class="fr-col-6 needs-required">
                         {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
-                        {% dsfr_form_field form.selected_hazard|set_data:"conclusion-form-target:selectedHazard" %}
+                        <div id="selected_hazard-treeselect" class="fr-input-group">
+                            {{ form.selected_hazard.label_tag }}
+                            <div
+                                data-conclusion-form-target="selectedHazardTreeselect"
+                                data-action="input->conclusion-form#onTreeselectInput update-dom->conclusion-form#onUpdateDom"
+                            ></div>
+                            {{ form.selected_hazard|set_data:"conclusion-form-target:selectedHazardTreeselectInput" }}
+                            <template data-conclusion-form-target="selectedHazardTreeselectHeader">
+                                <div class="categorie-danger-header">
+                                    <div class="fr-ml-1v">Dangers les plus courants</div>
+                                    {% for danger in form.common_danger %}
+                                        <div
+                                            class="treeselect-list__item"
+                                            level="0"
+                                            group="false"
+                                            data-action="mousedown->conclusion-form#onShortcut:prevent:stop"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                id="shortcut_{{ forloop.counter0 }}"
+                                                class="treeselect-list__item-checkbox-container"
+                                            >
+                                            <label
+                                                class="treeselect-list__item-label shortcut"
+                                                for="shortcut_{{ forloop.counter0 }}"
+                                            >{{ danger }}</label>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="fr-ml-1v">Liste complète des dangers</div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                     <div class="fr-col-6 conclusion-comment">
                         {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
@@ -200,31 +245,19 @@
                         {% dsfr_form_field form.conclusion_analyse %}
                     </div>
                 </div>
-                <template data-conclusion-form-target="selectedHazardConfirmedSelect">
-                    {% for subwidget in form.selected_hazard_confirmed.subwidgets %}
-                        {{ subwidget }}
-                    {% endfor %}
-                </template>
-                <template data-conclusion-form-target="selectedHazardSuspectedSelect">
-                    {% for subwidget in form.selected_hazard_suspected.subwidgets %}
-                        {{ subwidget }}
-                    {% endfor %}
-                </template>
-                <template data-conclusion-form-target="selectedHazardOtherSelect">
-                    {% for subwidget in form.selected_hazard_other.subwidgets %}
-                        {{ subwidget }}
-                    {% endfor %}
-                </template>
             </fieldset>
             <fieldset id="liens-libre" class="fr-fieldset form-fieldset fr-mt-2w">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
                 </div>
                 <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
-                <div data-controller="free-links" class="free-links" data-free-links-ids-value='{{ form.instance.free_link_ids }}'>
+                <div data-controller="free-links" class="free-links" data-free-links-ids-value='{{ form.instance.free_link_ids_json|default:"[]" }}'>
                     {{ form.free_link|set_data:"free-links-target:select"  }}
                 </div>
             </fieldset>
+            <section class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
+                {% partial buttons %}
+            </section>
         </main>
     </form>
 {% endblock %}

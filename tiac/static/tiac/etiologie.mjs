@@ -12,10 +12,12 @@ class EtiologieFormController  extends Controller {
         "hiddenField",
         "jsonConfig"
     ]
-    static values = {currentOption:String, selectedValues: Array, config: Object}
+    static values = {currentOption:String, selectedValues: Array, config: Object, hasConnected: {type: Boolean, default: false}};
 
     connect() {
         this.config = JSON.parse(this.jsonConfigTarget.textContent)
+        this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
+        this.hasConnectedValue = true
     }
 
     onShowFirstModal() {
@@ -29,25 +31,33 @@ class EtiologieFormController  extends Controller {
         this.selectedValuesValue = this.selectedValuesValue.filter(it => it !== choice)
     }
 
+    renderRecommendation = (choice, description) => {
+        if (!description) return '<div class="fr-col-12 fr-col-lg-3"></div>';
+        return `
+        <div class="fr-col-12 fr-col-lg-3">Recommandations
+            <button aria-describedby="tooltip-${choice}" type="button" class="fr-btn--tooltip fr-btn">infobulle</button>
+            <span class="fr-tooltip fr-placement" id="tooltip-${choice}" role="tooltip">${description}</span>
+        </div>`;
+    }
+
+
     renderCard(choice) {
         const item = this.config.find(d => d.value === choice);
-        return `
-         <div class="etiologie-card-container fr-p-4w fr-mb-2w">
-                <div class="fr-grid-row fr-grid-row--gutters fr-col">
-                    <div class="fr-col-12 fr-col-lg-4">${item.name}</div>
-                    <div class="fr-col-12 fr-col-lg-4">${item.help_text}</div>
-                    <div class="fr-col-12 fr-col-lg-3">Recommandations
-                        <button aria-describedby="tooltip-${choice}" type="button" class="fr-btn--tooltip fr-btn">infobulle</button>
-                        <span class="fr-tooltip fr-placement" id="tooltip-${choice}" role="tooltip">${item.description}</span>
-                    </div>
-                    <div class="fr-col-12 fr-col-lg-1">
+        return `<div class="etiologie-card-container fr-p-4w fr-mb-2w">
+            <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                <div class="fr-col-12 fr-col-lg-4">${item.name}</div>
+                <div class="fr-col-12 fr-col-lg-4">${item.help_text}</div>
+                ${this.renderRecommendation(choice, item.description)}
+                <div class="fr-col-12 fr-col-lg-1">
                     <button
-                                            class="fr-btn fr-icon-delete-line fr-btn--secondary fr-btn--sm"
-                                            data-${this.identifier}-choice-param="${choice}"
-                                            data-action="${this.identifier}#onDelete:prevent:default"
-                                        >Supprimer</button>
-</div>
-                </div></div>`
+                        class="fr-btn fr-icon-delete-line fr-btn--secondary fr-btn--sm"
+                        data-${this.identifier}-choice-param="${choice}"
+                        data-action="${this.identifier}#onDelete:prevent:default">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>`
     }
 
     renderCards(){
@@ -60,9 +70,11 @@ class EtiologieFormController  extends Controller {
         }
     }
 
-    selectedValuesValueChanged() {
+    /** @param {string[]} newValue */
+    selectedValuesValueChanged(newValue) {
+        if(!this.hasConnectedValue) return;
         this.renderCards()
-        this.hiddenFieldTarget.value = JSON.stringify(this.selectedValuesValue)
+        this.hiddenFieldTarget.value = newValue.join("||")
     }
 
     onChooseOption(){

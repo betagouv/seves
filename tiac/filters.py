@@ -11,8 +11,15 @@ from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilte
 from core.form_mixins import js_module
 from core.models import LienLibre
 from ssa.filters import WithEtablissementFilterMixin, CharInFilter
-from tiac.constants import TypeRepas, TypeAliment, DangersSyndromiques, EvenementFollowUp, DANGERS_COURANTS
-from tiac.models import EvenementSimple, InvestigationTiac, TypeEvenement
+from tiac.constants import (
+    TypeRepas,
+    TypeAliment,
+    DangersSyndromiques,
+    EvenementFollowUp,
+    DANGERS_COURANTS,
+    SuspicionConclusion,
+)
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 
 
 class TiacFilterForm(DsfrBaseForm):
@@ -30,17 +37,17 @@ class TiacFilterForm(DsfrBaseForm):
         "end_date",
         "structure_contact",
         "agent_contact",
-        "type_evenement",
-        "full_text_search",
+        "follow_up",
+        "suspicion_conclusion",
     ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         simple_choices = [(f"simple-{value}", f"Enr. simple / {label}") for value, label in EvenementFollowUp.choices]
         investigation_choices = [
-            (f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in TypeEvenement.choices
+            (f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in InvestigationFollowUp.choices
         ]
-        self.fields["type_evenement"].choices = simple_choices + investigation_choices
+        self.fields["follow_up"].choices = simple_choices + investigation_choices
 
     @cached_property
     def common_danger(self):
@@ -66,10 +73,21 @@ class TiacFilter(
     end_date = django_filters.DateFilter(
         field_name="date_reception", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
     )
-    type_evenement = django_filters.ChoiceFilter(
+    follow_up = django_filters.ChoiceFilter(
         label="Type d'événement/suites",
         empty_label=settings.SELECT_EMPTY_CHOICE,
-        method="filter_type_evenement",
+        method="filter_follow_up",
+    )
+    suspicion_conclusion = django_filters.ChoiceFilter(
+        label="Conclusion",
+        choices=SuspicionConclusion.choices,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
+    selected_hazard = CharInFilter(
+        label="Dangers retenus",
+        field_name="selected_hazard",
+        lookup_expr="overlap",
+        widget=HiddenInput,
     )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
@@ -86,7 +104,7 @@ class TiacFilter(
         distinct=True,
         label="Numéro SIVSS",
         widget=TextInput(
-            attrs={"placeholder": "000000", "pattern": "\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
+            attrs={"placeholder": "000000", "pattern": r"\d{6}", "maxlength": 6, "title": "6 chiffres requis"}
         ),
     )
 
@@ -118,13 +136,13 @@ class TiacFilter(
     agents_pathogenes = CharInFilter(
         label="Agent pathogène confirmé par l'ARS",
         field_name="agents_confirmes_ars",
-        lookup_expr="contains",
+        lookup_expr="overlap",
         widget=HiddenInput,
     )
     analyse_categorie_danger = CharInFilter(
         label="Analyse - Danger détecté",
         field_name="analyses_alimentaires__categorie_danger",
-        lookup_expr="contains",
+        lookup_expr="overlap",
         widget=HiddenInput,
     )
     type_aliment = django_filters.ChoiceFilter(
@@ -139,16 +157,11 @@ class TiacFilter(
         lookup_expr="in",
         widget=HiddenInput,
     )
-    nb_personnes_repas = django_filters.ChoiceFilter(
-        choices=[
-            ("0-5", "[0-5]"),
-            ("6-10", "[6-10]"),
-            ("11-50", "[11-50]"),
-            ("51-+", "[51+]"),
-        ],
+    nb_personnes_repas = django_filters.CharFilter(
+        field_name="repas__nombre_participant",
+        lookup_expr="contains",
+        distinct=True,
         label="Repas - Nombre de participants",
-        empty_label=settings.SELECT_EMPTY_CHOICE,
-        method="filter_nb_personnes_repas",
     )
     type_repas = django_filters.ChoiceFilter(
         choices=TypeRepas,
@@ -161,6 +174,7 @@ class TiacFilter(
     )
 
     INVESTIGATION_TIAC_FILTERS = [
+        "suspicion_conclusion",
         "numero_sivss",
         "nb_dead_persons",
         "nb_personnes_repas",
@@ -170,6 +184,7 @@ class TiacFilter(
         "aliment_categorie_produit",
         "analyse_categorie_danger",
         "agents_pathogenes",
+        "selected_hazard",
     ]
 
     def _apply_free_links(self, queryset, queryset_type):
@@ -235,14 +250,14 @@ class TiacFilter(
                 queryset = self.queryset._querysets[1]
                 queryset_type = "tiac"
 
-        if self.form.cleaned_data["type_evenement"].startswith("simple"):
+        if self.form.cleaned_data["follow_up"].startswith("simple"):
             if queryset_type == "combined":
                 queryset_type = "simple"
                 queryset = self.queryset._querysets[0]
             elif queryset_type == "tiac":
                 return self.queryset._querysets[0].none()
 
-        if self.form.cleaned_data["type_evenement"].startswith("tiac"):
+        if self.form.cleaned_data["follow_up"].startswith("tiac"):
             if queryset_type == "combined":
                 queryset_type = "tiac"
                 queryset = self.queryset._querysets[1]
@@ -286,20 +301,15 @@ class TiacFilter(
     def filter_nb_dead_persons(self, queryset, name, value):
         return self._range_filter(value, "nb_dead_persons", queryset)
 
-    def filter_nb_personnes_repas(self, queryset, name, value):
-        return self._range_filter(value, "repas__nombre_participant", queryset)
-
     def filter_danger_syndromiques_suspectes(self, queryset, name, value):
         return queryset.filter(danger_syndromiques_suspectes__contains=value)
 
     def filter_with_free_links(self, queryset, name, value):
         return queryset
 
-    def filter_type_evenement(self, queryset, name, value):
+    def filter_follow_up(self, queryset, name, value):
         type_fiche, cleaned_value = value.split("-")
-        if type_fiche == "simple":
-            return queryset.filter(follow_up=cleaned_value)
-        return queryset.filter(type_evenement=cleaned_value)
+        return queryset.filter(follow_up=cleaned_value)
 
     def filter_full_text_search(self, queryset, name, value):
         return queryset
@@ -313,7 +323,9 @@ class TiacFilter(
             "end_date",
             "structure_contact",
             "agent_contact",
-            "type_evenement",
+            "follow_up",
+            "suspicion_conclusion",
+            "selected_hazard",
             "full_text_search",
             "etat",
         ]

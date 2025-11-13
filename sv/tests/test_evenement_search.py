@@ -172,8 +172,8 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
 def test_search_with_region_structure_mapping(live_server, page: Page, ensure_departements) -> None:
     """Test que le filtre région retourne aussi les événements créés par une structure de la région
     lorsque les lieux n'ont pas de région spécifiée."""
-    departement, *_ = ensure_departements("Charente-Maritime")
-    nouvelle_aquitaine: Region = departement.region
+    charente, finistere, *_ = ensure_departements("Charente-Maritime", "Finistère")
+    nouvelle_aquitaine: Region = charente.region
     structure_region_nouvelle_aquitaine = REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine.nom)
     structure_nouvelle_aquitaine = StructureFactory(
         niveau2=structure_region_nouvelle_aquitaine, libelle=structure_region_nouvelle_aquitaine
@@ -182,10 +182,10 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     # Evenements avec lieu(x)
     evenement_lieu_sans_region_structure_autre = LieuFactory(departement=None).fiche_detection.evenement
     evenement_lieu_naq_structure_autre = LieuFactory(departement__region=nouvelle_aquitaine).fiche_detection.evenement
-    evenement_lieu_autre_region_structure_autre = LieuFactory(departement__nom="Finistère").fiche_detection.evenement
+    evenement_lieu_autre_region_structure_autre = LieuFactory(departement=finistere).fiche_detection.evenement
     evenement_lieu_naq_structure_naq = LieuFactory(
         commune="La Rochelle",
-        departement=departement,
+        departement=charente,
         fiche_detection__evenement__createur=structure_nouvelle_aquitaine,
     ).fiche_detection.evenement
     fiche_detection = FicheDetectionFactory(createur=structure_nouvelle_aquitaine)

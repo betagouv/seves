@@ -1,20 +1,21 @@
 import csv
 import tempfile
-from datetime import datetime
 
 from django.core.files import File
 
-from core.models import Export, Departement
+from core.export import BaseExport
+from core.models import Export
 from core.notifications import notify_export_is_ready
 from ssa.models import EvenementProduit
 
 
-class EvenementProduitExport:
+class EvenementProduitExport(BaseExport):
     evenement_produit_fields = [
         ("numero", "Numéro de fiche"),
         ("etat", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
+        ("date_reception", "Date de réception"),
         ("numero_rasff", "Numéro RASFF"),
         ("type_evenement", "Type d'événement"),
         ("source", "Source"),
@@ -52,28 +53,6 @@ class EvenementProduitExport:
 
     def get_fieldnames(self):
         return [header for _, header in (self.evenement_produit_fields + self.etablissement_fields)]
-
-    def get_field_value(self, instance, field):
-        attrs = field.split("__")
-        for i, attr in enumerate(attrs):
-            is_last_level_attribute = len(attrs) - 1
-            if i == is_last_level_attribute:
-                display_method = f"get_{attr}_display"
-                if hasattr(instance, display_method):
-                    return getattr(instance, display_method)()
-            value = getattr(instance, attr, None)
-            if isinstance(value, list):
-                return ",".join(value) if value else None
-            if isinstance(value, datetime):
-                return value.strftime("%d/%m/%Y %Hh%M")
-            if isinstance(value, Departement):
-                return str(value)
-            return value
-
-    def add_data(self, result, instance, fields):
-        for field, header in fields:
-            result[header] = self.get_field_value(instance, field)
-        return result
 
     def get_evenement_data(self, evenement_produit):
         result = {}

@@ -1,10 +1,7 @@
-import json
-
 from django.forms import inlineformset_factory, BaseInlineFormSet, Media
 
 from core.form_mixins import js_module
 from core.mixins import WithCommonContextVars
-from ssa.models import CategorieProduit
 from .constants import TypeAliment
 from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm, AnalyseAlimentaireForm
 from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect, AnalyseAlimentaire
@@ -50,10 +47,6 @@ class AlimentSuspectBaseFormSet(BaseInlineFormSet):
         return super().media + Media(
             js=(js_module("tiac/aliment.mjs"),),
         )
-
-    @property
-    def categorie_produit_data(self):
-        return json.dumps(CategorieProduit.build_options())
 
     @property
     def empty_form(self):

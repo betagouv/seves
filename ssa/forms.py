@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from django.utils import timezone
 
 from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
 from core.form_mixins import DSFRForm
-from core.forms import BaseMessageForm, BaseEtablissementForm
+from core.forms import BaseMessageForm, BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message
 from ssa.fields import SelectWithAttributeField
@@ -15,6 +16,10 @@ from ssa.widgets import PositionDossierWidget
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.ModelForm):
+    date_reception = forms.DateTimeField(
+        label="Date de réception",
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+    )
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     numero_rasff = forms.CharField(
         required=False,
@@ -122,6 +127,30 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
     class Meta:
         model = EvenementProduit
         exclude = ["createur", "numero_annee", "numero_evenement", "etat"]
+        fields = [
+            "date_reception",
+            "numero_rasff",
+            "type_evenement",
+            "source",
+            "description",
+            "aliments_animaux",
+            "categorie_produit",
+            "denomination",
+            "marque",
+            "lots",
+            "description_complementaire",
+            "temperature_conservation",
+            "categorie_danger",
+            "precision_danger",
+            "quantification",
+            "quantification_unite",
+            "evaluation",
+            "produit_pret_a_manger",
+            "reference_souches",
+            "reference_clusters",
+            "actions_engagees",
+            "numeros_rappel_conso",
+        ]
         widgets = {
             "evaluation": forms.Textarea(
                 attrs={
@@ -207,3 +236,9 @@ class MessageForm(BaseMessageForm):
         super().clean()
         if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
             self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
+
+
+class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
+    recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.get_ssa_structures(), label="Destinataires", required=True
+    )

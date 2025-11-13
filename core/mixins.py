@@ -16,6 +16,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
+from docxtpl import DocxTemplate
+from waffle import flag_is_active
 
 from core.forms import (
     DocumentUploadForm,
@@ -124,6 +126,7 @@ class WithMessageMixin:
         )
         context["message_list"] = message_list
         context["message_update_forms"] = self._get_message_update_forms(message_list)
+        context["message_v2"] = flag_is_active(self.request, "message_v2")
         return context
 
 
@@ -138,7 +141,15 @@ class WithContactFormsInContextMixin:
         return context
 
 
-class WithContactListInContextMixin:
+class WithContactQuerysetMixin:
+    def get_agents(self, obj):
+        return obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
+
+    def get_structures(self, obj):
+        return obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
+
+
+class WithContactListInContextMixin(WithContactQuerysetMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
@@ -154,7 +165,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.agent.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
+            for contact in self.get_agents(obj)
         ]
 
         context["contacts_structures"] = [
@@ -162,7 +173,7 @@ class WithContactListInContextMixin:
                 "contact": contact,
                 "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
             }
-            for contact in obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
+            for contact in self.get_structures(obj)
         ]
 
         context["content_type"] = ContentType.objects.get_for_model(obj)
@@ -411,6 +422,19 @@ class WithEtatMixin(models.Model):
 
     def get_cloture_confirm_message(self):
         return "L'objet a bien été cloturé."
+
+
+class AllowModificationMixin(WithEtatMixin):
+    def can_user_access(self, user):
+        if user.agent.is_in_structure(self.createur):
+            return True
+        return not self.is_draft
+
+    def can_be_modified(self, user):
+        return self.can_user_access(user) and not self.is_cloture
+
+    class Meta:
+        abstract = True
 
 
 class WithFreeLinkIdsMixin:
@@ -667,18 +691,24 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
     def _mark_contact_as_fin_suivi(self, form):
         if form.instance.status == Message.Status.BROUILLON:
             return
-        message_type = form.cleaned_data.get("message_type")
-        if message_type == Message.FIN_SUIVI:
+        message_type = form.cleaned_data.get("message_type") or form.instance.message_type
+        if message_type != Message.FIN_SUIVI:
+            return
+
+        if form.cleaned_data.get("content_type"):
             content_type = form.cleaned_data.get("content_type")
             object_id = form.cleaned_data.get("object_id")
+        else:
+            content_type = form.instance.content_type
+            object_id = form.instance.object_id
 
-            fin_suivi_contact = FinSuiviContact(
-                content_type=content_type,
-                object_id=object_id,
-                contact=Contact.objects.get(structure=self.request.user.agent.structure),
-            )
-            fin_suivi_contact.full_clean()
-            fin_suivi_contact.save()
+        fin_suivi_contact = FinSuiviContact(
+            content_type=content_type,
+            object_id=object_id,
+            contact=Contact.objects.get(structure=self.request.user.agent.structure),
+        )
+        fin_suivi_contact.full_clean()
+        fin_suivi_contact.save()
 
     def _is_internal_communication(self, structures):
         """
@@ -781,3 +811,30 @@ class WithCommonContextVars(RenderableMixin):
     def get_context(self):
         extra_context = self.extra_context if isinstance(self.extra_context, Mapping) else {}
         return {"COMMUNES_API": settings.COMMUNES_API, **extra_context, **super().get_context()}
+
+
+class WithDocumentExportContextMixin(WithContactQuerysetMixin):
+    def get_free_links_numbers(self):
+        free_links = LienLibre.objects.for_object(self.object)
+        free_links_numbers = []
+        for link in free_links:
+            if link.related_object_1 == self.object and link.related_object_2.is_deleted is False:
+                free_links_numbers.append(str(link.related_object_2))
+            if link.related_object_2 == self.object and link.related_object_1.is_deleted is False:
+                free_links_numbers.append(str(link.related_object_1))
+        return free_links_numbers
+
+    def create_document_bloc_commun(self):
+        obj = self.object
+        messages = [m for m in obj.messages.filter(status=Message.Status.FINALISE)]
+        sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
+        context = {
+            "messages": messages,
+            "agents": self.get_agents(obj),
+            "structures": self.get_structures(obj),
+            "documents": Document.objects.for_fiche(obj).prefetch_related("created_by_structure"),
+        }
+        sub_template.render(context)
+        sub_doc_file = f"subdoc_{obj}.docx"
+        sub_template.save(sub_doc_file)
+        return sub_doc_file

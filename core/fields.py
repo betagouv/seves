@@ -26,6 +26,7 @@ class MultiModelChoiceField(forms.MultipleChoiceField):
 
 
 class DSFRCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    template_name = "forms/checkbox_select.html"
     option_template_name = "forms/dsfr_checkbox_option.html"
 
     def __init__(self, *args, **kwargs):
@@ -79,3 +80,24 @@ class AdresseLieuDitField(forms.ChoiceField):
     def validate(self, value):
         # Autorise n'importe quelle valeur
         return
+
+
+class MessageObjectField(forms.CharField):
+    def __init__(self, content_object, message_type, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.disabled = True
+        self.required = False
+        self.initial = f"{settings.EMAIL_SUBJECT_PREFIX} {content_object.get_email_subject()} - {message_type}"
+        self.label = "Objet"
+
+
+class MessageContentField(forms.CharField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(label="Message", widget=forms.Textarea, *args, **kwargs)
+        self.widget.attrs.update(
+            {
+                "cols": 30,
+                "rows": 10,
+                "placeholder": "Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l'évènement et le lien vers la fiche Sèves.",
+            }
+        )

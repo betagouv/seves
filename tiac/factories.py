@@ -10,7 +10,9 @@ from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from core.factories import BaseEtablissementFactory
-from core.models import Structure
+from core.mixins import WithEtatMixin
+from core.models import Structure, LienLibre
+from ssa.factories import EvenementProduitFactory
 from ssa.models import CategorieProduit, CategorieDanger
 from tiac.constants import (
     EvenementOrigin,
@@ -31,9 +33,10 @@ from tiac.models import (
     Etablissement,
     Evaluation,
     InvestigationTiac,
-    TypeEvenement,
     RepasSuspect,
     AnalyseAlimentaire,
+    InvestigationFollowUp,
+    Analyses,
 )
 
 fake = Faker()
@@ -111,9 +114,14 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
-    evenement_simple = factory.SubFactory("tiac.factories.EvenementSimpleFactory")
-
     type_etablissement = factory.Faker("sentence", nb_words=2)
+    investigation = None
+
+    @factory.lazy_attribute
+    def evenement_simple(self):
+        if not self.investigation:
+            return EvenementSimpleFactory()
+        return None
 
     class Params:
         inspection = factory.Trait(
@@ -128,34 +136,88 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     class Meta:
         model = InvestigationTiac
 
+    # Contexte
     will_trigger_inquiry = factory.Faker("boolean")
     numero_sivss = factory.Faker("numerify", text="######")
-    type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
+    follow_up = FuzzyChoice(InvestigationFollowUp.values)
 
+    # Cas
     nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
     nb_sick_persons_to_hospital = factory.Faker("pyint", min_value=0, max_value=10)
     nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
 
-    agents_confirmes_ars = factory.LazyFunction(
-        lambda: random.sample([choice[0] for choice in CategorieDanger.choices], k=random.randint(1, 3))
-    )
+    # Etiologie
     danger_syndromiques_suspectes = factory.LazyFunction(
-        lambda: random.sample([choice[0] for choice in DangersSyndromiques.choices], k=random.randint(1, 3))
+        lambda: random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
     )
+    analyses_sur_les_malades = FuzzyChoice(Analyses.values)
+    precisions = factory.Faker("sentence")
 
+    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+
+    # Conclusion
     suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
-
     conclusion_comment = factory.Faker("paragraph")
 
     @factory.lazy_attribute
     def selected_hazard(self):
         if self.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
-            return random.choices(CategorieDanger.values)[0]
+            return random.sample(CategorieDanger.values, k=random.randint(1, 3))
         if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
-            return random.choices(DangersSyndromiques.values)[0]
-        return ""
+            return random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
+        return []
+
+    @factory.post_generation
+    def with_danger_syndromiques_suspectes_count(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        self.danger_syndromiques_suspectes = random.sample(DangersSyndromiques.values, k=extracted)
+
+    @factory.post_generation
+    def with_etablissements(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+
+        kwargs["investigation"] = self
+        EtablissementFactory.create_batch(extracted, **kwargs)
+
+    @factory.post_generation
+    def with_repas(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+
+        kwargs["investigation"] = self
+        RepasSuspectFactory.create_batch(extracted, **kwargs)
+
+    @factory.post_generation
+    def with_analyse_alimentaires(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+
+        kwargs["investigation"] = self
+        AnalyseAlimentaireFactory.create_batch(extracted, **kwargs)
+
+    @factory.post_generation
+    def with_aliment_suspect(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+
+        kwargs.update({"investigation": self, "cuisine": True})
+        AlimentSuspectFactory.create_batch(extracted, **kwargs)
+
+    @factory.post_generation
+    def with_liens_libres(self, create, extracted, **_):
+        if not create or not extracted:
+            return
+
+        for _ in range(extracted):
+            lien_libre = random.choice([EvenementSimpleFactory, EvenementProduitFactory])(
+                etat=WithEtatMixin.Etat.EN_COURS
+            )
+            LienLibre.objects.create(related_object_1=self, related_object_2=lien_libre)
 
 
 class RepasSuspectFactory(DjangoModelFactory):
@@ -169,7 +231,7 @@ class RepasSuspectFactory(DjangoModelFactory):
         lambda: random.sample([choice[0] for choice in Motif.choices], k=random.randint(1, 3))
     )
     datetime_repas = factory.LazyFunction(random_datetime_utc)
-    nombre_participant = factory.Faker("pyint", min_value=0, max_value=10)
+    nombre_participant = factory.Faker("numerify", text="## participants")
     departement = factory.SubFactory("core.factories.DepartementFactory")
 
     type_repas = FuzzyChoice([choice[0] for choice in TypeRepas.choices])

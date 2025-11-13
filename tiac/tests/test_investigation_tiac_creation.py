@@ -1,3 +1,6 @@
+import random
+
+import pytest
 from playwright.sync_api import Page, expect
 
 from core.factories import DepartementFactory
@@ -13,7 +16,14 @@ from tiac.factories import (
     AnalyseAlimentaireFactory,
 )
 from .pages import InvestigationTiacFormPage
-from ..constants import DangersSyndromiques, MotifAliment, TypeCollectivite, TypeRepas, SuspicionConclusion
+from ..constants import (
+    DangersSyndromiques,
+    MotifAliment,
+    TypeCollectivite,
+    TypeRepas,
+    SuspicionConclusion,
+    DANGERS_COURANTS,
+)
 from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
 
 fields_to_exclude_repas = [
@@ -40,7 +50,7 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
 
     investigation = InvestigationTiac.objects.get()
     assert investigation.createur == mocked_authentification_user.agent.structure
-    assert investigation.type_evenement == input_data.type_evenement
+    assert investigation.follow_up == input_data.follow_up
     assert investigation.contenu == input_data.contenu
     assert investigation.numero is not None
     assert investigation.is_draft is True
@@ -72,26 +82,12 @@ def test_can_create_investigation_tiac_with_all_fields(
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
-    creation_page.fill_required_fields(input_data)
-    creation_page.date_reception.fill(input_data.date_reception.strftime("%Y-%m-%d"))
-    creation_page.evenement_origin.select_option(input_data.evenement_origin)
-    creation_page.set_modalites_declaration(input_data.modalites_declaration)
-    creation_page.set_notify_ars(input_data.notify_ars)
-    creation_page.set_will_trigger_inquiry(input_data.will_trigger_inquiry)
-    creation_page.numero_sivss.fill(input_data.numero_sivss)
-
-    creation_page.nb_sick_persons.fill(str(input_data.nb_sick_persons))
-    creation_page.nb_sick_persons_to_hospital.fill(str(input_data.nb_sick_persons_to_hospital))
-    creation_page.nb_dead_persons.fill(str(input_data.nb_dead_persons))
-    creation_page.datetime_first_symptoms.fill(input_data.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
-    creation_page.datetime_last_symptoms.fill(input_data.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
+    creation_page.fill_context_block(input_data)
 
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
 
-    creation_page.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
-    creation_page.selected_hazard.select_option(input_data.selected_hazard)
-    creation_page.conclusion_comment.fill(input_data.conclusion_comment)
+    creation_page.fill_conlusion(input_data)
 
     creation_page.submit_as_draft()
 
@@ -99,9 +95,98 @@ def test_can_create_investigation_tiac_with_all_fields(
     assert_models_are_equal(
         input_data,
         investigation,
-        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"],
+        to_exclude=[
+            "id",
+            "_state",
+            "numero_annee",
+            "numero_evenement",
+            "date_creation",
+            "analyses_sur_les_malades",
+            "precisions",
+        ],
         ignore_array_order=True,
     )
+
+
+test_data = [
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.sample(CategorieDanger.values, k=1),
+        id=f"{SuspicionConclusion.CONFIRMED}-single",
+    ),
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.sample(CategorieDanger.values, k=2),
+        id=f"{SuspicionConclusion.CONFIRMED}-multiple",
+    ),
+    pytest.param(
+        SuspicionConclusion.CONFIRMED.value,
+        random.sample(DANGERS_COURANTS, k=1),
+        id=f"{SuspicionConclusion.CONFIRMED}-common-choices",
+    ),
+    pytest.param(
+        SuspicionConclusion.SUSPECTED.value,
+        random.sample(DangersSyndromiques.values, k=1),
+        id=f"{SuspicionConclusion.SUSPECTED}-single",
+    ),
+    pytest.param(
+        SuspicionConclusion.SUSPECTED.value,
+        random.sample(DangersSyndromiques.values, k=2),
+        id=f"{SuspicionConclusion.SUSPECTED}-multiple",
+    ),
+    *[(item.value, []) for item in SuspicionConclusion.no_clue],
+]
+
+
+@pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
+def test_can_create_investigation_tiac_conlusion(
+    live_server,
+    mocked_authentification_user,
+    page: Page,
+    assert_models_are_equal,
+    suspicion_conclusion,
+    selected_hazard,
+):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(
+        danger_syndromiques_suspectes=[], suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard
+    )
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+
+    creation_page.fill_conlusion(input_data)
+
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert_models_are_equal(
+        input_data,
+        investigation,
+        fields=[
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_etablissement",
+            "conclusion_repas",
+            "conclusion_aliment",
+            "conclusion_analyse",
+        ],
+        ignore_array_order=True,
+    )
+
+
+def test_can_create_investigation_tiac_with_agents_pathogenes_shortcut(live_server, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert investigation.agents_confirmes_ars == ["Shigella"]
 
 
 def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
@@ -166,9 +251,7 @@ def test_can_create_investigation_tiac_with_repas(
     creation_page.add_repas(input_data)
     expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
     expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display())).to_be_visible()
-    expect(
-        creation_page.get_repas_card(0).get_by_text(f"{input_data.nombre_participant} participant(s)", exact=True)
-    ).to_be_visible()
+    expect(creation_page.get_repas_card(0).get_by_text(input_data.nombre_participant, exact=True)).to_be_visible()
 
     creation_page.submit_as_draft()
 
@@ -332,6 +415,29 @@ def test_can_create_investigation_tiac_with_aliment_and_edit(live_server, mocked
     assert investigation.aliments.get().denomination == "Ma nouvelle dénomination"
 
 
+def test_can_add_and_cancel_aliment(live_server, page: Page, assert_models_are_equal):
+    investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(investigation)
+
+    # Open modal, fill and delete
+    creation_page.add_aliment_cuisine(input_data)
+    creation_page.page.locator(".aliment-card").all()[0].get_by_role("button", name="Supprimer").click()
+    creation_page.current_modal.get_by_role("button", name="Supprimer").click()
+
+    # Open modal and cancel
+    creation_page.page.get_by_test_id("add-aliment").click()
+    creation_page.current_modal.wait_for(state="visible")
+    creation_page.current_modal.get_by_role("button", name="Annuler").click()
+    creation_page.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    creation_page.submit_as_draft()
+    assert InvestigationTiac.objects.get().repas.count() == 0
+
+
 def test_can_create_investigation_tiac_with_mutliple_aliments_and_delete(
     live_server, mocked_authentification_user, page: Page
 ):
@@ -400,26 +506,35 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     creation_page.navigate()
     creation_page.fill_required_fields(investigation)
     creation_page.add_analyse_alimentaire(analyse)
+
     assert creation_page.nb_analyse == 1
 
     creation_page.submit_as_draft()
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
-    assert_models_are_equal(analyse, analyses[0], FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True)
+    assert_models_are_equal(
+        analyse, analyses[0], to_exclude=FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True
+    )
 
 
-def test_conclusion_behavior(live_server, page: Page, assert_models_are_equal):
+def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
+    analyse: AnalyseAlimentaire = AnalyseAlimentaireFactory.build()
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(investigation)
 
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.SUSPECTED)
-    assert str(CategorieDanger.NOIX_DE_CAJOU.label) not in creation_page.selected_hazard.text_content()
+    # Open modal, fill and delete
+    creation_page.add_analyse_alimentaire(analyse)
+    creation_page.page.locator(".analyse-card").all()[0].get_by_role("button", name="Supprimer").click()
+    creation_page.current_modal.get_by_role("button", name="Supprimer").click()
 
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
-    assert str(CategorieDanger.NOIX_DE_CAJOU.label) in creation_page.selected_hazard.text_content()
+    # Open modal and cancel
+    creation_page.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
+    creation_page.current_modal.wait_for(state="visible")
+    creation_page.current_modal.get_by_role("button", name="Annuler").click()
+    creation_page.current_modal.wait_for(state="hidden", timeout=2_000)
 
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.DISCARDED)
-    expect(creation_page.selected_hazard).to_be_disabled()
+    creation_page.submit_as_draft()
+    assert InvestigationTiac.objects.get().analyses_alimentaires.count() == 0

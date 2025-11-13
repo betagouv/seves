@@ -41,6 +41,9 @@ class WithFilteredListMixin(WithOrderingMixin):
         return QuerySetSequence(evenement_simple_qs, investigation_qs)
 
     def get_queryset(self):
-        queryset = self.apply_ordering(self.get_raw_queryset)
-        self.filter = TiacFilter(self.request.GET, queryset=queryset)
+        raw_queryset = self.get_raw_queryset
+        for idx, queryset in enumerate(raw_queryset._querysets):
+            raw_queryset._querysets[idx] = self.apply_ordering(queryset)
+
+        self.filter = TiacFilter(self.request.GET, queryset=raw_queryset)
         return self.filter.qs

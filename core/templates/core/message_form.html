@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+{% load static dsfr_tags widget_tweaks %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/message_page.css' %}">
+{% endblock %}
+{% block scripts %}
+    <script type="module" src="{% static 'core/message_form_page.mjs' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" action="" id="message-form" data-controller="message-form">
+        {% csrf_token %}
+        <div class="fr-container-xxl fr-pt-4w">
+            <a href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
+               target="_blank">Ouvrir la fiche {{ object.numero }}</a>
+
+            <div class="fr-flex fr-flex--row fr-flex--space-between">
+                <div>
+                    <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">{{ form.page_title }}</h1>
+                    {% if form.help_text %}
+                        <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
+                    {% endif %}
+                </div>
+                <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
+            </div>
+            <div class="white-container--lite">
+                {% for field in form %}
+                    <div class="fr-fieldset__element">
+                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                            {% dsfr_form_field field|set_data:data_target  %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
+                <li>
+                    <button type="submit" value="{{ message_status.BROUILLON }}" name="action" class="fr-btn fr-btn--secondary" data-testid="draft-fildesuivi-add-submit" data-action="message-form#onSend" data-message-form-target="draftBtn">Enregistrer comme brouillon</button>
+                </li>
+                <li>
+                    <button type="submit" value="{{ message_status.FINALISE }}" name="action" class="fr-btn" data-testid="fildesuivi-add-submit" data-action="message-form#onSend" data-message-form-target="sendBtn">Envoyer</button>
+                </li>
+            </ul>
+        </div>
+    </form>
+{% endblock %}

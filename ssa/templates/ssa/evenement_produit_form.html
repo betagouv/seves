@@ -22,7 +22,7 @@
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
         <div class="fr-hidden" id="categorie-danger-header">
-            <div class="fr-ml-1v">Danger les plus courants</div>
+            <div class="fr-ml-1v">Dangers les plus courants</div>
             {% for danger in danger_plus_courant %}
                 <div class="treeselect-list__item" level="0" group="false">
                     <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
@@ -59,6 +59,9 @@
                                 <label class="fr-label" for="date-creation-input">Date de création</label>
                                 <input type="text" id="date-creation-input" class="fr-input fr-mt-0" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                             </div>
+                            <div>
+                                {% render_field form.date_reception %}
+                            </div>
                             {% if form.numero_rasff %}
                                 <div class="rasff">{% render_field form.numero_rasff %}</div>
                             {% endif %}
@@ -70,7 +73,6 @@
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
                             <div>{% render_field form.type_evenement %}</div>
                             <div class="source">{% render_field form.source %}</div>
-
                         </div>
                         <div class="fr-col-12 fr-col-lg-4">
                             {% render_field form.description %}

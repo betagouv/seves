@@ -6,7 +6,7 @@
         class="modal-analyse-container fr-col-12 fr-col-lg-6 fr-col-xl-3"
         data-controller="analyse-alimentaire-form"
         data-analyse-alimentaire-form-form-prefix-value="{{ form.prefix }}"
-        data-analyse-alimentaire-form-should-immediately-show-value="True"
+        data-analyse-alimentaire-form-should-immediately-show-value="{{ should_immediately_show|default:False}}"
         data-analyse-alimentaire-form-categorie-danger-value="{{ form.categorie_danger_json }}"
         data-action="dsfr.conceal->analyse-alimentaire-form#onCloseForm"
     >
@@ -63,7 +63,7 @@
 
 <fieldset class="fr-fieldset form-fieldset analyses-alimentaires-fieldset fr-mt-4v" data-controller="analyse-alimentaire-formset">
     <div class="fieldset-header">
-        <h4 class="fr-h5">Analyses alimentaires</h4>
+        <h4 class="fr-h5">Analyses alimentaires et d’environnement</h4>
         <button
             type="button"
             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
@@ -84,7 +84,9 @@
         {% endfor %}
     </div>
     <template data-analyse-alimentaire-formset-target="emptyFormTpl">
-        {% with form=formset.empty_form %}{% partial form-dialog %}{% endwith %}
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
     </template>
 
 </fieldset>

@@ -177,6 +177,7 @@ class Document(models.Model):
         TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
         TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
         TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
+        TRACABILITE_AVAL_GENERAL = "tracabilite_aval_general", "Traçabilité aval"
         TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
         DSCE_CHED = "dsce_ched", "DSCE/CHED"
         ETIQUETAGE = "etiquetage", "Étiquetage"
@@ -311,18 +312,19 @@ class Message(models.Model):
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
 
-    def get_fiche_url(self):
-        return self.content_object.get_absolute_url()
-
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
-        match self.message_type:
-            case self.DEMANDE_INTERVENTION:
+        return Message.get_email_type_display_from_value(self.message_type)
+
+    @classmethod
+    def get_email_type_display_from_value(cls, value) -> str:
+        match value:
+            case cls.DEMANDE_INTERVENTION:
                 return "DI"
-            case self.COMPTE_RENDU:
+            case cls.COMPTE_RENDU:
                 return "CR sur DI"
             case _:
-                return self.get_message_type_display()
+                return dict(cls.MESSAGE_TYPE_CHOICES).get(value)
 
     @property
     def is_draft(self):
@@ -338,6 +340,7 @@ class Message(models.Model):
         return self.content_object.get_allowed_document_types()
 
 
+@reversion.register()
 class LienLibre(models.Model):
     content_type_1 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_1")
     object_id_1 = models.PositiveIntegerField()
@@ -400,11 +403,17 @@ class Visibilite(models.TextChoices):
 
 
 class Export(models.Model):
-    object_ids = ArrayField(models.BigIntegerField())
+    object_ids = ArrayField(models.BigIntegerField(), null=True)
     task_done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to=get_timestamped_filename_export)
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="exports")
+    queryset_sequence = models.JSONField(default=dict)
+
+    @classmethod
+    def from_queryset(cls, queryset):
+        model_label = f"{queryset.model._meta.app_label}.{queryset.model._meta.model_name}"
+        return {"model": model_label, "ids": list(queryset.values_list("id", flat=True))}
 
 
 class Region(models.Model):
@@ -458,8 +467,8 @@ class BaseEtablissement(models.Model):
         verbose_name="Code INSEE de la commune",
         validators=[
             RegexValidator(
-                regex="^[0-9]{5}$",
-                message="Le code INSEE doit contenir exactement 5 chiffres",
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
+                message="Le code INSEE doit être valide",
                 code="invalid_code_insee",
             ),
         ],

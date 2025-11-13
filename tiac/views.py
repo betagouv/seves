@@ -1,13 +1,22 @@
+import datetime
+import io
 import json
+import os
+from functools import cached_property
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
-from django.views.generic.edit import ProcessFormView
+from django.views.generic.edit import ProcessFormView, ModelFormMixin
+from docxtpl import DocxTemplate
+from queryset_sequence import QuerySetSequence
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -20,12 +29,16 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithAddUserContactsMixin,
+    WithDocumentExportContextMixin,
 )
+from core.models import Export, FinSuiviContact, LienLibre
 from core.views import MediaDefiningMixin
 from ssa.models import CategorieDanger, CategorieProduit
+from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationTiac
+from tiac.tasks import export_tiac_task
 from .constants import DangersSyndromiques
 from .display import DisplayItem
 from .filters import TiacFilter
@@ -177,10 +190,15 @@ class EvenementSimpleDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
+        context["can_be_changed_in_investigation"] = self.get_object().can_be_changed_in_investigation(
+            self.request.user
+        )
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["transfer_form"] = EvenementSimpleTransferForm()
         context["etablissements"] = self.get_object().etablissements.all()
@@ -216,6 +234,7 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         context["filter"] = self.filter
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
+        context["selected_hazard_data"] = json.dumps(build_combined_options(DangersSyndromiques, CategorieDanger))
         return context
 
 
@@ -232,23 +251,87 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class InvestigationTiacCreationView(
-    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, CreateView
+class EvenementTransformView(UpdateView):
+    def get_queryset(self):
+        return EvenementSimple.objects.all()
+
+    def _create_investigation_tiac(self):
+        fields_to_copy = [
+            "date_reception",
+            "evenement_origin",
+            "modalites_declaration",
+            "contenu",
+            "notify_ars",
+            "nb_sick_persons",
+        ]
+        self.investigation = InvestigationTiac(createur=self.request.user.agent.structure)
+        for field in fields_to_copy:
+            setattr(self.investigation, field, getattr(self.object, field))
+        self.investigation.save()
+
+    def _copy_etablissements(self):
+        for etablissement in self.object.etablissements.all():
+            etablissement.pk = None
+            etablissement.evenement_simple = None
+            etablissement.investigation = self.investigation
+            etablissement.save()
+
+    def _copy_and_add_free_links(self):
+        for free_link in LienLibre.objects.for_object(self.object):
+            if self.object == free_link.related_object_1:
+                free_link.pk = None
+                free_link.related_object_1 = self.investigation
+                free_link.save()
+            else:
+                free_link.pk = None
+                free_link.related_object_2 = self.investigation
+                free_link.save()
+
+        LienLibre.objects.create(related_object_1=self.object, related_object_2=self.investigation)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        for contact in self.object.get_contacts_structures_not_in_fin_suivi():
+            FinSuiviContact.objects.create(content_object=self.object, contact=contact)
+        self._create_investigation_tiac()
+        self.object.cloturer()
+        self._copy_etablissements()
+        self._copy_and_add_free_links()
+        messages.success(self.request, "L'événement a bien été passé en investigation de TIAC.")
+        return HttpResponseRedirect(reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.investigation.pk}))
+
+
+class InvestigationTiacBaseView(
+    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, ModelFormMixin, ProcessFormView
 ):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
+    model = InvestigationTiac
 
-    def dispatch(self, request, *args, **kwargs):
+    @cached_property
+    def repas_formset(self):
+        return RepasFormSet(**self.get_formset_kwargs())
+
+    @cached_property
+    def aliment_formset(self):
+        return AlimentFormSet(**self.get_formset_kwargs())
+
+    @cached_property
+    def etablissement_formset(self):
+        return InvestigationTiacEtablissementFormSet(**self.get_formset_kwargs(title_level="h4", title_classes="fr-h5"))
+
+    @cached_property
+    def analyse_alimentaire_formset(self):
+        return AnalysesAlimentairesFormSet(**self.get_formset_kwargs())
+
+    def get_formset_kwargs(self, **kwargs):
+        result = kwargs.copy()
+
+        if self.object:
+            result.setdefault("instance", self.object)
         if self.request.POST:
-            self.repas_formset = RepasFormSet(data=self.request.POST)
-            self.aliment_formset = AlimentFormSet(data=self.request.POST)
-        else:
-            self.repas_formset = RepasFormSet()
-            self.aliment_formset = AlimentFormSet()
-
-        self.etablissement_formset = self.get_etablissement_formset()
-        self.analyse_alimentaire_formset = self.get_analyse_alimentaire_formset()
-        return super().dispatch(request, *args, **kwargs)
+            result.setdefault("data", self.request.POST)
+        return result
 
     def get_media(self, **context_data) -> Media:
         media = super().get_media(**context_data)
@@ -287,18 +370,21 @@ class InvestigationTiacCreationView(
         context = super().get_context_data(**kwargs)
         context["dangers"] = DangersSyndromiques.as_list()
         context["dangers_json"] = json.dumps([choice.to_dict() for choice in DangersSyndromiques.as_list()])
-        context["repas_formset"] = RepasFormSet()
-        context["aliment_formset"] = AlimentFormSet()
-        context["empty_repas_form"] = context["repas_formset"].empty_form
-        context["empty_aliment_form"] = context["aliment_formset"].empty_form
+        context["repas_formset"] = self.repas_formset
+        context["aliment_formset"] = self.aliment_formset
         context["etablissement_formset"] = self.etablissement_formset
         context["analyse_alimentaire_formset"] = self.analyse_alimentaire_formset
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
         context["danger_plus_courant"] = InvestigationTiac.danger_plus_courants()
         return context
 
+    def get_object(self, queryset=None):
+        if not self.kwargs.get(self.pk_url_kwarg) and not self.kwargs.get(self.slug_url_kwarg):
+            # Case where we're on a creation view
+            return None
+        return super().get_object(queryset)
+
     def formset_invalid(self, formset, msg_1, msg_2):
-        self.object = None
         messages.error(self.request, msg_1)
         for i, form in enumerate(formset):
             if not form.is_valid():
@@ -309,6 +395,9 @@ class InvestigationTiacCreationView(
         return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
+        if not hasattr(self, "object"):
+            self.object = self.get_object()
+
         if not self.repas_formset.is_valid():
             return self.formset_invalid(
                 self.repas_formset, "Erreurs dans le(s) formulaire(s) Repas", "Erreur dans le formulaire repas"
@@ -350,11 +439,23 @@ class InvestigationTiacCreationView(
         self.analyse_alimentaire_formset.save()
         self.add_user_contacts(self.object)
 
+        messages.success(self.request, self.get_success_message())
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
+    def get_success_message(self):
         if self.object.is_published:
             messages.success(self.request, "L’évènement a été publié avec succès.")
         else:
             messages.success(self.request, "L’évènement a été créé avec succès.")
-        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
+    template_name = "tiac/investigation_modification.html"
+
+    def get_success_message(self):
+        return "L’évènement a été mis à jour avec succès."
 
 
 class InvestigationTiacDetailView(
@@ -392,13 +493,16 @@ class InvestigationTiacDetailView(
             annee, numero_evenement = self.kwargs["numero"].split(".")
             self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
             return self.object
-        except (ValueError, EvenementSimple.DoesNotExist):
+        except (ValueError, InvestigationTiac.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        contact = self.request.user.agent.structure.contact_set.get()
+        context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
+        context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["dangers"] = [
             d.to_dict() for d in DangersSyndromiques.as_list() if d.value in self.object.danger_syndromiques_suspectes
@@ -406,10 +510,105 @@ class InvestigationTiacDetailView(
         context["etablissements"] = self.get_object().etablissements.all()
         context["raisons_sociales"] = [e.raison_sociale for e in context["etablissements"]]
         context["communes"] = [e.commune for e in context["etablissements"] if e.commune]
-        context["dates_repas"] = [
-            r.datetime_repas.strftime("%d/%m/%Y %Hh%M") for r in self.get_object().repas.all() if r.datetime_repas
-        ]
+        context["dates_repas"] = [r.datetime_repas for r in self.get_object().repas.all() if r.datetime_repas]
         return context
 
     def get_publish_success_message(self):
         return "L’évènement a été publié avec succès."
+
+
+class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, numero=None, *args, **kwargs):
+        annee, numero_evenement = numero.replace("T-", "").split(".")
+        self.object = EvenementSimple.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("tiac/doc_templates/evenement_simple.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=enregistrement_simple_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
+
+
+class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, numero=None, *args, **kwargs):
+        annee, numero_evenement = numero.replace("T-", "").split(".")
+        self.object = InvestigationTiac.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("tiac/doc_templates/investigation_tiac.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=investigation_tiac_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
+
+
+class TiacExportView(WithFilteredListMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        queryset = self.get_queryset()
+        serialized_queryset_sequence = []
+
+        if isinstance(queryset, QuerySetSequence):
+            for qs in queryset._querysets:
+                serialized_queryset_sequence.append(Export.from_queryset(qs))
+        else:
+            serialized_queryset_sequence = [Export.from_queryset(queryset)]
+
+        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
+        export_tiac_task.delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{reverse('tiac:evenement-liste')}?{urlencode(allowed_params)}")

@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.html import strip_tags
 from reversion.models import Version
 
 from core.mixins import (
@@ -14,6 +15,7 @@ from core.mixins import (
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
+    AllowModificationMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
@@ -55,10 +57,30 @@ class BaseTiacModel(models.Model):
     class Meta:
         abstract = True
 
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_GENERAL,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AUTRE,
+        ]
+
 
 @reversion.register()
 class EvenementSimple(
     AllowsSoftDeleteMixin,
+    AllowModificationMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
     WithSharedNumeroMixin,
@@ -99,11 +121,6 @@ class EvenementSimple(
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:evenement-simple-details", kwargs={"numero": numero})
 
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
     @property
     def latest_version(self):
         return (
@@ -119,8 +136,8 @@ class EvenementSimple(
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
 
-    def can_be_modified(self, user):
-        return self.can_user_access(user) and not self.is_cloture
+    def can_be_changed_in_investigation(self, user):
+        return self.can_user_access(user)
 
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
@@ -139,37 +156,31 @@ class EvenementSimple(
 
         return MessageForm
 
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
+
     def get_publish_success_message(self):
         return "Événement simple publié avec succès"
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
 
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
     def get_email_subject(self):
         return f"{self.numero}"
+
+    @property
+    def type_evenement(self):
+        return "Enregistrement simple"
+
+    @property
+    def display_transfer_notice(self):
+        return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
 
 class Evaluation(models.TextChoices):
@@ -192,7 +203,7 @@ class Etablissement(BaseEtablissement, models.Model):
     evenement_simple = models.ForeignKey(
         EvenementSimple, null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
     )
-    investigation_tiac = models.ForeignKey(
+    investigation = models.ForeignKey(
         "tiac.InvestigationTiac", null=True, default=None, on_delete=models.PROTECT, related_name="etablissements"
     )
 
@@ -222,8 +233,8 @@ class Etablissement(BaseEtablissement, models.Model):
             ),
             models.CheckConstraint(
                 condition=(
-                    (Q(evenement_simple__isnull=True) & Q(investigation_tiac__isnull=False))
-                    | (Q(evenement_simple__isnull=False) & Q(investigation_tiac__isnull=True))
+                    (Q(evenement_simple__isnull=True) & Q(investigation__isnull=False))
+                    | (Q(evenement_simple__isnull=False) & Q(investigation__isnull=True))
                 ),
                 name="is_related_to_either_evenement_simple_or_investigation_tiac",
             ),
@@ -239,7 +250,7 @@ class Etablissement(BaseEtablissement, models.Model):
         return value
 
 
-class TypeEvenement(models.TextChoices):
+class InvestigationFollowUp(models.TextChoices):
     INVESTIGATION_DD = "investigation par ma dd", "Investigation par ma DD"
     INVESTIGATION_COORDONNEE = "investigation coordonnée", "Investigation coordonnée / MUS informée"
 
@@ -253,8 +264,8 @@ class Analyses(models.TextChoices):
 @reversion.register()
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
+    AllowModificationMixin,
     WithContactPermissionMixin,
-    WithEtatMixin,
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     WithBlocCommunFieldsMixin,
@@ -271,8 +282,8 @@ class InvestigationTiac(
         blank=True,
         validators=[RegexValidator(r"^\d{6}$", "Doit contenir exactement 6 chiffres")],
     )
-    type_evenement = models.CharField(
-        max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement", blank=True
+    follow_up = models.CharField(
+        max_length=100, choices=InvestigationFollowUp.choices, verbose_name="Suite donnée par la DD", blank=True
     )
 
     # Cas
@@ -307,10 +318,10 @@ class InvestigationTiac(
     suspicion_conclusion = models.CharField(
         "Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, null=True, default=None, blank=True
     )
-    selected_hazard = models.CharField(
-        "Danger retenu",
-        choices=SELECTED_HAZARD_CHOICES,
-        default="",
+    selected_hazard = ArrayField(
+        models.CharField(max_length=255, choices=SELECTED_HAZARD_CHOICES),
+        verbose_name="Dangers retenus",
+        default=list,
         blank=True,
     )
     conclusion_comment = models.TextField("Commentaire", default="", blank=True)
@@ -343,38 +354,19 @@ class InvestigationTiac(
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
 
-    def can_user_access(self, user):
-        if user.agent.is_in_structure(self.createur):
-            return True
-        return not self.is_draft
-
     def get_message_form(self):
         from tiac.forms import MessageForm
 
         return MessageForm
 
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
 
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
@@ -424,9 +416,9 @@ class InvestigationTiac(
 
     @property
     def type_evenement_display(self):
-        if self.type_evenement == TypeEvenement.INVESTIGATION_DD:
+        if self.follow_up == InvestigationFollowUp.INVESTIGATION_DD:
             return "Invest. locale"
-        if self.type_evenement == TypeEvenement.INVESTIGATION_COORDONNEE:
+        if self.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
             return "Invest. coord. / MUS informée"
         return "-"
 
@@ -436,13 +428,26 @@ class InvestigationTiac(
 
     @property
     def short_conclusion_selected_hazard(self):
-        if not self.selected_hazard:
-            return ""
-        return (
-            DangersSyndromiques(self.selected_hazard).short_name
-            if self.selected_hazard in DangersSyndromiques.values
-            else CategorieDanger(self.selected_hazard).label
-        )
+        return [
+            (
+                DangersSyndromiques(selected_hazard).short_name
+                if selected_hazard in DangersSyndromiques.values
+                else CategorieDanger(selected_hazard).uncategorized_label
+            )
+            for selected_hazard in self.selected_hazard
+        ]
+
+    @property
+    def danger_syndromiques_suspectes_labels(self):
+        return ", ".join(strip_tags(DangersSyndromiques(d).name_display) for d in self.danger_syndromiques_suspectes)
+
+    @property
+    def agents_confirmes_ars_labels(self):
+        return ", ".join(CategorieDanger(d).label for d in self.agents_confirmes_ars)
+
+    @property
+    def type_evenement(self):
+        return "Investigation de TIAC"
 
     class Meta:
         constraints = (
@@ -450,11 +455,13 @@ class InvestigationTiac(
                 condition=(
                     models.Q(
                         suspicion_conclusion=SuspicionConclusion.CONFIRMED.value,
-                        selected_hazard__in=CategorieDanger.values,
+                        selected_hazard__contained_by=CategorieDanger.values,
+                        selected_hazard__len__gt=0,
                     )
                     | models.Q(
                         suspicion_conclusion=SuspicionConclusion.SUSPECTED.value,
-                        selected_hazard__in=DangersSyndromiques.values,
+                        selected_hazard__contained_by=DangersSyndromiques.values,
+                        selected_hazard__len__gt=0,
                     )
                     | (
                         ~models.Q(
@@ -463,7 +470,7 @@ class InvestigationTiac(
                                 SuspicionConclusion.CONFIRMED.value,
                             ]
                         )
-                        & models.Q(selected_hazard="")
+                        & models.Q(selected_hazard__len=0)
                     )
                 ),
                 name="selected_hazard_constraints",
@@ -482,7 +489,7 @@ class RepasSuspect(models.Model):
         blank=True,
     )
     datetime_repas = models.DateTimeField(verbose_name="Date et heure du repas", blank=True, null=True)
-    nombre_participant = models.IntegerField(verbose_name="Nombre de participant(e)s", blank=True, null=True)
+    nombre_participant = models.CharField(verbose_name="Nombre de participant(e)s", blank=True, null=True)
     departement = models.ForeignKey(
         Departement,
         on_delete=models.PROTECT,
@@ -508,6 +515,9 @@ class RepasSuspect(models.Model):
     @property
     def show_type_collectivite(self):
         return self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE
+
+    def __str__(self):
+        return self.denomination
 
 
 class AlimentSuspect(models.Model):
@@ -555,6 +565,9 @@ class AlimentSuspect(models.Model):
     def is_aliment_cuisine(self):
         return self.type_aliment == TypeAliment.CUISINE
 
+    def __str__(self):
+        return self.denomination
+
 
 class AnalyseAlimentaire(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="analyses_alimentaires")
@@ -573,3 +586,10 @@ class AnalyseAlimentaire(models.Model):
     @property
     def categorie_danger_labels(self):
         return [CategorieDanger(cd).label.split(">")[-1] for cd in self.categorie_danger]
+
+    @property
+    def categorie_danger_full_labels(self):
+        return ", ".join([CategorieDanger(cd).label for cd in self.categorie_danger])
+
+    def __str__(self):
+        return self.reference_prelevement

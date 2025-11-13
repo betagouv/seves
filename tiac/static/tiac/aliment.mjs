@@ -2,6 +2,16 @@ import {BaseFormSetController} from "BaseFormset"
 import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
 import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
+import {collectFormValues} from 'Forms'
+/**
+ * @typedef AlimentData
+ * @property {string} categorie_produit
+ * @property {string} denomination
+ * @property {string} description_composition
+ * @property {string} description_produit
+ * @property {string[]} motif_suspicion
+ * @property {string} type_aliment
+ */
 
 class AlimentFormController extends BaseFormInModal {
     static targets = [
@@ -16,19 +26,28 @@ class AlimentFormController extends BaseFormInModal {
         "categorieProduitRootContainer",
         "jsonConfig",
     ]
+    static values = {categorieProduit: Array}
 
     connect() {
         this.setupCategorieProduit()
-        this.openDialog()
-        this.handleConditionalFields(this.typeAlimentInputContainerTarget.querySelector(":checked").value)
+        if (this.shouldImmediatelyShowValue) {
+            this.openDialog()
+            this.handleConditionalFields(this.typeAlimentInputContainerTarget.querySelector(":checked").value)
+        } else {
+            this.initCard(
+                collectFormValues(this.fieldsetTarget, {
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true
+                })
+            )
+        }
     }
 
     setupCategorieProduit(){
-        const options = JSON.parse(this.jsonConfigTarget.textContent)
         const treeselect = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: this.categorieProduitInputTarget.value,
-            options: options,
+            options: this.categorieProduitValue,
             isSingleSelect: true,
             openCallback() {
                 patchItems(treeselect.srcElement)
@@ -41,13 +60,14 @@ class AlimentFormController extends BaseFormInModal {
 
         treeselect.srcElement.addEventListener('input', (e) => {
             if (!e.detail) return
-            const result = findPath(e.detail, options)
+            const result = findPath(e.detail, this.categorieProduitValue)
             this.categorieProduitInputTarget.value = e.detail
             this.categorieProduitContainerTarget.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
         })
     }
 
     initCard(aliment) {
+        this.shouldImmediatelyShowValue = false;
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(aliment))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(aliment))
@@ -70,12 +90,18 @@ class AlimentFormController extends BaseFormInModal {
         }
     }
 
+    onCloseForm() {
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
+    }
+
     onTypeAlimentChange(event){
         this.handleConditionalFields(event.target.value)
     }
 
     getDeleteConfirmationSentence(aliment){
-        return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
+        return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
     }
 
     getDeleteConfirmationTitle(aliment){
@@ -83,6 +109,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     /**
+     * @param {AlimentData} aliment
      * @return {string} HTML
      */
     renderCard(aliment) {

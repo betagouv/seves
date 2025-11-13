@@ -1,14 +1,24 @@
+from collections import OrderedDict
 from typing import Literal
 
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
+from dsfr.forms import DsfrBaseForm
 
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
-from core.fields import DSFRRadioButton, ContactModelMultipleChoiceField, SEVESChoiceField, AdresseLieuDitField
+from core.fields import (
+    DSFRRadioButton,
+    ContactModelMultipleChoiceField,
+    SEVESChoiceField,
+    AdresseLieuDitField,
+    MessageObjectField,
+    MessageContentField,
+)
 from core.models import Document, Contact, Message, Visibilite, Structure, Departement
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -70,40 +80,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
-    recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label="Destinataires*"
-    )
-    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
-    recipients_copy_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), required=False, label="Copie"
-    )
-
-    message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
-    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
-
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-    ]
-
-    class Meta:
-        model = Message
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
+class CommonMessageMixin:
     def _add_files_inputs(self, data, files):
         document_types = {k: v for k, v in data.items() if k.startswith("document_type_")}
         documents = {k: v for k, v in files.items() if k.startswith("document_file_")}
@@ -131,20 +108,18 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
         self._contacts = self._contacts.select_related("agent__structure")
         return self._contacts
 
-    def _build_label_with_shortcuts(
-        self, label_text, structure_ids, contact_ids=None, css_class_prefix="destinataires"
-    ):
+    def _build_label_with_shortcuts(self, label_text, structure_ids, contact_ids=None, prefix="destinataires"):
         html_parts = [f"{label_text}"]
         if contact_ids:
             html_parts.append(
                 f"<p class='fr-mb-1v'>"
-                f"<a href='#' class='fr-link {css_class_prefix}-contacts-shortcut' "
+                f"<a href='#' data-action='message-form#onShortcut{prefix.title()}:stop:prevent' class='fr-link {prefix}-contacts-shortcut' "
                 f"data-contacts='{contact_ids}'>Ajouter tous les contacts de la fiche</a></p>"
             )
         html_parts.append(
             f"<p class='fr-mb-2v'>"
-            f"<a href='#' class='fr-link {css_class_prefix}-shortcut' "
-            f"data-structures='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
+            f"<a href='#' data-action='message-form#onShortcut{prefix.title()}:stop:prevent' class='fr-link {prefix}-shortcut' "
+            f"data-structures='{structure_ids}' data-contacts='{structure_ids}'>Ajouter seulement les structures de la fiche</a></p>"
         )
         return mark_safe("\n".join(html_parts))
 
@@ -160,11 +135,271 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
 
     def _get_recipients_structures_only_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Destinataires*", structure_ids, css_class_prefix="destinataires")
+        return self._build_label_with_shortcuts("Destinataires*", structure_ids, prefix="destinataires")
 
     def _get_recipients_copy_structures_only_label(self, obj):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Copie", structure_ids, css_class_prefix="copie")
+        return self._build_label_with_shortcuts("Copie", structure_ids, prefix="copie")
+
+    def _add_related_objects(self):
+        self.instance.status = self.status
+        self.instance.sender = self.sender
+        self.instance.sender_structure = self.sender.agent.structure
+        self.instance.object_id = self.obj.id
+        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
+
+    def clean(self):
+        super().clean()
+        self.status = self.data.get("action", self.data.get("status"))
+        if self.status not in Message.Status:
+            raise NotImplementedError
+
+    def handle_files(self, kwargs):
+        if kwargs.get("data") and kwargs.get("files"):
+            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+
+    def set_labels(self):
+        for field in self:
+            field.label = self.fields[field.name].label
+
+    def _add_object_field(self, obj, message_type):
+        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type))
+        new_field = ("message_object", field)
+        fields = list(self.fields.items())
+        index = next(i for i, (name, _) in enumerate(fields) if name == "title")
+        fields.insert(index, new_field)
+        self.fields = OrderedDict(fields)
+
+
+class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau message"
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+    message_object = None
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.MESSAGE)
+        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+
+        self.fields["recipients"].queryset = queryset
+        self.fields["recipients_copy"].queryset = queryset
+
+        if self._get_structures(obj):
+            self.fields["recipients"].label = self._get_recipients_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.MESSAGE
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "title",
+            "content",
+        ]
+
+
+class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouvelle note"
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.NOTE)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.NOTE
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = ["title", "content"]
+
+
+class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau point de situation"
+    help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.POINT_DE_SITUATION)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.POINT_DE_SITUATION
+        self._add_related_objects()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            instance.recipients.set(self.obj.contacts.all())
+        return instance
+
+    class Meta:
+        model = Message
+        fields = ["title", "content"]
+
+
+class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouvelle demande d'intervention"
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.DEMANDE_INTERVENTION)
+
+        queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset_structures = queryset_structures.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+
+        self.fields["recipients"].queryset = queryset_structures
+        self.fields["recipients_copy"].queryset = queryset_structures
+
+        if self._get_structures(obj):
+            self.fields["recipients"].label = self._get_recipients_structures_only_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(obj)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.DEMANDE_INTERVENTION
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "title",
+            "content",
+        ]
+
+
+class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Signaler la fin de suivi"
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.FIN_SUIVI)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.FIN_SUIVI
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "title",
+            "content",
+        ]
+
+
+class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+    page_title = "Nouveau compte rendu sur demande d'intervention"
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    content = MessageContentField()
+
+    def __init__(self, *args, sender, **kwargs):
+        obj = kwargs.pop("obj", None)
+        self.obj = obj
+        self.sender = sender
+        super().__init__(*args, **kwargs)
+        self._add_object_field(obj, Message.COMPTE_RENDU)
+
+        self.handle_files(kwargs)
+        self.set_labels()
+
+    def clean(self):
+        super().clean()
+        self.instance.message_type = Message.COMPTE_RENDU
+        self._add_related_objects()
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "title",
+            "content",
+        ]
+
+
+class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMessageMixin, forms.ModelForm):
+    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
+    recipients_structures_only = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), label="Destinataires*"
+    )
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
+    recipients_copy_structures_only = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), required=False, label="Copie"
+    )
+
+    message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
+    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
+    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
+
+    manual_render_fields = [
+        "recipients_structures_only",
+        "recipients_copy_structures_only",
+    ]
+
+    class Meta:
+        model = Message
+        fields = [
+            "recipients",
+            "recipients_copy",
+            "recipients_copy_structures_only",
+            "message_type",
+            "title",
+            "content",
+            "content_type",
+            "object_id",
+            "status",
+        ]
 
     def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
         obj = kwargs.pop("obj", None)
@@ -191,8 +426,7 @@ class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.Mo
             self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
             self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_structures_only_label(obj)
 
-        if kwargs.get("data") and kwargs.get("files"):
-            self._add_files_inputs(kwargs.get("data"), kwargs.get("files"))
+        self.handle_files(kwargs)
 
         if self.instance.pk:
             if self.instance.message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
@@ -339,7 +573,7 @@ class BaseEtablissementForm(forms.ModelForm):
     )
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
-    pays = CountryField(blank=True).formfield(widget=forms.Select(attrs={"class": "fr-select"}))
+    pays = CountryField(blank=True).formfield(label="Pays", widget=forms.Select(attrs={"class": "fr-select"}))
     departement = forms.ModelChoiceField(
         queryset=Departement.objects.order_by("numero").all(),
         to_field_name="numero",
@@ -349,6 +583,7 @@ class BaseEtablissementForm(forms.ModelForm):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.fields["pays"].label_suffix = ""
 
         if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
             self.fields["adresse_lieu_dit"].choices = [(self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)]

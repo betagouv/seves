@@ -2,12 +2,13 @@ import json
 import re
 from urllib.parse import quote
 
+from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Page, expect, Locator
 
 from ssa.models import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
-from tiac.constants import TypeRepas
+from tiac.constants import TypeRepas, SuspicionConclusion, DangersSyndromiques
 from tiac.models import (
     EvenementSimple,
     Etablissement,
@@ -95,6 +96,9 @@ class WithEtablissementMixin:
 
 
 class WithAnalyseAlimentaireMixin(WithTreeSelect):
+    def get_analyse_alimentaire_card(self, index):
+        return self.page.locator(".analyse-card").nth(index)
+
     def open_analyse_alimentaire_modal(self):
         self.page.locator(".analyses-alimentaires-fieldset").get_by_role("button", name="Ajouter").click()
         self.current_modal.wait_for(state="visible")
@@ -120,6 +124,24 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         modal = self.open_analyse_alimentaire_modal()
         self.fill_analyse_alimentaire(modal, analyse)
         self.close_analyse_alimentaire_modal()
+
+    def delete_analyse_alimentaire(self, index):
+        self.get_analyse_alimentaire_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_analyse_alimentaire(self, index, **kwargs):
+        card = self.get_analyse_alimentaire_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".analyse-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def _analyse_alimentaire(self, index):
+        self.page.locator(".analyse-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
 
     @property
     def nb_analyse(self):
@@ -220,8 +242,8 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_numero")
 
     @property
-    def type_evenement(self):
-        return self.page.locator("#id_type_evenement")
+    def follow_up(self):
+        return self.page.locator("#id_follow_up")
 
     @property
     def with_links(self):
@@ -230,6 +252,10 @@ class EvenementListPage(WithTreeSelect):
     @property
     def start_date_field(self):
         return self.page.locator("#id_start_date")
+
+    @property
+    def conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
 
     @property
     def end_date_field(self):
@@ -249,6 +275,9 @@ class EvenementListPage(WithTreeSelect):
 
     def submit_search(self):
         return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+
+    def submit_export(self):
+        return self.page.get_by_role("button", name="Extraire", exact=True).click()
 
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
@@ -340,6 +369,9 @@ class EvenementListPage(WithTreeSelect):
         choices = [(d, d) for d in dangers]
         choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
 
+    def select_hazard(self, label):
+        self._set_treeselect_option("danger-retenu", label)
+
     def set_agents_pathogenes_from_shortcut(self, label):
         container = self.page.locator("#id_agents_pathogenes").locator("..")
         container.locator(".treeselect-input__edit").click()
@@ -409,8 +441,43 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
         choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
         self.page.get_by_role("button", name="Transférer").click()
 
+    def transform(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Passer en investigation").click()
+        self.page.get_by_role("button", name="Confirmer").click()
+
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
+
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_message_content_and_send(self):
+        self.page.locator("#id_title").fill("Title of the message")
+        self.page.locator("#id_content").fill("My content \n with a line return")
+        self.page.get_by_test_id("fildesuivi-add-submit").click()
+
+    @property
+    def fil_de_suivi_sender(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
+
+    @property
+    def fil_de_suivi_recipients(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
+
+    @property
+    def fil_de_suivi_title(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
+
+    @property
+    def fil_de_suivi_type(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
 
 
 class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
@@ -421,7 +488,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "contenu",
         "will_trigger_inquiry",
         "numero_sivss",
-        "type_evenement",
+        "follow_up",
         "notify_ars",
         "nb_sick_persons",
         "nb_sick_persons_to_hospital",
@@ -450,39 +517,58 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         )
 
     def set_will_trigger_inquiry(self, value):
-        self.page.locator("#radio-id_will_trigger_inquiry").locator(
-            f"input[type='radio'][value='{str(value).lower()}']"
-        ).check(force=True)
-
-    def set_notify_ars(self, value):
-        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+        self.page.locator("#radio-id_will_trigger_inquiry").locator(f"input[type='radio'][value='{value}']").check(
             force=True
         )
 
-    def set_type_evenement(self, value):
-        self.page.locator("#radio-id_type_evenement").locator(
-            f"input[type='radio'][value='{str(value).lower()}']"
-        ).check(force=True)
+    def set_notify_ars(self, value):
+        self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{value}']").check(force=True)
+
+    def set_follow_up(self, value):
+        self.page.locator("#radio-id_follow_up").locator(f"input[type='radio'][value='{str(value).lower()}']").check(
+            force=True
+        )
 
     def set_analyses(self, value):
         self.page.locator("#radio-id_analyses_sur_les_malades").locator(
             f"input[type='radio'][value='{str(value).lower()}']"
         ).check(force=True)
 
-    def fill_required_fields(self, object: InvestigationTiac):
-        self.contenu.fill(object.contenu)
-        self.set_type_evenement(object.type_evenement)
+    def fill_required_fields(self, obj: InvestigationTiac):
+        self.contenu.fill(obj.contenu)
+        self.set_follow_up(obj.follow_up)
+
+    def fill_context_block(self, obj: InvestigationTiac):
+        self.fill_required_fields(obj)
+        self.date_reception.fill(obj.date_reception.strftime("%Y-%m-%d"))
+        self.evenement_origin.select_option(obj.evenement_origin)
+        self.set_modalites_declaration(obj.modalites_declaration)
+        self.set_notify_ars(obj.notify_ars)
+        self.set_will_trigger_inquiry(obj.will_trigger_inquiry)
+        self.numero_sivss.fill(obj.numero_sivss)
+
+        self.nb_sick_persons.fill(str(obj.nb_sick_persons))
+        self.nb_sick_persons_to_hospital.fill(str(obj.nb_sick_persons_to_hospital))
+        self.nb_dead_persons.fill(str(obj.nb_dead_persons))
+        self.datetime_first_symptoms.fill(obj.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
+        self.datetime_last_symptoms.fill(obj.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
 
     def add_agent_pathogene_confirme(self, label):
         self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("agents-pathogene", label)
+
+    def add_agent_pathogene_confirme_via_shortcut(self, label):
+        container = self.page.locator("#agents-pathogene")
+        container.evaluate("el => el.scrollIntoView()")
+        container.locator(".treeselect-input__edit").click()
+        container.locator(".shortcut", has_text=label).locator("..").click()
 
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
     def find_label_for_danger(self, text):
-        return self.current_modal.get_by_text(text[:25])
+        return self.current_modal.get_by_text(striptags(text)[:25])
 
     def open_danger_modal(self):
         self.page.get_by_test_id("add-etiologie").click()
@@ -513,7 +599,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
-        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
+        self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
         self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
 
@@ -566,10 +652,11 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.current_modal.get_by_role("button", name="Enregistrer").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
 
+    def get_dangers_syndromiques(self):
+        return self.page.locator(".etiologie-card-container").locator("visible=true")
+
     def delete_danger_syndromique(self, index):
-        self.page.locator(".etiologie-card-container").locator("visible=true").nth(index).get_by_role(
-            "button", name="Supprimer"
-        ).click()
+        self.get_dangers_syndromiques().nth(index).get_by_role("button", name="Supprimer").click()
 
     def delete_repas(self, index):
         self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()
@@ -591,11 +678,40 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def nb_aliments(self):
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
+    def submit(self, btn_label="Enregistrer"):
+        self.page.get_by_role("button", name=btn_label, exact=True).first.click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
     def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon").click()
+        self.submit("Enregistrer le brouillon")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
+
+    def remove_free_link(self, index):
+        self.page.locator("#liens-libre").get_by_role("button", name="Remove item").nth(index).click()
+
+    def fill_conlusion(self, input_data):
+        self.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
+        if input_data.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
+            for item in input_data.selected_hazard:
+                self._set_treeselect_option("selected_hazard-treeselect", CategorieDanger(item).label)
+        elif input_data.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
+            for item in input_data.selected_hazard:
+                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
+
+        self.conclusion_comment.fill(input_data.conclusion_comment)
+
+
+class InvestigationTiacEditPage(InvestigationTiacFormPage):
+    def __init__(self, page: Page, base_url, investigation: InvestigationTiac):
+        self.investigation = investigation
+        super().__init__(page, base_url)
+
+    def navigate(self):
+        self.page.goto(
+            f"{self.base_url}{reverse('tiac:investigation-tiac-edition', kwargs={'pk': self.investigation.pk})}"
+        )
 
 
 class InvestigationTiacDetailsPage:
@@ -671,3 +787,33 @@ class InvestigationTiacDetailsPage:
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def add_recipient_to_message(self, contact: str, choice_js_fill):
+        choice_js_fill(
+            self.page,
+            ".choices:has(#id_recipients)",
+            contact,
+            contact,
+            use_locator_as_parent_element=True,
+        )
+
+    def add_message_content_and_send(self):
+        self.page.locator("#id_title").fill("Title of the message")
+        self.page.locator("#id_content").fill("My content \n with a line return")
+        self.page.get_by_test_id("fildesuivi-add-submit").click()
+
+    @property
+    def fil_de_suivi_sender(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
+
+    @property
+    def fil_de_suivi_recipients(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
+
+    @property
+    def fil_de_suivi_title(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
+
+    @property
+    def fil_de_suivi_type(self, line_number=1):
+        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")

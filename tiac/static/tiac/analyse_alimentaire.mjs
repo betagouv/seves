@@ -62,6 +62,7 @@ class AlimentFormController extends BaseFormInModal {
             value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
             options: this.categorieDangerValue,
             isSingleSelect: false,
+            isIndependentNodes: true,
             openCallback: this.treeselectOpenCallback.bind(this),
             placeholder: "Chercher ou choisir dans la liste",
             searchCallback: item => {
