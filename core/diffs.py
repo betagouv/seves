@@ -117,7 +117,7 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 new = obj_compare.compare_obj2.to_string()
                 diff.append(Diff(self._get_pretty_field(field), old, new, version1.revision))
 
-        if comment := version1.revision.get_comment():
-            diff.append(Diff("", "", comment, version1.revision))
+        if comment := version2.revision.get_comment():
+            diff.append(Diff("", "", comment, version2.revision))
 
         return diff, has_unfollowed_fields

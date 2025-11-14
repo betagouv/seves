@@ -1,4 +1,10 @@
 {% load waffle_tags %}
+{% for message in message_list %}
+    {% if message.can_be_deleted %}
+        {% include "core/_delete_modal.html" with object=message content_type=message_content_type next_url=object.get_absolute_url suffix=message.pk %}
+    {% endif %}
+{% endfor %}
+
 <table class="fil-de-suivi">
     <thead>
         <tr>
@@ -19,6 +25,9 @@
             </th>
             <th scope="col">
                 Type
+            </th>
+            <th scope="col">
+                Actions
             </th>
         </tr>
     </thead>
@@ -89,6 +98,17 @@
                         <a href="{% url 'message-view' message.pk %}" target="_blank" rel="noreferrer" class="cell-link">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
                     {% else %}
                         <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if message.can_be_deleted %}
+                        <div class="fr-pl-2w">
+                            <button class="fr-icon-delete-bin-line fr-btn fr-btn--tertiary no-border" data-fr-opened="false" aria-controls="fr-modal-delete{{ message.pk }}"></button>
+                        </div>
+                    {% else %}
+                        <div class="fr-pl-2w">
+                            <button class="fr-icon-delete-bin-line fr-btn fr-btn--tertiary no-border" disabled="true"></button>
+                        </div>
                     {% endif %}
                 </td>
             </tr>

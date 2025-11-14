@@ -8,7 +8,7 @@ from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.forms.utils import RenderableMixin
@@ -124,9 +124,12 @@ class WithMessageMixin:
                 "documents",
             )
         )
+        for message in message_list:
+            message.can_be_deleted = message.can_user_delete(self.request.user)
         context["message_list"] = message_list
         context["message_update_forms"] = self._get_message_update_forms(message_list)
         context["message_v2"] = flag_is_active(self.request, "message_v2")
+        context["message_content_type"] = ContentType.objects.get_for_model(Message)
         return context
 
 
@@ -185,40 +188,6 @@ class WithFreeLinksListInContextMixin:
         context = super().get_context_data(**kwargs)
         context["free_links_list"] = LienLibre.objects.for_object(self.get_object())
         return context
-
-
-class AllowsSoftDeleteMixin(models.Model):
-    is_deleted = models.BooleanField(default=False)
-
-    def can_user_delete(self, user):
-        raise NotImplementedError
-
-    def can_be_deleted(self, user):
-        return self.can_user_delete(user)
-
-    def soft_delete(self, user):
-        if not self.can_be_deleted(user):
-            raise PermissionDenied
-        self.is_deleted = True
-        self.save()
-
-    def get_soft_delete_success_message(self):
-        return "L'objet a bien été supprimé"
-
-    def get_soft_delete_permission_error_message(self):
-        return "Vous n'avez pas les droits pour supprimer cet objet"
-
-    def get_soft_delete_attribute_error_message(self):
-        return "Ce type d'objet ne peut pas être supprimé"
-
-    def get_soft_delete_confirm_title(self):
-        return "Supprimer cet objet"
-
-    def get_soft_delete_confirm_message(self):
-        return "Cette action est irréversible. Confirmez-vous la suppression de cet objet ?"
-
-    class Meta:
-        abstract = True
 
 
 class IsActiveMixin(models.Model):

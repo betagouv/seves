@@ -11,11 +11,11 @@ from core.mixins import (
     WithVisibiliteMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
-    AllowsSoftDeleteMixin,
     EmailNotificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
 )
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.mixins import WithEtatMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, Document

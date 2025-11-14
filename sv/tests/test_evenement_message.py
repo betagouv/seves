@@ -45,6 +45,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
     generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
     generic_test_can_add_message_in_new_tab_with_documents,
+    generic_test_can_delete_my_own_message,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1720,3 +1721,22 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
 @override_flag("message_v2", active=True)
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill):
     generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, EvenementFactory())
+
+
+@pytest.mark.django_db
+def test_cant_delete_a_message_i_dont_own(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    message = MessageFactory(content_object=evenement)
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(Message).id,
+        "content_id": message.pk,
+    }
+    response = client.post(reverse("soft-delete"), data=payload)
+
+    message.refresh_from_db()
+    assert response.status_code == 302
+    assert message.is_deleted is False
+
+
+def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user):
+    generic_test_can_delete_my_own_message(live_server, page, EvenementFactory(), mocked_authentification_user)
