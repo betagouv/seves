@@ -6,7 +6,12 @@ from django.forms import DateInput, TextInput, CheckboxInput
 from django_countries import Countries
 from django_filters.filters import BaseInFilter, CharFilter
 
-from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
+from core.filters_mixins import (
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtatFilterMixin,
+)
 from core.forms import DSFRForm
 from core.models import LienLibre, Departement
 from ssa.models import EvenementProduit
@@ -63,6 +68,7 @@ class EvenementProduitFilter(
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtablissementFilterMixin,
+    WithEtatFilterMixin,
     django_filters.FilterSet,
 ):
     with_free_links = django_filters.BooleanFilter(
