@@ -54,7 +54,7 @@ def test_can_cloturer_evenement_produit_if_last_remaining_structure(
 
     evenement.refresh_from_db()
     assert evenement.etat == EvenementProduit.Etat.CLOTURE
-    expect(page.get_by_text("Clôturé", exact=True)).to_be_visible()
+    assert page.get_by_text("Fin de suivi").count() == 2
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
 
 

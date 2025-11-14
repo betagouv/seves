@@ -7,7 +7,12 @@ from django.db.models import Q
 from django.forms import DateInput, Media, CheckboxInput, TextInput, HiddenInput
 from dsfr.forms import DsfrBaseForm
 
-from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
+from core.filters_mixins import (
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtatFilterMixin,
+)
 from core.form_mixins import js_module
 from core.models import LienLibre
 from ssa.filters import WithEtablissementFilterMixin, CharInFilter
@@ -59,6 +64,7 @@ class TiacFilter(
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtablissementFilterMixin,
+    WithEtatFilterMixin,
     django_filters.FilterSet,
 ):
     with_free_links = django_filters.BooleanFilter(
@@ -95,9 +101,6 @@ class TiacFilter(
         widget=TextInput(attrs={"placeholder": "Aliment, analyse, repas, établissement..."}),
     )
 
-    etat = django_filters.ChoiceFilter(
-        choices=EvenementSimple.Etat, label="État", empty_label=settings.SELECT_EMPTY_CHOICE
-    )
     numero_sivss = django_filters.CharFilter(
         field_name="numero_sivss",
         lookup_expr="contains",

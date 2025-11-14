@@ -2,6 +2,7 @@ import django_filters
 from django.db.models import Q
 from django.forms.widgets import TextInput
 
+from core.mixins import WithEtatMixin
 from core.models import Contact, Structure
 from seves import settings
 
@@ -61,3 +62,17 @@ class WithAgentContactFilterMixin(django_filters.FilterSet):
 
     def filter_agent_contact(self, queryset, name, value):
         return queryset.filter(contacts=value)
+
+
+class WithEtatFilterMixin(django_filters.FilterSet):
+    etat = django_filters.ChoiceFilter(
+        method="filter_etat",
+        choices=tuple(WithEtatMixin.Etat.choices) + (("fin de suivi", "Fin de suivi"),),
+        label="État de l'événement",
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
+
+    def filter_etat(self, queryset, name, value):
+        if value == "fin de suivi":
+            return queryset.filter(has_fin_de_suivi=True)
+        return queryset.filter(etat=value, has_fin_de_suivi=False)
