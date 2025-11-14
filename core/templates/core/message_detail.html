@@ -33,7 +33,14 @@
                     <a href="{{ message.content_object.get_absolute_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
                        target="_blank">Ouvrir la fiche {{ message.content_object.numero }}</a>
 
-                    <h1 class="fr-mt-2w">{{ message.title }}</h1>
+                    <div class="fr-flex fr-flex--space-between fr-flex--row">
+                        <h1 class="fr-mt-2w">{{ message.title }}</h1>
+                        {% if can_reply_to %}
+                            <div class="fr-my-auto">
+                                <a href="{% url 'message-add' message.content_type.id message.object_id %}?type=message&reply_id={{ message.id }}" class="fr-btn">Répondre</a>
+                            </div>
+                        {% endif %}
+                    </div>
                     <div class="fr-container--fluid">
                         <div class="fr-grid-row fr-grid-row--gutters">
                             <div class="fr-col-8">

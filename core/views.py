@@ -203,6 +203,9 @@ class MessageCreateView(
                 "cr_demande_intervention": self.obj.get_crdi_form(),
                 "fin_suivi": FinDeSuiviForm,
             }
+            self.reply_id = self.request.GET.get("reply_id")
+            if self.reply_id:
+                return BasicMessageForm
             return mapping.get(self.request.GET.get("type"))
         return self.obj.get_message_form()
 
@@ -226,6 +229,18 @@ class MessageCreateView(
                     "sender": self.request.user.agent.contact_set.get(),
                 }
             )
+            if self.reply_id:
+                reply_message = Message.objects.get(id=self.reply_id)
+                if reply_message.can_reply_to(self.request.user):
+                    kwargs.update(
+                        {
+                            "initial": {
+                                "title": f"[Rép] {reply_message.title}",
+                                "recipients": reply_message.sender,
+                                "content": reply_message.get_reply_intro_text(),
+                            }
+                        }
+                    )
         else:
             kwargs.update(
                 {
@@ -311,8 +326,8 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         )
 
     def dispatch(self, request, *args, **kwargs):
-        message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
-        self.fiche = message.content_object
+        self.message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
+        self.fiche = self.message.content_object
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -324,6 +339,7 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
+        context["can_reply_to"] = self.message.can_reply_to(self.request.user)
         return context
 
 
