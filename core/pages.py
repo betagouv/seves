@@ -28,6 +28,10 @@ class BaseMessagePage(ABC):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
 
+    def delete_message(self):
+        self.page.locator("table .fr-icon-delete-bin-line").click()
+        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Supprimer").click()
+
     def new_note(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Note").click()

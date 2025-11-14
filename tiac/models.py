@@ -8,7 +8,6 @@ from django.utils.html import strip_tags
 from reversion.models import Version
 
 from core.mixins import (
-    AllowsSoftDeleteMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
     WithFreeLinkIdsMixin,
@@ -17,6 +16,7 @@ from core.mixins import (
     EmailNotificationMixin,
     AllowModificationMixin,
 )
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
 from ssa.models import CategorieProduit, CategorieDanger

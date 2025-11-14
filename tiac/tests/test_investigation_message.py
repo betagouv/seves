@@ -25,6 +25,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
     generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
     generic_test_can_add_message_in_new_tab_with_documents,
+    generic_test_can_delete_my_own_message,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -219,3 +220,8 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, evenement)
+
+
+def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_delete_my_own_message(live_server, page, evenement, mocked_authentification_user)

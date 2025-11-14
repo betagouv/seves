@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import DepartementFactory
+from core.factories import DepartementFactory, MessageFactory
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
@@ -34,6 +34,10 @@ def test_can_view_evenement_produit_history(live_server, page):
     update_page.close_etablissement_modal()
     update_page.submit_as_draft()
 
+    message = MessageFactory(content_object=evenement)
+    message.is_deleted = True
+    message.save()
+
     content_type = ContentType.objects.get_for_model(EvenementProduit)
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
@@ -49,6 +53,7 @@ def test_can_view_evenement_produit_history(live_server, page):
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
+                "One for the deletion of the message",
             ]
         )
     )

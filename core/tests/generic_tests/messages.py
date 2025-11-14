@@ -641,3 +641,19 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     message = Message.objects.get()
     assert message.documents.count() == 2
     assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}
+
+
+def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user):
+    assert Message.objects.count() == 0
+    assert Message._base_manager.count() == 0
+
+    message = MessageFactory(content_object=object, sender=mocked_authentification_user.agent.contact_set.get())
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+
+    assert message_page.message_title_in_table() == message.title
+
+    message_page.delete_message()
+    assert Message.objects.count() == 0
+    assert Message._base_manager.count() == 1

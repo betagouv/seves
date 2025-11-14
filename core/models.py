@@ -16,7 +16,15 @@ from django_countries.fields import CountryField
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
-from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
+from .managers import (
+    ContactQueryset,
+    LienLibreQueryset,
+    StructureQueryset,
+    DocumentManager,
+    DocumentQueryset,
+    MessageManager,
+)
+from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import validate_upload_file, AllowedExtensions
 
@@ -260,7 +268,7 @@ class Document(models.Model):
 
 
 @reversion.register()
-class Message(models.Model):
+class Message(AllowsSoftDeleteMixin, models.Model):
     MESSAGE = "message"
     NOTE = "note"
     POINT_DE_SITUATION = "point de situation"
@@ -303,11 +311,17 @@ class Message(models.Model):
 
     documents = GenericRelation(Document)
 
+    objects = MessageManager()
+
     class Meta:
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
         ordering = ["status", "-date_creation"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_deleted = self.is_deleted
 
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
@@ -330,8 +344,27 @@ class Message(models.Model):
     def is_draft(self):
         return self.status == self.Status.BROUILLON
 
+    def _is_owner(self, user):
+        return self.sender == user.agent.contact_set.get()
+
     def can_be_updated(self, user):
-        return self.is_draft and self.sender == user.agent.contact_set.get()
+        return self.is_draft and self._is_owner(user)
+
+    def can_user_delete(self, user):
+        return self._is_owner(user)
+
+    def get_soft_delete_success_message(self):
+        return "L'élément a bien été supprimé"
+
+    def get_soft_delete_confirm_message(self):
+        if self.message_type in self.TYPES_TO_FEMINIZE:
+            return f"Cette action est irréversible. Confirmez-vous la suppression de la : {self.get_message_type_display()} du fil de suivi - {self.title} ?"
+        return f"Cette action est irréversible. Confirmez-vous la suppression du : {self.get_message_type_display()} du fil de suivi - {self.title} ?"
+
+    def get_soft_delete_confirm_title(self):
+        if self.message_type in self.TYPES_TO_FEMINIZE:
+            return f"Supprimer la {self.get_message_type_display()} du fil de suivi"
+        return f"Supprimer le {self.get_message_type_display()} du fil de suivi"
 
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})

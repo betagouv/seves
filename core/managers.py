@@ -142,3 +142,8 @@ class EvenementManagerMixin:
                 FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)
             )
         )
+
+
+class MessageManager(Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
