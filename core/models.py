@@ -372,6 +372,20 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     def get_allowed_document_types(self):
         return self.content_object.get_allowed_document_types()
 
+    def get_absolute_url(self):
+        return reverse("message-view", kwargs={"pk": self.pk})
+
+    def can_reply_to(self, user):
+        return self.message_type == self.MESSAGE and self.content_object.can_user_access(user)
+
+    def get_reply_intro_text(self):
+        intro = f"Le {self.date_creation.strftime('%d/%m/%Y %Hh%M')} {self.sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        if self.recipients_copy.all():
+            intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
+
+        intro += f" le message suivant: \n\n {self.content}"
+        return intro
+
 
 @reversion.register()
 class LienLibre(models.Model):

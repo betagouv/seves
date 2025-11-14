@@ -657,3 +657,41 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     message_page.delete_message()
     assert Message.objects.count() == 0
     assert Message._base_manager.count() == 1
+
+
+def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object):
+    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    sender = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    message = MessageFactory(content_object=object, message_type=Message.MESSAGE, sender=sender)
+
+    page.goto(f"{live_server.url}{message.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.page.get_by_text("Répondre", exact=True).click()
+
+    assert message_page.message_title.input_value() == f"[Rép] {message.title}"
+    assert message_page.message_content.input_value() == message.get_reply_intro_text()
+
+    message_page.message_content.fill("Ma réponse")
+    message_page.pick_recipient_copy(contact.agent, choice_js_fill)
+    message_page.submit_message()
+
+    assert Message.objects.count() == 2
+    reply = Message.objects.first()
+
+    expected_title = f"[Rép] {message.title}"
+    expected_content = "Ma réponse"
+    expected_recipients = [
+        message.sender,
+    ]
+    expected_copies = [
+        contact,
+    ]
+
+    assert reply.title == expected_title, f"{reply.title=!r} != {expected_title=!r}"
+    assert reply.content == expected_content, f"{reply.content=!r} != {expected_content=!r}"
+    assert list(reply.recipients.all()) == expected_recipients, (
+        f"{list(reply.recipients.all())=!r} != {expected_recipients=!r}"
+    )
+    assert list(reply.recipients_copy.all()) == expected_copies, (
+        f"{list(reply.recipients_copy.all())=!r} != {expected_copies=!r}"
+    )
