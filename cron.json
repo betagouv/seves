@@ -11,6 +11,10 @@
 	  {
 		"command": "0 5 * * * ./bin/backup_db.sh",
 	    "size": "2XL"
+	  },
+	  {
+		"command": "0 4 * * * ./bin/fetch_and_import_contacts.sh",
+	    "size": "2XL"
 	  }
 	]
   }
