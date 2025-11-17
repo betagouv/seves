@@ -363,8 +363,8 @@ class Message(AllowsSoftDeleteMixin, models.Model):
 
     def get_soft_delete_confirm_title(self):
         if self.message_type in self.TYPES_TO_FEMINIZE:
-            return f"Supprimer la {self.get_message_type_display()} du fil de suivi"
-        return f"Supprimer le {self.get_message_type_display()} du fil de suivi"
+            return f"Supprimer la {self.get_message_type_display()}"
+        return f"Supprimer le {self.get_message_type_display()}"
 
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})
