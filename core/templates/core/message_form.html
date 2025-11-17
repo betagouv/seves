@@ -19,7 +19,9 @@
 
                     <div class="fr-flex fr-flex--row fr-flex--space-between">
                         <div>
-                            <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">{{ form.page_title }}</h1>
+                            <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
+                                {% if form.instance.pk %}Mise à jour du message{% else %}{{ form.page_title }}{% endif %}
+                            </h1>
                             {% if form.help_text %}
                                 <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
                             {% endif %}
