@@ -6,8 +6,6 @@
 {% block buttons %}
     <div class="fr-links-group fr-links-group--inline">
         <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
-        <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-            Enregistrer
-        </button>
+        {{  block.super }}
     </div>
 {% endblock %}

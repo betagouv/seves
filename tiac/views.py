@@ -142,8 +142,16 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
     def test_func(self):
         return self.get_object().can_user_access(self.request.user)
 
+    def form_valid(self, form):
+        self.object_was_draft = form.instance.is_draft
+        return super().form_valid(form)
+
     def get_success_message(self):
-        return "L’évènement a été mis à jour avec succès."
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object_was_draft and not self.object.is_draft
+            else "L’évènement a été mis à jour avec succès."
+        )
 
     def get_etablissement_formset_kwargs(self):
         return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}
@@ -454,8 +462,16 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
     template_name = "tiac/investigation_modification.html"
 
+    def form_valid(self, form):
+        self.object_was_draft = form.instance.is_draft
+        return super().form_valid(form)
+
     def get_success_message(self):
-        return "L’évènement a été mis à jour avec succès."
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object_was_draft and not self.object.is_draft
+            else "L’évènement a été mis à jour avec succès."
+        )
 
 
 class InvestigationTiacDetailView(
