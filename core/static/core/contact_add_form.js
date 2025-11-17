@@ -8,12 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
         searchPlaceholderValue: "Choisir dans la liste",
         noChoicesText: 'Aucune fiche à sélectionner',
     };
-    const select_contacts_structures = document.getElementById('id_contacts_structures');
-    const select_contacts_agents = document.getElementById('id_contacts_agents');
 
-    select_contacts_structures.style.visibility = 'visible';
-    select_contacts_agents.style.visibility = 'visible';
-
-    new Choices(select_contacts_structures, options);
-    new Choices(select_contacts_agents, options);
+    document.querySelectorAll("#id_contacts_structures, #id_contacts_agents").forEach(el => {
+        el.style.visibility = 'visible';
+        new Choices(el, options);
+    })
 });
