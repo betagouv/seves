@@ -59,7 +59,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
     creation_page.set_categorie_danger(input_data)
     creation_page.precision_danger.fill(input_data.precision_danger)
     creation_page.quantification.fill(str(input_data.quantification))
-    creation_page.set_quantification_unite(input_data.quantification_unite)
+    creation_page.set_quantification_unite(input_data.get_quantification_unite_display())
     creation_page.evaluation.fill(input_data.evaluation)
     creation_page.reference_souches.fill(input_data.reference_souches)
     creation_page.reference_clusters.fill(input_data.reference_clusters)
