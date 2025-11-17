@@ -281,10 +281,19 @@ class MessageUpdateView(
     UpdateView,
 ):
     model = Message
-    http_method_names = ["post"]
 
     def get_form_class(self):
-        return self.content_object.get_message_form()
+        if flag_is_active(self.request, "message_v2"):
+            mapping = {
+                Message.MESSAGE: BasicMessageForm,
+                Message.NOTE: NoteForm,
+                Message.POINT_DE_SITUATION: PointDeSituationForm,
+                Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
+                Message.COMPTE_RENDU: self.obj.get_crdi_form(),
+                Message.FIN_SUIVI: FinDeSuiviForm,
+            }
+            return mapping.get(self.object.message_type)
+        return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
         self.content_object = self.get_object().content_object
@@ -301,8 +310,19 @@ class MessageUpdateView(
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
         kwargs["obj"] = self.content_object
-        kwargs["next"] = self.content_object.get_absolute_url()
+        if not flag_is_active(self.request, "message_v2"):
+            kwargs["next"] = self.content_object.get_absolute_url()
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["go_back_url"] = self.obj.get_absolute_url()
+        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["message_status"] = Message.Status
+        context["object"] = self.obj
+        return context
 
     def get_success_url(self):
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"

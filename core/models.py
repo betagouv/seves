@@ -369,6 +369,11 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})
 
+    def get_message_url(self):
+        if self.is_draft:
+            return self.get_update_url()
+        return self.get_absolute_url()
+
     def get_allowed_document_types(self):
         return self.content_object.get_allowed_document_types()
 

@@ -28,6 +28,9 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_message_in_new_tab_with_documents,
     generic_test_can_delete_my_own_message,
     generic_test_can_reply_to_message,
+    generic_test_can_update_draft_note_in_new_tab,
+    generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_send_draft_message_in_new_tab,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -143,6 +146,16 @@ def test_can_update_draft_note(live_server, page: Page, choice_js_fill, mocked_a
     generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, evenement_produit, mailoutbox)
 
 
+@override_flag("message_v2", active=True)
+def test_can_update_draft_note_in_new_tab(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_update_draft_note_in_new_tab(
+        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+    )
+
+
 def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation(
@@ -150,9 +163,27 @@ def test_can_update_draft_point_situation(live_server, page: Page, mocked_authen
     )
 
 
+@override_flag("message_v2", active=True)
+def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation_in_new_tab(
+        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+    )
+
+
 def test_can_update_draft_demande_intervention(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_update_draft_demande_intervention_in_new_tab(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_update_draft_point_situation_in_new_tab(
         live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
     )
 
@@ -176,6 +207,14 @@ def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentifica
 def test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, evenement_produit, mailoutbox)
+
+
+@override_flag("message_v2", active=True)
+def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_send_draft_message_in_new_tab(
+        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+    )
 
 
 def test_can_send_draft_point_de_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
@@ -207,7 +246,7 @@ def test_can_send_draft_compte_rendu(live_server, page: Page, mocked_authentific
     )
 
     page.goto(f"{live_server.url}{evenement_produit.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, message.id)
+    message_page = UpdateMessagePage(page, f"#sidebar-message-{message.id}")
     message_page.open_message()
     message_page.submit_message()
 

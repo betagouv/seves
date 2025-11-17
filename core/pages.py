@@ -213,13 +213,13 @@ class CreateMessagePage(BaseMessagePage):
 
 
 class UpdateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, message_id: int):
+    def __init__(self, page: Page, container_id):
         super().__init__(page)
-        self.message_id = message_id
+        self._container_id = container_id
 
     @property
     def container_id(self) -> str:
-        return f"#sidebar-message-{self.message_id}"
+        return self._container_id
 
 
 class WithDocumentsPage:
