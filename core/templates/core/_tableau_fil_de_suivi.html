@@ -79,9 +79,9 @@
                 </td>
                 <td>
                     {% if message_v2 %}
-                        <a href="{% url 'message-view' message.pk %}" target="_blank" rel="noreferrer" class="cell-link">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
+                        <a href="{% url 'message-view' message.pk %}" target="_blank" rel="noreferrer" class="cell-link fr-cell--multiline">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
                     {% else %}
-                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
+                        <a href="#" class="cell-link fr-cell--multiline fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
                     {% endif %}
                 </td>
                 <td>
