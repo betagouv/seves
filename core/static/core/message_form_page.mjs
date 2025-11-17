@@ -159,6 +159,8 @@ export class MessageFormController extends Controller {
         this.documentNameInputTarget.value = ""
         this.commentInputTarget.value = ""
         this.currentDocumentID += 1;
+        this.documentFileTarget.disabled = true
+        this.addDocumentTarget.disabled = true
     }
 
     connect() {

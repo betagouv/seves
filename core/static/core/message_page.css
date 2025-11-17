@@ -9,3 +9,11 @@ label:has(+ .choices select[data-required="true"])::after,
 .required-field::after {
     content: none;
 }
+
+#message-add-document {
+    background-color: white;
+}
+
+.document-to-add {
+    background-color: white !important;
+}
