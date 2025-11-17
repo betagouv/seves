@@ -680,11 +680,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit(self, btn_label="Enregistrer"):
-        self.page.get_by_role("button", name=btn_label, exact=True).first.click()
+        self.page.locator("button#submit_publish").first.click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
-        self.submit("Enregistrer le brouillon")
+        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).first.click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))

@@ -21,20 +21,38 @@
                     {% endif %}
                 </h1>
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
-                    <div class="fr-links-group fr-links-group--inline">
+                    <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm">
+
                         {% block buttons %}
                             {% partialdef buttons inline %}
                                 {% if form.instance and form.instance.is_draft %}
-                                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary">
-                                        Enregistrer le brouillon
-                                    </button>
+                                    <li>
+                                        <button
+                                            type="submit"
+                                            name="action"
+                                            value="draft"
+                                            class="fr-btn fr-btn--secondary"
+                                        >
+                                            Enregistrer le brouillon
+                                        </button>
+                                    </li>
                                 {% endif %}
-                                <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-                                    {% if form.instance.pk %}Enregistrer{% else %}Publier{% endif %}
-                                </button>
+                                <li>
+
+                                    <button
+                                        id="submit_publish"
+                                        type="submit"
+                                        name="action"
+                                        value="publish"
+                                        class="fr-btn"
+                                    >
+                                        {% if form.instance.pk and not form.instance.is_draft %}Enregistrer{% else %}
+                                            Publier{% endif %}
+                                    </button>
+                                </li>
                             {% endpartialdef %}
                         {% endblock %}
-                    </div>
+                    </ul>
                 </div>
             </div>
 
@@ -255,9 +273,11 @@
                     {{ form.free_link|set_data:"free-links-target:select"  }}
                 </div>
             </fieldset>
-            <section class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
-                {% partial buttons %}
-            </section>
+            <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-mt-4v">
+                {% block bottom_buttons %}
+                    {% partial buttons %}
+                {% endblock %}
+            </ul>
         </main>
     </form>
 {% endblock %}

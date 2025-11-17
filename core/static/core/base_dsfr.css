@@ -84,3 +84,9 @@
     margin-right: auto;
     width: 100%;
 }
+
+/* Fixes behavior of .fr-links in .fr-btns-group */
+.fr-btns-group .fr-link {
+    align-self: center !important;
+    margin: 0 .5rem 1rem !important;
+}
