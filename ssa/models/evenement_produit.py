@@ -15,7 +15,7 @@ from core.mixins import (
     AllowModificationMixin,
 )
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
-from core.model_mixins import WithBlocCommunFieldsMixin
+from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
 from core.models import Structure, Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
@@ -147,6 +147,7 @@ class EvenementProduit(
     AllowModificationMixin,
     WithNumeroMixin,
     WithFreeLinkIdsMixin,
+    EmailableObjectMixin,
     models.Model,
 ):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
@@ -338,6 +339,12 @@ class EvenementProduit(
     @property
     def limit_contacts_to_user_from_app(self):
         return "ssa"
+
+    def get_short_email_display_name(self):
+        return f"Événement produit {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"{self.get_short_email_display_name()} (Catégorie de produit : {self.get_categorie_produit_display() or '-'} Danger : {self.get_categorie_danger_display() or '-'})"
 
     def get_allowed_document_types(self):
         return [

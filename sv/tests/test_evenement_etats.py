@@ -1,15 +1,15 @@
 import html
 
 import pytest
-from django.urls import reverse
-
-from core.factories import ContactStructureFactory, StructureFactory
-from sv.factories import EvenementFactory, FicheDetectionFactory
-from sv.models import Structure, Evenement
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from playwright.sync_api import Page, expect
+
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
-from core.models import Contact, FinSuiviContact, Message, Visibilite
+from core.factories import ContactStructureFactory, StructureFactory
+from core.models import Contact, FinSuiviContact, Visibilite
+from sv.factories import EvenementFactory
+from sv.models import Structure, Evenement
 
 
 @pytest.fixture
@@ -24,61 +24,6 @@ def _add_contacts(evenement, mocked_authentification_user):
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     evenement.contacts.add(user_contact_agent)
     evenement.contacts.add(user_contact_structure)
-
-
-def test_element_suivi_fin_suivi_creates_etat_fin_suivi(live_server, page: Page, mocked_authentification_user):
-    """Test que l'ajout d'un élément de suivi de type 'fin de suivi' ajoute l'état 'fin de suivi'
-    à la structure de l'agent connecté sur l'événement."""
-    evenement = EvenementFactory()
-    FicheDetectionFactory(evenement=evenement)
-    _add_contacts(evenement, mocked_authentification_user)
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Fil de suivi").click()
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message").fill("test")
-    page.get_by_test_id("fildesuivi-add-submit").click()
-    page.get_by_test_id("contacts").click()
-    expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
-    expect(page.get_by_test_id("evenement-header").get_by_text("Fin de suivi", exact=True)).to_be_visible()
-
-    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
-    expect(page.get_by_role("cell", name="Fin de suivi")).to_be_visible()
-
-
-def test_element_suivi_fin_suivi_already_exists(live_server, page: Page, mocked_authentification_user):
-    """Test l'impossibilité de créer un élément de suivi de type 'fin de suivi' s'il en existe déjà un pour la structure de l'agent connecté."""
-    evenement = EvenementFactory()
-    _add_contacts(evenement, mocked_authentification_user)
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    for _ in range(2):
-        page.get_by_role("tab", name="Fil de suivi").click()
-        page.get_by_test_id("element-actions").click()
-        page.get_by_role("link", name="Signaler la fin de suivi").click()
-        page.get_by_label("Message").fill("test")
-        page.get_by_test_id("fildesuivi-add-submit").click()
-
-    expect(page.locator("body")).to_contain_text(
-        "Un objet Fin suivi contact avec ces champs Content type, Object id et Contact existe déjà."
-    )
-    rows = page.locator("table.fil-de-suivi tbody tr")
-    expect(rows).to_have_count(1)
-
-
-def test_cannot_create_fin_suivi_if_structure_not_in_contacts(live_server, page: Page, mocked_authentification_user):
-    """Test l'impossibilité de créer un élément de suivi de type 'fin de suivi' si la structure de l'agent connecté n'est pas dans les contacts de l'évenement."""
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("tab", name="Fil de suivi").click()
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message").fill("test")
-    page.get_by_test_id("fildesuivi-add-submit").click()
-    expect(page.locator("body")).to_contain_text(
-        "Vous ne pouvez pas signaler la fin de suivi pour cette fiche car votre structure n'est pas dans la liste des contacts."
-    )
-    rows = page.locator("table.fil-de-suivi tbody tr")
-    expect(rows).to_have_count(0)
 
 
 def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
@@ -240,12 +185,6 @@ def test_cloture_evenement_auto_fin_suivi_si_derniere_structure_ac(
     assert evenement.etat == Evenement.Etat.CLOTURE
     assert FinSuiviContact.objects.filter(
         content_type=evenement_content_type, object_id=evenement.id, contact=contact_mus
-    ).exists()
-    assert Message.objects.filter(
-        message_type=Message.FIN_SUIVI,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        content_type=evenement_content_type,
-        object_id=evenement.id,
     ).exists()
 
 

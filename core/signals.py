@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_migrate, pre_delete
 from django.dispatch import receiver
 
-from core.models import Document, LienLibre, Message
+from core.models import Document, LienLibre, Message, FinSuiviContact
 from .tasks import scan_for_viruses
 
 logger = logging.getLogger(__name__)
@@ -70,4 +70,13 @@ def message_deleted(sender, instance: Message, **kwargs):
                 reversion.set_comment(
                     f"Le message de type '{instance.get_message_type_display()}' ayant pour titre {instance.title} a été supprimé de la fiche"
                 )
+                reversion.add_to_revision(instance.content_object)
+
+
+@receiver(post_save, sender=FinSuiviContact)
+def fin_suivi_added(sender, instance, created, **kwargs):
+    if created:
+        with transaction.atomic():
+            with reversion.create_revision():
+                reversion.set_comment(f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche")
                 reversion.add_to_revision(instance.content_object)

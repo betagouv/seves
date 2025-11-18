@@ -81,10 +81,8 @@ def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
     evenement.contacts.set([contact_agent_1, contact_agent_2, contact_structure])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Signaler la fin de suivi").click()
-    page.get_by_label("Message").fill("aaa")
-    page.get_by_test_id("fildesuivi-add-submit").click()
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("button", name="Signaler la fin de suivi").click()
     page.get_by_test_id("contacts").click()
 
     contacts_agents = page.get_by_test_id("contacts-agents")

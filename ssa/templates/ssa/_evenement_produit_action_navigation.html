@@ -13,6 +13,28 @@
                 {%  if is_evenement_can_be_cloture %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                 {% endif %}
+                {%  if can_fin_de_suivi_be_added %}
+                    <li>
+                        <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="mode" value="add">
+                            <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                            <input type="hidden" name="pk" value="{{ object.pk }}">
+                            <button class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                        </form>
+                    </li>
+                {% endif %}
+                {%  if can_fin_de_suivi_be_removed %}
+                    <li>
+                        <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="mode" value="remove">
+                            <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                            <input type="hidden" name="pk" value="{{ object.pk }}">
+                            <button class="fr-translate__language fr-nav__link"><span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>Reprendre le suivi</button>
+                        </form>
+                    </li>
+                {% endif %}
                 <li>
                     <form method="post" action="{% url 'ssa:export-evenement-produit-document' object.numero %}">
                         {% csrf_token %}

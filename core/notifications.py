@@ -54,11 +54,6 @@ def notify_message(message_obj: Message):
         case Message.DEMANDE_INTERVENTION:
             recipients = [r.email for r in message_obj.recipients.structures_only()]
             copy = [r.email for r in message_obj.recipients_copy.structures_only()]
-        case Message.FIN_SUIVI:
-            recipients = message_obj.content_object.contacts.agents_only().filter(
-                agent__structure__niveau2=MUS_STRUCTURE
-            )
-            recipients = [r.email for r in recipients]
         case Message.NOTIFICATION_AC:
             content = f"Bonjour,\nLa fiche {message_obj.content_object.numero} vient d'être déclarée à l'administration centrale."
             recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
@@ -127,4 +122,43 @@ Merci de ne pas répondre directement à ce message. </p>
 </div>
 </html>
         """,
+    )
+
+
+def _add_footer(object):
+    return f"""
+    Consulter la fiche dans Sèves : {settings.ROOT_URL}{object.get_absolute_url()}
+    Merci de ne pas répondre directement à ce message.
+    """
+
+
+def _add_footer_html(object):
+    return f"""
+    <p>Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a></p>
+    <p>Merci de ne pas répondre directement à ce message.</p>
+    """
+
+
+def notify_fin_de_suivi(object, structure):
+    recipients = [r.email for r in object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)]
+    send(
+        recipients=recipients,
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Fin de suivi",
+        message=f"""
+    Bonjour,
+
+    La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name()}
+
+    {_add_footer(object)}
+            """,
+        html_message=f"""
+    <!DOCTYPE html>
+    <html>
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bonjour,</p>
+        <p>La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name()}</p>
+        {_add_footer_html(object)}
+    </div>
+    </html>
+            """,
     )
