@@ -1,7 +1,9 @@
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 
 from core.models import Document, Message, Contact, FinSuiviContact
+from core.notifications import notify_fin_de_suivi
 
 
 class WithBlocCommunFieldsMixin(models.Model):
@@ -30,12 +32,23 @@ class WithBlocCommunFieldsMixin(models.Model):
                 content_object=self,
                 contact=Contact.objects.get(structure=user.agent.structure),
             )
+            notify_fin_de_suivi(self, user.agent.structure)
 
-            Message.objects.create(
-                title="Fin de suivi",
-                content="Fin de suivi ajoutée automatiquement suite à la clôture de l'événement.",
-                sender=user.agent.contact_set.get(),
-                sender_structure=user.agent.structure,
-                message_type=Message.FIN_SUIVI,
-                content_object=self,
-            )
+    def remove_fin_suivi(self, user):
+        fin_suivi = FinSuiviContact.objects.get(
+            object_id=self.id,
+            content_type=ContentType.objects.get_for_model(self.__class__),
+            contact=Contact.objects.get(structure=user.agent.structure),
+        )
+        fin_suivi.delete()
+
+
+class EmailableObjectMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    def get_short_email_display_name(self):
+        raise NotImplementedError
+
+    def get_long_email_display_name(self):
+        raise NotImplementedError

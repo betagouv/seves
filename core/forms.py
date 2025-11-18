@@ -358,33 +358,6 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
         ]
 
 
-class FinDeSuiviForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
-    page_title = "Signaler la fin de suivi"
-    content = MessageContentField()
-
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
-        self._add_object_field(obj, Message.FIN_SUIVI)
-
-        self.handle_files(kwargs)
-        self.set_labels()
-
-    def clean(self):
-        super().clean()
-        self.instance.message_type = Message.FIN_SUIVI
-        self._add_related_objects()
-
-    class Meta:
-        model = Message
-        fields = [
-            "title",
-            "content",
-        ]
-
-
 class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
     page_title = "Nouveau compte rendu sur demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")

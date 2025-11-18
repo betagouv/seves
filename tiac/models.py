@@ -182,6 +182,12 @@ class EvenementSimple(
     def display_transfer_notice(self):
         return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
+    def get_short_email_display_name(self):
+        return f"Enregistrement simple {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"Enregistrement simple {self.numero}"
+
 
 class Evaluation(models.TextChoices):
     SATISFAISANTE = "satisfaisante", "A - Maîtrise des risques satisfaisante"
@@ -448,6 +454,14 @@ class InvestigationTiac(
     @property
     def type_evenement(self):
         return "Investigation de TIAC"
+
+    def get_short_email_display_name(self):
+        return f"Investigation de TIAC {self.numero}"
+
+    def get_long_email_display_name(self):
+        raisons_sociales = ", ".join([e.raison_sociale for e in self.etablissements.all()])
+        communes = ", ".join([e.commune for e in self.etablissements.all() if e.commune])
+        return f"Investigation de TIAC {self.numero} (Créateur : {self.createur} / Etablissement(s) : {raisons_sociales} / Commune(s) : {communes})"
 
     class Meta:
         constraints = (

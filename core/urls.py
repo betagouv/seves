@@ -19,6 +19,7 @@ from .views import (
     sirene_api,
     RevisionsListView,
     MessageDetailsView,
+    FinDeSuiviHandlingView,
 )
 
 urlpatterns = [
@@ -101,6 +102,11 @@ urlpatterns = [
         "evenement/<int:pk>/ouvrir/",
         EvenementOuvrirView.as_view(),
         name="evenement-ouvrir",
+    ),
+    path(
+        "evenement/fin-de-suivi/",
+        FinDeSuiviHandlingView.as_view(),
+        name="evenement-fin-de-suivi",
     ),
     path(
         "siret/<str:siret>/",

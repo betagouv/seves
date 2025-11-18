@@ -31,7 +31,6 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    FinDeSuiviForm,
     DocumentInMessageUploadForm,
 )
 from .mixins import (
@@ -42,7 +41,7 @@ from .mixins import (
     MessageHandlingMixin,
     WithFormErrorsAsMessagesMixin,
 )
-from .models import Document, Message, Contact, user_is_referent_national
+from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
 from .notifications import notify_contact_agent
 from .redirect import safe_redirect
 from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
@@ -201,7 +200,6 @@ class MessageCreateView(
                 "point_situation": PointDeSituationForm,
                 "demande_intervention": DemandeInterventionForm,
                 "cr_demande_intervention": self.obj.get_crdi_form(),
-                "fin_suivi": FinDeSuiviForm,
             }
             self.reply_id = self.request.GET.get("reply_id")
             if self.reply_id:
@@ -290,7 +288,6 @@ class MessageUpdateView(
                 Message.POINT_DE_SITUATION: PointDeSituationForm,
                 Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
                 Message.COMPTE_RENDU: self.obj.get_crdi_form(),
-                Message.FIN_SUIVI: FinDeSuiviForm,
             }
             return mapping.get(self.object.message_type)
         return self.obj.get_message_form()
@@ -536,6 +533,35 @@ class EvenementOuvrirView(View):
             obj.publish()
             messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
             return redirect(redirect_url)
+
+
+class FinDeSuiviHandlingView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data.get("content_type"))
+        object = content_type.model_class().objects.get(pk=data.get("pk"))
+
+        if data["mode"] == "add":
+            if not FinSuiviContact.can_add_fin_de_suivi(object, self.request.user):
+                messages.error(request, "Vous ne pouvez pas mettre fin au suivi de l'évènement.")
+                return redirect(object.get_absolute_url())
+
+            object.add_fin_suivi(self.request.user)
+            messages.success(request, "Fin de suivi ajouté avec succès.")
+            return redirect(object.get_absolute_url())
+
+        if data["mode"] == "remove":
+            if not FinSuiviContact.can_remove_fin_de_suivi(object, self.request.user):
+                messages.error(request, "Vous ne pouvez pas reprendre le suivi de l'évènement.")
+                return redirect(object.get_absolute_url())
+
+            object.remove_fin_suivi(self.request.user)
+            messages.success(request, "La reprise de suivi a été prise en compte.")
+            return redirect(object.get_absolute_url())
+
+        raise NotImplementedError
 
 
 def sirene_api(request, siret: str):

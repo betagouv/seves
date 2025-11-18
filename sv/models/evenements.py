@@ -206,6 +206,12 @@ class Evenement(
 
         return CompteRenduDemandeInterventionForm
 
+    def get_short_email_display_name(self):
+        return f"Événement {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"Événement {self.numero} (ON: {self.organisme_nuisible.libelle_court})"
+
     @property
     def limit_contacts_to_user_from_app(self):
         return "sv"

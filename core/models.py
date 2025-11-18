@@ -144,6 +144,39 @@ class FinSuiviContact(models.Model):
     def __str__(self):
         return f"Fin de suivi de {self.contact} pour la fiche {self.content_type} n° {self.content_object}"
 
+    @classmethod
+    def _can_change_fin_de_suivi(cls, object, user, contact):
+        if not hasattr(object, "contacts"):
+            return False
+        if not object.contacts.filter(id=contact.id).exists():
+            return False
+        if not object.can_user_access(user):
+            return False
+
+    @classmethod
+    def can_add_fin_de_suivi(cls, object, user):
+        contact = user.agent.structure.contact_set.get()
+        content_type = ContentType.objects.get_for_model(object).id
+        can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
+        if can_change_fin_de_suivi is False:
+            return False
+
+        return not FinSuiviContact.objects.filter(
+            object_id=object.id, content_type_id=content_type, contact=contact
+        ).exists()
+
+    @classmethod
+    def can_remove_fin_de_suivi(cls, object, user):
+        contact = user.agent.structure.contact_set.get()
+        content_type = ContentType.objects.get_for_model(object).id
+        can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
+        if can_change_fin_de_suivi is False:
+            return False
+
+        return FinSuiviContact.objects.filter(
+            object_id=object.id, content_type_id=content_type, contact=contact
+        ).exists()
+
     def clean(self):
         super().clean()
         content_type_model = self.content_type.model
@@ -285,8 +318,8 @@ class Message(AllowsSoftDeleteMixin, models.Model):
         (FIN_SUIVI, "Fin de suivi"),
         (NOTIFICATION_AC, "Notification à l'administration centrale"),
     )
-    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_SUIVI)
-    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_SUIVI)
+    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION)
+    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION)
     TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 

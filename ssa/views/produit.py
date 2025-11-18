@@ -13,7 +13,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 
-from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin
+from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -110,6 +110,7 @@ class EvenementProduitDetailView(
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     UserPassesTestMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = EvenementProduit

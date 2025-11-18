@@ -30,6 +30,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
+    WithFinDeSuiviMixin,
 )
 from core.models import Export, FinSuiviContact, LienLibre
 from core.views import MediaDefiningMixin
@@ -167,6 +168,7 @@ class EvenementSimpleDetailView(
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = EvenementSimple
@@ -484,6 +486,7 @@ class InvestigationTiacDetailView(
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = InvestigationTiac

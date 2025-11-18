@@ -2,12 +2,11 @@ import os
 from typing import Literal
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact, Contact
+from core.models import Message
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -310,34 +309,6 @@ def generic_test_can_update_draft_demande_intervention_in_new_tab(
     assert len(mailoutbox) == 0
 
 
-def generic_test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
-    contact = mocked_authentification_user.agent.structure.contact_set.get()
-    object.contacts.add(contact)
-    message = MessageFactory(
-        content_object=object,
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        message_type=Message.FIN_SUIVI,
-    )
-
-    page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, f"#sidebar-message-{message.id}")
-    message_page.open_message()
-    message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
-    message_page.save_as_draft_message()
-
-    message.refresh_from_db()
-    assert message.message_type == Message.FIN_SUIVI
-    assert message.status == Message.Status.BROUILLON
-    assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
-    assert not FinSuiviContact.objects.filter(
-        content_type=ContentType.objects.get_for_model(object), object_id=object.id, contact=contact
-    ).exists()
-    assert len(mailoutbox) == 0
-
-
 def generic_test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     object.contacts.add(contact)
@@ -463,32 +434,6 @@ def generic_test_can_finaliser_draft_note(live_server, page: Page, mocked_authen
 
     message.refresh_from_db()
     assert message.status == Message.Status.FINALISE
-
-
-def generic_test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, object, mailoutbox):
-    contact = mocked_authentification_user.agent.structure.contact_set.get()
-    agent_1 = ContactAgentFactory(agent__structure__niveau2=MUS_STRUCTURE)
-    agent_2 = ContactAgentFactory(agent__structure__niveau2="FOO")
-    structure_1 = ContactStructureFactory()
-    object.contacts.set([agent_1, agent_2, structure_1, contact])
-    message = MessageFactory(
-        content_object=object,
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        message_type=Message.FIN_SUIVI,
-    )
-
-    page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, f"#sidebar-message-{message.id}")
-    message_page.open_message()
-    message_page.submit_message()
-
-    message.refresh_from_db()
-    assert message.status == Message.Status.FINALISE
-    assert FinSuiviContact.objects.filter(
-        content_type=ContentType.objects.get_for_model(object), object_id=object.id, contact=contact
-    ).exists()
-    assert len(mailoutbox) == 1
 
 
 def generic_test_can_only_see_own_document_types_in_message_form(
@@ -730,44 +675,6 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
     assert message_page.message_recipient_in_table() == ""
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Point de situation"
-
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
-
-    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
-    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
-    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
-
-
-def generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
-    live_server, page: Page, object, mocked_authentification_user
-):
-    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
-    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
-    object.contacts.add(user_contact_agent)
-    object.contacts.add(user_contact_structure)
-
-    page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = CreateMessagePage(page, container_id="#message-form")
-    message_page.new_fin_de_suivi()
-    expect((message_page.page.get_by_text("Signaler la fin de suivi"))).to_be_visible()
-
-    message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
-    message_page.submit_message()
-
-    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
-
-    expect(page.get_by_role("paragraph").filter(has_text="Fin de suivi")).to_be_visible()
-    page.get_by_test_id("contacts").click()
-    expect(page.get_by_test_id("contacts-structures").get_by_text("Fin de suivi")).to_be_visible()
-    page.get_by_test_id("fil-de-suivi").click()
-
-    assert message_page.message_sender_in_table() == "Structure Test"
-    assert message_page.message_recipient_in_table() == ""
-    assert message_page.message_title_in_table() == "Title of the message"
-    assert message_page.message_type_in_table() == "Fin de suivi"
 
     with page.context.expect_page() as new_page_info:
         message_page.open_message()

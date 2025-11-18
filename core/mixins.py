@@ -12,7 +12,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.forms.utils import RenderableMixin
-from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
@@ -577,6 +576,18 @@ class WithClotureContextMixin:
         return context
 
 
+class WithFinDeSuiviMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_fin_de_suivi_be_added"] = FinSuiviContact().can_add_fin_de_suivi(
+            self.get_object(), self.request.user
+        )
+        context["can_fin_de_suivi_be_removed"] = FinSuiviContact().can_remove_fin_de_suivi(
+            self.get_object(), self.request.user
+        )
+        return context
+
+
 class WithPublishMixin:
     def publish(self, obj, request):
         if not obj.can_publish(request.user):
@@ -657,28 +668,6 @@ class WithOrderingMixin:
 
 
 class MessageHandlingMixin(WithAddUserContactsMixin):
-    def _mark_contact_as_fin_suivi(self, form):
-        if form.instance.status == Message.Status.BROUILLON:
-            return
-        message_type = form.cleaned_data.get("message_type") or form.instance.message_type
-        if message_type != Message.FIN_SUIVI:
-            return
-
-        if form.cleaned_data.get("content_type"):
-            content_type = form.cleaned_data.get("content_type")
-            object_id = form.cleaned_data.get("object_id")
-        else:
-            content_type = form.instance.content_type
-            object_id = form.instance.object_id
-
-        fin_suivi_contact = FinSuiviContact(
-            content_type=content_type,
-            object_id=object_id,
-            contact=Contact.objects.get(structure=self.request.user.agent.structure),
-        )
-        fin_suivi_contact.full_clean()
-        fin_suivi_contact.save()
-
     def _is_internal_communication(self, structures):
         """
         Returns True if all contacts involved are part of the same structure
@@ -751,12 +740,6 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         ).exclude(pk__in=pks_to_keeps).delete()
 
     def handle_message_form(self, form):
-        try:
-            self._mark_contact_as_fin_suivi(form)
-        except ValidationError as e:
-            for message in e.messages:
-                messages.error(self.request, message)
-            return HttpResponseRedirect(self.obj.get_absolute_url())
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.obj)

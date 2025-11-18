@@ -10,7 +10,6 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_note,
     generic_test_can_update_draft_point_situation,
     generic_test_can_finaliser_draft_note,
-    generic_test_can_send_draft_fin_suivi,
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
@@ -24,7 +23,6 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_see_message_in_new_tab_without_document_in_draft,
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
-    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
     generic_test_can_add_message_in_new_tab_with_documents,
     generic_test_can_delete_my_own_message,
     generic_test_can_reply_to_message,
@@ -100,16 +98,6 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
         live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
-    )
-
-
-@override_flag("message_v2", active=True)
-def test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
-    live_server, page: Page, mocked_authentification_user
-):
-    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
-        live_server, page, evenement_produit, mocked_authentification_user
     )
 
 
@@ -197,13 +185,6 @@ def test_can_update_draft_compte_rendu_demande_intervention(
     )
 
 
-def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    generic_test_can_update_draft_point_situation(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
-    )
-
-
 def test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, evenement_produit, mailoutbox)
@@ -258,13 +239,6 @@ def test_can_send_draft_compte_rendu(live_server, page: Page, mocked_authentific
 def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, evenement_produit)
-
-
-def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    generic_test_can_send_draft_fin_suivi(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
-    )
 
 
 def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
