@@ -151,7 +151,7 @@ export class MessageFormController extends Controller {
             name: this.documentNameInputTarget.value,
             comment: this.commentInputTarget.value,
         }
-        this.addDocumentCard(this.documentFileTarget.files[0].name)
+        this.addDocumentCard(this.documentNameInputTarget.value)
         this.documents.push(doc)
 
         this.documentTypeSelectTarget.selectedIndex = 0
