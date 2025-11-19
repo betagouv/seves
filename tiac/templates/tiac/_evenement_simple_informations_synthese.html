@@ -8,6 +8,10 @@
           <div class="fr-col-5">{{ object.createur }}</div>
         </div>
         <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-7 bold">Transféré à</div>
+          <div class="fr-col-5">{{ object.transfered_to|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-7 bold">Date de réception à la DD(ETS)PP</div>
           <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
         </div>
