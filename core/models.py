@@ -417,11 +417,11 @@ class Message(AllowsSoftDeleteMixin, models.Model):
         return self.message_type == self.MESSAGE and self.content_object.can_user_access(user)
 
     def get_reply_intro_text(self):
-        intro = f"Le {self.date_creation.strftime('%d/%m/%Y %Hh%M')} {self.sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {self.sender.display_with_agent_unit} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
         if self.recipients_copy.all():
             intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
 
-        intro += f" le message suivant: \n\n {self.content}"
+        intro += f" le message suivant *******: \n\n {self.content}"
         return intro
 
 
