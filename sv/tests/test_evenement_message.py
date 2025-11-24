@@ -1736,8 +1736,10 @@ def test_cant_delete_a_message_i_dont_own(client):
     assert message.is_deleted is False
 
 
-def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user):
-    generic_test_can_delete_my_own_message(live_server, page, EvenementFactory(), mocked_authentification_user)
+def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_delete_my_own_message(
+        live_server, page, EvenementFactory(), mocked_authentification_user, mailoutbox
+    )
 
 
 @override_flag("message_v2", active=True)

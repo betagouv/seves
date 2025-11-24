@@ -207,7 +207,7 @@ class Evenement(
         return CompteRenduDemandeInterventionForm
 
     def get_short_email_display_name(self):
-        return f"Événement {self.numero}"
+        return f"{self.organisme_nuisible} {self.numero}"
 
     def get_long_email_display_name(self):
         return f"Événement {self.numero} (ON: {self.organisme_nuisible.libelle_court})"
