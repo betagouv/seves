@@ -32,6 +32,7 @@ from .forms import (
     PointDeSituationForm,
     DemandeInterventionForm,
     DocumentInMessageUploadForm,
+    MessageDocumentForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -318,6 +319,10 @@ class MessageUpdateView(
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
+        context["form"].documents_forms = [
+            MessageDocumentForm(instance=d, object=self.get_object(), with_nom=True)
+            for d in self.get_object().documents.all()
+        ]
         context["object"] = self.obj
         return context
 

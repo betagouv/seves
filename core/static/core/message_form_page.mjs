@@ -47,6 +47,10 @@ export class MessageFormController extends Controller {
 
     addDocumentsInput(){
         this.documents.forEach((doc, i) => {
+            if (!doc.file){
+                this.addHiddenInput(`existing_document_name_${doc.id}`, "true")
+                return // Existing document
+            }
             this.addHiddenInput(`document_type_${i}`, doc.type)
             this.addHiddenInput(`document_name_${i}`, doc.name)
             this.addHiddenInput(`document_comment_${i}`, doc.comment)
@@ -129,10 +133,10 @@ export class MessageFormController extends Controller {
         }
     }
 
-    addDocumentCard(filename){
-        const card = `<div class="fr-p-1w fr-mb-2w document-to-add" id="document_card_${this.currentDocumentID}">
+    addDocumentCard(filename, id=this.currentDocumentID){
+        const card = `<div class="fr-p-1w fr-mb-2w document-to-add" id="document_card_${id}">
                         <span>${filename}</span>
-                        <a href="#" data-action="click->message-form#onDeleteDocument" data-document-id="${this.currentDocumentID}">
+                        <a href="#" data-action="click->message-form#onDeleteDocument" data-document-id="${id}">
                             <span class="fr-icon-close-circle-line" aria-hidden="true"></span>
                         </a>
                     </div>`
@@ -163,10 +167,20 @@ export class MessageFormController extends Controller {
         this.addDocumentTarget.disabled = true
     }
 
+    loadExistingDocuments(){
+        this.inputsContainerTarget.querySelectorAll(".existing-document-form").forEach(form =>{
+            let id = form.querySelector("#existing_document").value
+            this.addDocumentCard(form.querySelector("#id_nom").value, id=id)
+            this.documents.push({id: id})
+            this.currentDocumentID += 1;
+        })
+    }
+
     connect() {
         this.configureChoicesForRecipients()
         this.configureChoicesForCopy()
         this.currentDocumentID = 0
+        this.loadExistingDocuments()
     }
 
 }

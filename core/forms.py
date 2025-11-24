@@ -505,11 +505,14 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
 
     class Meta:
         model = Document
-        fields = ["document_type", "file"]
+        fields = ["document_type", "file", "nom", "description"]
 
     def __init__(self, *args, **kwargs):
         obj = kwargs.pop("object")
+        with_nom = kwargs.pop("with_nom", False)
         super().__init__(*args, **kwargs)
+        if with_nom is False:
+            self.fields.pop("nom")
         self.fields["document_type"].choices = [
             ("", settings.SELECT_EMPTY_CHOICE),
             *[(c.value, c.label) for c in obj.get_allowed_document_types()],
