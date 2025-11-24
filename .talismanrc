@@ -5,6 +5,7 @@ allowed_patterns:
 - 'ValidationError\(.+\)?'
 - 'Object.keys\(.+\)?'
 - '\.passedElement'
+- 'url("[^"]*")'  # Allow css' url() function
 fileignoreconfig:
 - filename: core/forms.py
   checksum: 5a1b5f58ad9a86eba63e40ed849afb3a9795141c52ee64555ffae52319fd2299
