@@ -90,10 +90,8 @@ def generic_test_can_update_draft_message_in_new_tab(
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
+    message_page.open_message()
 
-    message_page.page = new_page_info.value
     message_page.pick_recipient(contact_to_add.agent, choice_js_fill)
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc_to_add.agent, choice_js_fill)
@@ -162,11 +160,8 @@ def generic_test_can_update_draft_note_in_new_tab(
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, container_id="#message-form")
+    message_page.open_message()
 
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-
-    message_page.page = new_page_info.value
     message_page.message_title.fill("Titre mis à jour")
     message_page.message_content.fill("Contenu mis à jour")
     message_page.save_as_draft_message()
@@ -191,10 +186,8 @@ def generic_test_can_update_draft_point_situation_in_new_tab(
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
+    message_page.open_message()
 
-    message_page.page = new_page_info.value
     message_page.message_title.fill("Titre mis à jour")
     message_page.message_content.fill("Contenu mis à jour")
     message_page.save_as_draft_message()
@@ -286,10 +279,8 @@ def generic_test_can_update_draft_demande_intervention_in_new_tab(
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
+    message_page.open_message()
 
-    message_page.page = new_page_info.value
     message_page.pick_recipient(contact_to_add.structure, choice_js_fill)
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc_to_add.structure, choice_js_fill)
@@ -346,10 +337,8 @@ def generic_test_can_send_draft_message_in_new_tab(
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
+    message_page.open_message()
 
-    message_page.page = new_page_info.value
     message_page.submit_message()
 
     message.refresh_from_db()
@@ -482,6 +471,50 @@ def generic_test_can_see_and_delete_documents_from_draft_message(
     message.refresh_from_db()
     assert message.status == Message.Status.FINALISE
     assert message.documents.count() == 2
+    assert document_to_keep in message.documents.all()
+    assert document_to_remove not in message.documents.all()
+    assert len(mailoutbox) == 1
+
+
+def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
+    live_server, page, object, mocked_authentification_user, mailoutbox
+):
+    message = MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.MESSAGE,
+    )
+    document_to_remove = DocumentFactory(content_object=message)
+    document_to_keep = DocumentFactory(content_object=message)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, "#message-form")
+    message_page.open_message()
+    message_page.page.wait_for_timeout(1000)
+
+    assert len(message_page.get_existing_documents_title) == 2, (
+        f"Expected 2 got {len(message_page.get_existing_documents_title)}"
+    )
+    assert document_to_remove.nom in message_page.get_existing_documents_title
+    assert document_to_keep.nom in message_page.get_existing_documents_title
+
+    # Add new document
+    message_page.add_basic_document()
+    assert len(message_page.get_existing_documents_title) == 3
+
+    # Remove previous document
+    message_page.page.locator(f"#document_card_{document_to_remove.pk} .fr-icon-close-circle-line").click()
+    assert len(message_page.get_existing_documents_title) == 2
+
+    message_page.submit_message()
+
+    # Wait for the page to confirm message was sent
+    expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
+
+    message.refresh_from_db()
+    assert message.status == Message.Status.FINALISE
+    assert message.documents.count() == 2, f"Expected 2 documents found {message.documents.count()}"
     assert document_to_keep in message.documents.all()
     assert document_to_remove not in message.documents.all()
     assert len(mailoutbox) == 1

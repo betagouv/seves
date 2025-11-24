@@ -41,7 +41,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
 
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc #id_description").fill("Description")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("scalingo.json")
     page.get_by_test_id("documents-send").click()
 
@@ -65,7 +65,7 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
 
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc #id_description").fill("Description")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("test.csv")
     page.get_by_test_id("documents-send").click()
 
@@ -257,7 +257,7 @@ def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Pa
     expect(page.locator("#fr-modal-add-doc")).to_be_visible()
     page.locator("#id_nom").fill("Test Document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description test")
+    page.locator("#fr-modal-add-doc #id_description").fill("Description test")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
         settings.BASE_DIR / "static/images/marianne.png"
     )
@@ -403,7 +403,7 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
 
     page.locator("#id_nom").fill("Name of the document")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description")
+    page.locator("#fr-modal-add-doc #id_description").fill("Description")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
         settings.BASE_DIR / "static/images/marianne.png"
     )
@@ -470,7 +470,7 @@ def test_document_upload_exceeding_max_size_shows_validation_error_and_prevents_
     # Télécharger le fichier trop volumineux
     page.locator("#id_nom").fill("Document trop volumineux")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Test validation taille")
+    page.locator("#fr-modal-add-doc #id_description").fill("Test validation taille")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(temp_path)
     page.get_by_test_id("documents-send").click()
 
@@ -499,7 +499,7 @@ def test_document_upload_with_missing_max_size_shows_configuration_error(live_se
 
     page.locator("#id_nom").fill("Test configuration manquante")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Test attribut manquant")
+    page.locator("#fr-modal-add-doc #id_description").fill("Test attribut manquant")
     file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
@@ -525,7 +525,7 @@ def test_document_upload_with_invalid_max_size_shows_configuration_error(live_se
 
     page.locator("#id_nom").fill("Test configuration invalide")
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Test attribut invalide")
+    page.locator("#fr-modal-add-doc #id_description").fill("Test attribut invalide")
     file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
 
     validation_message = file_input.evaluate("el => el.validationMessage")
@@ -750,7 +750,7 @@ def test_document_name_length_validation(live_server, page: Page, mocked_authent
     page.get_by_test_id("documents-add").click()
     page.locator("#id_nom").fill(long_name)
     page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#id_description").fill("Description test")
+    page.locator("#fr-modal-add-doc #id_description").fill("Description test")
     page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
         settings.BASE_DIR / "static/images/marianne.png"
     )

@@ -166,10 +166,12 @@ class BaseMessagePage(ABC):
         self.message_content.fill("My content \n with a line return")
 
     def add_basic_document(self, suffix=""):
-        self.page.locator("#id_nom").fill(f"Mon document{suffix}")
-        self.page.locator("#id_document_type").select_option("Autre document")
-        self.page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
-        self.page.locator("#id_description").fill(f"Ma description {suffix}")
+        self.page.locator("#id_nom").locator("visible=true").fill(f"Mon document{suffix}")
+        self.page.locator("#id_document_type").locator("visible=true").select_option("Autre document")
+        self.page.locator("#id_file").locator("visible=true").set_input_files(
+            settings.BASE_DIR / "static/images/login.jpeg"
+        )
+        self.page.locator("#id_description").locator("visible=true").fill(f"Ma description {suffix}")
         self.page.get_by_role("button", name="Valider l'ajout du document").click()
 
     def remove_document(self, index):

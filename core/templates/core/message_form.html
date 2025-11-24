@@ -20,7 +20,7 @@
                     <div class="fr-flex fr-flex--row fr-flex--space-between">
                         <div>
                             <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
-                                {% if form.instance.pk %}Mise à jour du message{% elif request.GET.reply_id %}Réponse à un message{% else %}{{ form.page_title }}{% endif %}
+                                {% if form.instance.pk %}[Brouillon] {{ message.title }}{% elif request.GET.reply_id %}Réponse à un message{% else %}{{ form.page_title }}{% endif %}
                             </h1>
                             {% if form.help_text %}
                                 <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
@@ -68,7 +68,15 @@
                     <div class="fr-p-2w grey-container">
                         <h2 class="fr-h4">Documents</h2>
                         <div data-message-form-target="cardsContainer">Aucun documents ajouté</div>
-                        <div data-message-form-target="inputsContainer" class="fr-hidden"></div>
+                        <div data-message-form-target="inputsContainer" class="fr-hidden">
+                            {% for existing_document_form in form.documents_forms %}
+                                <div class="existing-document-form">
+                                    {{ existing_document_form }}
+                                    <input type="hidden" id="existing_document" value="{{ existing_document_form.instance.pk}}">
+                                </div>
+                            {% endfor %}
+                        </div>
+
                         <hr class="fr-hr-or fr-mt-4w">
 
                         {% dsfr_form_field add_document_form.nom|set_data:"message-form-target:documentNameInput"|set_data:"action:input->message-form#onNomChanged" %}
