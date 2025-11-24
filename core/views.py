@@ -549,7 +549,7 @@ class FinDeSuiviHandlingView(View):
                 return redirect(object.get_absolute_url())
 
             object.add_fin_suivi(self.request.user)
-            messages.success(request, "Fin de suivi ajouté avec succès.")
+            messages.success(request, "Fin de suivi réalisée avec succès.")
             return redirect(object.get_absolute_url())
 
         if data["mode"] == "remove":

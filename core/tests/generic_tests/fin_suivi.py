@@ -21,7 +21,7 @@ def generic_test_can_add_fin_de_suivi(live_server, page: Page, object, mailoutbo
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("button", name="Signaler la fin de suivi").click()
 
-    expect(page.get_by_text("Fin de suivi ajouté avec succès.")).to_be_visible()
+    expect(page.get_by_text("Fin de suivi réalisée avec succès.")).to_be_visible()
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]

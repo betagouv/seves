@@ -80,3 +80,11 @@ def fin_suivi_added(sender, instance, created, **kwargs):
             with reversion.create_revision():
                 reversion.set_comment(f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche")
                 reversion.add_to_revision(instance.content_object)
+
+
+@receiver(pre_delete, sender=FinSuiviContact)
+def fin_suivi_removed(sender, instance, **kwargs):
+    with transaction.atomic():
+        with reversion.create_revision():
+            reversion.set_comment(f"La structure {instance.contact} a repris le suivi sur cette fiche")
+            reversion.add_to_revision(instance.content_object)
