@@ -328,3 +328,6 @@ SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-siren
 COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")
 
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = True
+
+if DEBUG:
+    DSFR_USE_INTEGRITY_CHECKSUMS = env.get_value("DSFR_USE_INTEGRITY_CHECKSUMS", bool)

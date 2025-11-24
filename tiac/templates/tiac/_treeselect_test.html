@@ -1,0 +1,123 @@
+<div class="fr-treeselect">
+    <div class="fr-treeselect__wrapper">
+        <button class="fr-treeselect__button" type="button">Selectionner une option</button>
+        <div class="fr-treeselect__collapse">
+            <div class="fr-treeselect__head">
+                <div class="fr-search-bar" role="search">
+                    <label class="fr-label" for="search-input">Rechercher</label>
+                    <input
+                        class="fr-input"
+                        aria-describedby="search-input-messages"
+                        placeholder="Rechercher"
+                        id="search-input"
+                        type="search"
+                    >
+                    <div class="fr-messages-group" id="search-input-messages" aria-live="polite"></div>
+                </div>
+            </div>
+            <div id="treeselect-items" class="fr-treeselect__body">
+                <div class="fr-treeselect__group">
+                    <div class="fr-treeselect__group-header">
+                        <button
+                            class="fr-treeselect__group-button"
+                            aria-controls="subgroup-0"
+                            aria-expanded="true"
+                        >Dangers courants
+                        </button>
+                    </div>
+                    <div id="subgroup-0" class="fr-collapse">
+                        <div class="fr-treeselect__element">
+                            <div class="fr-checkbox-group">
+                                <input
+                                    name="Staphylococcus"
+                                    id="checkbox-1"
+                                    type="checkbox"
+                                >
+                                <label class="fr-label" for="checkbox-1">
+                                    Staphylococcus aureus et/ou sa toxine
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fr-treeselect__group">
+                    <div class="fr-treeselect__group-header">
+                        <button
+                            class="fr-treeselect__group-button"
+                            aria-controls="subgroup-1"
+                            aria-expanded="false"
+                        >List de tous les dangers
+                        </button>
+                    </div>
+                    <div id="subgroup-1" class="fr-collapse">
+                        <div class="fr-treeselect__group">
+                            <div class="fr-treeselect__group-header">
+                                <div class="fr-checkbox-group">
+                                    <input
+                                        name="Allergènes"
+                                        id="checkbox-2"
+                                        type="checkbox"
+                                    >
+                                    <label
+                                        class="fr-label"
+                                        for="checkbox-2"
+                                        aria-controls="subgroup-2"
+                                        aria-expanded="false"
+                                    >
+                                        Allergènes fruits à coque
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="subgroup-2" class="fr-collapse">
+                                <div class="fr-treeselect__element">
+                                    <div class="fr-checkbox-group">
+                                        <input
+                                            name="Arachide"
+                                            id="checkbox-3"
+                                            type="checkbox"
+                                        >
+                                        <label class="fr-label" for="checkbox-3">Arachide</label>
+                                    </div>
+                                </div>
+                                <div class="fr-treeselect__group">
+                                    <div class="fr-treeselect__group-header">
+                                        <div class="fr-checkbox-group">
+                                            <input
+                                                name="Allergènes 2"
+                                                id="checkbox-5"
+                                                type="checkbox"
+                                            >
+                                            <label
+                                                class="fr-label"
+                                                for="checkbox-5"
+                                                aria-controls="subgroup-5"
+                                                aria-expanded="false"
+                                            >
+                                                Allergènes fruits à coque
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="subgroup-5" class="fr-collapse">
+                                        <div class="fr-treeselect__element">
+                                            <div class="fr-checkbox-group">
+                                                <input
+                                                    name="Arachide 2"
+                                                    id="checkbox-6"
+                                                    type="checkbox"
+                                                >
+                                                <label
+                                                    class="fr-label"
+                                                    for="checkbox-6"
+                                                >Arachide</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
