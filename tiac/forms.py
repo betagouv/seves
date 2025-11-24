@@ -14,6 +14,7 @@ from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_mo
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
+from core.widgets import Treeselect
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
@@ -303,7 +304,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
     )
-    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
+    selected_hazard = forms.ChoiceField(choices=CategorieDanger, widget=Treeselect)
 
     class Meta:
         model = InvestigationTiac

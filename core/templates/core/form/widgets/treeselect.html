@@ -1,0 +1,74 @@
+{% load partials %}
+
+{% partialdef input %}
+    <div class="fr-treeselect-input-group fr-{{ widget.type }}-group">
+        {% include "django/forms/widgets/input.html" %}
+        <label
+            class="fr-label"
+            for="{{ widget.attrs.id }}"
+            {% if widget.group_index %}aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"{% endif %}
+        >
+            {{ widget.label }}
+        </label>
+    </div>
+{% endpartialdef %}
+
+{% partialdef group %}
+    <div class="fr-treeselect__group fr-accordion">
+        <div class="fr-treeselect__group-header">
+            {% if widget.group_option %}
+                {% with widget=widget.group_option %}
+                    {% partial input %}
+                {% endwith %}
+            {% else %}
+                <button
+                    class="fr-treeselect__group-button fr-accordion__btn"
+                    aria-expanded="false"
+                    aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"
+                    type="button"
+                >
+                    {{ widget.group }}
+                </button>
+            {% endif %}
+        </div>
+        <div id="fr-treeselect-subgroup-{{ widget.group_index }}" class="fr-collapse">
+            {% for optgroup in widget.optgroups %}
+                {% include optgroup.template_name with widget=optgroup %}
+            {% endfor %}
+        </div>
+    </div>
+{% endpartialdef %}
+
+{% partialdef option %}
+    <div class="fr-treeselect__element">
+        {% partial input %}
+    </div>
+{% endpartialdef %}
+
+<div class="fr-treeselect">
+    <div class="fr-treeselect__wrapper">
+        <button class="fr-treeselect__button" type="button">Selectionner une option</button>
+        <div class="fr-treeselect__collapse">
+            {% if widget.has_search_bar %}
+                <div class="fr-treeselect__head">
+                    <div class="fr-search-bar" role="search">
+                        <label class="fr-label" for="search-input">Rechercher</label>
+                        <input
+                            id="search-input"
+                            class="fr-input"
+                            aria-describedby="search-input-messages"
+                            placeholder="Rechercher"
+                            type="search"
+                        >
+                        <div class="fr-messages-group" id="search-input-messages" aria-live="polite"></div>
+                    </div>
+                </div>
+            {% endif %}
+            <div id="treeselect-items" class="fr-treeselect__body">
+                {% for optgroup in widget.optgroups %}
+                    {% include optgroup.template_name with widget=optgroup %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
