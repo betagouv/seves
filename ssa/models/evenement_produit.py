@@ -342,7 +342,7 @@ class EvenementProduit(
         return "ssa"
 
     def get_short_email_display_name(self):
-        return f"Événement produit {self.numero}"
+        return f"{self.get_type_evenement_display()} {self.numero}"
 
     def get_long_email_display_name(self):
         return f"{self.get_short_email_display_name()} (Catégorie de produit : {self.get_categorie_produit_display() or '-'} / Danger : {self.get_categorie_danger_display() or '-'})"
