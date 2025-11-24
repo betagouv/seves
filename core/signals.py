@@ -8,6 +8,7 @@ from django.db.models.signals import pre_save, post_save, post_migrate, pre_dele
 from django.dispatch import receiver
 
 from core.models import Document, LienLibre, Message, FinSuiviContact
+from .notifications import notify_message_deleted
 from .tasks import scan_for_viruses
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ def link_deleted(sender, instance, **kwargs):
 @receiver([post_save], sender=Message)
 def message_deleted(sender, instance: Message, **kwargs):
     if instance.is_deleted is True and instance._initial_is_deleted is False:
+        notify_message_deleted(instance)
         with transaction.atomic():
             with reversion.create_revision():
                 reversion.set_comment(

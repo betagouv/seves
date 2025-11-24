@@ -712,7 +712,7 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}
 
 
-def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user):
+def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user, mailoutbox):
     assert Message.objects.count() == 0
     assert Message._base_manager.count() == 0
 
@@ -726,6 +726,11 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     message_page.delete_message()
     assert Message.objects.count() == 0
     assert Message._base_manager.count() == 1
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Suppression d’un élément du fil de suivi" in mail.subject
+    assert "a été supprimé." in mail.body
 
 
 def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object):

@@ -162,3 +162,35 @@ def notify_fin_de_suivi(object, structure):
     </html>
             """,
     )
+
+
+def notify_message_deleted(message: Message):
+    object = message.content_object
+    recipients = [r.email for r in message.recipients.all()]
+    copy = [r.email for r in message.recipients_copy.all()]
+    recipients_structure = [r.email for r in message.recipients.structures_only()]
+    copy_structures = [r.email for r in message.recipients_copy.structures_only()]
+    send(
+        recipients=list(set(recipients + copy + recipients_structure + copy_structures)),
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Suppression d’un élément du fil de suivi",
+        message=f"""
+    Bonjour,
+
+    Un élément du fil de suivi de l’évènement : {object.get_long_email_display_name()} a été supprimé.
+
+    {message.get_message_type_display()} - {message.title}
+
+    {_add_footer(object)}
+            """,
+        html_message=f"""
+    <!DOCTYPE html>
+    <html>
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bonjour,</p>
+        <p>Un élément du fil de suivi de l’évènement : {object.get_long_email_display_name()} a été supprimé. </p>
+        <p>{message.get_message_type_display()} - {message.title}</p>
+        {_add_footer_html(object)}
+    </div>
+    </html>
+            """,
+    )
