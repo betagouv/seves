@@ -391,8 +391,8 @@ class Message(AllowsSoftDeleteMixin, models.Model):
 
     def get_soft_delete_confirm_message(self):
         if self.message_type in self.TYPES_TO_FEMINIZE:
-            return f"Cette action est irréversible. Confirmez-vous la suppression de la : {self.get_message_type_display()} du fil de suivi - {self.title} ?"
-        return f"Cette action est irréversible. Confirmez-vous la suppression du : {self.get_message_type_display()} du fil de suivi - {self.title} ?"
+            return f"Cette action est irréversible. Confirmez-vous la suppression de la : {self.get_message_type_display()} - {self.title} ?"
+        return f"Cette action est irréversible. Confirmez-vous la suppression du : {self.get_message_type_display()} - {self.title} ?"
 
     def get_soft_delete_confirm_title(self):
         if self.message_type in self.TYPES_TO_FEMINIZE:

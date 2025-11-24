@@ -68,7 +68,7 @@ def message_deleted(sender, instance: Message, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():
                 reversion.set_comment(
-                    f"Le message de type '{instance.get_message_type_display()}' ayant pour titre {instance.title} a été supprimé de la fiche"
+                    f"Le message de type '{instance.get_message_type_display()}' ayant pour titre {instance.title} a été supprimé"
                 )
                 reversion.add_to_revision(instance.content_object)
 
