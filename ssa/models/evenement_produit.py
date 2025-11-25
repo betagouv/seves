@@ -46,6 +46,7 @@ class Source(models.TextChoices):
     PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
     PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
     AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
+    AUTRE = "autre", "Signalement autre"
 
 
 class PretAManger(models.TextChoices):
