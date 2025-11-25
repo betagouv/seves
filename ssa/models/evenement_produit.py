@@ -16,37 +16,12 @@ from core.mixins import (
 )
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
-from core.models import Structure, Document, LienLibre
+from core.models import Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
-from .categorie_produit import CategorieProduit
-from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
-from .categorie_danger import CategorieDanger
-
-
-class TypeEvenement(models.TextChoices):
-    ALERTE_PRODUIT_NATIONALE = "alerte_produit_nationale", "Alerte produit nationale"
-    ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
-    NON_ALERTE = "non_alerte", "Non alerte (non mis sur le marché)"
-    NON_ALERTE_NON_DANGEREUX = "non_alerte_non_dangereux", "Non alerte (non dangereux)"
-    AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
-
-
-class Source(models.TextChoices):
-    AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
-    AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
-    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC (hors PCF)"
-    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Prélèvement officiel autre (hors PCF)"
-    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel (hors PCF)"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas ou TIAC"
-    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement de consommateur"
-    NOTIFICATION_RASFF = "notification_rasff", "Notification RASFF"
-    NOTIFICATION_AAC = "notification_aac", "Notification AAC"
-    TOUT_DROIT = "tout_droit", "Tout droit"
-    PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
-    PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
-    AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
-    AUTRE = "autre", "Signalement autre"
+from ssa.models.validators import rappel_conso_validator
+from ..constants import CategorieDanger, CategorieProduit
+from .mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin
 
 
 class PretAManger(models.TextChoices):
@@ -136,6 +111,8 @@ class QuantificationUnite(models.TextChoices):
 @reversion.register(follow=["contacts"])
 class EvenementProduit(
     AllowsSoftDeleteMixin,
+    WithEvenementInformationMixin,
+    WithEvenementRisqueMixin,
     WithBlocCommunFieldsMixin,
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
@@ -147,19 +124,7 @@ class EvenementProduit(
     EmailableObjectMixin,
     models.Model,
 ):
-    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    date_reception = models.DateField(verbose_name="Date de réception")
-    numero_rasff = models.CharField(
-        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
-    )
-
-    # Informations générales
-    type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
-    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
-    description = models.TextField(verbose_name="Description de l'événement")
-    aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
-
+    # WithEvenementInformationMixin
     # Informations liées au produit
     categorie_produit = models.CharField(
         max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
@@ -173,22 +138,16 @@ class EvenementProduit(
     )
 
     # Informations liées au risque
-    categorie_danger = models.CharField(
-        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
-    )
-    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
+    # Inclue WithEvenementRisqueMixin
     quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
     quantification_unite = models.CharField(
         blank=True, max_length=100, choices=QuantificationUnite.choices, verbose_name="Unité"
     )
-    evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     produit_pret_a_manger = models.CharField(
         blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
-    reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
-    reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")
 

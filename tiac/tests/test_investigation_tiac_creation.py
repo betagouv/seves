@@ -7,7 +7,7 @@ from core.factories import DepartementFactory
 from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from ssa.models import CategorieDanger
+from ssa.constants import CategorieDanger
 from tiac.factories import (
     InvestigationTiacFactory,
     RepasSuspectFactory,

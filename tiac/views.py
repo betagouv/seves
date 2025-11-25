@@ -34,7 +34,7 @@ from core.mixins import (
 )
 from core.models import Export, FinSuiviContact, LienLibre
 from core.views import MediaDefiningMixin
-from ssa.models import CategorieDanger, CategorieProduit
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin

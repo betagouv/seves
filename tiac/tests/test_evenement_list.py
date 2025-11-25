@@ -2,7 +2,7 @@ from playwright.sync_api import Page, expect
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import Departement, LienLibre
-from ssa.models import CategorieDanger, CategorieProduit
+from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import DangersSyndromiques, SuspicionConclusion
 from tiac.factories import (
     EvenementSimpleFactory,

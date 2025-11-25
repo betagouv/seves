@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from core.factories import DocumentFactory
 from core.models import Document
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import CategorieDanger
+from ssa.constants import CategorieDanger
 from ssa.models.evenement_produit import PretAManger
 
 

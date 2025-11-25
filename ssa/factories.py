@@ -10,16 +10,14 @@ from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from ssa.models import (
     EvenementProduit,
-    TypeEvenement,
-    Source,
     TemperatureConservation,
     QuantificationUnite,
     ActionEngagees,
     Etablissement,
     PositionDossier,
-    CategorieDanger,
 )
-from ssa.models.evenement_produit import PretAManger, CategorieProduit
+from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source
+from ssa.models.evenement_produit import PretAManger
 
 
 def generate_rappel_conso():

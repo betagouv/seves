@@ -563,7 +563,7 @@ class BaseEtablissement(models.Model):
         Departement,
         on_delete=models.PROTECT,
         verbose_name="Département",
-        related_name="%(app_label)s_etablissements",
+        related_name="%(app_label)s_%(class)ss",
         blank=True,
         null=True,
     )

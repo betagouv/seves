@@ -8,9 +8,10 @@ from core.forms import BaseMessageForm, BaseEtablissementForm, BaseCompteRenduDe
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import Etablissement, PositionDossier, CategorieDanger
-from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
-from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
+from ssa.models import Etablissement, PositionDossier
+from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source
+from ssa.models import EvenementProduit, TemperatureConservation, ActionEngagees
+from ssa.models.evenement_produit import PretAManger, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
 
