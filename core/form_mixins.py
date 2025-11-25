@@ -68,11 +68,15 @@ class WithFreeLinksMixin:
             if link:
                 links_ids_to_keep.append(link.id)
             else:
-                link = LienLibre.objects.create(related_object_1=instance, related_object_2=obj)
+                link = LienLibre(related_object_1=instance, related_object_2=obj)
+                link._user = self.user
+                link.save()
                 links_ids_to_keep.append(link.id)
 
         links_to_delete = LienLibre.objects.for_object(instance).exclude(id__in=links_ids_to_keep)
-        links_to_delete.delete()
+        for link in links_to_delete:
+            link._user = self.user
+            link.delete()
 
     def get_queryset(self, model, user, instance):
         raise NotImplementedError

@@ -21,7 +21,7 @@ from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
 from waffle import flag_is_active
 
-from core.diffs import CompareMixin
+from core.diffs import CompareMixin, get_diff_from_comment_version
 from .forms import (
     DocumentUploadForm,
     DocumentEditForm,
@@ -610,13 +610,23 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         return self.object.can_user_access(self.request.user)
 
     def get_queryset(self):
-        return Version.objects.get_for_object(self.object).select_related(
-            "revision", "revision__user__agent__structure"
+        return (
+            Version.objects.get_for_object(self.object)
+            .select_related("revision", "revision__user__agent__structure")
+            .order_by("-revision__date_created")
+            .exclude(serialized_data={})
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["object"] = self.object
+
+        comments_versions = (
+            Version.objects.get_for_object(self.object)
+            .select_related("revision", "revision__user__agent__structure")
+            .order_by("-revision__date_created")
+            .filter(serialized_data={})
+        )
 
         versions = context["object_list"]
         context["patches"] = []
@@ -624,4 +634,10 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             context["patches"].extend(diffs)
 
+        for version in comments_versions:
+            comment_diff = get_diff_from_comment_version(version)
+            if comment_diff:
+                context["patches"].append(comment_diff)
+
+        context["patches"] = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
         return context

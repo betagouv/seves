@@ -20,7 +20,7 @@ fileignoreconfig:
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
 - filename: core/views.py
-  checksum: 7bee100011c8e54e27854f48acc05e4018f381d5ccdbd7fb635983a0327f54d2
+  checksum: 2110553427b8fbda6c2c77fbc178ced52a1cd0574d24974f728ee97dcd334698
 - filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html
@@ -97,4 +97,6 @@ fileignoreconfig:
   checksum: 790a1175b5ee54efbf8e2c4fdf98bf77491842f4837c9e72ca54ec28db55edf6
 - filename: core/migrations/0040_alter_document_document_type.py
   checksum: 5159796f7b12df27546e95a32fa6d591d607fd2fee496179607ca48ac31b3172
+- filename: core/migrations/0042_customrevisionmetadata.py
+  checksum: 54ee3c43e5ef8d5a10f3acb3ff6842c803074d2e60dfc0652617e83fd61e8a16
 version: "1.0"

@@ -13,6 +13,7 @@ from django.db.models import Q, CheckConstraint
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from reversion.models import Revision
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
@@ -571,3 +572,8 @@ class BaseEtablissement(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CustomRevisionMetaData(models.Model):
+    revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
+    extra_data = models.JSONField()
