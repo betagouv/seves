@@ -685,7 +685,7 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
 
 
-def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, object):
+def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, object, mailoutbox):
     active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
@@ -710,6 +710,12 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     message = Message.objects.get()
     assert message.documents.count() == 2
     assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Documents déposés sur Sèves en pièce jointe de ce message" in mail.body
+    assert "Mon document numero 3 (Autre document)" in mail.body
+    assert "Mon document (Autre document)" in mail.body
 
 
 def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user, mailoutbox):

@@ -247,9 +247,9 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
 
 
 @override_flag("message_v2", active=True)
-def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill):
+def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
-    generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, evenement)
+    generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, evenement, mailoutbox)
 
 
 def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):

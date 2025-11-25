@@ -1717,8 +1717,10 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
 
 
 @override_flag("message_v2", active=True)
-def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill):
-    generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, EvenementFactory())
+def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
+    generic_test_can_add_message_in_new_tab_with_documents(
+        live_server, page, choice_js_fill, EvenementFactory(), mailoutbox
+    )
 
 
 @pytest.mark.django_db

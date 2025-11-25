@@ -17,6 +17,11 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                 <div style="font-family: Arial, sans-serif;">
                     <p style="white-space: pre-wrap; line-height: 1.5; font-weight: bold; text-decoration: underline;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
+                    {% if documents %}
+                    <p style="font-style: italic; margin-top: 20px; margin-bottom: 0px;">
+                     Documents déposés sur Sèves en pièce jointe de ce message : {% for doc in documents %} {{doc.nom}} ({{ doc.get_document_type_display }}){% endfor %}
+                    </p>
+                    {% endif %}
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
                     <p style="margin-top: 20px;">Consulter la fiche dans Sèves : <a href="{{ fiche_url }}">{{ fiche_url }}</a></p>
@@ -34,6 +39,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
             "message_obj": message_obj,
             "subject": subject,
             "content": content,
+            "documents": message_obj.documents.all(),
             "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
         },
     )
