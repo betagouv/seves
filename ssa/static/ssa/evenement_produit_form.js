@@ -3,22 +3,6 @@ import {setUpFreeLinks} from "/static/core/free_links.js";
 import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener('DOMContentLoaded', () => {
-  function disableSourceOptions(typeEvenementInput, sourceInput, reset=true) {
-    const isHumanCase = typeEvenementInput.value === "investigation_cas_humain";
-    sourceInput.querySelectorAll('option').forEach(option => {
-      if (option.value !== "autre") {
-        if ((option.getAttribute('data-for-human-case') === 'true') !== isHumanCase){
-          option.style.display = 'none'
-        } else {
-          option.style.display = ''
-        }
-      }
-    });
-    if (reset===true){
-      sourceInput.selectedIndex = 0;
-    }
-  }
-
   function handleNoticeProduitDisplay(options, value) {
     if(isLevel2WithChildren(options, value)){
       document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
@@ -140,12 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
     handleNoticeDangerDisplay(options, selectedValue)
   }
 
-  const typeEvenementInput = document.getElementById('id_type_evenement')
-  const sourceInput = document.getElementById('id_source')
-  typeEvenementInput.addEventListener("change", () => {
-    disableSourceOptions(typeEvenementInput, sourceInput)
-  })
-  disableSourceOptions(typeEvenementInput, sourceInput, false)
   setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
   new Choices(document.getElementById("id_quantification_unite"), {
     ...choicesDefaults,

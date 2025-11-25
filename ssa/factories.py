@@ -35,6 +35,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
+    source = FuzzyChoice(Source.values)
     description = factory.Faker("paragraph")
     aliments_animaux = factory.Faker("boolean")
 
@@ -71,16 +72,6 @@ class EvenementProduitFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
-
-    @factory.post_generation
-    def source(self, create, extracted, **kwargs):
-        if extracted:
-            self.source = extracted
-        elif self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            self.source = random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-        else:
-            other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
-            self.source = random.choice(list(other_sources))
 
     @factory.lazy_attribute
     def produit_pret_a_manger(self):

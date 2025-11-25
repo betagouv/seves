@@ -7,7 +7,6 @@ from core.form_mixins import DSFRForm
 from core.forms import BaseMessageForm, BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message
-from ssa.fields import SelectWithAttributeField
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import Etablissement, PositionDossier, CategorieDanger
 from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
@@ -34,7 +33,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
         label="Inclut des aliments pour animaux",
     )
-    source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
+    source = SEVESChoiceField(choices=Source.choices, required=False)
     description = forms.CharField(
         required=True,
         widget=forms.Textarea(

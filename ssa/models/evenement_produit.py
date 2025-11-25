@@ -29,7 +29,6 @@ class TypeEvenement(models.TextChoices):
     ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
     NON_ALERTE = "non_alerte", "Non alerte (non mis sur le marché)"
     NON_ALERTE_NON_DANGEREUX = "non_alerte_non_dangereux", "Non alerte (non dangereux)"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
     AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
 
 
@@ -47,10 +46,6 @@ class Source(models.TextChoices):
     PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
     PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
     AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
-
-    DO_LISTERIOSE = "do_listeriose", "DO Listériose"
-    CAS_GROUPES = "cas_groupes", "Cas groupés"
-    AUTRE = "autre", "Signalement autre"
 
 
 class PretAManger(models.TextChoices):
@@ -201,8 +196,6 @@ class EvenementProduit(
     )
 
     objects = EvenementProduitManager()
-
-    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
 
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
@@ -372,21 +365,6 @@ class EvenementProduit(
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(source=Source.AUTRE)
-                    | models.Q(source="")
-                    | (
-                        models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                    | (
-                        ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                ),
-                name="type_evenement_source_constraint",
-            ),
             models.CheckConstraint(
                 condition=(
                     models.Q(produit_pret_a_manger="")

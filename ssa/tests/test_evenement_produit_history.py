@@ -46,7 +46,6 @@ def test_can_view_evenement_produit_history(live_server, page):
         len(
             [
                 "One for table header",
-                "One line created by the post_generation hook for source field in the factory",
                 "One line created by the change of description",
                 "One line created when we add the Etablissement",
                 "One line created by the addition of agent/structure contact during the update of the object",
