@@ -7,7 +7,8 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_migrate, pre_delete
 from django.dispatch import receiver
 
-from core.models import Document, LienLibre, Message, FinSuiviContact
+from core.models import Document, LienLibre, Message, FinSuiviContact, CustomRevisionMetaData
+from .diffs import create_manual_version
 from .notifications import notify_message_deleted
 from .tasks import scan_for_viruses
 
@@ -43,24 +44,36 @@ def tiac_feature_flag(sender, app_config, **kwargs):
 
 @receiver([post_save], sender=LienLibre)
 def link_added(sender, instance, **kwargs):
-    with transaction.atomic():
-        with reversion.create_revision():
-            reversion.set_comment(f"Le lien '{str(instance.related_object_2)}' a été ajouté à la fiche")
-            reversion.add_to_revision(instance.related_object_1)
-        with reversion.create_revision():
-            reversion.set_comment(f"Le lien '{str(instance.related_object_1)}' a été ajouté à la fiche")
-            reversion.add_to_revision(instance.related_object_2)
+    revision = create_manual_version(
+        instance.related_object_1,
+        f"Le lien '{instance.related_object_2}' a été ajouté à la fiche",
+        user=getattr(instance, "_user", None),
+    )
+    CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Évènements liés"})
+
+    revision = create_manual_version(
+        instance.related_object_2,
+        f"Le lien '{instance.related_object_1}' a été ajouté à la fiche",
+        user=getattr(instance, "_user", None),
+    )
+    CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Évènements liés"})
 
 
 @receiver([pre_delete], sender=LienLibre)
 def link_deleted(sender, instance, **kwargs):
-    with transaction.atomic():
-        with reversion.create_revision():
-            reversion.set_comment(f"Le lien '{str(instance.related_object_2)}' a été supprimé à la fiche")
-            reversion.add_to_revision(instance.related_object_1)
-        with reversion.create_revision():
-            reversion.set_comment(f"Le lien '{str(instance.related_object_1)}' a été supprimé à la fiche")
-            reversion.add_to_revision(instance.related_object_2)
+    revision = create_manual_version(
+        instance.related_object_1,
+        f"Le lien '{instance.related_object_2}' a été supprimé à la fiche",
+        user=getattr(instance, "_user", None),
+    )
+    CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Évènements liés"})
+
+    revision = create_manual_version(
+        instance.related_object_2,
+        f"Le lien '{instance.related_object_1}' a été supprimé à la fiche",
+        user=getattr(instance, "_user", None),
+    )
+    CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Évènements liés"})
 
 
 @receiver([post_save], sender=Message)
@@ -72,6 +85,7 @@ def message_deleted(sender, instance: Message, **kwargs):
                 reversion.set_comment(
                     f"Le message de type '{instance.get_message_type_display()}' ayant pour titre {instance.title} a été supprimé"
                 )
+                reversion.add_meta(CustomRevisionMetaData, extra_data={"field": "Fil de suivi"})
                 reversion.add_to_revision(instance.content_object)
 
 
@@ -81,6 +95,7 @@ def fin_suivi_added(sender, instance, created, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():
                 reversion.set_comment(f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche")
+                reversion.add_meta(CustomRevisionMetaData, extra_data={"field": "Fil de suivi"})
                 reversion.add_to_revision(instance.content_object)
 
 
@@ -89,4 +104,5 @@ def fin_suivi_removed(sender, instance, **kwargs):
     with transaction.atomic():
         with reversion.create_revision():
             reversion.set_comment(f"La structure {instance.contact} a repris le suivi sur cette fiche")
+            reversion.add_meta(CustomRevisionMetaData, extra_data={"field": "Fil de suivi"})
             reversion.add_to_revision(instance.content_object)

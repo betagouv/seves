@@ -20,6 +20,7 @@
                                         <th scope="col">Champ modif.</th>
                                         <th scope="col">Ancienne valeur</th>
                                         <th scope="col">Nouvelle valeur</th>
+                                        <th scope="col">Commentaire</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -31,6 +32,7 @@
                                             <td class="fr-cell--multiline">{{ patch.field|title }}</td>
                                             <td class="history-removed fr-cell--multiline">{{ patch.old|or_empty_value_tag  }}</td>
                                             <td class="history-added fr-cell--multiline">{{ patch.new|or_empty_value_tag  }}</td>
+                                            <td class="fr-cell--multiline">{{ patch.comment|or_empty_value_tag  }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

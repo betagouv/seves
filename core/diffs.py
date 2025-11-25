@@ -1,7 +1,12 @@
 from dataclasses import dataclass
 
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
+from django.utils import timezone
+from reversion.models import Revision, Version
+from reversion.revisions import _get_options
 from reversion_compare.compare import CompareObjects
 from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin
 from reversion_compare.mixins import CompareMixin as OriginalCompareMixin
@@ -15,20 +20,49 @@ class Diff:
     field: str
     old: str
     new: str
+    comment: str
     agent: Agent
     structure: Structure
     date_created: datetime
 
-    def __init__(self, field, old, new, revision=None):
+    def __init__(self, field, old, new, revision=None, comment=""):
         self.field = field
         self.old = old
         self.new = new
+        self.comment = comment
 
         if revision:
             self.date_created = revision.date_created
             if revision.user:
                 self.agent = revision.user.agent
                 self.structure = self.agent.structure
+
+
+def get_diff_from_comment_version(version):
+    comment = version.revision.get_comment()
+    if not comment:
+        return None
+    try:
+        field = version.revision.customrevisionmetadata.extra_data.get("field")
+    except ObjectDoesNotExist:
+        field = ""
+    return Diff(field, "", "", version.revision, comment)
+
+
+def create_manual_version(obj, comment, user=None):
+    revision = Revision.objects.create(user=user, comment=comment, date_created=timezone.now())
+
+    options = _get_options(obj.__class__)
+    Version.objects.create(
+        revision=revision,
+        content_type=ContentType.objects.get_for_model(obj),
+        object_id=obj.pk,
+        object_repr=str(obj),
+        format=options.format,
+        serialized_data={},
+        db="default",
+    )
+    return revision
 
 
 class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
@@ -98,7 +132,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
                     diff.append(Diff(self._get_pretty_field(field), "", new, version1.revision))
                 for item_1, _item_2 in change["changed_items"]:
-                    prefix = item_1._object_version.object._meta.model_name.title()
+                    model_name = item_1._object_version.object._meta.model_name.title()
+                    prefix = f"{model_name} ({str(item_1._object_version.object)})"
                     nested_diff = self.compare(item_1._object_version.object, item_1, _item_2)[0]
                     for change in nested_diff:
                         pretty_field = self._get_pretty_field(change.field, prefix=prefix)
@@ -117,7 +152,7 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 new = obj_compare.compare_obj2.to_string()
                 diff.append(Diff(self._get_pretty_field(field), old, new, version1.revision))
 
-        if comment := version2.revision.get_comment():
-            diff.append(Diff("", "", comment, version2.revision))
-
+        comment_diff = get_diff_from_comment_version(version2)
+        if comment_diff:
+            diff.append(comment_diff)
         return diff, has_unfollowed_fields
