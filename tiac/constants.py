@@ -6,8 +6,8 @@ from django.db.models import TextChoices
 from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 
-from ssa.models import CategorieDanger
-from ssa.models.mixins import WithChoicesToJS
+from ssa.constants import CategorieDanger
+from core.mixins import WithChoicesToJS
 
 
 class EvenementOrigin(TextChoices):

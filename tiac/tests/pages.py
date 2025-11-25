@@ -6,7 +6,7 @@ from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Page, expect, Locator
 
-from ssa.models import CategorieDanger
+from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import TypeRepas, SuspicionConclusion, DangersSyndromiques
 from tiac.models import (

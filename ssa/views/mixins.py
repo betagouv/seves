@@ -2,7 +2,8 @@ import json
 
 from core.mixins import WithOrderingMixin
 from ssa.filters import EvenementProduitFilter
-from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
+from ssa.models import EvenementProduit
+from ssa.constants import CategorieDanger, CategorieProduit
 
 
 class WithFilteredListMixin(WithOrderingMixin):

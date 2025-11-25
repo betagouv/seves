@@ -19,7 +19,7 @@ from core.mixins import (
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
-from ssa.models import CategorieProduit, CategorieDanger
+from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import (
     ModaliteDeclarationEvenement,
     EvenementOrigin,

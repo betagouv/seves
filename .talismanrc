@@ -1,6 +1,7 @@
 allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
 - '(from|import)[\w\s\.]+'  # Allow python imports
+- '(models\.)?ForeignKey\(.+\)?'
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -31,7 +32,7 @@ fileignoreconfig:
 - filename: sv/tests/test_evenement_list_order.py
   checksum: 8f9ff88f349a3e8be0d00903d6a9ccaa81db3c8c825a4feaccbb45042b641542
 - filename: core/mixins.py
-  checksum: a3e7662dc5fd7531847d3aea99bbd0b34e90b7b1fd3a9f57b25037fee28fb857
+  checksum: 1abac686508bce4c05942361c4d50c4062b63f70b52f390eb332880f936717d2
 - filename: conftest.py
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py

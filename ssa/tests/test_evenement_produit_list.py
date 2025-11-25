@@ -3,8 +3,9 @@ from playwright.sync_api import Page, expect
 from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre, Departement
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
-from ssa.models.evenement_produit import PretAManger, ActionEngagees, Source
+from ssa.models import EvenementProduit, TemperatureConservation
+from ssa.constants import TypeEvenement, Source
+from ssa.models.evenement_produit import PretAManger, ActionEngagees
 from ssa.tests.pages import EvenementProduitListPage
 
 

@@ -3,7 +3,8 @@ from playwright.sync_api import expect
 from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement, CategorieDanger, CategorieProduit
+from ssa.models import EvenementProduit, Etablissement
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 

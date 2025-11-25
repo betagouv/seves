@@ -29,8 +29,8 @@ from core.mixins import (
 from core.models import Export
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit, CategorieDanger, Etablissement
-from ssa.models.evenement_produit import CategorieProduit
+from ssa.models import EvenementProduit, Etablissement
+from ..constants import CategorieDanger, CategorieProduit
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 

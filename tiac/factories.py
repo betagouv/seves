@@ -13,7 +13,7 @@ from core.factories import BaseEtablissementFactory
 from core.mixins import WithEtatMixin
 from core.models import Structure, LienLibre
 from ssa.factories import EvenementProduitFactory
-from ssa.models import CategorieProduit, CategorieDanger
+from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import (
     EvenementOrigin,
     ModaliteDeclarationEvenement,
