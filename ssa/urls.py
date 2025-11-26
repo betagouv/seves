@@ -7,7 +7,11 @@ from .views import (
     FindNumeroAgrementView,
     EvenementUpdateView,
 )
-from .views.produit import EvenementProduitExportView, EvenementProduitDocumentExportView
+from .views.produit import (
+    EvenementProduitExportView,
+    EvenementProduitDocumentExportView,
+    InvestigationCasHumainCreateView,
+)
 
 app_name = "ssa"
 urlpatterns = [
@@ -45,5 +49,10 @@ urlpatterns = [
         "api/find-numero-agrement/",
         FindNumeroAgrementView.as_view(),
         name="find-numero-agrement",
+    ),
+    path(
+        "investigation-cas-humain/creation",
+        InvestigationCasHumainCreateView.as_view(),
+        name="investigation-cas-humain-creation",
     ),
 ]

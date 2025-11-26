@@ -1,4 +1,5 @@
-@import url("/static/core/base_dsfr.css");
+@import url("./base_dsfr.css");
+@import url("./base_form.css");
 
 body{
     background-color: #F6F6F6;
@@ -165,7 +166,6 @@ label:has(+ .choices select[data-required="true"])::after,
     top: 0;
     left: 0;
 }
-
 
 .ac-notified {
     background-color: #faa18d;

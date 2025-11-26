@@ -6,7 +6,6 @@ from django.utils.safestring import mark_safe
 from reversion.models import Version
 
 from core.mixins import (
-    WithNumeroMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithMessageUrlsMixin,
@@ -20,8 +19,8 @@ from core.models import Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
-from ..constants import CategorieDanger, CategorieProduit
-from .mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin
+from ..constants import CategorieDanger, CategorieProduit, Source
+from .mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin, WithSharedNumeroMixin
 
 
 class PretAManger(models.TextChoices):
@@ -119,12 +118,14 @@ class EvenementProduit(
     EmailNotificationMixin,
     WithContactPermissionMixin,
     AllowModificationMixin,
-    WithNumeroMixin,
+    WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     EmailableObjectMixin,
     models.Model,
 ):
     # WithEvenementInformationMixin
+    aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
+
     # Informations liées au produit
     categorie_produit = models.CharField(
         max_length=255, choices=CategorieProduit.choices, verbose_name="Catégorie de produit", blank=True
@@ -139,6 +140,7 @@ class EvenementProduit(
 
     # Informations liées au risque
     # Inclue WithEvenementRisqueMixin
+    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )

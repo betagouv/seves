@@ -1,5 +1,17 @@
-from .produit import EvenementProduitCreateView as EvenementProduitCreateView
-from .produit import EvenementProduitDetailView as EvenementProduitDetailView
-from .produit import EvenementProduitListView as EvenementProduitListView
-from .produit import EvenementUpdateView as EvenementUpdateView
-from .api import FindNumeroAgrementView as FindNumeroAgrementView
+from .api import FindNumeroAgrementView
+from .produit import (
+    EvenementProduitCreateView,
+    EvenementProduitDetailView,
+    EvenementProduitListView,
+    EvenementUpdateView,
+    InvestigationCasHumainCreateView,
+)
+
+__all__ = (
+    "EvenementProduitCreateView",
+    "EvenementProduitDetailView",
+    "EvenementProduitListView",
+    "EvenementUpdateView",
+    "InvestigationCasHumainCreateView",
+    "FindNumeroAgrementView",
+)
