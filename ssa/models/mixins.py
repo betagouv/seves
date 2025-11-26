@@ -1,8 +1,9 @@
 from django.db import models
+from django.utils import timezone
 
-from core.mixins import sort_tree
+from core.mixins import sort_tree, WithNumeroMixin
 from core.models import Structure
-from ssa.constants import CategorieDanger, TypeEvenement, Source
+from ssa.constants import CategorieDanger, TypeEvenement
 from ssa.models.validators import validate_numero_rasff
 
 
@@ -25,9 +26,7 @@ class WithEvenementInformationMixin(models.Model):
 
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
-    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     description = models.TextField(verbose_name="Description de l'événement")
-    aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     class Meta:
         abstract = True
@@ -41,6 +40,29 @@ class WithEvenementRisqueMixin(models.Model):
     evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
     reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class WithSharedNumeroMixin(WithNumeroMixin):
+    @classmethod
+    def _get_annee_and_numero(cls):
+        from . import EvenementInvestigationCasHumain, EvenementProduit
+
+        annee_courante = timezone.now().year
+
+        def last_num(model):
+            fiche = (
+                model._base_manager.filter(numero_annee=annee_courante)
+                .select_for_update()
+                .order_by("-numero_evenement")
+                .first()
+            )
+            return fiche.numero_evenement if fiche else 0
+
+        numero = max(last_num(EvenementInvestigationCasHumain), last_num(EvenementProduit)) + 1
+        return annee_courante, numero
 
     class Meta:
         abstract = True

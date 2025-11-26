@@ -5,13 +5,11 @@
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
-    <script type="module" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/evenement_produit_form.mjs' %}"></script>
     <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
@@ -20,10 +18,10 @@
     <form method="post" id="main-form">
         {% csrf_token %}
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
-        <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
+        <div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>
         <div class="fr-hidden" id="categorie-danger-header">
             <div class="fr-ml-1v">Dangers les plus courants</div>
-            {% for danger in danger_plus_courant %}
+            {% for danger in form.danger_plus_courants %}
                 <div class="treeselect-list__item" level="0" group="false">
                     <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
                 </div>

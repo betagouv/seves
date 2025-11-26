@@ -1,5 +1,5 @@
 import re
-from enum import property as enum_property
+from enum import property as enum_property, auto
 
 from django.db import models
 
@@ -1729,3 +1729,9 @@ class Source(models.TextChoices):
     PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
     AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
     AUTRE = "autre", "Signalement autre"
+
+
+class SourceInvestigationCasHumain(models.TextChoices):
+    DO_LISTERIOSE = auto(), "DO listériose"
+    CAS_GROUPES = auto(), "Cas groupés"
+    SIGNALEMENT_AUTRE = auto(), "Signalement autre"

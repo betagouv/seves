@@ -90,3 +90,27 @@
     align-self: center !important;
     margin: 0 .5rem 1rem !important;
 }
+
+.btn-add-group .fr-menu {
+    margin: 0;
+}
+
+.btn-add-group .fr-translate .fr-translate__btn::before {
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+}
+
+.fr-textarea-grow {
+    height: 100%;
+}
+
+.fr-textarea-grow .fr-input-group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+}
+
+.fr-textarea-grow .fr-input-group textarea {
+    flex-grow: 1;
+}

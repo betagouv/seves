@@ -562,3 +562,28 @@ class EvenementProduitListPage(WithTreeSelect):
     def set_structure_filter(self, value, choice_js_fill_from_element):
         element = self.page.locator("#id_structure_contact").locator("..")
         choice_js_fill_from_element(self.page, element, value, value)
+
+
+class InvestigationCasHumainFormPage(WithTreeSelect):
+    fields = ("type_evenement", "description")
+
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+        for field in self.fields:
+            setattr(self, field, page.locator(f"#id_{field}"))
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-creation')}")
+
+    def fill_required_fields(self, evenement_produit):
+        self.type_evenement.select_option(evenement_produit.type_evenement)
+        self.description.fill(evenement_produit.description)
+
+    def submit_as_draft(self):
+        self.page.locator('button[value="draft"]').click()
+        self.page.wait_for_url(f"**{reverse('ssa:evenement-produit-liste')}")
+
+    def publish(self):
+        self.page.locator('button[value="publish"]').click()
+        self.page.wait_for_url(f"**{reverse('ssa:evenement-produit-liste')}")

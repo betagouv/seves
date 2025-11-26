@@ -1,11 +1,19 @@
 {% extends "core/base.html" %}
 
 {% block product_nav %}
-    <li>
-        <a
-            class="fr-btn fr-btn--icon-left fr-btn--header-blue fr-my-auto fr-icon-add-line"
-            href="{% url 'ssa:evenement-produit-creation' %}"
-        >Créer un événement</a>
+    <li class="btn-add-group fr-my-auto">
+        <nav role="navigation" class="fr-translate fr-nav">
+            <div class="fr-nav__item">
+                <button class="fr-translate__btn fr-btn fr-btn--header-blue" aria-controls="translate-1"
+                        aria-expanded="false" title="Sélectionner un type de fiche a créer">Créer un événement</button>
+                <div class="fr-collapse fr-translate__menu fr-menu" id="translate-1">
+                    <ul class="fr-menu__list">
+                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'ssa:evenement-produit-creation' %}">Créer un événement produit</a></li>
+                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'ssa:investigation-cas-humain-creation' %}">Investigation de cas humain</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
     </li>
     <li class="{% block highlight_menu_evenements %}{% endblock %}">
         <a class="fr-btn" href="{% url 'ssa:evenement-produit-liste' %}">Liste des événements</a>
