@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
@@ -27,7 +27,8 @@ from core.mixins import (
     WithAddUserContactsMixin,
 )
 from core.models import Export
-from ssa.forms import EvenementProduitForm
+from core.views import MediaDefiningMixin
+from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement
 from ..constants import CategorieDanger, CategorieProduit
@@ -39,6 +40,7 @@ class EvenementProduitCreateView(
     WithFormErrorsAsMessagesMixin,
     WithAddUserContactsMixin,
     EvenementProduitValuesMixin,
+    MediaDefiningMixin,
     CreateView,
 ):
     form_class = EvenementProduitForm
@@ -153,6 +155,7 @@ class EvenementUpdateView(
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     EvenementProduitValuesMixin,
+    MediaDefiningMixin,
     UpdateView,
 ):
     form_class = EvenementProduitForm
@@ -282,3 +285,25 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
 
     def test_func(self):
         return self.object.can_user_access(self.request.user)
+
+
+class InvestigationCasHumainCreateView(
+    WithFormErrorsAsMessagesMixin,
+    WithAddUserContactsMixin,
+    EvenementProduitValuesMixin,
+    MediaDefiningMixin,
+    CreateView,
+):
+    template_name = "ssa/evenement_investigation_cas_humain.html"
+    form_class = InvestigationCasHumainForm
+    success_url = reverse_lazy("ssa:evenement-produit-liste")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save()
+        messages.success(self.request, "La fiche d'investigation cas humain a été créée avec succès.")
+        return super().form_valid(form)

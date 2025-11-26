@@ -1,4 +1,5 @@
-@import url("/static/core/base_dsfr.css");
+@import url("./base_dsfr.css");
+@import url("./base_form.css");
 
 body{
     background-color: #F6F6F6;
@@ -142,17 +143,6 @@ label:has(+ .choices select[data-required="true"]),
 fieldset:has(input[type="radio"][required]) > legend {
     font-weight: bold;
 }
-label:has(+ input:required)::after,
-label:has(+ input[data-required="true"])::after,
-label:has(+ select:required)::after,
-label:has(+ select[data-required="true"])::after,
-label:has(+ textarea:required)::after,
-label:has(+ textarea[data-required="true"])::after,
-label:has(+ .choices select:required)::after,
-label:has(+ .choices select[data-required="true"])::after,
-.required-field::after {
-    content: "*";
-}
 
 /* -- Champs obligatoires (choices-js) -- */
 .choices__input[hidden][required] {
@@ -271,4 +261,33 @@ label:has(+ .choices select[data-required="true"])::after,
 
 .history-added{
     color : var(--success-425-625);
+}
+
+
+.btn-add-group .fr-menu {
+    margin: 0;
+}
+
+.btn-add-group .fr-translate .fr-translate__btn::before {
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.fr-textarea-grow {
+    height: 100%;
+}
+
+.fr-textarea-grow .fr-input-group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+}
+
+.fr-textarea-grow .fr-input-group textarea {
+    flex-grow: 1;
 }

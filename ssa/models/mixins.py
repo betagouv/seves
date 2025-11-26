@@ -2,7 +2,7 @@ from django.db import models
 
 from core.mixins import sort_tree
 from core.models import Structure
-from ssa.constants import CategorieDanger, TypeEvenement, Source
+from ssa.constants import CategorieDanger, TypeEvenement
 from ssa.models.validators import validate_numero_rasff
 
 
@@ -25,9 +25,7 @@ class WithEvenementInformationMixin(models.Model):
 
     # Informations générales
     type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
-    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     description = models.TextField(verbose_name="Description de l'événement")
-    aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     class Meta:
         abstract = True

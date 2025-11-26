@@ -15,8 +15,9 @@ from ssa.models import (
     ActionEngagees,
     Etablissement,
     PositionDossier,
+    EvenementInvestigationCasHumain,
 )
-from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source
+from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source, SourceInvestigationCasHumain
 from ssa.models.evenement_produit import PretAManger
 
 
@@ -109,3 +110,39 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     numero_agrement = factory.Faker("numerify", text="###.##.###")
 
     numeros_resytal = factory.Faker("numerify", text="######")
+
+
+class InvestigationCasHumainFactory(DjangoModelFactory):
+    class Meta:
+        model = EvenementInvestigationCasHumain
+
+    date_creation = factory.Faker("date_time_this_decade")
+    date_reception = factory.Faker("date_this_decade")
+    numero_annee = factory.Faker("year")
+    numero_rasff = factory.Faker("bothify", text="####.####")
+    type_evenement = FuzzyChoice(TypeEvenement.values)
+    source = FuzzyChoice(SourceInvestigationCasHumain.values)
+    description = factory.Faker("paragraph")
+
+    categorie_danger = FuzzyChoice(CategorieDanger.values)
+    precision_danger = factory.Faker("sentence", nb_words=3)
+    evaluation = factory.Faker("paragraph")
+    reference_souches = factory.Faker("sentence", nb_words=5)
+    reference_clusters = factory.Faker("sentence", nb_words=5)
+
+    @factory.lazy_attribute
+    def createur(self):
+        return Structure.objects.get(libelle="Structure Test")
+
+    @factory.post_generation
+    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
+        if extracted and create:
+            if isinstance(extracted, str):
+                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
+            else:
+                self.date_creation = extracted
+            self.save()
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1
