@@ -140,8 +140,8 @@ def _add_footer(object):
 
 def _add_footer_html(object):
     return f"""
-    <p>Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a></p>
-    <p>Merci de ne pas répondre directement à ce message.</p>
+    <p>Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a><br>
+    Merci de ne pas répondre directement à ce message.</p>
     """
 
 
@@ -192,8 +192,8 @@ def notify_message_deleted(message: Message):
     <!DOCTYPE html>
     <html>
     <div style="font-family: Arial, sans-serif;">
-        <p>Bonjour,</p>
-        <p>Un élément du fil de suivi de l’évènement : {object.get_long_email_display_name()} a été supprimé. </p>
+        <p>Bonjour,<br>
+        Un élément du fil de suivi de l’évènement <b>{object.get_long_email_display_name()}</b> a été supprimé. </p>
         <p>{message.get_message_type_display()} - {message.title}</p>
         {_add_footer_html(object)}
     </div>
