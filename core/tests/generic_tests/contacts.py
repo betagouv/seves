@@ -4,7 +4,7 @@ from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.pages import WithContactsPage
 
 
-def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, object):
+def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, object, mailoutbox):
     contact_structure = ContactStructureFactory()
     contact = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
 
@@ -18,8 +18,13 @@ def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_
     assert page.get_by_test_id("contacts-agents").count() == 1
     assert object.__class__.objects.filter(pk=object.pk, contacts=contact).exists()
 
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Ajout aux contacts" in mail.subject
+    assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
 
-def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, object):
+
+def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, object, mailoutbox):
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
@@ -31,3 +36,44 @@ def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice
     expect(page.get_by_test_id("contacts-structures")).to_be_visible()
     assert page.get_by_test_id("contacts-structures").count() == 1
     assert object.__class__.objects.filter(pk=object.pk, contacts=contact_structure).exists()
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Ajout aux contacts" in mail.subject
+    assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
+
+
+def generic_test_remove_contact_agent_from_an_evenement(live_server, page, object, mailoutbox):
+    contact = ContactAgentFactory()
+    object.contacts.set([contact])
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    contact_page = WithContactsPage(page)
+    contact_page.remove_contact(contact)
+
+    contact_page.go_to_contact_tab()
+    expect(page.get_by_text("Le contact a bien été supprimé de la fiche.")).to_be_visible()
+    assert object.contacts.count() == 0
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Retrait des contacts" in mail.subject
+    assert "Vous avez été retiré au suivi de l’évènement" in mail.body
+
+
+def generic_test_remove_contact_structure_from_an_evenement(live_server, page, object, mailoutbox):
+    contact = ContactStructureFactory()
+    object.contacts.set([contact])
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    contact_page = WithContactsPage(page)
+    contact_page.remove_contact(contact)
+
+    contact_page.go_to_contact_tab()
+    expect(page.get_by_text("Le contact a bien été supprimé de la fiche.")).to_be_visible()
+    assert object.contacts.count() == 0
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Retrait des contacts" in mail.subject
+    assert "Vous avez été retiré au suivi de l’évènement" in mail.body

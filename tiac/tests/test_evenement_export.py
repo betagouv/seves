@@ -89,7 +89,7 @@ def test_export_tiac_from_ui(live_server, mocked_authentification_user, page: Pa
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.subject == "Sèves - Votre export est prêt"
+    assert mail.subject == "[Sèves] Votre export est prêt"
 
 
 def test_export_tiac_from_ui_with_only_one_type_of_object_in_filter(
@@ -116,4 +116,4 @@ def test_export_tiac_from_ui_with_only_one_type_of_object_in_filter(
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.subject == "Sèves - Votre export est prêt"
+    assert mail.subject == "[Sèves] Votre export est prêt"

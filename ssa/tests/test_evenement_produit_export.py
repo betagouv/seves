@@ -80,7 +80,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     assert mail.to == [
         user.email,
     ]
-    assert mail.subject == "Sèves - Votre export est prêt"
+    assert mail.subject == "[Sèves] Votre export est prêt"
     assert "_export_evenement_produit.csv" in mail.body
 
 
@@ -197,4 +197,4 @@ def test_export_evenement_produit_from_ui(live_server, mocked_authentification_u
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.subject == "Sèves - Votre export est prêt"
+    assert mail.subject == "[Sèves] Votre export est prêt"
