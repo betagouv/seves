@@ -43,7 +43,7 @@ from .mixins import (
     WithFormErrorsAsMessagesMixin,
 )
 from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
-from .notifications import notify_contact_agent
+from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
 from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
 
@@ -181,6 +181,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))
         self.fiche.contacts.remove(contact)
+        notify_contact_agent_added_or_removed(contact, self.fiche, added=False)
         messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
@@ -457,6 +458,7 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
             len(contacts_structures),
         ) % {"count": len(contacts_structures)}
         messages.success(request, message, extra_tags="core contacts")
+        notify_contact_agent_added_or_removed(contact_structure, self.obj, added=True)
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
@@ -491,7 +493,7 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
                     allowed_contacts_structures_to_add.append(contact_structure)
             if hasattr(self.obj, "update_allowed_structures_and_visibility"):
                 self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
-            notify_contact_agent(contact_agent, self.obj)
+            notify_contact_agent_added_or_removed(contact_agent, self.obj, added=True)
 
         message = ngettext(
             "L'agent a été ajouté avec succès.",

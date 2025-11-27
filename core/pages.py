@@ -299,3 +299,13 @@ class WithContactsPage:
     def add_structure(self, choice_js_fill, contact):
         choice_js_fill(self.page, "#add-contact-structure-form .choices", str(contact), str(contact))
         self.page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
+
+    def remove_contact(self, contact):
+        self.page.locator(f'a[aria-controls="fr-modal-contact-{contact.id}"]').click()
+        expect(
+            self.page.locator(".fr-modal__body")
+            .locator("visible=true")
+            .get_by_text(str(contact.agent or contact.structure))
+        ).to_be_visible()
+        expect(self.page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
+        self.page.get_by_test_id(f"contact-delete-{contact.id}").click()
