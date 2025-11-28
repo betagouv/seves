@@ -340,6 +340,7 @@ def generic_test_can_send_draft_message_in_new_tab(
     message_page.open_message()
 
     message_page.submit_message()
+    message_page.page.wait_for_timeout(600)
 
     message.refresh_from_db()
     assert message.status == Message.Status.FINALISE
