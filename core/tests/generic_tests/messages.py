@@ -340,6 +340,7 @@ def generic_test_can_send_draft_message_in_new_tab(
     message_page.open_message()
 
     message_page.submit_message()
+    expect(page.get_by_text("Le message a bien été ajouté.")).to_be_visible()
 
     message.refresh_from_db()
     assert message.status == Message.Status.FINALISE

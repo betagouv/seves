@@ -15,6 +15,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
+                    <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5; font-weight: bold; text-decoration: underline;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     {% if documents %}
@@ -40,6 +41,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
             "subject": subject,
             "content": content,
             "documents": message_obj.documents.all(),
+            "evenement": message_obj.content_object,
             "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
         },
     )

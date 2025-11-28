@@ -146,6 +146,7 @@ class BaseMessagePage(ABC):
 
     def open_message(self, index=1):
         self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
+        self.page.wait_for_timeout(600)
 
     def delete_document(self, nth):
         self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
