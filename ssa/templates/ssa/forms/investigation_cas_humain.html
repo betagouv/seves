@@ -1,0 +1,90 @@
+{% load dsfr_tags widget_tweaks %}
+
+<fieldset class="fr-fieldset form-fieldset">
+    <legend class="fr-fieldset__legend fr-h3">Informations</legend>
+
+    {% if form.non_field_errors %}
+        <section class="fr-my-4v fr-input-group fr-input-group--error">
+            {{ form.non_field_errors }}
+        </section>
+    {% endif %}
+
+    <div class="fr-grid-row fr-col">
+        <div class="fr-col-12 fr-col-xl-8 fr-grid-row">
+            <div class="fr-col-12  fr-grid-row">
+                <div class="fr-col-12 fr-col-md-6">
+                    <div class="fr-fieldset__element">
+                        {% dsfr_form_field form.date_reception %}
+                    </div>
+                </div>
+                <div class="fr-col-12 fr-col-md-6">
+                    <div class="fr-fieldset__element">
+                        {% dsfr_form_field form.type_evenement %}
+                    </div>
+                </div>
+            </div>
+            <div class="fr-col-12 fr-grid-row">
+                {% if form.numero_rasff %}
+                    <div class="fr-col-12 fr-col-md-6">
+                        <div class="fr-fieldset__element">
+                            {% dsfr_form_field form.numero_rasff %}
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="fr-col-12 fr-col-md-6">
+                    <div class="fr-fieldset__element">
+                        {% dsfr_form_field form.source %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fr-col-12 fr-col-xl-4 fr-flex">
+            <div class="fr-fieldset__element fr-textarea-grow">
+                {% dsfr_form_field form.description|remove_attr:"rows" %}
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="fr-fieldset form-fieldset fr-mt-4v">
+    <legend class="fr-fieldset__legend fr-h3">Risque</legend>
+
+    <div class="fr-grid-row fr-col">
+        <div class="fr-col-12 fr-col-xl-6">
+            <div class="fr-fieldset__element">
+                {{ form.categorie_danger.label_tag }}
+                <div id="categorie-danger"></div>
+                {{ form.categorie_danger }}
+                <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
+                    {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                </div>
+            </div>
+            <div class="fr-fieldset__element">
+                {% dsfr_form_field form.precision_danger %}
+            </div>
+            <div class="fr-fieldset__element">
+                {% dsfr_form_field form.reference_souches %}
+            </div>
+            <div class="fr-fieldset__element">
+                {% dsfr_form_field form.reference_clusters %}
+            </div>
+        </div>
+        <div class="fr-col-12 fr-col-xl-6 fr-flex">
+            <div class="fr-fieldset__element fr-textarea-grow">
+                {% dsfr_form_field form.evaluation|remove_attr:"rows" %}
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+<div class="fr-hidden" id="categorie-danger-header">
+    <div class="fr-ml-1v">Dangers les plus courants</div>
+    {% for danger in form.danger_plus_courants %}
+        <div class="treeselect-list__item" level="0" group="false">
+            <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
+        </div>
+    {% endfor %}
+    <div class="fr-ml-1v">Liste complète des dangers</div>
+</div>
+
+<div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>
