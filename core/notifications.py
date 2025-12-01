@@ -172,6 +172,8 @@ def notify_fin_de_suivi(object, structure):
 
 
 def notify_message_deleted(message: Message):
+    if message.is_draft:
+        return
     object = message.content_object
     recipients = [r.email for r in message.recipients.all()]
     copy = [r.email for r in message.recipients_copy.all()]

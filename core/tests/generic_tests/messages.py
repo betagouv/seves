@@ -773,6 +773,30 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     assert "a été supprimé." in mail.body
 
 
+def generic_test_can_delete_my_own_draft_message(
+    live_server, page: Page, object, mocked_authentification_user, mailoutbox
+):
+    assert Message.objects.count() == 0
+    assert Message._base_manager.count() == 0
+
+    message = MessageFactory(
+        content_object=object,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        status=Message.Status.BROUILLON,
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+
+    assert message_page.message_title_in_table() == f"[BROUILLON] {message.title}"
+
+    message_page.delete_message()
+    assert Message.objects.count() == 0
+    assert Message._base_manager.count() == 1
+
+    assert len(mailoutbox) == 0
+
+
 def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object):
     contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     sender = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))

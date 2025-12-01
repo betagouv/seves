@@ -50,6 +50,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_message_in_new_tab,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab,
+    generic_test_can_delete_my_own_draft_message,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -1754,6 +1755,12 @@ def test_cant_delete_a_message_i_dont_own(client):
 
 def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_delete_my_own_message(
+        live_server, page, EvenementFactory(), mocked_authentification_user, mailoutbox
+    )
+
+
+def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_delete_my_own_draft_message(
         live_server, page, EvenementFactory(), mocked_authentification_user, mailoutbox
     )
 
