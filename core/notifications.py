@@ -203,3 +203,32 @@ def notify_message_deleted(message: Message):
     </html>
             """,
     )
+
+
+def notify_object_cloture(object):
+    recipients = [r.email for r in object.contacts.structures_only().exclude_mus()]
+    send(
+        recipients=recipients,
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Clôture de l’évènement",
+        message=f"""
+        Bonjour,
+        L’évènement {object.get_short_email_display_name()} a été clôturé. Les informations restent néanmoins consultables.
+
+        {object.get_email_cloture_text() if hasattr(object, "get_email_cloture_text") else ""}
+
+        {_add_footer(object)}
+            """,
+        html_message=f"""
+    <!DOCTYPE html>
+    <html>
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bonjour,<br>
+        L’évènement <b>{object.get_short_email_display_name()}</b> a été clôturé. Les informations restent néanmoins consultables. </p>
+
+        {"<p>" + object.get_email_cloture_text_html() + "</p>" if hasattr(object, "get_email_cloture_text_html") else ""}
+
+        {_add_footer_html(object)}
+    </div>
+    </html>
+            """,
+    )

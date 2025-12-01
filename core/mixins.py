@@ -30,7 +30,7 @@ from core.models import Document, LienLibre, Contact, Message, Visibilite, Struc
 from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from .notifications import notify_message
+from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
@@ -330,6 +330,7 @@ class WithEtatMixin(models.Model):
     def cloturer(self):
         self.etat = self.Etat.CLOTURE
         self.save()
+        notify_object_cloture(self)
 
     def publish(self):
         self.etat = self.Etat.EN_COURS

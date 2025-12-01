@@ -475,6 +475,26 @@ class InvestigationTiac(
     def get_long_email_display_name_as_html(self):
         return f"<b>Investigation de TIAC {self.numero}</b> (Créateur : {self.createur} / Etablissement(s) : {self.raisons_sociales_display} / Commune(s) : {self.communes_display})"
 
+    def get_email_cloture_text(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        - Créateur : {self.createur}
+        - Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}
+        - Etablissement(s) : {self.raisons_sociales_display}
+        - Commune(s) : {self.communes_display}
+        """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        <ul>
+        <li>Créateur : {self.createur}</li>
+        <li>Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}</li>
+        <li>Etablissement(s) : {self.raisons_sociales_display}</li>
+        <li>Commune(s) : {self.communes_display}</li>
+        </ul>
+        """
+
     class Meta:
         constraints = (
             models.CheckConstraint(
