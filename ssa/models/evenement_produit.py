@@ -305,6 +305,28 @@ class EvenementProduit(
     def get_long_email_display_name_as_html(self):
         return f"<b>{self.get_short_email_display_name()}</b> (Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
 
+    def get_email_cloture_text(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        - Créateur : {self.createur}
+        - Date de création : {self.date_creation.strftime("%d/%m/%Y")}
+        - N° RASFF/AAC : {self.numero_rasff}
+        - Catégorie produit : {self.get_categorie_produit_display()}
+        - Danger : {self.get_categorie_danger_display()}
+        """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement
+        <ul>
+        <li>Créateur : {self.createur}</li>
+        <li>Date de création : {self.date_creation.strftime("%d/%m/%Y")}</li>
+        <li>N° RASFF/AAC : {self.numero_rasff}</li>
+        <li>Catégorie produit : {self.get_categorie_produit_display()}</li>
+        <li>Danger : {self.get_categorie_danger_display()}</li>
+        </ul>
+        """
+
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,

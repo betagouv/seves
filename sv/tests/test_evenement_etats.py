@@ -8,6 +8,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactStructureFactory, StructureFactory
 from core.models import Contact, FinSuiviContact, Visibilite
+from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from sv.factories import EvenementFactory
 from sv.models import Structure, Evenement
 
@@ -24,6 +25,11 @@ def _add_contacts(evenement, mocked_authentification_user):
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     evenement.contacts.add(user_contact_agent)
     evenement.contacts.add(user_contact_structure)
+
+
+def test_can_cloturer_evenement(live_server, page, mocked_authentification_user, mailoutbox):
+    evenement = EvenementFactory()
+    generic_test_can_cloturer_evenement(live_server, page, evenement, mocked_authentification_user, mailoutbox)
 
 
 def test_can_cloturer_evenement_if_creator_structure_in_fin_suivi(
