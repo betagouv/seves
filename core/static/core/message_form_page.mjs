@@ -162,28 +162,24 @@ export class MessageFormController extends Controller {
         this.documentNameInputTarget.value = ""
         this.commentInputTarget.value = ""
         this.documentFileTarget.value = null
-        this._getNextIdToUse()
+        this._setNextIdToUse()
         this.documentFileTarget.disabled = true
         this.addDocumentTarget.disabled = true
     }
 
-    _getNextIdToUse() {
-        let num = this.currentDocumentID + 1
-        console.log(num)
-        console.log(this.documents)
+    _setNextIdToUse() {
+        let num = this.currentDocumentID
         while (this.documents.some(d => d.id === num)) {
             num++
         }
         this.currentDocumentID = num
-        return this.currentDocumentID
     }
 
     loadExistingDocuments(){
         this.inputsContainerTarget.querySelectorAll(".existing-document-form").forEach(form =>{
-            let id = form.querySelector("#existing_document").value
+            let id = parseInt(form.querySelector("#existing_document").value)
             this.addDocumentCard(form.querySelector("#id_nom").value, id=id)
             this.documents.push({id: id})
-            this._getNextIdToUse()
         })
     }
 
