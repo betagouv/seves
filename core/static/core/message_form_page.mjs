@@ -159,12 +159,23 @@ export class MessageFormController extends Controller {
         this.documents.push(doc)
 
         this.documentTypeSelectTarget.selectedIndex = 0
-        this.documentFileTarget.value = null
         this.documentNameInputTarget.value = ""
         this.commentInputTarget.value = ""
-        this.currentDocumentID += 1;
+        this.documentFileTarget.value = null
+        this._getNextIdToUse()
         this.documentFileTarget.disabled = true
         this.addDocumentTarget.disabled = true
+    }
+
+    _getNextIdToUse() {
+        let num = this.currentDocumentID + 1
+        console.log(num)
+        console.log(this.documents)
+        while (this.documents.some(d => d.id === num)) {
+            num++
+        }
+        this.currentDocumentID = num
+        return this.currentDocumentID
     }
 
     loadExistingDocuments(){
@@ -172,7 +183,7 @@ export class MessageFormController extends Controller {
             let id = form.querySelector("#existing_document").value
             this.addDocumentCard(form.querySelector("#id_nom").value, id=id)
             this.documents.push({id: id})
-            this.currentDocumentID += 1;
+            this._getNextIdToUse()
         })
     }
 
