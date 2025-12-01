@@ -31,9 +31,10 @@ from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement
-from ..constants import CategorieDanger, CategorieProduit
+from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
+from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
 
 
 class EvenementProduitCreateView(
@@ -185,6 +186,15 @@ class EvenementUpdateView(
         self.add_user_contacts(form.instance)
         return response
 
+    def _trigger_notifications(self):
+        dirty_fields = self.object.get_dirty_fields()
+        if "type_evenement" in dirty_fields and self.object.type_evenement == TypeEvenement.ALERTE_PRODUIT_NATIONALE:
+            notify_type_evenement_fna(self.object, self.request.user)
+        if "aliments_animaux" in dirty_fields and self.object.aliments_animaux is True:
+            notify_alimentation_animale(self.object)
+        if ("reference_souches" in dirty_fields) or ("reference_clusters" in dirty_fields):
+            notify_souches_clusters(self.object, self.request.user)
+
     def post(self, request, pk):
         self.object = self.get_object()
         form = self.get_form()
@@ -209,9 +219,12 @@ class EvenementUpdateView(
             return self.render_to_response(self.get_context_data(formset=formset))
 
         with transaction.atomic():
-            self.object = form.save()
+            self.object = form.save(commit=False)
+            self._trigger_notifications()
+            self.object.save()
             formset.save()
             self.add_user_contacts(self.object)
+
         messages.success(self.request, "L'événement produit a bien été modifié.")
         return HttpResponseRedirect(self.get_success_url())
 

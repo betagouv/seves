@@ -66,6 +66,7 @@ django==5.2.8
     #   django-crispy-forms
     #   django-csp
     #   django-debug-toolbar
+    #   django-dirtyfields
     #   django-dsfr
     #   django-filter
     #   django-post-office
@@ -84,6 +85,8 @@ django-crispy-forms==2.4
 django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==6.1.0
+    # via -r requirements.in
+django-dirtyfields==1.9.8
     # via -r requirements.in
 django-dsfr==3.2.0
     # via -r requirements.in

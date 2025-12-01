@@ -72,6 +72,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
 
     fields_to_exclude = [
         "_prefetched_objects_cache",
+        "_original_state",
         "_state",
         "id",
         "numero_annee",
