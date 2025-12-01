@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
@@ -121,6 +122,7 @@ class EvenementProduit(
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     EmailableObjectMixin,
+    DirtyFieldsMixin,
     models.Model,
 ):
     # WithEvenementInformationMixin
@@ -299,10 +301,13 @@ class EvenementProduit(
         return f"{self.get_type_evenement_display()} {self.numero}"
 
     def get_long_email_display_name(self):
-        return f"{self.get_short_email_display_name()} (Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
+        return f"{self.get_short_email_display_name()} {self.get_long_email_display_name_suffix()}"
 
     def get_long_email_display_name_as_html(self):
-        return f"<b>{self.get_short_email_display_name()}</b> (Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
+        return f"<b>{self.get_short_email_display_name()}</b> {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_suffix(self):
+        return f"(Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
 
     def get_email_cloture_text(self):
         return f"""

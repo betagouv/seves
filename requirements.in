@@ -23,6 +23,7 @@ django-waffle
 django-querysetsequence
 django-reversion-compare
 docxtpl[subdoc]
+django-dirtyfields
 # Dev
 djhtml
 django-debug-toolbar
