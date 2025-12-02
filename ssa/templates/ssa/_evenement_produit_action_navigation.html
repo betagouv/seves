@@ -36,7 +36,7 @@
                     </li>
                 {% endif %}
                 <li>
-                    <form method="post" action="{% url 'ssa:export-evenement-produit-document' object.numero %}">
+                    <form method="post" action="{% url 'ssa:export-evenement-produit-document' object.pk %}">
                         {% csrf_token %}
                         <button class="fr-translate__language fr-nav__link" aria-controls="fr-modal-extract"><span class="fr-icon-download-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Télécharger le document</button>
                     </form>

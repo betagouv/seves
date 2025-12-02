@@ -160,8 +160,7 @@ class EvenementProduit(
     objects = EvenementProduitManager()
 
     def get_absolute_url(self):
-        numero = f"{self.numero_annee}.{self.numero_evenement}"
-        return reverse("ssa:evenement-produit-details", kwargs={"numero": numero})
+        return reverse("ssa:evenement-produit-details", kwargs={"pk": self.pk})
 
     def get_update_url(self):
         return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})

@@ -132,8 +132,7 @@ class EvenementProduitDetailView(
         if queryset is None:
             queryset = self.get_queryset()
         try:
-            annee, numero_evenement = self.kwargs["numero"].split(".")
-            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            self.object = queryset.get(pk=self.kwargs["pk"])
             return self.object
         except (ValueError, EvenementProduit.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
@@ -253,9 +252,8 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
-    def dispatch(self, request, numero=None, *args, **kwargs):
-        annee, numero_evenement = numero.replace("A-", "").split(".")
-        self.object = EvenementProduit.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+    def dispatch(self, request, pk, *args, **kwargs):
+        self.object = EvenementProduit.objects.get(pk=pk)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request):
