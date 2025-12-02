@@ -229,6 +229,8 @@ class MessageCreateView(
                     "sender": self.request.user.agent.contact_set.get(),
                 }
             )
+            if self.request.GET.get("contact"):
+                kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
             if self.reply_id:
                 reply_message = Message.objects.get(id=self.reply_id)
                 if reply_message.can_reply_to(self.request.user):
