@@ -15,7 +15,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
-                    <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name }}</p>
+                    <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name_as_html }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5; font-weight: bold; text-decoration: underline;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     {% if documents %}
@@ -88,7 +88,7 @@ Merci de ne pas répondre directement à ce message.
 <html>
 <div style="font-family: Arial, sans-serif;">
     <p>Bonjour,<br>
-    Vous avez été {action} au suivi de l’évènement : <b>{obj.get_long_email_display_name()}</b>.</p>
+    Vous avez été {action} au suivi de l’évènement : {obj.get_long_email_display_name_as_html()}.</p>
 
     <p>
     Consulter la fiche dans Sèves : https://seves.beta.gouv.fr/{obj.get_absolute_url()}<br>
@@ -163,7 +163,7 @@ def notify_fin_de_suivi(object, structure):
     <html>
     <div style="font-family: Arial, sans-serif;">
         <p>Bonjour,</p>
-        <p>La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name()}</p>
+        <p>La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name_as_html()}</p>
         {_add_footer_html(object)}
     </div>
     </html>
@@ -196,7 +196,7 @@ def notify_message_deleted(message: Message):
     <html>
     <div style="font-family: Arial, sans-serif;">
         <p>Bonjour,<br>
-        Un élément du fil de suivi de l’évènement <b>{object.get_long_email_display_name()}</b> a été supprimé. </p>
+        Un élément du fil de suivi de l’évènement {object.get_long_email_display_name_as_html()} a été supprimé. </p>
         <p>{message.get_message_type_display()} - {message.title}</p>
         {_add_footer_html(object)}
     </div>
