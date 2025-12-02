@@ -236,7 +236,7 @@ class MessageCreateView(
                         {
                             "initial": {
                                 "title": f"[Rép] {reply_message.title}",
-                                "recipients": reply_message.sender,
+                                "recipients": reply_message.sender_structure.contact_set.get(),
                                 "content": reply_message.get_reply_intro_text(),
                             }
                         }

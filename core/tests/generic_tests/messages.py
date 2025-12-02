@@ -801,6 +801,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     sender = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     message = MessageFactory(content_object=object, message_type=Message.MESSAGE, sender=sender)
+    contact_sender_structure = ContactStructureFactory(structure=message.sender_structure)
 
     page.goto(f"{live_server.url}{message.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
@@ -818,12 +819,8 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
 
     expected_title = f"[Rép] {message.title}"
     expected_content = "Ma réponse"
-    expected_recipients = [
-        message.sender,
-    ]
-    expected_copies = [
-        contact,
-    ]
+    expected_recipients = [contact_sender_structure]
+    expected_copies = [contact]
 
     assert reply.title == expected_title, f"{reply.title=!r} != {expected_title=!r}"
     assert reply.content == expected_content, f"{reply.content=!r} != {expected_content=!r}"
