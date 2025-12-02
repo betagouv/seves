@@ -251,7 +251,7 @@ def test_can_udpate_etablissement_with_error_show_message(live_server, page, ass
         agrementInput.removeAttribute('pattern');
         agrementInput.value = "22"
     }""")
-    update_page.publish()
+    update_page.publish(wait_for=evenement.get_update_url())
     expect(
         update_page.page.get_by_text(
             "Erreur dans le formulaire établissement #1 : 'numero_agrement': 22 n'est pas un format valide.", exact=True

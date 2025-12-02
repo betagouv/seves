@@ -2,15 +2,11 @@
 {% load static %}
 {% load render_field dsfr_tags %}
 {% block extrahead %}
-    <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
 {% endblock %}
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/evenement_produit_form.mjs' %}"></script>
-    <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 

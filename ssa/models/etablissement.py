@@ -22,7 +22,15 @@ class PositionDossier(models.TextChoices):
 @reversion.register()
 class Etablissement(BaseEtablissement, models.Model):
     evenement_produit = models.ForeignKey(
-        "ssa.EvenementProduit", on_delete=models.PROTECT, related_name="etablissements"
+        "ssa.EvenementProduit", on_delete=models.PROTECT, related_name="etablissements", null=True, default=None
+    )
+
+    investigation_cas_humain = models.ForeignKey(
+        "ssa.EvenementInvestigationCasHumain",
+        on_delete=models.PROTECT,
+        related_name="etablissements",
+        null=True,
+        default=None,
     )
 
     numero_agrement = models.CharField(
@@ -53,11 +61,15 @@ class Etablissement(BaseEtablissement, models.Model):
 
     @property
     def position_dossier_css_class(self):
-        return Etablissement.get_position_dossier_css_class(self.position_dossier)
+        return self.get_position_dossier_css_class(self.position_dossier)
 
-
-@reversion.register()
-class InvestigationCasHumainsEtablissement(BaseEtablissement, models.Model):
-    investigation_cas_humain = models.ForeignKey(
-        "ssa.EvenementInvestigationCasHumain", on_delete=models.PROTECT, related_name="etablissements"
-    )
+    class Meta:
+        constraints = (
+            models.CheckConstraint(
+                condition=(
+                    models.Q(evenement_produit__isnull=False, investigation_cas_humain__isnull=True)
+                    | models.Q(evenement_produit__isnull=True, investigation_cas_humain__isnull=False)
+                ),
+                name="either_evenement_produit_or_investigation_cas_humain",
+            ),
+        )

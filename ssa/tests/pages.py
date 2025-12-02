@@ -3,7 +3,7 @@ import re
 from urllib.parse import quote
 
 from django.urls import reverse
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Locator, Page, expect
 
 from ssa.models import Etablissement
 
@@ -56,7 +56,108 @@ class WithTreeSelect:
             current_input = new_input
 
 
-class EvenementProduitFormPage(WithTreeSelect):
+class WithEtablissementMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    @property
+    def current_modal_address_field(self):
+        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
+
+    @property
+    def current_modal_raison_sociale_field(self):
+        return self.current_modal.locator('[id$="raison_sociale"]')
+
+    @property
+    def current_modal_numero_agrement_field(self):
+        return self.current_modal.locator('[id$="numero_agrement"]')
+
+    def _fill_etablissement(self, modal, etablissement: Etablissement):
+        self.force_siret(etablissement.siret)
+        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
+        modal.locator('[id$="-autre_identifiant"]').fill(etablissement.autre_identifiant)
+        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
+        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
+        modal.locator('[id$="-commune"]').fill(etablissement.commune)
+        modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
+        modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
+        modal.locator('[id$="-type_exploitant"]').fill(etablissement.type_exploitant)
+        modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
+        modal.locator('[id$="-numeros_resytal"]').fill(etablissement.numeros_resytal)
+
+    def close_etablissement_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def force_etablissement_adresse(self, adresse, mock_call=False):
+        if mock_call:
+
+            def handle(route):
+                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
+
+            self.page.route(
+                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                handle,
+            )
+
+        self.current_modal_address_field.click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(adresse)
+        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
+
+    def force_siret(self, siret):
+        call_count = {"count": 0}
+
+        def handle(route):
+            data = {"message": "Aucun élément trouvé"}
+            route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
+            call_count["count"] += 1
+
+        self.page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**", handle)
+
+        self.current_modal.locator('label[for="search-siret-input-"] ~ div.choices').click()
+        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+        self.page.locator("*:focus").fill(siret)
+        self.page.get_by_role("option", name=f"{siret} (Forcer la valeur)", exact=True).click()
+        assert call_count["count"] == 1
+
+    def add_etablissement_with_required_fields(self, etablissement: Etablissement):
+        modal = self.open_etablissement_modal()
+        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        self.close_etablissement_modal()
+
+    def open_etablissement_modal(self):
+        self.page.locator("#add-etablissement").click()
+        return self.current_modal
+
+    def add_etablissement_siren(self, value, full_value, choice_js_fill_from_element):
+        element = self.current_modal.locator("[id^='search-siret-input-']").locator("..")
+        choice_js_fill_from_element(self.page, element, value, full_value)
+
+    def add_etablissement(self, etablissement: Etablissement):
+        modal = self.open_etablissement_modal()
+        self._fill_etablissement(modal, etablissement)
+        self.close_etablissement_modal()
+
+    def open_edit_etablissement(self, index=0):
+        self.page.locator(".etablissement-edit-btn").nth(index).click()
+
+    def edit_etablissement_with_new_values(self, index, wanted_values: Etablissement):
+        self.open_edit_etablissement(index=index)
+        modal = self.current_modal
+        self._fill_etablissement(modal, wanted_values)
+        self.close_etablissement_modal()
+
+    def etablissement_card(self, index=0):
+        return self.page.locator(".etablissement-card").nth(index)
+
+    def delete_etablissement(self, index):
+        return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
+
+
+class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
@@ -94,25 +195,9 @@ class EvenementProduitFormPage(WithTreeSelect):
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
-        self.page.evaluate("""
-            () => {
-              const element = document.getElementById('etablissement-template').content.querySelector('[data-token=""]');
-              if (element) {
-                element.setAttribute('data-token', 'FAKE');
-              }
-            }
-        """)
 
     def navigate_update_page(self, evenement):
         self.page.goto(f"{self.base_url}{evenement.get_update_url()}")
-        self.page.evaluate("""
-            () => {
-              const element = document.getElementById('etablissement-template').content.querySelector('[data-token=""]');
-              if (element) {
-                element.setAttribute('data-token', 'FAKE');
-              }
-            }
-        """)
 
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
@@ -163,11 +248,16 @@ class EvenementProduitFormPage(WithTreeSelect):
             "treeitem", name=value, exact=True
         ).nth(0).click()
 
-    def submit_as_draft(self):
-        self.page.locator("#submit_draft").click()
+    def _submit(self, locator: Locator, *, wait_for=None):
+        wait_for = wait_for or reverse("ssa:evenement-produit-details", kwargs={"pk": "1"}).replace("/1/", "/*/")
+        locator.click()
+        self.page.wait_for_url(f"**{wait_for}")
 
-    def publish(self):
-        self.page.locator("#submit_publish").click()
+    def submit_as_draft(self, *, wait_for=None):
+        self._submit(self.page.locator("#submit_draft"), wait_for=wait_for)
+
+    def publish(self, *, wait_for=None):
+        self._submit(self.page.locator("#submit_publish"), wait_for=wait_for)
 
     def add_rappel_conso(self, numero):
         p1, p2, p3 = numero.split("-")
@@ -182,108 +272,9 @@ class EvenementProduitFormPage(WithTreeSelect):
         box = tag.bounding_box()
         self.page.mouse.click(box["x"] + box["width"] - 15, box["y"] - 5 + box["height"] / 2)
 
-    def add_etablissement_with_required_fields(self, etablissement: Etablissement):
-        modal = self.open_etablissement_modal()
-        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        self.close_etablissement_modal()
-
-    def open_etablissement_modal(self):
-        self.page.locator("#add-etablissement").click()
-        return self.current_modal
-
-    def add_etablissement_siren(self, value, full_value, choice_js_fill_from_element):
-        element = self.current_modal.locator("[id^='search-siret-input-']").locator("..")
-        choice_js_fill_from_element(self.page, element, value, full_value)
-
     @property
     def date_creation(self):
         return self.page.locator("#date-creation-input")
-
-    @property
-    def current_modal(self):
-        return self.page.locator(".fr-modal__body").locator("visible=true")
-
-    @property
-    def current_modal_address_field(self):
-        return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
-
-    @property
-    def current_modal_raison_sociale_field(self):
-        return self.current_modal.locator('[id$="raison_sociale"]')
-
-    @property
-    def current_modal_numero_agrement_field(self):
-        return self.current_modal.locator('[id$="numero_agrement"]')
-
-    def close_etablissement_modal(self):
-        self.current_modal.locator(".save-btn").click()
-        self.current_modal.wait_for(state="hidden", timeout=2_000)
-
-    def force_etablissement_adresse(self, adresse, mock_call=False):
-        if mock_call:
-
-            def handle(route):
-                route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
-
-            self.page.route(
-                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
-                handle,
-            )
-
-        self.current_modal_address_field.click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill(adresse)
-        self.page.get_by_role("option", name=f"{adresse} (Forcer la valeur)", exact=True).click()
-
-    def force_siret(self, siret):
-        call_count = {"count": 0}
-
-        def handle(route):
-            data = {"message": "Aucun élément trouvé"}
-            route.fulfill(status=404, content_type="application/json", body=json.dumps(data))
-            call_count["count"] += 1
-
-        self.page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**", handle)
-
-        self.current_modal.locator('label[for="search-siret-input-"] ~ div.choices').click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill(siret)
-        self.page.get_by_role("option", name=f"{siret} (Forcer la valeur)", exact=True).click()
-        assert call_count["count"] == 1
-
-    def _fill_etablissement(self, modal, etablissement: Etablissement):
-        self.force_siret(etablissement.siret)
-        modal.locator('[id$="-numero_agrement"]').fill(etablissement.numero_agrement)
-        modal.locator('[id$="-autre_identifiant"]').fill(etablissement.autre_identifiant)
-        modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
-        modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
-        self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
-        modal.locator('[id$="-commune"]').fill(etablissement.commune)
-        modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
-        modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
-        modal.locator('[id$="-type_exploitant"]').fill(etablissement.type_exploitant)
-        modal.locator('[id$="-position_dossier"]').select_option(etablissement.position_dossier)
-        modal.locator('[id$="-numeros_resytal"]').fill(etablissement.numeros_resytal)
-
-    def add_etablissement(self, etablissement: Etablissement):
-        modal = self.open_etablissement_modal()
-        self._fill_etablissement(modal, etablissement)
-        self.close_etablissement_modal()
-
-    def open_edit_etablissement(self, index=0):
-        self.page.locator(".etablissement-edit-btn").nth(index).click()
-
-    def edit_etablissement_with_new_values(self, index, wanted_values: Etablissement):
-        self.open_edit_etablissement(index=index)
-        modal = self.current_modal
-        self._fill_etablissement(modal, wanted_values)
-        self.close_etablissement_modal()
-
-    def etablissement_card(self, index=0):
-        return self.page.locator(".etablissement-card").nth(index)
-
-    def delete_etablissement(self, index):
-        return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
     def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
@@ -564,8 +555,18 @@ class EvenementProduitListPage(WithTreeSelect):
         choice_js_fill_from_element(self.page, element, value, value)
 
 
-class InvestigationCasHumainFormPage(WithTreeSelect):
-    fields = ("type_evenement", "description")
+class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
+    fields = (
+        "type_evenement",
+        "description",
+        "date_reception",
+        "source",
+        "precision_danger",
+        "evaluation",
+        "reference_souches",
+        "reference_clusters",
+        "numero_rasff",
+    )
 
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -587,3 +588,13 @@ class InvestigationCasHumainFormPage(WithTreeSelect):
     def publish(self):
         self.page.locator('button[value="publish"]').click()
         self.page.wait_for_url(f"**{reverse('ssa:evenement-produit-liste')}")
+
+    def display_and_get_categorie_danger(self):
+        result = self.page.locator("#categorie-danger")
+        result.evaluate("el => el.scrollIntoView()")
+        return result
+
+    def set_categorie_danger(self, evenement_produit, clear_input=False):
+        self.display_and_get_categorie_danger()
+        label = evenement_produit.get_categorie_danger_display()
+        self._set_treeselect_option("categorie-danger", label, clear_input)

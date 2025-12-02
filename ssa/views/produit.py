@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -29,7 +30,7 @@ from core.mixins import (
 from core.models import Export
 from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
-from ssa.formsets import EtablissementFormSet
+from ssa.formsets import EtablissementFormSet, InvestigationCasHumainsEtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
@@ -97,9 +98,11 @@ class EvenementProduitCreateView(
         self.object = None
         return super().form_invalid(form)
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["formset"].media
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
         return context
 
@@ -172,11 +175,13 @@ class EvenementUpdateView(
         kwargs["user"] = self.request.user
         return kwargs
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["formset"].media
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
         formset = EtablissementFormSet(instance=self.get_object(), queryset=queryset)
-        context["empty_form"] = formset.empty_form
         context["formset"] = formset
         return context
 
@@ -309,12 +314,51 @@ class InvestigationCasHumainCreateView(
     form_class = InvestigationCasHumainForm
     success_url = reverse_lazy("ssa:evenement-produit-liste")
 
+    @property
+    def etablissement_formset(self):
+        if not hasattr(self, "_etablissement_formset"):
+            self._etablissement_formset = InvestigationCasHumainsEtablissementFormSet(**super().get_form_kwargs())
+        return self._etablissement_formset
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs, etablissement_formset=self.etablissement_formset)
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["etablissement_formset"].media
+
     def form_valid(self, form):
         self.object = form.save()
+        self.etablissement_formset.instance = self.object
+        self.etablissement_formset.save()
         messages.success(self.request, "La fiche d'investigation cas humain a été créée avec succès.")
         return super().form_valid(form)
+
+    def formset_invalid(self):
+        self.object = None
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Etablissement",
+        )
+        for i, form in enumerate(self.etablissement_formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(
+                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
+                        )
+
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        if not self.etablissement_formset.is_valid():
+            return self.formset_invalid()
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)

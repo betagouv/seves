@@ -1,0 +1,14 @@
+{% load dsfr_tags %}
+
+{% for field in form %}
+    <div class="fr-fieldset__element">{% dsfr_form_field field %}</div>
+    {% if field.name == "type_exploitant" %}
+        <label for="search-siret-input-">N° SIRET</label>
+        <select
+            class="fr-input"
+            type="search"
+            id="search-siret-input-"
+            data-communes-api="{{ COMMUNES_API }}"
+        ></select>
+    {% endif %}
+{% endfor %}

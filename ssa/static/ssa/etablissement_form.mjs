@@ -1,15 +1,25 @@
 import {setUpAddressChoices} from "BanAutocomplete";
 import {setUpSiretChoices} from "siret";
+import {formIsValid, removeRequired} from "Forms"
 
 let modalEtablissementHTMLContent = {}
 
+const prefix = document.querySelector("#etablissement-template").dataset.prefix
+
 document.addEventListener('DOMContentLoaded', () => {
+    function getPrefix(id) {
+        return prefix.replace(/__prefix__/g, id)
+    }
+
     function getNextIdToUse() {
-        let num = 0
-        while (document.getElementById(`id_etablissements-${num}-raison_sociale`)) {
-            num++
-        }
-        return num
+        const ids = document.querySelectorAll("dialog[data-form-prefix]").values().map(el => {
+            try {
+                return parseInt(el.dataset.formPrefix.match(/\d+/g)[0], 10)
+            } catch {
+                return Number.MIN_VALUE
+            }
+        });
+        return Math.max(...ids, -1) + 1
     }
 
     function setupAdresseField(modal){
@@ -76,14 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showEtablissementModal() {
         const nextIdToUse = getNextIdToUse()
+        const prefix = getPrefix(nextIdToUse)
 
         let template = document.getElementById('etablissement-template').innerHTML
         template = template.replace(/__prefix__/g, nextIdToUse.toString())
         document.getElementById("main-form").insertAdjacentHTML('beforeend', template)
 
-        const modal = document.getElementById("fr-modal-etablissement" + nextIdToUse.toString())
+        const modal = document.getElementById(`fr-modal-etablissement-${prefix}`)
         modal.querySelector('[id$=raison_sociale]').required = true
-        modal.querySelector('.save-btn').dataset.etablissementId = nextIdToUse
+        modal.querySelector('.save-btn').dataset.etablissementPrefix = prefix
 
         setTimeout(() => {
             dsfr(modal).modal.disclose()
@@ -112,9 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getEtablissementCard(baseCard, currentModal, currentID){
-
         if (!!baseCard.querySelector(".etablissement-card")){
-            baseCard.querySelector(".etablissement-card").id = `etablissement-card-${currentID}`
+            baseCard.querySelector(".etablissement-card").id = `etablissement-card-${getPrefix(currentID)}`
         }
         baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
 
@@ -164,21 +174,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function deleteEtablissement(etablissementID){
-        const etablissementModal = document.getElementById(`fr-modal-etablissement${etablissementID}`)
+        const prefix = getPrefix(etablissementID)
+        const etablissementModal = document.getElementById(`fr-modal-etablissement-${prefix}`)
         const exitingEtablissement = !!etablissementModal.querySelector('[id$=DELETE]')
         if(exitingEtablissement){
             etablissementModal.querySelector('[id$=DELETE]').checked = true
         } else {
             etablissementModal.remove()
         }
-        document.getElementById(`etablissement-card-${etablissementID}`).remove()
-        document.querySelector(`[aria-controls="fr-modal-etablissement${etablissementID}"]`).remove()
+        document.getElementById(`etablissement-card-${prefix}`).remove()
+        document.querySelector(`[aria-controls="fr-modal-etablissement-${prefix}"]`).remove()
     }
 
 
     function initExistingEtablissements(){
         document.querySelectorAll('[id^="fr-modal-etablissement"]').forEach(element =>{
-            const etablissementId = element.id.replace("fr-modal-etablissement", "")
+            const etablissementId = element.dataset.formPrefix.replace(getPrefix(""), "")
             getAndAddCardToList(element, etablissementId)
             setupEtablisementModal(element)
             element.querySelector('[id$=raison_sociale]').required = true
@@ -186,15 +197,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getAndAddCardToList(currentModal, etablissementId){
+        const prefix = getPrefix(etablissementId)
         const clone = document.getElementById('etablissement-card-template').content.cloneNode(true);
         const card = getEtablissementCard(clone, currentModal, etablissementId)
         card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
-        card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement${etablissementId}`)
+        card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
         card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
-            modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement${etablissementId} .fr-modal__content`).cloneNode(true)
+            modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement-${prefix} .fr-modal__content`).cloneNode(true)
         })
         document.getElementById("etablissement-card-container").appendChild(card);
-
+        const totalForm = document.querySelector('#etablissement-management-form [name$="TOTAL_FORMS"]')
+        totalForm.value = parseInt(totalForm.value, 10) + 1
     }
 
     function submitFormAndAddEtablissementCard(event) {
@@ -203,8 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return
         }
 
-        const etablissementId = event.target.dataset.etablissementId
-        const existingCard = document.getElementById(`etablissement-card-${etablissementId}`)
+        const prefix = event.target.dataset.etablissementPrefix
+        const etablissementId = prefix.replace(getPrefix(""), "")
+        const existingCard = document.getElementById(`etablissement-card-${prefix}`)
 
         if(!existingCard){
             getAndAddCardToList(currentModal, etablissementId)

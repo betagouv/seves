@@ -225,7 +225,6 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     creation_page.add_etablissement(etablissement_2)
     creation_page.add_etablissement(etablissement_3)
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     assert Etablissement.objects.count() == 3
     etablissements = Etablissement.objects.all()
@@ -254,7 +253,6 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, ensure_d
     creation_page.close_etablissement_modal()
 
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert str(etablissement.departement) == "02 - Aisne"
@@ -280,7 +278,6 @@ def test_can_add_etablissement_with_required_fields_only(live_server, page: Page
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement_with_required_fields(etablissement)
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert_models_are_equal(etablissement, etablissement, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
@@ -302,7 +299,6 @@ def test_can_add_and_delete_etablissements(live_server, page: Page, ensure_depar
     creation_page.add_etablissement(etablissement_3)
     creation_page.delete_etablissement(1)
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     assert Etablissement.objects.count() == 2
     etablissements = Etablissement.objects.all()
@@ -320,7 +316,6 @@ def test_can_add_free_links(live_server, page: Page, choice_js_fill):
     creation_page.add_free_link(evenement_1.numero, choice_js_fill)
     creation_page.add_free_link(evenement_2.numero, choice_js_fill)
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     evenement = EvenementProduit.objects.exclude(id__in=[evenement_1.id, evenement_2.id]).get()
     assert LienLibre.objects.count() == 2
@@ -338,7 +333,6 @@ def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_
     creation_page.fill_required_fields(evenement)
     creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Enregistrement simple : ")
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     evenement = EvenementProduit.objects.get()
     lien = LienLibre.objects.get()
@@ -354,7 +348,6 @@ def test_can_add_free_links_to_investigation_tiac(live_server, page: Page, choic
     creation_page.fill_required_fields(evenement)
     creation_page.add_free_link(investigation.numero, choice_js_fill, link_label="Investigation de tiac : ")
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     evenement = EvenementProduit.objects.get()
     lien = LienLibre.objects.get()
@@ -414,7 +407,6 @@ def test_can_create_etablissement_with_ban_auto_complete(
     assert call_count["count"] == 1
     creation_page.close_etablissement_modal()
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.adresse_lieu_dit == "251 Rue de Vaugirard"
@@ -460,7 +452,6 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     assert call_count["count"] == 1
     creation_page.close_etablissement_modal()
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.adresse_lieu_dit == "Mon addresse qui n'existe pas"
@@ -583,7 +574,6 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
         creation_page.close_etablissement_modal()
         creation_page.submit_as_draft()
-        creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
@@ -635,7 +625,6 @@ def test_can_create_etablissement_with_force_siret_value(
     creation_page.current_modal_raison_sociale_field.fill("Foo")
     creation_page.close_etablissement_modal()
     creation_page.submit_as_draft()
-    creation_page.page.wait_for_timeout(600)
 
     etablissement = Etablissement.objects.get()
     assert etablissement.siret == "12312312312312"

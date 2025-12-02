@@ -57,6 +57,10 @@
     border-left: 1px solid var(--border-default-grey);
 }
 
+.fr-block {
+    display: block !important;
+}
+
 .fr-flex {
     display: flex !important;
     flex-direction: column;
