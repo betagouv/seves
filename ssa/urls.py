@@ -21,7 +21,7 @@ urlpatterns = [
         name="evenement-produit-creation",
     ),
     path(
-        "evenement-produit/<str:numero>/",
+        "evenement-produit/<int:pk>/",
         EvenementProduitDetailView.as_view(),
         name="evenement-produit-details",
     ),
@@ -41,7 +41,7 @@ urlpatterns = [
         name="export-evenement-produit",
     ),
     path(
-        "export/evenement-produit/<str:numero>/document/",
+        "export/evenement-produit/<int:pk>/document/",
         EvenementProduitDocumentExportView.as_view(),
         name="export-evenement-produit-document",
     ),
