@@ -531,7 +531,7 @@ class WithDocumentPermissionMixin(BasePermissionMixin):
         return self._user_can_interact(user)
 
     def can_download_document(self, user):
-        return self._user_can_interact(user)
+        return self.can_user_access(user)
 
 
 class WithContactPermissionMixin(BasePermissionMixin):
