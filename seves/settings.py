@@ -97,7 +97,7 @@ MIDDLEWARE = [
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "seves.middlewares.HomeRedirectMiddleware",
     "reversion.middleware.RevisionMiddleware",
-    "csp.middleware.CSPMiddleware",
+    "seves.middlewares.SevesCSPMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
