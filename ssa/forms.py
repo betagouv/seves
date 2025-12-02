@@ -10,9 +10,9 @@ from dsfr.forms import DsfrBaseForm
 from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
 from core.form_mixins import DSFRForm, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm, BaseMessageForm
-from core.mixins import WithEtatMixin
+from core.mixins import WithEtatMixin, WithCommonContextVars
 from core.models import Contact, Message
-from ssa.constants import CategorieDanger, CategorieProduit, Source, TypeEvenement
+from ssa.constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, SourceInvestigationCasHumain
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import (
     ActionEngagees,
@@ -39,7 +39,6 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         ),
         label="N° RASFF/AAC",
     )
-    source = SEVESChoiceField(choices=Source.choices, required=False)
     description = forms.CharField(
         required=True,
         widget=forms.Textarea(
@@ -88,6 +87,8 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
+    source = SEVESChoiceField(choices=Source.choices, required=False)
+
     aliments_animaux = forms.ChoiceField(
         required=False,
         choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
@@ -201,7 +202,9 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
         }
 
 
-class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
+class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):
+    template_name = "ssa/forms/etablissement.html"
+
     numero_agrement = forms.CharField(
         required=False,
         label="Numéro d'agrément",
@@ -221,8 +224,6 @@ class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
 
-    manual_render_fields = ["DELETE", "position_dossier", "type_exploitant"]
-
     class Meta:
         model = Etablissement
         fields = [
@@ -240,6 +241,8 @@ class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
             "position_dossier",
             "numeros_resytal",
         ]
+
+        widgets = {"DELETE": forms.HiddenInput()}
 
 
 class MessageForm(BaseMessageForm):
@@ -285,6 +288,8 @@ class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm)
 
 class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.ModelForm):
     template_name = "ssa/forms/investigation_cas_humain.html"
+
+    source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=False)
 
     @property
     def media(self):

@@ -103,13 +103,19 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
-    evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
+    investigation_cas_humain = None
 
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     type_exploitant = factory.Faker("sentence", nb_words=2)
     numero_agrement = factory.Faker("numerify", text="###.##.###")
 
     numeros_resytal = factory.Faker("numerify", text="######")
+
+    @factory.lazy_attribute
+    def evenement_produit(self):
+        if not self.investigation_cas_humain:
+            return EvenementProduitFactory()
+        return None
 
 
 class InvestigationCasHumainFactory(DjangoModelFactory):

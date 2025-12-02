@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-    <form class="fr-container--fluid fr-background-alt--grey" method="post">
+    <form id="main-form" class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
         <main class="main-container">
             <div class="fr-grid-row">
@@ -25,6 +25,19 @@
                 </div>
             </div>
             {{ form }}
+
+            <fieldset class="fr-block fr-fieldset form-fieldset fr-mt-4v">
+                <legend class="fr-fieldset__legend fr-h3">Établissements</legend>
+                <button
+                    type="button"
+                    id="add-etablissement"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                >Ajouter
+                </button>
+                <div>
+                    {{ etablissement_formset }}
+                </div>
+            </fieldset>
         </main>
     </form>
 {% endblock %}
