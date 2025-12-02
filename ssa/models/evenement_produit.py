@@ -302,6 +302,9 @@ class EvenementProduit(
     def get_long_email_display_name(self):
         return f"{self.get_short_email_display_name()} (Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
 
+    def get_long_email_display_name_as_html(self):
+        return f"<b>{self.get_short_email_display_name()}</b> (Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
+
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,

@@ -212,6 +212,9 @@ class Evenement(
     def get_long_email_display_name(self):
         return f"Événement {self.numero} (ON: {self.organisme_nuisible.libelle_court})"
 
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Événement {self.numero}</b> (ON: {self.organisme_nuisible.libelle_court})"
+
     @property
     def limit_contacts_to_user_from_app(self):
         return "sv"

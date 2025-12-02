@@ -188,6 +188,9 @@ class EvenementSimple(
     def get_long_email_display_name(self):
         return f"Enregistrement simple {self.numero}"
 
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Enregistrement simple {self.numero}</b>"
+
 
 class Evaluation(models.TextChoices):
     SATISFAISANTE = "satisfaisante", "A - Maîtrise des risques satisfaisante"
@@ -459,9 +462,18 @@ class InvestigationTiac(
         return f"Investigation de TIAC {self.numero}"
 
     def get_long_email_display_name(self):
-        raisons_sociales = ", ".join([e.raison_sociale for e in self.etablissements.all()])
-        communes = ", ".join([e.commune for e in self.etablissements.all() if e.commune])
-        return f"Investigation de TIAC {self.numero} (Créateur : {self.createur} / Etablissement(s) : {raisons_sociales or 'Vide'} / Commune(s) : {communes or 'Vide'})"
+        return f"Investigation de TIAC {self.numero} (Créateur : {self.createur} / Etablissement(s) : {self.raisons_sociales_display} / Commune(s) : {self.communes_display})"
+
+    @property
+    def communes_display(self):
+        return ", ".join([e.commune for e in self.etablissements.all() if e.commune])
+
+    @property
+    def raisons_sociales_display(self):
+        return ", ".join([e.raison_sociale for e in self.etablissements.all()])
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Investigation de TIAC {self.numero}</b> (Créateur : {self.createur} / Etablissement(s) : {self.raisons_sociales_display} / Commune(s) : {self.communes_display})"
 
     class Meta:
         constraints = (
