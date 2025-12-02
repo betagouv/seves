@@ -616,14 +616,14 @@ def test_cant_forge_delete_document_if_evenement_is_cloture(client):
     assert evenement.documents.filter(is_deleted=False).count() == 1
 
 
-def test_cant_see_download_document_btn_if_evenement_is_cloture(live_server, page: Page):
+def test_can_see_download_document_btn_even_if_evenement_is_cloture(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     document = DocumentFactory(content_object=evenement)
     evenement.documents.set([document])
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
-    expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
+    expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
 
 
 def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
