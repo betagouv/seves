@@ -157,7 +157,12 @@ class WithEtablissementMixin:
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
 
-class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
+class WithFreeLinksMixin:
+    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
+
+
+class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin, WithFreeLinksMixin):
     info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
@@ -275,9 +280,6 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     @property
     def date_creation(self):
         return self.page.locator("#date-creation-input")
-
-    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
-        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
     @property
     def error_messages(self):
@@ -555,7 +557,7 @@ class EvenementProduitListPage(WithTreeSelect):
         choice_js_fill_from_element(self.page, element, value, value)
 
 
-class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
+class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin, WithFreeLinksMixin):
     fields = (
         "type_evenement",
         "description",

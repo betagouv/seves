@@ -4,6 +4,7 @@ from django.db import models, transaction
 from core.mixins import WithFreeLinkIdsMixin, AllowModificationMixin
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
+from ssa.managers import InvestigationCasHumainManager
 from ssa.models.mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin, WithSharedNumeroMixin
 
 
@@ -20,6 +21,15 @@ class EvenementInvestigationCasHumain(
     source = models.CharField(
         max_length=100, choices=SourceInvestigationCasHumain.choices, verbose_name="Source", blank=True
     )
+
+    objects = InvestigationCasHumainManager()
+
+    @property
+    def numero(self):
+        return f"A-{self.numero_annee}.{self.numero_evenement}"
+
+    def __str__(self):
+        return self.numero
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

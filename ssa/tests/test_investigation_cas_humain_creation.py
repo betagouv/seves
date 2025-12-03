@@ -7,11 +7,13 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import Departement
+from core.mixins import WithEtatMixin
+from core.models import Departement, LienLibre
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
 from ssa.views import FindNumeroAgrementView
+from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",
@@ -439,3 +441,62 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     )
     departement = page.locator(".fr-modal__content").locator("visible=true").locator('[id$="-departement"]')
     expect(departement).to_have_value("75")
+
+
+def test_can_add_free_links(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationCasHumainFactory.build()
+    evenement_1, evenement_2 = InvestigationCasHumainFactory.create_batch(2, etat=WithEtatMixin.Etat.EN_COURS)
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(evenement_1.numero, choice_js_fill, link_label="Investigation de cas humain : ")
+    creation_page.add_free_link(evenement_2.numero, choice_js_fill, link_label="Investigation de cas humain : ")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.exclude(id__in=[evenement_1.id, evenement_2.id]).get()
+    assert LienLibre.objects.count() == 2
+
+    assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
+    expected = sorted([evenement_1.numero, evenement_2.numero])
+    assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+def test_can_add_free_links_to_evenement_simple(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationCasHumainFactory.build()
+    evenement_simple = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(evenement_simple.numero, choice_js_fill, link_label="Enregistrement simple : ")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    lien = LienLibre.objects.get()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == evenement_simple
+
+
+def test_can_add_free_links_to_investigation_tiac(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationCasHumainFactory.build()
+    investigation = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_free_link(investigation.numero, choice_js_fill, link_label="Investigation de tiac : ")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    lien = LienLibre.objects.get()
+    assert lien.related_object_1 == evenement
+    assert lien.related_object_2 == investigation
+
+
+def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_js_cant_pick):
+    evenement = InvestigationCasHumainFactory()
+    evenement_1 = InvestigationCasHumainFactory(etat=WithEtatMixin.Etat.BROUILLON)
+
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    numero = "Événement produit : " + str(evenement_1.numero)
+    choice_js_cant_pick(creation_page.page, "#liens-libre .choices", numero, numero)

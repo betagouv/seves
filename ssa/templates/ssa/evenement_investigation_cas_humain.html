@@ -38,6 +38,12 @@
                     {{ etablissement_formset }}
                 </div>
             </fieldset>
+
+            <fieldset id="liens-libre" class="fr-block fr-fieldset form-fieldset fr-mt-4v">
+                <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
+
+                {% include "ssa/_free_links_block.html" %}
+            </fieldset>
         </main>
     </form>
 {% endblock %}

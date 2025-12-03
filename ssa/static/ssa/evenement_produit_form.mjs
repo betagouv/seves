@@ -1,5 +1,4 @@
 import choicesDefaults from "choicesDefaults"
-import {setUpFreeLinks} from "/static/core/free_links.js";
 import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,8 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     handleNoticeProduitDisplay(options, selectedValue)
   }
 
-
-  setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById('free-links-id'))
   new Choices(document.getElementById("id_quantification_unite"), {
     ...choicesDefaults,
     position: 'bottom',
