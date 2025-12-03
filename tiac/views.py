@@ -51,6 +51,7 @@ from .formsets import (
     InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
 )
+from .notifications import notify_transfer, notify_transformation
 
 
 class EvenementSimpleManipulationMixin(
@@ -258,6 +259,7 @@ class EvenementSimpleTransferView(UpdateView):
         response = super().form_valid(form)
         messages.success(self.request, f"L’évènement a bien été transféré à la {self.object.transfered_to}")
         self.object.contacts.add(self.object.transfered_to.contact_set.get())
+        notify_transfer(self.object)
         return response
 
 
@@ -307,6 +309,7 @@ class EvenementTransformView(UpdateView):
         self.object.cloturer()
         self._copy_etablissements()
         self._copy_and_add_free_links()
+        notify_transformation(self.object, self.investigation)
         messages.success(self.request, "L'événement a bien été passé en investigation de TIAC.")
         return HttpResponseRedirect(reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.investigation.pk}))
 

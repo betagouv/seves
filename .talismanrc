@@ -99,4 +99,6 @@ fileignoreconfig:
   checksum: 5159796f7b12df27546e95a32fa6d591d607fd2fee496179607ca48ac31b3172
 - filename: core/migrations/0042_customrevisionmetadata.py
   checksum: 54ee3c43e5ef8d5a10f3acb3ff6842c803074d2e60dfc0652617e83fd61e8a16
+- filename: tiac/notifications.py
+  checksum: 13f8fd8dff11347c5296f2f9df01263a432cd30896480a06de6a1fbdaa37bd46
 version: "1.0"
