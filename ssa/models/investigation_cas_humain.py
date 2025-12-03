@@ -1,5 +1,6 @@
 import reversion
 from django.db import models, transaction
+from django.urls import reverse
 
 from core.mixins import WithFreeLinkIdsMixin, AllowModificationMixin
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -30,6 +31,9 @@ class EvenementInvestigationCasHumain(
 
     def __str__(self):
         return self.numero
+
+    def get_update_url(self):
+        return reverse("ssa:investigation-cas-humain-update", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

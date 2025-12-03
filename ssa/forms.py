@@ -242,8 +242,6 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
             "numeros_resytal",
         ]
 
-        widgets = {"DELETE": forms.HiddenInput()}
-
 
 class MessageForm(BaseMessageForm):
     recipients_limited_recipients = ContactModelMultipleChoiceField(

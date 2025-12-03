@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const etablissementModal = document.getElementById(`fr-modal-etablissement-${prefix}`)
         const exitingEtablissement = !!etablissementModal.querySelector('[id$=DELETE]')
         if(exitingEtablissement){
-            etablissementModal.querySelector('[id$=DELETE]').checked = true
+            etablissementModal.querySelector('[id$=DELETE]').value = "on"
         } else {
             etablissementModal.remove()
         }

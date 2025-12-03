@@ -157,12 +157,7 @@ class WithEtablissementMixin:
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
 
-class WithFreeLinksMixin:
-    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
-        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
-
-
-class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin, WithFreeLinksMixin):
+class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
@@ -252,6 +247,9 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin, WithFreeL
         self.page.locator(".choices__list--dropdown .choices__list").get_by_role(
             "treeitem", name=value, exact=True
         ).nth(0).click()
+
+    def add_free_link(self, numero, choice_js_fill, link_label="Événement produit : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))
 
     def _submit(self, locator: Locator, *, wait_for=None):
         wait_for = wait_for or reverse("ssa:evenement-produit-details", kwargs={"pk": "1"}).replace("/1/", "/*/")
@@ -557,7 +555,7 @@ class EvenementProduitListPage(WithTreeSelect):
         choice_js_fill_from_element(self.page, element, value, value)
 
 
-class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin, WithFreeLinksMixin):
+class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     fields = (
         "type_evenement",
         "description",
@@ -579,17 +577,23 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin, Wit
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-creation')}")
 
+    def navigate_update_page(self, evenement):
+        self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-update', kwargs={'pk': evenement.pk})}")
+
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
         self.description.fill(evenement_produit.description)
 
-    def submit_as_draft(self):
-        self.page.locator('button[value="draft"]').click()
-        self.page.wait_for_url(f"**{reverse('ssa:evenement-produit-liste')}")
+    def _submit(self, locator: Locator, *, wait_for=None):
+        wait_for = wait_for or reverse("ssa:evenement-produit-liste")
+        locator.click()
+        self.page.wait_for_url(f"**{wait_for}")
 
-    def publish(self):
-        self.page.locator('button[value="publish"]').click()
-        self.page.wait_for_url(f"**{reverse('ssa:evenement-produit-liste')}")
+    def submit_as_draft(self, *, wait_for=None):
+        self._submit(self.page.locator('button[value="draft"]'), wait_for=wait_for)
+
+    def publish(self, *, wait_for=None):
+        self._submit(self.page.locator('button[value="publish"]'), wait_for=wait_for)
 
     def display_and_get_categorie_danger(self):
         result = self.page.locator("#categorie-danger")
@@ -600,3 +604,6 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin, Wit
         self.display_and_get_categorie_danger()
         label = evenement_produit.get_categorie_danger_display()
         self._set_treeselect_option("categorie-danger", label, clear_input)
+
+    def add_free_link(self, numero, choice_js_fill, link_label="Investigation de cas humain : "):
+        choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))

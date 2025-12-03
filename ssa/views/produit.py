@@ -31,7 +31,7 @@ from core.models import Export
 from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
 from ssa.formsets import EtablissementFormSet, InvestigationCasHumainsEtablissementFormSet
-from ssa.models import EvenementProduit, Etablissement
+from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCasHumain
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
@@ -313,6 +313,7 @@ class InvestigationCasHumainCreateView(
     template_name = "ssa/evenement_investigation_cas_humain.html"
     form_class = InvestigationCasHumainForm
     success_url = reverse_lazy("ssa:evenement-produit-liste")
+    success_message = "La fiche d'investigation cas humain a été créée avec succès."
 
     @property
     def etablissement_formset(self):
@@ -335,7 +336,7 @@ class InvestigationCasHumainCreateView(
         self.object = form.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
-        messages.success(self.request, "La fiche d'investigation cas humain a été créée avec succès.")
+        messages.success(self.request, self.success_message)
         return super().form_valid(form)
 
     def formset_invalid(self):
@@ -362,3 +363,20 @@ class InvestigationCasHumainCreateView(
         if not form.is_valid():
             return self.form_invalid(form)
         return self.form_valid(form)
+
+
+class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateView):
+    success_message = "La fiche d'investigation cas humain a été mise à jour avec succès."
+
+    @property
+    def object(self):
+        if not hasattr(self, "_object"):
+            self._object = self.get_object()
+        return self._object
+
+    @object.setter
+    def object(self, value):
+        self._object = value
+
+    def get_queryset(self):
+        return EvenementInvestigationCasHumain.objects.with_departement_prefetched()

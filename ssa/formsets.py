@@ -1,4 +1,6 @@
+from django import forms
 from django.forms import Media, inlineformset_factory, BaseInlineFormSet
+from django.forms.formsets import DELETION_FIELD_NAME
 
 from core.form_mixins import js_module
 from ssa.forms import EtablissementForm
@@ -15,6 +17,11 @@ class EtablissementBaseFormSet(BaseInlineFormSet):
             js=(js_module("ssa/etablissement_form.mjs"),),
             css={"all": ("core/_etablissement_card.css", "ssa/_etablissement_card.css")},
         )
+
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if DELETION_FIELD_NAME in form.fields:
+            form.fields[DELETION_FIELD_NAME].widget = forms.HiddenInput()
 
 
 EtablissementFormSet = inlineformset_factory(

@@ -11,6 +11,7 @@ from .views.produit import (
     EvenementProduitExportView,
     EvenementProduitDocumentExportView,
     InvestigationCasHumainCreateView,
+    InvestigationCasHumainUpdateView,
 )
 
 app_name = "ssa"
@@ -54,5 +55,10 @@ urlpatterns = [
         "investigation-cas-humain/creation",
         InvestigationCasHumainCreateView.as_view(),
         name="investigation-cas-humain-creation",
+    ),
+    path(
+        "investigation-cas-humain/<int:pk>/modification",
+        InvestigationCasHumainUpdateView.as_view(),
+        name="investigation-cas-humain-update",
     ),
 ]
