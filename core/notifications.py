@@ -1,8 +1,9 @@
+from django.contrib.contenttypes.models import ContentType
 from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact, Export
+from core.models import Message, Contact, Export, FinSuiviContact
 from django.conf import settings
 
 
@@ -47,6 +48,64 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
     )
 
 
+def _filter_contacts_in_fin_de_suivi(recipients, object):
+    content_type = ContentType.objects.get_for_model(object)
+
+    # Remove structure in fin de suivi
+    emails_to_exclude = set(
+        FinSuiviContact.objects.filter(content_type=content_type, object_id=object.id).values_list(
+            "contact__email", flat=True
+        )
+    )
+
+    # Remove agent in structure in fin de suivi
+    emails_to_exclude.update(
+        Contact.objects.filter(
+            email__in=recipients,
+            agent__isnull=False,
+            agent__structure__contact__finsuivicontact__content_type=content_type,
+            agent__structure__contact__finsuivicontact__object_id=object.id,
+        ).values_list("email", flat=True)
+    )
+
+    return [r for r in recipients if r not in emails_to_exclude]
+
+
+def send_as_seves(*, recipients, subject, message, html_message, object=None):
+    if object:
+        recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
+        suffix_html = f"""<p>
+            Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a>.
+            <br>Merci de ne pas répondre directement à ce message.</p>"""
+        suffix = f"""Consulter la fiche dans Sèves : {settings.ROOT_URL}{object.get_absolute_url()}
+        Merci de ne pas répondre directement à ce message."""
+    else:
+        suffix_html = "<p>Merci de ne pas répondre directement à ce message.</p>"
+        suffix = "Merci de ne pas répondre directement à ce message."
+
+    html = f"""<!DOCTYPE html>
+        <html>
+        <div style="font-family: Arial, sans-serif;">
+            {html_message}
+            {suffix_html}
+        </div>
+        </html>
+        """
+
+    message = f"""
+        {message}
+
+        {suffix}
+    """
+
+    send(
+        recipients=recipients,
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {subject}",
+        html_message=html,
+        message=message,
+    )
+
+
 def notify_message(message_obj: Message):
     if message_obj.is_draft:
         return
@@ -73,39 +132,25 @@ def notify_message(message_obj: Message):
 def notify_contact_agent_added_or_removed(contact: Contact, obj, added):
     action = "ajouté" if added else "retiré"
     subject = "Ajout aux contacts" if added else "Retrait des contacts"
-    send(
+    send_as_seves(
+        object=obj,
         recipients=[contact.email],
-        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {obj.get_short_email_display_name()} - {subject}",
+        subject=f"{obj.get_short_email_display_name()} - {subject}",
         message=f"""
 Bonjour,
 Vous avez été {action} au suivi de l’évènement : {obj.get_long_email_display_name()}
-
-Consulter la fiche dans Sèves : https://seves.beta.gouv.fr/{obj.get_absolute_url()}
-Merci de ne pas répondre directement à ce message.
         """,
         html_message=f"""
-<!DOCTYPE html>
-<html>
-<div style="font-family: Arial, sans-serif;">
     <p>Bonjour,<br>
     Vous avez été {action} au suivi de l’évènement : {obj.get_long_email_display_name_as_html()}.</p>
-
-    <p>
-    Consulter la fiche dans Sèves : https://seves.beta.gouv.fr/{obj.get_absolute_url()}<br>
-    Merci de ne pas répondre directement à ce message.
-    </p>
-
-    <p>Consulter la fiche dans Sèves : <a href="https://seves.beta.gouv.fr{obj.get_absolute_url()}">https://seves.beta.gouv.fr{obj.get_absolute_url()}</a>.<br>Merci de ne pas répondre directement à ce message.</p>
-</div>
-</html>
-        """,
+    """,
     )
 
 
 def notify_export_is_ready(export: Export):
-    send(
+    send_as_seves(
         recipients=[export.user.email],
-        subject="[Sèves] Votre export est prêt",
+        subject="Votre export est prêt",
         message=f"""
 Bonjour,
 
@@ -114,59 +159,30 @@ L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fic
 Attention, le lien n'est valable que durant 1 heure.
 
 Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email support@seves.beta.gouv.fr.
-
-Merci de ne pas répondre directement à ce message.
         """,
         html_message=f"""
-<!DOCTYPE html>
-<html>
-<div style="font-family: Arial, sans-serif;">
     <p>Bonjour,<br>
     L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est&nbsp;: <a href="{export.file.url}">{export.file.url}</a>.</p>
     <p>Attention, le lien n'est valable que durant 1 heure.</p>
     <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.</p>
-<p>Merci de ne pas répondre directement à ce message. </p>
-</div>
-</html>
         """,
     )
 
 
-def _add_footer(object):
-    return f"""
-    Consulter la fiche dans Sèves : {settings.ROOT_URL}{object.get_absolute_url()}
-    Merci de ne pas répondre directement à ce message.
-    """
-
-
-def _add_footer_html(object):
-    return f"""
-    <p>Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a><br>
-    Merci de ne pas répondre directement à ce message.</p>
-    """
-
-
 def notify_fin_de_suivi(object, structure):
     recipients = [r.email for r in object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)]
-    send(
+    send_as_seves(
         recipients=recipients,
-        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Fin de suivi",
+        object=object,
+        subject=f"{object.get_short_email_display_name()} - Fin de suivi",
         message=f"""
     Bonjour,
 
     La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name()}
-
-    {_add_footer(object)}
             """,
         html_message=f"""
-    <!DOCTYPE html>
-    <html>
-    <div style="font-family: Arial, sans-serif;">
         <p>Bonjour,</p>
         <p>La fin de suivi a été déclarée pour {structure} sur l’évènement : {object.get_long_email_display_name_as_html()}</p>
-        {_add_footer_html(object)}
-    </div>
-    </html>
             """,
     )
 
@@ -179,56 +195,41 @@ def notify_message_deleted(message: Message):
     copy = [r.email for r in message.recipients_copy.all()]
     recipients_structure = [r.email for r in message.recipients.structures_only()]
     copy_structures = [r.email for r in message.recipients_copy.structures_only()]
-    send(
+    send_as_seves(
         recipients=list(set(recipients + copy + recipients_structure + copy_structures)),
-        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Suppression d’un élément du fil de suivi",
+        object=object,
+        subject=f"{object.get_short_email_display_name()} - Suppression d’un élément du fil de suivi",
         message=f"""
     Bonjour,
 
     Un élément du fil de suivi de l’évènement : {object.get_long_email_display_name()} a été supprimé.
 
     {message.get_message_type_display()} - {message.title}
-
-    {_add_footer(object)}
             """,
         html_message=f"""
-    <!DOCTYPE html>
-    <html>
-    <div style="font-family: Arial, sans-serif;">
         <p>Bonjour,<br>
         Un élément du fil de suivi de l’évènement {object.get_long_email_display_name_as_html()} a été supprimé. </p>
         <p>{message.get_message_type_display()} - {message.title}</p>
-        {_add_footer_html(object)}
-    </div>
-    </html>
             """,
     )
 
 
 def notify_object_cloture(object):
     recipients = [r.email for r in object.contacts.structures_only().exclude_mus()]
-    send(
+    send_as_seves(
         recipients=recipients,
-        subject=f"{settings.EMAIL_SUBJECT_PREFIX} {object.get_short_email_display_name()} - Clôture de l’évènement",
+        object=object,
+        subject=f" {object.get_short_email_display_name()} - Clôture de l’évènement",
         message=f"""
         Bonjour,
         L’évènement {object.get_short_email_display_name()} a été clôturé. Les informations restent néanmoins consultables.
 
         {object.get_email_cloture_text() if hasattr(object, "get_email_cloture_text") else ""}
-
-        {_add_footer(object)}
             """,
         html_message=f"""
-    <!DOCTYPE html>
-    <html>
-    <div style="font-family: Arial, sans-serif;">
         <p>Bonjour,<br>
         L’évènement <b>{object.get_short_email_display_name()}</b> a été clôturé. Les informations restent néanmoins consultables. </p>
 
         {"<p>" + object.get_email_cloture_text_html() + "</p>" if hasattr(object, "get_email_cloture_text_html") else ""}
-
-        {_add_footer_html(object)}
-    </div>
-    </html>
-            """,
+        """,
     )
