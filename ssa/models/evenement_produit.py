@@ -40,6 +40,10 @@ class ActionEngagees(models.TextChoices):
     RETRAIT_RAPPEL = "retrait_rappel", "Retrait et information du consommateur / rappel "
     RETRAIT_RAPPEL_CP = "retrait_rappel_communique_presse", "Retrait et rappel avec communiqué de presse"
     RETRAIT_CONTROLE = "retrait_rappel_controle_effectivite", "Retrait et rappel avec contrôle de l'effectivité"
+    RETRAIT_CP_CONTROLE = (
+        "retrait_rappel_cp_controle_effectivite",
+        "Retrait et rappel avec communiqué de presse et contrôle de l'effectivité",
+    )
 
 
 class QuantificationUnite(models.TextChoices):
