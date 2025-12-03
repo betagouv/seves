@@ -1,7 +1,8 @@
 from playwright.sync_api import expect, Page
 
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre
+from core.models import LienLibre, Contact
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from tiac.factories import EvenementSimpleFactory, EtablissementFactory
 from tiac.models import EvenementSimple, InvestigationTiac
@@ -39,7 +40,7 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
     expect(page.get_by_text("Événement simple publié avec succès")).to_be_visible()
 
 
-def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill):
+def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill, mailoutbox):
     contact = ContactStructureFactory(structure__libelle="DDPP52")
     ContactAgentFactory(agent__structure=contact.structure, with_active_agent=True)
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
@@ -53,9 +54,16 @@ def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill):
     assert evenement.transfered_to == contact.structure
     assert contact in evenement.contacts.all()
 
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert set(mail.to) == {contact.email}
+    assert "Transfert de l’évènement" in mail.subject
+    assert f"en provenance de : {evenement.createur}" in mail.body
 
-def test_can_transform_evenement_simple_into_investigation_tiac(live_server, page: Page, choice_js_fill):
+
+def test_can_transform_evenement_simple_into_investigation_tiac(live_server, page: Page, choice_js_fill, mailoutbox):
     assert InvestigationTiac.objects.count() == 0
+    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     other_evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     LienLibre.objects.create(related_object_1=evenement, related_object_2=other_evenement)
@@ -94,3 +102,8 @@ def test_can_transform_evenement_simple_into_investigation_tiac(live_server, pag
         ]
     )
     assert linked_objects == {evenement, other_evenement}
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert set(mail.to) == {Contact.objects.get_mus().email}
+    assert "Passage en investigation TIAC" in mail.subject
