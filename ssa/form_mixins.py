@@ -15,20 +15,36 @@ class WithEvenementProduitFreeLinksMixin(WithFreeLinksMixin):
             queryset = queryset.exclude(id=instance.id)
         return queryset
 
+    def _get_cas_humain_queryset(self, user):
+        from ssa.models import EvenementInvestigationCasHumain
+
+        from core.mixins import WithEtatMixin
+
+        return (
+            EvenementInvestigationCasHumain.objects.all()
+            .order_by_numero()
+            .get_user_can_view(user)
+            .exclude(etat=WithEtatMixin.Etat.BROUILLON)
+        )
+
     def _get_evenement_simple_queryset(self, user):
+        from core.mixins import WithEtatMixin
+
         return (
             EvenementSimple.objects.all()
             .order_by_numero()
             .get_user_can_view(user)
-            .exclude(etat=EvenementSimple.Etat.BROUILLON)
+            .exclude(etat=WithEtatMixin.Etat.BROUILLON)
         )
 
     def _get_investigation_tiac_queryset(self, user):
+        from core.mixins import WithEtatMixin
+
         return (
             InvestigationTiac.objects.all()
             .order_by_numero()
             .get_user_can_view(user)
-            .exclude(etat=EvenementSimple.Etat.BROUILLON)
+            .exclude(etat=WithEtatMixin.Etat.BROUILLON)
         )
 
     def _add_free_links(self, model):
@@ -38,6 +54,7 @@ class WithEvenementProduitFreeLinksMixin(WithFreeLinksMixin):
             label="Sélectionner un objet",
             model_choices=[
                 (self.model_label, self.get_queryset(model, self.user, instance)),
+                ("Investigation de cas humain", self._get_cas_humain_queryset(self.user)),
                 ("Enregistrement simple", self._get_evenement_simple_queryset(self.user)),
                 ("Investigation de tiac", self._get_investigation_tiac_queryset(self.user)),
             ],

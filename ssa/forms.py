@@ -70,7 +70,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
                     "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
                 )
             },
-            js=(js_module("ssa/categorie_djanger.mjs"),),
+            js=(js_module("ssa/categorie_djanger.mjs"), js_module("ssa/free_links.mjs")),
         )
 
     def categorie_danger_data(self):
@@ -298,6 +298,7 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        self._add_free_links(model=EvenementProduit)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
@@ -308,7 +309,9 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
-        return super().save(commit)
+        instance = super().save(commit)
+        self.save_free_links(instance)
+        return instance
 
     class Meta:
         model = EvenementInvestigationCasHumain

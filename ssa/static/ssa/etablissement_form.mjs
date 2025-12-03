@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         removeRequired(currentModal)
     }
 
+
     document.getElementById('add-etablissement').addEventListener("click", event => {
         event.preventDefault()
         showEtablissementModal()

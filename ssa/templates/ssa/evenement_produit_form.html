@@ -183,14 +183,20 @@
                 </div>
             </div>
 
-            {% include "ssa/_etablissement_block.html" %}
+            <div class="white-container--lite fr-mt-4w">
+                <h3>Établissements</h3>
+                <button
+                    type="button"
+                    id="add-etablissement"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                >Ajouter
+                </button>
+                {{ formset }}
+            </div>
+
             <div id="liens-libre" class="white-container fr-mt-2w">
                 <h3>Événements liés</h3>
-                {{ form.instance.free_link_ids|json_script:"free-links-id" }}
-                <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
-                <div>
-                    {{ form.free_link }}
-                </div>
+                {% include "ssa/_free_links_block.html" %}
             </div>
         </main>
     </form>
