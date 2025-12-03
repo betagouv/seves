@@ -36,6 +36,7 @@ class EvenementProduitQueryset(EvenementManagerMixin, models.QuerySet):
             "denomination",
             "marque",
             "etablissements__raison_sociale",
+            "etablissements__enseigne_usuelle",
             "evaluation",
             "lots",
             "description_complementaire",
