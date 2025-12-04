@@ -32,7 +32,7 @@ from core.mixins import (
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
 )
-from core.models import Export, FinSuiviContact, LienLibre
+from core.models import Export, LienLibre
 from core.views import MediaDefiningMixin
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
@@ -304,7 +304,7 @@ class EvenementTransformView(UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         for contact in self.object.get_contacts_structures_not_in_fin_suivi():
-            FinSuiviContact.objects.create(content_object=self.object, contact=contact)
+            self.object.add_fin_suivi(structure=contact.structure, made_by=self.request.user)
         self._create_investigation_tiac()
         self.object.cloturer()
         self._copy_etablissements()
