@@ -29,7 +29,7 @@ def notify_souches_clusters(evenement: EvenementProduit, user):
     send_as_seves(
         recipients=recipients,
         object=evenement,
-        subject=f"{evenement.get_long_email_display_name()} - Souche / cluster",
+        subject=f"{evenement.get_short_email_display_name()} - Souche / cluster",
         message=f"""
     Bonjour,
     Les champs “souche” et / ou “cluster” ont été modifiés pour l’évènement : {evenement.get_long_email_display_name()}
@@ -53,7 +53,7 @@ def notify_alimentation_animale(evenement: EvenementProduit):
     send_as_seves(
         recipients=recipients,
         object=evenement,
-        subject=f"{evenement.get_long_email_display_name()} - Inclut des aliments pour animaux",
+        subject=f"{evenement.get_short_email_display_name()} - Inclut des aliments pour animaux",
         message=f"""
     Bonjour,
     L’évènement suivant {evenement.get_long_email_display_name()} inclut désormais des aliments pour animaux.
