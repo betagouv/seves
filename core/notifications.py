@@ -129,20 +129,26 @@ def notify_message(message_obj: Message):
         _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
 
 
-def notify_contact_agent_added_or_removed(contact: Contact, obj, added):
-    action = "ajouté" if added else "retiré"
+def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):
+    users_structure = user.agent.structure
+    if added is False:
+        if contact.structure == users_structure or (contact.agent and contact.agent.structure == users_structure):
+            return  # Never send the notification if the removal is performed by a user inside the same structure
+
+    action = "ajouté au" if added else "retiré du"
     subject = "Ajout aux contacts" if added else "Retrait des contacts"
+    by_text = "" if added else f" par {user.agent.agent_with_structure}"
     send_as_seves(
         object=obj,
         recipients=[contact.email],
         subject=f"{obj.get_short_email_display_name()} - {subject}",
         message=f"""
 Bonjour,
-Vous avez été {action} au suivi de l’évènement : {obj.get_long_email_display_name()}
+Vous avez été {action} suivi de l’évènement : {obj.get_long_email_display_name()}{by_text}
         """,
         html_message=f"""
     <p>Bonjour,<br>
-    Vous avez été {action} au suivi de l’évènement : {obj.get_long_email_display_name_as_html()}.</p>
+    Vous avez été {action} suivi de l’évènement : {obj.get_long_email_display_name_as_html()}{by_text}.</p>
     """,
     )
 
