@@ -233,7 +233,7 @@ class EvenementUpdateView(
         return HttpResponseRedirect(self.get_success_url())
 
 
-class EvenementProduitListView(WithFilteredListMixin, ListView):
+class EvenementsListView(WithFilteredListMixin, ListView):
     model = EvenementProduit
     paginate_by = 100
 
@@ -264,7 +264,7 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
         )
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")
+        return HttpResponseRedirect(f"{reverse('ssa:evenements-liste')}?{urlencode(allowed_params)}")
 
 
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
@@ -312,7 +312,7 @@ class InvestigationCasHumainCreateView(
 ):
     template_name = "ssa/evenement_investigation_cas_humain.html"
     form_class = InvestigationCasHumainForm
-    success_url = reverse_lazy("ssa:evenement-produit-liste")
+    success_url = reverse_lazy("ssa:evenements-liste")
     success_message = "La fiche d'investigation cas humain a été créée avec succès."
 
     @property

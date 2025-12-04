@@ -1,12 +1,19 @@
+from django.urls import reverse
 from playwright.sync_api import Page, expect
+from pytest_django.asserts import assertRedirects
 
-from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre, Departement
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
+from core.models import Departement, LienLibre
+from ssa.constants import Source, TypeEvenement
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit, TemperatureConservation
-from ssa.constants import TypeEvenement, Source
-from ssa.models.evenement_produit import PretAManger, ActionEngagees
+from ssa.models.evenement_produit import ActionEngagees, PretAManger
 from ssa.tests.pages import EvenementProduitListPage
+
+
+def test_old_url_redirects(client):
+    response = client.get(reverse("ssa:evenement-produit-liste"))
+    assertRedirects(response, reverse("ssa:evenements-liste"), status_code=301)
 
 
 def test_list_table_order(live_server, mocked_authentification_user, page: Page):

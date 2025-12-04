@@ -2,7 +2,7 @@ from .api import FindNumeroAgrementView
 from .produit import (
     EvenementProduitCreateView,
     EvenementProduitDetailView,
-    EvenementProduitListView,
+    EvenementsListView,
     EvenementUpdateView,
     InvestigationCasHumainCreateView,
 )
@@ -10,7 +10,7 @@ from .produit import (
 __all__ = (
     "EvenementProduitCreateView",
     "EvenementProduitDetailView",
-    "EvenementProduitListView",
+    "EvenementsListView",
     "EvenementUpdateView",
     "InvestigationCasHumainCreateView",
     "FindNumeroAgrementView",
