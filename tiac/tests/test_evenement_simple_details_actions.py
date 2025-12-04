@@ -1,8 +1,7 @@
 from playwright.sync_api import expect, Page
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre, Contact
+from core.models import LienLibre
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from tiac.factories import EvenementSimpleFactory, EtablissementFactory
 from tiac.models import EvenementSimple, InvestigationTiac
@@ -61,9 +60,10 @@ def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill, 
     assert f"en provenance de : {evenement.createur}" in mail.body
 
 
-def test_can_transform_evenement_simple_into_investigation_tiac(live_server, page: Page, choice_js_fill, mailoutbox):
+def test_can_transform_evenement_simple_into_investigation_tiac(
+    live_server, page: Page, choice_js_fill, mailoutbox, mus_contact
+):
     assert InvestigationTiac.objects.count() == 0
-    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     other_evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     LienLibre.objects.create(related_object_1=evenement, related_object_2=other_evenement)
@@ -105,5 +105,5 @@ def test_can_transform_evenement_simple_into_investigation_tiac(live_server, pag
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert set(mail.to) == {Contact.objects.get_mus().email}
+    assert set(mail.to) == {mus_contact.email}
     assert "Passage en investigation TIAC" in mail.subject

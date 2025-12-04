@@ -12,7 +12,7 @@ from django.utils import timezone
 from playwright.sync_api import Page, expect
 from waffle.testutils import override_flag
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE
 from core.factories import (
     ContactAgentFactory,
     ContactStructureFactory,
@@ -1636,12 +1636,9 @@ def test_can_update_draft_demande_intervention_in_new_tab(
 
 
 def test_can_update_draft_compte_rendu_demande_intervention(
-    live_server, page: Page, mocked_authentification_user, mailoutbox
+    live_server, page: Page, mocked_authentification_user, mailoutbox, mus_contact
 ):
     object = EvenementFactory()
-    contact_mus = ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
     contact_bsv = ContactStructureFactory(
         structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
     )
@@ -1650,7 +1647,7 @@ def test_can_update_draft_compte_rendu_demande_intervention(
         status=Message.Status.BROUILLON,
         sender=mocked_authentification_user.agent.contact_set.get(),
         message_type=Message.COMPTE_RENDU,
-        recipients=[contact_mus],
+        recipients=[mus_contact],
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
@@ -1664,7 +1661,7 @@ def test_can_update_draft_compte_rendu_demande_intervention(
     message.refresh_from_db()
     assert message.message_type == Message.COMPTE_RENDU
     assert message.recipients.count() == 2
-    assert set(message.recipients.all()) == {contact_mus, contact_bsv}
+    assert set(message.recipients.all()) == {mus_contact, contact_bsv}
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
     assert message.content == "Contenu mis à jour"

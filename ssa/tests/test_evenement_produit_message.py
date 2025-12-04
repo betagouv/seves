@@ -37,11 +37,8 @@ from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
 
 
-def test_can_add_and_see_compte_rendu(live_server, page: Page, choice_js_fill):
+def test_can_add_and_see_compte_rendu(live_server, page: Page, choice_js_fill, mus_contact):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    ContactStructureFactory(
-        structure__niveau2=MUS_STRUCTURE, structure__niveau1=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
 
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -104,11 +101,8 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
 
 
 @override_flag("message_v2", active=True)
-def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill):
+def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill, mus_contact):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    ContactStructureFactory(
-        structure__niveau2=MUS_STRUCTURE, structure__niveau1=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
 
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
