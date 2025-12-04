@@ -1,6 +1,8 @@
 from faker import Faker
 from playwright.sync_api import Page
 
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE
+from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -14,7 +16,7 @@ from tiac.factories import (
 )
 from .pages import InvestigationTiacEditPage
 from ..constants import SuspicionConclusion, DangersSyndromiques
-from ..models import InvestigationTiac, Analyses, EvenementSimple
+from ..models import InvestigationTiac, Analyses, EvenementSimple, InvestigationFollowUp
 
 
 def test_can_edit_required_fields(live_server, page: Page, assert_models_are_equal):
@@ -237,3 +239,42 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
         ],
         ignore_array_order=True,
     )
+
+
+def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live_server, page: Page, mailoutbox):
+    investigation = InvestigationTiacFactory(follow_up=InvestigationFollowUp.INVESTIGATION_DD)
+    contact_structure_mus = ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
+    creation_page = InvestigationTiacEditPage(page, live_server.url, investigation=investigation)
+    creation_page.navigate()
+    creation_page.set_follow_up(InvestigationFollowUp.INVESTIGATION_COORDONNEE)
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
+    assert "Investigation coordonnée" in mail.subject
+
+
+def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
+    investigation = InvestigationTiacFactory(suspicion_conclusion=None)
+    contact_1, contact_2, contact_3 = ContactAgentFactory.create_batch(3)
+    investigation.contacts.add(contact_1, contact_2, contact_3)
+    creation_page = InvestigationTiacEditPage(page, live_server.url, investigation=investigation)
+    creation_page.navigate()
+    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
+    creation_page._set_treeselect_option(
+        "selected_hazard-treeselect", "Allergène - composition ou étiquetage > Allergène - Arachide"
+    )
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert set(mail.to) == {contact_1.email, contact_2.email, contact_3.email}
+    assert "Conclusion suspicion TIAC" in mail.subject
+    assert "TIAC à agent confirmé" in mail.body
