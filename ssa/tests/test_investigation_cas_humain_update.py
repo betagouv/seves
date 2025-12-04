@@ -10,7 +10,7 @@ from ssa.tests.pages import InvestigationCasHumainFormPage
 from ssa.tests.test_investigation_cas_humain_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 
 
-def test_can_update_evenement_produit_descripteur_and_save_as_draft(
+def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
     live_server, page, choice_js_get_values, choice_js_fill
 ):
     evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory()
@@ -67,7 +67,7 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
 
 
-def test_can_update_evenement_produit_descripteur_and_publish(live_server, page):
+def test_can_update_investigation_cas_humain_descripteur_and_publish(live_server, page):
     evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory()
     update_page = InvestigationCasHumainFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
@@ -82,7 +82,7 @@ def test_can_update_evenement_produit_descripteur_and_publish(live_server, page)
     assert evenement.description == "New value"
 
 
-def test_update_evenement_produit_will_not_change_createur(live_server, page):
+def test_update_investigation_cas_humain_will_not_change_createur(live_server, page):
     createur = StructureFactory()
     evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory(
         createur=createur, etat=WithEtatMixin.Etat.EN_COURS
@@ -99,7 +99,7 @@ def test_update_evenement_produit_will_not_change_createur(live_server, page):
     assert evenement.createur == createur
 
 
-def test_can_see_and_edit_etablissement_on_evenement_produit_update(
+def test_can_see_and_edit_etablissement_on_investigation_cas_humain_update(
     live_server, page, settings, assert_models_are_equal, assert_etablissement_card_is_correct
 ):
     settings.SIRENE_CONSUMER_KEY = "FOO"
@@ -132,7 +132,7 @@ def test_can_see_and_edit_etablissement_on_evenement_produit_update(
     assert_models_are_equal(evenement.etablissements.first(), wanted_values, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
-def test_can_add_etablissement_on_evenement_produit_update(live_server, page, settings, assert_models_are_equal):
+def test_can_add_etablissement_on_investigation_cas_humain_update(live_server, page, settings, assert_models_are_equal):
     settings.SIRENE_CONSUMER_KEY = "FOO"
     settings.SIRENE_CONSUMER_SECRET = "BAR"
     evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory()
@@ -150,7 +150,7 @@ def test_can_add_etablissement_on_evenement_produit_update(live_server, page, se
     assert_models_are_equal(evenement.etablissements.last(), wanted_values, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
-def test_can_delete_etablissement_on_evenement_produit_update(live_server, page, assert_models_are_equal):
+def test_can_delete_etablissement_on_investigation_cas_humain_update(live_server, page, assert_models_are_equal):
     evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory()
     to_keep = EtablissementFactory(investigation_cas_humain=evenement)
     _to_delete = EtablissementFactory(investigation_cas_humain=evenement)
