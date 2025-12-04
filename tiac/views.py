@@ -38,7 +38,7 @@ from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
-from tiac.models import EvenementSimple, InvestigationTiac
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 from tiac.tasks import export_tiac_task
 from .constants import DangersSyndromiques
 from .display import DisplayItem
@@ -51,7 +51,7 @@ from .formsets import (
     InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
 )
-from .notifications import notify_transfer, notify_transformation
+from .notifications import notify_transfer, notify_transformation, notify_investigation_coordonnee, notify_conclusion
 
 
 class EvenementSimpleManipulationMixin(
@@ -440,7 +440,20 @@ class InvestigationTiacBaseView(
             return self.form_invalid(form)
         return self.form_valid(form)
 
+    def send_notifications(self, dirty_fields):
+        if dirty_fields is None:
+            if self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
+                notify_investigation_coordonnee(self.object, self.request.user)
+        else:
+            if "follow_up" in dirty_fields and self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
+                notify_investigation_coordonnee(self.object, self.request.user)
+            if "suspicion_conclusion" in dirty_fields:
+                notify_conclusion(self.object, self.request.user)
+
     def form_valid(self, form):
+        dirty_fields = None
+        if self.object:
+            dirty_fields = self.object.get_dirty_fields()
         self.object = form.save()
         self.repas_formset.instance = self.object
         self.repas_formset.save()
@@ -451,6 +464,7 @@ class InvestigationTiacBaseView(
         self.analyse_alimentaire_formset.instance = self.object
         self.analyse_alimentaire_formset.save()
         self.add_user_contacts(self.object)
+        self.send_notifications(dirty_fields)
 
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())

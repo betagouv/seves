@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models, transaction
@@ -282,6 +283,7 @@ class InvestigationTiac(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,
+    DirtyFieldsMixin,
     models.Model,
 ):
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")

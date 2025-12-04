@@ -3,6 +3,7 @@ import random
 import pytest
 from playwright.sync_api import Page, expect
 
+from core.constants import MUS_STRUCTURE
 from core.factories import DepartementFactory
 from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
@@ -24,7 +25,14 @@ from ..constants import (
     SuspicionConclusion,
     DANGERS_COURANTS,
 )
-from ..models import InvestigationTiac, RepasSuspect, AlimentSuspect, EvenementSimple, AnalyseAlimentaire
+from ..models import (
+    InvestigationTiac,
+    RepasSuspect,
+    AlimentSuspect,
+    EvenementSimple,
+    AnalyseAlimentaire,
+    InvestigationFollowUp,
+)
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",
@@ -39,6 +47,8 @@ fields_to_exclude_aliment = [
     "id",
     "investigation_id",
 ]
+
+pytestmark = pytest.mark.usefixtures("mus_contact")
 
 
 def test_can_create_investigation_tiac_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
@@ -98,6 +108,7 @@ def test_can_create_investigation_tiac_with_all_fields(
         to_exclude=[
             "id",
             "_state",
+            "_original_state",
             "numero_annee",
             "numero_evenement",
             "date_creation",
@@ -538,3 +549,22 @@ def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page, asser
 
     creation_page.submit_as_draft()
     assert InvestigationTiac.objects.get().analyses_alimentaires.count() == 0
+
+
+def test_create_investigation_tiac_with_investigation_coordonnee_notification(live_server, page: Page, mailoutbox):
+    input_data = InvestigationTiacFactory.build()
+    contact_structure_mus = Contact.objects.get(structure__libelle=MUS_STRUCTURE)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.set_follow_up(InvestigationFollowUp.INVESTIGATION_COORDONNEE)
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE
+    expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
+    assert "Investigation coordonnée" in mail.subject
