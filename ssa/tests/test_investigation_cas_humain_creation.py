@@ -34,15 +34,15 @@ def test_can_create_investigation_cas_humain_with_required_fields_only(
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementInvestigationCasHumain.objects.get()
-    assert evenement_produit.createur == mocked_authentification_user.agent.structure
-    assert evenement_produit.type_evenement == input_data.type_evenement
-    assert evenement_produit.description == input_data.description
-    assert evenement_produit.numero is not None
-    assert evenement_produit.is_draft is True
+    investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
+    assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
+    assert investigation_cas_humain.type_evenement == input_data.type_evenement
+    assert investigation_cas_humain.description == input_data.description
+    assert investigation_cas_humain.numero is not None
+    assert investigation_cas_humain.is_draft is True
 
 
-def test_can_create_evenement_produit_with_all_fields(
+def test_can_create_investigation_cas_humain_with_all_fields(
     live_server, mocked_authentification_user, assert_models_are_equal, page: Page
 ):
     input_data = InvestigationCasHumainFactory.build()
@@ -60,10 +60,10 @@ def test_can_create_evenement_produit_with_all_fields(
 
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementInvestigationCasHumain.objects.get()
+    investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
 
     assert_models_are_equal(
-        evenement_produit,
+        investigation_cas_humain,
         input_data,
         to_exclude=[
             "_prefetched_objects_cache",
@@ -78,19 +78,19 @@ def test_can_create_evenement_produit_with_all_fields(
     )
 
 
-def test_can_publish_evenement_produit(live_server, mocked_authentification_user, page: Page):
+def test_can_publish_investigation_cas_humain(live_server, mocked_authentification_user, page: Page):
     input_data = InvestigationCasHumainFactory.build()
     creation_page = InvestigationCasHumainFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
     creation_page.publish()
 
-    evenement_produit = EvenementInvestigationCasHumain.objects.get()
-    assert evenement_produit.createur == mocked_authentification_user.agent.structure
-    assert evenement_produit.type_evenement == input_data.type_evenement
-    assert evenement_produit.description == input_data.description
-    assert evenement_produit.numero is not None
-    assert evenement_produit.is_draft is False
+    investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
+    assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
+    assert investigation_cas_humain.type_evenement == input_data.type_evenement
+    assert investigation_cas_humain.description == input_data.description
+    assert investigation_cas_humain.numero is not None
+    assert investigation_cas_humain.is_draft is False
 
 
 def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
