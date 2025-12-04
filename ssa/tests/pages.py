@@ -408,7 +408,7 @@ class EvenementProduitListPage(WithTreeSelect):
         self.base_url = base_url
 
     def navigate(self):
-        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-liste')}")
+        self.page.goto(f"{self.base_url}{reverse('ssa:evenements-liste')}")
 
     def open_sidebar(self):
         self.page.locator(".open-sidebar").click()
@@ -585,7 +585,7 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self.description.fill(evenement_produit.description)
 
     def _submit(self, locator: Locator, *, wait_for=None):
-        wait_for = wait_for or reverse("ssa:evenement-produit-liste")
+        wait_for = wait_for or reverse("ssa:evenements-liste")
         locator.click()
         self.page.wait_for_url(f"**{wait_for}")
 

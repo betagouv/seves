@@ -23,6 +23,6 @@ def test_can_filter_by_fin_de_suivi(live_server, page, mocked_authentification_u
         live_server,
         page,
         EvenementProduitFactory,
-        reverse("ssa:evenement-produit-liste"),
+        reverse("ssa:evenements-liste"),
         mocked_authentification_user,
     )

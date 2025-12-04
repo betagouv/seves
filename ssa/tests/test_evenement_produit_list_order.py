@@ -25,7 +25,7 @@ def test_order_by_numero_evenement(
         "evenement_2": EvenementProduitFactory(numero_annee=2025, numero_evenement=3),
         "evenement_3": EvenementProduitFactory(numero_annee=2025, numero_evenement=1),
     }
-    page.goto(url_builder_for_list_ordering("numero_evenement", direction, "ssa:evenement-produit-liste"))
+    page.goto(url_builder_for_list_ordering("numero_evenement", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="N°", exact=True).click()
     assert_events_order(page, evenements, expected_order, 1)
 
@@ -46,7 +46,7 @@ def test_order_by_date_creation(
         "evenement_2": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 3, 1))),
         "evenement_3": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 2, 1))),
     }
-    page.goto(url_builder_for_list_ordering("creation", direction, "ssa:evenement-produit-liste"))
+    page.goto(url_builder_for_list_ordering("creation", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="Création").click()
     assert_events_order(page, evenements, expected_order, 1)
 
@@ -73,7 +73,7 @@ def test_order_by_createur(
             createur=StructureFactory(libelle="B"), etat=WithEtatMixin.Etat.EN_COURS
         ),
     }
-    page.goto(url_builder_for_list_ordering("createur", direction, "ssa:evenement-produit-liste"))
+    page.goto(url_builder_for_list_ordering("createur", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="Créateur").click()
     assert_events_order(page, evenements, expected_order, 1)
 
@@ -94,6 +94,6 @@ def test_order_by_etat(
         "evenement_2": EvenementProduitFactory(etat=WithEtatMixin.Etat.BROUILLON),
         "evenement_3": EvenementProduitFactory(etat=WithEtatMixin.Etat.CLOTURE),
     }
-    page.goto(url_builder_for_list_ordering("etat", direction, "ssa:evenement-produit-liste"))
+    page.goto(url_builder_for_list_ordering("etat", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="État").click()
     assert_events_order(page, evenements, expected_order, 1)

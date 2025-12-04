@@ -1,9 +1,10 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import (
     EvenementProduitDetailView,
     EvenementProduitCreateView,
-    EvenementProduitListView,
+    EvenementsListView,
     FindNumeroAgrementView,
     EvenementUpdateView,
 )
@@ -16,6 +17,16 @@ from .views.produit import (
 
 app_name = "ssa"
 urlpatterns = [
+    path(
+        "evenement-produit/",
+        RedirectView.as_view(pattern_name="ssa:evenements-liste", permanent=True),
+        name="evenement-produit-liste",
+    ),
+    path(
+        "evenements/",
+        EvenementsListView.as_view(),
+        name="evenements-liste",
+    ),
     path(
         "evenement-produit/creation",
         EvenementProduitCreateView.as_view(),
@@ -30,11 +41,6 @@ urlpatterns = [
         "evenement-produit/<int:pk>/modification",
         EvenementUpdateView.as_view(),
         name="evenement-produit-update",
-    ),
-    path(
-        "evenement-produit/",
-        EvenementProduitListView.as_view(),
-        name="evenement-produit-liste",
     ),
     path(
         "export/evenement-produit/",
