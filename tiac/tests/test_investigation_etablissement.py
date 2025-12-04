@@ -1,5 +1,5 @@
 import re
-
+import pytest
 from playwright.sync_api import Page
 
 from tiac.factories import EtablissementFactory, InvestigationTiacFactory
@@ -15,6 +15,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "investigation_id",
     "siret",
 ]
+pytestmark = pytest.mark.usefixtures("mus_contact")
 
 
 def test_form_validation(live_server, page: Page, ensure_departements):
