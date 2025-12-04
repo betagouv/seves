@@ -1,7 +1,5 @@
 from playwright.sync_api import expect
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.models import Structure, Contact
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -28,12 +26,13 @@ def test_can_cloturer_evenement(live_server, page, mocked_authentification_user,
     )
 
 
-def test_can_cloturer_investigation_if_last_remaining_structure(live_server, page, mocked_authentification_user):
-    ac_structure = Structure.objects.create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
-    contact = Contact.objects.create(structure=ac_structure)
+def test_can_cloturer_investigation_if_last_remaining_structure(
+    live_server, page, mocked_authentification_user, mus_contact
+):
+    ac_structure = mus_contact.structure
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, createur=ac_structure)
     mocked_authentification_user.agent.structure = ac_structure
-    evenement.contacts.add(contact)
+    evenement.contacts.add(mus_contact)
 
     details_page = InvestigationTiacDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

@@ -1,9 +1,8 @@
 from playwright.sync_api import expect
 
-from core.constants import MUS_STRUCTURE, AC_STRUCTURE
 from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
 from core.mixins import WithEtatMixin
-from core.models import LienLibre, Contact
+from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit, Etablissement
 from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement
@@ -290,11 +289,12 @@ def test_display_of_notices(live_server, mocked_authentification_user, page):
     expect(update_page.page.locator("#notice-container-risque").get_by_text(expected_text)).to_be_visible()
 
 
-def test_update_type_evenement_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+def test_update_type_evenement_will_trigger_email(
+    live_server, page, mailoutbox, mocked_authentification_user, mus_contact
+):
     evenement: EvenementProduit = EvenementProduitFactory(
         not_bacterie=True, type_evenement=TypeEvenement.NON_ALERTE, etat=WithEtatMixin.Etat.EN_COURS
     )
-    ContactStructureFactory(structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE)
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
     update_page.type_evenement.select_option(TypeEvenement.ALERTE_PRODUIT_NATIONALE)
@@ -305,7 +305,7 @@ def test_update_type_evenement_will_trigger_email(live_server, page, mailoutbox,
     assert evenement.type_evenement == TypeEvenement.ALERTE_PRODUIT_NATIONALE
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.to == [Contact.objects.get_mus().email, mocked_authentification_user.agent.contact_set.get().email]
+    assert mail.to == [mus_contact.email, mocked_authentification_user.agent.contact_set.get().email]
     assert evenement.numero in mail.subject
     assert "Modification type d’évènement" in mail.subject
     assert mocked_authentification_user.agent.agent_with_structure in mail.body

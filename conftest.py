@@ -15,8 +15,8 @@ from django.urls.base import reverse
 from django.utils.timezone import localdate
 from playwright.sync_api import expect, Page
 
-from core.constants import DEPARTEMENTS
-from core.factories import StructureFactory, UserFactory
+from core.constants import DEPARTEMENTS, AC_STRUCTURE, MUS_STRUCTURE
+from core.factories import StructureFactory, UserFactory, ContactStructureFactory
 from core.models import Agent, Contact, Region, Departement
 
 User = get_user_model()
@@ -281,3 +281,10 @@ def choose_different_values():
         return result[0] if singleton else result
 
     return _choose_different_values
+
+
+@pytest.fixture
+def mus_contact():
+    return ContactStructureFactory(
+        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
+    )

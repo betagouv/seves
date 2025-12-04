@@ -107,7 +107,7 @@ def test_user_not_from_ac_cant_load_structure_add_page(live_server, page: Page, 
 
 
 def test_existing_allowed_structures_are_selected_on_structure_add_page(
-    live_server, page: Page, mocked_authentification_user
+    live_server, page: Page, mocked_authentification_user, mus_contact
 ):
     evenement = EvenementFactory()
     selected_structure = StructureFactory()
@@ -120,9 +120,7 @@ def test_existing_allowed_structures_are_selected_on_structure_add_page(
     agent_contact.agent.user.save()
     evenement.allowed_structures.set([selected_structure])
 
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
-    )
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
 
     url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
@@ -132,7 +130,9 @@ def test_existing_allowed_structures_are_selected_on_structure_add_page(
     expect(page.get_by_label(str(not_selected_structure), exact=True)).not_to_be_checked()
 
 
-def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page: Page, mocked_authentification_user):
+def test_user_from_ac_can_change_to_limitee_and_pick_structure(
+    live_server, page: Page, mocked_authentification_user, mus_contact
+):
     evenement = EvenementFactory()
     structure_1 = StructureFactory()
     agent_contact = ContactAgentFactory(agent__structure=structure_1)
@@ -143,9 +143,7 @@ def test_user_from_ac_can_change_to_limitee_and_pick_structure(live_server, page
     agent_contact.agent.user.is_active = True
     agent_contact.agent.user.save()
 
-    mocked_authentification_user.agent.structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE
-    )
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
 
     assert evenement.visibilite == Visibilite.LOCALE
@@ -215,12 +213,10 @@ def test_ac_and_creator_structures_are_checked_and_disabled(live_server, page: P
 
 
 def test_users_from_ac_cant_see_update_visibilite_btn_if_evenement_is_cloture(
-    live_server, page: Page, mocked_authentification_user
+    live_server, page: Page, mocked_authentification_user, mus_contact
 ):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
-    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
-    ContactStructureFactory(structure=structure)
-    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -230,12 +226,10 @@ def test_users_from_ac_cant_see_update_visibilite_btn_if_evenement_is_cloture(
 
 
 def test_user_from_ac_cant_access_structure_add_visibilite_if_evenement_is_cloture(
-    live_server, page: Page, mocked_authentification_user
+    live_server, page: Page, mocked_authentification_user, mus_contact
 ):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
-    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
-    ContactStructureFactory(structure=structure)
-    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
 
     url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
@@ -244,11 +238,9 @@ def test_user_from_ac_cant_access_structure_add_visibilite_if_evenement_is_clotu
     assert response.status == 403
 
 
-def test_user_from_ac_cant_update_visibilite_if_evenement_is_cloture(client, mocked_authentification_user):
+def test_user_from_ac_cant_update_visibilite_if_evenement_is_cloture(client, mocked_authentification_user, mus_contact):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
-    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
-    ContactStructureFactory(structure=structure)
-    mocked_authentification_user.agent.structure = structure
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
 
     url = reverse("sv:evenement-visibilite-update", kwargs={"pk": evenement.pk})
@@ -259,12 +251,10 @@ def test_user_from_ac_cant_update_visibilite_if_evenement_is_cloture(client, moc
     assert evenement.visibilite == Visibilite.LOCALE
 
 
-def test_structure_are_added_in_contact_when_visibilite_limited(live_server, page: Page, mocked_authentification_user):
-    mus_structure, _ = Structure.objects.get_or_create(
-        niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, defaults={"libelle": MUS_STRUCTURE}
-    )
-    ContactStructureFactory(structure=mus_structure)
-    mocked_authentification_user.agent.structure = mus_structure
+def test_structure_are_added_in_contact_when_visibilite_limited(
+    live_server, page: Page, mocked_authentification_user, mus_contact
+):
+    mocked_authentification_user.agent.structure = mus_contact.structure
     mocked_authentification_user.agent.save()
     contact_1, contact_2, contact_3 = ContactStructureFactory.create_batch(3, with_one_active_agent=True)
     evenement = EvenementFactory()
