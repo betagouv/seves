@@ -181,7 +181,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))
         self.fiche.contacts.remove(contact)
-        notify_contact_agent_added_or_removed(contact, self.fiche, added=False)
+        notify_contact_agent_added_or_removed(contact, self.fiche, added=False, user=self.request.user)
         messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
@@ -451,6 +451,7 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         with transaction.atomic():
             for contact_structure in contacts_structures:
                 self.obj.contacts.add(contact_structure)
+                notify_contact_agent_added_or_removed(contact_structure, self.obj, added=True, user=self.request.user)
             if hasattr(self.obj, "update_allowed_structures_and_visibility"):
                 self.obj.update_allowed_structures_and_visibility(contacts_structures)
 
@@ -460,7 +461,6 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
             len(contacts_structures),
         ) % {"count": len(contacts_structures)}
         messages.success(request, message, extra_tags="core contacts")
-        notify_contact_agent_added_or_removed(contact_structure, self.obj, added=True)
         return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
@@ -489,13 +489,13 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         with transaction.atomic():
             for contact_agent in contacts_agents:
                 self.obj.contacts.add(contact_agent)
+                notify_contact_agent_added_or_removed(contact_agent, self.obj, added=True, user=self.request.user)
                 if not user_is_referent_national(contact_agent.agent.user):
                     contact_structure = contact_agent.get_structure_contact()
                     self.obj.contacts.add(contact_structure)
                     allowed_contacts_structures_to_add.append(contact_structure)
             if hasattr(self.obj, "update_allowed_structures_and_visibility"):
                 self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
-            notify_contact_agent_added_or_removed(contact_agent, self.obj, added=True)
 
         message = ngettext(
             "L'agent a été ajouté avec succès.",

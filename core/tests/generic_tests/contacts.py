@@ -58,7 +58,7 @@ def generic_test_remove_contact_agent_from_an_evenement(live_server, page, objec
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert "Retrait des contacts" in mail.subject
-    assert "Vous avez été retiré au suivi de l’évènement" in mail.body
+    assert "Vous avez été retiré du suivi de l’évènement" in mail.body
 
 
 def generic_test_remove_contact_structure_from_an_evenement(live_server, page, object, mailoutbox):
@@ -76,4 +76,33 @@ def generic_test_remove_contact_structure_from_an_evenement(live_server, page, o
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert "Retrait des contacts" in mail.subject
-    assert "Vous avez été retiré au suivi de l’évènement" in mail.body
+    assert "Vous avez été retiré du suivi de l’évènement" in mail.body
+
+
+def generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page, object, choice_js_fill, mailoutbox):
+    contact_structure = ContactStructureFactory()
+    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
+        2, with_active_agent=True, agent__structure=contact_structure.structure
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    contact_page = WithContactsPage(page)
+    contact_page.add_agents(choice_js_fill, [contact_agent_1, contact_agent_2])
+
+    contact_page.go_to_contact_tab()
+    expect(page.get_by_text("Les 2 agents ont été ajoutés avec succès.")).to_be_visible()
+    assert page.get_by_test_id("contacts-agents").count() == 2
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(
+            f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}", exact=True
+        )
+    ).to_be_visible()
+    expect(
+        page.get_by_test_id("contacts-agents").get_by_text(
+            f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}", exact=True
+        )
+    ).to_be_visible()
+
+    assert len(mailoutbox) == 2
+    assert "Ajout aux contacts" in mailoutbox[0].subject
+    assert "Ajout aux contacts" in mailoutbox[1].subject

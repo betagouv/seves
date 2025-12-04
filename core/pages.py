@@ -297,6 +297,14 @@ class WithContactsPage:
         )
         self.page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
 
+    def add_agents(self, choice_js_fill, contacts):
+        for contact in contacts:
+            choice_js_fill(
+                self.page, "#add-contact-agent-form .choices", contact.agent.nom, contact.display_with_agent_unit
+            )
+            self.page.keyboard.press("Escape")
+        self.page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
     def add_structure(self, choice_js_fill, contact):
         choice_js_fill(self.page, "#add-contact-structure-form .choices", str(contact), str(contact))
         self.page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()

@@ -12,6 +12,7 @@ from core.tests.generic_tests.contacts import (
     generic_test_remove_contact_agent_from_an_evenement,
     generic_test_add_contact_structure_to_an_evenement,
     generic_test_remove_contact_structure_from_an_evenement,
+    generic_test_add_multiple_contacts_agents_to_an_evenement,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -62,46 +63,9 @@ def test_cant_add_inactive_structure_to_an_evenement(live_server, page, choice_j
     choice_js_cant_pick(page, "#add-contact-structure-form .choices", str(contact), str(contact))
 
 
-def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, goto_contacts):
-    contact_structure = ContactStructureFactory()
-    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
-        2, with_active_agent=True, agent__structure=contact_structure.structure
-    )
+def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, mailoutbox):
     evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    goto_contacts(page)
-    choice_js_fill(
-        page,
-        "#add-contact-agent-form .choices",
-        contact_agent_1.agent.nom,
-        contact_agent_1.display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    goto_contacts(page)
-    page.wait_for_timeout(1000)
-    choice_js_fill(
-        page,
-        "#add-contact-agent-form .choices",
-        contact_agent_2.agent.nom,
-        contact_agent_2.display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
-
-    expect(page.get_by_text("Les 2 agents ont été ajoutés avec succès.")).to_be_visible()
-    goto_contacts(page)
-    assert page.get_by_test_id("contacts-agents").count() == 2
-    expect(
-        page.get_by_test_id("contacts-agents").get_by_text(
-            f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}", exact=True
-        )
-    ).to_be_visible()
-    expect(
-        page.get_by_test_id("contacts-agents").get_by_text(
-            f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}", exact=True
-        )
-    ).to_be_visible()
+    generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page, evenement, choice_js_fill, mailoutbox)
 
 
 def test_cant_add_contact_agent_if_evenement_brouillon(client, contact):
