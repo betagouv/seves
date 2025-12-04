@@ -1,11 +1,11 @@
 from playwright.sync_api import expect, Page
 
 from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre
+from core.models import LienLibre, FinSuiviContact
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from tiac.factories import EvenementSimpleFactory, EtablissementFactory
 from tiac.models import EvenementSimple, InvestigationTiac
-from .pages import EvenementSimpleDetailsPage
+from .pages import EvenementSimpleDetailsPage, EvenementSimpleFormPage
 
 
 def test_can_delete_evenement_simple(live_server, page):
@@ -107,3 +107,39 @@ def test_can_transform_evenement_simple_into_investigation_tiac(
     mail = mailoutbox[0]
     assert set(mail.to) == {mus_contact.email}
     assert "Passage en investigation TIAC" in mail.subject
+
+
+def test_can_transform_evenement_simple_into_investigation_tiac_even_with_one_structure_manually_added(
+    live_server, page: Page, choice_js_fill, mus_contact
+):
+    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    assert InvestigationTiac.objects.count() == 0
+
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.publish()
+
+    evenement = EvenementSimple.objects.get()
+    details_page = EvenementSimpleDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    details_page.page.get_by_role("tab", name="Contacts").click()
+    details_page.page.get_by_role("tab", name="Contacts").evaluate("el => el.scrollIntoView()")
+    choice_js_fill(
+        details_page.page, "#add-contact-structure-form .choices", str(contact_structure), str(contact_structure)
+    )
+    details_page.page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
+    expect(page.get_by_text("La structure a été ajoutée avec succès.")).to_be_visible()
+
+    details_page.transform()
+    expect(page.get_by_text("L'événement a bien été passé en investigation de TIAC.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.is_cloture is True
+    assert set(FinSuiviContact.objects.values_list("contact", flat=True)) == set(
+        [s.id for s in evenement.contacts.all().structures_only()]
+    )
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.is_draft is True

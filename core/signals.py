@@ -92,13 +92,15 @@ def message_deleted(sender, instance: Message, **kwargs):
 
 
 @receiver(post_save, sender=FinSuiviContact)
-def fin_suivi_added(sender, instance, created, **kwargs):
+def fin_suivi_added(sender, instance: FinSuiviContact, created, **kwargs):
     if created:
         with transaction.atomic():
-            with reversion.create_revision():
-                reversion.set_comment(f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche")
-                reversion.add_meta(CustomRevisionMetaData, extra_data={"field": "Fil de suivi"})
-                reversion.add_to_revision(instance.content_object)
+            revision = create_manual_version(
+                instance.content_object,
+                f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche",
+                user=getattr(instance, "_user", None),
+            )
+            CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Fil de suivi"})
 
 
 @receiver(pre_delete, sender=FinSuiviContact)
