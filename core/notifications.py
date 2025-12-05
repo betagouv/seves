@@ -16,7 +16,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                 <!DOCTYPE html>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
-                    <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name_as_html }}</p>
+                    <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic; margin-bottom: 20px;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5; font-weight: bold; text-decoration: underline;">{{ subject }}</p>
                     <p style="white-space: pre-wrap; line-height: 1.5;">{{ content }}</p>
                     {% if documents %}
@@ -27,6 +27,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
                     <p style="margin-top: 20px;">Consulter la fiche dans Sèves : <a href="{{ fiche_url }}">{{ fiche_url }}</a></p>
+                    <p>Merci de ne pas répondre directement à ce message.</p>
                 </div>
                 </html>
             """,
