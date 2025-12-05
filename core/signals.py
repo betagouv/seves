@@ -23,6 +23,7 @@ def bypass_antivirus_scan_if_needed(sender, instance, **kwargs):
 
 def run_virus_scan(instance):
     try:
+        logger.info(f"Will create task for document {instance.pk}")
         scan_for_viruses.delay(instance.pk)
     except OperationalError:
         logger.error("Could not connect to Redis")
@@ -30,6 +31,7 @@ def run_virus_scan(instance):
 
 @receiver(post_save, sender=Document)
 def scan_for_viruses_on_creation_if_needed(sender, instance, created, **kwargs):
+    logger.info(f"Will check if we need to scan document {instance.pk}")
     if created and not settings.BYPASS_ANTIVIRUS:
         transaction.on_commit(lambda: run_virus_scan(instance))
 
