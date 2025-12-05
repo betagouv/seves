@@ -519,7 +519,7 @@ class CloturerView(View):
             return redirect(redirect_url)
 
         if object.is_the_only_remaining_structure(self.request.user, object.get_contacts_structures_not_in_fin_suivi()):
-            object.add_fin_suivi(self.request.user)
+            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
 
         object.cloturer()
         messages.success(request, object.get_cloture_confirm_message())
@@ -557,7 +557,7 @@ class FinDeSuiviHandlingView(View):
                 messages.error(request, "Vous ne pouvez pas mettre fin au suivi de l'évènement.")
                 return redirect(object.get_absolute_url())
 
-            object.add_fin_suivi(self.request.user)
+            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
             messages.success(request, "Fin de suivi réalisée avec succès.")
             return redirect(object.get_absolute_url())
 

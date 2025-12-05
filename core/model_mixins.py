@@ -26,13 +26,15 @@ class WithBlocCommunFieldsMixin(models.Model):
     def get_crdi_form(self):
         raise NotImplementedError
 
-    def add_fin_suivi(self, user):
+    def add_fin_suivi(self, structure, made_by):
         with transaction.atomic():
-            FinSuiviContact.objects.create(
+            object = FinSuiviContact(
                 content_object=self,
-                contact=Contact.objects.get(structure=user.agent.structure),
+                contact=Contact.objects.get(structure=structure),
             )
-            notify_fin_de_suivi(self, user.agent.structure)
+            object._user = made_by
+            object.save()
+            notify_fin_de_suivi(self, structure)
 
     def remove_fin_suivi(self, user):
         fin_suivi = FinSuiviContact.objects.get(
