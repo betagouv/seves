@@ -11,7 +11,7 @@ from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSE
 
 
 def test_can_update_evenement_produit_descripteur_and_save_as_draft(
-    live_server, page, choice_js_get_values, choice_js_fill
+    live_server, page, choice_js_get_values, choice_js_fill, mus_contact
 ):
     evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
     wanted_values = EvenementProduitFactory.build()
