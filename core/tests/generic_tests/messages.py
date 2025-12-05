@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message
+from core.models import Message, FinSuiviContact
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -829,4 +829,51 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     )
     assert list(reply.recipients_copy.all()) == expected_copies, (
         f"{list(reply.recipients_copy.all())=!r} != {expected_copies=!r}"
+    )
+
+
+def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
+    live_server, page: Page, choice_js_get_values, object
+):
+    contact_structure = ContactStructureFactory()
+    contact_agent = ContactAgentFactory(
+        agent__structure=contact_structure.structure,
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
+    other_contact_structure = ContactStructureFactory()
+    other_contact_agent = ContactAgentFactory(
+        agent__structure=other_contact_structure.structure,
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+    )
+    object.contacts.add(contact_structure, contact_agent, other_contact_structure, other_contact_agent)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_message()
+    message_page.page.wait_for_url("**/message-add/**")
+
+    message_page.page.locator(".destinataires-contacts-shortcut").click()
+    expected = {
+        contact_agent.display_with_agent_unit,
+        contact_structure.display_with_agent_unit,
+        other_contact_structure.display_with_agent_unit,
+        other_contact_agent.display_with_agent_unit,
+    }
+    assert set(choice_js_get_values(page, "#id_recipients", delete_remove_link=True)) == expected, (
+        f"Got {set(choice_js_get_values(page, '#id_recipients', delete_remove_link=True))}"
+    )
+
+    FinSuiviContact.objects.create(
+        content_object=object,
+        contact=contact_structure,
+    )
+
+    message_page.page.reload()
+    message_page.page.locator(".destinataires-contacts-shortcut").click()
+    expected = {
+        other_contact_structure.display_with_agent_unit,
+        other_contact_agent.display_with_agent_unit,
+    }
+    assert set(choice_js_get_values(page, "#id_recipients", delete_remove_link=True)) == expected, (
+        f"Got {set(choice_js_get_values(page, '#id_recipients', delete_remove_link=True))}"
     )

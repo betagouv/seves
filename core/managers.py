@@ -33,6 +33,30 @@ class DocumentQueryset(QuerySet):
         return self.filter(content_type=message_type, object_id__in=message_ids)
 
 
+class ContactManager(Manager):
+    def get_queryset(self):
+        return ContactQueryset(self.model, using=self._db)
+
+    def get_emails_in_fin_de_suivi_for_object(self, object):
+        from .models import Contact, FinSuiviContact
+
+        content_type = ContentType.objects.get_for_model(object)
+
+        # Remove structure in fin de suivi
+        fin_de_suivi = FinSuiviContact.objects.filter(content_type=content_type, object_id=object.id)
+        emails_in_fin_de_suivi = set(fin_de_suivi.values_list("contact__email", flat=True))
+
+        # Remove agent in structure in fin de suivi
+        emails_in_fin_de_suivi.update(
+            Contact.objects.filter(
+                agent__isnull=False,
+                agent__structure__contact__finsuivicontact__content_type=content_type,
+                agent__structure__contact__finsuivicontact__object_id=object.id,
+            ).values_list("email", flat=True)
+        )
+        return emails_in_fin_de_suivi
+
+
 class ContactQueryset(QuerySet):
     def with_structure_and_agent(self):
         return self.select_related("structure", "agent")

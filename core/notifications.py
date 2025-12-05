@@ -1,9 +1,8 @@
-from django.contrib.contenttypes.models import ContentType
 from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact, Export, FinSuiviContact
+from core.models import Message, Contact, Export
 from django.conf import settings
 
 
@@ -50,24 +49,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
 
 
 def _filter_contacts_in_fin_de_suivi(recipients, object):
-    content_type = ContentType.objects.get_for_model(object)
-
-    # Remove structure in fin de suivi
-    emails_to_exclude = set(
-        FinSuiviContact.objects.filter(content_type=content_type, object_id=object.id).values_list(
-            "contact__email", flat=True
-        )
-    )
-
-    # Remove agent in structure in fin de suivi
-    emails_to_exclude.update(
-        Contact.objects.filter(
-            email__in=recipients,
-            agent__isnull=False,
-            agent__structure__contact__finsuivicontact__content_type=content_type,
-            agent__structure__contact__finsuivicontact__object_id=object.id,
-        ).values_list("email", flat=True)
-    )
+    emails_to_exclude = Contact.objects.get_emails_in_fin_de_suivi_for_object(object)
 
     return [r for r in recipients if r not in emails_to_exclude]
 
