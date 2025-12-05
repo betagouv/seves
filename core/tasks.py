@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 import os
 import subprocess
@@ -7,9 +9,12 @@ from core.models import Document
 from django.conf import settings
 from urllib.parse import urlparse
 
+logger = logging.getLogger(__name__)
+
 
 @shared_task
 def scan_for_viruses(document_pk):
+    logger.info(f"Will start scanning of {document_pk}")
     document = Document.objects.get(pk=document_pk)
     parsed_url = urlparse(document.file.url)
     file_path = os.path.join(str(document.pk))
@@ -30,6 +35,7 @@ def scan_for_viruses(document_pk):
         capture_output=True,
         text=True,
     )
+    logger.info(f"Scanning of document {document_pk} got {result.returncode}")
     match result.returncode:
         case 0:
             document.is_infected = False
@@ -38,6 +44,7 @@ def scan_for_viruses(document_pk):
             document.is_infected = True
             document.save()
         case _:
+            logger.info(f"Full stdout output {result.stdout}")
             raise Exception(result.stdout)
 
     os.remove(file_path)
