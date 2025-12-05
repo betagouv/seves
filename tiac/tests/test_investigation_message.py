@@ -31,6 +31,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_send_draft_message_in_new_tab,
     generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab,
     generic_test_can_delete_my_own_draft_message,
+    generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -277,3 +278,11 @@ def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authent
 def test_can_reply_to_message(live_server, page: Page, choice_js_fill):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement)
+
+
+@override_flag("message_v2", active=True)
+def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server, page: Page, choice_js_get_values):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
+        live_server, page, choice_js_get_values, evenement
+    )

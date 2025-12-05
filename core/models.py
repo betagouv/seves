@@ -24,6 +24,7 @@ from .managers import (
     DocumentManager,
     DocumentQueryset,
     MessageManager,
+    ContactManager,
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
@@ -114,7 +115,7 @@ class Contact(models.Model):
     agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True, blank=True)
     email = models.EmailField()
 
-    objects = ContactQueryset.as_manager()
+    objects = ContactManager.from_queryset(ContactQueryset)()
 
     def __str__(self):
         return str(self.structure) if self.structure else str(self.agent)
