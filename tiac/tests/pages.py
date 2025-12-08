@@ -438,7 +438,7 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
 
     def transfer(self, choice_js_fill, libelle):
         self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_role("link", name="Transférer à une autre DD").click()
+        self.page.get_by_role("link", name="Transférer à une autre structure").click()
         choice_js_fill(self.page, "#fr-modal-transfer", libelle, libelle)
         self.page.get_by_role("button", name="Transférer").click()
 
