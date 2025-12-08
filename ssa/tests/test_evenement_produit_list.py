@@ -3,9 +3,9 @@ from playwright.sync_api import Page, expect
 from pytest_django.asserts import assertRedirects
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
-from core.models import Departement, LienLibre
+from core.models import LienLibre
 from ssa.constants import Source, TypeEvenement
-from ssa.factories import EtablissementFactory, EvenementProduitFactory
+from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.models import EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import ActionEngagees, PretAManger
 from ssa.tests.pages import EvenementProduitListPage
@@ -19,8 +19,8 @@ def test_old_url_redirects(client):
 def test_list_table_order(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
     EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=22)
-    EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=22)
+    InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
@@ -35,6 +35,10 @@ def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, 
     evenement_2 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
     evenement_3 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
     evenement_4 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    evenement_5 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON, createur=StructureFactory())
+    evenement_6 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
+    evenement_7 = EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
+    evenement_8 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -43,6 +47,11 @@ def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, 
     expect(page.get_by_text(evenement_2.numero)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero)).to_be_visible()
     expect(page.get_by_text(evenement_4.numero)).to_be_visible()
+
+    expect(page.get_by_text(evenement_5.numero)).not_to_be_visible()
+    expect(page.get_by_text(evenement_6.numero)).to_be_visible()
+    expect(page.get_by_text(evenement_7.numero)).to_be_visible()
+    expect(page.get_by_text(evenement_8.numero)).to_be_visible()
 
 
 def test_row_content(live_server, mocked_authentification_user, page: Page):
@@ -67,7 +76,7 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
 
 def test_list_can_filter_by_numero(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=1)
     EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -81,6 +90,7 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
 def test_list_can_filter_by_numero_rasff(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(numero_rasff=123456, numero_annee=2025, numero_evenement=2)
     EvenementProduitFactory(numero_rasff=987654, numero_annee=2025, numero_evenement=1)
+    investigation = InvestigationCasHumainFactory()
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
@@ -88,6 +98,7 @@ def test_list_can_filter_by_numero_rasff(live_server, mocked_authentification_us
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+    expect(page.get_by_text(investigation.numero)).not_to_be_visible()
 
 
 def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_user, page: Page):
@@ -177,6 +188,9 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     evenement_9 = EvenementProduitFactory()
     evenement_10 = EvenementProduitFactory()
     EtablissementFactory(enseigne_usuelle="Morbier", evenement_produit=evenement_10)
+    evenement_11 = InvestigationCasHumainFactory()
+    evenement_12 = InvestigationCasHumainFactory()
+    EtablissementFactory(enseigne_usuelle="Morbier", investigation_cas_humain=evenement_12)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -193,6 +207,8 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text(evenement_8.numero)).not_to_be_visible()
     expect(search_page.page.get_by_text(evenement_9.numero)).not_to_be_visible()
     expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_11.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_12.numero)).to_be_visible()
 
 
 def test_more_filters_interactions(live_server, page: Page):
@@ -239,8 +255,11 @@ def test_more_filters_counter_after_search_is_done(live_server, page: Page):
 
 def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    to_be_found_2 = InvestigationCasHumainFactory(etat=EvenementProduit.Etat.EN_COURS)
     not_to_be_found_1 = EvenementProduitFactory()
     not_to_be_found_2 = EvenementProduitFactory(etat=EvenementProduit.Etat.CLOTURE)
+    not_to_be_found_3 = InvestigationCasHumainFactory()
+    not_to_be_found_4 = InvestigationCasHumainFactory(etat=EvenementProduit.Etat.CLOTURE)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -250,14 +269,18 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_4.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_aliments_animaux(live_server, page: Page):
     to_be_found = EvenementProduitFactory(aliments_animaux=True)
     not_to_be_found_1 = EvenementProduitFactory(aliments_animaux=False)
     not_to_be_found_2 = EvenementProduitFactory(aliments_animaux=None)
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -269,12 +292,14 @@ def test_can_filter_by_aliments_animaux(live_server, page: Page):
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_temperature_conservation(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(temperature_conservation=TemperatureConservation.SURGELE)
     not_to_be_found_1 = EvenementProduitFactory(temperature_conservation=TemperatureConservation.REFRIGERE)
     not_to_be_found_2 = EvenementProduitFactory(temperature_conservation=TemperatureConservation.TEMPERATURE_AMBIANTE)
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -286,12 +311,14 @@ def test_can_filter_by_temperature_conservation(live_server, mocked_authentifica
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
     not_to_be_found_1 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
     not_to_be_found_2 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.SANS_OBJET)
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -303,12 +330,14 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(reference_souches="FOO")
     not_to_be_found_1 = EvenementProduitFactory(reference_souches="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_souches="BUZZ")
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -320,12 +349,14 @@ def test_can_filter_by_reference_souches(live_server, mocked_authentification_us
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_reference_clusters(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(reference_clusters="FOO")
     not_to_be_found_1 = EvenementProduitFactory(reference_clusters="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_clusters="BUZZ")
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -337,6 +368,7 @@ def test_can_filter_by_reference_clusters(live_server, mocked_authentification_u
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_actions_engagees(live_server, mocked_authentification_user, page: Page):
@@ -344,6 +376,7 @@ def test_can_filter_by_actions_engagees(live_server, mocked_authentification_use
     not_to_be_found_1 = EvenementProduitFactory(actions_engagees=ActionEngagees.PAS_DE_MESURE)
     not_to_be_found_2 = EvenementProduitFactory(actions_engagees=ActionEngagees.RETRAIT_RAPPEL)
     not_to_be_found_3 = EvenementProduitFactory(actions_engagees=ActionEngagees.RETRAIT_RAPPEL_CP)
+    not_to_be_found_4 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -356,6 +389,7 @@ def test_can_filter_by_actions_engagees(live_server, mocked_authentification_use
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_4.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_numeros_rappel_conso(live_server, mocked_authentification_user, page: Page):
@@ -363,6 +397,7 @@ def test_can_filter_by_numeros_rappel_conso(live_server, mocked_authentification
     to_be_found_2 = EvenementProduitFactory(numeros_rappel_conso=["2024-10-1005", "2024-10-1000"])
     not_to_be_found_1 = EvenementProduitFactory(numeros_rappel_conso=[])
     not_to_be_found_2 = EvenementProduitFactory(numeros_rappel_conso=["2023-20-2000"])
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -375,10 +410,14 @@ def test_can_filter_by_numeros_rappel_conso(live_server, mocked_authentification
     expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user, page: Page):
     to_be_found = EtablissementFactory(numero_agrement="123.11.111")
+    to_be_found_2 = EtablissementFactory(
+        numero_agrement="123.11.111", investigation_cas_humain=InvestigationCasHumainFactory()
+    )
     not_to_be_found_1 = EtablissementFactory(numero_agrement="")
     not_to_be_found_2 = EtablissementFactory(numero_agrement="124.11.111")
 
@@ -390,12 +429,14 @@ def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation_cas_humain.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_commune(live_server, mocked_authentification_user, page: Page):
     to_be_found = EtablissementFactory(commune="Paris")
+    to_be_found_2 = EtablissementFactory(commune="Paris", investigation_cas_humain=InvestigationCasHumainFactory())
     not_to_be_found_1 = EtablissementFactory(commune="")
     not_to_be_found_2 = EtablissementFactory(commune="Bordeaux")
 
@@ -407,12 +448,16 @@ def test_can_filter_by_commune(live_server, mocked_authentification_user, page: 
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation_cas_humain.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Page):
     to_be_found = EtablissementFactory(siret="12345678912345")
+    to_be_found_2 = EtablissementFactory(
+        siret="12345678912345", investigation_cas_humain=InvestigationCasHumainFactory()
+    )
     not_to_be_found_1 = EtablissementFactory(siret="")
     not_to_be_found_2 = EtablissementFactory(siret="9" * 14)
 
@@ -424,14 +469,16 @@ def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Pa
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation_cas_humain.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_departement(live_server, ensure_departements, mocked_authentification_user, page: Page):
-    ensure_departements("Cantal", "Aveyron")
-    to_be_found = EtablissementFactory(departement=Departement.objects.get(nom="Cantal"))
-    not_to_be_found_1 = EtablissementFactory(departement=Departement.objects.get(nom="Aveyron"))
+    cantal, aveyron, *_ = ensure_departements("Cantal", "Aveyron")
+    to_be_found = EtablissementFactory(departement=cantal)
+    to_be_found_2 = EtablissementFactory(departement=cantal, investigation_cas_humain=InvestigationCasHumainFactory())
+    not_to_be_found_1 = EtablissementFactory(departement=aveyron)
     not_to_be_found_2 = EtablissementFactory(departement=None)
 
     search_page = EvenementProduitListPage(page, live_server.url)
@@ -442,12 +489,14 @@ def test_can_filter_by_departement(live_server, ensure_departements, mocked_auth
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation_cas_humain.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Page):
     to_be_found = EtablissementFactory(pays="FR")
+    to_be_found_2 = EtablissementFactory(pays="FR", investigation_cas_humain=InvestigationCasHumainFactory())
     not_to_be_found_1 = EtablissementFactory(pays="BE")
     not_to_be_found_2 = EtablissementFactory(pays="")
 
@@ -459,6 +508,7 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_produit.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation_cas_humain.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_produit.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_produit.numero, exact=True)).not_to_be_visible()
 
@@ -467,6 +517,7 @@ def test_can_filter_by_categorie_produit(live_server, mocked_authentification_us
     to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
     not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
     not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -476,12 +527,14 @@ def test_can_filter_by_categorie_produit(live_server, mocked_authentification_us
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(categorie_produit="VH - Bovin")
     not_to_be_found_1 = EvenementProduitFactory(categorie_produit="PC - Céphalopode")
     not_to_be_found_2 = EvenementProduitFactory(categorie_produit="Escargot")
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -491,12 +544,14 @@ def test_can_filter_by_categorie_produit_found_by_parent(live_server, mocked_aut
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_categorie_danger(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(categorie_danger="Salmonella dublin")
     not_to_be_found_1 = EvenementProduitFactory(categorie_danger="Listeria")
     not_to_be_found_2 = EvenementProduitFactory(categorie_danger="Staphylococcus")
+    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -506,12 +561,15 @@ def test_can_filter_by_categorie_danger(live_server, mocked_authentification_use
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_with_free_links(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
     linked_evenement = EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    linked_investigation = InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=3)
     LienLibre.objects.create(related_object_1=linked_evenement, related_object_2=to_be_found)
+    LienLibre.objects.create(related_object_1=linked_investigation, related_object_2=to_be_found)
 
     not_to_be_found_1 = EvenementProduitFactory(numero_annee=2024, numero_evenement=2)
     not_to_be_found_2 = EvenementProduitFactory(numero_annee=2024, numero_evenement=1)
@@ -523,6 +581,7 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(linked_evenement.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(linked_investigation.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
@@ -532,6 +591,7 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(linked_evenement.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(linked_investigation.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
@@ -539,6 +599,7 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
+    evenement_3 = EvenementProduitFactory()
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
     evenement_2.contacts.add(contact_structure)
 
@@ -549,11 +610,13 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
+    evenement_3 = InvestigationCasHumainFactory()
     contact_agent = ContactAgentFactory(with_active_agent=True)
     evenement_2.contacts.add(contact_agent)
 
@@ -564,20 +627,22 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_number_of_total_items(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON, createur=StructureFactory())
     EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     EvenementProduitFactory(etat=EvenementProduit.Etat.BROUILLON)
+    InvestigationCasHumainFactory(etat=EvenementProduit.Etat.BROUILLON)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    expect(page.get_by_text("2 sur un total de 2", exact=True)).to_be_visible()
+    expect(page.get_by_text("3 sur un total de 3", exact=True)).to_be_visible()
 
     search_page.open_sidebar()
     search_page.etat.select_option("En cours")
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text("1 sur un total de 2", exact=True)).to_be_visible()
+    expect(page.get_by_text("1 sur un total de 3", exact=True)).to_be_visible()

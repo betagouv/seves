@@ -58,12 +58,12 @@ urlpatterns = [
         name="find-numero-agrement",
     ),
     path(
-        "investigation-cas-humain/creation",
+        "investigation-cas-humain/creation/",
         InvestigationCasHumainCreateView.as_view(),
         name="investigation-cas-humain-creation",
     ),
     path(
-        "investigation-cas-humain/<int:pk>/modification",
+        "investigation-cas-humain/<int:pk>/modification/",
         InvestigationCasHumainUpdateView.as_view(),
         name="investigation-cas-humain-update",
     ),
