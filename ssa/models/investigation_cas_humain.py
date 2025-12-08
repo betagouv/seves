@@ -35,6 +35,9 @@ class EvenementInvestigationCasHumain(
     def get_update_url(self):
         return reverse("ssa:investigation-cas-humain-update", kwargs={"pk": self.pk})
 
+    def get_absolute_url(self):
+        return reverse("ssa:evenements-liste")  # Change when detail is implemented
+
     def save(self, *args, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():

@@ -1,10 +1,12 @@
 import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldError
 from django.db.models import Q
 from django.forms import DateInput, TextInput, CheckboxInput
 from django_countries import Countries
 from django_filters.filters import BaseInFilter, CharFilter
+from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
     WithNumeroFilterMixin,
@@ -63,7 +65,7 @@ class WithEtablissementFilterMixin(django_filters.FilterSet):
     )
 
 
-class EvenementProduitFilter(
+class EvenementFilter(
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
@@ -157,24 +159,71 @@ class EvenementProduitFilter(
         return queryset
 
     def filter_aliments_animaux(self, queryset, name, value):
+        if not issubclass(queryset.model, EvenementProduit):
+            return queryset.none()
         if value == "inconnu":
             return queryset.filter(aliments_animaux__isnull=True)
         return queryset.filter(aliments_animaux=value)
 
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        if self.form.cleaned_data["with_free_links"] is True:
-            ids = queryset.values_list("id", flat=True)
+    def filter_structure_contact(self, queryset, name, value):
+        return (
+            super().filter_structure_contact(queryset, name, value)
+            if issubclass(queryset.model, EvenementProduit)
+            else queryset.none()
+        )
 
-            content_type = ContentType.objects.get_for_model(EvenementProduit)
+    def filter_agent_contact(self, queryset, name, value):
+        return (
+            super().filter_agent_contact(queryset, name, value)
+            if issubclass(queryset.model, EvenementProduit)
+            else queryset.none()
+        )
+
+    def with_free_links_filtered(self, ids):
+        queryset = self.queryset
+        subquerysets = queryset._querysets if isinstance(queryset, QuerySetSequence) else [queryset]
+        content_types = set(ContentType.objects.get_for_models(*[queryset.model for queryset in subquerysets]).values())
+
+        for idx, subqueryset in enumerate(subquerysets):
             objects_from_free_links_1 = LienLibre.objects.filter(
-                content_type_2=content_type, content_type_1=content_type, object_id_1__in=ids
+                content_type_2__in=content_types, content_type_1__in=content_types, object_id_1__in=ids
             ).values_list("object_id_2", flat=True)
             objects_from_free_links_2 = LienLibre.objects.filter(
-                content_type_1=content_type, content_type_2=content_type, object_id_2__in=ids
+                content_type_1__in=content_types, content_type_2__in=content_types, object_id_2__in=ids
             ).values_list("object_id_1", flat=True)
-            queryset = self.queryset.filter(
+            subquerysets[idx] = subqueryset.filter(
                 Q(id__in=ids) | Q(id__in=objects_from_free_links_1) | Q(id__in=objects_from_free_links_2)
             ).distinct()
 
-        return queryset
+        if isinstance(queryset, QuerySetSequence):
+            queryset._set_querysets(subquerysets)
+            return queryset
+        else:
+            return subquerysets[0]
+
+    def filter_queryset(self, queryset):
+        with_free_links = self.form.cleaned_data.get("with_free_links")
+
+        if not isinstance(queryset, QuerySetSequence):
+            queryset = super().filter_queryset(queryset)
+            return self.with_free_links_filtered(queryset.values_list("id", flat=True)) if with_free_links else queryset
+
+        querysets = queryset._querysets
+        for idx, subqueryset in enumerate(querysets):
+            for name, value in self.form.cleaned_data.items():
+                try:
+                    subqueryset = self.filters[name].filter(subqueryset, value)
+                except FieldError:
+                    subqueryset = subqueryset.none()
+                    break
+            querysets[idx] = subqueryset
+
+        if not with_free_links:
+            queryset._set_querysets(querysets)
+            return queryset
+
+        ids = []
+        for subqueryset in querysets:
+            ids.extend(subqueryset.values_list("id", flat=True))
+
+        return self.with_free_links_filtered(ids)
