@@ -35,6 +35,7 @@ from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCa
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
+from ..display import EvenementDisplay
 from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
 
 
@@ -234,6 +235,7 @@ class EvenementUpdateView(
 
 
 class EvenementsListView(WithFilteredListMixin, ListView):
+    template_name = "ssa/evenements_list.html"
     model = EvenementProduit
     paginate_by = 100
 
@@ -243,12 +245,11 @@ class EvenementsListView(WithFilteredListMixin, ListView):
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
 
-        for evenement in context["object_list"]:
-            etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
-            evenement.etat = etat_data["etat"]
-            evenement.readable_etat = etat_data["readable_etat"]
-
         context["total_object_count"] = self.get_raw_queryset().count()
+        context["object_list_count"] = context["object_list"].count()
+        # Use generator here to generate presenters dynamically
+        context["object_list"] = (EvenementDisplay(evenement) for evenement in context["object_list"])
+
         return context
 
 

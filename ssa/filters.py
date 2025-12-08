@@ -1,10 +1,13 @@
 import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldError
 from django.db.models import Q
+from django.db.models.query import EmptyQuerySet
 from django.forms import DateInput, TextInput, CheckboxInput
 from django_countries import Countries
 from django_filters.filters import BaseInFilter, CharFilter
+from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
     WithNumeroFilterMixin,
@@ -157,12 +160,41 @@ class EvenementProduitFilter(
         return queryset
 
     def filter_aliments_animaux(self, queryset, name, value):
+        if not issubclass(queryset.model, EvenementProduit):
+            return queryset.none()
         if value == "inconnu":
             return queryset.filter(aliments_animaux__isnull=True)
         return queryset.filter(aliments_animaux=value)
 
+    def filter_structure_contact(self, queryset, name, value):
+        return (
+            super().filter_structure_contact(queryset, name, value)
+            if issubclass(queryset.model, EvenementProduit)
+            else queryset.none()
+        )
+
+    def filter_agent_contact(self, queryset, name, value):
+        return (
+            super().filter_agent_contact(queryset, name, value)
+            if issubclass(queryset.model, EvenementProduit)
+            else queryset.none()
+        )
+
     def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
+        if isinstance(queryset, QuerySetSequence):
+            for idx, subqueryset in enumerate(queryset._querysets):
+                for name, value in self.form.cleaned_data.items():
+                    try:
+                        subqueryset = self.filters[name].filter(subqueryset, value)
+                    except FieldError:
+                        subqueryset = subqueryset.none()
+                    if isinstance(subqueryset, EmptyQuerySet):
+                        # Don't look further if queryset is already empty
+                        break
+                queryset._querysets[idx] = subqueryset
+        else:
+            queryset = super().filter_queryset(queryset)
+
         if self.form.cleaned_data["with_free_links"] is True:
             ids = queryset.values_list("id", flat=True)
 

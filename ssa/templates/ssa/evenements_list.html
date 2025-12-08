@@ -82,13 +82,13 @@
     <main class="main-container">
 
         <div class="evenements_liste__table--header">
-            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
+            <div>{{ object_list_count }} sur un total de {{ total_object_count }}</div>
             <form action="{% url 'ssa:export-evenement-produit' %}?{{ request.GET.urlencode }}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">Extraire</button>
             </form>
         </div>
-        {% if object_list.count %}
+        {% if object_list_count %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table>
                     <thead>
@@ -104,7 +104,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for evenement in evenementproduit_list %}
+                        {% for evenement in object_list %}
                             <tr class="evenements__list-row">
                                 <td><div class="ellipsis"><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></div></td>
                                 <td><div class="ellipsis">{{ evenement.date_creation|date:"d/m/Y" }}</div></td>
