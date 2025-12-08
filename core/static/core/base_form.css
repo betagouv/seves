@@ -1,3 +1,35 @@
+
+
+/* -- Champs obligatoires -- */
+label:has(+ input:required),
+label:has(+ input[data-required="true"]),
+label:has(+ select:required),
+label:has(+ select[data-required="true"]),
+label:has(+ textarea:required),
+label:has(+ textarea[data-required="true"]),
+label:has(+ .choices select:required),
+label:has(+ .choices select[data-required="true"]),
+fieldset:has(input[type="radio"][required]) > legend,
+.required-field {
+    font-weight: bold;
+}
+label:has(+ input:required)::after,
+label:has(+ input[data-required="true"])::after,
+label:has(+ select:required)::after,
+label:has(+ select[data-required="true"])::after,
+label:has(+ textarea:required)::after,
+label:has(+ textarea[data-required="true"])::after,
+label:has(+ .choices select:required)::after,
+label:has(+ .choices select[data-required="true"])::after,
+fieldset:has(input[type="radio"][required]) > legend::after,
+.required-field::after {
+    content: "*";
+}
+
+.fr-required-marker {
+    display: none !important;
+}
+
 textarea {
     resize: vertical;
 }

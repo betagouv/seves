@@ -12,9 +12,6 @@
 .message-document-container .fr-btns-group{
     min-width: 115px;
 }
-label[for=id_recipients]::after, label[for=id_recipients_structures_only]::after{
-    content: none !important;
-}
 .btn-full{
     width: 100%;
     display: block;
