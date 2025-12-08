@@ -402,7 +402,7 @@ class InvestigationTiac(
         return f"L'événement n°{self.numero} a bien été clôturé."
 
     def get_email_subject(self):
-        return f"{self.numero}"
+        return f"Investigation de TIAC {self.numero}"
 
     @property
     def latest_version(self):
