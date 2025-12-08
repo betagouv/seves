@@ -84,7 +84,25 @@
                                 <td><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
                                 <td>{{ evenement.createur }}</td>
                                 <td>{{ evenement.date_reception }}</td>
-                                <td>{{ evenement.etablissement }}</td>
+                                <td>{{ evenement.etablissement }}
+
+                                    {% if evenement.etablissements|length == 0 %}
+                                        -
+                                    {% else %}
+                                        {{ evenement.etablissements.0 }}
+                                    {% endif %}
+                                    {% with rest=evenement.etablissements|slice:"1:" aria_describedby=evenement.numero|strfmt:"message-tooltip-etablissement-{}" %}
+                                        {% if rest %}
+                                            <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
+                                            <span
+                                                class="fr-tooltip fr-placement"
+                                                id="{{ aria_describedby }}"
+                                                role="tooltip"
+                                                aria-hidden="true"
+                                            >Autres établissements : {{ rest|join:", " }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
                                 <td>{{ evenement.conclusion }}</td>

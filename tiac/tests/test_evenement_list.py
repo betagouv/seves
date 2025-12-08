@@ -39,7 +39,7 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.date_reception_cell().text_content() == evenement.date_reception.strftime("%d/%m/%Y")
-    assert search_page.etablissement_cell().text_content() == f"{etablissement.raison_sociale} {etablissement.commune}"
+    assert search_page.etablissement_cell().text_content().strip().replace("\n", "") == etablissement.raison_sociale
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == f"Enr. simple / {evenement.get_follow_up_display()}"
     assert search_page.conclusion_cell().text_content() == "-"
@@ -56,7 +56,7 @@ def test_row_content_investigation_tiac(live_server, mocked_authentification_use
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.date_reception_cell().text_content() == evenement.date_reception.strftime("%d/%m/%Y")
-    assert search_page.etablissement_cell().text_content() == f"{etablissement.raison_sociale} {etablissement.commune}"
+    assert search_page.etablissement_cell().text_content().strip().replace("\n", "") == etablissement.raison_sociale
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == "Invest. coord. / MUS informée"
     assert search_page.conclusion_cell().text_content() == evenement.get_suspicion_conclusion_display()
