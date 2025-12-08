@@ -11,11 +11,11 @@ from core.mixins import (
     WithVisibiliteMixin,
     WithMessageUrlsMixin,
     WithFreeLinkIdsMixin,
-    AllowsSoftDeleteMixin,
     EmailNotificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
 )
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.mixins import WithEtatMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, Document
@@ -205,6 +205,15 @@ class Evenement(
         from ..forms import CompteRenduDemandeInterventionForm
 
         return CompteRenduDemandeInterventionForm
+
+    def get_short_email_display_name(self):
+        return f"{self.organisme_nuisible} {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"Événement {self.numero} (ON: {self.organisme_nuisible.libelle_court})"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Événement {self.numero}</b> (ON: {self.organisme_nuisible.libelle_court})"
 
     @property
     def limit_contacts_to_user_from_app(self):

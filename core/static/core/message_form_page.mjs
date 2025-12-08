@@ -2,9 +2,11 @@ import {Controller} from "Stimulus";
 import choicesDefaults from "choicesDefaults"
 import {applicationReady} from "Application"
 import {collectFormValues} from "Forms"
+import {validateFileSize, updateAcceptAttributeFileInput, getAcceptAllowedExtensionsAttributeValue, isSelectedFileExtensionValid} from "Document"
 
 export class MessageFormController extends Controller {
-    static targets = ["recipients", "recipients_copy", "draftBtn", "sendBtn"]
+    static targets = ["recipients", "recipients_copy", "draftBtn", "sendBtn", "documentTypeSelect", "documentNameInput", "addDocument", "documentFile", "commentInput","cardsContainer","allowedExtensions", "inputsContainer"]
+    documents = []
 
     configureChoicesForRecipients(){
         if(this.hasRecipientsTarget && this.recipientsTarget instanceof HTMLSelectElement){
@@ -35,16 +37,54 @@ export class MessageFormController extends Controller {
         }
     }
 
+    addHiddenInput(name, value)  {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = name
+        input.value = value
+        this.element.appendChild(input)
+    }
+
+    addDocumentsInput(){
+        this.documents.forEach((doc, i) => {
+            if (!doc.file){
+                this.addHiddenInput(`existing_document_name_${doc.id}`, "true")
+                return // Existing document
+            }
+            this.addHiddenInput(`document_type_${i}`, doc.type)
+            this.addHiddenInput(`document_name_${i}`, doc.name)
+            this.addHiddenInput(`document_comment_${i}`, doc.comment)
+            const fileInput = document.createElement("input")
+            fileInput.type = "file"
+            fileInput.name = `document_file_${i}`
+            const dt = new DataTransfer()
+            dt.items.add(doc.file)
+            fileInput.files = dt.files
+            fileInput.classList.add("fr-hidden")
+            this.element.appendChild(fileInput)
+        })
+    }
+
     onSend(event){
-        if (event.isTrusted === false){
+        if (event.isTrusted === false) {
+            // Make the form verification only for a human click: allows us to send the form for real when we need to
             return
         }
 
         event.preventDefault()
+        this.documentNameInputTarget.required = false
+        this.documentTypeSelectTarget.required = false
+        this.documentFileTarget.required = false
+
         const formValues = collectFormValues(this.element)
         if (formValues === undefined) {
+            this.documentNameInputTarget.required = true
+            this.documentTypeSelectTarget.required = true
+            this.documentFileTarget.required = true
             return
         }
+
+        this.addDocumentsInput()
         event.target.click()
         this.draftBtnTarget.disabled = true
         this.sendBtnTarget.disabled = true
@@ -58,9 +98,96 @@ export class MessageFormController extends Controller {
         this.recipientCopyChoices.setChoiceByValue(event.target.dataset.contacts.split(","))
     }
 
+    _setSendButtonState(){
+        this.addDocumentTarget.disabled = !(this.documentNameInputTarget.value && this.documentTypeSelectTarget.value && this.documentFileTarget.value)
+    }
+
+    _setAddFileButtonState(){
+        this.documentFileTarget.disabled = !(this.documentNameInputTarget.value && this.documentTypeSelectTarget.value)
+    }
+
+    onNomChanged(){
+        this._setSendButtonState()
+        this._setAddFileButtonState()
+    }
+
+    onTypeChanged(){
+        this._setAddFileButtonState()
+        this._setSendButtonState()
+        const documentTypeAllowedExtensions = getAcceptAllowedExtensionsAttributeValue(this.documentFileTarget, this.documentTypeSelectTarget);
+        updateAcceptAttributeFileInput(this.documentFileTarget, this.documentTypeSelectTarget, documentTypeAllowedExtensions, this.allowedExtensionsTarget)
+    }
+
+    onFileChanged(){
+        this._setSendButtonState()
+        validateFileSize(this.documentFileTarget)
+        const documentTypeAllowedExtensions = getAcceptAllowedExtensionsAttributeValue(this.documentFileTarget, this.documentTypeSelectTarget);
+        isSelectedFileExtensionValid(this.documentFileTarget, documentTypeAllowedExtensions)
+    }
+
+    onDeleteDocument(event){
+        event.target.parentNode.parentNode.remove()
+        this.documents = this.documents.filter(function(item) {return item.id != event.target.parentNode.dataset.documentId})
+        if (this.documents.length === 0){
+            this.cardsContainerTarget.innerText = "Aucun documents ajouté"
+        }
+    }
+
+    addDocumentCard(filename, id=this.currentDocumentID){
+        const card = `<div class="fr-p-1w fr-mb-2w document-to-add" id="document_card_${id}">
+                        <span>${filename}</span>
+                        <a href="#" data-action="click->message-form#onDeleteDocument" data-document-id="${id}">
+                            <span class="fr-icon-close-circle-line" aria-hidden="true"></span>
+                        </a>
+                    </div>`
+
+        if (this.documents.length === 0){
+            this.cardsContainerTarget.innerHTML = ""
+        }
+        this.cardsContainerTarget.insertAdjacentHTML("beforeend", card);
+    }
+
+    onAddDocument(){
+        const doc = {
+            id: this.currentDocumentID,
+            type: this.documentTypeSelectTarget.value,
+            file: this.documentFileTarget.files[0],
+            name: this.documentNameInputTarget.value,
+            comment: this.commentInputTarget.value,
+        }
+        this.addDocumentCard(this.documentNameInputTarget.value)
+        this.documents.push(doc)
+
+        this.documentTypeSelectTarget.selectedIndex = 0
+        this.documentNameInputTarget.value = ""
+        this.commentInputTarget.value = ""
+        this.documentFileTarget.value = null
+        this._setNextIdToUse()
+        this.documentFileTarget.disabled = true
+        this.addDocumentTarget.disabled = true
+    }
+
+    _setNextIdToUse() {
+        let num = this.currentDocumentID
+        while (this.documents.some(d => d.id === num)) {
+            num++
+        }
+        this.currentDocumentID = num
+    }
+
+    loadExistingDocuments(){
+        this.inputsContainerTarget.querySelectorAll(".existing-document-form").forEach(form =>{
+            let id = parseInt(form.querySelector("#existing_document").value)
+            this.addDocumentCard(form.querySelector("#id_nom").value, id=id)
+            this.documents.push({id: id})
+        })
+    }
+
     connect() {
         this.configureChoicesForRecipients()
         this.configureChoicesForCopy()
+        this.currentDocumentID = 0
+        this.loadExistingDocuments()
     }
 
 }

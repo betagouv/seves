@@ -18,10 +18,14 @@
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Menu</div>
                                 <div class="fr-col-3">{{ repas.menu|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Type de repas</div>
+                                <div class="fr-col-3">{{ repas.get_type_repas_display|or_empty_value_tag }}</div>
+                                {% if repas.show_type_collectivite %}
+                                    <div class="fr-col-3 bold">Type de collectivité</div>
+                                    <div class="fr-col-3">{{ repas.get_type_collectivite_display|or_empty_value_tag }}</div>
+                                {% endif %}
                                 <div class="fr-col-3 bold">Motifs de suspicion</div>
                                 <div class="fr-col-3">{{ repas.motif_suspicion_labels|or_empty_value_tag }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Date du repas</div>
                                 <div class="fr-col-3">{{ repas.datetime_repas|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Nombre de participants</div>
@@ -32,19 +36,9 @@
                                         <span class="empty-value">Vide</span>
                                     {% endif %}
                                 </div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Département</div>
                                 <div class="fr-col-3">{{ repas.departement|or_empty_value_tag }}</div>
-                                <div class="fr-col-3 bold">Type de repas</div>
-                                <div class="fr-col-3">{{ repas.get_type_repas_display|or_empty_value_tag }}</div>
                             </div>
-                            {% if repas.show_type_collectivite %}
-                                <div class="fr-grid-row fr-grid-row--gutters">
-                                    <div class="fr-col-3 bold">Type de collectivité</div>
-                                    <div class="fr-col-3">{{ repas.get_type_collectivite_display|or_empty_value_tag }}</div>
-                                </div>
-                            {% endif %}
                         </div>
                     </div>
                 </div>

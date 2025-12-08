@@ -1,4 +1,5 @@
 import io
+import datetime
 import json
 import os
 from urllib.parse import urlencode
@@ -7,13 +8,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 
-from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin
+from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -26,18 +28,21 @@ from core.mixins import (
     WithAddUserContactsMixin,
 )
 from core.models import Export
-from ssa.forms import EvenementProduitForm
-from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit, CategorieDanger, Etablissement
-from ssa.models.evenement_produit import CategorieProduit
+from core.views import MediaDefiningMixin
+from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
+from ssa.formsets import EtablissementFormSet, InvestigationCasHumainsEtablissementFormSet
+from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCasHumain
+from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
+from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
 
 
 class EvenementProduitCreateView(
     WithFormErrorsAsMessagesMixin,
     WithAddUserContactsMixin,
     EvenementProduitValuesMixin,
+    MediaDefiningMixin,
     CreateView,
 ):
     form_class = EvenementProduitForm
@@ -93,9 +98,11 @@ class EvenementProduitCreateView(
         self.object = None
         return super().form_invalid(form)
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["formset"].media
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["empty_form"] = self.etablissement_formset.empty_form
         context["formset"] = self.etablissement_formset
         return context
 
@@ -110,6 +117,7 @@ class EvenementProduitDetailView(
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     UserPassesTestMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = EvenementProduit
@@ -128,8 +136,7 @@ class EvenementProduitDetailView(
         if queryset is None:
             queryset = self.get_queryset()
         try:
-            annee, numero_evenement = self.kwargs["numero"].split(".")
-            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            self.object = queryset.get(pk=self.kwargs["pk"])
             return self.object
         except (ValueError, EvenementProduit.DoesNotExist):
             raise Http404("Fiche produit non trouvée")
@@ -151,6 +158,7 @@ class EvenementUpdateView(
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     EvenementProduitValuesMixin,
+    MediaDefiningMixin,
     UpdateView,
 ):
     form_class = EvenementProduitForm
@@ -167,11 +175,13 @@ class EvenementUpdateView(
         kwargs["user"] = self.request.user
         return kwargs
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["formset"].media
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         queryset = Etablissement.objects.filter(evenement_produit=self.get_object())
         formset = EtablissementFormSet(instance=self.get_object(), queryset=queryset)
-        context["empty_form"] = formset.empty_form
         context["formset"] = formset
         return context
 
@@ -179,6 +189,15 @@ class EvenementUpdateView(
         response = super().form_valid(form)
         self.add_user_contacts(form.instance)
         return response
+
+    def _trigger_notifications(self):
+        dirty_fields = self.object.get_dirty_fields()
+        if "type_evenement" in dirty_fields and self.object.type_evenement == TypeEvenement.ALERTE_PRODUIT_NATIONALE:
+            notify_type_evenement_fna(self.object, self.request.user)
+        if "aliments_animaux" in dirty_fields and self.object.aliments_animaux is True:
+            notify_alimentation_animale(self.object)
+        if ("reference_souches" in dirty_fields) or ("reference_clusters" in dirty_fields):
+            notify_souches_clusters(self.object, self.request.user)
 
     def post(self, request, pk):
         self.object = self.get_object()
@@ -204,14 +223,17 @@ class EvenementUpdateView(
             return self.render_to_response(self.get_context_data(formset=formset))
 
         with transaction.atomic():
-            self.object = form.save()
+            self.object = form.save(commit=False)
+            self._trigger_notifications()
+            self.object.save()
             formset.save()
             self.add_user_contacts(self.object)
+
         messages.success(self.request, "L'événement produit a bien été modifié.")
         return HttpResponseRedirect(self.get_success_url())
 
 
-class EvenementProduitListView(WithFilteredListMixin, ListView):
+class EvenementsListView(WithFilteredListMixin, ListView):
     model = EvenementProduit
     paginate_by = 100
 
@@ -242,15 +264,14 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
         )
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('ssa:evenement-produit-liste')}?{urlencode(allowed_params)}")
+        return HttpResponseRedirect(f"{reverse('ssa:evenements-liste')}?{urlencode(allowed_params)}")
 
 
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
-    def dispatch(self, request, numero=None, *args, **kwargs):
-        annee, numero_evenement = numero.replace("A-", "").split(".")
-        self.object = EvenementProduit.objects.get(numero_annee=annee, numero_evenement=numero_evenement)
+    def dispatch(self, request, pk, *args, **kwargs):
+        self.object = EvenementProduit.objects.get(pk=pk)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request):
@@ -258,7 +279,12 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
         sub_doc_file = self.create_document_bloc_commun()
         sub_doc = doc.new_subdoc(sub_doc_file)
 
-        context = {"object": self.object, "free_links": self.get_free_links_numbers(), "bloc_commun": sub_doc}
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
         doc.render(context)
 
         file_stream = io.BytesIO()
@@ -275,3 +301,82 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
 
     def test_func(self):
         return self.object.can_user_access(self.request.user)
+
+
+class InvestigationCasHumainCreateView(
+    WithFormErrorsAsMessagesMixin,
+    WithAddUserContactsMixin,
+    EvenementProduitValuesMixin,
+    MediaDefiningMixin,
+    CreateView,
+):
+    template_name = "ssa/evenement_investigation_cas_humain.html"
+    form_class = InvestigationCasHumainForm
+    success_url = reverse_lazy("ssa:evenements-liste")
+    success_message = "La fiche d'investigation cas humain a été créée avec succès."
+
+    @property
+    def etablissement_formset(self):
+        if not hasattr(self, "_etablissement_formset"):
+            self._etablissement_formset = InvestigationCasHumainsEtablissementFormSet(**super().get_form_kwargs())
+        return self._etablissement_formset
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs, etablissement_formset=self.etablissement_formset)
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["etablissement_formset"].media
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.etablissement_formset.instance = self.object
+        self.etablissement_formset.save()
+        messages.success(self.request, self.success_message)
+        return super().form_valid(form)
+
+    def formset_invalid(self):
+        self.object = None
+        messages.error(
+            self.request,
+            "Erreurs dans le(s) formulaire(s) Etablissement",
+        )
+        for i, form in enumerate(self.etablissement_formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(
+                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
+                        )
+
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        if not self.etablissement_formset.is_valid():
+            return self.formset_invalid()
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)
+
+
+class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateView):
+    success_message = "La fiche d'investigation cas humain a été mise à jour avec succès."
+
+    @property
+    def object(self):
+        if not hasattr(self, "_object"):
+            self._object = self.get_object()
+        return self._object
+
+    @object.setter
+    def object(self, value):
+        self._object = value
+
+    def get_queryset(self):
+        return EvenementInvestigationCasHumain.objects.with_departement_prefetched()

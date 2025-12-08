@@ -6,9 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from reversion.models import Version
 
-from core.mixins import (
-    AllowsSoftDeleteMixin,
-)
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from sv.managers import (

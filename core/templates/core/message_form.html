@@ -10,37 +10,97 @@
 {% block content %}
     <form method="post" enctype="multipart/form-data" action="" id="message-form" data-controller="message-form">
         {% csrf_token %}
-        <div class="fr-container-xxl fr-pt-4w">
-            <a href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
-               target="_blank">Ouvrir la fiche {{ object.numero }}</a>
+        <div class="fr-container--fluid fr-pt-4w">
+            <div class="fr-grid-row">
+                <div class="fr-col-1"></div>
+                <div class="fr-col-10">
+                    <a href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
+                       target="_blank">Ouvrir la fiche {{ object.numero }}</a>
 
-            <div class="fr-flex fr-flex--row fr-flex--space-between">
-                <div>
-                    <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">{{ form.page_title }}</h1>
-                    {% if form.help_text %}
-                        <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
-                    {% endif %}
-                </div>
-                <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
-            </div>
-            <div class="white-container--lite">
-                {% for field in form %}
-                    <div class="fr-fieldset__element">
-                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
-                            {% dsfr_form_field field|set_data:data_target  %}
-                        {% endwith %}
+                    <div class="fr-flex fr-flex--row fr-flex--space-between">
+                        <div>
+                            <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
+                                {% if form.instance.pk %}[Brouillon] {{ message.title }}{% elif request.GET.reply_id %}Réponse à un message{% else %}{{ form.page_title }}{% endif %}
+                            </h1>
+                            {% if form.help_text %}
+                                <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
                     </div>
-                {% endfor %}
+                </div>
+                <div class="fr-col-1"></div>
             </div>
+        </div>
 
-            <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
-                <li>
-                    <button type="submit" value="{{ message_status.BROUILLON }}" name="action" class="fr-btn fr-btn--secondary" data-testid="draft-fildesuivi-add-submit" data-action="message-form#onSend" data-message-form-target="draftBtn">Enregistrer comme brouillon</button>
-                </li>
-                <li>
-                    <button type="submit" value="{{ message_status.FINALISE }}" name="action" class="fr-btn" data-testid="fildesuivi-add-submit" data-action="message-form#onSend" data-message-form-target="sendBtn">Envoyer</button>
-                </li>
-            </ul>
+
+        <div class="fr-container--fluid">
+            <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-1"></div>
+                <div class="fr-col-7">
+                    <div class="white-container">
+                        {% for field in form %}
+                            <div class="fr-fieldset__element">
+                                {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                    {% dsfr_form_field field|set_data:data_target %}
+                                {% endwith %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
+                        <li>
+                            <button type="submit" value="{{ message_status.BROUILLON }}" name="action"
+                                    class="fr-btn fr-btn--secondary" data-testid="draft-fildesuivi-add-submit"
+                                    data-action="message-form#onSend" data-message-form-target="draftBtn">
+                                Enregistrer comme brouillon
+                            </button>
+                        </li>
+                        <li>
+                            <button type="submit" value="{{ message_status.FINALISE }}" name="action" class="fr-btn"
+                                    data-testid="fildesuivi-add-submit" data-action="message-form#onSend"
+                                    data-message-form-target="sendBtn">Envoyer
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="fr-col-3">
+                    <div class="fr-p-2w grey-container">
+                        <h2 class="fr-h4">Documents</h2>
+                        <div data-message-form-target="cardsContainer">Aucun documents ajouté</div>
+                        <div data-message-form-target="inputsContainer" class="fr-hidden">
+                            {% for existing_document_form in form.documents_forms %}
+                                <div class="existing-document-form">
+                                    {{ existing_document_form }}
+                                    <input type="hidden" id="existing_document" value="{{ existing_document_form.instance.pk}}">
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <hr class="fr-hr-or fr-mt-4w">
+
+                        {% dsfr_form_field add_document_form.nom|set_data:"message-form-target:documentNameInput"|set_data:"action:input->message-form#onNomChanged" %}
+                        {% dsfr_notice title="Nommer le document de manière claire et compréhensible pour tous" %}
+                        <div class="fr-my-4v"></div>
+                        {% dsfr_form_field add_document_form.document_type|set_data:"message-form-target:documentTypeSelect"|set_data:"action:change->message-form#onTypeChanged" %}
+                        <div id="allowed-extensions-infos">
+                            <span class="fr-hint-text">Formats supportés : </span>
+                            <span data-message-form-target="allowedExtensions"
+                                  class="fr-hint-text">{{ allowed_extensions|join:", " }}</span>
+                        </div>
+                        <span class="fr-hint-text">Taille maximale autorisée : {{ max_upload_size_mb }} Mo</span>
+
+                        {{ add_document_form.file|add_class:"fr-input fr-my-4v"|set_data:"message-form-target:documentFile"|set_data:"action:change->message-form#onFileChanged" }}
+                        {% dsfr_form_field add_document_form.description|set_data:"message-form-target:commentInput" %}
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                            <button class="fr-btn fr-btn--tertiary" id="message-add-document"
+                                    data-message-form-target="addDocument" data-action="click->message-form#onAddDocument:prevent:default" disabled>Valider l'ajout du document
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fr-col-1"></div>
+            </div>
         </div>
     </form>
 {% endblock %}

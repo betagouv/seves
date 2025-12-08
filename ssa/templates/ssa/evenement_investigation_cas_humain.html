@@ -1,0 +1,49 @@
+{% extends "ssa/base.html" %}
+{% load static %}
+
+{% block content %}
+    <form id="main-form" class="fr-container--fluid fr-background-alt--grey" method="post">
+        {% csrf_token %}
+        <main class="main-container">
+            <div class="fr-grid-row">
+                {% block title %}<h1 class="fr-col-6">Création d'un évènement</h1>{% endblock %}
+                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
+                    {% block buttons %}
+                        {% if form.instance and form.instance.is_draft %}
+                            <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
+                                Enregistrer le brouillon
+                            </button>
+                        {% endif %}
+                        <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
+                            {% if form.instance.pk and not form.instance.is_draft %}
+                                Enregistrer
+                            {% else %}
+                                Publier
+                            {% endif %}
+                        </button>
+                    {% endblock %}
+                </div>
+            </div>
+            {{ form }}
+
+            <fieldset class="fr-block fr-fieldset form-fieldset fr-mt-4v">
+                <legend class="fr-fieldset__legend fr-h3">Établissements</legend>
+                <button
+                    type="button"
+                    id="add-etablissement"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                >Ajouter
+                </button>
+                <div>
+                    {{ etablissement_formset }}
+                </div>
+            </fieldset>
+
+            <fieldset id="liens-libre" class="fr-block fr-fieldset form-fieldset fr-mt-4v">
+                <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
+
+                {% include "ssa/_free_links_block.html" %}
+            </fieldset>
+        </main>
+    </form>
+{% endblock %}

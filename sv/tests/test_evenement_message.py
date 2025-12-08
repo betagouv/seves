@@ -5,14 +5,14 @@ from datetime import datetime
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.contrib.auth.models import Group
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 from waffle.testutils import override_flag
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE
 from core.factories import (
     ContactAgentFactory,
     ContactStructureFactory,
@@ -20,7 +20,7 @@ from core.factories import (
     DocumentFactory,
     MessageFactory,
 )
-from core.models import Message, Contact, Structure, Visibilite, Document, FinSuiviContact
+from core.models import Message, Contact, Structure, Visibilite, Document
 from core.pages import UpdateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_message_without_document,
@@ -28,9 +28,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_note,
     generic_test_can_update_draft_point_situation,
     generic_test_can_update_draft_demande_intervention,
-    generic_test_can_update_draft_fin_suivi,
     generic_test_can_finaliser_draft_note,
-    generic_test_can_send_draft_fin_suivi,
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
@@ -43,7 +41,16 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_note_in_new_tab_without_document,
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
-    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status,
+    generic_test_can_add_message_in_new_tab_with_documents,
+    generic_test_can_delete_my_own_message,
+    generic_test_can_reply_to_message,
+    generic_test_can_update_draft_message_in_new_tab,
+    generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_update_draft_demande_intervention_in_new_tab,
+    generic_test_can_send_draft_message_in_new_tab,
+    generic_test_can_update_draft_note_in_new_tab,
+    generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab,
+    generic_test_can_delete_my_own_draft_message,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -92,16 +99,6 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     evenement = EvenementFactory()
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
         live_server, page, choice_js_fill, evenement, mocked_authentification_user
-    )
-
-
-@override_flag("message_v2", active=True)
-def test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
-    live_server, page: Page, mocked_authentification_user
-):
-    evenement = EvenementFactory()
-    generic_test_can_add_and_see_fin_de_suivi_in_new_tab_without_document_and_alter_status(
-        live_server, page, evenement, mocked_authentification_user
     )
 
 
@@ -1525,28 +1522,6 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     assert len(mailoutbox) == 0
 
 
-def test_can_add_draft_fin_suivi(live_server, page: Page, mailoutbox, mocked_authentification_user):
-    evenement = EvenementFactory()
-    contact = mocked_authentification_user.agent.structure.contact_set.get()
-    evenement.contacts.add(contact)
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Fin de suivi").click()
-    page.locator("#id_content").fill("My content \n with a line return")
-    page.get_by_role("button", name="Enregistrer comme brouillon").click()
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
-    assert page.text_content(cell_selector) == "[BROUILLON] Fin de suivi"
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
-    assert page.text_content(cell_selector) == "Fin de suivi [BROUILLON]"
-    assert evenement.messages.get().status == Message.Status.BROUILLON
-    assert len(mailoutbox) == 0
-    assert not FinSuiviContact.objects.filter(
-        content_type=ContentType.objects.get_for_model(evenement), object_id=evenement.id, contact=contact
-    ).exists()
-
-
 def test_draft_messages_always_displayed_first_in_messages_list(live_server, page: Page, mocked_authentification_user):
     """Test que les brouillons sont toujours affichés en premier dans la liste des messages,
     triés par date décroissante, suivis des messages finalisés également triés par date décroissante"""
@@ -1606,6 +1581,15 @@ def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocke
     )
 
 
+@override_flag("message_v2", active=True)
+def test_can_update_draft_message_in_new_tab(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_message_in_new_tab(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
     generic_test_cant_see_drafts_from_other_users(live_server, page, EvenementFactory())
 
@@ -1614,8 +1598,22 @@ def test_can_update_draft_note(live_server, page: Page, mocked_authentification_
     generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
 
 
+@override_flag("message_v2", active=True)
+def test_can_update_draft_note_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_note_in_new_tab(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
 def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_point_situation(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_update_draft_point_situation_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
 
@@ -1628,13 +1626,19 @@ def test_can_update_draft_demande_intervention(
     )
 
 
+@override_flag("message_v2", active=True)
+def test_can_update_draft_demande_intervention_in_new_tab(
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_update_draft_demande_intervention_in_new_tab(
+        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
+
+
 def test_can_update_draft_compte_rendu_demande_intervention(
-    live_server, page: Page, mocked_authentification_user, mailoutbox
+    live_server, page: Page, mocked_authentification_user, mailoutbox, mus_contact
 ):
     object = EvenementFactory()
-    contact_mus = ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
     contact_bsv = ContactStructureFactory(
         structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
     )
@@ -1643,11 +1647,11 @@ def test_can_update_draft_compte_rendu_demande_intervention(
         status=Message.Status.BROUILLON,
         sender=mocked_authentification_user.agent.contact_set.get(),
         message_type=Message.COMPTE_RENDU,
-        recipients=[contact_mus],
+        recipients=[mus_contact],
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, message.id)
+    message_page = UpdateMessagePage(page, f"#sidebar-message-{message.id}")
     message_page.open_message()
     page.locator(message_page.container_id).get_by_text("BSV").click()
     message_page.message_title.fill("Titre mis à jour")
@@ -1657,21 +1661,22 @@ def test_can_update_draft_compte_rendu_demande_intervention(
     message.refresh_from_db()
     assert message.message_type == Message.COMPTE_RENDU
     assert message.recipients.count() == 2
-    assert set(message.recipients.all()) == {contact_mus, contact_bsv}
+    assert set(message.recipients.all()) == {mus_contact, contact_bsv}
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
     assert message.content == "Contenu mis à jour"
     assert len(mailoutbox) == 0
 
 
-def test_can_update_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_update_draft_fin_suivi(
-        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
-
-
 def test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
+
+
+@override_flag("message_v2", active=True)
+def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_send_draft_message_in_new_tab(
+        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
+    )
 
 
 def test_can_send_draft_point_de_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
@@ -1682,12 +1687,6 @@ def test_can_send_draft_point_de_situation(live_server, page: Page, mocked_authe
 
 def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
     generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, EvenementFactory())
-
-
-def test_can_send_draft_fin_suivi(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_send_draft_fin_suivi(
-        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
 
 
 def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
@@ -1708,9 +1707,61 @@ def test_can_see_and_delete_documents_from_draft_message(
     )
 
 
+@override_flag("message_v2", active=True)
+def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
+    live_server, page: Page, mocked_authentification_user, mailoutbox
+):
+    generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
+        live_server,
+        page,
+        EvenementFactory(),
+        mocked_authentification_user,
+        mailoutbox,
+    )
+
+
 def test_only_displays_sv_contacts(live_server, page: Page, mocked_authentification_user):
     generic_test_only_displays_app_contacts(live_server, page, EvenementFactory(), "sv")
 
 
 def test_structure_show_only_one_entry_in_select(live_server, page: Page):
     generic_test_structure_show_only_one_entry_in_select(live_server, page, EvenementFactory())
+
+
+@override_flag("message_v2", active=True)
+def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
+    generic_test_can_add_message_in_new_tab_with_documents(
+        live_server, page, choice_js_fill, EvenementFactory(), mailoutbox
+    )
+
+
+@pytest.mark.django_db
+def test_cant_delete_a_message_i_dont_own(client):
+    evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
+    message = MessageFactory(content_object=evenement)
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(Message).id,
+        "content_id": message.pk,
+    }
+    response = client.post(reverse("soft-delete"), data=payload)
+
+    message.refresh_from_db()
+    assert response.status_code == 302
+    assert message.is_deleted is False
+
+
+def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_delete_my_own_message(
+        live_server, page, EvenementFactory(), mocked_authentification_user, mailoutbox
+    )
+
+
+def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
+    generic_test_can_delete_my_own_draft_message(
+        live_server, page, EvenementFactory(), mocked_authentification_user, mailoutbox
+    )
+
+
+@override_flag("message_v2", active=True)
+def test_can_reply_to_message(live_server, page: Page, choice_js_fill):
+    generic_test_can_reply_to_message(live_server, page, choice_js_fill, EvenementFactory())

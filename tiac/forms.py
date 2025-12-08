@@ -15,7 +15,8 @@ from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeIntervention
 from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Message, Structure, Departement
-from ssa.models import EvenementProduit, CategorieProduit, CategorieDanger
+from ssa.models import EvenementProduit
+from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import (
     DangersSyndromiques,
     DANGERS_COURANTS,
@@ -216,6 +217,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         fields = [
             "type_etablissement",
             "siret",
+            "autre_identifiant",
             "raison_sociale",
             "enseigne_usuelle",
             "adresse_lieu_dit",

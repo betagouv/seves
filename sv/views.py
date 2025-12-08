@@ -34,6 +34,7 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithClotureContextMixin,
     WithOrderingMixin,
+    WithFinDeSuiviMixin,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
@@ -136,6 +137,7 @@ class EvenementDetailView(
     WithContactListInContextMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
+    WithFinDeSuiviMixin,
     UserPassesTestMixin,
     DetailView,
 ):

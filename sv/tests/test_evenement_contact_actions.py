@@ -1,16 +1,18 @@
-import re
-
 import pytest
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group
-from playwright.sync_api import expect, Page
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from playwright.sync_api import expect, Page
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact
 from core.tests.generic_tests.contacts import (
     generic_test_add_contact_agent_to_an_evenement,
+    generic_test_remove_contact_agent_from_an_evenement,
+    generic_test_add_contact_structure_to_an_evenement,
+    generic_test_remove_contact_structure_from_an_evenement,
+    generic_test_add_multiple_contacts_agents_to_an_evenement,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -31,9 +33,14 @@ def contacts(db):
     return ContactAgentFactory.create_batch(2, agent__structure=structure, with_active_agent=True)
 
 
-def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill):
+def test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, mailoutbox):
     evenement = EvenementFactory()
-    generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, evenement)
+    generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, evenement, mailoutbox)
+
+
+def test_remove_contact_agent_from_an_evenement(live_server, page, mailoutbox):
+    evenement = EvenementFactory()
+    generic_test_remove_contact_agent_from_an_evenement(live_server, page, evenement, mailoutbox)
 
 
 def test_cant_add_inactive_agent_to_an_evenement(live_server, page, choice_js_cant_pick, goto_contacts):
@@ -56,46 +63,9 @@ def test_cant_add_inactive_structure_to_an_evenement(live_server, page, choice_j
     choice_js_cant_pick(page, "#add-contact-structure-form .choices", str(contact), str(contact))
 
 
-def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, goto_contacts):
-    contact_structure = ContactStructureFactory()
-    contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
-        2, with_active_agent=True, agent__structure=contact_structure.structure
-    )
+def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, mailoutbox):
     evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    goto_contacts(page)
-    choice_js_fill(
-        page,
-        "#add-contact-agent-form .choices",
-        contact_agent_1.agent.nom,
-        contact_agent_1.display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    goto_contacts(page)
-    page.wait_for_timeout(1000)
-    choice_js_fill(
-        page,
-        "#add-contact-agent-form .choices",
-        contact_agent_2.agent.nom,
-        contact_agent_2.display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
-
-    expect(page.get_by_text("Les 2 agents ont été ajoutés avec succès.")).to_be_visible()
-    goto_contacts(page)
-    assert page.get_by_test_id("contacts-agents").count() == 2
-    expect(
-        page.get_by_test_id("contacts-agents").get_by_text(
-            f"{contact_agent_1.agent.nom} {contact_agent_1.agent.prenom}", exact=True
-        )
-    ).to_be_visible()
-    expect(
-        page.get_by_test_id("contacts-agents").get_by_text(
-            f"{contact_agent_2.agent.nom} {contact_agent_2.agent.prenom}", exact=True
-        )
-    ).to_be_visible()
+    generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page, evenement, choice_js_fill, mailoutbox)
 
 
 def test_cant_add_contact_agent_if_evenement_brouillon(client, contact):
@@ -304,36 +274,131 @@ def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server
     assert contact_agent.agent.structure not in evenement.contacts.all()
 
 
-def test_notification_is_send_when_adding_contact_agent(live_server, page, choice_js_fill, goto_contacts, mailoutbox):
-    contact_structure = ContactStructureFactory()
-    contact_agent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+@pytest.fixture
+def contacts_structure():
+    return ContactStructureFactory.create_batch(2, with_one_active_agent=True)
+
+
+@pytest.mark.django_db
+def test_add_structure_form_hides_empty_emails(live_server, page):
+    evenement = EvenementFactory()
+    evenement.contacts.set(ContactStructureFactory.create_batch(5, with_one_active_agent=True))
+
+    ContactStructureFactory(structure__libelle="Level 1", with_one_active_agent=True)
+    ContactStructureFactory(structure__libelle="Level 2", with_one_active_agent=True, email="")
+    ContactStructureFactory(structure__libelle="Level 3", with_one_active_agent=True)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 1", exact=True)).to_be_visible()
+    expect(
+        page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 2", exact=True)
+    ).not_to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Level 3", exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_add_structure_form_hides_structure_without_active_user(live_server, page):
+    visible_structure = ContactStructureFactory(with_one_active_agent=True)
+    unvisible_structure = ContactStructureFactory()
+
+    page.goto(f"{live_server.url}{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+
+    expect(
+        page.get_by_label("Ajouter une structure").get_by_role(
+            "option", name=str(visible_structure.structure), exact=True
+        )
+    ).to_be_visible()
+    expect(
+        page.get_by_label("Ajouter une structure").get_by_role(
+            "option", name=str(unvisible_structure.structure), exact=True
+        )
+    ).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_add_structure_form_service_account_is_hidden(live_server, page):
+    page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+    expect(page.get_by_text("service_account")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_structure_niveau2_without_emails_are_not_visible(live_server, page):
+    ContactStructureFactory(structure__niveau1="Level 1", structure__libelle="Foo", with_one_active_agent=True)
+    ContactStructureFactory(
+        structure__niveau1="Level 1", structure__libelle="Bar", with_one_active_agent=True, email=""
+    )
+    page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Foo")).to_be_visible()
+    expect(page.get_by_label("Ajouter une structure").get_by_role("option", name="Bar")).not_to_be_visible()
+
+
+def test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+    generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, evenement, mailoutbox)
+
+
+def test_remove_contact_structure_from_an_evenement(live_server, page, mailoutbox):
+    evenement = EvenementFactory()
+    generic_test_remove_contact_structure_from_an_evenement(live_server, page, evenement, mailoutbox)
+
+
+@pytest.mark.django_db
+def test_add_multiple_structures_to_an_evenement(live_server, page, choice_js_fill):
+    contact_structure_1, contact_structure_2 = ContactStructureFactory.create_batch(2, with_one_active_agent=True)
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    goto_contacts(page)
-    choice_js_fill(
-        page, "#add-contact-agent-form .choices", contact_agent.agent.nom, contact_agent.display_with_agent_unit
-    )
-    page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+    page.get_by_role("tab", name="Contacts").click()
+    choice_js_fill(page, "#add-contact-structure-form .choices", str(contact_structure_1), str(contact_structure_1))
+    choice_js_fill(page, "#add-contact-structure-form .choices", str(contact_structure_2), str(contact_structure_2))
+    page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
 
-    expected_content = f"""
-<!DOCTYPE html>
-<html>
-<div style="font-family: Arial, sans-serif;">
-    <p style="font-weight: bold;">Ajout en contact d’une fiche</p>
-    <p>Bonjour,</p>
-    <p>Vous avez été ajouté en contact de la fiche n° {evenement.numero}.</p>
-    <p>Vous pouvez y accéder avec le lien suivant : <a href="https://seves.beta.gouv.fr{evenement.get_absolute_url()}">https://seves.beta.gouv.fr{evenement.get_absolute_url()}</a></p>
-</div>
-</html>
-    """
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    content, _ = mail.alternatives[0]
-    pattern = r"\s+"
-    normalized_content = re.sub(pattern, "", content)
-    normalized_expected = re.sub(pattern, "", expected_content)
-    assert normalized_expected == normalized_content
-    assert set(mail.to) == {f"{contact_agent.agent.prenom} {contact_agent.agent.nom} <{contact_agent.email}>"}
-    assert mail.from_email == "Sèves <no-reply@seves.beta.gouv.fr>"
-    assert mail.subject == f"[Sèves SV] {evenement.organisme_nuisible.code_oepp} {evenement.numero}"
+    expect(page.get_by_text("Les 2 structures ont été ajoutées avec succès.")).to_be_visible()
+    page.get_by_role("tab", name="Contacts").click()
+    assert page.get_by_test_id("contacts-structures").count() == 2
+    expect(page.get_by_test_id("contacts-structures").get_by_text(str(contact_structure_1), exact=True)).to_be_visible()
+    expect(page.get_by_test_id("contacts-structures").get_by_text(str(contact_structure_2), exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_add_contact_structure_if_evenement_brouillon(client):
+    contact = ContactStructureFactory(with_one_active_agent=True)
+    evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+
+    response = client.post(
+        reverse("structure-add"),
+        data={
+            "contacts_structures": [contact.id],
+            "content_type_id": ContentType.objects.get_for_model(evenement).id,
+            "content_id": evenement.id,
+        },
+        follow=True,
+    )
+
+    messages = list(response.context["messages"])
+    assert len(messages) == 1
+    assert messages[0].level_tag == "error"
+    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+
+
+@pytest.mark.django_db
+@pytest.mark.browser_context_args(timezone_id="Europe/Berlin", locale="de-DE")
+def test_add_contact_structure_without_value_shows_front_error(live_server, page: Page):
+    evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
+
+    validation_message = page.locator("#id_contacts_structures").evaluate("el => el.validationMessage")
+    assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]

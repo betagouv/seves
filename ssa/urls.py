@@ -1,23 +1,39 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import (
     EvenementProduitDetailView,
     EvenementProduitCreateView,
-    EvenementProduitListView,
+    EvenementsListView,
     FindNumeroAgrementView,
     EvenementUpdateView,
 )
-from .views.produit import EvenementProduitExportView, EvenementProduitDocumentExportView
+from .views.produit import (
+    EvenementProduitExportView,
+    EvenementProduitDocumentExportView,
+    InvestigationCasHumainCreateView,
+    InvestigationCasHumainUpdateView,
+)
 
 app_name = "ssa"
 urlpatterns = [
+    path(
+        "evenement-produit/",
+        RedirectView.as_view(pattern_name="ssa:evenements-liste", permanent=True),
+        name="evenement-produit-liste",
+    ),
+    path(
+        "evenements/",
+        EvenementsListView.as_view(),
+        name="evenements-liste",
+    ),
     path(
         "evenement-produit/creation",
         EvenementProduitCreateView.as_view(),
         name="evenement-produit-creation",
     ),
     path(
-        "evenement-produit/<str:numero>/",
+        "evenement-produit/<int:pk>/",
         EvenementProduitDetailView.as_view(),
         name="evenement-produit-details",
     ),
@@ -27,17 +43,12 @@ urlpatterns = [
         name="evenement-produit-update",
     ),
     path(
-        "evenement-produit/",
-        EvenementProduitListView.as_view(),
-        name="evenement-produit-liste",
-    ),
-    path(
         "export/evenement-produit/",
         EvenementProduitExportView.as_view(),
         name="export-evenement-produit",
     ),
     path(
-        "export/evenement-produit/<str:numero>/document/",
+        "export/evenement-produit/<int:pk>/document/",
         EvenementProduitDocumentExportView.as_view(),
         name="export-evenement-produit-document",
     ),
@@ -45,5 +56,15 @@ urlpatterns = [
         "api/find-numero-agrement/",
         FindNumeroAgrementView.as_view(),
         name="find-numero-agrement",
+    ),
+    path(
+        "investigation-cas-humain/creation",
+        InvestigationCasHumainCreateView.as_view(),
+        name="investigation-cas-humain-creation",
+    ),
+    path(
+        "investigation-cas-humain/<int:pk>/modification",
+        InvestigationCasHumainUpdateView.as_view(),
+        name="investigation-cas-humain-update",
     ),
 ]

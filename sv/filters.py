@@ -1,7 +1,12 @@
 import django_filters
 
 from core.constants import REGION_STRUCTURE_MAPPING
-from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
+from core.filters_mixins import (
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtatFilterMixin,
+)
 from core.forms import DSFRForm
 from core.models import Region
 from seves import settings
@@ -10,7 +15,11 @@ from django.forms.widgets import DateInput
 
 
 class EvenementFilter(
-    WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin, django_filters.FilterSet
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtatFilterMixin,
+    django_filters.FilterSet,
 ):
     region = django_filters.ModelChoiceFilter(
         label="Région", queryset=Region.objects.all(), empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_region"
@@ -30,7 +39,6 @@ class EvenementFilter(
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
-    etat = django_filters.ChoiceFilter(choices=Evenement.Etat, label="État", empty_label=settings.SELECT_EMPTY_CHOICE)
 
     class Meta:
         model = Evenement

@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import unicodedata
 from collections import defaultdict
 from typing import Mapping
 
@@ -8,11 +9,10 @@ from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.forms.utils import RenderableMixin
-from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
@@ -30,7 +30,7 @@ from core.models import Document, LienLibre, Contact, Message, Visibilite, Struc
 from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
-from .notifications import notify_message
+from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
@@ -124,9 +124,12 @@ class WithMessageMixin:
                 "documents",
             )
         )
+        for message in message_list:
+            message.can_be_deleted = message.can_user_delete(self.request.user)
         context["message_list"] = message_list
         context["message_update_forms"] = self._get_message_update_forms(message_list)
         context["message_v2"] = flag_is_active(self.request, "message_v2")
+        context["message_content_type"] = ContentType.objects.get_for_model(Message)
         return context
 
 
@@ -185,40 +188,6 @@ class WithFreeLinksListInContextMixin:
         context = super().get_context_data(**kwargs)
         context["free_links_list"] = LienLibre.objects.for_object(self.get_object())
         return context
-
-
-class AllowsSoftDeleteMixin(models.Model):
-    is_deleted = models.BooleanField(default=False)
-
-    def can_user_delete(self, user):
-        raise NotImplementedError
-
-    def can_be_deleted(self, user):
-        return self.can_user_delete(user)
-
-    def soft_delete(self, user):
-        if not self.can_be_deleted(user):
-            raise PermissionDenied
-        self.is_deleted = True
-        self.save()
-
-    def get_soft_delete_success_message(self):
-        return "L'objet a bien été supprimé"
-
-    def get_soft_delete_permission_error_message(self):
-        return "Vous n'avez pas les droits pour supprimer cet objet"
-
-    def get_soft_delete_attribute_error_message(self):
-        return "Ce type d'objet ne peut pas être supprimé"
-
-    def get_soft_delete_confirm_title(self):
-        return "Supprimer cet objet"
-
-    def get_soft_delete_confirm_message(self):
-        return "Cette action est irréversible. Confirmez-vous la suppression de cet objet ?"
-
-    class Meta:
-        abstract = True
 
 
 class IsActiveMixin(models.Model):
@@ -361,6 +330,7 @@ class WithEtatMixin(models.Model):
     def cloturer(self):
         self.etat = self.Etat.CLOTURE
         self.save()
+        notify_object_cloture(self)
 
     def publish(self):
         self.etat = self.Etat.EN_COURS
@@ -416,7 +386,7 @@ class WithEtatMixin(models.Model):
         return self.get_etat_data_from_fin_de_suivi(is_fin_de_suivi)
 
     def get_etat_data_from_fin_de_suivi(self, is_fin_de_suivi):
-        if not self.is_cloture and is_fin_de_suivi:
+        if is_fin_de_suivi:
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
@@ -561,7 +531,7 @@ class WithDocumentPermissionMixin(BasePermissionMixin):
         return self._user_can_interact(user)
 
     def can_download_document(self, user):
-        return self._user_can_interact(user)
+        return self.can_user_access(user)
 
 
 class WithContactPermissionMixin(BasePermissionMixin):
@@ -604,6 +574,18 @@ class WithClotureContextMixin:
         context["is_evenement_can_be_cloture"], _ = object.can_be_cloture(user)
         context["is_the_only_remaining_structure"] = object.is_the_only_remaining_structure(
             user, contacts_structures_not_in_fin_suivi
+        )
+        return context
+
+
+class WithFinDeSuiviMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_fin_de_suivi_be_added"] = FinSuiviContact().can_add_fin_de_suivi(
+            self.get_object(), self.request.user
+        )
+        context["can_fin_de_suivi_be_removed"] = FinSuiviContact().can_remove_fin_de_suivi(
+            self.get_object(), self.request.user
         )
         return context
 
@@ -688,28 +670,6 @@ class WithOrderingMixin:
 
 
 class MessageHandlingMixin(WithAddUserContactsMixin):
-    def _mark_contact_as_fin_suivi(self, form):
-        if form.instance.status == Message.Status.BROUILLON:
-            return
-        message_type = form.cleaned_data.get("message_type") or form.instance.message_type
-        if message_type != Message.FIN_SUIVI:
-            return
-
-        if form.cleaned_data.get("content_type"):
-            content_type = form.cleaned_data.get("content_type")
-            object_id = form.cleaned_data.get("object_id")
-        else:
-            content_type = form.instance.content_type
-            object_id = form.instance.object_id
-
-        fin_suivi_contact = FinSuiviContact(
-            content_type=content_type,
-            object_id=object_id,
-            contact=Contact.objects.get(structure=self.request.user.agent.structure),
-        )
-        fin_suivi_contact.full_clean()
-        fin_suivi_contact.save()
-
     def _is_internal_communication(self, structures):
         """
         Returns True if all contacts involved are part of the same structure
@@ -760,12 +720,13 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
             try:
                 Document.objects.create(
                     file=form.cleaned_data[f"document_{i}"],
-                    nom=form.cleaned_data[f"document_{i}"]._name,
+                    nom=form.cleaned_data.get(f"document_name_{i}", form.cleaned_data[f"document_{i}"]._name),
                     document_type=form.cleaned_data[f"document_type_{i}"],
                     content_type=content_type,
                     object_id=message.pk,
                     created_by=self.request.user.agent,
                     created_by_structure=self.request.user.agent.structure,
+                    description=form.cleaned_data.get(f"document_comment_{i}", ""),
                 )
             except OperationalError:
                 logger.error("Could not connect to Redis")
@@ -781,12 +742,6 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         ).exclude(pk__in=pks_to_keeps).delete()
 
     def handle_message_form(self, form):
-        try:
-            self._mark_contact_as_fin_suivi(form)
-        except ValidationError as e:
-            for message in e.messages:
-                messages.error(self.request, message)
-            return HttpResponseRedirect(self.obj.get_absolute_url())
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.obj)
@@ -838,3 +793,46 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
         sub_doc_file = f"subdoc_{obj}.docx"
         sub_template.save(sub_doc_file)
         return sub_doc_file
+
+
+def normalize(s):
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)).lower()
+
+
+def sort_tree(tree):
+    tree.sort(key=lambda x: normalize(x["name"]))
+    for node in tree:
+        if node["children"]:
+            sort_tree(node["children"])
+
+
+class WithChoicesToJS:
+    @classmethod
+    def build_options(cls, sorted_results=False):
+        def insert_node(path, value, tree):
+            current_level = tree
+            for label in path[:-1]:
+                existing = next((n for n in current_level if n["name"] == label), None)
+                if not existing:
+                    existing = {"name": label, "value": value, "children": []}
+                    current_level.append(existing)
+                current_level = existing["children"]
+            current_level.append({"name": path[-1], "value": value, "children": []})
+
+        options = []
+        for option in cls:
+            if hasattr(option, "short_name"):
+                path = [p.strip() for p in option.short_name.split(">")]
+            else:
+                path = [p.strip() for p in option.label.split(">")]
+            insert_node(path, option.value, options)
+
+        for option in options:
+            if option["children"] != []:
+                option["isGroupSelectable"] = False
+                option["value"] = 2 * option["value"]  # We can pick it we just need a unique value for TreeselectJS
+
+        if sorted_results:
+            sort_tree(options)
+
+        return options

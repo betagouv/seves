@@ -1,21 +1,32 @@
+import json
+
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from django.forms import Media
 from django.utils import timezone
+from django.utils.safestring import mark_safe
+from dsfr.forms import DsfrBaseForm
 
-from core.fields import SEVESChoiceField, DSFRRadioButton, ContactModelMultipleChoiceField
-from core.form_mixins import DSFRForm
-from core.forms import BaseMessageForm, BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
-from core.mixins import WithEtatMixin
+from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
+from core.form_mixins import DSFRForm, js_module
+from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm, BaseMessageForm
+from core.mixins import WithEtatMixin, WithCommonContextVars
 from core.models import Contact, Message
-from ssa.fields import SelectWithAttributeField
+from ssa.constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, SourceInvestigationCasHumain
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
-from ssa.models import Etablissement, PositionDossier, CategorieDanger
-from ssa.models import EvenementProduit, TypeEvenement, Source, TemperatureConservation, ActionEngagees
-from ssa.models.evenement_produit import PretAManger, QuantificationUnite, CategorieProduit
+from ssa.models import (
+    ActionEngagees,
+    Etablissement,
+    EvenementInvestigationCasHumain,
+    EvenementProduit,
+    PositionDossier,
+    TemperatureConservation,
+)
+from ssa.models.evenement_produit import PretAManger, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
 
-class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.ModelForm):
+class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
     date_reception = forms.DateTimeField(
         label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
@@ -28,13 +39,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         ),
         label="N° RASFF/AAC",
     )
-    aliments_animaux = forms.ChoiceField(
-        required=False,
-        choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
-        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
-        label="Inclut des aliments pour animaux",
-    )
-    source = SEVESChoiceField(choices=Source.choices, required=False, widget=SelectWithAttributeField)
     description = forms.CharField(
         required=True,
         widget=forms.Textarea(
@@ -44,6 +48,52 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             }
         ),
         label="Description de l'événement",
+    )
+
+    categorie_danger = SEVESChoiceField(required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput)
+    precision_danger = forms.CharField(
+        required=False,
+        label="Précision danger",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Sérotype, molécule...",
+            }
+        ),
+    )
+
+    @property
+    def media(self):
+        return super().media + Media(
+            css={
+                "all": (
+                    "ssa/_custom_tree_select.css",
+                    "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
+                )
+            },
+            js=(js_module("ssa/categorie_djanger.mjs"), js_module("ssa/free_links.mjs")),
+        )
+
+    def categorie_danger_data(self):
+        return mark_safe(json.dumps(CategorieDanger.build_options(sorted_results=True)))
+
+    def danger_plus_courants(self):
+        return [
+            CategorieDanger.LISTERIA_MONOCYTOGENES,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
+            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE,
+        ]
+
+
+class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
+    source = SEVESChoiceField(choices=Source.choices, required=False)
+
+    aliments_animaux = forms.ChoiceField(
+        required=False,
+        choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
+        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Inclut des aliments pour animaux",
     )
 
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
@@ -58,17 +108,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
             }
         ),
         label="Description complémentaire",
-    )
-
-    categorie_danger = SEVESChoiceField(required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput)
-    precision_danger = forms.CharField(
-        required=False,
-        label="Précision danger",
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "Sérotype, molécule...",
-            }
-        ),
     )
     quantification = forms.CharField(
         required=False,
@@ -163,7 +202,9 @@ class EvenementProduitForm(DSFRForm, WithEvenementProduitFreeLinksMixin, forms.M
         }
 
 
-class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
+class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):
+    template_name = "ssa/forms/etablissement.html"
+
     numero_agrement = forms.CharField(
         required=False,
         label="Numéro d'agrément",
@@ -183,12 +224,11 @@ class EtablissementForm(DSFRForm, BaseEtablissementForm, forms.ModelForm):
         widget=PositionDossierWidget(attrs={"class": "fr-select"}),
     )
 
-    manual_render_fields = ["DELETE", "position_dossier", "type_exploitant"]
-
     class Meta:
         model = Etablissement
         fields = [
             "siret",
+            "autre_identifiant",
             "numero_agrement",
             "raison_sociale",
             "enseigne_usuelle",
@@ -242,3 +282,56 @@ class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm)
     recipients = ContactModelMultipleChoiceField(
         queryset=Contact.objects.get_ssa_structures(), label="Destinataires", required=True
     )
+
+
+class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.ModelForm):
+    template_name = "ssa/forms/investigation_cas_humain.html"
+
+    source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=False)
+
+    @property
+    def media(self):
+        return super().media + Media(css={"all": ("core/dsfr_no_required.css",)})
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+        self._add_free_links(model=EvenementProduit)
+
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_rasff")
+
+    def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+
+        if not self.instance.pk:
+            self.instance.createur = self.user.agent.structure
+        instance = super().save(commit)
+        self.save_free_links(instance)
+        return instance
+
+    class Meta:
+        model = EvenementInvestigationCasHumain
+        fields = (
+            "date_reception",
+            "numero_rasff",
+            "type_evenement",
+            "source",
+            "description",
+            "categorie_danger",
+            "precision_danger",
+            "reference_souches",
+            "reference_clusters",
+            "evaluation",
+        )
+        widgets = {
+            "evaluation": forms.Textarea(
+                attrs={
+                    "placeholder": (
+                        "Préciser si besoin (facultatif) : analyse du danger et du risque par le professionnel, "
+                        "par les autorités, évaluation de la situation"
+                    )
+                },
+            )
+        }

@@ -6,7 +6,7 @@ from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Page, expect, Locator
 
-from ssa.models import CategorieDanger
+from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import TypeRepas, SuspicionConclusion, DangersSyndromiques
 from tiac.models import (
@@ -62,6 +62,7 @@ class WithEtablissementMixin:
     def fill_etablissement(self, modal, etablissement: Etablissement):
         modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="autre_identifiant"]').fill(etablissement.autre_identifiant)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
         modal.locator('[id$="-commune"]').fill(etablissement.commune)
@@ -679,11 +680,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit(self, btn_label="Enregistrer"):
-        self.page.get_by_role("button", name=btn_label, exact=True).first.click()
+        self.page.locator("button#submit_publish").first.click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
-        self.submit("Enregistrer le brouillon")
+        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).first.click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))

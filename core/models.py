@@ -13,10 +13,19 @@ from django.db.models import Q, CheckConstraint
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from reversion.models import Revision
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from seves import settings
-from .managers import ContactQueryset, LienLibreQueryset, StructureQueryset, DocumentManager, DocumentQueryset
+from .managers import (
+    ContactQueryset,
+    LienLibreQueryset,
+    StructureQueryset,
+    DocumentManager,
+    DocumentQueryset,
+    MessageManager,
+)
+from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import validate_upload_file, AllowedExtensions
 
@@ -135,6 +144,39 @@ class FinSuiviContact(models.Model):
 
     def __str__(self):
         return f"Fin de suivi de {self.contact} pour la fiche {self.content_type} n° {self.content_object}"
+
+    @classmethod
+    def _can_change_fin_de_suivi(cls, object, user, contact):
+        if not hasattr(object, "contacts"):
+            return False
+        if not object.contacts.filter(id=contact.id).exists():
+            return False
+        if not object.can_user_access(user):
+            return False
+
+    @classmethod
+    def can_add_fin_de_suivi(cls, object, user):
+        contact = user.agent.structure.contact_set.get()
+        content_type = ContentType.objects.get_for_model(object).id
+        can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
+        if can_change_fin_de_suivi is False:
+            return False
+
+        return not FinSuiviContact.objects.filter(
+            object_id=object.id, content_type_id=content_type, contact=contact
+        ).exists()
+
+    @classmethod
+    def can_remove_fin_de_suivi(cls, object, user):
+        contact = user.agent.structure.contact_set.get()
+        content_type = ContentType.objects.get_for_model(object).id
+        can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
+        if can_change_fin_de_suivi is False:
+            return False
+
+        return FinSuiviContact.objects.filter(
+            object_id=object.id, content_type_id=content_type, contact=contact
+        ).exists()
 
     def clean(self):
         super().clean()
@@ -260,7 +302,7 @@ class Document(models.Model):
 
 
 @reversion.register()
-class Message(models.Model):
+class Message(AllowsSoftDeleteMixin, models.Model):
     MESSAGE = "message"
     NOTE = "note"
     POINT_DE_SITUATION = "point de situation"
@@ -277,8 +319,8 @@ class Message(models.Model):
         (FIN_SUIVI, "Fin de suivi"),
         (NOTIFICATION_AC, "Notification à l'administration centrale"),
     )
-    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION, FIN_SUIVI)
-    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION, FIN_SUIVI)
+    TYPES_TO_FEMINIZE = (NOTE, DEMANDE_INTERVENTION)
+    TYPES_WITHOUT_RECIPIENTS = (NOTE, POINT_DE_SITUATION)
     TYPES_WITH_LIMITED_RECIPIENTS = (COMPTE_RENDU,)
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 
@@ -303,11 +345,17 @@ class Message(models.Model):
 
     documents = GenericRelation(Document)
 
+    objects = MessageManager()
+
     class Meta:
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
         ordering = ["status", "-date_creation"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_deleted = self.is_deleted
 
     def __str__(self):
         return f"Message de type {self.message_type}: {self.content[:150]}..."
@@ -330,14 +378,52 @@ class Message(models.Model):
     def is_draft(self):
         return self.status == self.Status.BROUILLON
 
+    def _is_owner(self, user):
+        return self.sender == user.agent.contact_set.get()
+
     def can_be_updated(self, user):
-        return self.is_draft and self.sender == user.agent.contact_set.get()
+        return self.is_draft and self._is_owner(user)
+
+    def can_user_delete(self, user):
+        return self._is_owner(user)
+
+    def get_soft_delete_success_message(self):
+        return "L'élément a bien été supprimé"
+
+    def get_soft_delete_confirm_message(self):
+        if self.message_type in self.TYPES_TO_FEMINIZE:
+            return f"Cette action est irréversible. Confirmez-vous la suppression de la : {self.get_message_type_display()} - {self.title} ?"
+        return f"Cette action est irréversible. Confirmez-vous la suppression du : {self.get_message_type_display()} - {self.title} ?"
+
+    def get_soft_delete_confirm_title(self):
+        if self.message_type in self.TYPES_TO_FEMINIZE:
+            return f"Supprimer la {self.get_message_type_display()}"
+        return f"Supprimer le {self.get_message_type_display()}"
 
     def get_update_url(self):
         return reverse("message-update", kwargs={"pk": self.pk})
 
+    def get_message_url(self):
+        if self.is_draft:
+            return self.get_update_url()
+        return self.get_absolute_url()
+
     def get_allowed_document_types(self):
         return self.content_object.get_allowed_document_types()
+
+    def get_absolute_url(self):
+        return reverse("message-view", kwargs={"pk": self.pk})
+
+    def can_reply_to(self, user):
+        return self.message_type == self.MESSAGE and self.content_object.can_user_access(user)
+
+    def get_reply_intro_text(self):
+        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {self.sender.display_with_agent_unit} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        if self.recipients_copy.all():
+            intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
+
+        intro += f" le message suivant *******: \n\n {self.content}"
+        return intro
 
 
 @reversion.register()
@@ -456,6 +542,7 @@ class BaseEtablissement(models.Model):
             ),
         ],
     )
+    autre_identifiant = models.CharField(max_length=255, verbose_name="Autre identifiant", blank=True)
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")
     enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
 
@@ -477,7 +564,7 @@ class BaseEtablissement(models.Model):
         Departement,
         on_delete=models.PROTECT,
         verbose_name="Département",
-        related_name="%(app_label)s_etablissements",
+        related_name="%(app_label)s_%(class)ss",
         blank=True,
         null=True,
     )
@@ -485,3 +572,8 @@ class BaseEtablissement(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CustomRevisionMetaData(models.Model):
+    revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
+    extra_data = models.JSONField()

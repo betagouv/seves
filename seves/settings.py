@@ -97,7 +97,7 @@ MIDDLEWARE = [
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "seves.middlewares.HomeRedirectMiddleware",
     "reversion.middleware.RevisionMiddleware",
-    "csp.middleware.CSPMiddleware",
+    "seves.middlewares.SevesCSPMiddleware",
 ]
 
 ROOT_URLCONF = "seves.urls"
@@ -282,6 +282,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
     },
 }
 
@@ -328,3 +332,6 @@ SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-siren
 COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")
 
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = True
+
+if DEBUG:
+    DSFR_USE_INTEGRITY_CHECKSUMS = env.bool("DSFR_USE_INTEGRITY_CHECKSUMS", True)

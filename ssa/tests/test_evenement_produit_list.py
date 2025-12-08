@@ -1,11 +1,19 @@
+from django.urls import reverse
 from playwright.sync_api import Page, expect
+from pytest_django.asserts import assertRedirects
 
-from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre, Departement
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import TypeEvenement, EvenementProduit, TemperatureConservation
-from ssa.models.evenement_produit import PretAManger, ActionEngagees, Source
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
+from core.models import Departement, LienLibre
+from ssa.constants import Source, TypeEvenement
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
+from ssa.models import EvenementProduit, TemperatureConservation
+from ssa.models.evenement_produit import ActionEngagees, PretAManger
 from ssa.tests.pages import EvenementProduitListPage
+
+
+def test_old_url_redirects(client):
+    response = client.get(reverse("ssa:evenement-produit-liste"))
+    assertRedirects(response, reverse("ssa:evenements-liste"), status_code=301)
 
 
 def test_list_table_order(live_server, mocked_authentification_user, page: Page):
@@ -51,10 +59,10 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
 
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
-    assert search_page.description_cell().text_content() == evenement.product_description
+    assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.etat_cell().text_content() == "Brouillon"
-    assert search_page.liens_cell().text_content() == "2"
 
 
 def test_list_can_filter_by_numero(live_server, mocked_authentification_user, page: Page):
@@ -167,6 +175,8 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     EtablissementFactory(raison_sociale="Morbier", evenement_produit=evenement_7)
     evenement_8 = EvenementProduitFactory()
     evenement_9 = EvenementProduitFactory()
+    evenement_10 = EvenementProduitFactory()
+    EtablissementFactory(enseigne_usuelle="Morbier", evenement_produit=evenement_10)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -182,6 +192,7 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_8.numero)).not_to_be_visible()
     expect(search_page.page.get_by_text(evenement_9.numero)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
 
 
 def test_more_filters_interactions(live_server, page: Page):
@@ -337,7 +348,7 @@ def test_can_filter_by_actions_engagees(live_server, mocked_authentification_use
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
     search_page.open_sidebar()
-    search_page.actions_engagees.select_option("Retrait du marché (sans information des consommateurs)")
+    search_page.actions_engagees.select_option("Retrait du marché sans information des consommateurs")
     search_page.add_filters()
     search_page.submit_search()
 

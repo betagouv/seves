@@ -8,7 +8,6 @@ from django.utils.html import strip_tags
 from reversion.models import Version
 
 from core.mixins import (
-    AllowsSoftDeleteMixin,
     WithContactPermissionMixin,
     WithEtatMixin,
     WithFreeLinkIdsMixin,
@@ -17,9 +16,10 @@ from core.mixins import (
     EmailNotificationMixin,
     AllowModificationMixin,
 )
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
 from core.models import Structure, BaseEtablissement, Document, Departement
-from ssa.models import CategorieProduit, CategorieDanger
+from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import (
     ModaliteDeclarationEvenement,
     EvenementOrigin,
@@ -181,6 +181,15 @@ class EvenementSimple(
     @property
     def display_transfer_notice(self):
         return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
+
+    def get_short_email_display_name(self):
+        return f"Enregistrement simple {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"Enregistrement simple {self.numero}"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Enregistrement simple {self.numero}</b>"
 
 
 class Evaluation(models.TextChoices):
@@ -448,6 +457,43 @@ class InvestigationTiac(
     @property
     def type_evenement(self):
         return "Investigation de TIAC"
+
+    def get_short_email_display_name(self):
+        return f"Investigation de TIAC {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"Investigation de TIAC {self.numero} (Créateur : {self.createur} / Etablissement(s) : {self.raisons_sociales_display} / Commune(s) : {self.communes_display})"
+
+    @property
+    def communes_display(self):
+        return ", ".join([e.commune for e in self.etablissements.all() if e.commune])
+
+    @property
+    def raisons_sociales_display(self):
+        return ", ".join([e.raison_sociale for e in self.etablissements.all()])
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>Investigation de TIAC {self.numero}</b> (Créateur : {self.createur} / Etablissement(s) : {self.raisons_sociales_display} / Commune(s) : {self.communes_display})"
+
+    def get_email_cloture_text(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        - Créateur : {self.createur}
+        - Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}
+        - Etablissement(s) : {self.raisons_sociales_display}
+        - Commune(s) : {self.communes_display}
+        """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        <ul>
+        <li>Créateur : {self.createur}</li>
+        <li>Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}</li>
+        <li>Etablissement(s) : {self.raisons_sociales_display}</li>
+        <li>Commune(s) : {self.communes_display}</li>
+        </ul>
+        """
 
     class Meta:
         constraints = (

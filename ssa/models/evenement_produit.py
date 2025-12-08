@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
@@ -6,51 +7,21 @@ from django.utils.safestring import mark_safe
 from reversion.models import Version
 
 from core.mixins import (
-    WithNumeroMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
-    AllowsSoftDeleteMixin,
     WithFreeLinkIdsMixin,
     AllowModificationMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure, Document, LienLibre
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
+from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
+from core.models import Document, LienLibre
 from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
-from .categorie_produit import CategorieProduit
-from ssa.models.validators import validate_numero_rasff, rappel_conso_validator
-from .categorie_danger import CategorieDanger
-
-
-class TypeEvenement(models.TextChoices):
-    ALERTE_PRODUIT_NATIONALE = "alerte_produit_nationale", "Alerte produit nationale"
-    ALERTE_PRODUIT_LOCALE = "alerte_produit_locale", "Alerte produit locale"
-    NON_ALERTE = "non_alerte", "Non alerte (non mis sur le marché)"
-    NON_ALERTE_NON_DANGEREUX = "non_alerte_non_dangereux", "Non alerte (non dangereux)"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humain", "Investigation cas humains"
-    AUTRE_ACTION_COORDONNEE = "autre_action_coordonnee", "Autre action coordonnée"
-
-
-class Source(models.TextChoices):
-    AUTOCONTROLE_NOTIFIE_PRODUIT = "autocontrole_notifie_produit", "Autocontrôle notifié (produit)"
-    AUTOCONTROLE_NOTIFIE_ENVIRONNEMENT = "autocontrole_notifie_environnement", "Autocontrôle notifié (environnement)"
-    PRELEVEMENT_PSPC = "prelevement_pspc", "Prélèvement PSPC (hors PCF)"
-    AUTRE_PRELEVEMENT_OFFICIEL = "autre_prelevement_officiel", "Prélèvement officiel autre (hors PCF)"
-    AUTRE_CONSTAT_OFFICIEL = "autre_constat_officiel", "Autre constat officiel (hors PCF)"
-    INVESTIGATION_CAS_HUMAINS = "investigation_cas_humains", "Investigation de cas ou TIAC"
-    SIGNALEMENT_CONSOMMATEUR = "signalement_consommateur", "Signalement de consommateur"
-    NOTIFICATION_RASFF = "notification_rasff", "Notification RASFF"
-    NOTIFICATION_AAC = "notification_aac", "Notification AAC"
-    TOUT_DROIT = "tout_droit", "Tout droit"
-    PRELEVEMENT_PSPC_PCF = "prelevement_pspc_pcf", "Prélèvement PSPC (en PCF)"
-    PRELEVEMENT_OFFICIEL_AUTRE = "prelevement_officiel_autre", "Prélèvement officiel autre (en PCF)"
-    AUTRE_CONSTAT_OFFICIEL_PCF = "autre_constat_officiel_pcf", "Autre constat officiel (en PCF)"
-
-    DO_LISTERIOSE = "do_listeriose", "DO Listériose"
-    CAS_GROUPES = "cas_groupes", "Cas groupés"
-    AUTRE = "autre", "Signalement autre"
+from ssa.models.validators import rappel_conso_validator
+from ..constants import CategorieDanger, CategorieProduit, Source
+from .mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin, WithSharedNumeroMixin
 
 
 class PretAManger(models.TextChoices):
@@ -67,9 +38,10 @@ class TemperatureConservation(models.TextChoices):
 
 class ActionEngagees(models.TextChoices):
     PAS_DE_MESURE = "pas_de_mesure", "Pas de mesure de retrait ou rappel"
-    RETRAIT = "retrait_marche", "Retrait du marché (sans information des consommateurs)"
-    RETRAIT_RAPPEL = "retrait_rappel", "Retrait et rappel"
+    RETRAIT = "retrait_marche", "Retrait du marché sans information des consommateurs"
+    RETRAIT_RAPPEL = "retrait_rappel", "Retrait et information du consommateur / rappel "
     RETRAIT_RAPPEL_CP = "retrait_rappel_communique_presse", "Retrait et rappel avec communiqué de presse"
+    RETRAIT_CONTROLE = "retrait_rappel_controle_effectivite", "Retrait et rappel avec contrôle de l'effectivité"
 
 
 class QuantificationUnite(models.TextChoices):
@@ -139,27 +111,21 @@ class QuantificationUnite(models.TextChoices):
 @reversion.register(follow=["contacts"])
 class EvenementProduit(
     AllowsSoftDeleteMixin,
+    WithEvenementInformationMixin,
+    WithEvenementRisqueMixin,
     WithBlocCommunFieldsMixin,
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     WithContactPermissionMixin,
     AllowModificationMixin,
-    WithNumeroMixin,
+    WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
+    EmailableObjectMixin,
+    DirtyFieldsMixin,
     models.Model,
 ):
-    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
-    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    date_reception = models.DateField(verbose_name="Date de réception")
-    numero_rasff = models.CharField(
-        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
-    )
-
-    # Informations générales
-    type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
-    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
-    description = models.TextField(verbose_name="Description de l'événement")
+    # WithEvenementInformationMixin
     aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     # Informations liées au produit
@@ -175,22 +141,17 @@ class EvenementProduit(
     )
 
     # Informations liées au risque
-    categorie_danger = models.CharField(
-        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
-    )
-    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
+    # Inclue WithEvenementRisqueMixin
+    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
     quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )
     quantification_unite = models.CharField(
         blank=True, max_length=100, choices=QuantificationUnite.choices, verbose_name="Unité"
     )
-    evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     produit_pret_a_manger = models.CharField(
         blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
-    reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
-    reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")
 
@@ -200,11 +161,8 @@ class EvenementProduit(
 
     objects = EvenementProduitManager()
 
-    SOURCES_FOR_HUMAN_CASE = [Source.DO_LISTERIOSE, Source.CAS_GROUPES]
-
     def get_absolute_url(self):
-        numero = f"{self.numero_annee}.{self.numero_evenement}"
-        return reverse("ssa:evenement-produit-details", kwargs={"numero": numero})
+        return reverse("ssa:evenement-produit-details", kwargs={"pk": self.pk})
 
     def get_update_url(self):
         return reverse("ssa:evenement-produit-update", kwargs={"pk": self.pk})
@@ -224,17 +182,6 @@ class EvenementProduit(
 
     def __str__(self):
         return self.numero
-
-    @property
-    def product_description(self):
-        product_description = ""
-        if self.denomination:
-            product_description = f"{self.denomination} "
-        if self.marque:
-            product_description += f"{self.marque} "
-        if self.description_complementaire:
-            product_description += f"{self.description_complementaire}"
-        return product_description.strip()
 
     @property
     def readable_product_fields(self):
@@ -350,6 +297,40 @@ class EvenementProduit(
     def limit_contacts_to_user_from_app(self):
         return "ssa"
 
+    def get_short_email_display_name(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"{self.get_short_email_display_name()} {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>{self.get_short_email_display_name()}</b> {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_suffix(self):
+        return f"(Catégorie de produit : {self.get_categorie_produit_display() or 'Vide'} / Danger : {self.get_categorie_danger_display() or 'Vide'})"
+
+    def get_email_cloture_text(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement :
+        - Créateur : {self.createur}
+        - Date de création : {self.date_creation.strftime("%d/%m/%Y")}
+        - N° RASFF/AAC : {self.numero_rasff}
+        - Catégorie produit : {self.get_categorie_produit_display()}
+        - Danger : {self.get_categorie_danger_display()}
+        """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+        Pour rappel, voici les éléments de synthèse pour cet évènement
+        <ul>
+        <li>Créateur : {self.createur}</li>
+        <li>Date de création : {self.date_creation.strftime("%d/%m/%Y")}</li>
+        <li>N° RASFF/AAC : {self.numero_rasff}</li>
+        <li>Catégorie produit : {self.get_categorie_produit_display()}</li>
+        <li>Danger : {self.get_categorie_danger_display()}</li>
+        </ul>
+        """
+
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,
@@ -375,21 +356,6 @@ class EvenementProduit(
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(source=Source.AUTRE)
-                    | models.Q(source="")
-                    | (
-                        models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                    | (
-                        ~models.Q(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS)
-                        & ~models.Q(source__in=[Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-                    )
-                ),
-                name="type_evenement_source_constraint",
-            ),
             models.CheckConstraint(
                 condition=(
                     models.Q(produit_pret_a_manger="")

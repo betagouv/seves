@@ -3,7 +3,7 @@ import random
 import pytest
 from django.db import IntegrityError
 
-from ssa.models import CategorieDanger
+from ssa.constants import CategorieDanger
 from tiac.constants import SuspicionConclusion, DangersSyndromiques
 from tiac.factories import InvestigationTiacFactory
 

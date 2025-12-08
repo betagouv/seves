@@ -45,11 +45,16 @@ class TiacExport(BaseExport):
         ("suspicion_conclusion", "Conclusion de la suspicion de TIAC"),
         ("selected_hazard", "Dangers retenus"),
         ("conclusion_comment", "Commentaire"),
+        ("conclusion_etablissement", " Scénario retenu - Établissement"),
+        ("conclusion_repas", " Scénario retenu - Repas"),
+        ("conclusion_aliment", " Scénario retenu - Aliment"),
+        ("conclusion_analyse", " Scénario retenu - Analyse"),
         ("list_of_linked_objects_as_str", "Événements liés"),
     ]
 
     etablissement_fields = [
         ("siret", "Numéro SIRET"),
+        ("autre_identifiant", "Autre identifiant"),
         ("raison_sociale", "Raison sociale"),
         ("enseigne_usuelle", "Enseigne usuelle"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),

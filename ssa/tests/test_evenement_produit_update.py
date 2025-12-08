@@ -1,15 +1,17 @@
 from playwright.sync_api import expect
 
 from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
+from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement, CategorieDanger, CategorieProduit
+from ssa.models import EvenementProduit, Etablissement
+from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 
 
 def test_can_update_evenement_produit_descripteur_and_save_as_draft(
-    live_server, page, choice_js_get_values, choice_js_fill
+    live_server, page, choice_js_get_values, choice_js_fill, mus_contact
 ):
     evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
     wanted_values = EvenementProduitFactory.build()
@@ -248,7 +250,7 @@ def test_can_udpate_etablissement_with_error_show_message(live_server, page, ass
         agrementInput.removeAttribute('pattern');
         agrementInput.value = "22"
     }""")
-    update_page.publish()
+    update_page.publish(wait_for=evenement.get_update_url())
     expect(
         update_page.page.get_by_text(
             "Erreur dans le formulaire établissement #1 : 'numero_agrement': 22 n'est pas un format valide.", exact=True
@@ -285,3 +287,91 @@ def test_display_of_notices(live_server, mocked_authentification_user, page):
 
     expect(update_page.page.locator("#notice-container-produit").get_by_text(expected_text)).to_be_visible()
     expect(update_page.page.locator("#notice-container-risque").get_by_text(expected_text)).to_be_visible()
+
+
+def test_update_type_evenement_will_trigger_email(
+    live_server, page, mailoutbox, mocked_authentification_user, mus_contact
+):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        not_bacterie=True, type_evenement=TypeEvenement.NON_ALERTE, etat=WithEtatMixin.Etat.EN_COURS
+    )
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.type_evenement.select_option(TypeEvenement.ALERTE_PRODUIT_NATIONALE)
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.type_evenement == TypeEvenement.ALERTE_PRODUIT_NATIONALE
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [mus_contact.email, mocked_authentification_user.agent.contact_set.get().email]
+    assert evenement.numero in mail.subject
+    assert "Modification type d’évènement" in mail.subject
+    assert mocked_authentification_user.agent.agent_with_structure in mail.body
+
+
+def test_update_aliments_animaux_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        not_bacterie=True, aliments_animaux=None, etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_structure_contact = ContactStructureFactory()
+    evenement.contacts.add(other_structure_contact)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.set_aliments_animaux("Oui")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.aliments_animaux is True
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_structure_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Inclut des aliments pour animaux" in mail.subject
+    assert "inclut désormais des aliments pour animaux." in mail.body
+
+
+def test_update_reference_souches_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        not_bacterie=True, reference_souches="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_souches.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_souches == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence souche : New value" in mail.body
+
+
+def test_update_reference_clusters_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement: EvenementProduit = EvenementProduitFactory(
+        not_bacterie=True, reference_clusters="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_clusters.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_clusters == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence cluster : New value" in mail.body

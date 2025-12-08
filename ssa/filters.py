@@ -2,12 +2,16 @@ import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import DateInput, TextInput
+from django.forms import DateInput, TextInput, CheckboxInput
 from django_countries import Countries
 from django_filters.filters import BaseInFilter, CharFilter
 
-from core.fields import DSFRCheckboxInput
-from core.filters_mixins import WithNumeroFilterMixin, WithStructureContactFilterMixin, WithAgentContactFilterMixin
+from core.filters_mixins import (
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
+    WithAgentContactFilterMixin,
+    WithEtatFilterMixin,
+)
 from core.forms import DSFRForm
 from core.models import LienLibre, Departement
 from ssa.models import EvenementProduit
@@ -64,10 +68,11 @@ class EvenementProduitFilter(
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtablissementFilterMixin,
+    WithEtatFilterMixin,
     django_filters.FilterSet,
 ):
     with_free_links = django_filters.BooleanFilter(
-        label="", method="filter_with_free_links", widget=DSFRCheckboxInput(label="Inclure les liaisons")
+        label="Inclure les liaisons", method="filter_with_free_links", widget=CheckboxInput
     )
     numero_rasff = django_filters.CharFilter(
         label="Numéro RASFF/AAC",

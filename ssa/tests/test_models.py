@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from core.factories import DocumentFactory
 from core.models import Document
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, TypeEvenement, Source, CategorieDanger
+from ssa.constants import CategorieDanger
 from ssa.models.evenement_produit import PretAManger
 
 
@@ -21,30 +21,6 @@ def test_numero_rappel_conso():
     evenement = EvenementProduitFactory(numeros_rappel_conso=["1999-1-3333"])
     with pytest.raises(ValidationError):
         evenement.full_clean()
-
-
-@pytest.mark.django_db
-def test_type_evenement_source_constraint():
-    # Autre can be used for any type
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.AUTRE)
-    EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.AUTRE)
-
-    # Both type can have no known source
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source="")
-    EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source="")
-
-    # Non human case can have sources, but not any of SOURCES_FOR_HUMAN_CASE
-    EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=Source.PRELEVEMENT_PSPC)
-    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
-        with pytest.raises(IntegrityError):
-            EvenementProduitFactory(type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, source=source)
-
-    # Human case can have sources, but only of SOURCES_FOR_HUMAN_CASE
-    for source in EvenementProduit.SOURCES_FOR_HUMAN_CASE:
-        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=source)
-
-    with pytest.raises(IntegrityError):
-        EvenementProduitFactory(type_evenement=TypeEvenement.INVESTIGATION_CAS_HUMAINS, source=Source.PRELEVEMENT_PSPC)
 
 
 @pytest.mark.django_db

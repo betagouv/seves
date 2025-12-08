@@ -1,6 +1,8 @@
 import contextlib
 
 import waffle
+from csp.constants import UNSAFE_INLINE
+from csp.middleware import CSPMiddleware
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
@@ -64,3 +66,15 @@ class HomeRedirectMiddleware:
             if settings.SV_GROUP in groups:
                 return redirect("sv:evenement-liste")
         return self.get_response(request)
+
+
+class SevesCSPMiddleware(CSPMiddleware):
+    def get_policy_parts(self, request, response, report_only=False):
+        policy_parts = super().get_policy_parts(request, response, report_only)
+
+        if settings.ADMIN_ENABLED and request.path_info.startswith(f"/{settings.ADMIN_URL}/post_office/email/"):
+            policy_parts.update = {
+                "style-src": UNSAFE_INLINE,
+            }
+
+        return policy_parts

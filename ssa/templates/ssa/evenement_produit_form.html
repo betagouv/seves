@@ -2,17 +2,11 @@
 {% load static %}
 {% load render_field dsfr_tags %}
 {% block extrahead %}
-    <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
-    <script type="module" src="{% static 'ssa/evenement_produit_form.js' %}"></script>
-    <script type="module" src="{% static 'ssa/_etablissement_form.js' %}"></script>
+    <script type="module" src="{% static 'ssa/evenement_produit_form.mjs' %}"></script>
     <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 
@@ -20,10 +14,10 @@
     <form method="post" id="main-form">
         {% csrf_token %}
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
-        <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger|safe }}</div>
+        <div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>
         <div class="fr-hidden" id="categorie-danger-header">
             <div class="fr-ml-1v">Dangers les plus courants</div>
-            {% for danger in danger_plus_courant %}
+            {% for danger in form.danger_plus_courants %}
                 <div class="treeselect-list__item" level="0" group="false">
                     <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
                 </div>
@@ -36,7 +30,7 @@
             <div class="evenement-produit-form-header">
                 <h1>{% if form.instance.pk %}Modification de l'événement {{ form.instance.numero }}{% else %}Création d'un événement{% endif %}</h1>
                 <div class="fr-mb-auto">
-                    <a href="{% url 'ssa:evenement-produit-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
+                    <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                     {% if form.instance and form.instance.is_draft %}
                         <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
                     {% endif %}
@@ -189,14 +183,20 @@
                 </div>
             </div>
 
-            {% include "ssa/_etablissement_block.html" %}
+            <div class="white-container--lite fr-mt-4w">
+                <h3>Établissements</h3>
+                <button
+                    type="button"
+                    id="add-etablissement"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                >Ajouter
+                </button>
+                {{ formset }}
+            </div>
+
             <div id="liens-libre" class="white-container fr-mt-2w">
                 <h3>Événements liés</h3>
-                {{ form.instance.free_link_ids|json_script:"free-links-id" }}
-                <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
-                <div>
-                    {{ form.free_link }}
-                </div>
+                {% include "ssa/_free_links_block.html" %}
             </div>
         </main>
     </form>

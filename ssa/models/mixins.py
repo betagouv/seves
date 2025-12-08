@@ -1,15 +1,10 @@
-import unicodedata
+from django.db import models
+from django.utils import timezone
 
-
-def normalize(s):
-    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)).lower()
-
-
-def sort_tree(tree):
-    tree.sort(key=lambda x: normalize(x["name"]))
-    for node in tree:
-        if node["children"]:
-            sort_tree(node["children"])
+from core.mixins import sort_tree, WithNumeroMixin
+from core.models import Structure
+from ssa.constants import CategorieDanger, TypeEvenement
+from ssa.models.validators import validate_numero_rasff
 
 
 def build_combined_options(*enums, sorted_results=False):
@@ -21,33 +16,53 @@ def build_combined_options(*enums, sorted_results=False):
     return all_options
 
 
-class WithChoicesToJS:
+class WithEvenementInformationMixin(models.Model):
+    createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_reception = models.DateField(verbose_name="Date de réception")
+    numero_rasff = models.CharField(
+        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
+    )
+
+    # Informations générales
+    type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
+    description = models.TextField(verbose_name="Description de l'événement")
+
+    class Meta:
+        abstract = True
+
+
+class WithEvenementRisqueMixin(models.Model):
+    categorie_danger = models.CharField(
+        max_length=255, choices=CategorieDanger.choices, verbose_name="Catégorie de danger", blank=True
+    )
+    precision_danger = models.CharField(blank=True, max_length=255, verbose_name="Précision danger")
+    evaluation = models.TextField(blank=True, verbose_name="Évaluation")
+    reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
+    reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class WithSharedNumeroMixin(WithNumeroMixin):
     @classmethod
-    def build_options(cls, sorted_results=False):
-        def insert_node(path, value, tree):
-            current_level = tree
-            for label in path[:-1]:
-                existing = next((n for n in current_level if n["name"] == label), None)
-                if not existing:
-                    existing = {"name": label, "value": value, "children": []}
-                    current_level.append(existing)
-                current_level = existing["children"]
-            current_level.append({"name": path[-1], "value": value, "children": []})
+    def _get_annee_and_numero(cls):
+        from . import EvenementInvestigationCasHumain, EvenementProduit
 
-        options = []
-        for option in cls:
-            if hasattr(option, "short_name"):
-                path = [p.strip() for p in option.short_name.split(">")]
-            else:
-                path = [p.strip() for p in option.label.split(">")]
-            insert_node(path, option.value, options)
+        annee_courante = timezone.now().year
 
-        for option in options:
-            if option["children"] != []:
-                option["isGroupSelectable"] = False
-                option["value"] = 2 * option["value"]  # We can pick it we just need a unique value for TreeselectJS
+        def last_num(model):
+            fiche = (
+                model._base_manager.filter(numero_annee=annee_courante)
+                .select_for_update()
+                .order_by("-numero_evenement")
+                .first()
+            )
+            return fiche.numero_evenement if fiche else 0
 
-        if sorted_results:
-            sort_tree(options)
+        numero = max(last_num(EvenementInvestigationCasHumain), last_num(EvenementProduit)) + 1
+        return annee_courante, numero
 
-        return options
+    class Meta:
+        abstract = True

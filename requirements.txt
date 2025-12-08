@@ -66,6 +66,7 @@ django==5.2.8
     #   django-crispy-forms
     #   django-csp
     #   django-debug-toolbar
+    #   django-dirtyfields
     #   django-dsfr
     #   django-filter
     #   django-post-office
@@ -77,13 +78,15 @@ django==5.2.8
     #   django-waffle
     #   mozilla-django-oidc
     #   sentry-sdk
-django-countries==8.0.0
+django-countries==8.1.1
     # via -r requirements.in
 django-crispy-forms==2.4
     # via django-dsfr
 django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==6.1.0
+    # via -r requirements.in
+django-dirtyfields==1.9.8
     # via -r requirements.in
 django-dsfr==3.2.0
     # via -r requirements.in
@@ -103,7 +106,7 @@ django-reversion-compare==0.19.1
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-django-template-partials==25.2
+django-template-partials==25.3
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
@@ -227,7 +230,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.0.0
+redis==7.1.0
     # via -r requirements.in
 requests==2.32.4
     # via
@@ -239,11 +242,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.14.4
+ruff==0.14.6
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.42.1
+sentry-sdk[django]==2.43.0
     # via -r requirements.in
 six==1.16.0
     # via

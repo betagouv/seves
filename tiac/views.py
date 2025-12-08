@@ -30,10 +30,11 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
+    WithFinDeSuiviMixin,
 )
-from core.models import Export, FinSuiviContact, LienLibre
+from core.models import Export, LienLibre
 from core.views import MediaDefiningMixin
-from ssa.models import CategorieDanger, CategorieProduit
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
@@ -50,6 +51,7 @@ from .formsets import (
     InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
 )
+from .notifications import notify_transfer, notify_transformation
 
 
 class EvenementSimpleManipulationMixin(
@@ -142,8 +144,16 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
     def test_func(self):
         return self.get_object().can_user_access(self.request.user)
 
+    def form_valid(self, form):
+        self.object_was_draft = form.instance.is_draft
+        return super().form_valid(form)
+
     def get_success_message(self):
-        return "L’évènement a été mis à jour avec succès."
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object_was_draft and not self.object.is_draft
+            else "L’évènement a été mis à jour avec succès."
+        )
 
     def get_etablissement_formset_kwargs(self):
         return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}
@@ -159,6 +169,7 @@ class EvenementSimpleDetailView(
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = EvenementSimple
@@ -248,6 +259,7 @@ class EvenementSimpleTransferView(UpdateView):
         response = super().form_valid(form)
         messages.success(self.request, f"L’évènement a bien été transféré à la {self.object.transfered_to}")
         self.object.contacts.add(self.object.transfered_to.contact_set.get())
+        notify_transfer(self.object)
         return response
 
 
@@ -292,11 +304,12 @@ class EvenementTransformView(UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         for contact in self.object.get_contacts_structures_not_in_fin_suivi():
-            FinSuiviContact.objects.create(content_object=self.object, contact=contact)
+            self.object.add_fin_suivi(structure=contact.structure, made_by=self.request.user)
         self._create_investigation_tiac()
         self.object.cloturer()
         self._copy_etablissements()
         self._copy_and_add_free_links()
+        notify_transformation(self.object, self.investigation)
         messages.success(self.request, "L'événement a bien été passé en investigation de TIAC.")
         return HttpResponseRedirect(reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.investigation.pk}))
 
@@ -454,8 +467,16 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
     template_name = "tiac/investigation_modification.html"
 
+    def form_valid(self, form):
+        self.object_was_draft = form.instance.is_draft
+        return super().form_valid(form)
+
     def get_success_message(self):
-        return "L’évènement a été mis à jour avec succès."
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object_was_draft and not self.object.is_draft
+            else "L’évènement a été mis à jour avec succès."
+        )
 
 
 class InvestigationTiacDetailView(
@@ -468,6 +489,7 @@ class InvestigationTiacDetailView(
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithFinDeSuiviMixin,
     DetailView,
 ):
     model = InvestigationTiac

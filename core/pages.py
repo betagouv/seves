@@ -28,6 +28,10 @@ class BaseMessagePage(ABC):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
 
+    def delete_message(self):
+        self.page.locator("table .fr-icon-delete-bin-line").click()
+        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Supprimer").click()
+
     def new_note(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Note").click()
@@ -142,6 +146,10 @@ class BaseMessagePage(ABC):
 
     def open_message(self, index=1):
         self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
+        self.page.wait_for_timeout(600)
+
+    def delete_document(self, nth):
+        self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
 
     def add_document(self):
         self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
@@ -157,6 +165,15 @@ class BaseMessagePage(ABC):
 
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
+
+    def add_basic_document(self, suffix=""):
+        self.page.locator("#id_nom").locator("visible=true").fill(f"Mon document{suffix}")
+        self.page.locator("#id_document_type").locator("visible=true").select_option("Autre document")
+        self.page.locator("#id_file").locator("visible=true").set_input_files(
+            settings.BASE_DIR / "static/images/login.jpeg"
+        )
+        self.page.locator("#id_description").locator("visible=true").fill(f"Ma description {suffix}")
+        self.page.get_by_role("button", name="Valider l'ajout du document").click()
 
     def remove_document(self, index):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
@@ -199,13 +216,13 @@ class CreateMessagePage(BaseMessagePage):
 
 
 class UpdateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, message_id: int):
+    def __init__(self, page: Page, container_id):
         super().__init__(page)
-        self.message_id = message_id
+        self._container_id = container_id
 
     @property
     def container_id(self) -> str:
-        return f"#sidebar-message-{self.message_id}"
+        return self._container_id
 
 
 class WithDocumentsPage:
@@ -280,6 +297,24 @@ class WithContactsPage:
         )
         self.page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
 
+    def add_agents(self, choice_js_fill, contacts):
+        for contact in contacts:
+            choice_js_fill(
+                self.page, "#add-contact-agent-form .choices", contact.agent.nom, contact.display_with_agent_unit
+            )
+            self.page.keyboard.press("Escape")
+        self.page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
+
     def add_structure(self, choice_js_fill, contact):
         choice_js_fill(self.page, "#add-contact-structure-form .choices", str(contact), str(contact))
         self.page.locator("#add-contact-structure-form").get_by_role("button", name="Ajouter").click()
+
+    def remove_contact(self, contact):
+        self.page.locator(f'a[aria-controls="fr-modal-contact-{contact.id}"]').click()
+        expect(
+            self.page.locator(".fr-modal__body")
+            .locator("visible=true")
+            .get_by_text(str(contact.agent or contact.structure))
+        ).to_be_visible()
+        expect(self.page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
+        self.page.get_by_test_id(f"contact-delete-{contact.id}").click()

@@ -21,10 +21,9 @@ from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
 from waffle import flag_is_active
 
-from core.diffs import CompareMixin
+from core.diffs import CompareMixin, get_diff_from_comment_version
 from .forms import (
     DocumentUploadForm,
-    MessageDocumentForm,
     DocumentEditForm,
     StructureAddForm,
     AgentAddForm,
@@ -32,7 +31,8 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    FinDeSuiviForm,
+    DocumentInMessageUploadForm,
+    MessageDocumentForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -42,9 +42,10 @@ from .mixins import (
     MessageHandlingMixin,
     WithFormErrorsAsMessagesMixin,
 )
-from .models import Document, Message, Contact, user_is_referent_national
-from .notifications import notify_contact_agent
+from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
+from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
+from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +181,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))
         self.fiche.contacts.remove(contact)
+        notify_contact_agent_added_or_removed(contact, self.fiche, added=False, user=self.request.user)
         messages.success(request, "Le contact a bien été supprimé de la fiche.", extra_tags="core contacts")
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
@@ -200,8 +202,10 @@ class MessageCreateView(
                 "point_situation": PointDeSituationForm,
                 "demande_intervention": DemandeInterventionForm,
                 "cr_demande_intervention": self.obj.get_crdi_form(),
-                "fin_suivi": FinDeSuiviForm,
             }
+            self.reply_id = self.request.GET.get("reply_id")
+            if self.reply_id:
+                return BasicMessageForm
             return mapping.get(self.request.GET.get("type"))
         return self.obj.get_message_form()
 
@@ -225,6 +229,20 @@ class MessageCreateView(
                     "sender": self.request.user.agent.contact_set.get(),
                 }
             )
+            if self.request.GET.get("contact"):
+                kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
+            if self.reply_id:
+                reply_message = Message.objects.get(id=self.reply_id)
+                if reply_message.can_reply_to(self.request.user):
+                    kwargs.update(
+                        {
+                            "initial": {
+                                "title": f"[Rép] {reply_message.title}",
+                                "recipients": reply_message.sender_structure.contact_set.get(),
+                                "content": reply_message.get_reply_intro_text(),
+                            }
+                        }
+                    )
         else:
             kwargs.update(
                 {
@@ -238,7 +256,9 @@ class MessageCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = MessageDocumentForm(object=self.obj)
+        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["object"] = self.obj
         return context
@@ -263,10 +283,18 @@ class MessageUpdateView(
     UpdateView,
 ):
     model = Message
-    http_method_names = ["post"]
 
     def get_form_class(self):
-        return self.content_object.get_message_form()
+        if flag_is_active(self.request, "message_v2"):
+            mapping = {
+                Message.MESSAGE: BasicMessageForm,
+                Message.NOTE: NoteForm,
+                Message.POINT_DE_SITUATION: PointDeSituationForm,
+                Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
+                Message.COMPTE_RENDU: self.obj.get_crdi_form(),
+            }
+            return mapping.get(self.object.message_type)
+        return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
         self.content_object = self.get_object().content_object
@@ -283,8 +311,23 @@ class MessageUpdateView(
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
         kwargs["obj"] = self.content_object
-        kwargs["next"] = self.content_object.get_absolute_url()
+        if not flag_is_active(self.request, "message_v2"):
+            kwargs["next"] = self.content_object.get_absolute_url()
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["go_back_url"] = self.obj.get_absolute_url()
+        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["allowed_extensions"] = AllowedExtensions.values
+        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["message_status"] = Message.Status
+        context["form"].documents_forms = [
+            MessageDocumentForm(instance=d, object=self.get_object(), with_nom=True)
+            for d in self.get_object().documents.all()
+        ]
+        context["object"] = self.obj
+        return context
 
     def get_success_url(self):
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
@@ -308,8 +351,8 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         )
 
     def dispatch(self, request, *args, **kwargs):
-        message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
-        self.fiche = message.content_object
+        self.message = get_object_or_404(Message, pk=self.kwargs.get("pk"))
+        self.fiche = self.message.content_object
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -321,6 +364,7 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
+        context["can_reply_to"] = self.message.can_reply_to(self.request.user)
         return context
 
 
@@ -407,6 +451,7 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         with transaction.atomic():
             for contact_structure in contacts_structures:
                 self.obj.contacts.add(contact_structure)
+                notify_contact_agent_added_or_removed(contact_structure, self.obj, added=True, user=self.request.user)
             if hasattr(self.obj, "update_allowed_structures_and_visibility"):
                 self.obj.update_allowed_structures_and_visibility(contacts_structures)
 
@@ -444,13 +489,13 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         with transaction.atomic():
             for contact_agent in contacts_agents:
                 self.obj.contacts.add(contact_agent)
+                notify_contact_agent_added_or_removed(contact_agent, self.obj, added=True, user=self.request.user)
                 if not user_is_referent_national(contact_agent.agent.user):
                     contact_structure = contact_agent.get_structure_contact()
                     self.obj.contacts.add(contact_structure)
                     allowed_contacts_structures_to_add.append(contact_structure)
             if hasattr(self.obj, "update_allowed_structures_and_visibility"):
                 self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
-            notify_contact_agent(contact_agent, self.obj)
 
         message = ngettext(
             "L'agent a été ajouté avec succès.",
@@ -474,7 +519,7 @@ class CloturerView(View):
             return redirect(redirect_url)
 
         if object.is_the_only_remaining_structure(self.request.user, object.get_contacts_structures_not_in_fin_suivi()):
-            object.add_fin_suivi(self.request.user)
+            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
 
         object.cloturer()
         messages.success(request, object.get_cloture_confirm_message())
@@ -497,6 +542,35 @@ class EvenementOuvrirView(View):
             obj.publish()
             messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
             return redirect(redirect_url)
+
+
+class FinDeSuiviHandlingView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data.get("content_type"))
+        object = content_type.model_class().objects.get(pk=data.get("pk"))
+
+        if data["mode"] == "add":
+            if not FinSuiviContact.can_add_fin_de_suivi(object, self.request.user):
+                messages.error(request, "Vous ne pouvez pas mettre fin au suivi de l'évènement.")
+                return redirect(object.get_absolute_url())
+
+            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
+            messages.success(request, "Fin de suivi réalisée avec succès.")
+            return redirect(object.get_absolute_url())
+
+        if data["mode"] == "remove":
+            if not FinSuiviContact.can_remove_fin_de_suivi(object, self.request.user):
+                messages.error(request, "Vous ne pouvez pas reprendre le suivi de l'évènement.")
+                return redirect(object.get_absolute_url())
+
+            object.remove_fin_suivi(self.request.user)
+            messages.success(request, "La reprise de suivi a été prise en compte.")
+            return redirect(object.get_absolute_url())
+
+        raise NotImplementedError
 
 
 def sirene_api(request, siret: str):
@@ -538,13 +612,23 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         return self.object.can_user_access(self.request.user)
 
     def get_queryset(self):
-        return Version.objects.get_for_object(self.object).select_related(
-            "revision", "revision__user__agent__structure"
+        return (
+            Version.objects.get_for_object(self.object)
+            .select_related("revision", "revision__user__agent__structure")
+            .order_by("-revision__date_created")
+            .exclude(serialized_data={})
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["object"] = self.object
+
+        comments_versions = (
+            Version.objects.get_for_object(self.object)
+            .select_related("revision", "revision__user__agent__structure")
+            .order_by("-revision__date_created")
+            .filter(serialized_data={})
+        )
 
         versions = context["object_list"]
         context["patches"] = []
@@ -552,4 +636,10 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             context["patches"].extend(diffs)
 
+        for version in comments_versions:
+            comment_diff = get_diff_from_comment_version(version)
+            if comment_diff:
+                context["patches"].append(comment_diff)
+
+        context["patches"] = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
         return context

@@ -59,6 +59,9 @@ class ContactQueryset(QuerySet):
     def structures_only(self):
         return self.exclude(structure__isnull=True)
 
+    def exclude_mus(self):
+        return self.exclude(structure__niveau2=MUS_STRUCTURE)
+
     def with_active_agent(self):
         return self.filter(agent__user__is_active=True)
 
@@ -142,3 +145,8 @@ class EvenementManagerMixin:
                 FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)
             )
         )
+
+
+class MessageManager(Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)

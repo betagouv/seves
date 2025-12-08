@@ -2,7 +2,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import DepartementFactory
+from core.factories import DepartementFactory, MessageFactory
+from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
@@ -34,6 +35,14 @@ def test_can_view_evenement_produit_history(live_server, page):
     update_page.close_etablissement_modal()
     update_page.submit_as_draft()
 
+    message = MessageFactory(content_object=evenement)
+    message.is_deleted = True
+    message.save()
+
+    other_evenement = EvenementProduitFactory()
+    lien = LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
+    lien.delete()
+
     content_type = ContentType.objects.get_for_model(EvenementProduit)
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
@@ -42,13 +51,18 @@ def test_can_view_evenement_produit_history(live_server, page):
         len(
             [
                 "One for table header",
-                "One line created by the post_generation hook for source field in the factory",
                 "One line created by the change of description",
                 "One line created when we add the Etablissement",
                 "One line created by the addition of agent/structure contact during the update of the object",
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
+                "One for the deletion of the message",
+                "One for creation of the LienLibre",
+                "One for deletion of the LienLibre",
             ]
         )
     )
+
+    expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été ajouté à la fiche", exact=True)).to_be_visible()
+    expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été supprimé à la fiche", exact=True)).to_be_visible()

@@ -1,6 +1,17 @@
 {% extends "tiac/investigation.html" %}
+{% load partials %}
+
 
 {% block buttons %}
-    <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
+    {% partialdef additional_buttons inline %}
+        <li>
+            <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
+        </li>
+    {% endpartialdef %}
+    {{ block.super }}
+{% endblock %}
+
+{% block bottom_buttons %}
+    {% partial additional_buttons %}
     {{ block.super }}
 {% endblock %}

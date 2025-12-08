@@ -1,4 +1,5 @@
-@import url("/static/core/base_dsfr.css");
+@import url("./base_dsfr.css");
+@import url("./base_form.css");
 
 body{
     background-color: #F6F6F6;
@@ -102,6 +103,18 @@ fieldset {
         padding: 2rem !important;
     }
 }
+
+.grey-container {
+    background-color: var(--grey-975-100-active);
+    padding: 1.5rem !important;
+}
+@media (min-width: 992px) {
+    .grey-container {
+        padding: 2rem !important;
+    }
+}
+
+
 .white-container--lite {
     background-color: white;
     padding: 1rem !important;
@@ -153,7 +166,6 @@ label:has(+ .choices select[data-required="true"])::after,
     top: 0;
     left: 0;
 }
-
 
 .ac-notified {
     background-color: #faa18d;

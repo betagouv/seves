@@ -1,0 +1,18 @@
+{% load dsfr_tags %}
+
+{% for field in form %}
+    {% if field.is_hidden %}
+        {% dsfr_form_field field %}
+    {% else %}
+        <div class="fr-fieldset__element">{% dsfr_form_field field %}</div>
+    {% endif %}
+    {% if field.name == "type_exploitant" %}
+        <label for="search-siret-input-">N° SIRET</label>
+        <select
+            class="fr-input"
+            type="search"
+            id="search-siret-input-"
+            data-communes-api="{{ COMMUNES_API }}"
+        ></select>
+    {% endif %}
+{% endfor %}

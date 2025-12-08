@@ -10,16 +10,15 @@ from core.factories import BaseEtablissementFactory
 from core.models import Structure
 from ssa.models import (
     EvenementProduit,
-    TypeEvenement,
-    Source,
     TemperatureConservation,
     QuantificationUnite,
     ActionEngagees,
     Etablissement,
     PositionDossier,
-    CategorieDanger,
+    EvenementInvestigationCasHumain,
 )
-from ssa.models.evenement_produit import PretAManger, CategorieProduit
+from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source, SourceInvestigationCasHumain
+from ssa.models.evenement_produit import PretAManger
 
 
 def generate_rappel_conso():
@@ -35,6 +34,7 @@ class EvenementProduitFactory(DjangoModelFactory):
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
+    source = FuzzyChoice(Source.values)
     description = factory.Faker("paragraph")
     aliments_animaux = factory.Faker("boolean")
 
@@ -72,16 +72,6 @@ class EvenementProduitFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
-    @factory.post_generation
-    def source(self, create, extracted, **kwargs):
-        if extracted:
-            self.source = extracted
-        elif self.type_evenement == TypeEvenement.INVESTIGATION_CAS_HUMAINS:
-            self.source = random.choice([Source.DO_LISTERIOSE, Source.CAS_GROUPES])
-        else:
-            other_sources = set(Source) - {Source.DO_LISTERIOSE, Source.CAS_GROUPES}
-            self.source = random.choice(list(other_sources))
-
     @factory.lazy_attribute
     def produit_pret_a_manger(self):
         if self.categorie_danger in CategorieDanger.dangers_bacteriens():
@@ -113,10 +103,52 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Meta:
         model = Etablissement
 
-    evenement_produit = factory.SubFactory("ssa.factories.EvenementProduitFactory")
+    investigation_cas_humain = None
 
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     type_exploitant = factory.Faker("sentence", nb_words=2)
     numero_agrement = factory.Faker("numerify", text="###.##.###")
 
     numeros_resytal = factory.Faker("numerify", text="######")
+
+    @factory.lazy_attribute
+    def evenement_produit(self):
+        if not self.investigation_cas_humain:
+            return EvenementProduitFactory()
+        return None
+
+
+class InvestigationCasHumainFactory(DjangoModelFactory):
+    class Meta:
+        model = EvenementInvestigationCasHumain
+
+    date_creation = factory.Faker("date_time_this_decade")
+    date_reception = factory.Faker("date_this_decade")
+    numero_annee = factory.Faker("year")
+    numero_rasff = factory.Faker("bothify", text="####.####")
+    type_evenement = FuzzyChoice(TypeEvenement.values)
+    source = FuzzyChoice(SourceInvestigationCasHumain.values)
+    description = factory.Faker("paragraph")
+
+    categorie_danger = FuzzyChoice(CategorieDanger.values)
+    precision_danger = factory.Faker("sentence", nb_words=3)
+    evaluation = factory.Faker("paragraph")
+    reference_souches = factory.Faker("sentence", nb_words=5)
+    reference_clusters = factory.Faker("sentence", nb_words=5)
+
+    @factory.lazy_attribute
+    def createur(self):
+        return Structure.objects.get(libelle="Structure Test")
+
+    @factory.post_generation
+    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
+        if extracted and create:
+            if isinstance(extracted, str):
+                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
+            else:
+                self.date_creation = extracted
+            self.save()
+
+    @factory.sequence
+    def numero_evenement(n):
+        return n + 1
