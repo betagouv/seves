@@ -101,4 +101,6 @@ fileignoreconfig:
   checksum: 54ee3c43e5ef8d5a10f3acb3ff6842c803074d2e60dfc0652617e83fd61e8a16
 - filename: tiac/notifications.py
   checksum: 13f8fd8dff11347c5296f2f9df01263a432cd30896480a06de6a1fbdaa37bd46
+- filename: bin/copy_s3_to_s3.sh
+  checksum: 8dec0a69adf36ebd32de735115d68d83f492b1356b17bcef8d37db362cb00697
 version: "1.0"

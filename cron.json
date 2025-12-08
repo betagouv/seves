@@ -13,6 +13,10 @@
 	    "size": "2XL"
 	  },
 	  {
+		"command": "0 3 * * * ./bin/copy_s3_to_s3.sh",
+	    "size": "2XL"
+	  },
+	  {
 		"command": "0 4 * * * ./bin/fetch_and_import_contacts.sh",
 	    "size": "2XL"
 	  }
