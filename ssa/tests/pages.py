@@ -284,10 +284,7 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         return self.page.locator(".fr-alert__title").all_text_contents()
 
 
-class EvenementProduitDetailsPage:
-    def submit_form(self):
-        self.page.locator(".fiche-produit-form-header .fr-btn").click()
-
+class SsaBaseDetailPage:
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -296,32 +293,20 @@ class EvenementProduitDetailsPage:
         return self.page.goto(f"{self.base_url}{object.get_absolute_url()}")
 
     @property
-    def title(self):
-        return self.page.locator(".details-top-row h1").nth(0)
+    def information_block(self):
+        return self.page.get_by_role("heading", name="Informations").locator("..").locator("visible=true")
 
     @property
     def last_modification(self):
         return self.page.locator(".last-modification")
 
     @property
-    def information_block(self):
-        return self.page.get_by_role("heading", name="Informations").locator("..")
-
-    @property
-    def produit_block(self):
-        return self.page.get_by_role("heading", name="Produit").locator("..")
+    def title(self):
+        return self.page.locator(".details-top-row h1").nth(0)
 
     @property
     def risque_block(self):
         return self.page.get_by_role("heading", name="Risque").locator("..")
-
-    @property
-    def actions_block(self):
-        return self.page.get_by_role("heading", name="Actions engagées").locator("..")
-
-    @property
-    def rappel_block(self):
-        return self.page.get_by_role("heading", name="Rappel conso").locator("..")
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
@@ -332,6 +317,27 @@ class EvenementProduitDetailsPage:
     @property
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
+
+
+class InvestigationCasHumainDetailsPage(SsaBaseDetailPage):
+    pass
+
+
+class EvenementProduitDetailsPage(SsaBaseDetailPage):
+    def submit_form(self):
+        self.page.locator(".fiche-produit-form-header .fr-btn").click()
+
+    @property
+    def produit_block(self):
+        return self.page.get_by_role("heading", name="Produit").locator("..")
+
+    @property
+    def actions_block(self):
+        return self.page.get_by_role("heading", name="Actions engagées").locator("..")
+
+    @property
+    def rappel_block(self):
+        return self.page.get_by_role("heading", name="Rappel conso").locator("..")
 
     def delete(self):
         self.page.get_by_role("button", name="Actions").click()
@@ -585,7 +591,7 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self.description.fill(evenement_produit.description)
 
     def _submit(self, locator: Locator, *, wait_for=None):
-        wait_for = wait_for or reverse("ssa:evenements-liste")
+        wait_for = wait_for or "/details/"
         locator.click()
         self.page.wait_for_url(f"**{wait_for}")
 
