@@ -6,8 +6,8 @@ from playwright.sync_api import Page, expect
 
 from core.factories import UserFactory
 from core.models import Export, LienLibre
-from ssa.export import EvenementProduitExport
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.export import SsaExport
+from ssa.factories import EvenementProduitFactory, EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import EvenementProduitListPage
 
 NB_QUERIES = 11
@@ -19,13 +19,15 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     other_evenement = EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
     LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
     user = UserFactory()
-    task = Export.objects.create(user=user, object_ids=[evenement.pk])
+    data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
+    task = Export.objects.create(user=user, queryset_sequence=data)
 
-    EvenementProduitExport().export(task.id)
+    SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
     lines = task.file.read().decode("utf-8").split("\n")
+    assert len(lines) == 3
     assert (
         lines[0]
         == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
@@ -73,7 +75,6 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     ]
     assert expected_fields == next(csv.reader(StringIO(lines[1])))
     assert lines[2] == ""
-    assert len(lines) == 3
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
@@ -81,25 +82,27 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         user.email,
     ]
     assert mail.subject == "[Sèves] Votre export est prêt"
-    assert "_export_evenement_produit.csv" in mail.body
+    assert "_export_produit_et_cas.csv" in mail.body
 
 
 @pytest.mark.django_db
 def test_export_evenement_produit_performances_scales_on_number_of_objects(django_assert_num_queries):
     evenement = EvenementProduitFactory()
-    task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
+    data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
+    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES):
-        EvenementProduitExport().export(task.id)
+        SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
 
     evenement_1, evenement_2, evenement_3 = EvenementProduitFactory.create_batch(3)
-    task = Export.objects.create(user=UserFactory(), object_ids=[evenement_1.pk, evenement_2.pk, evenement_3.pk])
+    data = [{"model": "ssa.evenementproduit", "ids": [evenement_1.pk, evenement_2.pk, evenement_3.pk]}]
+    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 2):
-        EvenementProduitExport().export(task.id)
+        SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
@@ -108,10 +111,11 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
 @pytest.mark.django_db
 def test_export_evenement_produit_performances_scales_on_number_of_etablissements(django_assert_num_queries):
     evenement = EtablissementFactory().evenement_produit
-    task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
+    data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
+    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
 
-    with django_assert_num_queries(NB_QUERIES + 2):
-        EvenementProduitExport().export(task.id)
+    with django_assert_num_queries(NB_QUERIES + 1):
+        SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
@@ -121,8 +125,8 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     EtablissementFactory(evenement_produit=evenement)
     task = Export.objects.create(user=UserFactory(), object_ids=[evenement.pk])
 
-    with django_assert_num_queries(NB_QUERIES + 4):
-        EvenementProduitExport().export(task.id)
+    with django_assert_num_queries(NB_QUERIES + 3):
+        SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
@@ -132,8 +136,9 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
 def test_export_evenement_produit_content_etablissement(mailoutbox):
     etablissement_1 = EtablissementFactory()
     etablissement_2 = EtablissementFactory(evenement_produit=etablissement_1.evenement_produit)
-    task = Export.objects.create(user=UserFactory(), object_ids=[etablissement_1.evenement_produit.pk])
-    EvenementProduitExport().export(task.id)
+    data = [{"model": "ssa.evenementproduit", "ids": [etablissement_1.evenement_produit.pk]}]
+    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    SsaExport().export(task.id)
 
     task.refresh_from_db()
     assert task.task_done is True
@@ -172,12 +177,13 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
     assert len(lines) == 4
 
 
-def test_export_evenement_produit_from_ui(live_server, mocked_authentification_user, page: Page, settings, mailoutbox):
+def test_export_evenements_from_ui(live_server, mocked_authentification_user, page: Page, settings, mailoutbox):
     settings.CELERY_TASK_ALWAYS_EAGER = True
     EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
     EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
     EvenementProduitFactory(numero_annee=2025, numero_evenement=21)
     EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
+    InvestigationCasHumainFactory(numero_annee=2023, numero_evenement=2025)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
@@ -191,10 +197,83 @@ def test_export_evenement_produit_from_ui(live_server, mocked_authentification_u
     assert task.task_done is True
     lines = task.file.read().decode("utf-8").split("\n")
     assert lines[1].startswith('"A-2025.21",')
-    assert lines[2].startswith('"A-2025.2",')
-    assert lines[3].startswith('"A-2025.1",')
-    assert len(lines) == 5
+    assert lines[2].startswith('"A-2025.1",')
+    assert lines[3].startswith('"A-2025.2",')
+    assert lines[4].startswith('"A-2023.2025",')
+    assert len(lines) == 6
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert mail.subject == "[Sèves] Votre export est prêt"
+
+
+@pytest.mark.django_db
+def test_export_investigation_cas_humain_simple_case(mailoutbox):
+    evenement = InvestigationCasHumainFactory()
+    other_evenement = InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
+    LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
+    user = UserFactory()
+    data = [{"model": "ssa.evenementinvestigationcashumain", "ids": [evenement.id]}]
+    task = Export.objects.create(user=user, queryset_sequence=data)
+
+    SsaExport().export(task.id)
+
+    task.refresh_from_db()
+    assert task.task_done is True
+    lines = task.file.read().decode("utf-8").split("\n")
+    assert len(lines) == 3
+    assert (
+        lines[0]
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+    )
+
+    expected_fields = [
+        str(evenement.numero),
+        "Brouillon",
+        str(evenement.createur),
+        evenement.date_creation.strftime("%d/%m/%Y %Hh%M"),
+        evenement.date_reception.strftime("%d/%m/%Y"),
+        evenement.numero_rasff,
+        evenement.get_type_evenement_display(),
+        evenement.get_source_display(),
+        "-",
+        evenement.description,
+        "-",
+        "-",
+        "-",
+        "-",
+        "-",
+        "-",
+        evenement.get_categorie_danger_display(),
+        "-",
+        "-",
+        evenement.evaluation,
+        "-",
+        evenement.reference_souches,
+        evenement.reference_clusters,
+        "-",
+        "-",
+        "A-2024.22",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    ]
+    assert expected_fields == next(csv.reader(StringIO(lines[1])))
+    assert lines[2] == ""
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [
+        user.email,
+    ]
+    assert mail.subject == "[Sèves] Votre export est prêt"
+    assert "_export_produit_et_cas.csv" in mail.body

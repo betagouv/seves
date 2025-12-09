@@ -3,7 +3,6 @@ import io
 import json
 import os
 from functools import cached_property
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -16,7 +15,6 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
-from queryset_sequence import QuerySetSequence
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -31,8 +29,9 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
+    WithExportHeterogeneousQuerysetMixin,
 )
-from core.models import Export, LienLibre
+from core.models import LienLibre
 from core.views import MediaDefiningMixin
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
@@ -613,24 +612,11 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
         return self.object.can_user_access(self.request.user)
 
 
-class TiacExportView(WithFilteredListMixin, View):
+class TiacExportView(WithFilteredListMixin, WithExportHeterogeneousQuerysetMixin, View):
     http_method_names = ["post"]
 
-    def post(self, request):
-        queryset = self.get_queryset()
-        serialized_queryset_sequence = []
+    def get_export_task(self):
+        return export_tiac_task
 
-        if isinstance(queryset, QuerySetSequence):
-            for qs in queryset._querysets:
-                serialized_queryset_sequence.append(Export.from_queryset(qs))
-        else:
-            serialized_queryset_sequence = [Export.from_queryset(queryset)]
-
-        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
-        export_tiac_task.delay(task.id)
-        messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
-        )
-        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
-        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('tiac:evenement-liste')}?{urlencode(allowed_params)}")
+    def get_success_url(self):
+        return reverse("tiac:evenement-liste")

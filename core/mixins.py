@@ -4,6 +4,7 @@ import logging
 import unicodedata
 from collections import defaultdict
 from typing import Mapping
+from urllib.parse import urlencode
 
 from celery.exceptions import OperationalError
 from django.conf import settings
@@ -13,10 +14,12 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.forms.utils import RenderableMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
 from docxtpl import DocxTemplate
+from queryset_sequence import QuerySetSequence
 from waffle import flag_is_active
 
 from core.forms import (
@@ -26,7 +29,7 @@ from core.forms import (
     StructureAddForm,
     AgentAddForm,
 )
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User, Export
 from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
@@ -836,3 +839,30 @@ class WithChoicesToJS:
             sort_tree(options)
 
         return options
+
+
+class WithExportHeterogeneousQuerysetMixin:
+    def get_export_task(self):
+        raise NotImplementedError
+
+    def get_success_url(self):
+        raise NotImplementedError
+
+    def post(self, request):
+        queryset = self.get_queryset()
+        serialized_queryset_sequence = []
+
+        if isinstance(queryset, QuerySetSequence):
+            for qs in queryset._querysets:
+                serialized_queryset_sequence.append(Export.from_queryset(qs))
+        else:
+            serialized_queryset_sequence = [Export.from_queryset(queryset)]
+
+        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
+        self.get_export_task().delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{self.get_success_url()}?{urlencode(allowed_params)}")
