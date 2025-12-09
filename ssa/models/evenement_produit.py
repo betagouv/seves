@@ -4,7 +4,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from reversion.models import Version
 
 from core.mixins import (
     WithDocumentPermissionMixin,
@@ -17,11 +16,15 @@ from core.mixins import (
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
 from core.models import Document, LienLibre
-from core.versions import get_versions_from_ids
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
 from ..constants import CategorieDanger, CategorieProduit, Source
-from .mixins import WithEvenementInformationMixin, WithEvenementRisqueMixin, WithSharedNumeroMixin
+from .mixins import (
+    WithEvenementInformationMixin,
+    WithEvenementRisqueMixin,
+    WithSharedNumeroMixin,
+    WithLatestVersionMixin,
+)
 
 
 class PretAManger(models.TextChoices):
@@ -114,6 +117,7 @@ class EvenementProduit(
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
     WithBlocCommunFieldsMixin,
+    WithLatestVersionMixin,
     WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
@@ -213,26 +217,6 @@ class EvenementProduit(
         if not self.categorie_danger or self.categorie_danger not in CategorieDanger.dangers_bacteriens():
             risk_fields.pop("Produit prêt à manger (PAM)")
         return risk_fields
-
-    @property
-    def latest_version(self):
-        from ssa.models import Etablissement
-
-        etablissement_ids = [e.id for e in self.etablissements.all()]
-        etablissements_versions = get_versions_from_ids(etablissement_ids, Etablissement)
-
-        instance_version = (
-            Version.objects.get_for_object(self)
-            .select_related("revision")
-            .select_related("revision__user__agent__structure")
-            .first()
-        )
-
-        versions = list(etablissements_versions) + [instance_version]
-        versions = [v for v in versions if v]
-        if not versions:
-            return None
-        return max(versions, key=lambda obj: obj.revision.date_created)
 
     @classmethod
     def danger_plus_courants(self):

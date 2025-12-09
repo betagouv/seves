@@ -46,7 +46,7 @@ fileignoreconfig:
 - filename: .github/workflows/django.yml
   checksum: bb2812e864802e3e55d05b28f6da146973a78b382dad3d94d1de8d4f10430657
 - filename: ssa/models/mixins.py
-  checksum: fde55f93bb5c2f6d49a9808e1953bc51488b4df5926146e6325daf6d2d6e104e
+  checksum: c31dc1b55d0170dc1662d68419ab86532b714ae8c91839bc887a64546f381aa2
 - filename: core/migrations/0036_alter_document_document_type.py
   checksum: 2e8699e33c60f9a9449163078d9171b0186bb7d490e72cf926d15b6833eda02e
 - filename: core/templates/core/_documents.html

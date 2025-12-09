@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
@@ -322,7 +322,6 @@ class InvestigationCasHumainCreateView(
 ):
     template_name = "ssa/evenement_investigation_cas_humain.html"
     form_class = InvestigationCasHumainForm
-    success_url = reverse_lazy("ssa:evenements-liste")
     success_message = "La fiche d'investigation cas humain a été créée avec succès."
 
     @property
@@ -347,7 +346,7 @@ class InvestigationCasHumainCreateView(
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
         messages.success(self.request, self.success_message)
-        return super().form_valid(form)
+        return HttpResponseRedirect(self.object.get_absolute_url())
 
     def formset_invalid(self):
         self.object = None

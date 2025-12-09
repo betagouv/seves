@@ -1,0 +1,33 @@
+{% load or_empty_value_tag dsfr_tags %}
+
+<div class="white-container detail-content fr-mt-2w">
+  <h2 class="fr-h6">Risque</h2>
+  <div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-5">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Danger</div>
+          <div class="fr-col-7">{{ object.get_categorie_danger_display|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Précision danger</div>
+          <div class="fr-col-7">{{ object.precision_danger|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Référence souche</div>
+          <div class="fr-col-7">{{ object.reference_souches|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Référence cluster</div>
+          <div class="fr-col-7">{{ object.reference_clusters|or_empty_value_tag }}</div>
+        </div>
+      </div>
+      <div class="fr-col-7">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-3 bold">Évaluation</div>
+          <div class="fr-col-9">{{ object.evaluation|or_empty_value_tag }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

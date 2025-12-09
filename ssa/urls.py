@@ -8,6 +8,7 @@ from .views import (
     FindNumeroAgrementView,
     EvenementUpdateView,
 )
+from .views.investigation_cas_humain import InvestigationCasHumainDetailView
 from .views.produit import (
     EvenementProduitExportView,
     EvenementProduitDocumentExportView,
@@ -66,5 +67,10 @@ urlpatterns = [
         "investigation-cas-humain/<int:pk>/modification/",
         InvestigationCasHumainUpdateView.as_view(),
         name="investigation-cas-humain-update",
+    ),
+    path(
+        "investigation-cas-humain/<int:pk>/details/",
+        InvestigationCasHumainDetailView.as_view(),
+        name="investigation-cas-humain-details",
     ),
 ]

@@ -1,0 +1,51 @@
+{% load or_empty_value_tag dsfr_tags %}
+
+<h2 class="fr-h6">Informations</h2>
+<div class="fr-container--fluid">
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-3">
+      <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-7 bold">Créateur</div>
+          <div class="fr-col-5">{{ object.createur }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-7 bold">Date de création</div>
+          <div class="fr-col-5">{{ object.date_creation|date }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-7 bold">N° RASFF/AAC</div>
+          <div class="fr-col-5">{{ object.numero_rasff|or_empty_value_tag }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="fr-col-4">
+      <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Type d'événement</div>
+          <div class="fr-col-7">Investigation de cas humain</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Source</div>
+          <div class="fr-col-7">{{ object.get_source_display|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Danger</div>
+          <div class="fr-col-7">{{ object.get_categorie_danger_display|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Référence cluster</div>
+          <div class="fr-col-7">{{ object.reference_clusters|or_empty_value_tag }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="fr-col-5">
+      <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-3 bold">Description de l'événement</div>
+          <div class="fr-col-9">{{ object.description|linebreaksbr }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
