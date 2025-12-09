@@ -11,6 +11,7 @@ from core.mixins import (
     WithMessageUrlsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
+from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
 from ssa.managers import InvestigationCasHumainManager
@@ -79,6 +80,12 @@ class EvenementInvestigationCasHumain(
 
     def get_long_email_display_name_suffix(self):
         return f"(Danger : {self.get_categorie_danger_display() or 'Vide'})"
+
+    @property
+    def list_of_linked_objects_as_str(self):
+        links = LienLibre.objects.for_object(self)
+        objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
+        return [str(o) for o in objects if not o.is_deleted]
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

@@ -2,7 +2,6 @@ import io
 import datetime
 import json
 import os
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -10,11 +9,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
-from queryset_sequence import QuerySetSequence
 
 from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
 from core.mixins import (
@@ -28,13 +25,11 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.models import Export
 from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
 from ssa.formsets import EtablissementFormSet, InvestigationCasHumainsEtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCasHumain
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
-from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 from ..display import EvenementDisplay
 from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
@@ -250,31 +245,6 @@ class EvenementsListView(WithFilteredListMixin, ListView):
         context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
 
         return context
-
-
-class EvenementProduitExportView(WithFilteredListMixin, View):
-    http_method_names = ["post"]
-
-    def post(self, request):
-        queryset = self.get_queryset()
-
-        if isinstance(queryset, QuerySetSequence):
-            for qs in queryset._querysets:
-                if issubclass(qs.model, EvenementProduit):
-                    queryset = qs
-                    break
-            else:
-                raise Http404
-
-        ids = list(queryset.values_list("id", flat=True))
-        task = Export.objects.create(object_ids=ids, user=request.user)
-        export_task.delay(task.id)
-        messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
-        )
-        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
-        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('ssa:evenements-liste')}?{urlencode(allowed_params)}")
 
 
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):

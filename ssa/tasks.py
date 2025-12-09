@@ -1,8 +1,8 @@
 from celery import shared_task
 
-from ssa.export import EvenementProduitExport
+from ssa.export import SsaExport
 
 
 @shared_task
 def export_task(task_id):
-    EvenementProduitExport().export(task_id)
+    SsaExport().export(task_id)
