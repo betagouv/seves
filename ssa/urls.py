@@ -10,11 +10,11 @@ from .views import (
 )
 from .views.investigation_cas_humain import InvestigationCasHumainDetailView
 from .views.produit import (
-    EvenementProduitExportView,
     EvenementProduitDocumentExportView,
     InvestigationCasHumainCreateView,
     InvestigationCasHumainUpdateView,
 )
+from .views.common import CsvExportView
 
 app_name = "ssa"
 urlpatterns = [
@@ -44,9 +44,9 @@ urlpatterns = [
         name="evenement-produit-update",
     ),
     path(
-        "export/evenement-produit/",
-        EvenementProduitExportView.as_view(),
-        name="export-evenement-produit",
+        "export/evenements/",
+        CsvExportView.as_view(),
+        name="export-csv",
     ),
     path(
         "export/evenement-produit/<int:pk>/document/",

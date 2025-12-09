@@ -8,6 +8,8 @@ from core.models import Departement
 
 
 class BaseExport:
+    blank_value = None
+
     def get_field_value(self, instance, field):
         attrs = field.split("__")
         for i, attr in enumerate(attrs):
@@ -20,7 +22,7 @@ class BaseExport:
                 model_field = instance._meta.get_field(attr)
             except FieldDoesNotExist:
                 model_field = None
-            value = getattr(instance, attr, None)
+            value = getattr(instance, attr, self.blank_value)
             if value is None:
                 return ""
             if model_field and isinstance(model_field, ArrayField) and getattr(model_field.base_field, "choices", None):
