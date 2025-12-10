@@ -6,7 +6,7 @@
         {% csrf_token %}
         <main class="main-container">
             <div class="fr-grid-row">
-                {% block title %}<h1 class="fr-col-6">Création d'un évènement</h1>{% endblock %}
+                {% block title %}<h1 class="fr-col-6">Créer une investigation de cas humain</h1>{% endblock %}
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
                     {% block buttons %}
                         {% if form.instance and form.instance.is_draft %}

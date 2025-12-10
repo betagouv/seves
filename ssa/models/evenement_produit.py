@@ -18,7 +18,7 @@ from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
 from core.models import LienLibre
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
-from ..constants import CategorieDanger, CategorieProduit, Source
+from ..constants import CategorieDanger, CategorieProduit, Source, TypeEvenement
 from .mixins import (
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -26,12 +26,6 @@ from .mixins import (
     WithLatestVersionMixin,
     SsaBaseEvenementModel,
 )
-
-
-class PretAManger(models.TextChoices):
-    OUI = "oui", "Oui"
-    NON = "non", "Non"
-    SANS_OBJET = "sans_objet", "Sans objet"
 
 
 class TemperatureConservation(models.TextChoices):
@@ -132,6 +126,7 @@ class EvenementProduit(
     models.Model,
 ):
     # WithEvenementInformationMixin
+    type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     # Informations liées au produit
@@ -154,9 +149,6 @@ class EvenementProduit(
     )
     quantification_unite = models.CharField(
         blank=True, max_length=100, choices=QuantificationUnite.choices, verbose_name="Unité"
-    )
-    produit_pret_a_manger = models.CharField(
-        blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")

@@ -29,7 +29,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
         "reference_souches",
         "reference_clusters",
     ]
-    select_fields = ["type_evenement", "source"]
+    select_fields = ["source"]
 
     # We need to check all the values *before* we make any changes because some field resets when there is a change
     for field in inputs_fields + select_fields:

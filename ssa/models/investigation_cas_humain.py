@@ -68,6 +68,9 @@ class EvenementInvestigationCasHumain(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def get_type_evenement_display(self):
+        return "Investigation de cas humain"
+
     def get_email_subject(self):
         return f"{self.get_type_evenement_display()} {self.numero}"
 

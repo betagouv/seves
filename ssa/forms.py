@@ -12,7 +12,14 @@ from core.form_mixins import DSFRForm, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm, BaseMessageForm
 from core.mixins import WithEtatMixin, WithCommonContextVars
 from core.models import Contact, Message
-from ssa.constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, SourceInvestigationCasHumain
+from ssa.constants import (
+    CategorieDanger,
+    CategorieProduit,
+    Source,
+    TypeEvenement,
+    SourceInvestigationCasHumain,
+    PretAManger,
+)
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import (
     ActionEngagees,
@@ -22,7 +29,7 @@ from ssa.models import (
     PositionDossier,
     TemperatureConservation,
 )
-from ssa.models.evenement_produit import PretAManger, QuantificationUnite
+from ssa.models.evenement_produit import QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
 
@@ -31,7 +38,6 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
-    type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     numero_rasff = forms.CharField(
         required=False,
         widget=forms.TextInput(
@@ -50,7 +56,9 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         label="Description de l'événement",
     )
 
-    categorie_danger = SEVESChoiceField(required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput)
+    categorie_danger = SEVESChoiceField(
+        required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput, label_suffix=""
+    )
     precision_danger = forms.CharField(
         required=False,
         label="Précision danger",
@@ -59,6 +67,13 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
                 "placeholder": "Sérotype, molécule...",
             }
         ),
+    )
+
+    produit_pret_a_manger = forms.ChoiceField(
+        required=False,
+        choices=PretAManger.choices,
+        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Produit Prêt à manger (PAM)",
     )
 
     @property
@@ -87,6 +102,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
+    type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     source = SEVESChoiceField(choices=Source.choices, required=False)
 
     aliments_animaux = forms.ChoiceField(
@@ -124,12 +140,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
         choices=TemperatureConservation.choices,
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
         label="Température de conservation",
-    )
-    produit_pret_a_manger = forms.ChoiceField(
-        required=False,
-        choices=PretAManger.choices,
-        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
-        label="Produit Prêt à manger (PAM)",
     )
 
     actions_engagees = SEVESChoiceField(
@@ -297,6 +307,17 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
 
+    def danger_plus_courants(self):
+        return [
+            CategorieDanger.LISTERIA_MONOCYTOGENES,
+            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
+            CategorieDanger.YERSINIA_ENTEROCOLITICA,
+            CategorieDanger.CLOSTRIDIUM_BOTULINUM,
+            CategorieDanger.VIRUS_DE_L_ENCEPHALITE_A_TIQUE,
+        ]
+
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
@@ -312,7 +333,6 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
         fields = (
             "date_reception",
             "numero_rasff",
-            "type_evenement",
             "source",
             "description",
             "categorie_danger",
@@ -325,8 +345,7 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
             "evaluation": forms.Textarea(
                 attrs={
                     "placeholder": (
-                        "Préciser si besoin (facultatif) : analyse du danger et du risque par le professionnel, "
-                        "par les autorités, évaluation de la situation"
+                        "Éléments d’interprétation sur les analyses génomiques et autres éléments épidémiologiques"
                     )
                 },
             )

@@ -1735,3 +1735,9 @@ class SourceInvestigationCasHumain(models.TextChoices):
     DO_LISTERIOSE = auto(), "DO listériose"
     CAS_GROUPES = auto(), "Cas groupés"
     SIGNALEMENT_AUTRE = auto(), "Signalement autre"
+
+
+class PretAManger(models.TextChoices):
+    OUI = "oui", "Oui"
+    NON = "non", "Non"
+    SANS_OBJET = "sans_objet", "Sans objet"

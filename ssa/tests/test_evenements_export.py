@@ -249,7 +249,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
         "-",
         "-",
         evenement.evaluation,
-        "-",
+        evenement.get_produit_pret_a_manger_display(),
         evenement.reference_souches,
         evenement.reference_clusters,
         "-",
