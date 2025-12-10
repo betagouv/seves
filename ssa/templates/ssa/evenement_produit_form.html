@@ -28,7 +28,7 @@
         <main class="main-container">
 
             <div class="evenement-produit-form-header">
-                <h1>{% if form.instance.pk %}Modification de l'événement {{ form.instance.numero }}{% else %}Création d'un événement{% endif %}</h1>
+                <h1>{% if form.instance.pk %}Modification l'évènement produit {{ form.instance.numero }}{% else %}Créer un évènement produit{% endif %}</h1>
                 <div class="fr-mb-auto">
                     <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                     {% if form.instance and form.instance.is_draft %}

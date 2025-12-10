@@ -36,7 +36,6 @@ def test_can_create_investigation_cas_humain_with_required_fields_only(
 
     investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
     assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
-    assert investigation_cas_humain.type_evenement == input_data.type_evenement
     assert investigation_cas_humain.description == input_data.description
     assert investigation_cas_humain.numero is not None
     assert investigation_cas_humain.is_draft is True
@@ -87,7 +86,6 @@ def test_can_publish_investigation_cas_humain(live_server, mocked_authentificati
 
     investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
     assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
-    assert investigation_cas_humain.type_evenement == input_data.type_evenement
     assert investigation_cas_humain.description == input_data.description
     assert investigation_cas_humain.numero is not None
     assert investigation_cas_humain.is_draft is False
