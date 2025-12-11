@@ -11,30 +11,45 @@
 
     <div class="fr-grid-row fr-col">
         <div class="fr-col-12 fr-col-xl-8 fr-grid-row">
-            <div class="fr-col-12  fr-grid-row">
-                <div class="fr-col-12 fr-col-md-6">
-                    <div class="fr-fieldset__element">
-                        {% dsfr_form_field form.date_reception %}
+            <div class="fr-col-12 fr-col-md-6">
+                <div class="fr-fieldset__element">
+                    <div id="date-creation" class="fr-input-group">
+                        <label class="fr-label" for="date-creation-input">Date de création</label>
+                        {% now 'Y-m-d' as now %}
+                        <input
+                            type="date"
+                            id="date-creation-input"
+                            class="fr-input"
+                            value="{{ form.instance.date_creation|default:now|date:"Y-m-d" }}"
+                            disabled
+                        >
                     </div>
                 </div>
-                <div class="fr-col-12 fr-col-md-6">
-                    <div class="fr-fieldset__element">
-                        {% dsfr_form_field form.type_evenement %}
-                    </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field form.date_reception %}
                 </div>
-            </div>
-            <div class="fr-col-12 fr-grid-row">
                 {% if form.numero_rasff %}
-                    <div class="fr-col-12 fr-col-md-6">
-                        <div class="fr-fieldset__element">
-                            {% dsfr_form_field form.numero_rasff %}
-                        </div>
+                    <div class="fr-fieldset__element">
+                        {% dsfr_form_field form.numero_rasff %}
                     </div>
                 {% endif %}
-                <div class="fr-col-12 fr-col-md-6">
-                    <div class="fr-fieldset__element">
-                        {% dsfr_form_field form.source %}
+            </div>
+            <div class="fr-col-12 fr-col-md-6">
+                <div class="fr-fieldset__element">
+                    <div class="fr-input-group">
+                        <label class="fr-label" for="date-creation-input">Type d'évènement</label>
+                        <select
+                            type="date"
+                            id="type-evenement-input"
+                            class="fr-input"
+                            disabled
+                        >
+                            <option selected>Investigation de cas humain</option>
+                        </select>
                     </div>
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field form.source %}
                 </div>
             </div>
         </div>
@@ -68,6 +83,11 @@
             <div class="fr-fieldset__element">
                 {% dsfr_form_field form.reference_clusters %}
             </div>
+
+            <fieldset class="fr-fieldset fr-px-2v fr-mx-0 fr-hidden" id="pam-container">
+                {{ form.produit_pret_a_manger.label_tag }}
+                {{ form.produit_pret_a_manger|dsfr_inline }}
+            </fieldset>
         </div>
         <div class="fr-col-12 fr-col-xl-6 fr-flex">
             <div class="fr-fieldset__element fr-textarea-grow">

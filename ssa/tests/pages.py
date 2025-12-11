@@ -563,7 +563,6 @@ class EvenementProduitListPage(WithTreeSelect):
 
 class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     fields = (
-        "type_evenement",
         "description",
         "date_reception",
         "source",
@@ -587,7 +586,6 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-update', kwargs={'pk': evenement.pk})}")
 
     def fill_required_fields(self, evenement_produit):
-        self.type_evenement.select_option(evenement_produit.type_evenement)
         self.description.fill(evenement_produit.description)
 
     def _submit(self, locator: Locator, *, wait_for=None):
