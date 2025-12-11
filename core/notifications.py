@@ -6,7 +6,9 @@ from core.models import Message, Contact, Export
 from django.conf import settings
 
 
-def _send_message(recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message):
+def _send_message(
+    recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message, message_v2_enabled
+):
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
@@ -43,7 +45,7 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
             "content": content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id, message_v2_enabled)}",
         },
     )
 
@@ -89,7 +91,7 @@ def send_as_seves(*, recipients, subject, message, html_message, object=None):
     )
 
 
-def notify_message(message_obj: Message):
+def notify_message(message_obj: Message, message_v2_enabled=False):
     if message_obj.is_draft:
         return
     recipients, copy = [], []
@@ -109,7 +111,14 @@ def notify_message(message_obj: Message):
             recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
 
     if recipients and content:
-        _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
+        _send_message(
+            recipients,
+            copy,
+            subject=message_obj.title,
+            content=content,
+            message_obj=message_obj,
+            message_v2_enabled=message_v2_enabled,
+        )
 
 
 def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):
