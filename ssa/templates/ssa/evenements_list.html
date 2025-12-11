@@ -106,7 +106,7 @@
                     <tbody>
                         {% for evenement in object_list %}
                             <tr class="evenements__list-row">
-                                <td><div class="ellipsis"><a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a></div></td>
+                                <td><div class="ellipsis"><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></div></td>
                                 <td><div class="ellipsis">{{ evenement.date_creation|date:"d/m/Y" }}</div></td>
                                 <td>
                                     <div class="ellipsis">{{ evenement.description }}</div>
