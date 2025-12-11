@@ -62,7 +62,7 @@ class EvenementFollowUp(TextChoices):
     NONE = "aucune suite", "Aucune suite"
     INSPECTION = "programmation futur controle", "Futur contrôle programmé"
     TRANSMISSION_DELEGATAIRE = "programmation au delegataire pour controle", "Transmis au délégataire pour contrôle"
-    TRANSMISSION_DD = "programmation a une autre DD", "Transféré à une autre DD"
+    TRANSMISSION_DD = "programmation a une autre DD", "Transféré à une autre structure"
     INVESGTIGATION_TIAC = "investigation tiac", "Passé en investigation de TIAC"
 
 

@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from reversion.models import Version
+from core.versions import get_versions_from_ids
 
 from core.mixins import sort_tree, WithNumeroMixin
 from core.models import Structure
@@ -40,6 +42,31 @@ class WithEvenementRisqueMixin(models.Model):
     evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
     reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class WithLatestVersionMixin(models.Model):
+    @property
+    def latest_version(self):
+        from ssa.models import Etablissement
+
+        etablissement_ids = [e.id for e in self.etablissements.all()]
+        etablissements_versions = get_versions_from_ids(etablissement_ids, Etablissement)
+
+        instance_version = (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
+
+        versions = list(etablissements_versions) + [instance_version]
+        versions = [v for v in versions if v]
+        if not versions:
+            return None
+        return max(versions, key=lambda obj: obj.revision.date_created)
 
     class Meta:
         abstract = True

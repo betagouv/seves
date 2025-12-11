@@ -12,7 +12,7 @@
           <div class="fr-col-5">{{ object.transfered_to|or_empty_value_tag }}</div>
         </div>
         <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-7 bold">Date de réception à la DD(ETS)PP</div>
+          <div class="fr-col-7 bold">Date de réception</div>
           <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
         </div>
       </div>
@@ -42,7 +42,7 @@
     <div class="fr-col-3">
       <div class="fr-container--fluid">
         <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-5 bold">Suite donnée par la DD</div>
+          <div class="fr-col-5 bold">Suite donnée</div>
           <div class="fr-col-7">{{ object.get_follow_up_display }}</div>
           {% if object.display_transfer_notice %}
             {% dsfr_notice title='Publiez la fiche, puis passez-la en investigation de TIAC depuis le menu "+ Action"' %}

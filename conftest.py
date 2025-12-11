@@ -17,7 +17,7 @@ from playwright.sync_api import expect, Page
 
 from core.constants import DEPARTEMENTS, AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import StructureFactory, UserFactory, ContactStructureFactory
-from core.models import Agent, Contact, Region, Departement
+from core.models import Agent, Contact, Region, Departement, Structure
 
 User = get_user_model()
 
@@ -147,11 +147,14 @@ def choice_js_option_disabled(db, page):
 
 @pytest.fixture
 def choice_js_get_values(db, page):
-    def _choice_js_get_values(page, locator):
+    def _choice_js_get_values(page, locator, delete_remove_link=False):
         selected_options = page.locator(f'{locator} ~ div [aria-selected="true"]')
         texts = []
         for i in range(selected_options.count()):
-            texts.append(selected_options.nth(i).inner_text())
+            text = selected_options.nth(i).inner_text()
+            if delete_remove_link:
+                text = text.replace("Remove item", "")
+            texts.append(text)
         return texts
 
     return _choice_js_get_values
@@ -285,6 +288,8 @@ def choose_different_values():
 
 @pytest.fixture
 def mus_contact():
-    return ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=MUS_STRUCTURE, structure__libelle=MUS_STRUCTURE
-    )
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    contact = Contact.objects.filter(structure=structure).first()
+    if contact:
+        return contact
+    return ContactStructureFactory(structure=structure)

@@ -15,14 +15,7 @@ class DisplayItem:
     danger_retenu: list[str]
     etat: str
     readable_etat: str
-    etablissement: str
-
-    @classmethod
-    def add_etablissement_data(cls, object):
-        if not (hasattr(object, "last_etablissement") and len(object.last_etablissement) > 0):
-            return "-"
-
-        return f"{object.last_etablissement[0].raison_sociale} {object.last_etablissement[0].commune}"
+    etablissements: list[str]
 
     @classmethod
     def from_evenement_simple(cls, evenement_simple: EvenementSimple):
@@ -38,7 +31,7 @@ class DisplayItem:
             danger_retenu=[],
             etat=evenement_simple.etat,
             readable_etat=evenement_simple.readable_etat,
-            etablissement=cls.add_etablissement_data(evenement_simple),
+            etablissements=[e.raison_sociale for e in evenement_simple.etablissements.all()],
         )
 
     @classmethod
@@ -55,7 +48,7 @@ class DisplayItem:
             danger_retenu=investigation_tiac.short_conclusion_selected_hazard,
             etat=investigation_tiac.etat,
             readable_etat=investigation_tiac.readable_etat,
-            etablissement=cls.add_etablissement_data(investigation_tiac),
+            etablissements=[e.raison_sociale for e in investigation_tiac.etablissements.all()],
         )
 
     @classmethod

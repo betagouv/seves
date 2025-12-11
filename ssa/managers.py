@@ -64,6 +64,7 @@ class InvestigationCasHumainQueryset(EvenementBaseQueryset):
         return (
             "description",
             "etablissements__raison_sociale",
+            "etablissements__enseigne_usuelle",
         )
 
 

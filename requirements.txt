@@ -78,7 +78,7 @@ django==5.2.8
     #   django-waffle
     #   mozilla-django-oidc
     #   sentry-sdk
-django-countries==8.1.1
+django-countries==8.2.0
     # via -r requirements.in
 django-crispy-forms==2.4
     # via django-dsfr
@@ -171,7 +171,7 @@ packaging==24.0
     #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.55.0
+playwright==1.57.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -242,11 +242,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.14.6
+ruff==0.14.8
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.43.0
+sentry-sdk[django]==2.47.0
     # via -r requirements.in
 six==1.16.0
     # via

@@ -49,7 +49,7 @@ from tiac.models import (
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     date_reception = forms.DateTimeField(
-        label="Date de réception à la DD(ETS)PP",
+        label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
@@ -58,7 +58,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         required=False,
     )
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
-    follow_up = SEVESChoiceField(choices=EvenementFollowUp.choices, label="Suite donnée par la DD", required=True)
+    follow_up = SEVESChoiceField(choices=EvenementFollowUp.choices, label="Suite donnée", required=True)
     modalites_declaration = forms.ChoiceField(
         required=False,
         choices=ModaliteDeclarationEvenement.choices,
@@ -253,7 +253,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
     date_reception = forms.DateTimeField(
         required=False,
-        label="Date de réception à la DD(ETS)PP",
+        label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
     evenement_origin = SEVESChoiceField(
@@ -275,7 +275,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         ),
     )
     follow_up = forms.ChoiceField(
-        choices=InvestigationFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée par la DD", required=True
+        choices=InvestigationFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée", required=True
     )
 
     nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")

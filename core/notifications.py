@@ -1,13 +1,14 @@
-from django.contrib.contenttypes.models import ContentType
 from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact, Export, FinSuiviContact
+from core.models import Message, Contact, Export
 from django.conf import settings
 
 
-def _send_message(recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message):
+def _send_message(
+    recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message, message_v2_enabled
+):
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
@@ -44,30 +45,13 @@ def _send_message(recipients: list[str], copy: list[str], subject: str, content:
             "content": content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id, message_v2_enabled)}",
         },
     )
 
 
 def _filter_contacts_in_fin_de_suivi(recipients, object):
-    content_type = ContentType.objects.get_for_model(object)
-
-    # Remove structure in fin de suivi
-    emails_to_exclude = set(
-        FinSuiviContact.objects.filter(content_type=content_type, object_id=object.id).values_list(
-            "contact__email", flat=True
-        )
-    )
-
-    # Remove agent in structure in fin de suivi
-    emails_to_exclude.update(
-        Contact.objects.filter(
-            email__in=recipients,
-            agent__isnull=False,
-            agent__structure__contact__finsuivicontact__content_type=content_type,
-            agent__structure__contact__finsuivicontact__object_id=object.id,
-        ).values_list("email", flat=True)
-    )
+    emails_to_exclude = Contact.objects.get_emails_in_fin_de_suivi_for_object(object)
 
     return [r for r in recipients if r not in emails_to_exclude]
 
@@ -107,7 +91,7 @@ def send_as_seves(*, recipients, subject, message, html_message, object=None):
     )
 
 
-def notify_message(message_obj: Message):
+def notify_message(message_obj: Message, message_v2_enabled=False):
     if message_obj.is_draft:
         return
     recipients, copy = [], []
@@ -127,7 +111,14 @@ def notify_message(message_obj: Message):
             recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
 
     if recipients and content:
-        _send_message(recipients, copy, subject=message_obj.title, content=content, message_obj=message_obj)
+        _send_message(
+            recipients,
+            copy,
+            subject=message_obj.title,
+            content=content,
+            message_obj=message_obj,
+            message_v2_enabled=message_v2_enabled,
+        )
 
 
 def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):

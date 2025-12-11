@@ -1,8 +1,10 @@
 import json
 
+from queryset_sequence import QuerySetSequence
+
 from core.mixins import WithOrderingMixin
-from ssa.filters import EvenementProduitFilter
-from ssa.models import EvenementProduit
+from ssa.filters import EvenementFilter
+from ssa.models import EvenementProduit, EvenementInvestigationCasHumain
 from ssa.constants import CategorieDanger, CategorieProduit
 
 
@@ -22,16 +24,26 @@ class WithFilteredListMixin(WithOrderingMixin):
     def get_raw_queryset(self):
         user = self.request.user
         contact = user.agent.structure.contact_set.get()
-        return (
+
+        evenement_produit_qs = (
             EvenementProduit.objects.with_departement_prefetched()
             .select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
         )
 
+        ich_qs = (
+            EvenementInvestigationCasHumain.objects.with_departement_prefetched()
+            .select_related("createur")
+            .get_user_can_view(user)
+            .with_fin_de_suivi(contact)
+        )
+
+        return QuerySetSequence(evenement_produit_qs, ich_qs, model=EvenementProduit)
+
     def get_queryset(self):
         queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementProduitFilter(self.request.GET, queryset=queryset)
+        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
         return self.filter.qs
 
 

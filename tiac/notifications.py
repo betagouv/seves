@@ -42,3 +42,39 @@ def notify_transformation(old: EvenementSimple, new: InvestigationTiac):
             </p>
             """,
     )
+
+
+def notify_investigation_coordonnee(object: InvestigationTiac, user):
+    send_as_seves(
+        recipients=[user.agent.contact_set.get().email, Contact.objects.get_mus().email],
+        object=object,
+        subject=f"{object.get_short_email_display_name()} - Investigation coordonnée",
+        message=f"""
+        Bonjour,
+        L'agent {user.agent.agent_with_structure} a édité l’évènement suivant {object.get_long_email_display_name()} en “Investigation coordonnée / MUS informée”.
+
+        Si ce n’est pas déjà fait, pensez à informer la MUS et/ ou les autres DDPP concernées des raisons de ce choix.
+            """,
+        html_message=f"""
+        <p>Bonjour,<br>
+        L'agent {user.agent.agent_with_structure} a édité l’évènement suivant {object.get_long_email_display_name_as_html()} en “Investigation coordonnée / MUS informée”. </p>
+
+        <p>Si ce n’est pas déjà fait, pensez à informer la MUS et/ ou les autres DDPP concernées des raisons de ce choix </p>
+        """,
+    )
+
+
+def notify_conclusion(object: InvestigationTiac, user):
+    send_as_seves(
+        recipients=[c.email for c in object.contacts.agents_only().exclude(id=user.agent.contact_set.get().id)],
+        object=object,
+        subject=f"{object.get_short_email_display_name()} - Conclusion suspicion TIAC",
+        message=f"""
+        Bonjour,
+        La conclusion de la suspicion de TIAC a été modifiée vers {object.get_suspicion_conclusion_display() or "Vide"} pour l’évènement : {object.get_long_email_display_name()}
+        """,
+        html_message=f"""
+        <p>Bonjour,<br>
+        La conclusion de la suspicion de TIAC a été modifiée vers {object.get_suspicion_conclusion_display() or "Vide"} pour l’évènement : {object.get_long_email_display_name_as_html()}</p>
+        """,
+    )

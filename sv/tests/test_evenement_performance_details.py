@@ -10,7 +10,7 @@ from sv.factories import (
     LieuFactory,
 )
 
-BASE_NUM_QUERIES = 28  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 30  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db

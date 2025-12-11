@@ -476,7 +476,9 @@ class EmailNotificationMixin:
     def get_email_subject(self):
         raise NotImplementedError
 
-    def get_absolute_url_with_message(self, message_id: int):
+    def get_absolute_url_with_message(self, message_id: int, message_v2_enabled):
+        if message_v2_enabled:
+            return Message.objects.get(pk=message_id).get_absolute_url()
         return f"{self.get_absolute_url()}?message={message_id}"
 
 
@@ -749,7 +751,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         self._delete_documents_if_needed(form)
         self._create_documents(form)
         try:
-            transaction.on_commit(lambda: notify_message(form.instance))
+            transaction.on_commit(lambda: notify_message(form.instance, flag_is_active(self.request, "message_v2")))
         except OperationalError:
             messages.error(
                 self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"

@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models, transaction
@@ -41,7 +42,7 @@ from .model_mixins import WithSharedNumeroMixin
 class BaseTiacModel(models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    date_reception = models.DateField(verbose_name="Date de réception à la DD(ETS)PP")
+    date_reception = models.DateField(verbose_name="Date de réception")
     evenement_origin = models.CharField(
         choices=EvenementOrigin.choices, verbose_name="Signalement déclaré par", blank=True
     )
@@ -95,7 +96,7 @@ class EvenementSimple(
     nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
 
     follow_up = models.CharField(
-        choices=EvenementFollowUp.choices, default=EvenementFollowUp.NONE, verbose_name="Suite donnée par la DD"
+        choices=EvenementFollowUp.choices, default=EvenementFollowUp.NONE, verbose_name="Suite donnée"
     )
     transfered_to = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="transfered", null=True)
 
@@ -260,7 +261,7 @@ class Etablissement(BaseEtablissement, models.Model):
 
 
 class InvestigationFollowUp(models.TextChoices):
-    INVESTIGATION_DD = "investigation par ma dd", "Investigation par ma DD"
+    INVESTIGATION_DD = "investigation par ma dd", "Investigation locale"
     INVESTIGATION_COORDONNEE = "investigation coordonnée", "Investigation coordonnée / MUS informée"
 
 
@@ -282,6 +283,7 @@ class InvestigationTiac(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,
+    DirtyFieldsMixin,
     models.Model,
 ):
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
@@ -292,7 +294,7 @@ class InvestigationTiac(
         validators=[RegexValidator(r"^\d{6}$", "Doit contenir exactement 6 chiffres")],
     )
     follow_up = models.CharField(
-        max_length=100, choices=InvestigationFollowUp.choices, verbose_name="Suite donnée par la DD", blank=True
+        max_length=100, choices=InvestigationFollowUp.choices, verbose_name="Suite donnée", blank=True
     )
 
     # Cas
@@ -402,7 +404,7 @@ class InvestigationTiac(
         return f"L'événement n°{self.numero} a bien été clôturé."
 
     def get_email_subject(self):
-        return f"{self.numero}"
+        return f"Investigation de TIAC {self.numero}"
 
     @property
     def latest_version(self):
@@ -479,7 +481,7 @@ class InvestigationTiac(
         return f"""
         Pour rappel, voici les éléments de synthèse pour cet évènement :
         - Créateur : {self.createur}
-        - Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}
+        - Date de réception : {self.date_reception.strftime("%d/%m/%Y")}
         - Etablissement(s) : {self.raisons_sociales_display}
         - Commune(s) : {self.communes_display}
         """
@@ -489,7 +491,7 @@ class InvestigationTiac(
         Pour rappel, voici les éléments de synthèse pour cet évènement :
         <ul>
         <li>Créateur : {self.createur}</li>
-        <li>Date de réception à la DD(ETS)PP : {self.date_reception.strftime("%d/%m/%Y")}</li>
+        <li>Date de réception à la : {self.date_reception.strftime("%d/%m/%Y")}</li>
         <li>Etablissement(s) : {self.raisons_sociales_display}</li>
         <li>Commune(s) : {self.communes_display}</li>
         </ul>

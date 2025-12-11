@@ -2,15 +2,14 @@
 {% load static %}
 {% load etat_tags %}
 {% load or_empty_value_tag %}
+
 {% block extrahead %}
   <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
-  <link rel="stylesheet" href="{% static 'ssa/evenement_produit_detail.css' %}">
   <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
-{% endblock %}
+{% endblock extrahead %}
 {% block scripts %}
-  <script type="text/javascript" src="{% static 'ssa/_rappel_conso_link.js' %}"></script>
-  <script type="module" src="{% static 'ssa/evenement_produit_detail.js' %}"></script>
+  <script type="module" src="{% static 'ssa/investigation_cas_humain_detail.js' %}"></script>
   <script type="module" src="{% static 'core/sidebar.js' %}"></script>
   <script type="module" src="{% static 'core/message_form.js' %}"></script>
   <script type="module" src="{% static 'core/document_form.js' %}"></script>
@@ -18,7 +17,7 @@
 {% endblock %}
 
 {% block aside %}
-  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url %}
+  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url extra_classes="needs-required" %}
   {% include "core/_document_warning_modal.html" %}
   {% include "core/_message_update_forms.html" with object=object %}
   {% for message in message_list %}
@@ -40,7 +39,7 @@
         {% endif %}
 
         {% if can_be_deleted %}
-          {% url 'ssa:evenements-liste' as next_url %}
+          {% url 'ssa:evenement-liste' as next_url %}
           {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
         {% endif %}
         {% if is_evenement_can_be_cloture %}
@@ -60,9 +59,6 @@
                 </form>
               </li>
             {% endif %}
-            <li>
-              {% include "ssa/_evenement_produit_action_navigation.html" %}
-            </li>
           </ul>
         </div>
 
@@ -72,65 +68,20 @@
 
     {% include "core/_latest_revision.html" with date_derniere_mise_a_jour=object.latest_version.revision.date_created latest_version=object.latest_version content_type_pk=content_type.pk object_pk=object.pk %}
 
-    <div id="detail-content">
-      {% include "ssa/_evenement_produit_informations.html" %}
-      {% include "ssa/_evenement_produit_informations_synthese.html" %}
+    <div class="white-container fr-hidden synthese-content">
+      {% include "ssa/_investigation_cas_humain_informations_synthese.html" %}
+    </div>
+    <div class="detail-content">
+      <div class="white-container">
+        {% include "ssa/_investigation_cas_humain_informations.html" %}
+      </div>
 
+      {% include "ssa/_investigation_cas_humain_produit.html" %}
       <div class="fr-container--fluid fr-mt-2w detail-content">
-        <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-6 ">
-            <div class="white-container">
-              <h2 class="fr-h6">Produit</h2>
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  {% for key, value in object.readable_product_fields.items %}
-                    <div class="fr-col-4 bold">{{ key }}</div>
-                    <div class="fr-col-8">{{ value|or_empty_value_tag }}</div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="fr-col-6">
-            <div class="white-container">
-              <h2 class="fr-h6">Risque</h2>
-              <div class="fr-container--fluid">
-                <div class="fr-grid-row fr-grid-row--gutters">
-                  {% for key, value in object.readable_risk_fields.items %}
-                    <div class="fr-col-4 bold">{{ key }}</div>
-                    <div class="fr-col-8">{{ value|or_empty_value_tag }}</div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-12">
-            <div class="white-container">
-              <h2 class="fr-h6">Actions engagées</h2>
-              {{ object.get_actions_engagees_display|or_empty_value_tag }}
-            </div>
-          </div>
-        </div>
-        <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-12">
-            <div class="white-container">
-              <h2 class="fr-h6">Rappel conso</h2>
-              {% for numero in object.numeros_rappel_conso %}
-                <span class="rappel-conso-link fr-mr-1w">{{ numero }}</span>
-              {% empty %}
-                <span class="empty-value">Vide</span>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
         {% include "ssa/_etablissements.html" %}
+
         {% include "core/_list_free_links.html" with classes="fr-mt-4v" title="Événements liés" object=object %}
       </div>
-      {% if not object.is_draft %}
-        {% include "core/_fiche_bloc_commun.html" with object=object %}
-      {% endif %}
     </div>
   </main>
 {% endblock content %}

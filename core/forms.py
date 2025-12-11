@@ -140,23 +140,40 @@ class CommonMessageMixin:
                 document_comment = forms.CharField(initial=data.get(f"document_comment_{document_number}"))
                 self.fields[f"document_comment_{document_number}"] = document_comment
 
+    def _get_fin_suivi_emails(self, obj):
+        if hasattr(self, "_fin_suivi_emails"):
+            return self._fin_suivi_emails
+
+        self._fin_suivi_emails = Contact.objects.get_emails_in_fin_de_suivi_for_object(obj)
+        return self._fin_suivi_emails
+
     def _get_structures(self, obj):
         if hasattr(self, "_structures"):
             return self._structures
-        self._structures = obj.contacts.structures_only().exclude(structure=self.sender.agent.structure)
+        self._structures = (
+            obj.contacts.structures_only()
+            .exclude(structure=self.sender.agent.structure)
+            .exclude(email__in=self._get_fin_suivi_emails(obj))
+        )
         self._structures = self._structures.select_related("structure")
         return self._structures
 
     def _get_contacts(self, obj):
         if hasattr(self, "_contacts"):
             return self._contacts
-        self._contacts = obj.contacts.exclude(structure=self.sender.agent.structure).exclude(agent=self.sender.agent)
+        self._contacts = (
+            obj.contacts.exclude(structure=self.sender.agent.structure)
+            .exclude(agent=self.sender.agent)
+            .exclude(email__in=self._get_fin_suivi_emails(obj))
+        )
         self._contacts = self._contacts.select_related("agent__structure")
         return self._contacts
 
-    def _build_label_with_shortcuts(self, label_text, structure_ids, contact_ids=None, prefix="destinataires"):
+    def _build_label_with_shortcuts(self, label_text, obj, with_contacts=False, prefix="destinataires"):
+        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         html_parts = [f"{label_text}"]
-        if contact_ids:
+        if with_contacts:
+            contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
             html_parts.append(
                 f"<p class='fr-mb-1v'>"
                 f"<a href='#' data-action='message-form#onShortcut{prefix.title()}:stop:prevent' class='fr-link {prefix}-contacts-shortcut' "
@@ -170,22 +187,16 @@ class CommonMessageMixin:
         return mark_safe("\n".join(html_parts))
 
     def _get_recipients_label(self, obj):
-        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
-        return self._build_label_with_shortcuts("Destinataires*", structure_ids, contact_ids, "destinataires")
+        return self._build_label_with_shortcuts("Destinataires*", obj, with_contacts=True)
 
     def _get_recipients_copy_label(self, obj):
-        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        contact_ids = ",".join([str(c.id) for c in self._get_contacts(obj)])
-        return self._build_label_with_shortcuts("Copie", structure_ids, contact_ids, "copie")
+        return self._build_label_with_shortcuts("Copie", obj, with_contacts=True, prefix="copie")
 
     def _get_recipients_structures_only_label(self, obj):
-        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Destinataires*", structure_ids, prefix="destinataires")
+        return self._build_label_with_shortcuts("Destinataires*", obj)
 
     def _get_recipients_copy_structures_only_label(self, obj):
-        structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
-        return self._build_label_with_shortcuts("Copie", structure_ids, prefix="copie")
+        return self._build_label_with_shortcuts("Copie", obj, prefix="copie")
 
     def _add_related_objects(self):
         self.instance.status = self.status

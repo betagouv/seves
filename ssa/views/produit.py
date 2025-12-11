@@ -10,10 +10,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
+from queryset_sequence import QuerySetSequence
 
 from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
 from core.mixins import (
@@ -35,6 +36,7 @@ from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCa
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
+from ..display import EvenementDisplay
 from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
 
 
@@ -234,6 +236,7 @@ class EvenementUpdateView(
 
 
 class EvenementsListView(WithFilteredListMixin, ListView):
+    template_name = "ssa/evenements_list.html"
     model = EvenementProduit
     paginate_by = 100
 
@@ -243,12 +246,9 @@ class EvenementsListView(WithFilteredListMixin, ListView):
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
 
-        for evenement in context["object_list"]:
-            etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
-            evenement.etat = etat_data["etat"]
-            evenement.readable_etat = etat_data["readable_etat"]
-
         context["total_object_count"] = self.get_raw_queryset().count()
+        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
+
         return context
 
 
@@ -256,7 +256,17 @@ class EvenementProduitExportView(WithFilteredListMixin, View):
     http_method_names = ["post"]
 
     def post(self, request):
-        ids = list(self.get_queryset().values_list("id", flat=True))
+        queryset = self.get_queryset()
+
+        if isinstance(queryset, QuerySetSequence):
+            for qs in queryset._querysets:
+                if issubclass(qs.model, EvenementProduit):
+                    queryset = qs
+                    break
+            else:
+                raise Http404
+
+        ids = list(queryset.values_list("id", flat=True))
         task = Export.objects.create(object_ids=ids, user=request.user)
         export_task.delay(task.id)
         messages.success(
@@ -312,7 +322,6 @@ class InvestigationCasHumainCreateView(
 ):
     template_name = "ssa/evenement_investigation_cas_humain.html"
     form_class = InvestigationCasHumainForm
-    success_url = reverse_lazy("ssa:evenements-liste")
     success_message = "La fiche d'investigation cas humain a été créée avec succès."
 
     @property
@@ -337,7 +346,7 @@ class InvestigationCasHumainCreateView(
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
         messages.success(self.request, self.success_message)
-        return super().form_valid(form)
+        return HttpResponseRedirect(self.object.get_absolute_url())
 
     def formset_invalid(self):
         self.object = None
