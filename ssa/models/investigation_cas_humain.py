@@ -7,9 +7,10 @@ from core.mixins import (
     AllowModificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
+    EmailNotificationMixin,
+    WithMessageUrlsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Document
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
 from ssa.managers import InvestigationCasHumainManager
@@ -18,11 +19,13 @@ from ssa.models.mixins import (
     WithEvenementRisqueMixin,
     WithSharedNumeroMixin,
     WithLatestVersionMixin,
+    SsaBaseEvenementModel,
 )
 
 
 @reversion.register
 class EvenementInvestigationCasHumain(
+    SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -33,6 +36,8 @@ class EvenementInvestigationCasHumain(
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithFreeLinkIdsMixin,
+    EmailNotificationMixin,
+    WithMessageUrlsMixin,
     models.Model,
 ):
     source = models.CharField(
@@ -54,39 +59,26 @@ class EvenementInvestigationCasHumain(
     def get_absolute_url(self):
         return reverse("ssa:investigation-cas-humain-details", kwargs={"pk": self.pk})
 
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
-
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_short_email_display_name(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"{self.get_short_email_display_name()} {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>{self.get_short_email_display_name()}</b> {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_suffix(self):
+        return f"(Danger : {self.get_categorie_danger_display() or 'Vide'})"
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

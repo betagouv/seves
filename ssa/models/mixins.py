@@ -4,7 +4,7 @@ from reversion.models import Version
 from core.versions import get_versions_from_ids
 
 from core.mixins import sort_tree, WithNumeroMixin
-from core.models import Structure
+from core.models import Structure, Document
 from ssa.constants import CategorieDanger, TypeEvenement
 from ssa.models.validators import validate_numero_rasff
 
@@ -90,6 +90,48 @@ class WithSharedNumeroMixin(WithNumeroMixin):
 
         numero = max(last_num(EvenementInvestigationCasHumain), last_num(EvenementProduit)) + 1
         return annee_courante, numero
+
+    class Meta:
+        abstract = True
+
+
+class SsaBaseEvenementModel(models.Model):
+    def get_message_form(self):
+        from ssa.forms import MessageForm
+
+        return MessageForm
+
+    def get_crdi_form(self):
+        from ssa.forms import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "ssa"
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
+            Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.DSCE_CHED,
+            Document.TypeDocument.ETIQUETAGE,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
+            Document.TypeDocument.AUTRE,
+        ]
 
     class Meta:
         abstract = True
