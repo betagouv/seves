@@ -15,7 +15,7 @@ from core.mixins import (
 )
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
-from core.models import Document, LienLibre
+from core.models import LienLibre
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
 from ..constants import CategorieDanger, CategorieProduit, Source
@@ -24,6 +24,7 @@ from .mixins import (
     WithEvenementRisqueMixin,
     WithSharedNumeroMixin,
     WithLatestVersionMixin,
+    SsaBaseEvenementModel,
 )
 
 
@@ -113,6 +114,7 @@ class QuantificationUnite(models.TextChoices):
 
 @reversion.register(follow=["contacts"])
 class EvenementProduit(
+    SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -267,20 +269,6 @@ class EvenementProduit(
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
 
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
-    def get_crdi_form(self):
-        from ssa.forms import CompteRenduDemandeInterventionForm
-
-        return CompteRenduDemandeInterventionForm
-
-    @property
-    def limit_contacts_to_user_from_app(self):
-        return "ssa"
-
     def get_short_email_display_name(self):
         return f"{self.get_type_evenement_display()} {self.numero}"
 
@@ -314,29 +302,6 @@ class EvenementProduit(
         <li>Danger : {self.get_categorie_danger_display()}</li>
         </ul>
         """
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
 
     class Meta:
         constraints = [
