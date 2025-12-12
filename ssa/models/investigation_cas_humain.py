@@ -83,6 +83,29 @@ class EvenementInvestigationCasHumain(
     def get_long_email_display_name_suffix(self):
         return f"(Danger : {self.get_categorie_danger_display() or 'Vide'})"
 
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
+    def get_email_cloture_text(self):
+        return f"""
+         Pour rappel, voici les éléments de synthèse pour cet évènement :
+         - Créateur : {self.createur}
+         - Date de création : {self.date_creation.strftime("%d/%m/%Y")}
+         - N° RASFF/AAC : {self.numero_rasff}
+         - Danger : {self.get_categorie_danger_display()}
+         """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+         Pour rappel, voici les éléments de synthèse pour cet évènement
+         <ul>
+         <li>Créateur : {self.createur}</li>
+         <li>Date de création : {self.date_creation.strftime("%d/%m/%Y")}</li>
+         <li>N° RASFF/AAC : {self.numero_rasff}</li>
+         <li>Danger : {self.get_categorie_danger_display()}</li>
+         </ul>
+         """
+
     @property
     def list_of_linked_objects_as_str(self):
         links = LienLibre.objects.for_object(self)
