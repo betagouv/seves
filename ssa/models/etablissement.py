@@ -43,6 +43,8 @@ class Etablissement(BaseEtablissement, models.Model):
     )
     numeros_resytal = models.CharField(max_length=255, verbose_name="Numéros d’inspection Resytal", blank=True)
 
+    historical_data = models.JSONField(default=dict, blank=True)
+
     def __str__(self):
         return f"{self.raison_sociale}"
 

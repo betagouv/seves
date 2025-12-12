@@ -165,6 +165,8 @@ class EvenementProduit(
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
 
+    historical_data = models.JSONField(default=dict, blank=True)
+
     objects = EvenementProduitManager()
 
     def get_absolute_url(self):
