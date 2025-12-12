@@ -259,6 +259,8 @@ class Document(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
+    historical_data = models.JSONField(default=dict, blank=True)
+
     objects = DocumentManager.from_queryset(DocumentQueryset)()
 
     class Meta:
@@ -345,6 +347,8 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
 
     documents = GenericRelation(Document)
+
+    historical_data = models.JSONField(default=dict, blank=True)
 
     objects = MessageManager()
 

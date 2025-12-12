@@ -45,6 +45,8 @@ class EvenementInvestigationCasHumain(
         max_length=100, choices=SourceInvestigationCasHumain.choices, verbose_name="Source", blank=True
     )
 
+    historical_data = models.JSONField(default=dict, blank=True)
+
     objects = InvestigationCasHumainManager()
 
     @property
