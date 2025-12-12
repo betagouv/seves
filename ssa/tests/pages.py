@@ -318,6 +318,11 @@ class SsaBaseDetailPage:
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
 
+    def cloturer(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name="Clôturer l'événement").click()
+        self.page.get_by_role("button", name="Clôturer").click()
+
 
 class InvestigationCasHumainDetailsPage(SsaBaseDetailPage):
     pass
@@ -347,11 +352,6 @@ class EvenementProduitDetailsPage(SsaBaseDetailPage):
     def download(self):
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_text("Télécharger le document", exact=True).click()
-
-    def cloturer(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_role("link", name="Clôturer l'événement").click()
-        self.page.get_by_role("button", name="Clôturer").click()
 
     def edit(self):
         self.page.get_by_role("button", name="Actions").click()
