@@ -220,7 +220,7 @@ main {
 label[for="id_contexte"],
 label[for="id_date_premier_signalement"],
 label[for="id_commentaire"],
-label[for="commune"],
+label[for^="commune"],
 label[for^="id_lieux-"][for$="-wgs84_longitude"]
 {
     font-weight: bold;

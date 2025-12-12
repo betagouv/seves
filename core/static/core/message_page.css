@@ -1,15 +1,3 @@
-label:has(+ input:required)::after,
-label:has(+ input[data-required="true"])::after,
-label:has(+ select:required)::after,
-label:has(+ select[data-required="true"])::after,
-label:has(+ textarea:required)::after,
-label:has(+ textarea[data-required="true"])::after,
-label:has(+ .choices select:required)::after,
-label:has(+ .choices select[data-required="true"])::after,
-.required-field::after {
-    content: none;
-}
-
 #message-add-document {
     background-color: white;
 }

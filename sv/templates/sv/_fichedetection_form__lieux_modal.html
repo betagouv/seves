@@ -1,3 +1,4 @@
+{% load widget_tweaks %}
 {% load render_field %}
 
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
@@ -28,7 +29,7 @@
                                 {{ form.adresse_lieu_dit }}
                             </p>
                             <div class="commune">
-                                <label class="fr-label" for="commune">Commune</label>
+                                <label class="fr-label" for="commune-select-{{ id }}">Commune</label>
                                 <select id="commune-select-{{ id }}" class="fr-input"></select>
                             </div>
                             {{ form.commune }}

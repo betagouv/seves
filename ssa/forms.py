@@ -289,10 +289,6 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
 
     source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=False)
 
-    @property
-    def media(self):
-        return super().media + Media(css={"all": ("core/dsfr_no_required.css",)})
-
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
