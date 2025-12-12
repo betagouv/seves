@@ -9,6 +9,8 @@ from django.conf import settings
 def _send_message(
     recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message, message_v2_enabled
 ):
+    if settings.SEND_NOTIFICATIONS is False:
+        return
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
@@ -57,6 +59,8 @@ def _filter_contacts_in_fin_de_suivi(recipients, object):
 
 
 def send_as_seves(*, recipients, subject, message, html_message, object=None):
+    if settings.SEND_NOTIFICATIONS is False:
+        return
     if object:
         recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
         suffix_html = f"""<p>
