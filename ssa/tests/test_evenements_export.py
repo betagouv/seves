@@ -30,7 +30,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     assert len(lines) == 3
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -51,6 +51,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         evenement.description_complementaire,
         evenement.get_temperature_conservation_display(),
         evenement.get_categorie_danger_display(),
+        evenement.precision_danger,
         str(evenement.quantification),
         evenement.get_quantification_unite_display(),
         evenement.evaluation,
@@ -157,7 +158,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.type_exploitant,
         etablissement_1.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[1])))[26:37]
+    assert expected_fields == next(csv.reader(StringIO(lines[1])))[27:38]
 
     expected_fields = [
         etablissement_2.siret,
@@ -172,7 +173,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.type_exploitant,
         etablissement_2.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[2])))[26:37]
+    assert expected_fields == next(csv.reader(StringIO(lines[2])))[27:38]
     assert lines[3] == ""
     assert len(lines) == 4
 
@@ -225,7 +226,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
     assert len(lines) == 3
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -246,6 +247,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
         "-",
         "-",
         evenement.get_categorie_danger_display(),
+        evenement.precision_danger,
         "-",
         "-",
         evenement.evaluation,
