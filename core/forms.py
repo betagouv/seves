@@ -187,13 +187,15 @@ class CommonMessageMixin:
         return mark_safe("\n".join(html_parts))
 
     def _get_recipients_label(self, obj):
-        return self._build_label_with_shortcuts("Destinataires*", obj, with_contacts=True)
+        return self._build_label_with_shortcuts(
+            mark_safe('<span class="label-marked">Destinataires</span>'), obj, with_contacts=True
+        )
 
     def _get_recipients_copy_label(self, obj):
         return self._build_label_with_shortcuts("Copie", obj, with_contacts=True, prefix="copie")
 
     def _get_recipients_structures_only_label(self, obj):
-        return self._build_label_with_shortcuts("Destinataires*", obj)
+        return self._build_label_with_shortcuts(mark_safe('<span class="label-marked">Destinataires</span>'), obj)
 
     def _get_recipients_copy_structures_only_label(self, obj):
         return self._build_label_with_shortcuts("Copie", obj, prefix="copie")
@@ -399,9 +401,11 @@ class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, f
 
 
 class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMessageMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
+    recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
+    )
     recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label="Destinataires*"
+        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
     )
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     recipients_copy_structures_only = ContactModelMultipleChoiceField(
