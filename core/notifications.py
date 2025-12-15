@@ -14,7 +14,7 @@ def _send_message(
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
-            "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()}",
+            "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()} de {message_obj.sender_structure}",
             "html_content": """
                 <!DOCTYPE html>
                 <html>
