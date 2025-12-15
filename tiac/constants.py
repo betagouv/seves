@@ -11,6 +11,7 @@ from core.mixins import WithChoicesToJS
 
 
 class EvenementOrigin(TextChoices):
+    ANSES = "anses", "ANSES"
     ARS = "ars", "ARS"
     CONSUMER = "consommateur", "Consommateur"
     ETABLISSEMENT = "etablissement", "Établissement"
