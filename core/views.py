@@ -241,10 +241,13 @@ class MessageCreateView(
             if self.reply_id:
                 reply_message = Message.objects.get(id=self.reply_id)
                 if reply_message.can_reply_to(self.request.user):
+                    title = reply_message.title
+                    if not reply_message.title.startswith(settings.REPLY_PREFIX):
+                        title = f"{settings.REPLY_PREFIX} {reply_message.title}"
                     kwargs.update(
                         {
                             "initial": {
-                                "title": f"[Rép] {reply_message.title}",
+                                "title": title,
                                 "recipients": reply_message.sender_structure.contact_set.get(),
                                 "content": reply_message.get_reply_intro_text(),
                             }
