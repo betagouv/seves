@@ -206,7 +206,14 @@ class MessageCreateView(
             self.reply_id = self.request.GET.get("reply_id")
             if self.reply_id:
                 return BasicMessageForm
-            return mapping.get(self.request.GET.get("type"))
+            message_form = mapping.get(self.request.GET.get("type"))
+
+            is_ac = self.request.user.agent.structure.is_ac
+            if message_form == DemandeInterventionForm and not is_ac:
+                raise PermissionDenied
+            if message_form == self.obj.get_crdi_form() and is_ac:
+                raise PermissionDenied
+            return message_form
         return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
