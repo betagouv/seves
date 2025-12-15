@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.mixins import WithEtatMixin
-from core.models import Departement, LienLibre
+from core.models import Departement, LienLibre, Contact
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
@@ -498,3 +498,20 @@ def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_
     creation_page.fill_required_fields(evenement)
     numero = "Événement produit : " + str(evenement_1.numero)
     choice_js_cant_pick(creation_page.page, "#liens-libre .choices", numero, numero)
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationCasHumainFactory.build()
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementInvestigationCasHumain.objects.get()
+    assert evenement_produit.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in evenement_produit.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in evenement_produit.contacts.all()
