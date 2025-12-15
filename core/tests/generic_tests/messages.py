@@ -807,7 +807,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.page.get_by_text("Répondre", exact=True).click()
 
-    assert message_page.message_title.input_value() == f"[Rép] {message.title}"
+    assert message_page.message_title.input_value() == f"{settings.REPLY_PREFIX} {message.title}"
     assert message_page.message_content.input_value() == message.get_reply_intro_text()
 
     message_page.message_content.fill("Ma réponse")
@@ -817,7 +817,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     assert Message.objects.count() == 2
     reply = Message.objects.first()
 
-    expected_title = f"[Rép] {message.title}"
+    expected_title = f"{settings.REPLY_PREFIX} {message.title}"
     expected_content = "Ma réponse"
     expected_recipients = [contact_sender_structure]
     expected_copies = [contact]
