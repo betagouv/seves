@@ -138,6 +138,9 @@ class TiacExport(BaseExport):
         querysets = []
         max_etablissement = max_repas = max_aliment = max_analyses = 0
         for entry in task.queryset_sequence:
+            entries = entry["ids"]
+            if not entries:
+                continue
             model = apps.get_model(entry["model"])
             queryset = model.objects.filter(id__in=entry["ids"])
             if model == InvestigationTiac:
