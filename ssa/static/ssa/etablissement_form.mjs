@@ -12,13 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getNextIdToUse() {
-        const ids = document.querySelectorAll("dialog[data-form-prefix]").values().map(el => {
+        const ids = [];
+        for(const el of document.querySelectorAll("dialog[data-form-prefix]")) {
             try {
-                return parseInt(el.dataset.formPrefix.match(/\d+/g)[0], 10)
-            } catch {
-                return Number.MIN_VALUE
-            }
-        });
+                ids.push(parseInt(el.dataset.formPrefix.match(/\d+/g)[0], 10))
+            } catch { /* */ }
+        }
         return Math.max(...ids, -1) + 1
     }
 
