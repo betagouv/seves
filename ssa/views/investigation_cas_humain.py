@@ -24,6 +24,7 @@ from ..forms import InvestigationCasHumainForm
 from ..formsets import InvestigationCasHumainsEtablissementFormSet
 from ..models import EvenementInvestigationCasHumain
 from .mixins import EvenementProduitValuesMixin
+from ..notifications import notify_souches_clusters
 
 
 class InvestigationCasHumainCreateView(
@@ -104,6 +105,22 @@ class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateV
 
     def get_queryset(self):
         return EvenementInvestigationCasHumain.objects.with_departement_prefetched()
+
+    def _trigger_notifications(self):
+        dirty_fields = self.object.get_dirty_fields()
+        if ("reference_souches" in dirty_fields) or ("reference_clusters" in dirty_fields):
+            notify_souches_clusters(self.object, self.request.user)
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self._trigger_notifications()
+        self.object.save()
+        self.etablissement_formset.instance = self.object
+        self.etablissement_formset.save()
+        self.add_user_contacts(self.object)
+
+        messages.success(self.request, self.success_message)
+        return HttpResponseRedirect(self.object.get_absolute_url())
 
 
 class InvestigationCasHumainDetailView(

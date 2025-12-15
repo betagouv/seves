@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.db import models, transaction
 from django.urls import reverse
 
@@ -39,6 +40,7 @@ class EvenementInvestigationCasHumain(
     WithFreeLinkIdsMixin,
     EmailNotificationMixin,
     WithMessageUrlsMixin,
+    DirtyFieldsMixin,
     models.Model,
 ):
     source = models.CharField(
