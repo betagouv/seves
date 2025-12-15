@@ -220,3 +220,47 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
         mocked_authentification_user.agent.contact_set.get(),
         mocked_authentification_user.agent.structure.contact_set.get(),
     }
+
+
+def test_update_reference_souches_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(
+        not_bacterie=True, reference_souches="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_souches.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_souches == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence souche : New value" in mail.body
+
+
+def test_update_reference_clusters_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(
+        not_bacterie=True, reference_clusters="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_clusters.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_clusters == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence cluster : New value" in mail.body

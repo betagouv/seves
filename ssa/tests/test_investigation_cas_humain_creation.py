@@ -66,6 +66,7 @@ def test_can_create_investigation_cas_humain_with_all_fields(
         input_data,
         to_exclude=[
             "_prefetched_objects_cache",
+            "_original_state",
             "_state",
             "id",
             "numero_annee",
