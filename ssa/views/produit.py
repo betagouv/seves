@@ -292,7 +292,7 @@ class InvestigationCasHumainCreateView(
 ):
     template_name = "ssa/evenement_investigation_cas_humain.html"
     form_class = InvestigationCasHumainForm
-    success_message = "La fiche d'investigation cas humain a été créée avec succès."
+    success_message = "L’évènement Investigation de cas humain a été créé avec succès."
 
     @property
     def etablissement_formset(self):
