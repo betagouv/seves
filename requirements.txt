@@ -208,7 +208,7 @@ pytest-django==4.11.1
     # via -r requirements.in
 pytest-env==1.2.0
     # via -r requirements.in
-pytest-playwright==0.7.1
+pytest-playwright==0.7.2
     # via -r requirements.in
 pytest-rerunfailures==16.1
     # via -r requirements.in
