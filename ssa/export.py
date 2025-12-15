@@ -30,6 +30,7 @@ class SsaExport(BaseExport):
         ("description_complementaire", "Description complémentaire"),
         ("temperature_conservation", "Température de conservation"),
         ("categorie_danger", "Catégorie de danger"),
+        ("precision_danger", "Précision danger"),
         ("quantification", "Quantification"),
         ("quantification_unite", "Unité de quantification"),
         ("evaluation", "Évaluation"),
