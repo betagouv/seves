@@ -117,3 +117,25 @@ def test_export_tiac_from_ui_with_only_one_type_of_object_in_filter(
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert mail.subject == "[Sèves] Votre export est prêt"
+
+
+def test_export_tiac_from_ui_with_only_investigation_tiac(
+    live_server, mocked_authentification_user, page: Page, settings, mailoutbox
+):
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    InvestigationTiacFactory(numero_annee=2025, numero_evenement=1)
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.submit_export()
+
+    expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
+
+    task = Export.objects.get()
+    assert task.task_done is True
+    lines = task.file.read().decode("utf-8").split("\n")
+    assert lines[1].startswith('"T-2025.1",')
+    assert len(lines) == 3
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.subject == "[Sèves] Votre export est prêt"
