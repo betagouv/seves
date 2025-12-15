@@ -133,6 +133,8 @@ class WithMessageMixin:
         context["message_update_forms"] = self._get_message_update_forms(message_list)
         context["message_v2"] = flag_is_active(self.request, "message_v2")
         context["message_content_type"] = ContentType.objects.get_for_model(Message)
+        context["can_add_di"] = self.request.user.agent.structure.is_ac
+        context["can_add_cr_di"] = not self.request.user.agent.structure.is_ac
         return context
 
 

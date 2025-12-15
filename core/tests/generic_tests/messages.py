@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact
+from core.models import Message, FinSuiviContact, Structure
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -653,6 +653,11 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, object, mocked_authentification_user
 ):
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    agent = mocked_authentification_user.agent
+    agent.structure = structure
+    agent.save()
     contact, contact_cc = ContactStructureFactory.create_batch(
         2, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
     )
@@ -672,7 +677,7 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
 
-    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_sender_in_table() == "MUS"
     assert message_page.message_recipient_in_table() == str(contact.structure)
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Demande d'intervention"
