@@ -173,7 +173,7 @@ class EvenementSimple(
         return not self.is_cloture and self.can_user_access(user)
 
     def get_email_subject(self):
-        return f"{self.numero}"
+        return f"Enregistrement simple {self.numero}"
 
     @property
     def type_evenement(self):

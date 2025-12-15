@@ -71,10 +71,10 @@ def notify_conclusion(object: InvestigationTiac, user):
         subject=f"{object.get_short_email_display_name()} - Conclusion suspicion TIAC",
         message=f"""
         Bonjour,
-        La conclusion de la suspicion de TIAC a été modifiée vers {object.get_suspicion_conclusion_display() or "Vide"} pour l’évènement : {object.get_long_email_display_name()}
+        La conclusion de la suspicion de TIAC a été modifiée vers « {object.get_suspicion_conclusion_display() or "Vide"} » pour l’évènement : {object.get_long_email_display_name()}
         """,
         html_message=f"""
         <p>Bonjour,<br>
-        La conclusion de la suspicion de TIAC a été modifiée vers {object.get_suspicion_conclusion_display() or "Vide"} pour l’évènement : {object.get_long_email_display_name_as_html()}</p>
+        La conclusion de la suspicion de TIAC a été modifiée vers « {object.get_suspicion_conclusion_display() or "Vide"} » pour l’évènement : {object.get_long_email_display_name_as_html()}</p>
         """,
     )
