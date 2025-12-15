@@ -220,7 +220,7 @@ class CommonMessageMixin:
             field.label = self.fields[field.name].label
 
     def _add_object_field(self, obj, message_type):
-        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type))
+        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type), self.sender)
         new_field = ("message_object", field)
         fields = list(self.fields.items())
         index = next(i for i, (name, _) in enumerate(fields) if name == "title")
