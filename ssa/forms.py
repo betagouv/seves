@@ -221,7 +221,7 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
         widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
     )
     type_exploitant = forms.CharField(
-        label="Type d'exploitant",
+        label="Type d'établissement",
         required=False,
         widget=forms.TextInput(
             attrs={"placeholder": "Siège/usine, producteur/affineur, importateur/distributeur…", "maxlength": 45}
@@ -237,9 +237,11 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
     class Meta:
         model = Etablissement
         fields = [
+            "type_exploitant",
+            "position_dossier",
             "siret",
-            "autre_identifiant",
             "numero_agrement",
+            "autre_identifiant",
             "raison_sociale",
             "enseigne_usuelle",
             "adresse_lieu_dit",
@@ -247,8 +249,6 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
             "code_insee",
             "departement",
             "pays",
-            "type_exploitant",
-            "position_dossier",
             "numeros_resytal",
         ]
 
