@@ -7,12 +7,11 @@ from .views import (
     EvenementsListView,
     FindNumeroAgrementView,
     EvenementUpdateView,
+    InvestigationCasHumainCreateView,
 )
-from .views.investigation_cas_humain import InvestigationCasHumainDetailView
+from .views.investigation_cas_humain import InvestigationCasHumainDetailView, InvestigationCasHumainUpdateView
 from .views.produit import (
     EvenementProduitDocumentExportView,
-    InvestigationCasHumainCreateView,
-    InvestigationCasHumainUpdateView,
 )
 from .views.common import CsvExportView
 
