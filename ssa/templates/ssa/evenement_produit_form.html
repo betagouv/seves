@@ -26,10 +26,9 @@
         </div>
 
         <main class="main-container">
-
             <div class="evenement-produit-form-header">
                 <h1>{% if form.instance.pk %}Modification l'évènement produit {{ form.instance.numero }}{% else %}Créer un évènement produit{% endif %}</h1>
-                <div class="fr-mb-auto">
+                <div class="action-buttons">
                     <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                     {% if form.instance and form.instance.is_draft %}
                         <button id="submit_draft" type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">Enregistrer le brouillon</button>
