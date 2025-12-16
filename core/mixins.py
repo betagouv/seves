@@ -18,7 +18,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
 from waffle import flag_is_active
 
@@ -790,6 +790,14 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
         obj = self.object
         messages = [m for m in obj.messages.filter(status=Message.Status.FINALISE)]
         sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
+
+        for message in messages:
+            text = message.content.split("\n")
+            rich_text = RichText()
+            for i, line in enumerate(text):
+                rich_text.add(line)
+            message.rt_content = rich_text
+
         context = {
             "messages": messages,
             "agents": self.get_agents(obj),
