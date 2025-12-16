@@ -99,7 +99,7 @@ class InvestigationCasHumainCreateView(
 
 
 class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateView):
-    success_message = "L'évènement Investigation cas hummain a bien été modifié."
+    success_message = "L'évènement Investigation cas humain a bien été modifié."
 
     @property
     def object(self):
