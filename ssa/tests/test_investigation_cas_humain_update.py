@@ -51,9 +51,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
     update_page.add_free_link(for_other_free_link.numero, choice_js_fill)
 
     update_page.submit_as_draft()
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
 
     evenement.refresh_from_db()
     assert evenement.is_draft is True
@@ -74,9 +72,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_publish(live_server
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.is_published is True
     assert evenement.description == "New value"
@@ -92,9 +88,7 @@ def test_update_investigation_cas_humain_will_not_change_createur(live_server, p
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.createur == createur
 
@@ -196,9 +190,7 @@ def test_contact_added_to_investigation_cas_humain_when_edit(live_server, page, 
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
     assert evenement.contacts.count() == 2
     assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
     assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
@@ -220,9 +212,7 @@ def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_a
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas hummain a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert set(evenement.contacts.all()) == {
         agent,
