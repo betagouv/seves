@@ -92,23 +92,23 @@
                         {% endif %}
                         {% if evenement.statut_reglementaire %}
                             <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-1w">
-                                <div class="fr-col-12 fr-col-lg-5 required-field">Statut réglementaire</div>
+                                <div class="fr-col-12 fr-col-lg-5 fr-text--bold">Statut réglementaire</div>
                                 <div class="fr-col">{{ evenement.statut_reglementaire }}</div>
                             </div>
                         {% endif %}
                         <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
-                            <div class="fr-col-12 fr-col-lg-5 required-field">{{ form.contexte.label_tag }}</div>
+                            <div class="fr-col-12 fr-col-lg-5">{{ form.contexte.label_tag }}</div>
                             <div class="fr-col">{{ form.contexte }}</div>
                         </div>
                         <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
-                            <div class="fr-col-12 fr-col-lg-5 required-field">{{ form.date_premier_signalement.label_tag }}</div>
+                            <div class="fr-col-12 fr-col-lg-5">{{ form.date_premier_signalement.label_tag }}</div>
                             <div class="fr-col">{{ form.date_premier_signalement }}</div>
                         </div>
                         <p class="fr-mt-3w">
                             {{ form.vegetaux_infestes.label_tag }}{{ form.vegetaux_infestes }}
                         </p>
                         <p>
-                            {{ form.commentaire.label_tag }}{{ form.commentaire|set_data:"required:true" }}
+                            {{ form.commentaire.label_tag }}{{ form.commentaire }}
                         </p>
                     </div>
                 </div>
