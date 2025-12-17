@@ -43,6 +43,7 @@ class EvenementProduitQueryset(EvenementBaseQueryset):
             "evaluation",
             "lots",
             "description_complementaire",
+            "precision_danger",
         )
 
 
@@ -63,6 +64,7 @@ class InvestigationCasHumainQueryset(EvenementBaseQueryset):
     def search_fields(self) -> Iterable[str]:
         return (
             "description",
+            "precision_danger",
             "etablissements__raison_sociale",
             "etablissements__enseigne_usuelle",
         )
