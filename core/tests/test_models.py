@@ -54,7 +54,7 @@ def test_can_create_contact_with_agent_only():
     User = get_user_model()
     user = User.objects.create(username="test")
     agent = Agent.objects.create(user=user, structure=structure)
-    contact = Contact.objects.create(agent=agent)
+    contact = Contact.objects.create(agent=agent, email="foo@gmail.com")
     assert contact.agent == agent
     assert contact.structure is None
 
@@ -74,3 +74,13 @@ def test_cant_create_contact_with_both_structure_and_agent():
 def test_cant_create_contact_with_no_structure_and_no_agent():
     with pytest.raises(IntegrityError):
         Contact.objects.create()
+
+
+@pytest.mark.django_db
+def test_cant_create_contact_for_agent_with_specific_email():
+    structure_agent = Structure.objects.create(niveau1="Structure de l'agent")
+    User = get_user_model()
+    user = User.objects.create(username="test")
+    agent = Agent.objects.create(user=user, structure=structure_agent)
+    with pytest.raises(IntegrityError):
+        Contact.objects.create(agent=agent, email="foo@test.com", sv_email="foo@test.com")

@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-from core.factories import UserFactory
+from core.factories import ContactAgentFactory
 from core.models import Export
 from tiac.constants import SuspicionConclusion
 from tiac.export import TiacExport
@@ -20,9 +20,10 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
 ):
     evenement = EvenementSimpleFactory()
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(17):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -31,9 +32,9 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     evenement_2 = EvenementSimpleFactory()
     evenement_3 = EvenementSimpleFactory()
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id, evenement_2.id, evenement_3.id]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(17):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -45,9 +46,10 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
 ):
     evenement = InvestigationTiacFactory()
     data = [{"model": "tiac.investigationtiac", "ids": [evenement.id]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(23):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -57,9 +59,9 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     AlimentSuspectFactory(investigation=evenement, cuisine=True)
     AnalyseAlimentaireFactory(investigation=evenement)
     EtablissementFactory(investigation=evenement)
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(27):
         TiacExport().export(task.id)
 
     task.refresh_from_db()

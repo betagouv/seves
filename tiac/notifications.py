@@ -4,9 +4,8 @@ from tiac.models import EvenementSimple, InvestigationTiac
 
 
 def notify_transfer(evenement: EvenementSimple):
-    recipients = [evenement.transfered_to.contact_set.get().email]
     send_as_seves(
-        recipients=recipients,
+        recipients=[evenement.transfered_to.contact_set.get()],
         object=evenement,
         subject=f"{evenement.get_short_email_display_name()} - Transfert de l’évènement",
         message=f"""
@@ -28,7 +27,7 @@ def notify_transfer(evenement: EvenementSimple):
 
 def notify_transformation(old: EvenementSimple, new: InvestigationTiac):
     send_as_seves(
-        recipients=[Contact.objects.get_mus().email],
+        recipients=[Contact.objects.get_mus()],
         object=new,
         subject=f"{new.get_short_email_display_name()} - Passage en investigation TIAC",
         message=f"""
@@ -46,7 +45,7 @@ def notify_transformation(old: EvenementSimple, new: InvestigationTiac):
 
 def notify_investigation_coordonnee(object: InvestigationTiac, user):
     send_as_seves(
-        recipients=[user.agent.contact_set.get().email, Contact.objects.get_mus().email],
+        recipients=[user.agent.contact_set.get(), Contact.objects.get_mus()],
         object=object,
         subject=f"{object.get_short_email_display_name()} - Investigation coordonnée",
         message=f"""
@@ -66,7 +65,7 @@ def notify_investigation_coordonnee(object: InvestigationTiac, user):
 
 def notify_conclusion(object: InvestigationTiac, user):
     send_as_seves(
-        recipients=[c.email for c in object.contacts.agents_only().exclude(id=user.agent.contact_set.get().id)],
+        recipients=object.contacts.agents_only().exclude(id=user.agent.contact_set.get().id),
         object=object,
         subject=f"{object.get_short_email_display_name()} - Conclusion suspicion TIAC",
         message=f"""

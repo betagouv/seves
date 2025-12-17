@@ -117,4 +117,4 @@ class SsaExport(BaseExport):
 
             task.task_done = True
             task.save()
-            notify_export_is_ready(task)
+            notify_export_is_ready(task, object=queryset.first())
