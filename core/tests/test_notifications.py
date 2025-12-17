@@ -37,3 +37,23 @@ def test_notifications_are_filtered_with_fin_de_suivi(mailoutbox):
     mail = mailoutbox[0]
 
     assert mail.to == [contact.email, structure.email]
+
+
+@pytest.mark.django_db
+def test_handle_empty_emails_for_recipients(mailoutbox):
+    # We just need a dummy object to test the recipients
+    object = RegionFactory()
+    object.get_absolute_url = lambda: "foo"
+
+    send_as_seves(
+        recipients=["foo@bar.com", ""],
+        subject="Test",
+        message="Test",
+        html_message="Test",
+        object=object,
+    )
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+
+    assert mail.to == ["foo@bar.com"]

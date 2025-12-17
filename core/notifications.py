@@ -11,6 +11,7 @@ def _send_message(
 ):
     if settings.SEND_NOTIFICATIONS is False:
         return
+    recipients = [r for r in recipients if r != ""]
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
@@ -58,10 +59,11 @@ def _filter_contacts_in_fin_de_suivi(recipients, object):
     return [r for r in recipients if r not in emails_to_exclude]
 
 
-def send_as_seves(*, recipients, subject, message, html_message, object=None):
+def send_as_seves(*, recipients: list[str], subject, message, html_message, object=None):
     if settings.SEND_NOTIFICATIONS is False:
         return
     if object:
+        recipients = [r for r in recipients if r != ""]
         recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
         suffix_html = f"""<p>
             Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a>.
