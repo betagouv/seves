@@ -41,3 +41,15 @@ def test_can_cloturer_investigation_cas_humain_if_last_remaining_structure(
     assert evenement.etat == EvenementInvestigationCasHumain.Etat.CLOTURE
     assert page.get_by_text("Fin de suivi").count() == 2
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
+
+
+def test_can_download_document_evenement_produit(live_server, page):
+    evenement = InvestigationCasHumainFactory()
+
+    details_page = InvestigationCasHumainDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    with page.expect_download() as download_info:
+        details_page.download()
+
+    download = download_info.value
+    assert download.suggested_filename == f"investigtion_cas_humain_{evenement.numero}.docx"
