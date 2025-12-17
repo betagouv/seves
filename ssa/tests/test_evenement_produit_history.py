@@ -51,6 +51,7 @@ def test_can_view_evenement_produit_history(live_server, page):
         len(
             [
                 "One for table header",
+                "One (fake) line for the creation of the object",
                 "One line created by the change of description",
                 "One line created when we add the Etablissement",
                 "One line created by the addition of agent/structure contact during the update of the object",

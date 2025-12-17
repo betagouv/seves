@@ -21,7 +21,7 @@ from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
 from waffle import flag_is_active
 
-from core.diffs import CompareMixin, get_diff_from_comment_version
+from core.diffs import CompareMixin, get_diff_from_comment_version, Diff
 from .forms import (
     DocumentUploadForm,
     DocumentEditForm,
@@ -641,7 +641,13 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         )
 
         versions = context["object_list"]
-        context["patches"] = []
+
+        if versions:
+            context["patches"] = [
+                Diff(
+                    field="Statut", old="Vide", new=self.object.get_etat_display(), revision=list(versions)[-1].revision
+                )
+            ]
         for i in range(1, len(versions)):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             context["patches"].extend(diffs)

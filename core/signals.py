@@ -97,7 +97,7 @@ def fin_suivi_added(sender, instance: FinSuiviContact, created, **kwargs):
         with transaction.atomic():
             revision = create_manual_version(
                 instance.content_object,
-                f"La structure {instance.contact} a déclarée la fin de suivi sur cette fiche",
+                f"La structure {instance.contact} a déclaré la fin de suivi sur cette fiche",
                 user=getattr(instance, "_user", None),
             )
             CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Fil de suivi"})
