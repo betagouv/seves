@@ -6,12 +6,25 @@ from ssa.models import EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
 
 
-def test_can_cloturer_evenement(live_server, page: Page, mocked_authentification_user, mailoutbox):
+def test_can_delete_investigation_cas_humain(live_server, page):
+    evenement = InvestigationCasHumainFactory()
+    assert EvenementInvestigationCasHumain.objects.count() == 1
+
+    details_page = InvestigationCasHumainDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.delete()
+    expect(page.get_by_text(f"L'investigation de cas humain {evenement.numero} a bien été supprimée")).to_be_visible()
+
+    assert EvenementInvestigationCasHumain.objects.count() == 0
+    assert EvenementInvestigationCasHumain._base_manager.get().pk == evenement.pk
+
+
+def test_can_cloturer_investigation_cas_humain(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_cloturer_evenement(live_server, page, evenement, mocked_authentification_user, mailoutbox)
 
 
-def test_can_cloturer_evenement_produit_if_last_remaining_structure(
+def test_can_cloturer_investigation_cas_humain_if_last_remaining_structure(
     live_server, page: Page, mocked_authentification_user, mus_contact
 ):
     evenement = InvestigationCasHumainFactory(

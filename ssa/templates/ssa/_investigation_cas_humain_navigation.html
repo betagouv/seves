@@ -8,6 +8,9 @@
                     {% if can_be_modified %}
                         <li><a class="fr-translate__language fr-nav__link" href="{{ object.get_update_url}}"><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
                     {% endif %}
+                    {% if can_be_deleted %}
+                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
+                    {% endif %}
                     {%  if is_evenement_can_be_cloture %}
                         <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
                     {% endif %}
