@@ -1,50 +1,53 @@
-{% if can_be_modified or is_evenement_can_be_cloture or can_fin_de_suivi_be_added or can_fin_de_suivi_be_removed %}
-    <nav role="navigation" class="fr-translate fr-nav">
-        <div class="fr-nav__item">
-            <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
-                    aria-expanded="false" title="Sélectionner une action">Actions</button>
-            <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
-                <ul class="fr-menu__list">
-                    {% if can_be_modified %}
-                        <li><a class="fr-translate__language fr-nav__link" href="{{ object.get_update_url}}"><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
-                    {% endif %}
-                    {% if can_be_deleted %}
-                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
-                    {% endif %}
-                    {%  if is_evenement_can_be_cloture %}
-                        <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
-                    {% endif %}
-                    {% if can_fin_de_suivi_be_added %}
-                        <li>
-                            <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="mode" value="add">
-                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
-                                <input type="hidden" name="pk" value="{{ object.pk }}">
-                                <button class="fr-translate__language fr-nav__link">
-                                    <span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>
-                                    Signaler la fin de suivi
-                                </button>
-                            </form>
-                        </li>
-                    {% endif %}
-                    {% if can_fin_de_suivi_be_removed %}
-                        <li>
-                            <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="mode" value="remove">
-                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
-                                <input type="hidden" name="pk" value="{{ object.pk }}">
-                                <button class="fr-translate__language fr-nav__link">
-                                    <span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>
-                                    Reprendre le suivi
-                                </button>
-                            </form>
-                        </li>
-                    {% endif %}
-
-                </ul>
-            </div>
+<nav role="navigation" class="fr-translate fr-nav">
+    <div class="fr-nav__item">
+        <button class="fr-translate__btn fr-btn fr-btn--lg" aria-controls="action-1"
+                aria-expanded="false" title="Sélectionner une action">Actions</button>
+        <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
+            <ul class="fr-menu__list">
+                {% if can_be_modified %}
+                    <li><a class="fr-translate__language fr-nav__link" href="{{ object.get_update_url}}"><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
+                {% endif %}
+                {% if can_be_deleted %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-delete"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Supprimer l'événement</a></li>
+                {% endif %}
+                {%  if is_evenement_can_be_cloture %}
+                    <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>
+                {% endif %}
+                {% if can_fin_de_suivi_be_added %}
+                    <li>
+                        <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="mode" value="add">
+                            <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                            <input type="hidden" name="pk" value="{{ object.pk }}">
+                            <button class="fr-translate__language fr-nav__link">
+                                <span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>
+                                Signaler la fin de suivi
+                            </button>
+                        </form>
+                    </li>
+                {% endif %}
+                {% if can_fin_de_suivi_be_removed %}
+                    <li>
+                        <form method="post" action="{% url 'evenement-fin-de-suivi' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="mode" value="remove">
+                            <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                            <input type="hidden" name="pk" value="{{ object.pk }}">
+                            <button class="fr-translate__language fr-nav__link">
+                                <span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>
+                                Reprendre le suivi
+                            </button>
+                        </form>
+                    </li>
+                {% endif %}
+                <li>
+                    <form method="post" action="{% url 'ssa:export-investigation-cas-humain-document' object.pk %}">
+                        {% csrf_token %}
+                        <button class="fr-translate__language fr-nav__link" aria-controls="fr-modal-extract"><span class="fr-icon-download-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Télécharger le document</button>
+                    </form>
+                </li>
+            </ul>
         </div>
-    </nav>
-{% endif %}
+    </div>
+</nav>

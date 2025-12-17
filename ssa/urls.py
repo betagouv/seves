@@ -9,7 +9,11 @@ from .views import (
     EvenementUpdateView,
     InvestigationCasHumainCreateView,
 )
-from .views.investigation_cas_humain import InvestigationCasHumainDetailView, InvestigationCasHumainUpdateView
+from .views.investigation_cas_humain import (
+    InvestigationCasHumainDetailView,
+    InvestigationCasHumainUpdateView,
+    InvestigationCasHumainDocumentExportView,
+)
 from .views.produit import (
     EvenementProduitDocumentExportView,
 )
@@ -71,5 +75,10 @@ urlpatterns = [
         "investigation-cas-humain/<int:pk>/details/",
         InvestigationCasHumainDetailView.as_view(),
         name="investigation-cas-humain-details",
+    ),
+    path(
+        "export/investigation-cas-humain/<int:pk>/document/",
+        InvestigationCasHumainDocumentExportView.as_view(),
+        name="export-investigation-cas-humain-document",
     ),
 ]

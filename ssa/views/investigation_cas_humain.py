@@ -1,9 +1,16 @@
+import datetime
+import io
+import os
+from functools import cached_property
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, UpdateView
+from django.views.generic.detail import BaseDetailView
+from docxtpl import DocxTemplate
 
 from core.mixins import (
     WithAddUserContactsMixin,
@@ -11,6 +18,7 @@ from core.mixins import (
     WithClotureContextMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithDocumentExportContextMixin,
     WithDocumentListInContextMixin,
     WithDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
@@ -23,8 +31,8 @@ from core.views import MediaDefiningMixin
 from ..forms import InvestigationCasHumainForm
 from ..formsets import InvestigationCasHumainsEtablissementFormSet
 from ..models import EvenementInvestigationCasHumain
-from .mixins import EvenementProduitValuesMixin
 from ..notifications import notify_souches_clusters
+from .mixins import EvenementProduitValuesMixin
 
 
 class InvestigationCasHumainCreateView(
@@ -171,3 +179,40 @@ class InvestigationCasHumainDetailView(
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
+
+
+class InvestigationCasHumainDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, BaseDetailView):
+    http_method_names = ["post"]
+    model = EvenementInvestigationCasHumain
+
+    @cached_property
+    def object(self):
+        return self.get_object()
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        doc = DocxTemplate("ssa/doc_templates/investigation_cas_humain.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = self.get_context_data(
+            object=self.object,
+            free_links=self.get_free_links_numbers(),
+            bloc_commun=sub_doc,
+            now=datetime.datetime.now(),
+        )
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=investigtion_cas_humain_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response

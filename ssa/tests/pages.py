@@ -328,6 +328,10 @@ class SsaBaseDetailPage:
         self.page.get_by_text("Supprimer l'événement", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
 
+    def download(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Télécharger le document", exact=True).click()
+
 
 class InvestigationCasHumainDetailsPage(SsaBaseDetailPage):
     pass
@@ -348,10 +352,6 @@ class EvenementProduitDetailsPage(SsaBaseDetailPage):
     @property
     def rappel_block(self):
         return self.page.get_by_role("heading", name="Rappel conso").locator("..")
-
-    def download(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Télécharger le document", exact=True).click()
 
     def edit(self):
         self.page.get_by_role("button", name="Actions").click()
