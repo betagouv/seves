@@ -25,10 +25,19 @@ class Diff:
     structure: Structure
     date_created: datetime
 
+    def _normalize_value(self, value):
+        if value == "None":
+            value = "Vide"
+        if value == "True":
+            value = "Oui"
+        if value == "False":
+            value = "Non"
+        return value
+
     def __init__(self, field, old, new, revision=None, comment=""):
         self.field = field
-        self.old = old
-        self.new = new
+        self.old = self._normalize_value(old)
+        self.new = self._normalize_value(new)
         self.comment = comment
 
         if revision:
@@ -127,30 +136,30 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:
                     new = f"Objet supprimé : {item._object_version.object.__class__.__name__} {item}"
-                    diff.append(Diff(self._get_pretty_field(field), "", new, version1.revision))
+                    diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 for item in change["added_items"]:
                     new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
-                    diff.append(Diff(self._get_pretty_field(field), "", new, version1.revision))
+                    diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 for item_1, _item_2 in change["changed_items"]:
                     model_name = item_1._object_version.object._meta.model_name.title()
                     prefix = f"{model_name} ({str(item_1._object_version.object)})"
                     nested_diff = self.compare(item_1._object_version.object, item_1, _item_2)[0]
                     for change in nested_diff:
                         pretty_field = self._get_pretty_field(change.field, prefix=prefix)
-                        diff.append(Diff(pretty_field, change.old, change.new, version1.revision))
+                        diff.append(Diff(pretty_field, change.old, change.new, version2.revision))
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:
                     new = f"Élement(s) retiré(s) {', '.join([str(item) for item in change['removed_items']])}"
-                    diff.append(Diff(self._get_pretty_field(field), "", new, version1.revision))
+                    diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 if change["added_items"] or change["added_missing_objects"]:
                     items = change["added_items"] + change["added_missing_objects"]
                     new = f"Élement(s) ajouté(s) {', '.join([str(item) for item in items])}"
-                    diff.append(Diff(self._get_pretty_field(field), "", new, version1.revision))
+                    diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
             else:
                 old = obj_compare.compare_obj1.to_string()
                 new = obj_compare.compare_obj2.to_string()
-                diff.append(Diff(self._get_pretty_field(field), old, new, version1.revision))
+                diff.append(Diff(self._get_pretty_field(field), old, new, version2.revision))
 
         comment_diff = get_diff_from_comment_version(version2)
         if comment_diff:
