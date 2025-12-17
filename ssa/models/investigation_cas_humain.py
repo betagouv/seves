@@ -73,6 +73,15 @@ class EvenementInvestigationCasHumain(
     def get_type_evenement_display(self):
         return "Investigation de cas humain"
 
+    def get_soft_delete_success_message(self):
+        return f"L'investigation de cas humain {self.numero} a bien été supprimée"
+
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'investigation de cas humain {self.numero}"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation de cas humain ?"
+
     def get_email_subject(self):
         return f"{self.get_type_evenement_display()} {self.numero}"
 
