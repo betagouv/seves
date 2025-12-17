@@ -4,7 +4,7 @@ from ssa.models import EvenementProduit
 
 
 def notify_type_evenement_fna(evenement: EvenementProduit, user):
-    recipients = [Contact.objects.get_mus().email, user.agent.contact_set.get().email]
+    recipients = [Contact.objects.get_mus(), user.agent.contact_set.get()]
     send_as_seves(
         recipients=recipients,
         object=evenement,
@@ -25,9 +25,8 @@ def notify_type_evenement_fna(evenement: EvenementProduit, user):
 
 
 def notify_souches_clusters(evenement: EvenementProduit, user):
-    recipients = [c.email for c in evenement.contacts.agents_only().exclude(id=user.agent.contact_set.get().id)]
     send_as_seves(
-        recipients=recipients,
+        recipients=evenement.contacts.agents_only().exclude(id=user.agent.contact_set.get().id),
         object=evenement,
         subject=f"{evenement.get_short_email_display_name()} - Souche / cluster",
         message=f"""
@@ -49,9 +48,8 @@ def notify_souches_clusters(evenement: EvenementProduit, user):
 
 
 def notify_alimentation_animale(evenement: EvenementProduit):
-    recipients = [c.email for c in evenement.contacts.structures_only()]
     send_as_seves(
-        recipients=recipients,
+        recipients=evenement.contacts.structures_only(),
         object=evenement,
         subject=f"{evenement.get_short_email_display_name()} - Inclut des aliments pour animaux",
         message=f"""

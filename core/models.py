@@ -109,16 +109,39 @@ class Contact(models.Model):
                 ),
                 name="contact_has_structure_or_agent",
             ),
+            models.CheckConstraint(
+                condition=(
+                    Q(agent__isnull=True)
+                    | (
+                        Q(email__isnull=False)
+                        & ~Q(email="")
+                        & (Q(sv_email="") | Q(sv_email__isnull=True))
+                        & (Q(ssa_email="") | Q(ssa_email__isnull=True))
+                        & (Q(tiac_email="") | Q(tiac_email__isnull=True))
+                    )
+                ),
+                name="contact_agent_email_only",
+            ),
         ]
 
     structure = models.ForeignKey(Structure, on_delete=models.RESTRICT, null=True, blank=True)
     agent = models.ForeignKey(Agent, on_delete=models.RESTRICT, null=True, blank=True)
     email = models.EmailField()
 
+    sv_email = models.EmailField(null=True, blank=True)
+    ssa_email = models.EmailField(null=True, blank=True)
+    tiac_email = models.EmailField(null=True, blank=True)
+
     objects = ContactManager.from_queryset(ContactQueryset)()
 
     def __str__(self):
         return str(self.structure) if self.structure else str(self.agent)
+
+    def get_email_for_object(self, obj):
+        app_name = obj._meta.app_label
+        if hasattr(self, f"{app_name}_email"):
+            return getattr(self, f"{app_name}_email") or self.email
+        return self.email
 
     @property
     def display_with_agent_unit(self):

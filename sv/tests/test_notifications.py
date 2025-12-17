@@ -65,6 +65,31 @@ def test_notification_message(mailoutbox):
 
 
 @pytest.mark.django_db
+def test_notification_message_with_specific_email(mailoutbox):
+    evenement = EvenementFactory()
+    contact_2, contact_3, _contact_5 = ContactStructureFactory.create_batch(3)
+    contact_2.sv_email = "sv@test.com"
+    contact_2.ssa_email = "ssa@test.com"
+    contact_2.save()
+
+    contact_3.sv_email = "sv2@test.com"
+    contact_3.ssa_email = "ssa@test.com"
+    contact_3.save()
+
+    message = create_message_and_notify(
+        message_type=Message.MESSAGE,
+        object=evenement,
+        recipients=[contact_2],
+        recipients_copy=[contact_3],
+    )
+
+    mail = assert_mail_common(mailoutbox, message, evenement)
+    assert message.content in mail.body
+    assert set(mail.to) == {"sv@test.com"}
+    assert set(mail.cc) == {"sv2@test.com"}
+
+
+@pytest.mark.django_db
 def test_notification_demande_intervention(mailoutbox):
     evenement = EvenementFactory()
     agent_1, agent_2, _agent_3 = ContactAgentFactory.create_batch(3)

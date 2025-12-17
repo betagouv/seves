@@ -4,13 +4,13 @@ from io import StringIO
 import pytest
 from playwright.sync_api import Page, expect
 
-from core.factories import UserFactory
+from core.factories import ContactAgentFactory
 from core.models import Export, LienLibre
 from ssa.export import SsaExport
 from ssa.factories import EvenementProduitFactory, EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import EvenementProduitListPage
 
-NB_QUERIES = 11
+NB_QUERIES = 18
 
 
 @pytest.mark.django_db
@@ -18,9 +18,9 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     evenement = EvenementProduitFactory()
     other_evenement = EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
     LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
-    user = UserFactory()
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
-    task = Export.objects.create(user=user, queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     SsaExport().export(task.id)
 
@@ -79,9 +79,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.to == [
-        user.email,
-    ]
+    assert mail.to == [contact.email]
     assert mail.subject == "[Sèves] Votre export est prêt"
     assert "_export_produit_et_cas.csv" in mail.body
 
@@ -90,9 +88,10 @@ def test_export_evenement_produit_simple_case(mailoutbox):
 def test_export_evenement_produit_performances_scales_on_number_of_objects(django_assert_num_queries):
     evenement = EvenementProduitFactory()
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(NB_QUERIES):
+    with django_assert_num_queries(NB_QUERIES - 1):
         SsaExport().export(task.id)
 
     task.refresh_from_db()
@@ -100,9 +99,10 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
 
     evenement_1, evenement_2, evenement_3 = EvenementProduitFactory.create_batch(3)
     data = [{"model": "ssa.evenementproduit", "ids": [evenement_1.pk, evenement_2.pk, evenement_3.pk]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(NB_QUERIES + 2):
+    with django_assert_num_queries(NB_QUERIES + 1):
         SsaExport().export(task.id)
 
     task.refresh_from_db()
@@ -113,7 +113,8 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
 def test_export_evenement_produit_performances_scales_on_number_of_etablissements(django_assert_num_queries):
     evenement = EtablissementFactory().evenement_produit
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 1):
         SsaExport().export(task.id)
@@ -124,7 +125,8 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     evenement = EtablissementFactory().evenement_produit
     EtablissementFactory(evenement_produit=evenement)
     EtablissementFactory(evenement_produit=evenement)
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 1):
         SsaExport().export(task.id)
@@ -138,7 +140,8 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
     etablissement_1 = EtablissementFactory()
     etablissement_2 = EtablissementFactory(evenement_produit=etablissement_1.evenement_produit)
     data = [{"model": "ssa.evenementproduit", "ids": [etablissement_1.evenement_produit.pk]}]
-    task = Export.objects.create(user=UserFactory(), queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
     SsaExport().export(task.id)
 
     task.refresh_from_db()
@@ -214,9 +217,9 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
     evenement = InvestigationCasHumainFactory()
     other_evenement = InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
     LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
-    user = UserFactory()
     data = [{"model": "ssa.evenementinvestigationcashumain", "ids": [evenement.id]}]
-    task = Export.objects.create(user=user, queryset_sequence=data)
+    contact = ContactAgentFactory()
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     SsaExport().export(task.id)
 
@@ -275,8 +278,6 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
-    assert mail.to == [
-        user.email,
-    ]
+    assert mail.to == [contact.email]
     assert mail.subject == "[Sèves] Votre export est prêt"
     assert "_export_produit_et_cas.csv" in mail.body

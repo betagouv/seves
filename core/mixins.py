@@ -180,6 +180,7 @@ class WithContactListInContextMixin(WithContactQuerysetMixin):
             {
                 "contact": contact,
                 "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
+                "email": contact.get_email_for_object(obj),
             }
             for contact in self.get_structures(obj)
         ]
