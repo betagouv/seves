@@ -261,9 +261,9 @@ def test_structure_are_added_in_contact_when_visibilite_limited(
 
     url = reverse("sv:structure-add-visibilite", kwargs={"pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
-    page.get_by_text(str(contact_1.structure)).click()
-    page.get_by_text(str(contact_2.structure)).click()
-    page.get_by_text(str(contact_3.structure)).click()
+    page.get_by_text(str(contact_1.structure), exact=True).click()
+    page.get_by_text(str(contact_2.structure), exact=True).click()
+    page.get_by_text(str(contact_3.structure), exact=True).click()
     page.get_by_role("button", name="Valider").click()
 
     evenement.refresh_from_db()
