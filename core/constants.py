@@ -200,3 +200,6 @@ class Domains(StrEnum, ExtendedChoices):
         with contextlib.suppress(ValueError):
             return Domains(value).group
         return None
+
+
+SORA_MIGRATION_FAKE_AGENT = "SORA_MIGRATION_FAKE_AGENT"

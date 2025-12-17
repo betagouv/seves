@@ -248,7 +248,7 @@ class Document(models.Model):
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)
-    created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created", null=True)
+    created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created")
     created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
     deleted_by = models.ForeignKey(
         Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True, blank=True
