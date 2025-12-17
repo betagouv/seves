@@ -138,7 +138,7 @@ class EvenementProduit(
     lots = models.TextField(blank=True, verbose_name="Lots, DLC/DDM")
     description_complementaire = models.TextField(blank=True, verbose_name="Description complémentaire")
     temperature_conservation = models.CharField(
-        max_length=100, choices=TemperatureConservation.choices, verbose_name="Température de conservation"
+        max_length=100, choices=TemperatureConservation.choices, verbose_name="Température de conservation", blank=True
     )
 
     # Informations liées au risque
