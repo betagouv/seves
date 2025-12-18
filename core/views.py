@@ -18,7 +18,7 @@ from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.views.generic.edit import FormView, CreateView, UpdateView, FormMixin
 from reversion.models import Version
 from waffle import flag_is_active
 
@@ -32,9 +32,9 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    DocumentInMessageUploadForm,
     MessageDocumentForm,
 )
+from .formsets import DocumentInMessageUploadFormSet
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
     WithAddUserContactsMixin,
@@ -192,6 +192,7 @@ class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     CreateView,
 ):
     model = Message
@@ -265,15 +266,27 @@ class MessageCreateView(
             )
         return kwargs
 
+    def get_document_in_message_upload_formset(self, **kwargs):
+        form_kwargs = FormMixin.get_form_kwargs(self)
+        form_kwargs.update({"obj": self.obj, "user": self.request.user, **kwargs})
+        return DocumentInMessageUploadFormSet(**form_kwargs)
+
+    def _create_documents(self, form):
+        super()._create_documents(form)
+        self.get_document_in_message_upload_formset(message=form.instance).save()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["add_document_formset"] = self.get_document_in_message_upload_formset()
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["object"] = self.obj
         return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
 
     def get_success_url(self):
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
@@ -292,6 +305,7 @@ class MessageUpdateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     UpdateView,
 ):
     model = Message
@@ -327,22 +341,33 @@ class MessageUpdateView(
             kwargs["next"] = self.content_object.get_absolute_url()
         return kwargs
 
+    def get_document_in_message_upload_formset(self, **kwargs):
+        form_kwargs = FormMixin.get_form_kwargs(self)
+        form_kwargs.update({"obj": self.obj, "user": self.request.user, **kwargs})
+        return DocumentInMessageUploadFormSet(**form_kwargs)
+
     def get_context_data(self, **kwargs):
+        instance = self.get_object()
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["add_document_formset"] = self.get_document_in_message_upload_formset(message=instance)
         context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["form"].documents_forms = [
-            MessageDocumentForm(instance=d, object=self.get_object(), with_nom=True)
-            for d in self.get_object().documents.all()
+            MessageDocumentForm(instance=d, object=instance, with_nom=True) for d in instance.documents.all()
         ]
         context["object"] = self.obj
         return context
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
+
     def get_success_url(self):
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
+
+    def _create_documents(self, form):
+        super()._create_documents(form)
+        self.get_document_in_message_upload_formset(message=form.instance).save()
 
     def form_valid(self, form):
         return self.handle_message_form(form)

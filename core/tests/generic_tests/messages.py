@@ -492,12 +492,11 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
     message_page.open_message()
-    message_page.page.wait_for_timeout(1000)
 
     assert len(message_page.get_existing_documents_title) == 2, (
         f"Expected 2 got {len(message_page.get_existing_documents_title)}"
     )
-    assert document_to_remove.nom in message_page.get_existing_documents_title
+    assert document_to_remove.nom in ".".join(message_page.get_existing_documents_title)
     assert document_to_keep.nom in message_page.get_existing_documents_title
 
     # Add new document
@@ -505,7 +504,7 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     assert len(message_page.get_existing_documents_title) == 3
 
     # Remove previous document
-    message_page.page.locator(f"#document_card_{document_to_remove.pk} .fr-icon-close-circle-line").click()
+    message_page.remove_document_by_name(document_to_remove.nom)
     assert len(message_page.get_existing_documents_title) == 2
 
     message_page.submit_message()

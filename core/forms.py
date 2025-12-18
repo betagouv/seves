@@ -1,3 +1,4 @@
+import uuid
 from collections import OrderedDict
 from typing import Literal
 
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.forms import Media
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
@@ -66,6 +68,8 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
 
 
 class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+    template_name = "core/form/document_in_message_upload.html"
+
     nom = forms.CharField(
         help_text="",
         label="Intitulé du document",
@@ -77,7 +81,19 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTyp
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget(attrs={"disabled": True}))
+    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget())
+
+    @property
+    def file_id(self):
+        return "" if not self.instance else uuid.uuid4()
+
+    @property
+    def media(self):
+        return super().media + Media(css={"all": ("core/form/document_in_message_upload.css",)})
+
+    @property
+    def max_upload_size_mb(self):
+        return MAX_UPLOAD_SIZE_MEGABYTES
 
     class Meta:
         model = Document
@@ -85,12 +101,14 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTyp
 
     def __init__(self, *args, **kwargs):
         obj = kwargs.pop("obj")
+        self.user = kwargs.pop("user", None)
+        self.message = kwargs.pop("message", None)
         super().__init__(*args, **kwargs)
         self.fields["document_type"].choices = [
             ("", settings.SELECT_EMPTY_CHOICE),
             *[(c.value, c.label) for c in obj.get_allowed_document_types()],
         ]
-        self.add_content_type_fields(obj)
+        self.add_content_type_fields(self.message or obj)
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
@@ -101,6 +119,13 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTyp
         if document_type := self.cleaned_data.get("document_type"):
             Document.validate_file_extention_for_document_type(file, document_type)
         return file
+
+    def save(self, commit=True):
+        if not self.user or not self.message:
+            raise ValidationError("Unknown user: please pass 'user=request.user' and 'message' to __init__")
+        self.instance.created_by = self.user.agent
+        self.instance.created_by_structure = self.user.agent.structure
+        return super().save(commit)
 
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
@@ -524,15 +549,21 @@ class MessageDocumentForm(DSFRForm, forms.ModelForm):
         fields = ["document_type", "file", "nom", "description"]
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("object")
+        self.obj = kwargs.pop("object")
         with_nom = kwargs.pop("with_nom", False)
         super().__init__(*args, **kwargs)
         if with_nom is False:
             self.fields.pop("nom")
         self.fields["document_type"].choices = [
             ("", settings.SELECT_EMPTY_CHOICE),
-            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+            *[(c.value, c.label) for c in self.obj.get_allowed_document_types()],
         ]
+
+    def add_prefix(self, field_name):
+        base_prefix = super().add_prefix(field_name)
+        if self.instance:
+            return f"{base_prefix}-{self.instance.pk}"
+        return base_prefix
 
 
 class VisibiliteUpdateBaseForm(DSFRForm):

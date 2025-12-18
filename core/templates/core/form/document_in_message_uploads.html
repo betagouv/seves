@@ -1,0 +1,177 @@
+{% load widget_tweaks %}
+{% load dsfr_tags %}
+<div
+    data-controller="document-formset"
+    data-document-formset-dragging-class="document-upload-drag-drop--dragging"
+    data-document-formset-document-form-outlet="[data-controller='document-form']"
+>
+    {% if formset.initial_forms|length %}
+
+    {% else %}
+        <p>Aucun document ajouté</p>
+    {% endif %}
+
+    <button
+        aria-controls="document-modal"
+        data-fr-opened="false"
+        type="button"
+        class="fr-btn"
+        data-testid="add-document-btn"
+    >Ajouter des documents</button>
+
+    <section data-document-formset-target="validatedSection">
+        {% for form in formset.documents_forms %}
+            <div data-controller="existing-document-validated" data-testid="document-card">
+                <span data-testid="document-card-title">{{ form.nom.value }}</span>
+                <button
+                    type="button"
+                    class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                    data-action="existing-document-validated#onDelete:stop:prevent"
+                >Supprimer</button>
+                <fieldset class="existing-document-form fr-hidden">
+                    {% for field in form %}
+                        {{ field.as_hidden }}
+                    {% endfor %}
+                    <input
+                        type="hidden"
+                        id="existing_document"
+                        name="existing_document_name_{{ form.instance.pk }}"
+                        value="{{ form.instance.pk }}"
+                    />
+                </fieldset>
+            </div>
+        {% endfor %}
+    </section>
+
+    <template data-document-formset-target="validatedSectionTpl">
+        <div
+            data-controller="document-validated"
+            data-document-validated-file-id-value="__fileId__"
+            data-testid="document-card"
+        >
+            <span data-document-validated-target="title" data-testid="document-card-title"></span>
+            <button
+                type="button"
+                class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                data-action="document-validated#onDelete:stop:prevent"
+            >Supprimer</button>
+        </div>
+    </template>
+    <dialog
+        id="document-modal"
+        class="fr-modal fr-modal--top"
+        aria-labelledby="document-modal-title"
+        data-fr-concealing-backdrop="false"
+        data-action="dsfr.conceal->document-formset#onModalClose"
+        data-document-formset-target="modal"
+    >
+        <div class="fr-container fr-container--fluid fr-container-md">
+            <div class="fr-grid-row fr-grid-row---center">
+                <div class="fr-col-12 fr-col-lg-10">
+                    <div class="fr-modal__body">
+                        <div class="fr-modal__header">
+                            <button
+                                aria-controls="document-modal"
+                                title="Fermer"
+                                type="button"
+                                id="document-modal-close-btn"
+                                class="fr-btn--close fr-btn"
+                            >Fermer
+                            </button>
+                        </div>
+                        <div class="fr-modal__content">
+                            <h2 id="document-modal-title" class="fr-modal__title">
+                                <span
+                                    class="fr-icon-arrow-right-line fr-icon--lg"
+                                    aria-hidden="true"
+                                ></span>
+                                Ajouter des documents
+                            </h2>
+
+                            <div id="allowed-extensions-infos" class="fr-mb-4v">
+                                <span class="fr-hint-text">Formats supportés :</span>
+                                <span
+                                    data-document-form-target="allowedExtensions"
+                                    class="fr-hint-text"
+                                >{{ formset.allowed_extensions|join:", " }}</span>
+                            </div>
+
+                            {% for field in formset.management_form %}
+                                {% with data_target=field.name|strfmt:"document-formset-target:{0}" %}
+                                    {{ field|set_data:data_target }}
+                                {% endwith %}
+                            {% endfor %}
+
+                            <div class="fr-select-group">
+                                <label class="fr-label" for="document-upload-type-all">
+                                    <span class="label-marked">Type de document</span>
+                                    <span class="fr-hint-text fr-text--regular fr-text-default--info">
+                                        Le même type sera appliqué à tous les documents puis vous pourrez modifier individuelement
+                                    </span>
+                                </label>
+                                <select
+                                    id="document-upload-type-all"
+                                    class="fr-select"
+                                    data-action="document-formset#onChangeType:prevent:stop"
+                                >
+                                    {% for subwidget in formset.empty_form.document_type.subwidgets %}
+                                        {{ subwidget }}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <section
+                                class="document-upload-drag-drop"
+                                disabled
+                                data-document-formset-target="documentModalDragDrop"
+                                data-action="dragover->document-formset#onDragOver drop->document-formset#onDrop:prevent:stop dragenter->document-formset#onDragEnter:prevent:stop dragleave->document-formset#onDragLeave:prevent:stop"
+                            >
+                                <p class="document-upload-drag-drop--desc">
+                                    Glissez vos fichiers ici ou
+                                    <a
+                                        href="#"
+                                        class="fr-link upload-btn"
+                                        type="button"
+                                        data-action="document-formset#selectFilePicker:prevent:stop"
+                                        data-testid="filechooser-link"
+                                    >cliquez pour les selectionner</a>
+                                </p>
+
+                                <input
+                                    type="file"
+                                    multiple
+                                    hidden
+                                    data-action="document-formset#onFileSelect:stop:prevent"
+                                    data-document-formset-target="documentFile"
+                                />
+
+                                <section
+                                    class="document-upload-drag-drop--accordion-container"
+                                    data-document-formset-target="formsetContainer"
+                                >
+                                    {% for form in formset %}
+                                        {{ form }}
+                                    {% endfor %}
+                                </section>
+                            </section>
+
+                            <section class="fr-btns-group fr-btns-group--right fr-btns-group--icon-left fr-mt-6v fr-mb-n4v">
+                                <button
+                                    class="fr-btn"
+                                    type="submit"
+                                    data-action="document-formset#onSubmit:prevent:stop"
+                                    data-document-formset-target="submitBtn"
+                                >Envoyer les documents
+                                </button>
+                            </section>
+
+                            <template data-document-formset-target="emptyFormTpl">
+                                {{ formset.empty_form }}
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+</div>

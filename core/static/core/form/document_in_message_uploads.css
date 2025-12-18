@@ -1,0 +1,32 @@
+.document-upload-drag-drop {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border-default-grey);
+}
+
+.document-upload-drag-drop--dragging {
+
+}
+
+.document-upload-drag-drop > .upload-btn::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: " ";
+  height: 100%;
+  width: 100%;
+}
+
+.document-upload-drag-drop > .document-upload-drag-drop--desc {
+  margin: 3rem;
+  text-align: center;
+}
+
+.document-upload-drag-drop--accordion-container {
+  margin: 2rem
+}
+
+.document-upload-drag-drop--accordion-container .fr-accordion:not(:first-child) {
+  margin: .5rem 0 0;
+}

@@ -1,8 +1,22 @@
-from typing import Literal
+from typing import Literal, Self
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager, OuterRef, Subquery, Func, F, Exists
+from django.db.models import (
+    Case,
+    When,
+    Value,
+    IntegerField,
+    QuerySet,
+    Q,
+    Manager,
+    OuterRef,
+    Subquery,
+    Func,
+    F,
+    Exists,
+    Model,
+)
 from django.contrib.auth import get_user_model
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME, SSA_STRUCTURES, TIAC_STRUCTURES
@@ -34,6 +48,16 @@ class DocumentQueryset(QuerySet):
         message_ids = fiche.messages.exclude(status=Message.Status.BROUILLON).values_list("id", flat=True)
         message_type = ContentType.objects.get_for_model(Message)
         return self.filter(content_type=message_type, object_id__in=message_ids)
+
+    def for_model_instance(self, instance: Model | None) -> Self:
+        return (
+            self.filter(
+                content_type=ContentType.objects.get_for_model(instance._meta.model),
+                object_id=instance.pk,
+            )
+            if instance is not None
+            else self.none()
+        )
 
 
 class ContactManager(Manager):

@@ -44,17 +44,25 @@ class DSFRForm(forms.Form):
 class WithNextUrlMixin:
     def add_next_field(self, next):
         if next:
-            self.fields["next"] = forms.CharField(widget=forms.HiddenInput())
-            self.initial["next"] = next
+            self.fields["next"] = forms.CharField(initial=next, widget=forms.HiddenInput())
 
 
 class WithContentTypeMixin:
     def add_content_type_fields(self, obj):
         if obj:
-            self.fields["content_type"].widget = forms.HiddenInput()
-            self.fields["object_id"].widget = forms.HiddenInput()
-            self.initial["content_type"] = ContentType.objects.get_for_model(obj)
-            self.initial["object_id"] = obj.pk
+            self["content_type"].widget = forms.HiddenInput()
+            self.fields["content_type"].required = False
+            self.initial["content_type"] = self["content_type"].initial = ContentType.objects.get_for_model(obj)
+
+            self["object_id"].widget = forms.HiddenInput()
+            self.fields["object_id"].required = False
+            self.initial["object_id"] = self["object_id"].initial = obj.pk
+
+    def clean_content_type(self):
+        return self.cleaned_data.get("content_type") or self.initial["content_type"]
+
+    def clean_object_id(self):
+        return self.cleaned_data.get("object_id") or self.initial["object_id"]
 
 
 class WithFreeLinksMixin:

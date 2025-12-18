@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from django.conf import settings
 from playwright.sync_api import Page, expect
 
-from core.models import Document, Agent, Structure
+from core.models import Agent, Document, Structure
 
 
 class BaseMessagePage(ABC):
@@ -146,7 +146,7 @@ class BaseMessagePage(ABC):
 
     def open_message(self, index=1):
         self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
-        self.page.wait_for_timeout(600)
+        self.page.wait_for_url("**/core/message/*/update/")
 
     def delete_document(self, nth):
         self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
@@ -167,13 +167,36 @@ class BaseMessagePage(ABC):
         self.message_content.fill("My content \n with a line return")
 
     def add_basic_document(self, suffix=""):
-        self.page.locator("#id_nom").locator("visible=true").fill(f"Mon document{suffix}")
-        self.page.locator("#id_document_type").locator("visible=true").select_option("Autre document")
-        self.page.locator("#id_file").locator("visible=true").set_input_files(
-            settings.BASE_DIR / "static/images/login.jpeg"
-        )
-        self.page.locator("#id_description").locator("visible=true").fill(f"Ma description {suffix}")
-        self.page.get_by_role("button", name="Valider l'ajout du document").click()
+        # Open modale
+        self.page.get_by_test_id("add-document-btn").click()
+
+        # Open file chooser and select file
+        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
+        with self.page.expect_file_chooser() as fc_info:
+            self.page.get_by_test_id("filechooser-link").click()
+
+        document_name = "login.jpeg"
+        fc_info.value.set_files(settings.BASE_DIR / "static/images" / document_name)
+
+        # Open modification accordion
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+        expect(accordion).to_be_visible()
+        accordion.get_by_test_id("open-accordion").click()
+
+        document_name = f"Mon document{suffix}"
+        accordion.locator('[name$="nom"]').fill(document_name)
+
+        # Accordion title changed so we must reselect
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+
+        accordion.locator('[name$="document_type"]').select_option("Autre document")
+        accordion.locator('[name$="description"]').fill(f"Ma description {suffix}")
+        self.page.locator("#document-modal").get_by_role("button", name="Envoyer les documents").click()
+
+    def remove_document_by_name(self, document_name):
+        self.page.locator(f'[data-testid="document-card"]:has-text("{document_name}")').get_by_role(
+            role="button", name="Supprimer"
+        ).click()
 
     def remove_document(self, index):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
@@ -196,7 +219,9 @@ class BaseMessagePage(ABC):
 
     @property
     def get_existing_documents_title(self):
-        cards = self.page.locator(self.container_id).locator("[id^='document_card_'] span")
+        cards = (
+            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
+        )
         texts = [cards.nth(i).inner_text() for i in range(cards.count())]
         return [t for t in texts if t]
 

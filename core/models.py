@@ -320,6 +320,9 @@ class Document(models.Model):
 
     def clean(self):
         super().clean()
+        if not self.content_object:
+            # Object is probably empty which means it won't be saved
+            return
         if self.document_type not in self.content_object.get_allowed_document_types():
             raise ValidationError(
                 {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
