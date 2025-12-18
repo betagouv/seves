@@ -1,0 +1,20 @@
+.document-modal-drag-drop {
+  position: relative;
+  padding: 3em;
+  margin: 0;
+  border: 1px solid var(--border-default-grey);
+  text-align: center;
+}
+
+.document-modal-drag-drop > .upload-btn::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: " ";
+  height: 100%;
+  width: 100%;
+}
+
+.document-modal-drag-drop--dragging {
+
+}

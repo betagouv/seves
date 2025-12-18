@@ -1,0 +1,23 @@
+{% load dsfr_tags widget_tweaks %}
+
+<div data-controller="document-form">
+    {% dsfr_form_field form.nom|set_data:"document-form-target:documentNameInput" %}
+    {% dsfr_notice title="Nommer le document de manière claire et compréhensible pour tous" %}
+    <div class="fr-my-4v"></div>
+    {% dsfr_form_field form.document_type|set_data:"document-form-target:documentTypeSelect" %}
+
+    <span class="fr-hint-text">Taille maximale autorisée : {{ max_upload_size_mb }} Mo</span>
+
+    {{ form.file|add_class:"fr-input fr-my-4v"|set_data:"document-form-target:documentFile" }}
+    {% dsfr_form_field form.description|set_data:"document-form-target:commentInput" %}
+    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+        <button
+            id="message-add-document"
+            class="fr-btn fr-btn--tertiary"
+            disabled
+            data-document-form-target="addDocument"
+            data-action="click->document-form#onAddDocument:prevent:default"
+        >Valider l'ajout du document
+        </button>
+    </div>
+</div>
