@@ -28,9 +28,8 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     assert message_page.message_recipient_in_table() == str(active_contact)
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Message"
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
+
+    new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert "My content <br> with a line return" in new_page.content()
@@ -209,8 +208,12 @@ def generic_test_can_only_see_own_document_types_in_message_form(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
     message_page.new_message()
+    message_page.open_document_modal()
 
     expected = [settings.SELECT_EMPTY_CHOICE, *[t.label for t in object.get_allowed_document_types()]]
+    check_select_options_from_element(message_page.global_document_type_input, expected, False)
+
+    message_page.add_basic_document(close=False)
     check_select_options_from_element(message_page.document_type_input, expected, False)
 
 
@@ -229,10 +232,11 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
     message_page.open_message()
+
     assert len(message_page.get_existing_documents_title) == 2, (
         f"Expected 2 got {len(message_page.get_existing_documents_title)}"
     )
-    assert document_to_remove.nom in message_page.get_existing_documents_title
+    assert document_to_remove.nom in ".".join(message_page.get_existing_documents_title)
     assert document_to_keep.nom in message_page.get_existing_documents_title
 
     # Add new document
@@ -240,7 +244,7 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     assert len(message_page.get_existing_documents_title) == 3
 
     # Remove previous document
-    message_page.page.locator(f"#document_card_{document_to_remove.pk} .fr-icon-close-circle-line").click()
+    message_page.remove_document_by_name(document_to_remove.nom)
     assert len(message_page.get_existing_documents_title) == 2
 
     message_page.submit_message()
@@ -326,9 +330,7 @@ def generic_test_can_add_and_see_message_in_new_tab_without_document(
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Message"
 
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
+    new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
@@ -377,9 +379,7 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Note"
 
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
+    new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
@@ -418,9 +418,7 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Demande d'intervention"
 
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
+    new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
@@ -451,9 +449,7 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Point de situation"
 
-    with page.context.expect_page() as new_page_info:
-        message_page.open_message()
-    new_page = new_page_info.value
+    new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
@@ -468,14 +464,14 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     message_page.new_message()
     message_page.add_basic_message(active_contact, choice_js_fill)
     message_page.add_basic_document()
-    assert message_page.page.locator(".document-to-add").count() == 1
+    assert len(message_page.get_existing_documents_title) == 1
 
     message_page.add_basic_document(suffix=" numero 2")
     message_page.add_basic_document(suffix=" numero 3")
-    assert message_page.page.locator(".document-to-add").count() == 3
+    assert len(message_page.get_existing_documents_title) == 3
 
     message_page.delete_document(nth=1)
-    assert message_page.page.locator(".document-to-add").count() == 2
+    assert len(message_page.get_existing_documents_title) == 2
 
     message_page.submit_message()
 

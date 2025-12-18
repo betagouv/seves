@@ -1,3 +1,4 @@
+import uuid
 from collections import OrderedDict
 
 from django import forms
@@ -5,21 +6,22 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.forms import Media
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.constants import Domains
 from core.fields import (
-    DSFRRadioButton,
-    ContactModelMultipleChoiceField,
-    SEVESChoiceField,
     AdresseLieuDitField,
-    MessageObjectField,
+    ContactModelMultipleChoiceField,
+    DSFRRadioButton,
     MessageContentField,
+    MessageObjectField,
+    SEVESChoiceField,
 )
-from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
-from core.models import Document, Contact, Message, Visibilite, Structure, Departement
+from core.form_mixins import DSFRForm, WithContentTypeMixin, WithNextUrlMixin
+from core.models import Contact, Departement, Document, Message, Structure, Visibilite
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
 
@@ -64,32 +66,41 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
         return file
 
 
-class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelForm):
+    template_name = "core/form/document_in_message_upload.html"
+
     nom = forms.CharField(
         help_text="",
         label="Intitulé du document",
         widget=forms.TextInput(attrs={"maxlength": 256, "required": True}),
     )
     document_type = SEVESChoiceField(
-        choices=Document.TypeDocument.choices, label="Type de document", widget=forms.Select(attrs={"required": True})
+        choices=Document.TypeDocument.choices,
+        label="Type de document",
+        widget=forms.Select(attrs={"required": True}),
     )
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget(attrs={"disabled": True}))
+    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget())
 
-    class Meta:
-        model = Document
-        fields = ["nom", "document_type", "description", "file", "content_type", "object_id"]
+    @property
+    def file_id(self):
+        return "" if not self.instance else uuid.uuid4()
 
-    def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj")
+    @property
+    def media(self):
+        return super().media + Media(css={"all": ("core/form/document_in_message_upload.css",)})
+
+    def __init__(self, allowed_document_types, user, *args, message=None, **kwargs):
+        self.allowed_document_types = allowed_document_types
+        self.user = user
+        self.message = message
         super().__init__(*args, **kwargs)
         self.fields["document_type"].choices = [
             ("", settings.SELECT_EMPTY_CHOICE),
-            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+            *[(c.value, c.label) for c in self.allowed_document_types],
         ]
-        self.add_content_type_fields(obj)
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
@@ -100,6 +111,19 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTyp
         if document_type := self.cleaned_data.get("document_type"):
             Document.validate_file_extention_for_document_type(file, document_type)
         return file
+
+    def save(self, commit=True):
+        if not self.message:
+            raise ValidationError("Unknown user: please 'message' to __init__")
+        self.instance.created_by = self.user.agent
+        self.instance.created_by_structure = self.user.agent.structure
+        self.instance.content_type = ContentType.objects.get_for_model(self.message)
+        self.instance.object_id = self.message.pk
+        return super().save(commit)
+
+    class Meta:
+        model = Document
+        fields = ["nom", "document_type", "description", "file"]
 
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
@@ -397,32 +421,6 @@ class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, f
             "recipients",
             "title",
             "content",
-        ]
-
-
-class MessageDocumentForm(DSFRForm, forms.ModelForm):
-    document_type = SEVESChoiceField(
-        choices=Document.TypeDocument.choices,
-        label="Type de document",
-        required=False,
-    )
-    file = forms.FileField(
-        label="Ajouter un document", required=False, widget=RestrictedFileWidget(attrs={"disabled": True})
-    )
-
-    class Meta:
-        model = Document
-        fields = ["document_type", "file", "nom", "description"]
-
-    def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("object")
-        with_nom = kwargs.pop("with_nom", False)
-        super().__init__(*args, **kwargs)
-        if with_nom is False:
-            self.fields.pop("nom")
-        self.fields["document_type"].choices = [
-            ("", settings.SELECT_EMPTY_CHOICE),
-            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
         ]
 
 

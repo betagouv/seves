@@ -31,8 +31,6 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    DocumentInMessageUploadForm,
-    MessageDocumentForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -46,7 +44,6 @@ from .mixins import (
 from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
 from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
-from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +188,7 @@ class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     CreateView,
 ):
     model = Message
@@ -255,17 +253,22 @@ class MessageCreateView(
                 )
         return kwargs
 
+    def _create_documents(self, form):
+        super()._create_documents(form)
+        self.get_document_in_message_upload_formset(message=form.instance).save()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["add_document_formset"] = self.get_document_in_message_upload_formset()
         context["message_status"] = Message.Status
         context["object"] = self.obj
         if self.reply_message:
             context["page_title"] = self.reply_message.reply_page_title
         return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
 
     def get_success_url(self):
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
@@ -284,6 +287,7 @@ class MessageUpdateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     UpdateView,
 ):
     model = Message
@@ -316,21 +320,23 @@ class MessageUpdateView(
         return kwargs
 
     def get_context_data(self, **kwargs):
+        instance = self.get_object()
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["add_document_formset"] = self.get_document_in_message_upload_formset(message=instance)
         context["message_status"] = Message.Status
-        context["form"].documents_forms = [
-            MessageDocumentForm(instance=d, object=self.get_object(), with_nom=True)
-            for d in self.get_object().documents.all()
-        ]
         context["object"] = self.obj
         return context
 
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
+
     def get_success_url(self):
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
+
+    def _create_documents(self, form):
+        super()._create_documents(form)
+        self.get_document_in_message_upload_formset(message=form.instance).save()
 
     def form_valid(self, form):
         return self.handle_message_form(form)

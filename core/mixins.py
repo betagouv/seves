@@ -18,17 +18,28 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
+from django.views.generic.edit import BaseCreateView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
 
 from core.forms import (
-    DocumentUploadForm,
-    DocumentEditForm,
-    StructureAddForm,
     AgentAddForm,
+    DocumentEditForm,
+    DocumentUploadForm,
+    StructureAddForm,
 )
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User, Export
-from core.models import user_is_referent_national
+from core.models import (
+    Contact,
+    Document,
+    Export,
+    FinSuiviContact,
+    LienLibre,
+    Message,
+    Structure,
+    User,
+    Visibilite,
+    user_is_referent_national,
+)
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
 from .notifications import notify_message, notify_object_cloture
@@ -637,7 +648,18 @@ class WithOrderingMixin:
         return context
 
 
-class MessageHandlingMixin(WithAddUserContactsMixin):
+class MessageHandlingMixin(WithAddUserContactsMixin, BaseCreateView):
+    def get_document_in_message_upload_formset(self, **kwargs):
+        from django.views.generic.edit import FormMixin
+
+        from core.formsets import DocumentInMessageUploadFormSet
+
+        form_kwargs = FormMixin.get_form_kwargs(self)
+        form_kwargs.update(
+            {"user": self.request.user, "allowed_document_types": self.obj.get_allowed_document_types(), **kwargs}
+        )
+        return DocumentInMessageUploadFormSet(**form_kwargs)
+
     def _is_internal_communication(self, structures):
         """
         Returns True if all contacts involved are part of the same structure
@@ -698,7 +720,9 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
                 )
             except OperationalError:
                 logger.error("Could not connect to Redis")
-                messages.error("Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages")
+                messages.error(
+                    self.request, "Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages"
+                )
 
     def _delete_documents_if_needed(self, form):
         prefix = "existing_document_name_"
