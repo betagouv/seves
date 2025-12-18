@@ -24,6 +24,10 @@ class BaseMessagePage(ABC):
     def recipients_locator(self):
         return f'{self.container_id} label[for="id_recipients"] ~ div.choices'
 
+    @property
+    def document_modal(self):
+        return self.page.locator("#document-modal")
+
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
@@ -131,12 +135,24 @@ class BaseMessagePage(ABC):
     def message_type_in_table(self, index=1):
         return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
 
-    def open_message(self, index=1):
-        self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
-        self.page.wait_for_timeout(600)
+    def open_message(self, index=1) -> Page:
+        """Returns the new message page if page was opened in a new tab"""
+        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
+        if link.get_attribute("target") == "_blank":
+            with self.page.context.expect_page() as new_page_info:
+                link.click()
+            return new_page_info.value
+        else:
+            link.click()
+            self.page.wait_for_url("**/core/message/**/")
+            return self.page
 
     def delete_document(self, nth):
-        self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
+        document_count = self.page.get_by_test_id("document-card").count()
+        self.page.get_by_test_id("document-delete-btn").nth(nth).click()
+        # Check that deleting removes file bloc in both message aside and modal
+        expect(self.page.get_by_test_id("document-card")).to_have_count(document_count - 1)
+        expect(self.page.get_by_test_id("document-upload")).to_have_count(document_count - 1)
 
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
@@ -145,14 +161,45 @@ class BaseMessagePage(ABC):
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
 
-    def add_basic_document(self, suffix=""):
-        self.page.locator("#id_nom").locator("visible=true").fill(f"Mon document{suffix}")
-        self.page.locator("#id_document_type").locator("visible=true").select_option("Autre document")
-        self.page.locator("#id_file").locator("visible=true").set_input_files(
-            settings.BASE_DIR / "static/images/login.jpeg"
+    def open_document_modal(self):
+        if self.document_modal.is_hidden():
+            self.page.get_by_test_id("add-document-btn").click()
+            expect(self.document_modal).to_be_visible()
+
+    def add_basic_document(self, suffix="", close=True):
+        self.open_document_modal()
+
+        # Open file chooser and select file
+        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
+
+        document_name = "login.jpeg"
+        self.page.get_by_test_id("filechooser-link").set_input_files(
+            settings.BASE_DIR / "static/images" / document_name
         )
-        self.page.locator("#id_description").locator("visible=true").fill(f"Ma description {suffix}")
-        self.page.get_by_role("button", name="Valider l'ajout du document").click()
+        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
+        self.page.get_by_test_id("filechooser-link").set_input_files([])
+
+        # Open modification accordion
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+        expect(accordion).to_be_visible()
+        accordion.get_by_test_id("open-accordion").click()
+
+        document_name = f"Mon document{suffix}"
+        accordion.locator('[name$="nom"]').fill(document_name)
+
+        # Accordion title changed so we must reselect
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+
+        accordion.locator('[name$="document_type"]').select_option("Autre document")
+        accordion.locator('[name$="description"]').fill(f"Ma description {suffix}")
+        if close:
+            self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
+            expect(self.document_modal).not_to_be_visible()
+
+    def remove_document_by_name(self, document_name):
+        self.page.locator(f'[data-testid="document-card"]:has-text("{document_name}")').get_by_role(
+            role="button", name="Supprimer"
+        ).click()
 
     def remove_document(self, index):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
@@ -162,12 +209,18 @@ class BaseMessagePage(ABC):
         return self.page.get_by_role("button", name="Ajouter un document")
 
     @property
+    def global_document_type_input(self):
+        return self.page.locator("#document-upload-type-all")
+
+    @property
     def document_type_input(self):
-        return self.page.locator("#id_document_type")
+        return self.page.locator('[name$="document_type"]')
 
     @property
     def get_existing_documents_title(self):
-        cards = self.page.locator(self.container_id).locator("[id^='document_card_'] span")
+        cards = (
+            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
+        )
         texts = [cards.nth(i).inner_text() for i in range(cards.count())]
         return [t for t in texts if t]
 

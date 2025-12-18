@@ -704,18 +704,6 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     assert document.deleted_by == mocked_authentification_user.agent
 
 
-def test_empty_option_is_delete_after_selecting_document_type(live_server, page: Page):
-    """Test que l'option vide est supprimée après avoir sélectionné un type de document"""
-    evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-    page.locator("#id_document_type").select_option(Document.TypeDocument.AUTRE)
-
-    expect(page.locator("#id_document_type").locator("option[value='']")).not_to_be_visible()
-
-
 def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
     national_referent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)

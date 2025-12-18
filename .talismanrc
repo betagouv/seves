@@ -2,6 +2,7 @@ allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
 - '(from|import)[\w\s\.]+'  # Allow python imports
 - '(models\.)?ForeignKey\(.+\)?'
+- 'ValidationError\(.+\)?'
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -36,7 +37,7 @@ fileignoreconfig:
 - filename: conftest.py
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
-  checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
+  checksum: 22e3841c86e809b2cd4961bdd208cd7ed7f92f8e01b5ed163649df2780529655
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: ssa/forms.py
