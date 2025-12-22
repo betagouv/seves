@@ -69,13 +69,6 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         ),
     )
 
-    produit_pret_a_manger = forms.ChoiceField(
-        required=False,
-        choices=PretAManger.choices,
-        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
-        label="Produit Prêt à manger (PAM)",
-    )
-
     @property
     def media(self):
         return super().media + Media(
@@ -134,6 +127,12 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
         required=False,
         choices=QuantificationUnite.with_opt_group(),
         label="Unité",
+    )
+    produit_pret_a_manger = forms.ChoiceField(
+        required=False,
+        choices=PretAManger.choices,
+        widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Produit Prêt à manger (PAM)",
     )
     temperature_conservation = forms.ChoiceField(
         required=False,

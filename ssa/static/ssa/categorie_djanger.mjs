@@ -6,10 +6,12 @@ function handleValueChangeCategorieDanger(value, options) {
 
     document.getElementById("id_categorie_danger").value = value
     document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = fullPath
-    if(fullPath.includes("Bactérie >")) {
-        document.getElementById("pam-container").classList.remove("fr-hidden")
-    } else {
-        document.getElementById("pam-container").classList.add("fr-hidden")
+    if (document.getElementById("pam-container")) {
+        if (fullPath.includes("Bactérie >") && document.getElementById("pam-container")) {
+            document.getElementById("pam-container").classList.remove("fr-hidden")
+        } else {
+            document.getElementById("pam-container").classList.add("fr-hidden")
+        }
     }
 }
 
@@ -79,7 +81,9 @@ function setupCategorieDanger() {
         if(!!e.detail) {
             handleValueChangeCategorieDanger(e.detail, options)
         } else {
-            document.getElementById("pam-container").classList.add("fr-hidden")
+            if (document.getElementById("pam-container")){
+                document.getElementById("pam-container").classList.add("fr-hidden")
+            }
         }
     })
 

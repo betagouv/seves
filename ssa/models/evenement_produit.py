@@ -18,7 +18,7 @@ from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
 from core.models import LienLibre
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
-from ..constants import CategorieDanger, CategorieProduit, Source, TypeEvenement
+from ..constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, PretAManger
 from .mixins import (
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -153,6 +153,9 @@ class EvenementProduit(
     )
     quantification_unite = models.CharField(
         blank=True, max_length=100, choices=QuantificationUnite.choices, verbose_name="Unité"
+    )
+    produit_pret_a_manger = models.CharField(
+        blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
 
     actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")

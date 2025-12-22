@@ -320,10 +320,8 @@ def test_can_filter_by_temperature_conservation(live_server, mocked_authentifica
 
 def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentification_user, page: Page):
     to_be_found = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
-    to_be_found_2 = InvestigationCasHumainFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
     not_to_be_found_1 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
     not_to_be_found_2 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.SANS_OBJET)
-    not_to_be_found_3 = InvestigationCasHumainFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -333,10 +331,8 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
-    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):

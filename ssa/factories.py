@@ -158,12 +158,6 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
     def numero_evenement(n):
         return n + 1
 
-    @factory.lazy_attribute
-    def produit_pret_a_manger(self):
-        if self.categorie_danger in CategorieDanger.dangers_bacteriens():
-            return random.choice(PretAManger.values)
-        return ""
-
     class Params:
         not_bacterie = factory.Trait(
             categorie_danger=factory.LazyAttribute(
