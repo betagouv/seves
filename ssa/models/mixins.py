@@ -5,7 +5,7 @@ from core.versions import get_versions_from_ids
 
 from core.mixins import sort_tree, WithNumeroMixin
 from core.models import Structure, Document
-from ssa.constants import CategorieDanger, PretAManger
+from ssa.constants import CategorieDanger
 from ssa.models.validators import validate_numero_rasff
 
 
@@ -41,9 +41,6 @@ class WithEvenementRisqueMixin(models.Model):
     evaluation = models.TextField(blank=True, verbose_name="Évaluation")
     reference_souches = models.CharField(max_length=255, verbose_name="Références souches", blank=True)
     reference_clusters = models.CharField(max_length=255, verbose_name="Références clusters", blank=True)
-    produit_pret_a_manger = models.CharField(
-        blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
-    )
 
     class Meta:
         abstract = True
