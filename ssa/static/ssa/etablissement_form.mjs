@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
         card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
             modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement-${prefix} .fr-modal__content`).cloneNode(true)
+            document.querySelector(`#fr-modal-etablissement-${prefix} [id$=raison_sociale]`).required = true
         })
         document.getElementById("etablissement-card-container").appendChild(card);
         const totalForm = document.querySelector('#etablissement-management-form [name$="TOTAL_FORMS"]')
