@@ -49,10 +49,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
     # via celery
 cryptography==44.0.1
-    # via
-    #   josepy
-    #   mozilla-django-oidc
-    #   pyopenssl
+    # via mozilla-django-oidc
 diff-match-patch==20241021
     # via django-reversion-compare
 distlib==0.3.8
@@ -146,8 +143,6 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-josepy==1.14.0
-    # via mozilla-django-oidc
 kombu==5.6.1
     # via celery
 lxml==6.0.2
@@ -161,7 +156,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-mozilla-django-oidc==4.0.1
+mozilla-django-oidc==5.0.2
     # via -r requirements.in
 nodeenv==1.8.0
     # via pre-commit
@@ -194,8 +189,8 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyopenssl==25.0.0
-    # via josepy
+pyjwt==2.10.1
+    # via mozilla-django-oidc
 pytest==8.4.2
     # via
     #   pytest-base-url
