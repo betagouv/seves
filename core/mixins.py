@@ -878,3 +878,15 @@ class WithExportHeterogeneousQuerysetMixin:
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
         return HttpResponseRedirect(f"{self.get_success_url()}?{urlencode(allowed_params)}")
+
+
+class WithFormsetInvalidMixin:
+    def formset_invalid(self, formset, msg_1, msg_2):
+        messages.error(self.request, msg_1)
+        for i, form in enumerate(formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
+
+        return self.render_to_response(self.get_context_data())

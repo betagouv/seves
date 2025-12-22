@@ -30,6 +30,7 @@ from core.mixins import (
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
     WithExportHeterogeneousQuerysetMixin,
+    WithFormsetInvalidMixin,
 )
 from core.models import LienLibre
 from core.views import MediaDefiningMixin
@@ -54,7 +55,11 @@ from .notifications import notify_transfer, notify_transformation, notify_invest
 
 
 class EvenementSimpleManipulationMixin(
-    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, MediaDefiningMixin, ProcessFormView
+    WithFormErrorsAsMessagesMixin,
+    WithAddUserContactsMixin,
+    MediaDefiningMixin,
+    WithFormsetInvalidMixin,
+    ProcessFormView,
 ):
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
@@ -103,22 +108,6 @@ class EvenementSimpleManipulationMixin(
         messages.success(self.request, self.get_success_message())
         return super().form_valid(form)
 
-    def formset_invalid(self):
-        self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Etablissement",
-        )
-        for i, form in enumerate(self.get_etablissement_formset()):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(
-                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
-                        )
-
-        return self.render_to_response(self.get_context_data())
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["etablissement_formset"] = self.get_etablissement_formset()
@@ -126,7 +115,12 @@ class EvenementSimpleManipulationMixin(
 
     def post(self, request, *args, **kwargs):
         if not self.get_etablissement_formset().is_valid():
-            return self.formset_invalid()
+            self.object = None
+            return self.formset_invalid(
+                self.get_etablissement_formset(),
+                "Erreurs dans le(s) formulaire(s) Établissements",
+                "Erreur dans le formulaire établissement",
+            )
         return super().post(request, *args, **kwargs)
 
 
@@ -314,7 +308,12 @@ class EvenementTransformView(UpdateView):
 
 
 class InvestigationTiacBaseView(
-    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, ModelFormMixin, ProcessFormView
+    WithFormErrorsAsMessagesMixin,
+    MediaDefiningMixin,
+    WithAddUserContactsMixin,
+    WithFormsetInvalidMixin,
+    ModelFormMixin,
+    ProcessFormView,
 ):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
@@ -395,16 +394,6 @@ class InvestigationTiacBaseView(
             # Case where we're on a creation view
             return None
         return super().get_object(queryset)
-
-    def formset_invalid(self, formset, msg_1, msg_2):
-        messages.error(self.request, msg_1)
-        for i, form in enumerate(formset):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
-
-        return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
         if not hasattr(self, "object"):
