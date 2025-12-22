@@ -10,3 +10,9 @@
 .user {
     padding: 0.8rem;
 }
+.fr-container--fluid {
+    overflow: unset;
+}
+td {
+    white-space: unset !important;
+}
