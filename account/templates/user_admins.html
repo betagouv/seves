@@ -1,0 +1,175 @@
+{% extends 'core/base.html' %}
+{% load static widget_tweaks dsfr_tags %}
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'account/base.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div data-controller="permissions-admin-form">
+        <dialog id="fr-modal-add-user" class="fr-modal" aria-labelledby="modal-title" aria-modal="true" data-permissions-admin-form-target="confirmModal">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button aria-controls="modal" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h2 id="modal-title" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true" ></span>
+                                    Accorder le rôle d’administrateur
+                                </h2>
+                                <p data-permissions-admin-form-target="modalContent">
+                                </p>
+                            </div>
+                            <div class="fr-modal__footer">
+
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                                    <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-add-user">
+                                        Annuler
+                                    </button>
+                                    <button class="fr-btn" type="submit" data-action="click->permissions-admin-form#onConfirm">Confirmer le rôle d’administrateur</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+
+        <div class="fr-container fr-pt-4w">
+            <h1 class="fr-h1">Gestion des administrateurs</h1>
+            <h6 class="fr-h6">La MUS ajoute ou révoque les droits des personnes autorisées a donner les droits d’accès à Sèves pour leur structure. </h6>
+
+            <div class="white-container">
+                <h2 class="fr-h2">Ajouter un administrateur</h2>
+                <form method="post" data-permissions-admin-form-target="form">
+                    {% csrf_token %}
+
+                    <div class="fr-container--fluid">
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-4">
+                                {{ form.user|set_data:"permissions-admin-form-target:selectUser" }}
+                            </div>
+                            <div class="fr-col-4">
+
+                                <div class="fr-fieldset">
+                                    <span>Donner accès à</span>
+                                    <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                        <div class="fr-checkbox-group">
+                                            <input name="domains" id="checkbox-10" type="checkbox" value="SSA" data-action="permissions-admin-form#handleButtonState">
+                                            <label class="fr-label" for="checkbox-10"> SSA </label>
+                                        </div>
+                                    </div>
+                                    <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                        <div class="fr-checkbox-group">
+                                            <input name="domains" id="checkbox-11" type="checkbox" value="SV" data-action="permissions-admin-form#handleButtonState">
+                                            <label class="fr-label" for="checkbox-11"> SV </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="fr-col-4">
+                                <button class="fr-btn fr-flex--align-end" aria-controls="fr-modal-add-user"
+                                        data-action="permissions-admin-form#onSubmitForm:prevent:stop"
+                                        data-fr-opened="false" disabled="" data-permissions-admin-form-target="submitBtn">
+                                    Accorder le rôle administrateur
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="fr-table">
+                <div class="fr-table__wrapper">
+                    <div class="fr-table__container">
+                        <div class="fr-table__content">
+                            <table>
+                                <caption>
+                                    Liste des administrateurs
+                                </caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">
+                                            Accordé à
+                                        </th>
+                                        <th scope="col">
+                                            Accordé pour
+                                        </th>
+                                        <th scope="col">
+                                            Domaines
+                                        </th>
+                                        <th scope="col">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for existing in existing_admins %}
+                                        <tr>
+                                            <td>
+                                                {{ existing.agent.agent_with_structure }}
+                                            </td>
+                                            <td>
+                                                {{ existing.agent.structure }}
+                                            </td>
+                                            <td>
+                                                {{ existing.domains }}
+                                            </td>
+                                            <td>
+                                                <form method="post">
+
+                                                    <dialog id="fr-modal-remove-user-{{ existing.pk }}" class="fr-modal" aria-labelledby="modal-title-2" aria-modal="true">
+                                                        <div class="fr-container fr-container--fluid fr-container-md">
+                                                            <div class="fr-grid-row fr-grid-row--center">
+                                                                <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                                                                    <div class="fr-modal__body">
+                                                                        <div class="fr-modal__header">
+                                                                            <button aria-controls="fr-modal-remove-user-{{ existing.pk }}" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                                                                        </div>
+                                                                        <div class="fr-modal__content">
+                                                                            <h2 id="modal-title-2" class="fr-modal__title">
+                                                                                <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true" ></span>
+                                                                                Révoquer le rôle d’administrateur
+                                                                            </h2>
+                                                                            <p>
+                                                                                Vous êtes sur le point de révoquer à {{ existing.agent.agent_with_structure }} la possibilité de donner les droits d’accès à Sèves pour sa structure, êtes-vous sûr de vouloir poursuivre ?
+                                                                            </p>
+                                                                        </div>
+                                                                        <div class="fr-modal__footer">
+                                                                            <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                                                                                <button class="fr-btn fr-btn--secondary" aria-controls="fr-modal-remove-user-{{ existing.pk }}">
+                                                                                    Annuler
+                                                                                </button>
+                                                                                <button class="fr-btn" type="submit">Confirmer la révocation</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </dialog>
+                                                    <input type="hidden" name="action" value="remove">
+                                                    <input type="hidden" name="user" value="{{ existing.pk }}">
+                                                    {% csrf_token %}
+                                                    <a class="fr-btn fr-flex--align-end" href="#" aria-controls="fr-modal-remove-user-{{ existing.pk }}" data-fr-opened="false">
+                                                        Révoquer le rôle d’administrateur
+                                                    </a>
+                                                </form>
+
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

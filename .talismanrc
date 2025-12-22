@@ -105,4 +105,6 @@ fileignoreconfig:
   checksum: 8dec0a69adf36ebd32de735115d68d83f492b1356b17bcef8d37db362cb00697
 - filename: seves/auth.py
   checksum: 783b605ce4242e1c04e58a4220ba63875303501b6573339e374aa6c81084e102
+- filename: account/static/account/permissions_admins.js
+  checksum: fdeac6dc4a079cc9c2fdb65f7008793f9980fd4c3f68e1bcec3dc36538814fbc
 version: "1.0"

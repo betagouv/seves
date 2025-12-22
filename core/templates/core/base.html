@@ -117,6 +117,9 @@
                                                         {% if request.user|has_group:"access_admin" %}
                                                             <li class="fr-nav__link"><a href="{% url 'handle-permissions' %}">Gestion des droits d'accès</a></li>
                                                         {% endif %}
+                                                        {% if request.user.agent.structure.is_mus %}
+                                                            <li class="fr-nav__link"><a href="{% url 'handle-admins' %}">Gestion des administrateurs</a></li>
+                                                        {% endif %}
                                                     </ul>
                                                 </div>
                                             {% endif %}
