@@ -68,6 +68,19 @@ class AgentFactory(DjangoModelFactory):
     telephone = factory.Faker("phone_number", locale="fr_FR")
     mobile = factory.Faker("phone_number", locale="fr_FR")
 
+    @factory.post_generation
+    def with_active_user(self, create, extracted, **kwargs):
+        if not create or (not extracted and not kwargs):
+            return
+
+        kwargs.setdefault("with_groups", [])
+
+        self.user.is_active = True
+        self.user.save()
+        for group in kwargs["with_groups"]:
+            group, _ = Group.objects.get_or_create(name=group)
+            self.user.groups.add(group)
+
 
 class ContactAgentFactory(DjangoModelFactory):
     class Meta:
