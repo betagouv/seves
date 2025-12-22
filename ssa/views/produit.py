@@ -13,7 +13,12 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 
-from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
+from core.mixins import (
+    WithClotureContextMixin,
+    WithDocumentExportContextMixin,
+    WithFinDeSuiviMixin,
+    WithFormsetInvalidMixin,
+)
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -40,6 +45,7 @@ class EvenementProduitCreateView(
     WithAddUserContactsMixin,
     EvenementProduitValuesMixin,
     MediaDefiningMixin,
+    WithFormsetInvalidMixin,
     CreateView,
 ):
     form_class = EvenementProduitForm
@@ -57,25 +63,14 @@ class EvenementProduitCreateView(
         kwargs["user"] = self.request.user
         return kwargs
 
-    def formset_invalid(self):
-        self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Etablissement",
-        )
-        for i, form in enumerate(self.etablissement_formset):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(
-                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
-                        )
-
-        return self.render_to_response(self.get_context_data())
-
     def post(self, request, *args, **kwargs):
         if not self.etablissement_formset.is_valid():
-            return self.formset_invalid()
+            self.object = None
+            return self.formset_invalid(
+                self.etablissement_formset,
+                "Erreurs dans le(s) formulaire(s) Établissements",
+                "Erreur dans le formulaire établissement",
+            )
 
         form = self.get_form()
         if not form.is_valid():
