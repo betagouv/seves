@@ -193,6 +193,7 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     EtablissementFactory(enseigne_usuelle="Morbier", investigation_cas_humain=evenement_12)
     evenement_13 = EvenementProduitFactory(precision_danger="Morbier")
     evenement_14 = InvestigationCasHumainFactory(precision_danger="Morbier")
+    evenement_15 = InvestigationCasHumainFactory(evaluation="Morbier")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -213,6 +214,7 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text(evenement_12.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_13.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_14.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_15.numero)).to_be_visible()
 
 
 def test_more_filters_interactions(live_server, page: Page):
