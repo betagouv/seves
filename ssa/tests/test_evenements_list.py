@@ -4,7 +4,7 @@ from pytest_django.asserts import assertRedirects
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import LienLibre
-from ssa.constants import Source, TypeEvenement, PretAManger
+from ssa.constants import Source, TypeEvenement, PretAManger, SourceInvestigationCasHumain
 from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.models import EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import ActionEngagees
@@ -115,6 +115,22 @@ def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
 
 
+def test_list_can_filter_by_type_evenement_for_investigation_cas_humain(
+    live_server, mocked_authentification_user, page: Page
+):
+    EvenementProduitFactory(
+        type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=1)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.type_evenement_select.select_option("Investigation de cas humain")
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.1"
+    expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+
+
 def test_list_can_filter_by_source(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(
         source=Source.TOUT_DROIT, type_evenement=TypeEvenement.NON_ALERTE, numero_annee=2025, numero_evenement=2
@@ -132,6 +148,46 @@ def test_list_can_filter_by_source(live_server, mocked_authentification_user, pa
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_can_filter_by_source_for_investigation_cas_humain(live_server, mocked_authentification_user, page: Page):
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.DO_LISTERIOSE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.CAS_GROUPES,
+        numero_annee=2025,
+        numero_evenement=1,
+    )
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_can_filter_by_common_source(live_server, mocked_authentification_user, page: Page):
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.SIGNALEMENT_AUTRE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.CAS_GROUPES,
+        numero_annee=2025,
+        numero_evenement=1,
+    )
+    EvenementProduitFactory(source=Source.AUTRE, numero_annee=2025, numero_evenement=3)
+    EvenementProduitFactory(source=Source.TOUT_DROIT, numero_annee=2025, numero_evenement=4)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(SourceInvestigationCasHumain.SIGNALEMENT_AUTRE)
+    search_page.submit_search()
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.2")).to_be_visible()
+    expect(search_page.page.get_by_text("2025.3")).to_be_visible()
+    expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
 
 def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
