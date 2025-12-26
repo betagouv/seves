@@ -26,16 +26,20 @@
       <div class="fr-col-4">
         <div class="fr-container--fluid">
           <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Type d'événement</div>
-            <div class="fr-col-7">{{ object.get_type_evenement_display|or_empty_value_tag }}</div>
+            <div class="fr-col-4 bold">Type d'événement</div>
+            <div class="fr-col-8">{{ object.get_type_evenement_display|or_empty_value_tag }}</div>
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Catégorie produit</div>
-            <div class="fr-col-7">{{ object.get_categorie_produit_display|or_empty_value_tag }}</div>
+            <div class="fr-col-4 bold">Source</div>
+            <div class="fr-col-8">{{ object.get_source_display|or_empty_value_tag }}</div>
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Danger</div>
-            <div class="fr-col-7">{{ object.get_categorie_danger_display|or_empty_value_tag }}</div>
+            <div class="fr-col-4 bold">Catégorie produit</div>
+            <div class="fr-col-8">{{ object.get_categorie_produit_display|or_empty_value_tag }}</div>
+          </div>
+          <div class="fr-grid-row fr-grid-row--gutters">
+            <div class="fr-col-4 bold">Danger</div>
+            <div class="fr-col-8">{{ object.get_categorie_danger_display|or_empty_value_tag }}</div>
           </div>
         </div>
       </div>
