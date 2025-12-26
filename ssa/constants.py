@@ -1734,7 +1734,7 @@ class Source(models.TextChoices):
 class SourceInvestigationCasHumain(models.TextChoices):
     DO_LISTERIOSE = auto(), "DO listériose"
     CAS_GROUPES = auto(), "Cas groupés"
-    SIGNALEMENT_AUTRE = auto(), "Signalement autre"
+    SIGNALEMENT_AUTRE = "autre", "Signalement autre"
 
 
 class PretAManger(models.TextChoices):
