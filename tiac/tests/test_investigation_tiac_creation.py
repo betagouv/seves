@@ -178,10 +178,8 @@ def test_can_create_investigation_tiac_conlusion(
             "suspicion_conclusion",
             "selected_hazard",
             "conclusion_comment",
-            "conclusion_etablissement",
             "conclusion_repas",
             "conclusion_aliment",
-            "conclusion_analyse",
         ],
         ignore_array_order=True,
     )
