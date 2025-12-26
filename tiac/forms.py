@@ -344,18 +344,12 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "suspicion_conclusion",
             "selected_hazard",
             "conclusion_comment",
-            "conclusion_etablissement",
             "conclusion_repas",
             "conclusion_aliment",
-            "conclusion_analyse",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
             "will_trigger_inquiry": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
-        }
-        labels = {
-            "conclusion_etablissement": "Conclusion établissement",
-            "conclusion_analyse": "Conclusion d'analyse alimentaire et d’environnement",
         }
 
     @property
@@ -385,7 +379,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
-        for field in ("conclusion_etablissement", "conclusion_repas", "conclusion_aliment", "conclusion_analyse"):
+        for field in ("conclusion_repas", "conclusion_aliment"):
             self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
             queryset = self[field].field.queryset
             self[field].field.queryset = (
