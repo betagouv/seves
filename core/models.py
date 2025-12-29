@@ -88,6 +88,10 @@ class Structure(models.Model):
         return self.niveau1 == AC_STRUCTURE
 
     @property
+    def is_mus(self):
+        return self.niveau2 == MUS_STRUCTURE
+
+    @property
     def is_mus_or_bsv(self):
         return self.niveau2 in [MUS_STRUCTURE, BSV_STRUCTURE]
 

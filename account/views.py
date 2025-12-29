@@ -2,15 +2,20 @@ from collections import defaultdict
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 from django.views.generic import FormView
 
-from account.forms import UserPermissionForm
+from account.forms import UserPermissionForm, AddAdminForm
 from account.notifications import notify_new_permission, notify_remove_permission
 from core.models import Contact
 from core.redirect import safe_redirect
+from core.views import MediaDefiningMixin
 from seves import settings
+from seves.settings import CAN_GIVE_ACCESS_GROUP
 
 User = get_user_model()
 
@@ -114,3 +119,67 @@ class HandlePermissionsView(FormView):
                 notify_remove_permission(contact_agent, changes["removed"])
         messages.success(self.request, "Modification de droits enregistrées")
         return safe_redirect(self.request.POST.get("next"))
+
+
+class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
+    template_name = "user_admins.html"
+    form_class = AddAdminForm
+    success_url = reverse_lazy("handle-admins")
+
+    def test_func(self):
+        return self.request.user.agent.structure.is_mus
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["existing_admins"] = (
+            Group.objects.get(name=CAN_GIVE_ACCESS_GROUP)
+            .user_set.all()
+            .prefetch_related("groups")
+            .select_related("agent", "agent__structure")
+        )
+        for admin in context["existing_admins"]:
+            admin.domains = ", ".join(
+                [
+                    g.name.split("_user")[0].title()
+                    for g in admin.groups.filter(name__in=[settings.SV_GROUP, settings.SSA_GROUP])
+                ]
+            )
+        return context
+
+    def get_media(self, **context_data):
+        return context_data["form"].media
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("action") == "remove":
+            admin_group = Group.objects.get(name=CAN_GIVE_ACCESS_GROUP)
+            user = User.objects.get(pk=request.POST.get("user"))
+            user.groups.remove(admin_group)
+            messages.success(self.request, "Le rôle administrateur a été révoqué")
+            return HttpResponseRedirect(self.get_success_url())
+
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        user = form.cleaned_data["user"]
+        user.is_active = True
+        user.groups.add(Group.objects.get(name=CAN_GIVE_ACCESS_GROUP))
+        user.save()
+        if "SV" in form.cleaned_data["domains"]:
+            user.groups.add(Group.objects.get(name=settings.SV_GROUP))
+        if "SSA" in form.cleaned_data["domains"]:
+            user.groups.add(Group.objects.get(name=settings.SSA_GROUP))
+
+        notify_new_permission(user.agent.contact_set.get(), form.cleaned_data["domains"])
+        messages.success(self.request, "Le rôle administrateur a été accordé")
+        return response
+
+    def form_invalid(self, form):
+        response = super().form_valid(form)
+        messages.error(self.request, "Erreur de traitement")
+        return response

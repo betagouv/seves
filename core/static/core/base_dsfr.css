@@ -61,6 +61,10 @@
     display: block !important;
 }
 
+.fr-flex-only {
+    display: flex !important;
+}
+
 .fr-flex {
     display: flex !important;
     flex-direction: column;
