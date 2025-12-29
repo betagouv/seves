@@ -761,7 +761,9 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     assert Message.objects.count() == 0
     assert Message._base_manager.count() == 0
 
-    message = MessageFactory(content_object=object, sender=mocked_authentification_user.agent.contact_set.get())
+    message = MessageFactory(
+        content_object=object, title="Mon titre", sender=mocked_authentification_user.agent.contact_set.get()
+    )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
