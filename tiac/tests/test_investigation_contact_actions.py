@@ -5,6 +5,8 @@ from core.tests.generic_tests.contacts import (
     generic_test_remove_contact_structure_from_an_evenement,
     generic_test_add_multiple_contacts_agents_to_an_evenement,
     generic_test_add_contact_structure_to_an_evenement_with_dedicated_email,
+    generic_test_cant_add_contact_agent_if_he_cant_access_domain,
+    generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -42,3 +44,23 @@ def test_remove_contact_structure_from_an_evenement(live_server, page, mailoutbo
 def test_add_multiple_contacts_agents_to_an_evenement(live_server, page, choice_js_fill, mailoutbox):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page, evenement, choice_js_fill, mailoutbox)
+
+
+def test_cant_add_contact_agent_if_he_cant_access_domain(live_server, page, choice_js_cant_pick):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_cant_add_contact_agent_if_he_cant_access_domain(
+        live_server,
+        page,
+        choice_js_cant_pick,
+        evenement,
+    )
+
+
+def test_cant_add_contact_structure_if_any_agent_cant_access_domain(live_server, page, choice_js_cant_pick):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain(
+        live_server,
+        page,
+        choice_js_cant_pick,
+        evenement,
+    )
