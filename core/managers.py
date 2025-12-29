@@ -3,8 +3,11 @@ from typing import Literal
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager, OuterRef, Subquery, Func, F, Exists
+from django.contrib.auth import get_user_model
 
 from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME, SSA_STRUCTURES, TIAC_STRUCTURES
+
+User = get_user_model()
 
 
 class DocumentManager(Manager):
@@ -80,6 +83,9 @@ class ContactQueryset(QuerySet):
     def agents_only(self):
         return self.exclude(agent__isnull=True)
 
+    def agents_with_group(self, group):
+        return self.agents_only().filter(agent__user__groups__name__in=[group])
+
     def structures_only(self):
         return self.exclude(structure__isnull=True)
 
@@ -136,6 +142,15 @@ class LienLibreQueryset(QuerySet):
 class StructureQueryset(QuerySet):
     def has_at_least_one_active_contact(self):
         return self.filter(agent__user__is_active=True).distinct()
+
+    def can_be_contacted_and_agent_has_group(self, group):
+        return (
+            self.has_at_least_one_active_contact()
+            .exclude(niveau1=SERVICE_ACCOUNT_NAME)
+            .exclude(contact__email="")
+            .filter(agent__user__groups__name__in=[group])
+            .distinct()
+        )
 
     def can_be_contacted(self):
         return self.has_at_least_one_active_contact().exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")

@@ -451,12 +451,13 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         return self.get_fiche_object().can_add_structure(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        form = StructureAddForm(request.POST)
+        self.obj = self.get_fiche_object()
+
+        form = StructureAddForm(request.POST, obj=self.obj)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de la structure.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        self.obj = self.get_fiche_object()
         contacts_structures = form.cleaned_data["contacts_structures"]
         with transaction.atomic():
             for contact_structure in contacts_structures:
@@ -488,12 +489,12 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         return self.get_fiche_object().can_add_agent(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        form = AgentAddForm(request.POST)
+        self.obj = self.get_fiche_object()
+        form = AgentAddForm(request.POST, obj=self.obj)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de l'agent.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        self.obj = self.get_fiche_object()
         contacts_agents = form.cleaned_data["contacts_agents"]
         allowed_contacts_structures_to_add = []
         with transaction.atomic():

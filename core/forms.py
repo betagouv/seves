@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
+from core.constants import Domains
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.fields import (
     DSFRRadioButton,
@@ -565,11 +566,12 @@ class StructureAddForm(DSFRForm):
     )
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         super().__init__(*args, **kwargs)
+        needed_group = Domains.group_for_value(obj._meta.app_label)
         queryset = (
             Contact.objects.structures_only()
-            .filter(structure__in=Structure.objects.can_be_contacted())
+            .filter(structure__in=Structure.objects.can_be_contacted_and_agent_has_group(needed_group))
             .order_by("structure__libelle")
             .select_related("structure")
         )
@@ -589,11 +591,12 @@ class AgentAddForm(DSFRForm):
     )
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         super().__init__(*args, **kwargs)
+        needed_group = Domains.group_for_value(obj._meta.app_label)
         queryset = (
-            Contact.objects.agents_only()
-            .can_be_emailed()
+            Contact.objects.can_be_emailed()
+            .agents_with_group(needed_group)
             .select_related("agent", "agent__structure")
             .order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
         )

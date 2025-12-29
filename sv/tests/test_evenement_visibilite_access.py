@@ -188,7 +188,9 @@ def test_agent_with_referent_national_group_can_view_evenement(
 def test_agent_added_in_contacts_can_view_evenement(live_server, page: Page, client, choice_js_fill, goto_contacts):
     evenement = EvenementFactory()
     contact_structure = ContactStructureFactory()
-    contact_agent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    contact_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SV_GROUP,), agent__structure=contact_structure.structure
+    )
 
     def mocked(self, request):
         request.user = contact_agent.agent.user
@@ -218,7 +220,9 @@ def test_agent_added_in_contacts_can_view_evenement(live_server, page: Page, cli
 def test_structure_added_in_contacts_can_view_evenement(live_server, page: Page, client, choice_js_fill, goto_contacts):
     evenement = EvenementFactory()
     contact_structure = ContactStructureFactory()
-    contact_agent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    contact_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SV_GROUP,), agent__structure=contact_structure.structure
+    )
 
     def mocked(self, request):
         request.user = contact_agent.agent.user
@@ -246,8 +250,8 @@ def test_structure_added_in_contacts_can_view_evenement(live_server, page: Page,
 def test_adding_contact_preserves_existing_allowed_structures(
     live_server, page: Page, mocked_authentification_user, client, choice_js_fill, goto_contacts
 ):
-    contact_structure_1 = ContactStructureFactory(with_one_active_agent=True)
-    contact_structure_2 = ContactStructureFactory(with_one_active_agent=True)
+    contact_structure_1 = ContactStructureFactory(with_one_active_agent__with_groups=(settings.SV_GROUP,))
+    contact_structure_2 = ContactStructureFactory(with_one_active_agent__with_groups=(settings.SV_GROUP,))
     evenement = EvenementFactory()
     evenement.allowed_structures.set([contact_structure_1.structure])
     evenement.visibilite = Visibilite.LIMITEE
@@ -275,9 +279,13 @@ def test_agent_referent_national_in_contacts_does_not_grant_access_to_other_agen
     """
     contact_structure = ContactStructureFactory()
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
-    agent_referent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    agent_referent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SV_GROUP,), agent__structure=contact_structure.structure
+    )
     agent_referent.agent.user.groups.add(referent_national_group)
-    autre_agent = ContactAgentFactory(with_active_agent=True, agent__structure=contact_structure.structure)
+    autre_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SV_GROUP,), agent__structure=contact_structure.structure
+    )
     evenement = EvenementFactory()
 
     def mocked_autre_agent(self, request):
