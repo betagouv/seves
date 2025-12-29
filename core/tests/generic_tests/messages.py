@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact, Structure
+from core.models import Message, FinSuiviContact, Structure, Contact
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -554,6 +554,7 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
 
 
 def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page, record):
+    Contact.objects.filter(email="service_account@seves.com").delete()
     contact_structure = ContactStructureFactory()
     ContactAgentFactory(
         agent__structure=contact_structure.structure,
