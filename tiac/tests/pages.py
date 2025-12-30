@@ -602,7 +602,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
 
         self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
-        self.current_modal.get_by_label("Aliment simple/ingrédient").click(force=True)
+        self.current_modal.get_by_label("Matières premières").click(force=True)
 
         for field in ["denomination", "description_produit"]:
             self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
