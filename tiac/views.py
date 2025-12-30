@@ -272,6 +272,7 @@ class EvenementTransformView(UpdateView):
         self.investigation = InvestigationTiac(createur=self.request.user.agent.structure)
         for field in fields_to_copy:
             setattr(self.investigation, field, getattr(self.object, field))
+        self.investigation.follow_up = InvestigationFollowUp.INVESTIGATION_DD
         self.investigation.save()
 
     def _copy_etablissements(self):
