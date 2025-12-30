@@ -80,7 +80,6 @@ export function collectFormValues(formLike, {nameTransform, skipValidation} = {
 export function removeRequired(element) {
     element.querySelectorAll('[required], [pattern]').forEach(field => {
         field.required = false
-        field.removeAttribute("pattern")
     })
 }
 
