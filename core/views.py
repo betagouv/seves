@@ -1,3 +1,4 @@
+import json
 import logging
 from functools import wraps
 
@@ -41,6 +42,7 @@ from .mixins import (
     WithACNotificationMixin,
     MessageHandlingMixin,
     WithFormErrorsAsMessagesMixin,
+    WithEtatMixin,
 )
 from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
 from .notifications import notify_contact_agent_added_or_removed
@@ -630,30 +632,33 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             .exclude(serialized_data={})
         )
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.object
+    def get_initial_patch(self, versions):
+        etat_value = json.loads(list(versions)[-1].serialized_data)[0]["fields"]["etat"]
+        readable_etat = WithEtatMixin.Etat(etat_value).label
+        return Diff(field="Statut", old="Vide", new=readable_etat, revision=list(versions)[-1].revision)
 
-        comments_versions = (
+    def get_comment_versions(self):
+        return (
             Version.objects.get_for_object(self.object)
             .select_related("revision", "revision__user__agent__structure")
             .order_by("-revision__date_created")
             .filter(serialized_data={})
         )
 
-        versions = context["object_list"]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
 
-        if versions:
-            context["patches"] = [
-                Diff(
-                    field="Statut", old="Vide", new=self.object.get_etat_display(), revision=list(versions)[-1].revision
-                )
-            ]
+        versions = context["object_list"]
+        if not versions:
+            return context
+
+        context["patches"] = [self.get_initial_patch(versions)]
         for i in range(1, len(versions)):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             context["patches"].extend(diffs)
 
-        for version in comments_versions:
+        for version in self.get_comment_versions():
             comment_diff = get_diff_from_comment_version(version)
             if comment_diff:
                 context["patches"].append(comment_diff)
