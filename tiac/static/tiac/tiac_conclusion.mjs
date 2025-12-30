@@ -119,16 +119,19 @@ class ConclusionFormController extends Controller {
         this.suspicionConclusionValue = value
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
             this.treeselect.disabled = false;
+            this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse";
             this.selectedHazardTreeselectInputTarget.required = true;
             this.treeselect.options = this.selectedHazardConfirmedChoicesValue;
             this.treeselect.mount()
         } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
             this.treeselect.disabled = false;
+            this.treeselect.placeholder = "Choisir dans la liste parmi les dangers syndromiques";
             this.selectedHazardTreeselectInputTarget.required = true;
             this.treeselect.options = this.selectedHazardSuspectedChoicesValue;
             this.treeselect.mount()
         } else {
             this.treeselect.options = [];
+            this.treeselect.placeholder = "Choisir dans la liste";
             this.treeselect.disabled = true;
             this.selectedHazardTreeselectInputTarget.required = false;
             this.treeselect.mount()
