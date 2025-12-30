@@ -375,7 +375,7 @@ def test_can_create_investigation_tiac_with_aliment_simple(
     expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
     for motif in input_data.motif_suspicion:
         expect(card.get_by_text(MotifAliment(motif).label)).to_be_visible()
-    expect(card.get_by_text("Aliment simple/ingrédient", exact=True)).to_be_visible()
+    expect(card.get_by_text("Matières premières", exact=True)).to_be_visible()
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.get()

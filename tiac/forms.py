@@ -513,7 +513,7 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         label="Dénomination de l'aliment", required=True, widget=forms.TextInput(attrs={"required": "required"})
     )
     type_aliment = forms.ChoiceField(
-        label="Type d'aliment prélevé", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
+        label="Type d'aliment suspecté", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
     )
     categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
     description_composition = forms.CharField(
