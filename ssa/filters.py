@@ -118,7 +118,6 @@ class EvenementFilter(
         choices=(
             (True, "Oui"),
             (False, "Non"),
-            ("inconnu", "Inconnu"),
         ),
         method="filter_aliments_animaux",
     )

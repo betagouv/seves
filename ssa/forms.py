@@ -100,7 +100,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
 
     aliments_animaux = forms.ChoiceField(
         required=False,
-        choices=[(True, "Oui"), (False, "Non"), (None, "Non applicable")],
+        choices=[(True, "Oui"), (False, "Non")],
         widget=DSFRRadioButton(attrs={"class": "fr-fieldset__element--inline"}),
         label="Inclut des aliments pour animaux",
     )
