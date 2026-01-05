@@ -559,6 +559,8 @@ class RepasSuspect(models.Model):
         return self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE
 
     def __str__(self):
+        if self.datetime_repas:
+            return f"{self.denomination} ({self.datetime_repas.strftime('%Y-%m-%d %H:%M')})"
         return self.denomination
 
 
