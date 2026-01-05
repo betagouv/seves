@@ -244,20 +244,23 @@ class Document(models.Model):
         SIGNALEMENT_RASFF = "fiche_rasff", "Signalement/notification : Fiche RASFF"
         SIGNALEMENT_AUTRE = "signalement_autre", "Signalement/notification : Autre"
         ANALYSE_RISQUE = "analyse_risque", "Analyse de risque"
-        TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
-        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
-        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
-        TRACABILITE_AVAL_GENERAL = "tracabilite_aval_general", "Traçabilité aval"
-        TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
+        TRACABILITE_INTERNE_TABLEAU = "tracabilite_interne_tableau", "Traçabilité interne : tableau de suivi"
+        TRACABILITE_INTERNE_JUSTIFICATIF = "tracabilite_interne_justificatif", "Traçabilité interne : justificatif"
+        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité externe : « Recipient list »"
+        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité externe : Autre liste (tableau, relevé)"
+        TRACABILITE_AVAL_JUSTIFICATIF = (
+            "tracabilite_aval_justificatif",
+            "Traçabilité externe : Justificatif (BL, facture)",
+        )
         DSCE_CHED = "dsce_ched", "DSCE/CHED"
-        ETIQUETAGE = "etiquetage", "Étiquetage"
-        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
-        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
         CERTIFICAT_SANITAIRE = "certificat_sanitaire", "Certificat sanitaire"
-        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
-        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
-        PHOTO = "photo", "Photo (du produit, photo de l’établissement…)"
+        ETIQUETAGE = "etiquetage", "Étiquetage (y compris photo)"
+        PHOTO = "photo", "Photo (du danger, photo de l’établissement)"
         AFFICHETTE_RAPPEL = "affichette rappel", "Affichette de rappel"
+        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
+        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
+        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
+        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
 
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),

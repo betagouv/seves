@@ -108,4 +108,6 @@ fileignoreconfig:
   checksum: 783b605ce4242e1c04e58a4220ba63875303501b6573339e374aa6c81084e102
 - filename: account/static/account/permissions_admins.js
   checksum: fdeac6dc4a079cc9c2fdb65f7008793f9980fd4c3f68e1bcec3dc36538814fbc
+- filename: core/migrations/0046_alter_document_document_type.py
+  checksum: d98b145d7469d9773d9d6cd7a162f6bd9e7a104e174612bb14385d0fd0b5ed08
 version: "1.0"
