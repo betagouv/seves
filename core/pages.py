@@ -27,6 +27,7 @@ class BaseMessagePage(ABC):
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
+        self.page.wait_for_url("**/core/message-add/**")
 
     def delete_message(self):
         self.page.locator("table .fr-icon-delete-bin-line").click()
@@ -35,18 +36,22 @@ class BaseMessagePage(ABC):
     def new_note(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Note").click()
+        self.page.wait_for_timeout(600)
 
     def new_point_de_situation(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Point de situation").click()
+        self.page.wait_for_timeout(600)
 
-    def new_fin_de_suivi(self):
+    def new_compte_rendu(self):
         self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_role("link", name="Signaler la fin de suivi").click()
+        self.page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+        self.page.wait_for_timeout(600)
 
     def new_demande_intervention(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+        self.page.wait_for_timeout(600)
 
     def pick_recipient(self, contact, choice_js_fill):
         if isinstance(contact, Agent):
@@ -68,15 +73,6 @@ class BaseMessagePage(ABC):
         else:
             raise NotImplementedError
 
-    def pick_recipient_structure_only(self, structure, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            f'{self.container_id} label[for="id_recipients_structures_only"] ~ div.choices',
-            structure.libelle,
-            structure.libelle,
-            use_locator_as_parent_element=True,
-        )
-
     def pick_recipient_copy(self, contact, choice_js_fill):
         if isinstance(contact, Agent):
             choice_js_fill(
@@ -97,18 +93,9 @@ class BaseMessagePage(ABC):
         else:
             raise NotImplementedError
 
-    def pick_recipient_copy_structure_only(self, structure, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            f'{self.container_id} label[for="id_recipients_copy_structures_only"] ~ div.choices',
-            structure.libelle,
-            structure.libelle,
-            use_locator_as_parent_element=True,
-        )
-
     @property
     def message_form_title(self):
-        return self.page.locator("#message-type-title")
+        return self.page.locator("h1")
 
     @property
     def message_title(self):
@@ -116,7 +103,7 @@ class BaseMessagePage(ABC):
 
     @property
     def message_content(self):
-        return self.page.locator(f"{self.container_id} {self.CONTENT_ID}")
+        return self.page.locator(f"{self.CONTENT_ID}")
 
     @property
     def submit_button(self):
@@ -151,14 +138,6 @@ class BaseMessagePage(ABC):
     def delete_document(self, nth):
         self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
 
-    def add_document(self):
-        self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
-        self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
-        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files(
-            settings.BASE_DIR / "static/images/login.jpeg"
-        )
-        self.page.locator(f"{self.container_id} #message-add-document").click()
-
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
         expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
@@ -179,20 +158,12 @@ class BaseMessagePage(ABC):
         self.page.locator(f"{self.container_id} #document_remove_{index}").click()
 
     @property
-    def message_title_in_sidebar(self):
-        return self.page.locator(".sidebar.open h5")
-
-    @property
-    def message_content_in_sidebar(self):
-        return self.page.locator(".sidebar.open").get_by_test_id("message-content")
-
-    @property
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter un document")
 
     @property
     def document_type_input(self):
-        return self.page.locator(".sidebar #id_document_type")
+        return self.page.locator("#id_document_type")
 
     @property
     def get_existing_documents_title(self):
@@ -206,7 +177,7 @@ class BaseMessagePage(ABC):
 
 
 class CreateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, container_id="#sidebar"):
+    def __init__(self, page: Page, container_id="#message-form"):
         super().__init__(page)
         self._container_id = container_id
 
@@ -216,7 +187,7 @@ class CreateMessagePage(BaseMessagePage):
 
 
 class UpdateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, container_id):
+    def __init__(self, page: Page, container_id="#message-form"):
         super().__init__(page)
         self._container_id = container_id
 

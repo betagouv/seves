@@ -90,31 +90,33 @@ def test_when_structure_is_in_fin_suivi_all_agents_should_be_in_fin_suivi(
         expect(contact).to_contain_text("Fin de suivi")
 
 
-def test_click_on_contact_agent_name_opens_sidebar_for_message(live_server, page):
+def test_click_on_contact_agent_name_opens_message(live_server, page, choice_js_get_values):
     evenement = EvenementFactory()
-    contact_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    contact_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SV_GROUP,))
     evenement.contacts.set([contact_agent])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_test_id("contacts-agents").locator("a.email").click()
+    page.wait_for_url("**core/message-add**")
 
-    expect(page.locator("#message-type-title")).to_have_text("message")
-    expect(page.locator(".sidebar label[for='id_recipients'] ~ div.choices [data-deletable='']")).to_have_text(
-        contact_agent.agent.agent_with_structure + "Remove item"
-    )
+    expect(page.locator("h1")).to_have_text("Nouveau message")
+    assert choice_js_get_values(page, "label[for='id_recipients']", delete_remove_link=True) == [
+        contact_agent.agent.agent_with_structure
+    ]
 
 
-def test_click_on_contact_structure_name_opens_sidebar_for_message(live_server, page):
+def test_click_on_contact_structure_name_opens_message(live_server, page, choice_js_get_values):
     evenement = EvenementFactory()
-    contact_agent = ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    contact_agent = ContactStructureFactory(with_one_active_agent__with_groups=(settings.SV_GROUP,))
     evenement.contacts.set([contact_agent])
 
     page.goto(f"{live_server.url}/{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
     page.get_by_test_id("contacts-structures").locator("a.email").click()
+    page.wait_for_url("**core/message-add**")
 
-    expect(page.locator("#message-type-title")).to_have_text("message")
-    expect(page.locator(".sidebar label[for='id_recipients'] ~ div.choices [data-deletable='']")).to_have_text(
-        str(contact_agent.structure) + "Remove item"
-    )
+    expect(page.locator("h1")).to_have_text("Nouveau message")
+    assert choice_js_get_values(page, "label[for='id_recipients']", delete_remove_link=True) == [
+        str(contact_agent.structure)
+    ]

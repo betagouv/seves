@@ -95,11 +95,6 @@ class WithSharedNumeroMixin(WithNumeroMixin):
 
 
 class SsaBaseEvenementModel(models.Model):
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
 

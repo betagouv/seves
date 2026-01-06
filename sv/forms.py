@@ -15,8 +15,8 @@ from dsfr.forms import DsfrBaseForm
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple, AdresseLieuDitField
 from core.form_mixins import DSFRForm, js_module
-from core.forms import VisibiliteUpdateBaseForm, BaseMessageForm, BaseCompteRenduDemandeInterventionForm
-from core.models import Structure, Visibilite, Message, Contact
+from core.forms import VisibiliteUpdateBaseForm, BaseCompteRenduDemandeInterventionForm
+from core.models import Structure, Visibilite, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithLatestVersionLocking,
@@ -599,63 +599,6 @@ class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
         disabled_pks = [structure.pk for structure in structures_disabled]
         self.fields["allowed_structures"].widget.disabled_choices = disabled_pks
         self.fields["allowed_structures"].widget.checked_choices = disabled_pks
-
-
-class MessageForm(BaseMessageForm):
-    recipients_limited_recipients = forms.MultipleChoiceField(
-        choices=[("mus", "MUS"), ("bsv", "BSV")],
-        label="Destinataires",
-        widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
-    )
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-        "recipients_limited_recipients",
-    ]
-
-    class Meta(BaseMessageForm.Meta):
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "recipients_limited_recipients",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        kwargs["limit_contacts_to"] = "sv"
-        super().__init__(*args, **kwargs)
-        instance = kwargs.get("instance")
-        if instance and instance.pk and "recipients_limited_recipients" in self.fields:
-            self.fields["recipients_limited_recipients"].widget.attrs["id"] = (
-                f"id_recipients_limited_recipients_{instance.pk}"
-            )
-            recipients = self.instance.recipients.values_list("structure__libelle", flat=True)
-            if recipients:
-                initial = [r.lower() for r in recipients if r]
-                self.initial["recipients_limited_recipients"] = initial
-
-    def _convert_checkboxes_to_contacts(self):
-        try:
-            checkboxes = copy(self.cleaned_data["recipients_limited_recipients"])
-        except KeyError:
-            raise ValidationError("Au moins un destinataire doit être sélectionné.")
-        self.cleaned_data["recipients"] = []
-        if "mus" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_mus())
-        if "bsv" in checkboxes:
-            self.cleaned_data["recipients"].append(Contact.objects.get_bsv())
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self._convert_checkboxes_to_contacts()
 
 
 class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):

@@ -6,9 +6,7 @@ from core.models import Message, Contact, Export
 from django.conf import settings
 
 
-def _send_message(
-    recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message, message_v2_enabled
-):
+def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message):
     if settings.SEND_NOTIFICATIONS is False:
         return
     recipients = [r.get_email_for_object(message_obj.content_object) for r in recipients]
@@ -51,7 +49,7 @@ def _send_message(
             "content": content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id, message_v2_enabled)}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
         },
     )
 
@@ -104,7 +102,7 @@ def send_as_seves(
     )
 
 
-def notify_message(message_obj: Message, message_v2_enabled=False):
+def notify_message(message_obj: Message):
     if message_obj.is_draft:
         return
     recipients, copy = [], []
@@ -130,7 +128,6 @@ def notify_message(message_obj: Message, message_v2_enabled=False):
             subject=message_obj.title,
             content=content,
             message_obj=message_obj,
-            message_v2_enabled=message_v2_enabled,
         )
 
 

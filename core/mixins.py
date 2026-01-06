@@ -20,12 +20,10 @@ from django.urls import reverse
 from django.views.generic import FormView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
-from waffle import flag_is_active
 
 from core.forms import (
     DocumentUploadForm,
     DocumentEditForm,
-    MessageDocumentForm,
     StructureAddForm,
     AgentAddForm,
 )
@@ -82,37 +80,9 @@ class WithBlocCommunPermission:
 
 
 class WithMessageMixin:
-    def get_message_form_class(self):
-        raise NotImplementedError
-
-    def _get_message_update_forms(self, message_list):
-        obj = self.get_object()
-        message_update_forms = []
-        for message in message_list:
-            if message.can_be_updated(self.request.user):
-                form = obj.get_message_form()(
-                    instance=message,
-                    sender=self.request.user,
-                    obj=obj,
-                    next=obj.get_absolute_url(),
-                )
-                form.documents_forms = [
-                    MessageDocumentForm(instance=d, object=message) for d in message.documents.all()
-                ]
-                message_update_forms.append(form)
-        return message_update_forms
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         obj = self.get_object()
-        context["message_form"] = obj.get_message_form()(
-            sender=self.request.user,
-            obj=obj,
-            next=obj.get_absolute_url(),
-        )
-        context["add_document_form"] = MessageDocumentForm(object=obj)
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         message_list = (
             obj.messages.filter(Q(status=Message.Status.FINALISE) | Q(sender=self.request.user.agent.contact_set.get()))
@@ -121,17 +91,12 @@ class WithMessageMixin:
                 "recipients__agent",
                 "recipients__structure",
                 "recipients__agent__structure",
-                "recipients_copy__agent",
-                "recipients_copy__structure",
-                "recipients_copy__agent__structure",
                 "documents",
             )
         )
         for message in message_list:
             message.can_be_deleted = message.can_user_delete(self.request.user)
         context["message_list"] = message_list
-        context["message_update_forms"] = self._get_message_update_forms(message_list)
-        context["message_v2"] = flag_is_active(self.request, "message_v2")
         context["message_content_type"] = ContentType.objects.get_for_model(Message)
         context["can_add_di"] = self.request.user.agent.structure.is_ac
         context["can_add_cr_di"] = not self.request.user.agent.structure.is_ac
@@ -482,11 +447,6 @@ class EmailNotificationMixin:
     def get_email_subject(self):
         raise NotImplementedError
 
-    def get_absolute_url_with_message(self, message_id: int, message_v2_enabled):
-        if message_v2_enabled:
-            return Message.objects.get(pk=message_id).get_absolute_url()
-        return f"{self.get_absolute_url()}?message={message_id}"
-
 
 class WithFormErrorsAsMessagesMixin(FormView):
     def form_invalid(self, form):
@@ -757,7 +717,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin):
         self._delete_documents_if_needed(form)
         self._create_documents(form)
         try:
-            transaction.on_commit(lambda: notify_message(form.instance, flag_is_active(self.request, "message_v2")))
+            transaction.on_commit(lambda: notify_message(form.instance))
         except OperationalError:
             messages.error(
                 self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"

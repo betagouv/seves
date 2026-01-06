@@ -12,11 +12,10 @@ from dsfr.forms import DsfrBaseForm
 from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
-from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message, Structure, Departement
-from ssa.models import EvenementProduit
+from core.models import Contact, Structure, Departement
 from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.models import EvenementProduit
 from tiac.constants import (
     DangersSyndromiques,
     DANGERS_COURANTS,
@@ -135,41 +134,6 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 ("Investigation de tiac", queryset_investigation_tiac),
             ],
         )
-
-
-class MessageForm(BaseMessageForm):
-    recipients_limited_recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.get_tiac_structures(), label="Destinataires", required=False
-    )
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-        "recipients_limited_recipients",
-    ]
-
-    class Meta(BaseMessageForm.Meta):
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "recipients_limited_recipients",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        kwargs["limit_contacts_to"] = "ssa"
-        super().__init__(*args, **kwargs)
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
 
 
 class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
