@@ -368,15 +368,6 @@ class EvenementProduitDetailsPage(SsaBaseDetailPage):
     def message_form_title(self):
         return self.page.locator("#message-type-title")
 
-    def add_limited_recipient_to_message(self, contact: str, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            ".choices:has(#id_recipients_limited_recipients)",
-            contact,
-            contact,
-            use_locator_as_parent_element=True,
-        )
-
     def add_recipient_to_message(self, contact: str, choice_js_fill):
         choice_js_fill(
             self.page,

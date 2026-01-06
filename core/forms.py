@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from typing import Literal
 
 from django import forms
 from django.conf import settings
@@ -11,7 +10,6 @@ from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.constants import Domains
-from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.fields import (
     DSFRRadioButton,
     ContactModelMultipleChoiceField,
@@ -20,6 +18,7 @@ from core.fields import (
     MessageObjectField,
     MessageContentField,
 )
+from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.models import Document, Contact, Message, Visibilite, Structure, Departement
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 from core.widgets import RestrictedFileWidget
@@ -399,114 +398,6 @@ class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, f
             "title",
             "content",
         ]
-
-
-class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMessageMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
-    )
-    recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
-    )
-    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
-    recipients_copy_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), required=False, label="Copie"
-    )
-
-    message_type = forms.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, widget=forms.HiddenInput)
-    content = forms.CharField(label="Message", widget=forms.Textarea(attrs={"cols": 30, "rows": 10}))
-    status = forms.ChoiceField(widget=forms.HiddenInput, choices=Message.Status, initial=Message.Status.BROUILLON)
-
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-    ]
-
-    class Meta:
-        model = Message
-        fields = [
-            "recipients",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
-    def __init__(self, *args, sender, limit_contacts_to: None | Literal["sv", "ssa"] = None, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        next_url = kwargs.pop("next", None)
-        super().__init__(*args, **kwargs)
-        self.fields["status"].widget = forms.HiddenInput()
-        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
-
-        if limit_contacts_to:
-            queryset = queryset.for_apps(limit_contacts_to).distinct()
-
-        self.fields["recipients"].queryset = queryset
-        self.fields["recipients_copy"].queryset = queryset
-
-        queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
-        self.fields["recipients_structures_only"].queryset = queryset_structures
-        self.fields["recipients_copy_structures_only"].queryset = queryset_structures
-
-        if self._get_structures(obj):
-            self.fields["recipients"].label = self._get_recipients_label(obj)
-            self.fields["recipients_structures_only"].label = self._get_recipients_structures_only_label(obj)
-            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
-            self.fields["recipients_copy_structures_only"].label = self._get_recipients_copy_structures_only_label(obj)
-
-        self.handle_files(kwargs)
-
-        if self.instance.pk:
-            if self.instance.message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
-                self.initial["recipients_structures_only"] = self.instance.recipients.all()
-                self.initial["recipients_copy_structures_only"] = self.instance.recipients_copy.all()
-
-            if self.instance.message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-                self.initial["recipients_limited_recipients"] = self.instance.recipients.all()
-
-        self.add_content_type_fields(obj)
-        self.add_next_field(next_url)
-
-        if kwargs.get("data"):
-            message_type = kwargs.get("data")["message_type"]
-        elif self.instance and self.instance.pk:
-            message_type = self.instance.message_type
-        else:
-            message_type = None
-
-        if message_type:
-            if (
-                message_type in Message.TYPES_WITHOUT_RECIPIENTS
-                or message_type in Message.TYPES_WITH_LIMITED_RECIPIENTS
-            ):
-                self.fields.pop("recipients")
-                self.fields.pop("recipients_copy")
-            if message_type not in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-                self.fields.pop("recipients_limited_recipients")
-
-            if message_type in Message.TYPES_WITH_STRUCTURES_ONLY:
-                self.fields.pop("recipients")
-                self.fields.pop("recipients_copy")
-            else:
-                self.fields.pop("recipients_structures_only")
-                self.fields.pop("recipients_copy_structures_only")
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_STRUCTURES_ONLY:
-            self.cleaned_data["recipients"] = self.cleaned_data["recipients_structures_only"]
-            self.cleaned_data["recipients_copy"] = self.cleaned_data["recipients_copy_structures_only"]
-        if self.cleaned_data["message_type"] == Message.POINT_DE_SITUATION:
-            self.cleaned_data["recipients"] = self.obj.contacts.all()
-        self.instance.sender = self.sender
-        self.instance.sender_structure = self.sender.agent.structure
 
 
 class MessageDocumentForm(DSFRForm, forms.ModelForm):

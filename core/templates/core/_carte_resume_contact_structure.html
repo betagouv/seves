@@ -5,13 +5,9 @@
     {% endif %}
 </div>
 <div class="fr-col-5">
-    {% if message_v2 %}
-        <a href="{% url 'message-add' content_type.pk object.pk %}?type=message&contact={{ contact.pk }}" class="fr-link email">
-    {% else %}
-        <a href="#" class="fr-link email open-sidebar" data-message-type="message" data-recipient="{{ contact.pk }}">
-    {% endif %}
-    {{ email }}
-</a>
+    <a href="{% url 'message-add' content_type.pk object.pk %}?type=message&contact={{ contact.pk }}" class="fr-link email">
+        {{ email }}
+    </a>
 </div>
 <div class="fr-col-offset-1"></div>
 

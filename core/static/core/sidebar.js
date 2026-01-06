@@ -31,9 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    document.querySelectorAll(".fil-de-suivi-sidebar").forEach(element => {
-        bindClickToSidebar(element, document.getElementById(`sidebar-message-${element.dataset.messagePk}`));
-    })
     document.querySelectorAll(".open-sidebar").forEach(element => {
         bindClickToSidebar(element, document.getElementById('sidebar'))
     })

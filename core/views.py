@@ -20,7 +20,6 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
-from waffle import flag_is_active
 
 from core.diffs import CompareMixin, get_diff_from_comment_version, Diff
 from .forms import (
@@ -197,26 +196,24 @@ class MessageCreateView(
     model = Message
 
     def get_form_class(self):
-        if flag_is_active(self.request, "message_v2"):
-            mapping = {
-                "message": BasicMessageForm,
-                "note": NoteForm,
-                "point_situation": PointDeSituationForm,
-                "demande_intervention": DemandeInterventionForm,
-                "cr_demande_intervention": self.obj.get_crdi_form(),
-            }
-            self.reply_id = self.request.GET.get("reply_id")
-            if self.reply_id:
-                return BasicMessageForm
-            message_form = mapping.get(self.request.GET.get("type"))
+        mapping = {
+            "message": BasicMessageForm,
+            "note": NoteForm,
+            "point_situation": PointDeSituationForm,
+            "demande_intervention": DemandeInterventionForm,
+            "cr_demande_intervention": self.obj.get_crdi_form(),
+        }
+        self.reply_id = self.request.GET.get("reply_id")
+        if self.reply_id:
+            return BasicMessageForm
+        message_form = mapping.get(self.request.GET.get("type"))
 
-            is_ac = self.request.user.agent.structure.is_ac
-            if message_form == DemandeInterventionForm and not is_ac:
-                raise PermissionDenied
-            if message_form == self.obj.get_crdi_form() and is_ac:
-                raise PermissionDenied
-            return message_form
-        return self.obj.get_message_form()
+        is_ac = self.request.user.agent.structure.is_ac
+        if message_form == DemandeInterventionForm and not is_ac:
+            raise PermissionDenied
+        if message_form == self.obj.get_crdi_form() and is_ac:
+            raise PermissionDenied
+        return message_form
 
     def dispatch(self, request, *args, **kwargs):
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
@@ -232,39 +229,30 @@ class MessageCreateView(
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        if flag_is_active(self.request, "message_v2"):
-            kwargs.update(
-                {
-                    "obj": self.obj,
-                    "sender": self.request.user.agent.contact_set.get(),
-                }
-            )
-            if self.request.GET.get("contact"):
-                kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
-            if self.reply_id:
-                reply_message = Message.objects.get(id=self.reply_id)
-                self.reply_message = reply_message
-                if reply_message.can_reply_to(self.request.user):
-                    title = reply_message.title
-                    if not reply_message.title.startswith(settings.REPLY_PREFIX):
-                        title = f"{settings.REPLY_PREFIX} {reply_message.title}"
-                    kwargs.update(
-                        {
-                            "initial": {
-                                "title": title,
-                                "recipients": reply_message.sender_structure.contact_set.get(),
-                                "content": reply_message.get_reply_intro_text(),
-                            }
+        kwargs.update(
+            {
+                "obj": self.obj,
+                "sender": self.request.user.agent.contact_set.get(),
+            }
+        )
+        if self.request.GET.get("contact"):
+            kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
+        if self.reply_id:
+            reply_message = Message.objects.get(id=self.reply_id)
+            self.reply_message = reply_message
+            if reply_message.can_reply_to(self.request.user):
+                title = reply_message.title
+                if not reply_message.title.startswith(settings.REPLY_PREFIX):
+                    title = f"{settings.REPLY_PREFIX} {reply_message.title}"
+                kwargs.update(
+                    {
+                        "initial": {
+                            "title": title,
+                            "recipients": reply_message.sender_structure.contact_set.get(),
+                            "content": reply_message.get_reply_intro_text(),
                         }
-                    )
-        else:
-            kwargs.update(
-                {
-                    "obj": self.obj,
-                    "next": self.obj.get_absolute_url(),
-                    "sender": self.request.user.agent.contact_set.get(),
-                }
-            )
+                    }
+                )
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -301,16 +289,14 @@ class MessageUpdateView(
     model = Message
 
     def get_form_class(self):
-        if flag_is_active(self.request, "message_v2"):
-            mapping = {
-                Message.MESSAGE: BasicMessageForm,
-                Message.NOTE: NoteForm,
-                Message.POINT_DE_SITUATION: PointDeSituationForm,
-                Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
-                Message.COMPTE_RENDU: self.obj.get_crdi_form(),
-            }
-            return mapping.get(self.object.message_type)
-        return self.obj.get_message_form()
+        mapping = {
+            Message.MESSAGE: BasicMessageForm,
+            Message.NOTE: NoteForm,
+            Message.POINT_DE_SITUATION: PointDeSituationForm,
+            Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
+            Message.COMPTE_RENDU: self.obj.get_crdi_form(),
+        }
+        return mapping.get(self.object.message_type)
 
     def dispatch(self, request, *args, **kwargs):
         self.content_object = self.get_object().content_object
@@ -327,8 +313,6 @@ class MessageUpdateView(
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
         kwargs["obj"] = self.content_object
-        if not flag_is_active(self.request, "message_v2"):
-            kwargs["next"] = self.content_object.get_absolute_url()
         return kwargs
 
     def get_context_data(self, **kwargs):

@@ -6,25 +6,15 @@
 {% block extrahead %}
   <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
   <link rel="stylesheet" href="{% static 'ssa/_etablissement_card.css' %}">
-  <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
 {% endblock extrahead %}
 {% block scripts %}
   <script type="module" src="{% static 'ssa/investigation_cas_humain_detail.js' %}"></script>
-  <script type="module" src="{% static 'core/sidebar.js' %}"></script>
-  <script type="module" src="{% static 'core/message_form.js' %}"></script>
   <script type="module" src="{% static 'core/document_form.js' %}"></script>
   <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
 {% endblock %}
 
 {% block aside %}
-  {% include "core/_sidebar_message_form.html" with object=object id="sidebar" action=object.add_message_url %}
   {% include "core/_document_warning_modal.html" %}
-  {% include "core/_message_update_forms.html" with object=object %}
-  {% for message in message_list %}
-    {% if not message.is_draft %}
-      {% include "core/_sidebar_message_details.html" %}
-    {% endif %}
-  {% endfor %}
 {% endblock aside %}
 
 
