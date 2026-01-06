@@ -1,3 +1,4 @@
+import pytest
 from playwright.sync_api import Page, expect
 from waffle.testutils import override_flag
 
@@ -305,9 +306,12 @@ def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authent
 
 
 @override_flag("message_v2", active=True)
-def test_can_reply_to_message(live_server, page: Page, choice_js_fill):
+@pytest.mark.parametrize(
+    "type_message", [Message.MESSAGE, Message.POINT_DE_SITUATION, Message.DEMANDE_INTERVENTION, Message.COMPTE_RENDU]
+)
+def test_can_reply_to_message(live_server, page: Page, choice_js_fill, type_message):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-    generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement_produit)
+    generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement_produit, type_message)
 
 
 @override_flag("message_v2", active=True)

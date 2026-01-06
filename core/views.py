@@ -221,6 +221,7 @@ class MessageCreateView(
     def dispatch(self, request, *args, **kwargs):
         self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
         self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
+        self.reply_message = None
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self) -> bool | None:
@@ -242,6 +243,7 @@ class MessageCreateView(
                 kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
             if self.reply_id:
                 reply_message = Message.objects.get(id=self.reply_id)
+                self.reply_message = reply_message
                 if reply_message.can_reply_to(self.request.user):
                     title = reply_message.title
                     if not reply_message.title.startswith(settings.REPLY_PREFIX):
@@ -273,6 +275,8 @@ class MessageCreateView(
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["object"] = self.obj
+        if self.reply_message:
+            context["page_title"] = self.reply_message.reply_page_title
         return context
 
     def get_success_url(self):

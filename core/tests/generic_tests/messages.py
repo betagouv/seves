@@ -805,10 +805,10 @@ def generic_test_can_delete_my_own_draft_message(
     assert len(mailoutbox) == 0
 
 
-def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object):
+def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object, type_message):
     contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     sender = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
-    message = MessageFactory(content_object=object, message_type=Message.MESSAGE, sender=sender)
+    message = MessageFactory(content_object=object, message_type=type_message, sender=sender)
     contact_sender_structure = ContactStructureFactory(structure=message.sender_structure)
 
     page.goto(f"{live_server.url}{message.get_absolute_url()}")

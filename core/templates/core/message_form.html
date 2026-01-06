@@ -20,7 +20,15 @@
                     <div class="fr-flex fr-flex--row fr-flex--space-between">
                         <div>
                             <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
-                                {% if form.instance.pk %}[Brouillon] {{ message.title }}{% elif request.GET.reply_id %}Réponse à un message{% else %}{{ form.page_title }}{% endif %}
+                                {% if form.instance.pk %}
+                                    [Brouillon] {{ message.title }}
+                                {% else %}
+                                    {% if page_title %}
+                                        {{ page_title }}
+                                    {% else %}
+                                        {{ form.page_title }}
+                                    {% endif %}
+                                {% endif %}
                             </h1>
                             {% if form.help_text %}
                                 <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
