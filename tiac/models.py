@@ -152,11 +152,6 @@ class EvenementSimple(
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
 
-    def get_message_form(self):
-        from tiac.forms import MessageForm
-
-        return MessageForm
-
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
 
@@ -358,11 +353,6 @@ class InvestigationTiac(
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
-
-    def get_message_form(self):
-        from tiac.forms import MessageForm
-
-        return MessageForm
 
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm

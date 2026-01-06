@@ -20,9 +20,6 @@ class WithBlocCommunFieldsMixin(models.Model):
         fin_suivi_contacts_ids = self.fin_suivi.values_list("contact", flat=True)
         return contacts_structure.exclude(id__in=fin_suivi_contacts_ids)
 
-    def get_message_form(self):
-        raise NotImplementedError
-
     def get_crdi_form(self):
         raise NotImplementedError
 

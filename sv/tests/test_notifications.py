@@ -178,9 +178,7 @@ def test_email_contains_correct_link_to_fiche_with_message(mailoutbox):
     )
     body = mailoutbox[0].body
     url = re.search(r'href="([^"]+)"', body).group(1)
-    expected_url = (
-        f"http://testserver.com{evenement.get_absolute_url_with_message(message.id, message_v2_enabled=False)}"
-    )
+    expected_url = f"http://testserver.com{evenement.get_absolute_url_with_message(message.id)}"
     assert url == expected_url
 
 

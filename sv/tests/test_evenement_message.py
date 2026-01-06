@@ -10,7 +10,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
-from waffle.testutils import override_flag
 
 from core.constants import AC_STRUCTURE, BSV_STRUCTURE
 from core.factories import (
@@ -65,7 +64,6 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_message_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
@@ -75,25 +73,21 @@ def test_can_add_and_see_message_in_new_tab_without_document(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     generic_test_can_add_see_message_in_new_tab_without_document_in_draft(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
@@ -103,7 +97,6 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -1582,7 +1575,6 @@ def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocke
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_message_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
@@ -1599,7 +1591,6 @@ def test_can_update_draft_note(live_server, page: Page, mocked_authentification_
     generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_note_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_note_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
@@ -1612,7 +1603,6 @@ def test_can_update_draft_point_situation(live_server, page: Page, mocked_authen
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_point_situation_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
@@ -1627,7 +1617,6 @@ def test_can_update_draft_demande_intervention(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
@@ -1673,7 +1662,6 @@ def test_can_send_draft_message(live_server, page: Page, mocked_authentification
     generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
 
 
-@override_flag("message_v2", active=True)
 def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_send_draft_message_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
@@ -1708,7 +1696,6 @@ def test_can_see_and_delete_documents_from_draft_message(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     live_server, page: Page, mocked_authentification_user, mailoutbox
 ):
@@ -1729,7 +1716,6 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
     generic_test_structure_show_only_one_entry_in_select(live_server, page, EvenementFactory())
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
     generic_test_can_add_message_in_new_tab_with_documents(
         live_server, page, choice_js_fill, EvenementFactory(), mailoutbox
@@ -1763,12 +1749,10 @@ def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authent
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_reply_to_message(live_server, page: Page, choice_js_fill):
     generic_test_can_reply_to_message(live_server, page, choice_js_fill, EvenementFactory())
 
 
-@override_flag("message_v2", active=True)
 def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server, page: Page, choice_js_get_values):
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
         live_server, page, choice_js_get_values, EvenementFactory()

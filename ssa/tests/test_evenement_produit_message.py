@@ -1,5 +1,4 @@
 from playwright.sync_api import Page, expect
-from waffle.testutils import override_flag
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactStructureFactory, MessageFactory
@@ -61,7 +60,6 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_message_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
@@ -71,7 +69,6 @@ def test_can_add_and_see_message_in_new_tab_without_document(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_see_message_in_new_tab_without_document_in_draft(
@@ -79,19 +76,16 @@ def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, c
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement_produit)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement_produit)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
@@ -101,7 +95,6 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill, mus_contact):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
 
@@ -131,7 +124,6 @@ def test_can_update_draft_note(live_server, page: Page, choice_js_fill, mocked_a
     generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, evenement_produit, mailoutbox)
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_note_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
@@ -148,7 +140,6 @@ def test_can_update_draft_point_situation(live_server, page: Page, mocked_authen
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation_in_new_tab(
@@ -163,7 +154,6 @@ def test_can_update_draft_demande_intervention(live_server, page: Page, mocked_a
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, mocked_authentification_user, mailoutbox
 ):
@@ -187,7 +177,6 @@ def test_can_send_draft_message(live_server, page: Page, mocked_authentification
     generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, evenement_produit, mailoutbox)
 
 
-@override_flag("message_v2", active=True)
 def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_send_draft_message_in_new_tab(
@@ -259,7 +248,6 @@ def test_can_see_and_delete_documents_from_draft_message(
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     live_server, page: Page, mocked_authentification_user, mailoutbox
 ):
@@ -282,7 +270,6 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page):
     generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement_produit)
 
 
-@override_flag("message_v2", active=True)
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_message_in_new_tab_with_documents(
@@ -304,13 +291,11 @@ def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authent
     )
 
 
-@override_flag("message_v2", active=True)
 def test_can_reply_to_message(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement_produit)
 
 
-@override_flag("message_v2", active=True)
 def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server, page: Page, choice_js_get_values):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
