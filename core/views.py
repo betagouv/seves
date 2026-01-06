@@ -32,9 +32,9 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    DocumentInMessageUploadForm,
     MessageDocumentForm,
 )
+from .formsets import DocumentInMessageUploadFormSet
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
     WithAddUserContactsMixin,
@@ -192,6 +192,7 @@ class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     CreateView,
 ):
     model = Message
@@ -268,12 +269,15 @@ class MessageCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["add_document_formset"] = DocumentInMessageUploadFormSet(obj=self.obj)
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
         context["object"] = self.obj
         return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
 
     def get_success_url(self):
         return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
@@ -292,6 +296,7 @@ class MessageUpdateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
+    MediaDefiningMixin,
     UpdateView,
 ):
     model = Message
@@ -330,7 +335,7 @@ class MessageUpdateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
+        context["add_document_formset"] = DocumentInMessageUploadFormSet(obj=self.obj)
         context["allowed_extensions"] = AllowedExtensions.values
         context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
         context["message_status"] = Message.Status
@@ -340,6 +345,9 @@ class MessageUpdateView(
         ]
         context["object"] = self.obj
         return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
 
     def get_success_url(self):
         return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.forms import Media
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
@@ -66,6 +67,8 @@ class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms
 
 
 class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+    template_name = "core/form/document_in_message_upload.html"
+
     nom = forms.CharField(
         help_text="",
         label="Intitulé du document",
@@ -78,6 +81,10 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, WithContentTyp
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
     file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget(attrs={"disabled": True}))
+
+    @property
+    def media(self):
+        return super().media + Media(js=[])
 
     class Meta:
         model = Document

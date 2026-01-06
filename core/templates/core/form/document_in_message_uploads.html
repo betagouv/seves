@@ -1,0 +1,116 @@
+{% load dsfr_tags widget_tweaks %}
+
+{% partialdef form %}
+    <div data-controller="document-form">
+        {% dsfr_form_field form.nom|set_data:"document-form-target:documentNameInput" %}
+        {% dsfr_notice title="Nommer le document de manière claire et compréhensible pour tous" %}
+        <div class="fr-my-4v"></div>
+        {% dsfr_form_field form.document_type|set_data:"document-form-target:documentTypeSelect" %}
+
+        <span class="fr-hint-text">Taille maximale autorisée : {{ max_upload_size_mb }} Mo</span>
+
+        {{ form.file|add_class:"fr-input fr-my-4v"|set_data:"document-form-target:documentFile" }}
+        {% dsfr_form_field form.description|set_data:"document-form-target:commentInput" %}
+        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+            <button
+                id="message-add-document"
+                class="fr-btn fr-btn--tertiary"
+                disabled
+                data-document-form-target="addDocument"
+                data-action="click->document-form#onAddDocument:prevent:default"
+            >Valider l'ajout du document
+            </button>
+        </div>
+    </div>
+{% endpartialdef %}
+
+<div data-controller="document-formset" data-document-formset-dragging-class="document-modal-drag-drop--dragging">
+    {{ formset.managment_form }}
+
+    {% if formset.initial_forms|length %}
+
+    {% else %}
+        <p>Aucun document ajouté</p>
+    {% endif %}
+
+    <button aria-controls="document-modal" data-fr-opened="false" type="button" class="fr-btn">
+        Ajouter des documents
+    </button>
+    <dialog
+        id="document-modal"
+        class="fr-modal fr-modal--top"
+        aria-labelledby="document-modal-title"
+        data-fr-concealing-backdrop="true"
+    >
+        <div class="fr-container fr-container--fluid fr-container-md">
+            <div class="fr-grid-row fr-grid-row---center">
+                <div class="fr-col-12 fr-col-lg-10">
+                    <div class="fr-modal__body">
+                        <div class="fr-modal__header">
+                            <button
+                                aria-controls="document-modal"
+                                title="Fermer"
+                                type="button"
+                                id="document-modal-close-btn"
+                                class="fr-btn--close fr-btn"
+                            >Fermer
+                            </button>
+                        </div>
+                        <div class="fr-modal__content">
+                            <h2 id="document-modal-title" class="fr-modal__title">
+                                <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                                Ajouter des documents
+                            </h2>
+
+                            <div id="allowed-extensions-infos" class="fr-mb-4v">
+                                <span class="fr-hint-text">Formats supportés :</span>
+                                <span data-document-form-target="allowedExtensions" class="fr-hint-text">
+                                    {{ allowed_extensions|join:", " }}
+                                </span>
+                            </div>
+
+                            <div class="fr-select-group">
+                                <label class="fr-label" for="document-modal-type-all">
+                                    <span class="label-marked">Type de document</span>
+                                    <span class="fr-hint-text fr-text--regular fr-text-default--info">
+                                        Le même type sera appliqué à tous les documents puis vous pourrez modifier individuelement
+                                    </span>
+                                </label>
+                                <select
+                                    id="document-modal-type-all"
+                                    class="fr-select"
+                                    required
+                                    data-action="document-formset#onChangeType:prevent:stop"
+                                >
+                                    {% for subwidget in formset.empty_form.document_type.subwidgets %}
+                                        {{ subwidget }}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <p
+                                class="document-modal-drag-drop"
+                                disabled
+                                data-document-formset-target="documentModalDragDrop"
+                                data-action="dragover->document-formset#onDragOver drop->document-formset#onDrop:prevent:stop dragenter->document-formset#onDragEnter:prevent:stop dragleave->document-formset#onDragLeave:prevent:stop"
+                            >
+                                Glissez vos fichiers ici ou
+                                <a href="#" class="fr-link upload-btn" type="button">cliquez pour les selectionner</a>
+                            </p>
+
+                            <div data-document-formset-target="formsetContainer">
+                                {% for form in formset %}
+                                    {{ form }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <template data-document-formset-target="emptyFormTpl">
+        {{ formset.empty_form }}
+    </template>
+</div>
