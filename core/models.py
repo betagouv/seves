@@ -447,10 +447,27 @@ class Message(AllowsSoftDeleteMixin, models.Model):
         return reverse("message-view", kwargs={"pk": self.pk})
 
     def can_reply_to(self, user):
-        return self.message_type == self.MESSAGE and self.content_object.can_user_access(user)
+        return self.message_type in (
+            self.MESSAGE,
+            self.POINT_DE_SITUATION,
+            self.COMPTE_RENDU,
+            self.DEMANDE_INTERVENTION,
+        ) and self.content_object.can_user_access(user)
+
+    @property
+    def reply_page_title(self):
+        if self.message_type == self.MESSAGE:
+            return "Réponse à un message"
+        if self.message_type == self.POINT_DE_SITUATION:
+            return "Réponse à un point de situation"
+        if self.message_type == self.COMPTE_RENDU:
+            return "Réponse à un compte rendu sur demande d'intervention"
+        if self.message_type == self.DEMANDE_INTERVENTION:
+            return "Réponse à une demande d'intervention"
 
     def get_reply_intro_text(self):
-        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {self.sender.display_with_agent_unit} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        sender = self.sender.display_with_agent_unit if self.sender else self.sender_structure
+        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
         if self.recipients_copy.all():
             intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
 
