@@ -206,7 +206,7 @@ class BaseMessagePage(ABC):
 
 
 class CreateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, container_id="#sidebar"):
+    def __init__(self, page: Page, container_id="#message-form"):
         super().__init__(page)
         self._container_id = container_id
 
