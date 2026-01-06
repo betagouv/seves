@@ -4,10 +4,10 @@ from pytest_django.asserts import assertRedirects
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import LienLibre
-from ssa.constants import Source, TypeEvenement
+from ssa.constants import Source, TypeEvenement, PretAManger, SourceInvestigationCasHumain
 from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.models import EvenementProduit, TemperatureConservation
-from ssa.models.evenement_produit import ActionEngagees, PretAManger
+from ssa.models.evenement_produit import ActionEngagees
 from ssa.tests.pages import EvenementProduitListPage
 
 
@@ -115,6 +115,22 @@ def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
 
 
+def test_list_can_filter_by_type_evenement_for_investigation_cas_humain(
+    live_server, mocked_authentification_user, page: Page
+):
+    EvenementProduitFactory(
+        type_evenement=TypeEvenement.ALERTE_PRODUIT_NATIONALE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=1)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.type_evenement_select.select_option("Investigation de cas humain")
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.1"
+    expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
+
+
 def test_list_can_filter_by_source(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(
         source=Source.TOUT_DROIT, type_evenement=TypeEvenement.NON_ALERTE, numero_annee=2025, numero_evenement=2
@@ -132,6 +148,46 @@ def test_list_can_filter_by_source(live_server, mocked_authentification_user, pa
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_can_filter_by_source_for_investigation_cas_humain(live_server, mocked_authentification_user, page: Page):
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.DO_LISTERIOSE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.CAS_GROUPES,
+        numero_annee=2025,
+        numero_evenement=1,
+    )
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_can_filter_by_common_source(live_server, mocked_authentification_user, page: Page):
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.SIGNALEMENT_AUTRE, numero_annee=2025, numero_evenement=2
+    )
+    InvestigationCasHumainFactory(
+        source=SourceInvestigationCasHumain.CAS_GROUPES,
+        numero_annee=2025,
+        numero_evenement=1,
+    )
+    EvenementProduitFactory(source=Source.AUTRE, numero_annee=2025, numero_evenement=3)
+    EvenementProduitFactory(source=Source.TOUT_DROIT, numero_annee=2025, numero_evenement=4)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.source_select.select_option(SourceInvestigationCasHumain.SIGNALEMENT_AUTRE)
+    search_page.submit_search()
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.2")).to_be_visible()
+    expect(search_page.page.get_by_text("2025.3")).to_be_visible()
+    expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
 
 def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
@@ -191,6 +247,9 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     evenement_11 = InvestigationCasHumainFactory()
     evenement_12 = InvestigationCasHumainFactory()
     EtablissementFactory(enseigne_usuelle="Morbier", investigation_cas_humain=evenement_12)
+    evenement_13 = EvenementProduitFactory(precision_danger="Morbier")
+    evenement_14 = InvestigationCasHumainFactory(precision_danger="Morbier")
+    evenement_15 = InvestigationCasHumainFactory(evaluation="Morbier")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -209,6 +268,9 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
     expect(search_page.page.get_by_text(evenement_11.numero)).not_to_be_visible()
     expect(search_page.page.get_by_text(evenement_12.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_13.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_14.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_15.numero)).to_be_visible()
 
 
 def test_more_filters_interactions(live_server, page: Page):
@@ -318,7 +380,6 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
     to_be_found = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.OUI)
     not_to_be_found_1 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.NON)
     not_to_be_found_2 = EvenementProduitFactory(bacterie=True, produit_pret_a_manger=PretAManger.SANS_OBJET)
-    not_to_be_found_3 = InvestigationCasHumainFactory()
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -330,7 +391,6 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
-    expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):

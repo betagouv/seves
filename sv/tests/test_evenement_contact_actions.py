@@ -13,8 +13,12 @@ from core.tests.generic_tests.contacts import (
     generic_test_add_contact_structure_to_an_evenement,
     generic_test_remove_contact_structure_from_an_evenement,
     generic_test_add_multiple_contacts_agents_to_an_evenement,
+    generic_test_add_contact_structure_to_an_evenement_with_dedicated_email,
+    generic_test_cant_add_contact_agent_if_he_cant_access_domain,
+    generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain,
 )
 from seves import settings
+from seves.settings import SV_GROUP
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -111,7 +115,9 @@ def test_cant_delete_contact_if_evenement_brouillon(client, contact):
 def test_add_agent_contact_adds_structure_contact(live_server, page, choice_js_fill, goto_contacts):
     """Test que l'ajout d'un contact agent ajoute automatiquement le contact de sa structure"""
     structure_contact = ContactStructureFactory()
-    agent_contact = ContactAgentFactory(agent__structure=structure_contact.structure, with_active_agent=True)
+    agent_contact = ContactAgentFactory(
+        agent__structure=structure_contact.structure, with_active_agent__with_groups=(SV_GROUP,)
+    )
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -131,7 +137,7 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
     """Test que l'ajout de plusieurs contacts agents de la même structure n'ajoute qu'une seule fois le contact structure"""
     structure_contact = ContactStructureFactory()
     contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
-        2, agent__structure=structure_contact.structure, with_active_agent=True
+        2, agent__structure=structure_contact.structure, with_active_agent__with_groups=[SV_GROUP]
     )
     evenement = EvenementFactory()
 
@@ -254,7 +260,7 @@ def test_cant_forge_add_structure_if_evenement_is_cloture(client):
 
 @pytest.mark.django_db
 def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server, page, choice_js_fill, goto_contacts):
-    contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_agent = ContactAgentFactory(with_active_agent__with_groups=(SV_GROUP,))
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
     contact_agent.agent.user.groups.add(referent_national_group)
     evenement = EvenementFactory()
@@ -276,17 +282,17 @@ def test_add_contact_agent_doesnt_add_structure_if_referent_national(live_server
 
 @pytest.fixture
 def contacts_structure():
-    return ContactStructureFactory.create_batch(2, with_one_active_agent=True)
+    return ContactStructureFactory.create_batch(2, with_one_active_agent__with_groups=(SV_GROUP,))
 
 
 @pytest.mark.django_db
 def test_add_structure_form_hides_empty_emails(live_server, page):
     evenement = EvenementFactory()
-    evenement.contacts.set(ContactStructureFactory.create_batch(5, with_one_active_agent=True))
+    evenement.contacts.set(ContactStructureFactory.create_batch(5, with_one_active_agent__with_groups=(SV_GROUP,)))
 
-    ContactStructureFactory(structure__libelle="Level 1", with_one_active_agent=True)
-    ContactStructureFactory(structure__libelle="Level 2", with_one_active_agent=True, email="")
-    ContactStructureFactory(structure__libelle="Level 3", with_one_active_agent=True)
+    ContactStructureFactory(structure__libelle="Level 1", with_one_active_agent__with_groups=(SV_GROUP,))
+    ContactStructureFactory(structure__libelle="Level 2", with_one_active_agent__with_groups=(SV_GROUP,), email="")
+    ContactStructureFactory(structure__libelle="Level 3", with_one_active_agent__with_groups=(SV_GROUP,))
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
@@ -301,7 +307,7 @@ def test_add_structure_form_hides_empty_emails(live_server, page):
 
 @pytest.mark.django_db
 def test_add_structure_form_hides_structure_without_active_user(live_server, page):
-    visible_structure = ContactStructureFactory(with_one_active_agent=True)
+    visible_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SV_GROUP,))
     unvisible_structure = ContactStructureFactory()
 
     page.goto(f"{live_server.url}{EvenementFactory().get_absolute_url()}")
@@ -330,9 +336,11 @@ def test_add_structure_form_service_account_is_hidden(live_server, page):
 
 @pytest.mark.django_db
 def test_structure_niveau2_without_emails_are_not_visible(live_server, page):
-    ContactStructureFactory(structure__niveau1="Level 1", structure__libelle="Foo", with_one_active_agent=True)
     ContactStructureFactory(
-        structure__niveau1="Level 1", structure__libelle="Bar", with_one_active_agent=True, email=""
+        structure__niveau1="Level 1", structure__libelle="Foo", with_one_active_agent__with_groups=(SV_GROUP,)
+    )
+    ContactStructureFactory(
+        structure__niveau1="Level 1", structure__libelle="Bar", with_one_active_agent__with_groups=(SV_GROUP,), email=""
     )
     page.goto(f"{live_server.url}/{EvenementFactory().get_absolute_url()}")
     page.get_by_role("tab", name="Contacts").click()
@@ -354,7 +362,9 @@ def test_remove_contact_structure_from_an_evenement(live_server, page, mailoutbo
 
 @pytest.mark.django_db
 def test_add_multiple_structures_to_an_evenement(live_server, page, choice_js_fill):
-    contact_structure_1, contact_structure_2 = ContactStructureFactory.create_batch(2, with_one_active_agent=True)
+    contact_structure_1, contact_structure_2 = ContactStructureFactory.create_batch(
+        2, with_one_active_agent__with_groups=(SV_GROUP,)
+    )
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -372,7 +382,7 @@ def test_add_multiple_structures_to_an_evenement(live_server, page, choice_js_fi
 
 @pytest.mark.django_db
 def test_cant_add_contact_structure_if_evenement_brouillon(client):
-    contact = ContactStructureFactory(with_one_active_agent=True)
+    contact = ContactStructureFactory(with_one_active_agent__with_groups=(SV_GROUP,))
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
 
     response = client.post(
@@ -402,3 +412,30 @@ def test_add_contact_structure_without_value_shows_front_error(live_server, page
 
     validation_message = page.locator("#id_contacts_structures").evaluate("el => el.validationMessage")
     assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
+
+
+def test_add_contact_structure_to_an_evenement_with_dedicated_email(live_server, page, choice_js_fill, mailoutbox):
+    evenement = EvenementFactory()
+    generic_test_add_contact_structure_to_an_evenement_with_dedicated_email(
+        live_server, page, choice_js_fill, evenement, mailoutbox, domain="sv"
+    )
+
+
+def test_cant_add_contact_agent_if_he_cant_access_domain(live_server, page, choice_js_cant_pick):
+    evenement = EvenementFactory()
+    generic_test_cant_add_contact_agent_if_he_cant_access_domain(
+        live_server,
+        page,
+        choice_js_cant_pick,
+        evenement,
+    )
+
+
+def test_cant_add_contact_structure_if_any_agent_cant_access_domain(live_server, page, choice_js_cant_pick):
+    evenement = EvenementFactory()
+    generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain(
+        live_server,
+        page,
+        choice_js_cant_pick,
+        evenement,
+    )

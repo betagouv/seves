@@ -1,3 +1,37 @@
+
+
+/* -- Champs obligatoires -- */
+label:has(+ input:required),
+label:has(+ input[data-required="true"]),
+label:has(+ select:required),
+label:has(+ select[data-required="true"]),
+label:has(+ textarea:required),
+label:has(+ textarea[data-required="true"]),
+label:has(+ .choices select:required),
+label:has(+ .choices select[data-required="true"]),
+fieldset:has(input[type="radio"][required]) > legend,
+.required-field,
+.label-marked {
+    font-weight: bold;
+}
+label:has(+ input:required):not(:has(.label-marked))::after,
+label:has(+ input[data-required="true"]):not(:has(.label-marked))::after,
+label:has(+ select:required):not(:has(.label-marked))::after,
+label:has(+ select[data-required="true"]):not(:has(.label-marked))::after,
+label:has(+ textarea:required):not(:has(.label-marked))::after,
+label:has(+ textarea[data-required="true"]):not(:has(.label-marked))::after,
+label:has(+ .choices select:required):not(:has(.label-marked))::after,
+label:has(+ .choices select[data-required="true"]):not(:has(.label-marked))::after,
+fieldset:has(input[type="radio"][required]):not(:has(.label-marked)) > legend::after,
+.required-field:not(:has(.label-marked))::after,
+.label-marked::after {
+    content: "*";
+}
+
+.fr-required-marker {
+    display: none !important;
+}
+
 textarea {
     resize: vertical;
 }

@@ -83,11 +83,11 @@ class AdresseLieuDitField(forms.ChoiceField):
 
 
 class MessageObjectField(forms.CharField):
-    def __init__(self, content_object, message_type, *args, **kwargs):
+    def __init__(self, content_object, message_type, sender, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.disabled = True
         self.required = False
-        self.initial = f"{settings.EMAIL_SUBJECT_PREFIX} {content_object.get_email_subject()} - {message_type}"
+        self.initial = f"{settings.EMAIL_SUBJECT_PREFIX} {content_object.get_email_subject()} - {message_type} de {sender.agent.structure}"
         self.label = "Objet"
 
 

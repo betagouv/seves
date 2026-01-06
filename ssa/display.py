@@ -2,7 +2,6 @@ import dataclasses
 import typing
 from datetime import datetime
 
-from django.utils.safestring import mark_safe
 
 if typing.TYPE_CHECKING:
     from core.models import Structure
@@ -27,14 +26,11 @@ class EvenementDisplay:
         from ssa.models import EvenementProduit
 
         if isinstance(evenement, EvenementProduit):
-            categorie_produit = evenement.get_categorie_produit_display()
-            categorie_danger = evenement.get_categorie_danger_display()
-            type_evenement = evenement.get_type_evenement_display()
+            categorie_produit = evenement.get_categorie_produit_display() or "-"
+            categorie_danger = evenement.get_categorie_danger_display() or "-"
         else:
-            non_applicable = mark_safe("<em>Non applicable</em>")
-            categorie_produit = non_applicable
-            categorie_danger = non_applicable
-            type_evenement = non_applicable
+            categorie_produit = "-"
+            categorie_danger = "-"
 
         etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
 
@@ -48,5 +44,5 @@ class EvenementDisplay:
             absolute_url=evenement.get_absolute_url(),
             categorie_produit=categorie_produit,
             categorie_danger=categorie_danger,
-            type_evenement=type_evenement,
+            type_evenement=evenement.get_type_evenement_display(),
         )

@@ -4,8 +4,8 @@ from .produit import (
     EvenementProduitDetailView,
     EvenementsListView,
     EvenementUpdateView,
-    InvestigationCasHumainCreateView,
 )
+from .investigation_cas_humain import InvestigationCasHumainCreateView
 
 __all__ = (
     "EvenementProduitCreateView",

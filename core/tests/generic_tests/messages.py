@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact
+from core.models import Message, FinSuiviContact, Structure, Contact
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 
@@ -554,6 +554,7 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
 
 
 def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page, record):
+    Contact.objects.filter(email="service_account@seves.com").delete()
     contact_structure = ContactStructureFactory()
     ContactAgentFactory(
         agent__structure=contact_structure.structure,
@@ -653,6 +654,11 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, object, mocked_authentification_user
 ):
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    ContactStructureFactory(structure=structure)
+    agent = mocked_authentification_user.agent
+    agent.structure = structure
+    agent.save()
     contact, contact_cc = ContactStructureFactory.create_batch(
         2, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
     )
@@ -672,7 +678,7 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
 
-    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_sender_in_table() == "MUS"
     assert message_page.message_recipient_in_table() == str(contact.structure)
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Demande d'intervention"
@@ -756,7 +762,9 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     assert Message.objects.count() == 0
     assert Message._base_manager.count() == 0
 
-    message = MessageFactory(content_object=object, sender=mocked_authentification_user.agent.contact_set.get())
+    message = MessageFactory(
+        content_object=object, title="Mon titre", sender=mocked_authentification_user.agent.contact_set.get()
+    )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -807,7 +815,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.page.get_by_text("Répondre", exact=True).click()
 
-    assert message_page.message_title.input_value() == f"[Rép] {message.title}"
+    assert message_page.message_title.input_value() == f"{settings.REPLY_PREFIX} {message.title}"
     assert message_page.message_content.input_value() == message.get_reply_intro_text()
 
     message_page.message_content.fill("Ma réponse")
@@ -817,7 +825,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     assert Message.objects.count() == 2
     reply = Message.objects.first()
 
-    expected_title = f"[Rép] {message.title}"
+    expected_title = f"{settings.REPLY_PREFIX} {message.title}"
     expected_content = "Ma réponse"
     expected_recipients = [contact_sender_structure]
     expected_copies = [contact]

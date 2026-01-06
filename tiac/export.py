@@ -45,10 +45,8 @@ class TiacExport(BaseExport):
         ("suspicion_conclusion", "Conclusion de la suspicion de TIAC"),
         ("selected_hazard", "Dangers retenus"),
         ("conclusion_comment", "Commentaire"),
-        ("conclusion_etablissement", " Scénario retenu - Établissement"),
         ("conclusion_repas", " Scénario retenu - Repas"),
         ("conclusion_aliment", " Scénario retenu - Aliment"),
-        ("conclusion_analyse", " Scénario retenu - Analyse"),
         ("list_of_linked_objects_as_str", "Événements liés"),
     ]
 
@@ -138,6 +136,9 @@ class TiacExport(BaseExport):
         querysets = []
         max_etablissement = max_repas = max_aliment = max_analyses = 0
         for entry in task.queryset_sequence:
+            entries = entry["ids"]
+            if not entries:
+                continue
             model = apps.get_model(entry["model"])
             queryset = model.objects.filter(id__in=entry["ids"])
             if model == InvestigationTiac:
@@ -208,4 +209,4 @@ class TiacExport(BaseExport):
 
             task.task_done = True
             task.save()
-            notify_export_is_ready(task)
+            notify_export_is_ready(task, object=queryset.first())

@@ -743,7 +743,7 @@ def test_fiche_detection_without_organisme_nuisible_shows_error(
 def test_can_create_evenement_if_last_evenement_is_deleted(
     live_server, page: Page, mocked_authentification_user, choice_js_fill, form_elements: FicheDetectionFormDomElements
 ):
-    EvenementFactory(numero_annee=2025, numero_evenement=1, is_deleted=True)
+    EvenementFactory(numero_annee=datetime.now().year, numero_evenement=1, is_deleted=True)
     organisme_nuisible = OrganismeNuisibleFactory()
     statut_reglementaire = StatutReglementaireFactory()
 
@@ -757,7 +757,7 @@ def test_can_create_evenement_if_last_evenement_is_deleted(
     form_elements.statut_reglementaire_input.select_option(statut_reglementaire.libelle)
     page.get_by_role("button", name="Enregistrer").click()
 
-    assert Evenement.objects.last().numero == "2025.2"
+    assert Evenement.objects.last().numero == f"{datetime.now().year}.2"
 
 
 def test_cant_access_fiche_detection_form_for_evenement_i_cant_see(client):

@@ -15,7 +15,7 @@ def test_investigation_cas_humain_detail_page_content(live_server, page: Page):
 
     expect(details_page.information_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
     expect(details_page.information_block.get_by_text(evenement.numero_rasff, exact=True)).to_be_visible()
-    type_evenement = details_page.information_block.get_by_text(evenement.get_type_evenement_display(), exact=True)
+    type_evenement = details_page.information_block.get_by_text("Investigation de cas humain", exact=True)
     expect(type_evenement).to_be_visible()
     expect(details_page.information_block.get_by_text(evenement.get_source_display(), exact=True)).to_be_visible()
     expect(details_page.information_block.get_by_text(evenement.description, exact=True)).to_be_visible()

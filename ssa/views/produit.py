@@ -2,7 +2,6 @@ import io
 import datetime
 import json
 import os
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -10,13 +9,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.forms import Media
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
-from queryset_sequence import QuerySetSequence
 
-from core.mixins import WithClotureContextMixin, WithDocumentExportContextMixin, WithFinDeSuiviMixin
+from core.mixins import (
+    WithClotureContextMixin,
+    WithDocumentExportContextMixin,
+    WithFinDeSuiviMixin,
+    WithFormsetInvalidMixin,
+)
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -28,13 +30,11 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.models import Export
 from core.views import MediaDefiningMixin
-from ssa.forms import EvenementProduitForm, InvestigationCasHumainForm
-from ssa.formsets import EtablissementFormSet, InvestigationCasHumainsEtablissementFormSet
-from ssa.models import EvenementProduit, Etablissement, EvenementInvestigationCasHumain
+from ssa.forms import EvenementProduitForm
+from ssa.formsets import EtablissementFormSet
+from ssa.models import EvenementProduit, Etablissement
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
-from ssa.tasks import export_task
 from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 from ..display import EvenementDisplay
 from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
@@ -45,6 +45,7 @@ class EvenementProduitCreateView(
     WithAddUserContactsMixin,
     EvenementProduitValuesMixin,
     MediaDefiningMixin,
+    WithFormsetInvalidMixin,
     CreateView,
 ):
     form_class = EvenementProduitForm
@@ -62,25 +63,14 @@ class EvenementProduitCreateView(
         kwargs["user"] = self.request.user
         return kwargs
 
-    def formset_invalid(self):
-        self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Etablissement",
-        )
-        for i, form in enumerate(self.etablissement_formset):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(
-                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
-                        )
-
-        return self.render_to_response(self.get_context_data())
-
     def post(self, request, *args, **kwargs):
         if not self.etablissement_formset.is_valid():
-            return self.formset_invalid()
+            self.object = None
+            return self.formset_invalid(
+                self.etablissement_formset,
+                "Erreurs dans le(s) formulaire(s) Établissements",
+                "Erreur dans le formulaire établissement",
+            )
 
         form = self.get_form()
         if not form.is_valid():
@@ -252,31 +242,6 @@ class EvenementsListView(WithFilteredListMixin, ListView):
         return context
 
 
-class EvenementProduitExportView(WithFilteredListMixin, View):
-    http_method_names = ["post"]
-
-    def post(self, request):
-        queryset = self.get_queryset()
-
-        if isinstance(queryset, QuerySetSequence):
-            for qs in queryset._querysets:
-                if issubclass(qs.model, EvenementProduit):
-                    queryset = qs
-                    break
-            else:
-                raise Http404
-
-        ids = list(queryset.values_list("id", flat=True))
-        task = Export.objects.create(object_ids=ids, user=request.user)
-        export_task.delay(task.id)
-        messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
-        )
-        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
-        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('ssa:evenements-liste')}?{urlencode(allowed_params)}")
-
-
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
     http_method_names = ["post"]
 
@@ -311,81 +276,3 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
 
     def test_func(self):
         return self.object.can_user_access(self.request.user)
-
-
-class InvestigationCasHumainCreateView(
-    WithFormErrorsAsMessagesMixin,
-    WithAddUserContactsMixin,
-    EvenementProduitValuesMixin,
-    MediaDefiningMixin,
-    CreateView,
-):
-    template_name = "ssa/evenement_investigation_cas_humain.html"
-    form_class = InvestigationCasHumainForm
-    success_message = "La fiche d'investigation cas humain a été créée avec succès."
-
-    @property
-    def etablissement_formset(self):
-        if not hasattr(self, "_etablissement_formset"):
-            self._etablissement_formset = InvestigationCasHumainsEtablissementFormSet(**super().get_form_kwargs())
-        return self._etablissement_formset
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs, etablissement_formset=self.etablissement_formset)
-
-    def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["etablissement_formset"].media
-
-    def form_valid(self, form):
-        self.object = form.save()
-        self.etablissement_formset.instance = self.object
-        self.etablissement_formset.save()
-        messages.success(self.request, self.success_message)
-        return HttpResponseRedirect(self.object.get_absolute_url())
-
-    def formset_invalid(self):
-        self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Etablissement",
-        )
-        for i, form in enumerate(self.etablissement_formset):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(
-                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
-                        )
-
-        return self.render_to_response(self.get_context_data())
-
-    def post(self, request, *args, **kwargs):
-        if not self.etablissement_formset.is_valid():
-            return self.formset_invalid()
-
-        form = self.get_form()
-        if not form.is_valid():
-            return self.form_invalid(form)
-        return self.form_valid(form)
-
-
-class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateView):
-    success_message = "La fiche d'investigation cas humain a été mise à jour avec succès."
-
-    @property
-    def object(self):
-        if not hasattr(self, "_object"):
-            self._object = self.get_object()
-        return self._object
-
-    @object.setter
-    def object(self, value):
-        self._object = value
-
-    def get_queryset(self):
-        return EvenementInvestigationCasHumain.objects.with_departement_prefetched()

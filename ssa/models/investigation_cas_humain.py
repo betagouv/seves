@@ -1,4 +1,5 @@
 import reversion
+from dirtyfields import DirtyFieldsMixin
 from django.db import models, transaction
 from django.urls import reverse
 
@@ -7,9 +8,11 @@ from core.mixins import (
     AllowModificationMixin,
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
+    EmailNotificationMixin,
+    WithMessageUrlsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Document
+from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
 from ssa.managers import InvestigationCasHumainManager
@@ -18,11 +21,13 @@ from ssa.models.mixins import (
     WithEvenementRisqueMixin,
     WithSharedNumeroMixin,
     WithLatestVersionMixin,
+    SsaBaseEvenementModel,
 )
 
 
 @reversion.register
 class EvenementInvestigationCasHumain(
+    SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -33,11 +38,16 @@ class EvenementInvestigationCasHumain(
     WithDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithFreeLinkIdsMixin,
+    EmailNotificationMixin,
+    WithMessageUrlsMixin,
+    DirtyFieldsMixin,
     models.Model,
 ):
     source = models.CharField(
         max_length=100, choices=SourceInvestigationCasHumain.choices, verbose_name="Source", blank=True
     )
+
+    historical_data = models.JSONField(default=dict, blank=True)
 
     objects = InvestigationCasHumainManager()
 
@@ -54,39 +64,67 @@ class EvenementInvestigationCasHumain(
     def get_absolute_url(self):
         return reverse("ssa:investigation-cas-humain-details", kwargs={"pk": self.pk})
 
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
-
     def _user_can_interact(self, user):
         return not self.is_cloture and self.can_user_access(user)
 
     def can_user_delete(self, user):
         return self.can_user_access(user)
+
+    def get_type_evenement_display(self):
+        return "Investigation de cas humain"
+
+    def get_soft_delete_success_message(self):
+        return f"L'investigation de cas humain {self.numero} a bien été supprimée"
+
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'investigation de cas humain {self.numero}"
+
+    def get_soft_delete_confirm_message(self):
+        return "Cette action est irréversible. Confirmez-vous la suppression de cette investigation de cas humain ?"
+
+    def get_email_subject(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_short_email_display_name(self):
+        return f"{self.get_type_evenement_display()} {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"{self.get_short_email_display_name()} {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>{self.get_short_email_display_name()}</b> {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_suffix(self):
+        return f"(Danger : {self.get_categorie_danger_display() or 'Vide'})"
+
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
+    def get_email_cloture_text(self):
+        return f"""
+         Pour rappel, voici les éléments de synthèse pour cet évènement :
+         - Créateur : {self.createur}
+         - Date de création : {self.date_creation.strftime("%d/%m/%Y")}
+         - N° RASFF/AAC : {self.numero_rasff}
+         - Danger : {self.get_categorie_danger_display()}
+         """
+
+    def get_email_cloture_text_html(self):
+        return f"""
+         Pour rappel, voici les éléments de synthèse pour cet évènement
+         <ul>
+         <li>Créateur : {self.createur}</li>
+         <li>Date de création : {self.date_creation.strftime("%d/%m/%Y")}</li>
+         <li>N° RASFF/AAC : {self.numero_rasff}</li>
+         <li>Danger : {self.get_categorie_danger_display()}</li>
+         </ul>
+         """
+
+    @property
+    def list_of_linked_objects_as_str(self):
+        links = LienLibre.objects.for_object(self)
+        objects = [link.related_object_1 if link.related_object_2 == self else link.related_object_2 for link in links]
+        return [str(o) for o in objects if not o.is_deleted]
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

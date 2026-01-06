@@ -2,15 +2,17 @@ import csv
 import tempfile
 
 from django.core.files import File
+from django.apps import apps
+from queryset_sequence import QuerySetSequence
 
 from core.export import BaseExport
 from core.models import Export
 from core.notifications import notify_export_is_ready
-from ssa.models import EvenementProduit
 
 
-class EvenementProduitExport(BaseExport):
-    evenement_produit_fields = [
+class SsaExport(BaseExport):
+    blank_value = "-"
+    evenement_fields = [
         ("numero", "Numéro de fiche"),
         ("etat", "État"),
         ("createur", "Structure créatrice"),
@@ -28,6 +30,7 @@ class EvenementProduitExport(BaseExport):
         ("description_complementaire", "Description complémentaire"),
         ("temperature_conservation", "Température de conservation"),
         ("categorie_danger", "Catégorie de danger"),
+        ("precision_danger", "Précision danger"),
         ("quantification", "Quantification"),
         ("quantification_unite", "Unité de quantification"),
         ("evaluation", "Évaluation"),
@@ -54,42 +57,47 @@ class EvenementProduitExport(BaseExport):
     ]
 
     def get_fieldnames(self):
-        return [header for _, header in (self.evenement_produit_fields + self.etablissement_fields)]
+        return [header for _, header in (self.evenement_fields + self.etablissement_fields)]
 
-    def get_evenement_data(self, evenement_produit):
+    def get_evenement_data(self, instance):
         result = {}
-        self.add_data(result, evenement_produit, self.evenement_produit_fields)
+        self.add_data(result, instance, self.evenement_fields)
         return result
 
-    def get_evenement_data_with_etablissement(self, evenement_produit, etablissement):
-        result = self.get_evenement_data(evenement_produit)
+    def get_evenement_data_with_etablissement(self, instance, etablissement):
+        result = self.get_evenement_data(instance)
         self.add_data(result, etablissement, self.etablissement_fields)
         return result
 
-    def get_lines_from_instance(self, evenement_produit):
-        etablissements = evenement_produit.etablissements.all()
+    def get_lines_from_instance(self, instance):
+        etablissements = instance.etablissements.all()
         if not etablissements:
-            yield self.get_evenement_data(evenement_produit)
+            yield self.get_evenement_data(instance)
             return
 
         for etablissement in etablissements:
-            yield self.get_evenement_data_with_etablissement(evenement_produit, etablissement)
+            yield self.get_evenement_data_with_etablissement(instance, etablissement)
             continue
+
+    def get_queryset(self, task):
+        querysets = []
+        for entry in task.queryset_sequence:
+            model = apps.get_model(entry["model"])
+            queryset = model.objects.filter(id__in=entry["ids"])
+            queryset = queryset.prefetch_related(
+                "etablissements",
+                "etablissements__departement",
+            ).select_related("createur")
+            querysets.append(queryset)
+
+        return QuerySetSequence(*querysets)
 
     def export(self, task_id):
         task = Export.objects.get(id=task_id)
         if task.task_done is True:
             return
 
-        queryset = (
-            EvenementProduit.objects.with_departement_prefetched()
-            .filter(id__in=task.object_ids)
-            .select_related("createur")
-            .prefetch_related("etablissements")
-        )
-        obj_id_to_obj = {obj.id: obj for obj in queryset}
-        ordered_objs = [obj_id_to_obj[i] for i in task.object_ids if i in obj_id_to_obj]
-
+        queryset = self.get_queryset(task)
         with tempfile.NamedTemporaryFile(mode="w+", newline="", delete=False) as tmp:
             writer = csv.DictWriter(
                 tmp,
@@ -99,14 +107,14 @@ class EvenementProduitExport(BaseExport):
             )
             writer.writeheader()
 
-            for instance in ordered_objs:
+            for instance in queryset:
                 for line in self.get_lines_from_instance(instance):
                     writer.writerow(line)
 
             tmp.flush()
             with open(tmp.name, "rb") as read_file:
-                task.file.save("export_evenement_produit.csv", File(read_file))
+                task.file.save("export_produit_et_cas.csv", File(read_file))
 
             task.task_done = True
             task.save()
-            notify_export_is_ready(task)
+            notify_export_is_ready(task, object=queryset.first())

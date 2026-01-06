@@ -1,14 +1,27 @@
 {% extends "ssa/base.html" %}
 {% load static %}
 
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
+{% endblock %}
+
 {% block content %}
     <form id="main-form" class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
         <main class="main-container">
-            <div class="fr-grid-row">
-                {% block title %}<h1 class="fr-col-6">Création d'un évènement</h1>{% endblock %}
-                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
+            <div class="evenement-produit-form-header">
+                {% block title %}
+                    <h1>
+                        {% if form.instance.pk %}
+                            Modification l'investigation de cas humain {{ form.instance.numero }}
+                        {% else %}
+                            Créer une investigation de cas humain
+                        {% endif %}
+                    </h1>
+                {% endblock %}
+                <div class="action-buttons">
                     {% block buttons %}
+                        <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                         {% if form.instance and form.instance.is_draft %}
                             <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
                                 Enregistrer le brouillon

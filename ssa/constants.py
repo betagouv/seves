@@ -1099,6 +1099,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Huile de poisson (hors feed)",
         "Autre produit animal > Produits raffinés d'origine animale (hors complément alimentaire) > Huile de poisson (hors feed)",
     )
+    CRETON = (
+        "Creton",
+        "Autre produit animal > Creton (fraction protéique issue de la fonte)",
+    )
     SUBSTITUT_DE_LAIT = "Substitut de lait (hors infantile)", "Analogue végétal > Substitut de lait (hors infantile)"
     SUBSTITUT_DE_FROMAGE = "Substitut de fromage", "Analogue végétal > Substitut de fromage"
     SUBSTITUT_DE_DESSERT_LACTE_DE_YAOURT = (
@@ -1175,8 +1179,8 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Chocolat (bouchée, tablette) (hors boisson)",
         "Entremet salé, dessert ou confiserie > Chocolat (bouchée, tablette) (hors boisson)",
     )
-    HUILE_VEGETALE = "Huile végétale", "Noix, graine, grain et dérivé > Huile végétale"
-    MARGARINE = "Margarine", "Noix, graine, grain et dérivé > Margarine"
+    HUILE_VEGETALE = "Huile végétale", "Huile et margarine végétale > Huile végétale"
+    MARGARINE = "Margarine", "Huile et margarine végétale > Margarine"
     FRUIT_A_COQUE = (
         "Fruit à coque (amande, noisette, noix, pistache, châtaigne…)",
         "Fruit à coque, graine, céréale et dérivé > Fruit à coque (amande, noisette, noix, pistache, châtaigne…)",
@@ -1218,8 +1222,8 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Fruit à coque, graine, céréale et dérivé > Graine ou fruit oléagineux (olive, coco, pignon, sésame, tournesol, lin, courge, arachide...) > GO - Non transformé (yc mélange)",
     )
     GO_SECHE_CUIT_FERMENTE = (
-        "GO - Séché, cuit, fermenté (yc aromatisé) (hors huile, germé)",
-        "Fruit à coque, graine, céréale et dérivé > Graine ou fruit oléagineux (olive, coco, pignon, sésame, tournesol, lin, courge, arachide...) > GO - Séché, cuit, fermenté (yc aromatisé) (hors huile, germé)",
+        "GO - Séché, cuit, fermenté (yc aromatisé) (hors huile) (hors germé) ",
+        "Fruit à coque, graine, céréale et dérivé > Graine ou fruit oléagineux (olive, coco, pignon, sésame, tournesol, lin, courge, arachide...) > GO - Séché, cuit, fermenté (yc aromatisé) (hors huile) (hors germé)",
     )
     GO_CONFIT_EN_CONFITURE_EN_VINAIGRE_EN_SAUMURE_EN_ALCOOL = (
         "GO - Confit, en confiture, en vinaigre, en saumure, en alcool",
@@ -1702,8 +1706,8 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Produit non alimentaire > Autre produit non alimentaire",
     )
     PRODUIT_INDETERMINE = "Produit indéterminé", "Produit indéterminé > Produit indéterminé"
-    ENVIRONNEMENT_SURFACE = "Environnement - surface", "Environnement - surface > Environnement - surface"
-    SANS_OBJET = "Sans objet", "Sans objet > Sans objet"
+    ENVIRONNEMENT_SURFACE = "Environnement", "Environnement > Environnement de production - surface"
+    ENVIRONNEMENT_ZONE = "Environnement zone", "Environnement > Zone - terrain"
 
 
 class TypeEvenement(models.TextChoices):
@@ -1734,4 +1738,10 @@ class Source(models.TextChoices):
 class SourceInvestigationCasHumain(models.TextChoices):
     DO_LISTERIOSE = auto(), "DO listériose"
     CAS_GROUPES = auto(), "Cas groupés"
-    SIGNALEMENT_AUTRE = auto(), "Signalement autre"
+    SIGNALEMENT_AUTRE = "autre", "Signalement autre"
+
+
+class PretAManger(models.TextChoices):
+    OUI = "oui", "Oui"
+    NON = "non", "Non"
+    SANS_OBJET = "sans_objet", "Sans objet"

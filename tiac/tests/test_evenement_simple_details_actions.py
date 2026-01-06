@@ -3,8 +3,9 @@ from playwright.sync_api import expect, Page
 from core.factories import ContactStructureFactory, ContactAgentFactory
 from core.models import LienLibre, FinSuiviContact
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
+from seves.settings import SSA_GROUP
 from tiac.factories import EvenementSimpleFactory, EtablissementFactory
-from tiac.models import EvenementSimple, InvestigationTiac
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
 from .pages import EvenementSimpleDetailsPage, EvenementSimpleFormPage
 
 
@@ -94,6 +95,7 @@ def test_can_transform_evenement_simple_into_investigation_tiac(
     for field in fields_to_compare:
         assert getattr(investigation, field) == getattr(evenement, field)
     assert investigation.etablissements.count() == 2
+    assert investigation.follow_up == InvestigationFollowUp.INVESTIGATION_DD
 
     linked_objects = set(
         [
@@ -112,7 +114,7 @@ def test_can_transform_evenement_simple_into_investigation_tiac(
 def test_can_transform_evenement_simple_into_investigation_tiac_even_with_one_structure_manually_added(
     live_server, page: Page, choice_js_fill, mus_contact
 ):
-    contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SSA_GROUP,))
     assert InvestigationTiac.objects.count() == 0
 
     input_data = EvenementSimpleFactory.build()

@@ -16,6 +16,7 @@ from core.filters_mixins import (
 )
 from core.forms import DSFRForm
 from core.models import LienLibre, Departement
+from ssa.constants import TypeEvenement, SourceInvestigationCasHumain, Source
 from ssa.models import EvenementProduit
 
 
@@ -46,6 +47,13 @@ class EvenementProduitFilterForm(DSFRForm):
         "departement",
         "pays",
     ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["type_evenement"].choices = [(k, v) for k, v in TypeEvenement.choices] + [
+            ("ich", "Investigation de cas humain")
+        ]
+        self.fields["source"].choices = list(dict.fromkeys(Source.choices + SourceInvestigationCasHumain.choices))
 
 
 class WithEtablissementFilterMixin(django_filters.FilterSet):
@@ -94,6 +102,10 @@ class EvenementFilter(
     end_date = django_filters.DateFilter(
         field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
+    type_evenement = django_filters.ChoiceFilter(
+        label="Type d'événement ", choices=[], empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_type_evenement"
+    )
+    source = django_filters.ChoiceFilter(label="Source ", choices=[], empty_label=settings.SELECT_EMPTY_CHOICE)
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
         label="Recherche libre",
@@ -106,7 +118,6 @@ class EvenementFilter(
         choices=(
             (True, "Oui"),
             (False, "Non"),
-            ("inconnu", "Inconnu"),
         ),
         method="filter_aliments_animaux",
     )
@@ -149,6 +160,17 @@ class EvenementFilter(
             "pays",
         ]
         form = EvenementProduitFilterForm
+
+    def filter_type_evenement(self, queryset, name, value):
+        if value == "ich":
+            if issubclass(queryset.model, EvenementProduit):
+                queryset = queryset.none()
+        else:
+            if issubclass(queryset.model, EvenementProduit):
+                queryset = queryset.filter(type_evenement=value)
+            else:
+                queryset = queryset.none()
+        return queryset
 
     def filter_full_text_search(self, queryset, name, value):
         if not value:

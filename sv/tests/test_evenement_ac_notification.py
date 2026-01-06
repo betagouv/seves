@@ -1,5 +1,8 @@
+from unittest import mock
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
@@ -99,10 +102,11 @@ def test_if_email_notification_fails_does_not_create_message_or_update_status(li
     Contact.objects.create(structure=Structure.objects.create(niveau2=MUS_STRUCTURE))
     Contact.objects.create(structure=Structure.objects.create(niveau2=BSV_STRUCTURE), email="foo@bar.com")
 
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("button", name="Actions").click()
-    page.get_by_role("link", name="Déclarer à l'AC").click()
-    page.get_by_role("button", name="Confirmer").click()
+    with mock.patch("core.notifications._send_message", mock.Mock(side_effect=ValidationError("Test"))):
+        page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+        page.get_by_role("button", name="Actions").click()
+        page.get_by_role("link", name="Déclarer à l'AC").click()
+        page.get_by_role("button", name="Confirmer").click()
 
     assert len(mailoutbox) == 0
     expect(page.get_by_text("Une erreur s'est produite lors de la notification")).to_be_visible()

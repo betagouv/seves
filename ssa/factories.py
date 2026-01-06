@@ -17,8 +17,14 @@ from ssa.models import (
     PositionDossier,
     EvenementInvestigationCasHumain,
 )
-from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement, Source, SourceInvestigationCasHumain
-from ssa.models.evenement_produit import PretAManger
+from ssa.constants import (
+    CategorieDanger,
+    CategorieProduit,
+    TypeEvenement,
+    Source,
+    SourceInvestigationCasHumain,
+    PretAManger,
+)
 
 
 def generate_rappel_conso():
@@ -126,7 +132,6 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
     date_reception = factory.Faker("date_this_decade")
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
-    type_evenement = FuzzyChoice(TypeEvenement.values)
     source = FuzzyChoice(SourceInvestigationCasHumain.values)
     description = factory.Faker("paragraph")
 
@@ -152,3 +157,19 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+    class Params:
+        not_bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] not in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )
+        bacterie = factory.Trait(
+            categorie_danger=factory.LazyAttribute(
+                lambda _: random.choice(
+                    [c[0] for c in CategorieDanger.choices if c[0] in CategorieDanger.dangers_bacteriens()]
+                )
+            )
+        )

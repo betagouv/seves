@@ -11,6 +11,7 @@ from core.mixins import WithChoicesToJS
 
 
 class EvenementOrigin(TextChoices):
+    ANSES = "anses", "ANSES"
     ARS = "ars", "ARS"
     CONSUMER = "consommateur", "Consommateur"
     ETABLISSEMENT = "etablissement", "Établissement"
@@ -50,7 +51,7 @@ class TypeCollectivite(TextChoices):
 
 class TypeAliment(TextChoices):
     CUISINE = "aliment cuisine", "Aliment cuisiné"
-    SIMPLE = "aliment simple", "Aliment simple/ingrédient"
+    SIMPLE = "aliment simple", "Matières premières"
 
 
 class ModaliteDeclarationEvenement(TextChoices):

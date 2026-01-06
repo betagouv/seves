@@ -33,7 +33,10 @@ def assert_mail_common(mails, message, evenement):
     assert len(mails) == 1
     mail = mails[0]
     message_type = message.get_email_type_display()
-    assert mail.subject == f"[Sèves] {evenement.organisme_nuisible.code_oepp} {evenement.numero} - {message_type}"
+    assert (
+        mail.subject
+        == f"[Sèves] {evenement.organisme_nuisible.code_oepp} {evenement.numero} - {message_type} de {message.sender_structure}"
+    )
     assert mail.from_email == "no-reply@seves.beta.gouv.fr"
     assert message.sender.agent.prenom in mail.body
     assert message.sender.agent.nom in mail.body
@@ -59,6 +62,31 @@ def test_notification_message(mailoutbox):
     assert message.content in mail.body
     assert set(mail.to) == {contact_1.email, contact_2.email}
     assert set(mail.cc) == {contact_3.email, contact_4.email}
+
+
+@pytest.mark.django_db
+def test_notification_message_with_specific_email(mailoutbox):
+    evenement = EvenementFactory()
+    contact_2, contact_3, _contact_5 = ContactStructureFactory.create_batch(3)
+    contact_2.sv_email = "sv@test.com"
+    contact_2.ssa_email = "ssa@test.com"
+    contact_2.save()
+
+    contact_3.sv_email = "sv2@test.com"
+    contact_3.ssa_email = "ssa@test.com"
+    contact_3.save()
+
+    message = create_message_and_notify(
+        message_type=Message.MESSAGE,
+        object=evenement,
+        recipients=[contact_2],
+        recipients_copy=[contact_3],
+    )
+
+    mail = assert_mail_common(mailoutbox, message, evenement)
+    assert message.content in mail.body
+    assert set(mail.to) == {"sv@test.com"}
+    assert set(mail.cc) == {"sv2@test.com"}
 
 
 @pytest.mark.django_db

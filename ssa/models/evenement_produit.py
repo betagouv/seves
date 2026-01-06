@@ -15,22 +15,17 @@ from core.mixins import (
 )
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
-from core.models import Document, LienLibre
+from core.models import LienLibre
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
-from ..constants import CategorieDanger, CategorieProduit, Source
+from ..constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, PretAManger
 from .mixins import (
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
     WithSharedNumeroMixin,
     WithLatestVersionMixin,
+    SsaBaseEvenementModel,
 )
-
-
-class PretAManger(models.TextChoices):
-    OUI = "oui", "Oui"
-    NON = "non", "Non"
-    SANS_OBJET = "sans_objet", "Sans objet"
 
 
 class TemperatureConservation(models.TextChoices):
@@ -45,6 +40,10 @@ class ActionEngagees(models.TextChoices):
     RETRAIT_RAPPEL = "retrait_rappel", "Retrait et information du consommateur / rappel "
     RETRAIT_RAPPEL_CP = "retrait_rappel_communique_presse", "Retrait et rappel avec communiqué de presse"
     RETRAIT_CONTROLE = "retrait_rappel_controle_effectivite", "Retrait et rappel avec contrôle de l'effectivité"
+    RETRAIT_CP_CONTROLE = (
+        "retrait_rappel_cp_controle_effectivite",
+        "Retrait et rappel avec communiqué de presse et contrôle de l'effectivité",
+    )
 
 
 class QuantificationUnite(models.TextChoices):
@@ -113,6 +112,7 @@ class QuantificationUnite(models.TextChoices):
 
 @reversion.register(follow=["contacts"])
 class EvenementProduit(
+    SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
@@ -130,6 +130,7 @@ class EvenementProduit(
     models.Model,
 ):
     # WithEvenementInformationMixin
+    type_evenement = models.CharField(max_length=100, choices=TypeEvenement.choices, verbose_name="Type d'événement")
     aliments_animaux = models.BooleanField(null=True, verbose_name="Inclut des aliments pour animaux")
 
     # Informations liées au produit
@@ -141,7 +142,7 @@ class EvenementProduit(
     lots = models.TextField(blank=True, verbose_name="Lots, DLC/DDM")
     description_complementaire = models.TextField(blank=True, verbose_name="Description complémentaire")
     temperature_conservation = models.CharField(
-        max_length=100, choices=TemperatureConservation.choices, verbose_name="Température de conservation"
+        max_length=100, choices=TemperatureConservation.choices, verbose_name="Température de conservation", blank=True
     )
 
     # Informations liées au risque
@@ -162,6 +163,8 @@ class EvenementProduit(
     numeros_rappel_conso = ArrayField(
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
+
+    historical_data = models.JSONField(default=dict, blank=True)
 
     objects = EvenementProduitManager()
 
@@ -267,20 +270,6 @@ class EvenementProduit(
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
 
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
-    def get_crdi_form(self):
-        from ssa.forms import CompteRenduDemandeInterventionForm
-
-        return CompteRenduDemandeInterventionForm
-
-    @property
-    def limit_contacts_to_user_from_app(self):
-        return "ssa"
-
     def get_short_email_display_name(self):
         return f"{self.get_type_evenement_display()} {self.numero}"
 
@@ -314,29 +303,6 @@ class EvenementProduit(
         <li>Danger : {self.get_categorie_danger_display()}</li>
         </ul>
         """
-
-    def get_allowed_document_types(self):
-        return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
-            Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
-            Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
-            Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
-            Document.TypeDocument.AUTRE,
-        ]
 
     class Meta:
         constraints = [

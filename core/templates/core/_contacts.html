@@ -39,7 +39,7 @@
         <div class="fr-col-12 fr-col-lg-6">
             {% for contact in contacts_structures %}
                 <div data-testid="contacts-structures" class="contact-structure fr-grid-row fr-mb-2v fr-p-2w">
-                    {% include "core/_carte_resume_contact_structure.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi %}
+                    {% include "core/_carte_resume_contact_structure.html" with contact=contact.contact is_in_fin_suivi=contact.is_in_fin_suivi email=contact.email %}
                 </div>
             {% endfor %}
         </div>

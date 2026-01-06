@@ -7,12 +7,21 @@
     margin-bottom: 1rem;
 }
 
-.evenement-produit-form-header{
+.evenement-produit-form-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
 }
+
+.evenement-produit-form-header .action-buttons {
+    margin: var(--title-spacing);
+    display: flex;
+}
+
+.evenement-produit-form-header .action-buttons .fr-link {
+    align-self: center;
+}
+
 .flex-column {
     display: flex;
     flex-direction: column;

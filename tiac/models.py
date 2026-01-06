@@ -173,7 +173,7 @@ class EvenementSimple(
         return not self.is_cloture and self.can_user_access(user)
 
     def get_email_subject(self):
-        return f"{self.numero}"
+        return f"Enregistrement simple {self.numero}"
 
     @property
     def type_evenement(self):
@@ -337,17 +337,11 @@ class InvestigationTiac(
     )
     conclusion_comment = models.TextField("Commentaire", default="", blank=True)
 
-    conclusion_etablissement = models.ForeignKey(
-        "tiac.Etablissement", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
     conclusion_repas = models.ForeignKey(
         "tiac.RepasSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
     )
     conclusion_aliment = models.ForeignKey(
         "tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
-    conclusion_analyse = models.ForeignKey(
-        "tiac.AnalyseAlimentaire", on_delete=models.PROTECT, null=True, default=None, blank=True
     )
 
     objects = InvestigationTiacManager()

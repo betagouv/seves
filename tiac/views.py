@@ -3,7 +3,6 @@ import io
 import json
 import os
 from functools import cached_property
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -16,7 +15,6 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
-from queryset_sequence import QuerySetSequence
 
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -31,8 +29,10 @@ from core.mixins import (
     WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
+    WithExportHeterogeneousQuerysetMixin,
+    WithFormsetInvalidMixin,
 )
-from core.models import Export, LienLibre
+from core.models import LienLibre
 from core.views import MediaDefiningMixin
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
@@ -55,7 +55,11 @@ from .notifications import notify_transfer, notify_transformation, notify_invest
 
 
 class EvenementSimpleManipulationMixin(
-    WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, MediaDefiningMixin, ProcessFormView
+    WithFormErrorsAsMessagesMixin,
+    WithAddUserContactsMixin,
+    MediaDefiningMixin,
+    WithFormsetInvalidMixin,
+    ProcessFormView,
 ):
     template_name = "tiac/evenement_simple.html"
     form_class = forms.EvenementSimpleForm
@@ -104,22 +108,6 @@ class EvenementSimpleManipulationMixin(
         messages.success(self.request, self.get_success_message())
         return super().form_valid(form)
 
-    def formset_invalid(self):
-        self.object = None
-        messages.error(
-            self.request,
-            "Erreurs dans le(s) formulaire(s) Etablissement",
-        )
-        for i, form in enumerate(self.get_etablissement_formset()):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(
-                            self.request, f"Erreur dans le formulaire établissement #{i + 1} : '{field}': {error}"
-                        )
-
-        return self.render_to_response(self.get_context_data())
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["etablissement_formset"] = self.get_etablissement_formset()
@@ -127,7 +115,12 @@ class EvenementSimpleManipulationMixin(
 
     def post(self, request, *args, **kwargs):
         if not self.get_etablissement_formset().is_valid():
-            return self.formset_invalid()
+            self.object = None
+            return self.formset_invalid(
+                self.get_etablissement_formset(),
+                "Erreurs dans le(s) formulaire(s) Établissements",
+                "Erreur dans le formulaire établissement",
+            )
         return super().post(request, *args, **kwargs)
 
 
@@ -279,6 +272,7 @@ class EvenementTransformView(UpdateView):
         self.investigation = InvestigationTiac(createur=self.request.user.agent.structure)
         for field in fields_to_copy:
             setattr(self.investigation, field, getattr(self.object, field))
+        self.investigation.follow_up = InvestigationFollowUp.INVESTIGATION_DD
         self.investigation.save()
 
     def _copy_etablissements(self):
@@ -315,7 +309,12 @@ class EvenementTransformView(UpdateView):
 
 
 class InvestigationTiacBaseView(
-    WithFormErrorsAsMessagesMixin, MediaDefiningMixin, WithAddUserContactsMixin, ModelFormMixin, ProcessFormView
+    WithFormErrorsAsMessagesMixin,
+    MediaDefiningMixin,
+    WithAddUserContactsMixin,
+    WithFormsetInvalidMixin,
+    ModelFormMixin,
+    ProcessFormView,
 ):
     template_name = "tiac/investigation.html"
     form_class = forms.InvestigationTiacForm
@@ -396,16 +395,6 @@ class InvestigationTiacBaseView(
             # Case where we're on a creation view
             return None
         return super().get_object(queryset)
-
-    def formset_invalid(self, formset, msg_1, msg_2):
-        messages.error(self.request, msg_1)
-        for i, form in enumerate(formset):
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
-
-        return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
         if not hasattr(self, "object"):
@@ -627,24 +616,11 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
         return self.object.can_user_access(self.request.user)
 
 
-class TiacExportView(WithFilteredListMixin, View):
+class TiacExportView(WithFilteredListMixin, WithExportHeterogeneousQuerysetMixin, View):
     http_method_names = ["post"]
 
-    def post(self, request):
-        queryset = self.get_queryset()
-        serialized_queryset_sequence = []
+    def get_export_task(self):
+        return export_tiac_task
 
-        if isinstance(queryset, QuerySetSequence):
-            for qs in queryset._querysets:
-                serialized_queryset_sequence.append(Export.from_queryset(qs))
-        else:
-            serialized_queryset_sequence = [Export.from_queryset(queryset)]
-
-        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
-        export_tiac_task.delay(task.id)
-        messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
-        )
-        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
-        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
-        return HttpResponseRedirect(f"{reverse('tiac:evenement-liste')}?{urlencode(allowed_params)}")
+    def get_success_url(self):
+        return reverse("tiac:evenement-liste")

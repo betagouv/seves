@@ -235,10 +235,8 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
             "suspicion_conclusion",
             "selected_hazard",
             "conclusion_comment",
-            "conclusion_etablissement",
             "conclusion_repas",
             "conclusion_aliment",
-            "conclusion_analyse",
         ],
         ignore_array_order=True,
     )

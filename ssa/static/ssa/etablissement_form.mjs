@@ -12,13 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getNextIdToUse() {
-        const ids = document.querySelectorAll("dialog[data-form-prefix]").values().map(el => {
+        const ids = [];
+        for(const el of document.querySelectorAll("dialog[data-form-prefix]")) {
             try {
-                return parseInt(el.dataset.formPrefix.match(/\d+/g)[0], 10)
-            } catch {
-                return Number.MIN_VALUE
-            }
-        });
+                ids.push(parseInt(el.dataset.formPrefix.match(/\d+/g)[0], 10))
+            } catch { /* */ }
+        }
         return Math.max(...ids, -1) + 1
     }
 
@@ -204,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
         card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
             modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement-${prefix} .fr-modal__content`).cloneNode(true)
+            document.querySelector(`#fr-modal-etablissement-${prefix} [id$=raison_sociale]`).required = true
         })
         document.getElementById("etablissement-card-container").appendChild(card);
         const totalForm = document.querySelector('#etablissement-management-form [name$="TOTAL_FORMS"]')

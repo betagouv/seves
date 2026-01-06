@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
+from core.constants import Domains
 from core.form_mixins import DSFRForm, WithNextUrlMixin, WithContentTypeMixin
 from core.fields import (
     DSFRRadioButton,
@@ -187,13 +188,15 @@ class CommonMessageMixin:
         return mark_safe("\n".join(html_parts))
 
     def _get_recipients_label(self, obj):
-        return self._build_label_with_shortcuts("Destinataires*", obj, with_contacts=True)
+        return self._build_label_with_shortcuts(
+            mark_safe('<span class="label-marked">Destinataires</span>'), obj, with_contacts=True
+        )
 
     def _get_recipients_copy_label(self, obj):
         return self._build_label_with_shortcuts("Copie", obj, with_contacts=True, prefix="copie")
 
     def _get_recipients_structures_only_label(self, obj):
-        return self._build_label_with_shortcuts("Destinataires*", obj)
+        return self._build_label_with_shortcuts(mark_safe('<span class="label-marked">Destinataires</span>'), obj)
 
     def _get_recipients_copy_structures_only_label(self, obj):
         return self._build_label_with_shortcuts("Copie", obj, prefix="copie")
@@ -220,7 +223,7 @@ class CommonMessageMixin:
             field.label = self.fields[field.name].label
 
     def _add_object_field(self, obj, message_type):
-        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type))
+        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type), self.sender)
         new_field = ("message_object", field)
         fields = list(self.fields.items())
         index = next(i for i, (name, _) in enumerate(fields) if name == "title")
@@ -399,9 +402,11 @@ class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, f
 
 
 class BaseMessageForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, CommonMessageMixin, forms.ModelForm):
-    recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires*")
+    recipients = ContactModelMultipleChoiceField(
+        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
+    )
     recipients_structures_only = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.none(), label="Destinataires*"
+        queryset=Contact.objects.none(), label=mark_safe('<span class="label-marked">Destinataires</span>')
     )
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     recipients_copy_structures_only = ContactModelMultipleChoiceField(
@@ -561,11 +566,12 @@ class StructureAddForm(DSFRForm):
     )
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         super().__init__(*args, **kwargs)
+        needed_group = Domains.group_for_value(obj._meta.app_label)
         queryset = (
             Contact.objects.structures_only()
-            .filter(structure__in=Structure.objects.can_be_contacted())
+            .filter(structure__in=Structure.objects.can_be_contacted_and_agent_has_group(needed_group))
             .order_by("structure__libelle")
             .select_related("structure")
         )
@@ -585,11 +591,12 @@ class AgentAddForm(DSFRForm):
     )
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj", None)
+        obj = kwargs.pop("obj")
         super().__init__(*args, **kwargs)
+        needed_group = Domains.group_for_value(obj._meta.app_label)
         queryset = (
-            Contact.objects.agents_only()
-            .can_be_emailed()
+            Contact.objects.can_be_emailed()
+            .agents_with_group(needed_group)
             .select_related("agent", "agent__structure")
             .order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
         )

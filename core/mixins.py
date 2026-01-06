@@ -4,6 +4,7 @@ import logging
 import unicodedata
 from collections import defaultdict
 from typing import Mapping
+from urllib.parse import urlencode
 
 from celery.exceptions import OperationalError
 from django.conf import settings
@@ -13,10 +14,12 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.forms.utils import RenderableMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, RichText
+from queryset_sequence import QuerySetSequence
 from waffle import flag_is_active
 
 from core.forms import (
@@ -26,7 +29,7 @@ from core.forms import (
     StructureAddForm,
     AgentAddForm,
 )
-from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User
+from core.models import Document, LienLibre, Contact, Message, Visibilite, Structure, FinSuiviContact, User, Export
 from core.models import user_is_referent_national
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter
@@ -130,6 +133,8 @@ class WithMessageMixin:
         context["message_update_forms"] = self._get_message_update_forms(message_list)
         context["message_v2"] = flag_is_active(self.request, "message_v2")
         context["message_content_type"] = ContentType.objects.get_for_model(Message)
+        context["can_add_di"] = self.request.user.agent.structure.is_ac
+        context["can_add_cr_di"] = not self.request.user.agent.structure.is_ac
         return context
 
 
@@ -175,6 +180,7 @@ class WithContactListInContextMixin(WithContactQuerysetMixin):
             {
                 "contact": contact,
                 "is_in_fin_suivi": contact.structure_id in structures_fin_suivi_ids,
+                "email": contact.get_email_for_object(obj),
             }
             for contact in self.get_structures(obj)
         ]
@@ -785,6 +791,14 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
         obj = self.object
         messages = [m for m in obj.messages.filter(status=Message.Status.FINALISE)]
         sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
+
+        for message in messages:
+            text = message.content.split("\n")
+            rich_text = RichText()
+            for i, line in enumerate(text):
+                rich_text.add(line)
+            message.rt_content = rich_text
+
         context = {
             "messages": messages,
             "agents": self.get_agents(obj),
@@ -838,3 +852,42 @@ class WithChoicesToJS:
             sort_tree(options)
 
         return options
+
+
+class WithExportHeterogeneousQuerysetMixin:
+    def get_export_task(self):
+        raise NotImplementedError
+
+    def get_success_url(self):
+        raise NotImplementedError
+
+    def post(self, request):
+        queryset = self.get_queryset()
+        serialized_queryset_sequence = []
+
+        if isinstance(queryset, QuerySetSequence):
+            for qs in queryset._querysets:
+                serialized_queryset_sequence.append(Export.from_queryset(qs))
+        else:
+            serialized_queryset_sequence = [Export.from_queryset(queryset)]
+
+        task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
+        self.get_export_task().delay(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{self.get_success_url()}?{urlencode(allowed_params)}")
+
+
+class WithFormsetInvalidMixin:
+    def formset_invalid(self, formset, msg_1, msg_2):
+        messages.error(self.request, msg_1)
+        for i, form in enumerate(formset):
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
+
+        return self.render_to_response(self.get_context_data())

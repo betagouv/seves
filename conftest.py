@@ -160,6 +160,19 @@ def choice_js_get_values(db, page):
     return _choice_js_get_values
 
 
+@pytest.fixture
+def choice_js_get_all_values(db, page):
+    def _choice_js_get__all_values(page, locator):
+        all_options = page.locator(f"{locator} .choices__list .choices__item--selectable")
+        texts = []
+        for i in range(all_options.count()):
+            text = all_options.nth(i).inner_text()
+            texts.append(text)
+        return texts
+
+    return _choice_js_get__all_values
+
+
 def _check_select_options_on_element(element, expected_options, with_default_value):
     options = element.locator("option").element_handles()
     visible_texts = []

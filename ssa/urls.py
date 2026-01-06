@@ -7,14 +7,17 @@ from .views import (
     EvenementsListView,
     FindNumeroAgrementView,
     EvenementUpdateView,
-)
-from .views.investigation_cas_humain import InvestigationCasHumainDetailView
-from .views.produit import (
-    EvenementProduitExportView,
-    EvenementProduitDocumentExportView,
     InvestigationCasHumainCreateView,
-    InvestigationCasHumainUpdateView,
 )
+from .views.investigation_cas_humain import (
+    InvestigationCasHumainDetailView,
+    InvestigationCasHumainUpdateView,
+    InvestigationCasHumainDocumentExportView,
+)
+from .views.produit import (
+    EvenementProduitDocumentExportView,
+)
+from .views.common import CsvExportView
 
 app_name = "ssa"
 urlpatterns = [
@@ -44,9 +47,9 @@ urlpatterns = [
         name="evenement-produit-update",
     ),
     path(
-        "export/evenement-produit/",
-        EvenementProduitExportView.as_view(),
-        name="export-evenement-produit",
+        "export/evenements/",
+        CsvExportView.as_view(),
+        name="export-csv",
     ),
     path(
         "export/evenement-produit/<int:pk>/document/",
@@ -72,5 +75,10 @@ urlpatterns = [
         "investigation-cas-humain/<int:pk>/details/",
         InvestigationCasHumainDetailView.as_view(),
         name="investigation-cas-humain-details",
+    ),
+    path(
+        "export/investigation-cas-humain/<int:pk>/document/",
+        InvestigationCasHumainDocumentExportView.as_view(),
+        name="export-investigation-cas-humain-document",
     ),
 ]

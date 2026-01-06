@@ -7,12 +7,18 @@ from django.conf import settings
 
 
 def _send_message(
-    recipients: list[str], copy: list[str], subject: str, content: str, message_obj: Message, message_v2_enabled
+    recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message, message_v2_enabled
 ):
+    if settings.SEND_NOTIFICATIONS is False:
+        return
+    recipients = [r.get_email_for_object(message_obj.content_object) for r in recipients]
+    recipients = [r for r in recipients if r != ""]
+    copy = [c.get_email_for_object(message_obj.content_object) for c in copy]
+    copy = [c for c in copy if c != ""]
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
-            "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()}",
+            "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()} de {message_obj.sender_structure}",
             "html_content": """
                 <!DOCTYPE html>
                 <html>
@@ -56,8 +62,12 @@ def _filter_contacts_in_fin_de_suivi(recipients, object):
     return [r for r in recipients if r not in emails_to_exclude]
 
 
-def send_as_seves(*, recipients, subject, message, html_message, object=None):
+def send_as_seves(*, recipients: list[Contact], subject, message, html_message, object):
+    if settings.SEND_NOTIFICATIONS is False:
+        return
     if object:
+        recipients = [r.get_email_for_object(object) for r in recipients]
+        recipients = [r for r in recipients if r != ""]
         recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
         suffix_html = f"""<p>
             Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a>.
@@ -99,16 +109,16 @@ def notify_message(message_obj: Message, message_v2_enabled=False):
 
     match message_obj.message_type:
         case Message.MESSAGE:
-            recipients = [r.email for r in message_obj.recipients.all()]
-            copy = [r.email for r in message_obj.recipients_copy.all()]
+            recipients = message_obj.recipients.all()
+            copy = message_obj.recipients_copy.all()
         case Message.COMPTE_RENDU | Message.POINT_DE_SITUATION:
-            recipients = [r.email for r in message_obj.recipients.all()]
+            recipients = message_obj.recipients.all()
         case Message.DEMANDE_INTERVENTION:
-            recipients = [r.email for r in message_obj.recipients.structures_only()]
-            copy = [r.email for r in message_obj.recipients_copy.structures_only()]
+            recipients = message_obj.recipients.structures_only()
+            copy = message_obj.recipients_copy.structures_only()
         case Message.NOTIFICATION_AC:
             content = f"Bonjour,\nLa fiche {message_obj.content_object.numero} vient d'être déclarée à l'administration centrale."
-            recipients = [Contact.objects.get_mus().email, Contact.objects.get_bsv().email]
+            recipients = [Contact.objects.get_mus(), Contact.objects.get_bsv()]
 
     if recipients and content:
         _send_message(
@@ -132,7 +142,7 @@ def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):
     by_text = "" if added else f" par {user.agent.agent_with_structure}"
     send_as_seves(
         object=obj,
-        recipients=[contact.email],
+        recipients=[contact],
         subject=f"{obj.get_short_email_display_name()} - {subject}",
         message=f"""
 Bonjour,
@@ -145,9 +155,10 @@ Vous avez été {action} suivi de l’évènement : {obj.get_long_email_display_
     )
 
 
-def notify_export_is_ready(export: Export):
+def notify_export_is_ready(export: Export, object):
     send_as_seves(
-        recipients=[export.user.email],
+        recipients=[export.user.agent.contact_set.get()],
+        object=object,
         subject="Votre export est prêt",
         message=f"""
 Bonjour,
@@ -168,9 +179,8 @@ Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide
 
 
 def notify_fin_de_suivi(object, structure):
-    recipients = [r.email for r in object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE)]
     send_as_seves(
-        recipients=recipients,
+        recipients=object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE),
         object=object,
         subject=f"{object.get_short_email_display_name()} - Fin de suivi",
         message=f"""
@@ -189,10 +199,10 @@ def notify_message_deleted(message: Message):
     if message.is_draft:
         return
     object = message.content_object
-    recipients = [r.email for r in message.recipients.all()]
-    copy = [r.email for r in message.recipients_copy.all()]
-    recipients_structure = [r.email for r in message.recipients.structures_only()]
-    copy_structures = [r.email for r in message.recipients_copy.structures_only()]
+    recipients = list(message.recipients.all())
+    copy = list(message.recipients_copy.all())
+    recipients_structure = list(message.recipients.structures_only())
+    copy_structures = list(message.recipients_copy.structures_only())
     send_as_seves(
         recipients=list(set(recipients + copy + recipients_structure + copy_structures)),
         object=object,
@@ -213,9 +223,8 @@ def notify_message_deleted(message: Message):
 
 
 def notify_object_cloture(object):
-    recipients = [r.email for r in object.contacts.structures_only().exclude_mus()]
     send_as_seves(
-        recipients=recipients,
+        recipients=object.contacts.structures_only().exclude_mus(),
         object=object,
         subject=f" {object.get_short_email_display_name()} - Clôture de l’évènement",
         message=f"""

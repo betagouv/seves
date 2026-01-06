@@ -1,7 +1,7 @@
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory, DepartementFactory
+from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from ssa.factories import InvestigationCasHumainFactory, EtablissementFactory
@@ -29,7 +29,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
         "reference_souches",
         "reference_clusters",
     ]
-    select_fields = ["type_evenement", "source"]
+    select_fields = ["source"]
 
     # We need to check all the values *before* we make any changes because some field resets when there is a change
     for field in inputs_fields + select_fields:
@@ -51,9 +51,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
     update_page.add_free_link(for_other_free_link.numero, choice_js_fill)
 
     update_page.submit_as_draft()
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
 
     evenement.refresh_from_db()
     assert evenement.is_draft is True
@@ -74,9 +72,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_publish(live_server
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.is_published is True
     assert evenement.description == "New value"
@@ -92,9 +88,7 @@ def test_update_investigation_cas_humain_will_not_change_createur(live_server, p
     update_page.description.fill("New value")
     update_page.publish()
 
-    expect(
-        update_page.page.get_by_text("La fiche d'investigation cas humain a été mise à jour avec succès.")
-    ).to_be_visible()
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.createur == createur
 
@@ -184,3 +178,89 @@ def test_can_udpate_etablissement_with_error_show_message(live_server, page, ass
     ).to_be_visible()
 
     assert Etablissement.objects.get().numero_agrement == etablissement.numero_agrement
+
+
+def test_contact_added_to_investigation_cas_humain_when_edit(live_server, page, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(
+        createur=StructureFactory(), etat=EvenementInvestigationCasHumain.Etat.EN_COURS, not_bacterie=True
+    )
+    assert evenement.contacts.count() == 0
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.description.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
+    assert evenement.contacts.count() == 2
+    assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
+    assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
+
+
+def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_authentification_user):
+    createur = StructureFactory()
+    evenement = InvestigationCasHumainFactory(
+        createur=createur, not_bacterie=True, etat=EvenementInvestigationCasHumain.Etat.EN_COURS
+    )
+    structure = ContactStructureFactory()
+    agent = ContactAgentFactory()
+    evenement.contacts.add(structure)
+    evenement.contacts.add(agent)
+    assert evenement.contacts.count() == 2
+
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.description.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert set(evenement.contacts.all()) == {
+        agent,
+        structure,
+        mocked_authentification_user.agent.contact_set.get(),
+        mocked_authentification_user.agent.structure.contact_set.get(),
+    }
+
+
+def test_update_reference_souches_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(
+        not_bacterie=True, reference_souches="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_souches.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_souches == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence souche : New value" in mail.body
+
+
+def test_update_reference_clusters_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(
+        not_bacterie=True, reference_clusters="Test", etat=WithEtatMixin.Etat.EN_COURS
+    )
+    other_agent_contact = ContactAgentFactory()
+    evenement.contacts.add(other_agent_contact)
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.reference_clusters.fill("New value")
+    update_page.publish()
+
+    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.reference_clusters == "New value"
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == [other_agent_contact.email]
+    assert evenement.numero in mail.subject
+    assert "Souche / cluster" in mail.subject
+    assert "Référence cluster : New value" in mail.body

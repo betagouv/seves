@@ -1,3 +1,4 @@
+import json
 import logging
 from functools import wraps
 
@@ -21,7 +22,7 @@ from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
 from waffle import flag_is_active
 
-from core.diffs import CompareMixin, get_diff_from_comment_version
+from core.diffs import CompareMixin, get_diff_from_comment_version, Diff
 from .forms import (
     DocumentUploadForm,
     DocumentEditForm,
@@ -41,6 +42,7 @@ from .mixins import (
     WithACNotificationMixin,
     MessageHandlingMixin,
     WithFormErrorsAsMessagesMixin,
+    WithEtatMixin,
 )
 from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
 from .notifications import notify_contact_agent_added_or_removed
@@ -206,7 +208,14 @@ class MessageCreateView(
             self.reply_id = self.request.GET.get("reply_id")
             if self.reply_id:
                 return BasicMessageForm
-            return mapping.get(self.request.GET.get("type"))
+            message_form = mapping.get(self.request.GET.get("type"))
+
+            is_ac = self.request.user.agent.structure.is_ac
+            if message_form == DemandeInterventionForm and not is_ac:
+                raise PermissionDenied
+            if message_form == self.obj.get_crdi_form() and is_ac:
+                raise PermissionDenied
+            return message_form
         return self.obj.get_message_form()
 
     def dispatch(self, request, *args, **kwargs):
@@ -234,10 +243,13 @@ class MessageCreateView(
             if self.reply_id:
                 reply_message = Message.objects.get(id=self.reply_id)
                 if reply_message.can_reply_to(self.request.user):
+                    title = reply_message.title
+                    if not reply_message.title.startswith(settings.REPLY_PREFIX):
+                        title = f"{settings.REPLY_PREFIX} {reply_message.title}"
                     kwargs.update(
                         {
                             "initial": {
-                                "title": f"[Rép] {reply_message.title}",
+                                "title": title,
                                 "recipients": reply_message.sender_structure.contact_set.get(),
                                 "content": reply_message.get_reply_intro_text(),
                             }
@@ -441,12 +453,13 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         return self.get_fiche_object().can_add_structure(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        form = StructureAddForm(request.POST)
+        self.obj = self.get_fiche_object()
+
+        form = StructureAddForm(request.POST, obj=self.obj)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de la structure.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        self.obj = self.get_fiche_object()
         contacts_structures = form.cleaned_data["contacts_structures"]
         with transaction.atomic():
             for contact_structure in contacts_structures:
@@ -478,12 +491,12 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         return self.get_fiche_object().can_add_agent(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        form = AgentAddForm(request.POST)
+        self.obj = self.get_fiche_object()
+        form = AgentAddForm(request.POST, obj=self.obj)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de l'agent.")
             return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
 
-        self.obj = self.get_fiche_object()
         contacts_agents = form.cleaned_data["contacts_agents"]
         allowed_contacts_structures_to_add = []
         with transaction.atomic():
@@ -619,24 +632,33 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             .exclude(serialized_data={})
         )
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["object"] = self.object
+    def get_initial_patch(self, versions):
+        etat_value = json.loads(list(versions)[-1].serialized_data)[0]["fields"]["etat"]
+        readable_etat = WithEtatMixin.Etat(etat_value).label
+        return Diff(field="Statut", old="Vide", new=readable_etat, revision=list(versions)[-1].revision)
 
-        comments_versions = (
+    def get_comment_versions(self):
+        return (
             Version.objects.get_for_object(self.object)
             .select_related("revision", "revision__user__agent__structure")
             .order_by("-revision__date_created")
             .filter(serialized_data={})
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+
         versions = context["object_list"]
-        context["patches"] = []
+        if not versions:
+            return context
+
+        context["patches"] = [self.get_initial_patch(versions)]
         for i in range(1, len(versions)):
             diffs, _ = self.compare(self.object, versions[i], versions[i - 1])
             context["patches"].extend(diffs)
 
-        for version in comments_versions:
+        for version in self.get_comment_versions():
             comment_diff = get_diff_from_comment_version(version)
             if comment_diff:
                 context["patches"].append(comment_diff)

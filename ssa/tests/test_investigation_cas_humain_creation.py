@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.mixins import WithEtatMixin
-from core.models import Departement, LienLibre
+from core.models import Departement, LienLibre, Contact
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
@@ -36,7 +36,6 @@ def test_can_create_investigation_cas_humain_with_required_fields_only(
 
     investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
     assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
-    assert investigation_cas_humain.type_evenement == input_data.type_evenement
     assert investigation_cas_humain.description == input_data.description
     assert investigation_cas_humain.numero is not None
     assert investigation_cas_humain.is_draft is True
@@ -45,7 +44,7 @@ def test_can_create_investigation_cas_humain_with_required_fields_only(
 def test_can_create_investigation_cas_humain_with_all_fields(
     live_server, mocked_authentification_user, assert_models_are_equal, page: Page
 ):
-    input_data = InvestigationCasHumainFactory.build()
+    input_data = InvestigationCasHumainFactory.build(not_bacterie=True)
     creation_page = InvestigationCasHumainFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
@@ -67,6 +66,7 @@ def test_can_create_investigation_cas_humain_with_all_fields(
         input_data,
         to_exclude=[
             "_prefetched_objects_cache",
+            "_original_state",
             "_state",
             "id",
             "numero_annee",
@@ -87,7 +87,6 @@ def test_can_publish_investigation_cas_humain(live_server, mocked_authentificati
 
     investigation_cas_humain = EvenementInvestigationCasHumain.objects.get()
     assert investigation_cas_humain.createur == mocked_authentification_user.agent.structure
-    assert investigation_cas_humain.type_evenement == input_data.type_evenement
     assert investigation_cas_humain.description == input_data.description
     assert investigation_cas_humain.numero is not None
     assert investigation_cas_humain.is_draft is False
@@ -149,6 +148,10 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, ensure_d
     creation_page.fill_required_fields(evenement)
     creation_page.add_etablissement(etablissement)
     creation_page.open_edit_etablissement()
+    expect(creation_page.page.locator('[id$="raison_sociale"]')).to_have_attribute("required", "")
+    expect(creation_page.page.locator('[id$="numero_agrement"]')).to_have_attribute(
+        "pattern", r"^\d{2,3}\.\d{2,3}\.\d{2,3}$"
+    )
     creation_page.current_modal.locator('[id$="-departement"]').select_option("01 - Ain")
     creation_page.close_etablissement_modal()
 
@@ -500,3 +503,20 @@ def test_cant_add_free_links_for_etat_brouillon(live_server, page: Page, choice_
     creation_page.fill_required_fields(evenement)
     numero = "Événement produit : " + str(evenement_1.numero)
     choice_js_cant_pick(creation_page.page, "#liens-libre .choices", numero, numero)
+
+
+def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationCasHumainFactory.build()
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementInvestigationCasHumain.objects.get()
+    assert evenement_produit.contacts.count() == 2
+
+    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
+    assert user_contact_agent in evenement_produit.contacts.all()
+
+    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
+    assert user_contact_structure in evenement_produit.contacts.all()
