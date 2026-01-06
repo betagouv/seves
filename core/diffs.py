@@ -34,8 +34,13 @@ class Diff:
             value = "Non"
         return value
 
+    def _normalize_field(self, field):
+        if field == "transfered to":
+            return "Transféré à"
+        return field
+
     def __init__(self, field, old, new, revision=None, comment=""):
-        self.field = field
+        self.field = self._normalize_field(field)
         self.old = self._normalize_value(old)
         self.new = self._normalize_value(new)
         self.comment = comment

@@ -16,6 +16,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
 
+from core.diffs import create_manual_version
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -304,6 +305,11 @@ class EvenementTransformView(UpdateView):
         self._copy_etablissements()
         self._copy_and_add_free_links()
         notify_transformation(self.object, self.investigation)
+        create_manual_version(
+            self.object,
+            f"L'événement a été passé en investigation de TIAC ({self.investigation.numero})",
+            user=self.request.user,
+        )
         messages.success(self.request, "L'événement a bien été passé en investigation de TIAC.")
         return HttpResponseRedirect(reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.investigation.pk}))
 
