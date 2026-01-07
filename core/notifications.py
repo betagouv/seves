@@ -49,7 +49,7 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
             "content": content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id)}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
         },
     )
 

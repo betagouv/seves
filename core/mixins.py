@@ -447,10 +447,6 @@ class EmailNotificationMixin:
     def get_email_subject(self):
         raise NotImplementedError
 
-    # TODO remove me ?
-    def get_absolute_url_with_message(self, message_id: int):
-        return Message.objects.get(pk=message_id).get_absolute_url()
-
 
 class WithFormErrorsAsMessagesMixin(FormView):
     def form_invalid(self, form):

@@ -23,18 +23,10 @@ from core.models import Message, Contact, Structure, Visibilite, Document
 from core.pages import UpdateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_message_without_document,
-    generic_test_can_update_draft_message,
-    generic_test_can_update_draft_note,
-    generic_test_can_update_draft_point_situation,
-    generic_test_can_update_draft_demande_intervention,
-    generic_test_can_finaliser_draft_note,
     generic_test_can_only_see_own_document_types_in_message_form,
-    generic_test_can_see_and_delete_documents_from_draft_message,
     generic_test_only_displays_app_contacts,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_structure_show_only_one_entry_in_select,
-    generic_test_can_send_draft_message,
-    generic_test_can_send_draft_point_de_situation,
     generic_test_can_add_and_see_message_in_new_tab_without_document,
     generic_test_can_add_see_message_in_new_tab_without_document_in_draft,
     generic_test_can_add_and_see_note_in_new_tab_without_document,
@@ -1569,12 +1561,6 @@ def test_draft_messages_always_displayed_first_in_messages_list(live_server, pag
     expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)
 
 
-def test_can_update_draft_message(live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox):
-    generic_test_can_update_draft_message(
-        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
-
-
 def test_can_update_draft_message_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
@@ -1587,18 +1573,8 @@ def test_cant_see_drafts_from_other_users(live_server, page: Page):
     generic_test_cant_see_drafts_from_other_users(live_server, page, EvenementFactory())
 
 
-def test_can_update_draft_note(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_update_draft_note(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
-
-
 def test_can_update_draft_note_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_note_in_new_tab(
-        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
-
-
-def test_can_update_draft_point_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_update_draft_point_situation(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
 
@@ -1606,14 +1582,6 @@ def test_can_update_draft_point_situation(live_server, page: Page, mocked_authen
 def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_point_situation_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
-
-
-def test_can_update_draft_demande_intervention(
-    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
-):
-    generic_test_can_update_draft_demande_intervention(
-        live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
 
 
@@ -1658,41 +1626,15 @@ def test_can_update_draft_compte_rendu_demande_intervention(
     assert len(mailoutbox) == 0
 
 
-def test_can_send_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_send_draft_message(live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox)
-
-
 def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_send_draft_message_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
 
 
-def test_can_send_draft_point_de_situation(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    generic_test_can_send_draft_point_de_situation(
-        live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
-    )
-
-
-def test_can_finaliser_draft_note(live_server, page: Page, mocked_authentification_user):
-    generic_test_can_finaliser_draft_note(live_server, page, mocked_authentification_user, EvenementFactory())
-
-
 def test_can_only_see_own_document_types_in_message_form(live_server, page: Page, check_select_options_from_element):
     generic_test_can_only_see_own_document_types_in_message_form(
         live_server, page, check_select_options_from_element, EvenementFactory()
-    )
-
-
-def test_can_see_and_delete_documents_from_draft_message(
-    live_server, page: Page, mocked_authentification_user, mailoutbox
-):
-    generic_test_can_see_and_delete_documents_from_draft_message(
-        live_server,
-        page,
-        EvenementFactory(),
-        mocked_authentification_user,
-        mailoutbox,
     )
 
 
