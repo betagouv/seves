@@ -163,7 +163,7 @@ def test_notification_compte_rendu(mailoutbox, mus_contact):
     assert set(mail.cc) == set()
 
 
-def test_email_contains_correct_link_to_fiche_with_message(mailoutbox):
+def test_email_contains_correct_link_to_fiche(mailoutbox):
     evenement = EvenementFactory()
     create_message_and_notify(
         message_type=Message.MESSAGE,

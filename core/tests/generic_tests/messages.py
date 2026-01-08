@@ -16,7 +16,7 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     message_page = CreateMessagePage(page)
     message_page.new_message()
     message_page.pick_recipient(active_contact, choice_js_fill)
-    expect(message_page.message_form_title).to_have_text("message")
+    expect(message_page.message_form_title).to_have_text("Nouveau message")
 
     message_page.message_title.fill("Title of the message")
     message_page.message_content.fill("My content \n with a line return")
@@ -28,10 +28,12 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     assert message_page.message_recipient_in_table() == str(active_contact)
     assert message_page.message_title_in_table() == "Title of the message"
     assert message_page.message_type_in_table() == "Message"
-    message_page.open_message()
+    with page.context.expect_page() as new_page_info:
+        message_page.open_message()
+    new_page = new_page_info.value
 
-    expect(page.get_by_text("Title of the message", exact=True)).to_be_visible()
-    assert "My content <br> with a line return" in message_page.message_content.inner_html()
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    assert "My content <br> with a line return" in new_page.content()
     assert object.messages.get().status == Message.Status.FINALISE
 
 

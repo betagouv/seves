@@ -95,7 +95,7 @@ class BaseMessagePage(ABC):
 
     @property
     def message_form_title(self):
-        return self.page.locator("#message-type-title")
+        return self.page.locator("h1")
 
     @property
     def message_title(self):
@@ -103,7 +103,7 @@ class BaseMessagePage(ABC):
 
     @property
     def message_content(self):
-        return self.page.locator(f"{self.container_id} {self.CONTENT_ID}")
+        return self.page.locator(f"{self.CONTENT_ID}")
 
     @property
     def submit_button(self):

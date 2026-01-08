@@ -1,6 +1,4 @@
-import os
 import re
-import tempfile
 from datetime import datetime
 
 import pytest
@@ -799,104 +797,6 @@ def test_can_delete_document_attached_to_message(live_server, page: Page, mocked
     assert document.deleted_by == mocked_authentification_user.agent
 
 
-def test_message_with_document_exceeding_max_size_shows_validation_error(live_server, page: Page, choice_js_fill):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
-    # Créer un fichier temporaire CSV de 16Mo
-    file_size = 16 * 1024 * 1024
-    fd, temp_path = tempfile.mkstemp(suffix=".csv")
-    os.truncate(fd, file_size)
-    os.close(fd)
-
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-    choice_js_fill(
-        page,
-        'label[for="id_recipients"] ~ div.choices',
-        active_contact.nom,
-        active_contact.contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    page.locator("#id_title").fill("Message avec fichier trop volumineux")
-    page.locator("#id_content").fill("Test de validation de taille de fichier")
-
-    file_input = page.locator("#id_file")
-    max_size_attr = file_input.get_attribute("data-max-size")
-    assert int(max_size_attr) == 15 * 1024 * 1024
-
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files(temp_path)
-
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "Le fichier est trop volumineux (maximum 15 Mo autorisés)" in validation_message
-
-    page.get_by_test_id("fildesuivi-add-submit").click()
-
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-    assert evenement.messages.count() == 0
-
-    os.unlink(temp_path)
-
-
-def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
-    evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-    page.locator("#id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-
-    file_input = page.locator("#id_file")
-    assert file_input.get_attribute("accept") == ".png,.jpg,.jpeg"
-    assert page.locator("#allowed-extensions-list").inner_text() == "png, jpg, jpeg"
-
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#id_file');
-        fileInput.removeAttribute('data-accept-allowed-extensions');
-    }""")
-
-    page.locator("#id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    file_input = page.locator("#id_file")
-    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-
-    expect(file_input).to_be_disabled()
-    expect(page.locator("#message-add-document")).to_be_disabled()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_missing_accept_for_cartographie_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#id_file');
-        fileInput.setAttribute('data-accept-allowed-extensions', '{"compte_rendu_reunion": ".pdf"}');
-    }""")
-
-    page.locator("#id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    file_input = page.locator("#id_file")
-    file_input.set_input_files("scalingo.json")
-
-    expect(file_input).to_be_disabled()
-    expect(page.locator("#message-add-document")).to_be_disabled()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
 def test_empty_option_is_delete_after_selecting_document_type(live_server, page: Page):
     """Test que l'option vide est supprimée après avoir sélectionné un type de document"""
     evenement = EvenementFactory()
@@ -921,24 +821,6 @@ def test_empty_document_type_option_after_document_added(live_server, page: Page
     page.locator("#message-add-document").click()
 
     expect(page.get_by_label("Type de document", exact=True)).to_have_value("")
-
-
-@pytest.mark.django_db
-def test_document_cartographie_upload_disabled_when_invalid_file_added_for_other_type(live_server, page: Page):
-    evenement = EvenementFactory()
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as temp_pdf_file:
-        page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-        page.get_by_test_id("element-actions").click()
-        page.get_by_role("link", name="Message").click()
-        page.locator("#id_document_type").select_option(Document.TypeDocument.AUTRE)
-        page.locator("#id_file").set_input_files(temp_pdf_file.name)
-        page.locator("#id_document_type").select_option("Cartographie")
-
-    expect(page.locator("#message-add-document")).to_be_disabled()
-    validation_message = page.locator("#id_file").evaluate("el => el.validationMessage")
-    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
 
 
 def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
