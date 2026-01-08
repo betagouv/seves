@@ -120,7 +120,7 @@ def test_can_send_draft_compte_rendu(live_server, page: Page, mocked_authentific
     )
 
     page.goto(f"{live_server.url}{evenement_produit.get_absolute_url()}")
-    message_page = UpdateMessagePage(page, f"#sidebar-message-{message.id}")
+    message_page = UpdateMessagePage(page)
     message_page.open_message()
     message_page.submit_message()
 

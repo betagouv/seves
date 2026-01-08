@@ -30,8 +30,8 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     assert message_page.message_type_in_table() == "Message"
     message_page.open_message()
 
-    expect(message_page.message_title_in_sidebar).to_be_visible()
-    assert "My content <br> with a line return" in message_page.message_content_in_sidebar.inner_html()
+    expect(page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    assert "My content <br> with a line return" in message_page.message_content.inner_html()
     assert object.messages.get().status == Message.Status.FINALISE
 
 
@@ -603,8 +603,9 @@ def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
         other_contact_structure.display_with_agent_unit,
         other_contact_agent.display_with_agent_unit,
     }
-    assert set(choice_js_get_values(page, "#id_recipients", delete_remove_link=True)) == expected, (
-        f"Got {set(choice_js_get_values(page, '#id_recipients', delete_remove_link=True))}"
+    locator = "label[for='id_recipients']"
+    assert set(choice_js_get_values(page, locator, delete_remove_link=True)) == expected, (
+        f"Got {set(choice_js_get_values(page, locator, delete_remove_link=True))}"
     )
 
     FinSuiviContact.objects.create(
@@ -618,6 +619,6 @@ def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
         other_contact_structure.display_with_agent_unit,
         other_contact_agent.display_with_agent_unit,
     }
-    assert set(choice_js_get_values(page, "#id_recipients", delete_remove_link=True)) == expected, (
-        f"Got {set(choice_js_get_values(page, '#id_recipients', delete_remove_link=True))}"
+    assert set(choice_js_get_values(page, locator, delete_remove_link=True)) == expected, (
+        f"Got {set(choice_js_get_values(page, locator, delete_remove_link=True))}"
     )
