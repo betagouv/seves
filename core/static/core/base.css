@@ -167,6 +167,10 @@ fieldset {
     content: "RECETTE";
     background-color: red;
 }
+.environment-preprod::before {
+    content: "PREPROD";
+    background-color: darkred;
+}
 .environment-dev::before {
     content: "DEV";
     background-color: green;
