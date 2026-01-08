@@ -23,7 +23,7 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     contact = ContactAgentFactory()
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -34,7 +34,7 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id, evenement_2.id, evenement_3.id]}]
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -49,7 +49,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     contact = ContactAgentFactory()
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(23):
+    with django_assert_num_queries(22):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -61,7 +61,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     EtablissementFactory(investigation=evenement)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(27):
+    with django_assert_num_queries(26):
         TiacExport().export(task.id)
 
     task.refresh_from_db()

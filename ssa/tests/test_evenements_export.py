@@ -10,7 +10,7 @@ from ssa.export import SsaExport
 from ssa.factories import EvenementProduitFactory, EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import EvenementProduitListPage
 
-NB_QUERIES = 18
+NB_QUERIES = 17
 
 
 @pytest.mark.django_db
@@ -281,3 +281,24 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
     assert mail.to == [contact.email]
     assert mail.subject == "[Sèves] Votre export est prêt"
     assert "_export_produit_et_cas.csv" in mail.body
+
+
+def test_export_get_email_even_in_fin_suivi(
+    live_server, mocked_authentification_user, page: Page, settings, mailoutbox
+):
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    evenement = EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
+    evenement.add_fin_suivi(
+        structure=mocked_authentification_user.agent.structure, made_by=mocked_authentification_user
+    )
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.submit_export()
+
+    expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
+
+    task = Export.objects.get()
+    assert task.task_done is True
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.subject == "[Sèves] Votre export est prêt"

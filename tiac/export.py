@@ -209,4 +209,4 @@ class TiacExport(BaseExport):
 
             task.task_done = True
             task.save()
-            notify_export_is_ready(task, object=queryset.first())
+            notify_export_is_ready(task, object=queryset[0])
