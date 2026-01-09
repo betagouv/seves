@@ -55,7 +55,7 @@
                                         <td>
                                             {{ document.created_by_structure.libelle | default:document.created_by_structure.niveau2 | upper }}
                                         </td>
-                                        <td >
+                                        <td class="fr-cell--multiline">
                                             <span class="fr-text--bold" data-testid="document-title-{{ document.pk }}">{{ document.nom }}</span>
                                             {% if document.description %}
                                                 <button class="fr-btn--tooltip fr-btn" type="button" id="button-{{ document.pk }}" aria-describedby="tooltip-{{ document.pk }}">
