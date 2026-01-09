@@ -42,3 +42,8 @@
 #contacts {
     min-height: 400px;
 }
+
+.bloc-commun__panel--documents .fr-tag {
+    max-width: 250px;
+    text-wrap: wrap;
+}
