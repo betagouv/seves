@@ -48,7 +48,7 @@
                                     <div class="fr-container--fluid">
                                         <div class="fr-grid-row">
                                             <div class="fr-col-9">
-                                                <div><span class="fr-text--bold">De : </span>{{ message.sender.display_with_agent_unit }}</div>
+                                                <div><span class="fr-text--bold">De : </span>{{ message.sender.display_with_agent_unit|default:message.sender_structure }}</div>
                                                 {% if message.recipients.all|length %}
                                                     <div><span class="fr-text--bold">À : </span>
                                                         {% for recipient in message.recipients.all %}
