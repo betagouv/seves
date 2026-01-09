@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView
 
 from account.forms import UserPermissionForm, AddAdminForm
-from account.notifications import notify_new_permission, notify_remove_permission
+from account.notifications import notify_new_permission, notify_remove_permission, notify_new_admin_permission
 from core.models import Contact
 from core.redirect import safe_redirect
 from core.views import MediaDefiningMixin
@@ -175,7 +175,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         if "SSA" in form.cleaned_data["domains"]:
             user.groups.add(Group.objects.get(name=settings.SSA_GROUP))
 
-        notify_new_permission(user.agent.contact_set.get(), form.cleaned_data["domains"])
+        notify_new_admin_permission(user.agent.contact_set.get(), form.cleaned_data["domains"])
         messages.success(self.request, "Le rôle administrateur a été accordé")
         return response
 
