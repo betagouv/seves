@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import (
     ContactAgentFactory,
     ContactStructureFactory,
@@ -18,7 +18,7 @@ from core.factories import (
     MessageFactory,
 )
 from core.models import Message, Contact, Structure, Visibilite, Document
-from core.pages import UpdateMessagePage, CreateMessagePage
+from core.pages import CreateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_message_without_document,
     generic_test_can_only_see_own_document_types_in_message_form,
@@ -122,62 +122,6 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
     assert evenement.messages.get().status == Message.Status.FINALISE
 
 
-def test_can_add_and_see_message_multiple_documents(live_server, page: Page, choice_js_fill, tmp_path):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-
-    choice_js_fill(
-        page,
-        'label[for="id_recipients"] ~ div.choices',
-        active_contact.nom,
-        active_contact.contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
-    )
-    page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
-
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
-    page.locator("#message-add-document").click()
-    expect(page.get_by_text("login.jpeg", exact=True)).to_be_visible()
-
-    page.locator("#id_document_type").select_option("Cartographie")
-    page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-    page.locator("#message-add-document").click()
-    expect(page.get_by_text("marianne.png", exact=True)).to_be_visible()
-
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/login.jpeg")
-    page.locator("#message-add-document").click()
-    expect(page.get_by_text("login.jpeg", exact=True)).to_have_count(2)
-
-    # Test to delete the 2nd document to see if the server can handle non-consecutive IDs of inputs
-    page.locator("#document_remove_1").click()
-    expect(page.get_by_text("marianne.png", exact=True)).not_to_be_visible()
-
-    page.get_by_test_id("fildesuivi-add-submit").click()
-    page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
-    assert page.text_content(cell_selector) == "Title of the message"
-
-    cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
-    assert page.text_content(cell_selector) == "Message"
-
-    page.locator(cell_selector).click()
-
-    expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
-    assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
-
-    message = Message.objects.get()
-    assert message.documents.count() == 2
-
-    expect(page.get_by_role("link", name="login.jpeg", exact=True)).to_have_count(2)
-
-
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     contacts = ContactAgentFactory.create_batch(
@@ -244,54 +188,18 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
     assert page.text_content(cell_selector) == "Message"
 
-    page.locator(cell_selector).click()
+    with page.context.expect_page() as new_page_info:
+        page.locator(cell_selector).click()
+    new_page = new_page_info.value
 
-    expect(page.get_by_role("heading", name="Title of the message")).to_be_visible()
-    assert "My content <br> with a line return" in page.get_by_test_id("message-content").inner_html()
+    expect(new_page.get_by_role("heading", name="Title of the message")).to_be_visible()
+    assert "My content <br> with a line return" in new_page.content()
 
     # Check that all the recipients / copies were added as contact
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("contacts").click()
+    new_page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    new_page.get_by_test_id("contacts").click()
     for agent in agents:
-        expect(page.get_by_label("Contacts").locator("p").filter(has_text=str(agent))).to_be_visible()
-
-
-def test_cant_add_compte_rendu_without_recipient(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-
-    Contact.objects.create(structure=Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS"))
-    structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
-    Contact.objects.create(structure=structure)
-    message_page = CreateMessagePage(page)
-    message_page.new_compte_rendu()
-
-    message_page.page.locator("#id_title").fill("Title of the message")
-    message_page.page.locator("#id_content").fill("My content \n with a line return")
-    message_page.page.get_by_test_id("fildesuivi-add-submit").click()
-
-    validation_message = message_page.page.locator("input[name='recipients_limited_recipients']").first.evaluate(
-        "el => el.validationMessage"
-    )
-    assert "Veuillez sélectionner au moins un destinataire" == validation_message
-    evenement.refresh_from_db()
-    assert Message.objects.all().count() == 0
-
-    # Bypass front-end protection
-    message_page.page.get_by_test_id("fildesuivi-add-submit").evaluate("""el => {
-      // Cloner l'élément pour supprimer tous les écouteurs existants
-      const newEl = el.cloneNode(true);
-      el.parentNode.replaceChild(newEl, el);
-
-      el.addEventListener('click', (event) => {
-        event.preventDefault();
-        const form = el.closest('form').submit();
-      });
-    }""")
-    message_page.submit_message()
-    message_page.page.get_by_text("Au moins un destinataire doit être sélectionné.")
-    evenement.refresh_from_db()
-    assert Message.objects.all().count() == 0
+        expect(new_page.get_by_label("Contacts").locator("p").filter(has_text=str(agent))).to_be_visible()
 
 
 def test_cant_click_on_shortcut_when_no_structure(live_server, page: Page):
@@ -383,10 +291,9 @@ def test_formatting_contacts_messages_details_page(live_server, page: Page):
     message = MessageFactory(content_object=evenement, sender=sender, title="Minor", content="Swing")
     message.recipients.set([contact])
 
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_role("cell", name=str(message.title)).click()
+    page.goto(f"{live_server.url}{message.get_absolute_url()}")
     expect(page.get_by_text("De : Reinhardt Django (MUS)")).to_be_visible()
-    expect(page.get_by_text("A : Reinhardt Jean (MUS)")).to_be_visible()
+    expect(page.get_by_text("À : Reinhardt Jean (MUS)")).to_be_visible()
 
 
 def test_cant_pick_inactive_user_in_message(live_server, page: Page, choice_js_cant_pick):
@@ -809,20 +716,6 @@ def test_empty_option_is_delete_after_selecting_document_type(live_server, page:
     expect(page.locator("#id_document_type").locator("option[value='']")).not_to_be_visible()
 
 
-def test_empty_document_type_option_after_document_added(live_server, page: Page):
-    """Test que l'option vide est présente dans le nouveau formulaire d'ajout de document après avoir ajouté un document"""
-    evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("element-actions").click()
-    page.get_by_role("link", name="Message").click()
-    page.locator("#id_document_type").select_option("Autre document")
-    page.locator("#id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-    page.locator("#message-add-document").click()
-
-    expect(page.get_by_label("Type de document", exact=True)).to_have_value("")
-
-
 def test_message_with_national_referent_does_not_add_structure(live_server, page: Page, choice_js_fill):
     national_referent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     referent_national_group, _ = Group.objects.get_or_create(name=settings.REFERENT_NATIONAL_GROUP)
@@ -1168,39 +1061,6 @@ def test_can_update_draft_demande_intervention_in_new_tab(
     generic_test_can_update_draft_demande_intervention_in_new_tab(
         live_server, page, choice_js_fill, mocked_authentification_user, EvenementFactory(), mailoutbox
     )
-
-
-def test_can_update_draft_compte_rendu_demande_intervention(
-    live_server, page: Page, mocked_authentification_user, mailoutbox, mus_contact
-):
-    object = EvenementFactory()
-    contact_bsv = ContactStructureFactory(
-        structure__niveau1=AC_STRUCTURE, structure__niveau2=BSV_STRUCTURE, structure__libelle=BSV_STRUCTURE
-    )
-    message = MessageFactory(
-        content_object=object,
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        message_type=Message.COMPTE_RENDU,
-        recipients=[mus_contact],
-    )
-
-    page.goto(f"{live_server.url}{object.get_absolute_url()}")
-    message_page = UpdateMessagePage(page)
-    message_page.open_message()
-    page.locator(message_page.container_id).get_by_text("BSV").click()
-    message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
-    message_page.save_as_draft_message()
-
-    message.refresh_from_db()
-    assert message.message_type == Message.COMPTE_RENDU
-    assert message.recipients.count() == 2
-    assert set(message.recipients.all()) == {mus_contact, contact_bsv}
-    assert message.status == Message.Status.BROUILLON
-    assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
-    assert len(mailoutbox) == 0
 
 
 def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):

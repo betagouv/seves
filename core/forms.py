@@ -400,6 +400,32 @@ class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, f
         ]
 
 
+class MessageDocumentForm(DSFRForm, forms.ModelForm):
+    document_type = SEVESChoiceField(
+        choices=Document.TypeDocument.choices,
+        label="Type de document",
+        required=False,
+    )
+    file = forms.FileField(
+        label="Ajouter un document", required=False, widget=RestrictedFileWidget(attrs={"disabled": True})
+    )
+
+    class Meta:
+        model = Document
+        fields = ["document_type", "file", "nom", "description"]
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop("object")
+        with_nom = kwargs.pop("with_nom", False)
+        super().__init__(*args, **kwargs)
+        if with_nom is False:
+            self.fields.pop("nom")
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
+        ]
+
+
 class VisibiliteUpdateBaseForm(DSFRForm):
     visibilite = forms.ChoiceField(
         label="",

@@ -229,8 +229,6 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
     message_page.open_message()
-    message_page.page.wait_for_timeout(1000)
-
     assert len(message_page.get_existing_documents_title) == 2, (
         f"Expected 2 got {len(message_page.get_existing_documents_title)}"
     )
@@ -307,7 +305,6 @@ def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page
     message_page.new_message()
 
     dropdown_items = [item.inner_text() for item in message_page.recipents_dropdown_items.all()]
-    message_page.page.wait_for_timeout(30000)
     assert len(dropdown_items) == 3, f"Got {len(dropdown_items)} items"
 
 
@@ -605,7 +602,7 @@ def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
         other_contact_structure.display_with_agent_unit,
         other_contact_agent.display_with_agent_unit,
     }
-    locator = "label[for='id_recipients']"
+    locator = "#id_recipients"
     assert set(choice_js_get_values(page, locator, delete_remove_link=True)) == expected, (
         f"Got {set(choice_js_get_values(page, locator, delete_remove_link=True))}"
     )
