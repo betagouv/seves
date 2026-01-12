@@ -6,7 +6,7 @@
 #
 amqp==5.3.1
     # via kombu
-asgiref==3.8.1
+asgiref==3.11.0
     # via
     #   django
     #   django-countries
@@ -57,7 +57,7 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==5.2.8
+django==6.0.1
     # via
     #   -r requirements.in
     #   dj-importmap
