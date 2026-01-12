@@ -51,7 +51,7 @@ class TypeCollectivite(TextChoices):
 
 class TypeAliment(TextChoices):
     CUISINE = "aliment cuisine", "Aliment cuisiné"
-    SIMPLE = "aliment simple", "Matières premières"
+    SIMPLE = "aliment simple", "Matière première"
 
 
 class ModaliteDeclarationEvenement(TextChoices):
