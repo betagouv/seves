@@ -526,6 +526,7 @@ def generic_test_can_delete_my_own_draft_message(
         content_object=object,
         sender=mocked_authentification_user.agent.contact_set.get(),
         status=Message.Status.BROUILLON,
+        title="Short title",
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
