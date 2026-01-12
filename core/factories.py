@@ -19,7 +19,7 @@ class StructureFactory(DjangoModelFactory):
 
     niveau1 = factory.Faker("sentence", nb_words=2)
     niveau2 = factory.Faker("sentence", nb_words=2)
-    libelle = factory.Faker("sentence", nb_words=2)
+    libelle = factory.Faker("sentence", nb_words=3)
 
 
 class UserFactory(DjangoModelFactory):

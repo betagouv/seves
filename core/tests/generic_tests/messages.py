@@ -394,9 +394,9 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     agent = mocked_authentification_user.agent
     agent.structure = structure
     agent.save()
-    contact, contact_cc = ContactStructureFactory.create_batch(
-        2, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
-    )
+    groups = (settings.SSA_GROUP, settings.SV_GROUP)
+    contact = ContactStructureFactory(structure__libelle="Foo", with_one_active_agent__with_groups=groups)
+    contact_cc = ContactStructureFactory(structure__libelle="Bar", with_one_active_agent__with_groups=groups)
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_demande_intervention()
