@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 
 from . import auth_views
 from .views import (
@@ -122,5 +123,15 @@ urlpatterns = [
         "message/<int:pk>/",
         MessageDetailsView.as_view(),
         name="message-view",
+    ),
+    path(
+        "mentions-legales/",
+        TemplateView.as_view(template_name="mentions-legales.html"),
+        name="mentions-legales",
+    ),
+    path(
+        "politique-de-confidentialite/",
+        TemplateView.as_view(template_name="politique-de-confidentialite.html"),
+        name="politique-de-confidentialite",
     ),
 ]

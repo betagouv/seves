@@ -46,6 +46,10 @@ fieldset {
 .main-container {
     margin: 2rem 1.5rem;
 }
+.main-container--sm {
+    margin: 2rem 1.5rem;
+    max-width: 992px;
+}
 #en-tete{
     display: flex;
     align-items: center;
@@ -248,4 +252,13 @@ fieldset {
 
 .history-added{
     color : var(--success-425-625);
+}
+
+.footer-links {
+    text-align: center;
+    color: var(--grey-425-625) !important;
+}
+
+.footer-links .fr-link{
+    color: var(--grey-425-625) !important;
 }
