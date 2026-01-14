@@ -49,6 +49,8 @@ def test_evenement_simple_detail_page_content_etablissement(
     expect(details_page.etablissement_modal.get_by_text(etablissement.raison_sociale, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.type_etablissement, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.siret, exact=True)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement, exact=True)).to_be_visible()
+    expect(details_page.etablissement_modal.get_by_text(etablissement.autre_identifiant, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.enseigne_usuelle, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.adresse_lieu_dit, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()

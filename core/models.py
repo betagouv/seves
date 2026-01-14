@@ -28,7 +28,7 @@ from .managers import (
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import validate_upload_file, AllowedExtensions
+from .validators import validate_upload_file, AllowedExtensions, validate_numero_agrement
 
 User = get_user_model()
 
@@ -590,6 +590,9 @@ class BaseEtablissement(models.Model):
                 code="invalid_siret",
             ),
         ],
+    )
+    numero_agrement = models.CharField(
+        max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
     autre_identifiant = models.CharField(max_length=255, verbose_name="Autre identifiant", blank=True)
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")

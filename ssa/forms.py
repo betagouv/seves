@@ -214,11 +214,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
 class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):
     template_name = "ssa/forms/etablissement.html"
 
-    numero_agrement = forms.CharField(
-        required=False,
-        label="Numéro d'agrément",
-        widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
-    )
     type_exploitant = forms.CharField(
         label="Type d'établissement",
         required=False,
