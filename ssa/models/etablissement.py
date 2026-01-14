@@ -2,7 +2,6 @@ import reversion
 from django.db import models
 
 from core.models import BaseEtablissement
-from ssa.models.validators import validate_numero_agrement
 
 
 class PositionDossier(models.TextChoices):
@@ -31,10 +30,6 @@ class Etablissement(BaseEtablissement, models.Model):
         related_name="etablissements",
         null=True,
         default=None,
-    )
-
-    numero_agrement = models.CharField(
-        max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
 
     type_exploitant = models.CharField(max_length=45, verbose_name="Type exploitant", blank=True)

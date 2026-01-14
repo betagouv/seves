@@ -500,6 +500,11 @@ class BaseEtablissementForm(forms.ModelForm):
         max_length=14,
         widget=forms.HiddenInput,
     )
+    numero_agrement = forms.CharField(
+        required=False,
+        label="Numéro d'agrément",
+        widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
+    )
     autre_identifiant = forms.CharField(required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)

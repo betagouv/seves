@@ -181,6 +181,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         fields = [
             "type_etablissement",
             "siret",
+            "numero_agrement",
             "autre_identifiant",
             "raison_sociale",
             "enseigne_usuelle",

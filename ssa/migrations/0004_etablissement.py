@@ -3,7 +3,7 @@
 import django.core.validators
 import django.db.models.deletion
 import django_countries.fields
-import ssa.models.validators
+import core.validators
 from django.db import migrations, models
 
 
@@ -257,7 +257,7 @@ class Migration(migrations.Migration):
                     models.CharField(
                         blank=True,
                         max_length=12,
-                        validators=[ssa.models.validators.validate_numero_agrement],
+                        validators=[core.validators.validate_numero_agrement],
                         verbose_name="Numéro d'agrément",
                     ),
                 ),

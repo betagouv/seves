@@ -9,6 +9,10 @@
     {{ form.siret|set_data:"etablissement-form-target:siretInput"|set_data:"action:choice->etablissement-form#onSiretChoice" }}
 </div>
 <div class="fr-input-group">
+    {{ form.numero_agrement.label_tag }}
+    {{ form.numero_agrement|set_data:"etablissement-form-target:numeroAgrementInput" }}
+</div>
+<div class="fr-input-group">
     {{ form.autre_identifiant.label_tag }}
     {{ form.autre_identifiant }}
 </div>
