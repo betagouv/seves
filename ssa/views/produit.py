@@ -18,6 +18,7 @@ from core.mixins import (
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
     WithFormsetInvalidMixin,
+    MediaDefiningMixin,
 )
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -30,7 +31,6 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement

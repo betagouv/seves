@@ -32,9 +32,9 @@ from core.mixins import (
     WithFinDeSuiviMixin,
     WithExportHeterogeneousQuerysetMixin,
     WithFormsetInvalidMixin,
+    MediaDefiningMixin,
 )
 from core.models import LienLibre, CustomRevisionMetaData
-from core.views import MediaDefiningMixin
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms

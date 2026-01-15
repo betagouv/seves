@@ -1,5 +1,4 @@
 import {Controller} from "Stimulus";
-import {useStore} from "StimulusStore"
 
 /**
  * @property {boolean} hasEmptyFormTplTarget
@@ -16,7 +15,7 @@ export class BaseFormSetController extends Controller {
     }
 
     static targets = ["emptyFormTpl", "formsetContainer", ...Object.keys(this.MGMT_FORM_FIELDS)]
-    static values = { ...this.MGMT_FORM_FIELDS }
+    static values = {...this.MGMT_FORM_FIELDS}
 
     connect() {
         this._initializeFieldValues()
@@ -24,8 +23,8 @@ export class BaseFormSetController extends Controller {
 
     _initializeFieldValues() {
         const htmlAttr = this.context.scope.schema.targetAttributeForScope(this.identifier)
-        for (const fieldName of Object.keys(this.constructor.MGMT_FORM_FIELDS)) {
-            if (!this[`has${fieldName}Target`]) {
+        for(const fieldName of Object.keys(this.constructor.MGMT_FORM_FIELDS)) {
+            if(!this[`has${fieldName}Target`]) {
                 console.debug(`Missing target with HTML attribute ${htmlAttr}="${fieldName}". Did you render the management form with the correct data attributes?`)
                 continue
             }

@@ -13,7 +13,7 @@ from account.forms import UserPermissionForm, AddAdminForm
 from account.notifications import notify_new_permission, notify_remove_permission, notify_new_admin_permission
 from core.models import Contact
 from core.redirect import safe_redirect
-from core.views import MediaDefiningMixin
+from core.mixins import MediaDefiningMixin
 from seves import settings
 from seves.settings import CAN_GIVE_ACCESS_GROUP
 
