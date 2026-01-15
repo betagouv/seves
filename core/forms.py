@@ -82,7 +82,7 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelFor
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget())
+    file = forms.FileField(label="Ajouter un document")
 
     @property
     def file_id(self):
@@ -92,38 +92,43 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelFor
     def media(self):
         return super().media + Media(css={"all": ("core/form/document_in_message_upload.css",)})
 
-    def __init__(self, allowed_document_types, user, *args, message=None, **kwargs):
+    def __init__(self, user, message, allowed_document_types, *args, **kwargs):
         self.allowed_document_types = allowed_document_types
         self.user = user
         self.message = message
+
         super().__init__(*args, **kwargs)
+
         self.fields["document_type"].choices = [
             ("", settings.SELECT_EMPTY_CHOICE),
             *[(c.value, c.label) for c in self.allowed_document_types],
         ]
+
+        self.instance.content_object = self.message
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
         if not file:
             return
         if file.size > MAX_UPLOAD_SIZE_BYTES:
-            raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
+            raise forms.ValidationError(
+                f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo; "
+                f"Veuillez ajouter un fichier différent"
+            )
         if document_type := self.cleaned_data.get("document_type"):
             Document.validate_file_extention_for_document_type(file, document_type)
         return file
 
     def save(self, commit=True):
-        if not self.message:
-            raise ValidationError("Unknown user: please 'message' to __init__")
         self.instance.created_by = self.user.agent
         self.instance.created_by_structure = self.user.agent.structure
-        self.instance.content_type = ContentType.objects.get_for_model(self.message)
-        self.instance.object_id = self.message.pk
+        # Force setting object_id after Message instance was saved
+        self.instance.content_object = self.message
         return super().save(commit)
 
     class Meta:
         model = Document
-        fields = ["nom", "document_type", "description", "file"]
+        fields = ["id", "nom", "document_type", "description", "file"]
 
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):

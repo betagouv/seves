@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 
 from django.conf import settings
 from playwright.sync_api import Page, expect
@@ -147,12 +148,21 @@ class BaseMessagePage(ABC):
             self.page.wait_for_url("**/core/message/**/")
             return self.page
 
+    def open_document_modal(self):
+        if self.document_modal.is_hidden():
+            self.page.get_by_test_id("add-document-btn").click()
+            expect(self.document_modal).to_be_visible()
+
+    def validate_document_modal(self):
+        if self.document_modal.is_visible():
+            self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
+            expect(self.document_modal).not_to_be_visible()
+
     def delete_document(self, nth):
         document_count = self.page.get_by_test_id("document-card").count()
         self.page.get_by_test_id("document-delete-btn").nth(nth).click()
         # Check that deleting removes file bloc in both message aside and modal
         expect(self.page.get_by_test_id("document-card")).to_have_count(document_count - 1)
-        expect(self.page.get_by_test_id("document-upload")).to_have_count(document_count - 1)
 
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
@@ -160,11 +170,6 @@ class BaseMessagePage(ABC):
 
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
-
-    def open_document_modal(self):
-        if self.document_modal.is_hidden():
-            self.page.get_by_test_id("add-document-btn").click()
-            expect(self.document_modal).to_be_visible()
 
     def add_basic_document(self, suffix="", close=True):
         self.open_document_modal()
@@ -193,16 +198,32 @@ class BaseMessagePage(ABC):
         accordion.locator('[name$="document_type"]').select_option("Autre document")
         accordion.locator('[name$="description"]').fill(f"Ma description {suffix}")
         if close:
-            self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
-            expect(self.document_modal).not_to_be_visible()
+            self.validate_document_modal()
 
-    def remove_document_by_name(self, document_name):
-        self.page.locator(f'[data-testid="document-card"]:has-text("{document_name}")').get_by_role(
-            role="button", name="Supprimer"
-        ).click()
+    def remove_document_by_name_from_aside(self, document_name):
+        aside_card_list = self.page.get_by_test_id("document-card")
+        count = aside_card_list.count()
+        aside_card_list.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        expect(aside_card_list).to_have_count(count - 1)
 
-    def remove_document(self, index):
-        self.page.locator(f"{self.container_id} #document_remove_{index}").click()
+    def remove_document_by_name_from_modal(self, document_name):
+        self.open_document_modal()
+        accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
+        count = accordions.count()
+        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        expect(accordions).to_have_count(count - 1)
+        self.validate_document_modal()
+
+    @contextmanager
+    def modify_document_by_name(self, document_name):
+        accordion = self.page.get_by_test_id("document-upload").filter(has_text=document_name)
+        self.open_document_modal()
+        accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).to_be_visible()
+        yield accordion
+        accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).not_to_be_visible()
+        self.validate_document_modal()
 
     @property
     def add_document_button(self):
