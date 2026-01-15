@@ -1,27 +1,39 @@
-<div class="message-actions fr-mb-2w">
-    <nav role="navigation" class="fr-translate fr-nav">
-        <div class="fr-nav__item">
-            <button class="fr-translate__btn fr-btn fr-btn--secondary" aria-controls="translate-1177"
-                    aria-expanded="false" title="Sélectionner un type d'élément de suivi" data-testid="element-actions">Élément de suivi</button>
-            <div class="fr-collapse fr-translate__menu fr-menu" id="translate-1177">
-                <ul class="fr-menu__list">
-                    <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=message">Message</a></li>
-                    <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=note">Note</a></li>
-                    <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=point_situation">Point de situation</a></li>
-                    {% if can_add_di %}
-                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=demande_intervention">Demande d'intervention</a></li>
-                    {% endif %}
-                    {% if can_add_cr_di %}
-                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=cr_demande_intervention">Compte rendu sur demande d'intervention</a></li>
-                    {% endif %}
-                </ul>
+<div class="fr-flex fr-flex--row fr-flex--space-between">
+    <form id="search-form" method="get" action="#tabpanel-messages" class="message-filter">
+        {{ message_filter.form }}
+        <button type="submit" class="fr-btn fr-icon-search-line">Rechercher dans les messages</button>
+    </form>
+    <div class="message-actions">
+        <nav role="navigation" class="fr-translate fr-nav">
+            <div class="fr-nav__item">
+                <button class="fr-translate__btn fr-btn fr-btn--secondary" aria-controls="translate-1177"
+                        aria-expanded="false" title="Sélectionner un type d'élément de suivi" data-testid="element-actions">Élément de suivi</button>
+                <div class="fr-collapse fr-translate__menu fr-menu" id="translate-1177">
+                    <ul class="fr-menu__list">
+                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=message">Message</a></li>
+                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=note">Note</a></li>
+                        <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=point_situation">Point de situation</a></li>
+                        {% if can_add_di %}
+                            <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=demande_intervention">Demande d'intervention</a></li>
+                        {% endif %}
+                        {% if can_add_cr_di %}
+                            <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=cr_demande_intervention">Compte rendu sur demande d'intervention</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </div>
 </div>
 
 <div class="fr-container--fluid">
-    {% if message_list %}
+    {% if request.GET.full_text_search %}
+        <div>
+            <span class="bold">{{ message_filter.qs|length }} message{{ message_filter.qs|length|pluralize }} trouvés</span>
+            <a href="{{ object.get_absolute_url }}#tabpanel-messages" class="fr-link fr-ml-2w">Effacer la recherche</a>
+        </div>
+    {% endif %}
+    {% if message_filter.qs %}
         <div class="fr-table--lg fr-table">
             <div class="fr-table__wrapper">
                 <div class="fr-table__container">
@@ -32,7 +44,7 @@
             </div>
         </div>
 
-    {% else %}
+    {% elif not request.GET.full_text_search %}
         <p>Pas de message pour le moment</p>
     {% endif %}
 </div>

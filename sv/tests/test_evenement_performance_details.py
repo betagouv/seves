@@ -40,7 +40,7 @@ def test_evenement_performances_with_messages_from_same_user(
     with django_assert_num_queries(BASE_NUM_QUERIES + 6):
         response = client.get(evenement.get_absolute_url())
 
-    assert len(response.context["message_list"]) == 4
+    assert len(response.context["message_filter"].qs) == 4
 
 
 @pytest.mark.django_db
@@ -63,7 +63,7 @@ def test_evenement_performances_with_multiple_messages_with_documents(
     with django_assert_max_num_queries(BASE_NUM_QUERIES + 14):
         response = client.get(evenement.get_absolute_url())
 
-    assert len(response.context["message_list"]) == 4
+    assert len(response.context["message_filter"].qs) == 4
 
 
 @pytest.mark.django_db

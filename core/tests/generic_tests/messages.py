@@ -618,3 +618,63 @@ def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
     assert set(choice_js_get_values(page, locator, delete_remove_link=True)) == expected, (
         f"Got {set(choice_js_get_values(page, locator, delete_remove_link=True))}"
     )
+
+
+def generic_test_can_search_in_message_list(live_server, page: Page, object):
+    params = {"content_object": object, "message_type": Message.MESSAGE}
+
+    agent_prenom = ContactAgentFactory(agent__prenom="Ma phrase")
+    agent_nom = ContactAgentFactory(agent__prenom="Ma phrase")
+    structure = ContactStructureFactory(structure__libelle="Ma phrase")
+
+    expected_messages = [
+        MessageFactory(title="Ma phrase", **params),
+        MessageFactory(content="Ma phrase", **params),
+        MessageFactory(sender__agent__prenom="Ma phrase", **params),
+        MessageFactory(sender__agent__nom="Ma phrase", **params),
+        MessageFactory(sender__agent__structure__libelle="Ma phrase", **params),
+        MessageFactory(recipients=[agent_prenom], **params),
+        MessageFactory(recipients=[agent_nom], **params),
+        MessageFactory(recipients=[structure], **params),
+        MessageFactory(recipients_copy=[agent_prenom], **params),
+        MessageFactory(recipients_copy=[agent_nom], **params),
+        MessageFactory(recipients_copy=[structure], **params),
+    ]
+
+    not_expected_1 = MessageFactory(**params)
+    not_expected_2 = MessageFactory(**params)
+    not_expected_3 = MessageFactory(**params)
+
+    message = MessageFactory(**params)
+    DocumentFactory(nom="Ma phrase", description="", content_object=message, is_infected=False)
+    expected_messages.append(message)
+
+    message = MessageFactory(**params)
+    DocumentFactory(description="Ma phrase", content_object=message, is_infected=False)
+    expected_messages.append(message)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.search_in_message_list("Ma phrase")
+
+    expect(message_page.page.locator("#tabpanel-messages-panel").get_by_text("13 messages trouvés")).to_be_visible()
+
+    for message in expected_messages:
+        expect(
+            message_page.page.locator("#tabpanel-messages-panel .fr-cell--multiline").get_by_text(message.title[:25])
+        ).to_be_visible()
+
+    expect(
+        message_page.page.locator("#tabpanel-messages-panel .fr-cell--multiline").get_by_text(not_expected_1.title[:25])
+    ).not_to_be_visible()
+    expect(
+        message_page.page.locator("#tabpanel-messages-panel .fr-cell--multiline").get_by_text(not_expected_2.title[:25])
+    ).not_to_be_visible()
+    expect(
+        message_page.page.locator("#tabpanel-messages-panel .fr-cell--multiline").get_by_text(not_expected_3.title[:25])
+    ).not_to_be_visible()
+
+    message_page.page.locator("#tabpanel-messages-panel").get_by_text("Effacer la recherche").click()
+    expect(
+        message_page.page.locator("#tabpanel-messages-panel .cell-link").get_by_text("Message", exact=True)
+    ).to_have_count(16)

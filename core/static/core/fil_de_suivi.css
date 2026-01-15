@@ -18,9 +18,15 @@
         border-bottom: 1px var(--border-contrast-grey) solid !important;
 }
 
-.message-actions {
+.message-filter {
+        flex-grow: 0.4;
         display: flex;
-        justify-content: end;
+}
+.message-filter .fr-input-group {
+        flex-grow: 1;
+}
+#id_full_text_search {
+        margin-top: 0 !important;
 }
 .message-actions .fr-translate__btn {
         padding: .5rem 1rem;

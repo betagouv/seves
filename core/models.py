@@ -25,6 +25,7 @@ from .managers import (
     DocumentQueryset,
     MessageManager,
     ContactManager,
+    MessagQueryset,
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
@@ -380,7 +381,7 @@ class Message(AllowsSoftDeleteMixin, models.Model):
 
     historical_data = models.JSONField(default=dict, blank=True)
 
-    objects = MessageManager()
+    objects = MessageManager.from_queryset(MessagQueryset)()
 
     class Meta:
         indexes = [

@@ -188,4 +188,50 @@ class EvenementManagerMixin:
 
 class MessageManager(Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(is_deleted=False)
+        return MessagQueryset(self.model, using=self._db).filter(is_deleted=False)
+
+
+class MessagQueryset(QuerySet):
+    def for_user(self, user):
+        from core.models import Message
+
+        return self.filter(Q(status=Message.Status.FINALISE) | Q(sender=user.agent.contact_set.get()))
+
+    def optimized_for_list(self):
+        return self.select_related("sender__agent__structure", "sender_structure").prefetch_related(
+            "recipients__agent",
+            "recipients__structure",
+            "recipients__agent__structure",
+            "documents",
+        )
+
+    def search(self, query):
+        fields = [
+            "sender__agent__prenom",
+            "sender__agent__nom",
+            "sender_structure__libelle",
+            "recipients__agent__prenom",
+            "recipients__agent__nom",
+            "recipients__structure__libelle",
+            "recipients_copy__agent__prenom",
+            "recipients_copy__agent__nom",
+            "recipients_copy__structure__libelle",
+            "title",
+            "content",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+
+        # Add fields for document
+        from .models import Document
+
+        ct = ContentType.objects.get_for_model(self.model)
+        doc_qs = (
+            Document.objects.filter(content_type=ct)
+            .filter(Q(nom__unaccent__icontains=query) | Q(description__unaccent__icontains=query))
+            .values("object_id")
+        )
+        query_object |= Q(pk__in=Subquery(doc_qs))
+
+        return self.filter(query_object).distinct()

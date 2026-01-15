@@ -228,6 +228,11 @@ class BaseMessagePage(ABC):
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
 
+    def search_in_message_list(self, query):
+        self.page.locator("#id_full_text_search").fill(query)
+        self.page.locator(".fr-icon-search-line").click()
+        self.page.wait_for_load_state("load")
+
 
 class CreateMessagePage(BaseMessagePage):
     def __init__(self, page: Page, container_id="#message-form"):
