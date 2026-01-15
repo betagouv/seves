@@ -24,6 +24,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab,
     generic_test_can_delete_my_own_draft_message,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
+    generic_test_can_search_in_message_list,
 )
 from ssa.factories import InvestigationCasHumainFactory
 from ssa.models import EvenementInvestigationCasHumain
@@ -195,3 +196,8 @@ def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
         live_server, page, choice_js_get_values, evenement_produit
     )
+
+
+def test_can_search_in_message_list(live_server, page: Page):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_search_in_message_list(live_server, page, evenement)

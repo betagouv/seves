@@ -12,7 +12,6 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Q
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -41,7 +40,7 @@ from core.models import (
     user_is_referent_national,
 )
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
-from .filters import DocumentFilter
+from .filters import DocumentFilter, MessageFilter
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
@@ -93,21 +92,12 @@ class WithBlocCommunPermission:
 class WithMessageMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        obj = self.get_object()
-        context["message_status"] = Message.Status
-        message_list = (
-            obj.messages.filter(Q(status=Message.Status.FINALISE) | Q(sender=self.request.user.agent.contact_set.get()))
-            .select_related("sender__agent__structure", "sender_structure")
-            .prefetch_related(
-                "recipients__agent",
-                "recipients__structure",
-                "recipients__agent__structure",
-                "documents",
-            )
-        )
-        for message in message_list:
+        message_list = self.get_object().messages.for_user(self.request.user).optimized_for_list()
+        message_filter = MessageFilter(self.request.GET, queryset=message_list)
+        for message in message_filter.qs:
             message.can_be_deleted = message.can_user_delete(self.request.user)
-        context["message_list"] = message_list
+        context["message_filter"] = message_filter
+        context["message_status"] = Message.Status
         context["message_content_type"] = ContentType.objects.get_for_model(Message)
         context["can_add_di"] = self.request.user.agent.structure.is_ac
         context["can_add_cr_di"] = not self.request.user.agent.structure.is_ac

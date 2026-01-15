@@ -1,5 +1,5 @@
 {% load waffle_tags %}
-{% for message in message_list %}
+{% for message in message_filter.qs %}
     {% if message.can_be_deleted %}
         {% include "core/_delete_modal.html" with object=message content_type=message_content_type next_url=object.get_absolute_url suffix=message.pk %}
     {% endif %}
@@ -32,7 +32,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for message in message_list %}
+        {% for message in message_filter.qs %}
             <tr id="table-sm-row-key-{{ forloop.counter }}" class="{% if message.is_draft %}message-draft{% endif %}" data-row-key="{{ forloop.counter }}">
                 <td>
                     <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.date_creation }}</a>

@@ -1,11 +1,16 @@
 import django_filters
-from django.forms import forms
+from django.forms import forms, TextInput
+from dsfr.forms import DsfrBaseForm
 
 from .models import Document, Structure
 from .form_mixins import DSFRForm
 
 
 class FilterForm(DSFRForm, forms.Form):
+    pass
+
+
+class DSFRFilterForm(DsfrBaseForm, forms.Form):
     pass
 
 
@@ -38,3 +43,21 @@ class DocumentFilter(django_filters.FilterSet):
         ids = self.queryset.values_list("created_by_structure", flat=True).distinct()
         structure_queryset = Structure.objects.filter(id__in=ids).order_by("libelle")
         self.filters["created_by_structure"].queryset = structure_queryset
+
+
+class MessageFilter(django_filters.FilterSet):
+    full_text_search = django_filters.CharFilter(
+        method="filter_full_text_search",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Tapez un terme pour chercher dans les messages"}),
+    )
+
+    class Meta:
+        model = Document
+        fields = ["full_text_search"]
+        form = DSFRFilterForm
+
+    def filter_full_text_search(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.search(value)
