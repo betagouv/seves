@@ -1,8 +1,10 @@
 import datetime
 import json
 import logging
+import typing
 import unicodedata
 from collections import defaultdict
+from functools import cached_property, wraps
 from typing import Mapping
 from urllib.parse import urlencode
 
@@ -12,11 +14,13 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.forms import Media
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import BaseCreateView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
@@ -45,7 +49,34 @@ from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
+if typing.TYPE_CHECKING:
+    from .formsets import DocumentInMessageUploadFormSet
+
 logger = logging.getLogger(__name__)
+
+
+class MediaDefiningMixin(ContextMixin):
+    def __new__(cls):
+        """
+        Wrapping get_context_data in a decorator here ensures get_media is called at the very last moment
+        when all superclasses' get_context_data have been called.
+        """
+
+        def patch_get_context_data(get_context_data):
+            @wraps(get_context_data)
+            def wrapper(*args, **kwargs):
+                context = get_context_data(*args, **kwargs)
+                context.setdefault("media", obj.get_media(**context))
+                return context
+
+            return wrapper
+
+        obj = super().__new__(cls)
+        obj.get_context_data = patch_get_context_data(obj.get_context_data)
+        return obj
+
+    def get_media(self, **context_data) -> Media:
+        return context_data["form"].media if "form" in context_data else Media()
 
 
 class WithDocumentUploadFormMixin:
@@ -414,13 +445,19 @@ class CanUpdateVisibiliteRequiredMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class PreventActionIfVisibiliteBrouillonMixin:
-    """
-    Mixin pour empêcher des actions sur des objets ayant la visibilité 'brouillon'.
-    """
+class GetFicheObjectMixin:
+    @cached_property
+    def fiche_objet(self):
+        return self.get_fiche_object()
 
     def get_fiche_object(self):
         raise NotImplementedError("Vous devez implémenter la méthode `get_fiche_object` pour ce mixin.")
+
+
+class PreventActionIfVisibiliteBrouillonMixin(GetFicheObjectMixin):
+    """
+    Mixin pour empêcher des actions sur des objets ayant la visibilité 'brouillon'.
+    """
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_fiche_object()
@@ -638,17 +675,31 @@ class WithOrderingMixin:
         return context
 
 
-class MessageHandlingMixin(WithAddUserContactsMixin, BaseCreateView):
-    def get_document_in_message_upload_formset(self, **kwargs):
+class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaDefiningMixin, BaseCreateView):
+    def get_document_in_message_upload_formset(self, message, **kwargs) -> "DocumentInMessageUploadFormSet":
         from django.views.generic.edit import FormMixin
 
         from core.formsets import DocumentInMessageUploadFormSet
 
         form_kwargs = FormMixin.get_form_kwargs(self)
         form_kwargs.update(
-            {"user": self.request.user, "allowed_document_types": self.obj.get_allowed_document_types(), **kwargs}
+            {
+                "user": self.request.user,
+                "message": message,
+                "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
+                **kwargs,
+            }
         )
         return DocumentInMessageUploadFormSet(**form_kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["add_document_formset"] = self.get_document_in_message_upload_formset(message=context["form"].instance)
+        context["fiche_objet"] = self.fiche_objet
+        return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["add_document_formset"].media
 
     def _is_internal_communication(self, structures):
         """
@@ -657,20 +708,20 @@ class MessageHandlingMixin(WithAddUserContactsMixin, BaseCreateView):
         return len(structures) <= 1
 
     def _handle_visibilite_if_needed(self, message):
-        if not hasattr(self.obj, "visibilite"):
+        if not hasattr(self.fiche_objet, "visibilite"):
             return
 
-        structures = [c.structure for c in self.obj.contacts.structures_only()]
+        structures = [c.structure for c in self.fiche_objet.contacts.structures_only()]
 
         if self._is_internal_communication(structures):
             return
-        if self.obj.visibilite == Visibilite.LOCALE:
+        if self.fiche_objet.visibilite == Visibilite.LOCALE:
             with transaction.atomic():
-                self.obj.allowed_structures.set(structures)
-                self.obj.visibilite = Visibilite.LIMITEE
-                self.obj.save()
-        if self.obj.visibilite == Visibilite.LIMITEE:
-            self.obj.allowed_structures.set(structures)
+                self.fiche_objet.allowed_structures.set(structures)
+                self.fiche_objet.visibilite = Visibilite.LIMITEE
+                self.fiche_objet.save()
+        if self.fiche_objet.visibilite == Visibilite.LIMITEE:
+            self.fiche_objet.allowed_structures.set(structures)
 
     def _add_contacts_to_object(self, message):
         """
@@ -680,7 +731,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, BaseCreateView):
         structures_with_agents = defaultdict(list)
 
         for contact in message.recipients.all().union(message.recipients_copy.all()):
-            self.obj.contacts.add(contact)
+            self.fiche_objet.contacts.add(contact)
             if contact.agent:
                 structures_with_agents[contact.agent.structure].append(contact)
 
@@ -688,48 +739,19 @@ class MessageHandlingMixin(WithAddUserContactsMixin, BaseCreateView):
             all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
             add_structure = not all_referents_nationaux
             if add_structure and (structure := contacts_agents[0].get_structure_contact()):
-                self.obj.contacts.add(structure)
-
-    def _create_documents(self, form):
-        message = form.instance
-        content_type = ContentType.objects.get_for_model(message)
-        document_numbers = [
-            s.replace("document_type_", "") for s in form.cleaned_data.keys() if s.startswith("document_type_")
-        ]
-        for i in document_numbers:
-            try:
-                Document.objects.create(
-                    file=form.cleaned_data[f"document_{i}"],
-                    nom=form.cleaned_data.get(f"document_name_{i}", form.cleaned_data[f"document_{i}"]._name),
-                    document_type=form.cleaned_data[f"document_type_{i}"],
-                    content_type=content_type,
-                    object_id=message.pk,
-                    created_by=self.request.user.agent,
-                    created_by_structure=self.request.user.agent.structure,
-                    description=form.cleaned_data.get(f"document_comment_{i}", ""),
-                )
-            except OperationalError:
-                logger.error("Could not connect to Redis")
-                messages.error(
-                    self.request, "Une erreur s'est produite lors de l'ajout du document.", extra_tags="core messages"
-                )
-
-    def _delete_documents_if_needed(self, form):
-        prefix = "existing_document_name_"
-        pks_to_keeps = [s.replace(prefix, "") for s in self.request.POST.keys() if s.startswith(prefix)]
-        content_type = ContentType.objects.get_for_model(form.instance)
-        Document.objects.filter(
-            content_type=content_type,
-            object_id=form.instance.pk,
-        ).exclude(pk__in=pks_to_keeps).delete()
+                self.fiche_objet.contacts.add(structure)
 
     def handle_message_form(self, form):
+        formset = self.get_document_in_message_upload_formset(message=form.instance)
+
+        if not formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, add_document_formset=formset))
+
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
-        self.add_user_contacts(self.obj)
+        self.add_user_contacts(self.fiche_objet)
         self._handle_visibilite_if_needed(form.instance)
-        self._delete_documents_if_needed(form)
-        self._create_documents(form)
+        formset.save()
         try:
             transaction.on_commit(lambda: notify_message(form.instance))
         except OperationalError:

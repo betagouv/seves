@@ -2,6 +2,7 @@ import {Controller} from "Stimulus"
 import {BaseFormSetController} from "BaseFormset"
 import {applicationReady} from "Application"
 import {createStore, useStore} from "StimulusStore"
+import {removeRequired} from "Forms"
 
 
 const globalFileTypeIndexStore = createStore({
@@ -22,10 +23,9 @@ const fileStore = createStore({
  * @property {Boolean} validated
  */
 class FileMeta {
-    constructor({file, title = "", validated = false}) {
+    constructor({file, title}) {
         this.file = file
         this.title = title
-        this.validated = validated
     }
 }
 
@@ -45,39 +45,41 @@ class FileMeta {
 
 /**
  * @extends StorePropertiesType
- * @property {Number} initialDocumentsValue
  * @property {Boolean} disabledValue
+ * @property {Object} allowedExtensionsPerDocumentTypeValue
  * @property {HTMLDialogElement} modalTarget
  * @property {HTMLParagraphElement} documentsAddedMsgTarget
+ * @property {HTMLElement} allowedExtensionsTarget
  * @property {HTMLSelectElement} globalFileTypeTarget
  * @property {HTMLElement} validatedSectionTarget
  * @property {HTMLTemplateElement} validatedSectionTplTarget
- * @property {HTMLElement} documentModalDragDropTarget
+ * @property {HTMLElement} documentModalDragDropContainerTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {HTMLTemplateElement} formTplTarget
  * @property {HTMLButtonElement} submitBtnTarget
  * @property {String[]} draggingClasses
  * @property {String[]} disabledClasses
- * @property {DocumentForm[]} documentFormOutlets
  */
 class DocumentFormset extends BaseFormSetController {
     static stores = [fileStore, globalFileTypeIndexStore]
-    static values = {disabled: {type: Boolean, default: true}, initialDocuments: {type: Number, default: 0}}
+    static values = {disabled: {type: Boolean, default: true}, allowedExtensionsPerDocumentType: Object}
     static targets = [
         "modal",
         "documentsAddedMsg",
+        "allowedExtensions",
         "globalFileType",
         "validatedSection",
         "validatedSectionTpl",
         "submitBtn",
-        "documentModalDragDrop",
+        "documentModalDragDropContainer",
         "documentFile",
         "formTpl"
     ]
     static classes = ["disabled", "dragging"]
-    static outlets = ["document-form"]
 
     initialize() {
+        /** @type {Set<string>} */
+        this.cachedFileIds = new Set()
         useStore(this)
     }
 
@@ -89,17 +91,22 @@ class DocumentFormset extends BaseFormSetController {
     disabledValueChanged(value) {
         this.submitBtnTarget.disabled = value
         if(value) {
-            this.documentModalDragDropTarget.classList.add(...this.disabledClasses)
+            this.documentModalDragDropContainerTarget.classList.add(...this.disabledClasses)
         } else {
-            this.documentModalDragDropTarget.classList.remove(...this.disabledClasses)
+            this.documentModalDragDropContainerTarget.classList.remove(...this.disabledClasses)
         }
     }
 
-    onChangeType({target}) {
-        this.disabledValue = target.value === ""
-        this.setGlobalFileTypeIndexValue(
-            Math.max(Array.from(target.options).findIndex(option => option.value === target.value), 0)
-        )
+    onChangeType({target: {options, value}}) {
+        this.disabledValue = value === ""
+        const option = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
+        this.setGlobalFileTypeIndexValue(option)
+        const allowedExtensions = this.allowedExtensionsPerDocumentTypeValue[option]
+        if(allowedExtensions !== undefined) {
+            this.allowedExtensionsTarget.textContent = allowedExtensions
+        } else {
+            this.allowedExtensionsTarget.textContent = this.allowedExtensionsPerDocumentTypeValue[""]
+        }
     }
 
     /**
@@ -126,11 +133,11 @@ class DocumentFormset extends BaseFormSetController {
     }
 
     onDragEnter() {
-        this.documentModalDragDropTarget.classList.add(...this.draggingClasses)
+        this.documentModalDragDropContainerTarget.classList.add(...this.draggingClasses)
     }
 
     onDragLeave() {
-        this.documentModalDragDropTarget.classList.remove(...this.draggingClasses)
+        this.documentModalDragDropContainerTarget.classList.remove(...this.draggingClasses)
     }
 
     /**
@@ -172,55 +179,32 @@ class DocumentFormset extends BaseFormSetController {
 
     /** @param {FileStoreStruct} files */
     onFilesUpdate(files) {
-        if(Object.keys(files).length + this.initialDocumentsValue === 0) {
+        const newKeys = new Set(Object.keys(files))
+
+        if(newKeys.length) {
             this.documentsAddedMsgTarget.innerText = "Aucun document ajouté"
         } else {
             this.documentsAddedMsgTarget.innerText = "Documents ajoutés au message"
         }
+
+        // Here we detect files for which we haven't yet created a card in validatedSectionTarget
+        // It's necessary to do this here because files can from from both validating the modal and
+        // DocumentForm adding an existing document for a draft message to the fileStore
+        for(const id of newKeys.difference(this.cachedFileIds)) {
+            this.validatedSectionTarget.insertAdjacentHTML(
+                "beforeend", this.validatedSectionTplTarget.innerHTML.replace("__fileId__", id)
+            )
+        }
+
+        this.cachedFileIds = newKeys
     }
 
     onModalClose() {
-        // Remove files that were not validated
-        let pristine = true
-        for(const [id, {validated}] of Object.entries(this.filesValue)) {
-            if(!validated) {
-                delete this.filesValue[id]
-                pristine = false
-            }
-        }
-        if(!pristine) {
-            // Unpacking dictionnary to force the creation of a new object to prevent
-            // stimulus-store from optimizing-out notifying other controllers
-            this.setFilesValue({...this.filesValue})
-        }
+        this.onFilesUpdate(this.filesValue)
     }
 
     onSubmit() {
-        let pristine = true
-        for(const [id, fileMeta] of Object.entries(this.filesValue)) {
-            if(!fileMeta.validated) {
-                this.validatedSectionTarget.insertAdjacentHTML(
-                    "beforeend", this.validatedSectionTplTarget.innerHTML.replace("__fileId__", id)
-                )
-            }
-            pristine = false
-            fileMeta.validated = true
-        }
-        if(!pristine) {
-            // Unpacking dictionnary to force the creation of a new object to prevent
-            // stimulus-store from optimizing-out notifying other controllers
-            this.setFilesValue({...this.filesValue})
-        }
         dsfr(this.modalTarget).modal.conceal()
-    }
-}
-
-/** @property {HTMLElement} titleTarget */
-class ExistingDocumentValidated extends Controller {
-    static targets = ["title"]
-
-    onDelete() {
-        this.element.remove()
     }
 }
 
@@ -261,14 +245,18 @@ class DocumentValidated extends Controller {
 
 /**
  * @extends StorePropertiesType
+ * @property {HTMLElement} element
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
+ * @property {Boolean} hasDocumentFileTarget
  * @property {HTMLElement} accordionTitleTarget
  * @property {HTMLElement} accordionTypeLabelTarget
  * @property {HTMLElement} accordionContentTarget
  * @property {HTMLInputElement} documentNameTarget
  * @property {HTMLOptionElement} documentTypeTarget
+ * @property {HTMLInputElement} deleteTarget
  * @property {String} fileIdValue
+ * @property {Boolean} initialValue
  */
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore]
@@ -279,25 +267,48 @@ class DocumentForm extends Controller {
         "accordionTypeLabel",
         "accordionContent",
         "documentName",
-        "documentType"
+        "documentType",
+        "delete"
     ]
-    static values = {fileId: {type: String, default: ""}}
+    static values = {fileId: {type: String, default: ""}, initial: {type: Boolean, default: false}}
 
     initialize() {
         useStore(this)
     }
 
+    connect() {
+        if(this.initialValue) {
+            this.initFile()
+        }
+    }
+
+    initFile() {
+        const file = new File([], this.documentNameTarget.value)
+        this.filesValue[this.fileIdValue] = new FileMeta({file, title: file.name})
+        // Unpacking dictionnary to force the creation of a new object to prevent
+        // stimulus-store from optimizing-out notifying other controllers
+        this.setFilesValue({...this.filesValue})
+        this.initialValue = false
+    }
+
     /** @param {String} value */
     fileIdValueChanged(value) {
-        if(value.length === 0 || this.filesValue[value] === undefined) return;
+        // If this.initialValue === true, we're in the case of a document transmitted by the backend, this should be
+        // processed in connect(); we're protecting this method in case it is triggered before connect()
+        if(this.initialValue || value.length === 0 || this.filesValue[value] === undefined) return;
 
         const {file} = this.filesValue[value]
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file)
-        this.documentFileTarget.files = dataTransfer.files
-        this.documentFileTarget.dispatchEvent(new Event("change"))
+        if(this.hasDocumentFileTarget) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file)
+            this.documentFileTarget.files = dataTransfer.files
+            this.documentFileTarget.dispatchEvent(new Event("change"))
+        }
+        this.updateForm(file)
+    }
 
-        // Updating form
+    /** @param {File} file */
+    updateForm(file) {
         this.documentNameTarget.value = file.name
         this.documentNameTarget.dispatchEvent(new Event("input"))
 
@@ -307,8 +318,12 @@ class DocumentForm extends Controller {
 
     /** @param {FileStoreStruct} files */
     onFilesUpdate(files) {
-        if(!Object.hasOwn(files, this.fileIdValue)) {
-            this.element.remove()
+        if(!this.initialValue && files[this.fileIdValue] === undefined) {
+            // Don't remove the form as it would not be process by the formset. Instead, disabled and hide it
+            removeRequired(this.element)
+            this.deleteTarget.value = "on"
+            this.element.setAttribute("hidden", "hidden")
+            delete this.element.dataset.controller
         }
     }
 
@@ -343,5 +358,4 @@ applicationReady.then(app => {
     app.register("document-formset", DocumentFormset)
     app.register("document-form", DocumentForm)
     app.register("document-validated", DocumentValidated)
-    app.register("existing-document-validated", ExistingDocumentValidated)
 })

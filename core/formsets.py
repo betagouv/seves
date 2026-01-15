@@ -1,3 +1,4 @@
+import json
 from functools import cached_property
 
 from django.forms import Media
@@ -19,13 +20,6 @@ class DocumentInMessageUploadBaseFormSet(BaseModelFormSet):
             js=(js_module("core/form/document_in_message_uploads.mjs"),),
         )
 
-    @cached_property
-    def existing_documents(self):
-        if not self.message:
-            return []
-
-        return self.message.documents.all()
-
     @property
     def max_upload_size_mb(self):
         return MAX_UPLOAD_SIZE_MEGABYTES
@@ -34,17 +28,23 @@ class DocumentInMessageUploadBaseFormSet(BaseModelFormSet):
     def allowed_extensions(self):
         return AllowedExtensions.values
 
+    @cached_property
+    def allowed_extensions_per_document_type(self):
+        result = Document.get_accept_attribute_per_document_type()
+        result[""] = "." + ",.".join(self.allowed_extensions)
+        return json.dumps(result)
+
     def __init__(
         self,
-        allowed_document_types,
         user,
+        message,
+        allowed_document_types,
         data=None,
         files=None,
         auto_id="id_%s",
         prefix=None,
         queryset=None,
         *,
-        message=None,
         initial=None,
         **kwargs,
     ):
@@ -62,15 +62,9 @@ class DocumentInMessageUploadBaseFormSet(BaseModelFormSet):
         }
 
     def get_queryset(self):
-        return super().get_queryset().none()
-
-    def save(self, commit=True):
-        return super().save(commit)
+        return super().get_queryset().none() if not self.message.pk else self.message.documents.all()
 
 
 DocumentInMessageUploadFormSet = modelformset_factory(
-    Document,
-    DocumentInMessageUploadForm,
-    formset=DocumentInMessageUploadBaseFormSet,
-    extra=0,
+    Document, DocumentInMessageUploadForm, formset=DocumentInMessageUploadBaseFormSet, extra=0, can_delete=True
 )

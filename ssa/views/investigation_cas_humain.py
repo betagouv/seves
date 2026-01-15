@@ -26,8 +26,8 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
     WithFormsetInvalidMixin,
+    MediaDefiningMixin,
 )
-from core.views import MediaDefiningMixin
 
 from ..forms import InvestigationCasHumainForm
 from ..formsets import InvestigationCasHumainsEtablissementFormSet

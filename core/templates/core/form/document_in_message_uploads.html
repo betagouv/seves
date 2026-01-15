@@ -1,13 +1,11 @@
-{% load dsfr_tags widget_tweaks %}
+{% load dsfr_tags stimulus widget_tweaks %}
 
 <div
     data-controller="document-formset"
     data-document-formset-dragging-class="document-upload-drag-drop--dragging"
     data-document-formset-disabled-class="document-upload-drag-drop--disabled"
-    data-document-formset-initial-documents-value="{{ formset.initial_forms|length }}"
-    data-document-formset-document-form-outlet="[data-controller='document-form']"
+    data-document-formset-allowed-extensions-per-document-type-value="{{ formset.allowed_extensions_per_document_type }}"
 >
-
     <p data-document-formset-target="documentsAddedMsg">
         {% if formset.initial_forms|length %}
             Documents ajoutés au message
@@ -15,6 +13,15 @@
             Aucun document ajouté
         {% endif %}
     </p>
+
+    {% if formset.errors %}
+        <div class="fr-alert fr-alert--error fr-mb-4v">
+            <p>
+                Il y a des erreurs dans les documents attachés au message.
+                Veuillez ouvrir la modale pour les corriger
+            </p>
+        </div>
+    {% endif %}
 
     <button
         aria-controls="document-modal"
@@ -25,28 +32,7 @@
     >Ajouter des documents
     </button>
 
-    <section data-document-formset-target="validatedSection">
-        {% for existing_document in formset.existing_documents %}
-            <div class="document-card" data-controller="existing-document-validated" data-testid="document-card">
-                <span class="document-title" data-testid="document-card-title">{{ existing_document.nom }}</span>
-                <button
-                    type="button"
-                    class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
-                    data-action="existing-document-validated#onDelete:stop:prevent"
-                    data-testid="document-delete-btn"
-                >Supprimer
-                </button>
-                <fieldset class="existing-document-form fr-hidden">
-                    <input
-                        type="hidden"
-                        id="existing_document"
-                        name="existing_document_name_{{ existing_document.pk }}"
-                        value="{{ existing_document.pk }}"
-                    />
-                </fieldset>
-            </div>
-        {% endfor %}
-    </section>
+    <section data-document-formset-target="validatedSection"></section>
 
     <template data-document-formset-target="validatedSectionTpl">
         <div
@@ -69,6 +55,7 @@
             </button>
         </div>
     </template>
+
     <dialog
         id="document-modal"
         class="fr-modal fr-modal--top"
@@ -99,18 +86,14 @@
                                 </h2>
                                 <p class="fr-hint-text">
                                     Formats supportés :
-                                    <span data-document-form-target="allowedExtensions">
+                                    <span data-document-formset-target="allowedExtensions">
                                         {{ formset.allowed_extensions|join:", " }}
                                     </span><br>
                                     Taille maximale autorisée : {{ formset.max_upload_size_mb }} Mo
                                 </p>
                             </hgroup>
 
-                            {% for field in formset.management_form %}
-                                {% with data_target=field.name|strfmt:"document-formset-target:{0}" %}
-                                    {{ field|set_data:data_target }}
-                                {% endwith %}
-                            {% endfor %}
+                            {% stimulus_managment_form formset %}
 
                             <div class="fr-select-group">
                                 <label class="fr-label" for="document-upload-type-all">
@@ -133,30 +116,36 @@
 
                             <section
                                 class="document-upload-drag-drop"
-                                data-document-formset-target="documentModalDragDrop"
-                                data-action="dragover->document-formset#onDragOver
-                                             drop->document-formset#onDrop:prevent:stop
-                                             dragenter->document-formset#onDragEnter:prevent:stop
-                                             dragleave->document-formset#onDragLeave:prevent:stop
-                                             dragend->document-formset#onDragLeave:prevent:stop"
+                                data-document-formset-target="documentModalDragDropContainer"
                             >
-                                <p class="document-upload-drag-drop--desc">
-                                    Glissez vos fichiers ici ou
-                                    <label
-                                        class="fr-label upload-btn"
-                                        for="filechooser-btn"
-                                        tabindex="0"
-                                    >cliquez pour les selectionner</label>
-                                    <input
-                                        id="filechooser-btn"
-                                        class="fr-sr-only"
-                                        type="file"
-                                        multiple
-                                        data-action="document-formset#onFileSelect:prevent:stop"
-                                        data-document-formset-target="documentFile"
-                                        data-testid="filechooser-link"
-                                    />
-                                </p>
+                                <div
+                                    class="document-upload-drag-drop--zone"
+                                    data-document-formset-target="documentModalDragDrop"
+                                    data-action="dragover->document-formset#onDragOver
+                                                 drop->document-formset#onDrop:prevent:stop
+                                                 dragenter->document-formset#onDragEnter:prevent:stop
+                                                 dragleave->document-formset#onDragLeave:prevent:stop
+                                                 dragend->document-formset#onDragLeave:prevent:stop"
+                                >
+
+                                    <p class="document-upload-drag-drop--desc">
+                                        Glissez vos fichiers ici ou
+                                        <label
+                                            class="fr-label upload-btn"
+                                            for="filechooser-btn"
+                                            tabindex="0"
+                                        >cliquez pour les selectionner</label>
+                                        <input
+                                            id="filechooser-btn"
+                                            class="fr-sr-only"
+                                            type="file"
+                                            multiple
+                                            data-action="document-formset#onFileSelect:prevent:stop"
+                                            data-document-formset-target="documentFile"
+                                            data-testid="filechooser-link"
+                                        />
+                                    </p>
+                                </div>
 
                                 <section
                                     class="document-upload-drag-drop--accordion-container"
