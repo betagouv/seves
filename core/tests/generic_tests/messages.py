@@ -217,7 +217,7 @@ def generic_test_can_only_see_own_document_types_in_message_form(
     check_select_options_from_element(message_page.document_type_input, expected, False)
 
 
-def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
+def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab(
     live_server, page, object, mocked_authentification_user, mailoutbox
 ):
     message = MessageFactory(
@@ -227,36 +227,63 @@ def generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
         message_type=Message.MESSAGE,
     )
     document_to_remove = DocumentFactory(content_object=message)
+    document_to_remove_2 = DocumentFactory(content_object=message)
     document_to_keep = DocumentFactory(content_object=message)
+    document_to_edit = DocumentFactory(content_object=message)
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = UpdateMessagePage(page, "#message-form")
     message_page.open_message()
 
-    assert len(message_page.get_existing_documents_title) == 2, (
-        f"Expected 2 got {len(message_page.get_existing_documents_title)}"
+    assert len(message_page.get_existing_documents_title) == 4, (
+        f"Expected 4 got {len(message_page.get_existing_documents_title)}"
     )
     assert document_to_remove.nom in ".".join(message_page.get_existing_documents_title)
+    assert document_to_remove_2.nom in ".".join(message_page.get_existing_documents_title)
     assert document_to_keep.nom in message_page.get_existing_documents_title
+    assert document_to_edit.nom in message_page.get_existing_documents_title
 
     # Add new document
     message_page.add_basic_document()
+    assert len(message_page.get_existing_documents_title) == 5
+
+    # Remove previous document from the document aside
+    required_fields = (
+        page.get_by_test_id("document-upload").filter(has_text=document_to_remove.nom).locator("[required]")
+    )
+    expect(required_fields).not_to_have_count(0)
+    message_page.remove_document_by_name_from_aside(document_to_remove.nom)
+    # Asserts that removed document won't be checked during form submission
+    expect(required_fields).to_have_count(0)
+    assert len(message_page.get_existing_documents_title) == 4
+
+    # Remove previous document from the document modal
+    required_fields = (
+        page.get_by_test_id("document-upload").filter(has_text=document_to_remove_2.nom).locator("[required]")
+    )
+    expect(required_fields).not_to_have_count(0)
+    message_page.remove_document_by_name_from_modal(document_to_remove_2.nom)
+    # Asserts that removed document won't be checked during form submission
+    expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 3
 
-    # Remove previous document
-    message_page.remove_document_by_name(document_to_remove.nom)
-    assert len(message_page.get_existing_documents_title) == 2
-
+    # Edit document
+    with message_page.modify_document_by_name(document_to_edit.nom) as accordion:
+        accordion.locator('[name$="nom"]').fill(f"New {document_to_edit.nom}")
     message_page.submit_message()
 
     # Wait for the page to confirm message was sent
     expect(page.locator(".fr-alert.fr-alert--success").get_by_text("Le message a bien été ajouté.")).to_be_visible()
 
     message.refresh_from_db()
+    document_to_edit_nom_old = document_to_edit.nom
+    document_to_edit.refresh_from_db()
     assert message.status == Message.Status.FINALISE
-    assert message.documents.count() == 2, f"Expected 2 documents found {message.documents.count()}"
+    assert message.documents.count() == 3, f"Expected 3 documents found {message.documents.count()}"
     assert document_to_keep in message.documents.all()
     assert document_to_remove not in message.documents.all()
+    assert document_to_remove_2 not in message.documents.all()
+    assert document_to_edit.nom == f"New {document_to_edit_nom_old}"
     assert len(mailoutbox) == 1
 
 

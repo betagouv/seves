@@ -310,7 +310,14 @@ class Document(models.Model):
     def validate_file_extention_for_document_type(cls, file, document_type):
         if document_type not in Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE:
             return
-        FileExtensionValidator(Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type])(file)
+        document_type_label = Document.TypeDocument(document_type).label
+        FileExtensionValidator(
+            Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type],
+            message=(
+                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document"
+                f"« {document_type_label} ». Les extensions autorisées sont : %(allowed_extensions)s."
+            ),
+        )(file)
 
     @classmethod
     def get_accept_attribute_per_document_type(cls):
@@ -329,10 +336,7 @@ class Document(models.Model):
                 {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
             )
         if self.file and self.document_type:
-            try:
-                self.validate_file_extention_for_document_type(self.file, self.document_type)
-            except ValidationError as e:
-                raise ValidationError(e.message)
+            self.validate_file_extention_for_document_type(self.file, self.document_type)
 
 
 @reversion.register()

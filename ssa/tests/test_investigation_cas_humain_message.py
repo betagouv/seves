@@ -21,7 +21,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
     generic_test_can_send_draft_message_in_new_tab,
-    generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab,
+    generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab,
     generic_test_can_delete_my_own_draft_message,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
     generic_test_can_search_in_message_list,
@@ -143,7 +143,7 @@ def test_can_only_see_own_document_types_in_message_form(live_server, page: Page
 def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
     live_server, page: Page, mocked_authentification_user, mailoutbox
 ):
-    generic_test_can_see_and_delete_documents_from_draft_message_in_new_tab(
+    generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab(
         live_server,
         page,
         InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS),

@@ -1,10 +1,33 @@
 {% load dsfr_tags widget_tweaks %}
 
 
+{% if form.errors %}
+    <div class="fr-alert fr-alert--error fr-mb-4v">
+        {% if form.errors.file %}
+            {% if form.file.data.name %}Il y a eu une erreur dans le traitement du document « {{ form.file.data.name }}
+                » :{% endif %}
+            {% if form.errors.file|length == 1 %}
+                <p>{{ form.errors.file.0 }}</p>
+            {% else %}
+                <ul>
+                    {% for error in form.errors.file %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% else %}
+            <p>Il y a des erreurs dans ce document. Veuillez ouvrir l'accordéon pour le corriger</p>
+        {% endif %}
+    </div>
+{% endif %}
 <section
     class="document-upload-accordion fr-accordion"
     data-controller="document-form"
     data-document-form-target="form"
+    {% if form.instance.pk %}
+        data-document-form-file-id-value="{{ form.file_id }}"
+        data-document-form-initial-value="true"
+    {% endif %}
     data-testid="document-upload"
 >
     <div class="fr-accordion__title">
@@ -13,8 +36,10 @@
                 class="document-upload-accordion__title fr-text"
                 data-document-form-target="accordionTitle"
                 data-testid="document-upload-title"
-            ></h3>
-            <p class="fr-tag fr-tag--sm" data-document-form-target="accordionTypeLabel"></p>
+            >{% if form.instance.pk %}{{ form.instance.nom }}{% endif %}</h3>
+            <p class="fr-tag fr-tag--sm" data-document-form-target="accordionTypeLabel">
+                {% if form.instance.pk %}{{ form.instance.get_document_type_display }}{% endif %}
+            </p>
         </div>
         <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-mb-n4v">
             <button
@@ -23,18 +48,26 @@
                 aria-expanded="false"
                 data-action="document-form#onModify:stop:prevent"
                 data-testid="open-accordion"
-            >Modifier</button>
+            >Modifier
+            </button>
             <button
                 type="button"
                 class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
                 data-action="document-form#onDelete:stop:prevent"
-            >Supprimer</button>
+            >Supprimer
+            </button>
         </div>
     </div>
     <div class="fr-collapse" data-document-form-target="accordionContent">
         {% dsfr_form_field form.nom|set_data:"document-form-target:documentName"|set_data:"action:document-form#onDocumentNameChanged" %}
         {% dsfr_form_field form.document_type|set_data:"document-form-target:documentType"|set_data:"action:document-form#onDocumentTypeChanged"|set_data:"testid:document-upload-type" %}
-        {{ form.file|add_class:"fr-input fr-hidden fr-my-4v"|set_data:"document-form-target:documentFile" }}
+        {% if not form.instance.pk %}
+            {{ form.file|add_class:"fr-input fr-hidden fr-my-4v"|set_data:"document-form-target:documentFile" }}
+        {% endif %}
         {% dsfr_form_field form.description %}
+        {{ form.id }}
+        {% with field=form.DELETE|set_data:"document-form-target:delete" %}
+            {{ field.as_hidden }}
+        {% endwith %}
     </div>
 </section>

@@ -35,10 +35,10 @@ from core.mixins import (
     WithClotureContextMixin,
     WithOrderingMixin,
     WithFinDeSuiviMixin,
+    MediaDefiningMixin,
 )
 from core.models import Visibilite, Contact
 from core.redirect import safe_redirect
-from core.views import MediaDefiningMixin
 from sv.forms import (
     FicheZoneDelimiteeForm,
     ZoneInfesteeFormSet,

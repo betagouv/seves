@@ -1,6 +1,5 @@
 import json
 import logging
-from functools import wraps
 
 import requests
 from celery.exceptions import OperationalError
@@ -10,14 +9,12 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.forms import Media
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView, ListView
-from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
 
@@ -46,30 +43,6 @@ from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
 
 logger = logging.getLogger(__name__)
-
-
-class MediaDefiningMixin(ContextMixin):
-    def __new__(cls):
-        """
-        Wrapping get_context_data in a decorator here ensures get_media is called at the very last moment
-        when all superclasses' get_context_data have been called.
-        """
-
-        def patch_get_context_data(get_context_data):
-            @wraps(get_context_data)
-            def wrapper(*args, **kwargs):
-                context = get_context_data(*args, **kwargs)
-                context.setdefault("media", obj.get_media(**context))
-                return context
-
-            return wrapper
-
-        obj = super().__new__(cls)
-        obj.get_context_data = patch_get_context_data(obj.get_context_data)
-        return obj
-
-    def get_media(self, **context_data) -> Media:
-        return context_data["form"].media if "form" in context_data else Media()
 
 
 class DocumentUploadView(
@@ -188,10 +161,17 @@ class MessageCreateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
-    MediaDefiningMixin,
     CreateView,
 ):
     model = Message
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.reply_message = None
+
+    def get_fiche_object(self):
+        self.fiche_object_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
+        return get_object_or_404(self.fiche_object_class, pk=self.kwargs.get("obj_pk"))
 
     def get_form_class(self):
         mapping = {
@@ -199,7 +179,7 @@ class MessageCreateView(
             "note": NoteForm,
             "point_situation": PointDeSituationForm,
             "demande_intervention": DemandeInterventionForm,
-            "cr_demande_intervention": self.obj.get_crdi_form(),
+            "cr_demande_intervention": self.fiche_objet.get_crdi_form(),
         }
         self.reply_id = self.request.GET.get("reply_id")
         if self.reply_id:
@@ -209,27 +189,18 @@ class MessageCreateView(
         is_ac = self.request.user.agent.structure.is_ac
         if message_form == DemandeInterventionForm and not is_ac:
             raise PermissionDenied
-        if message_form == self.obj.get_crdi_form() and is_ac:
+        if message_form == self.fiche_objet.get_crdi_form() and is_ac:
             raise PermissionDenied
         return message_form
 
-    def dispatch(self, request, *args, **kwargs):
-        self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
-        self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
-        self.reply_message = None
-        return super().dispatch(request, *args, **kwargs)
-
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_user_access(self.request.user)
-
-    def get_fiche_object(self):
-        return self.obj
+        return self.fiche_objet.can_user_access(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update(
             {
-                "obj": self.obj,
+                "obj": self.fiche_objet,
                 "sender": self.request.user.agent.contact_set.get(),
             }
         )
@@ -253,25 +224,16 @@ class MessageCreateView(
                 )
         return kwargs
 
-    def _create_documents(self, form):
-        super()._create_documents(form)
-        self.get_document_in_message_upload_formset(message=form.instance).save()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_formset"] = self.get_document_in_message_upload_formset()
+        context["go_back_url"] = self.fiche_objet.get_absolute_url()
         context["message_status"] = Message.Status
-        context["object"] = self.obj
         if self.reply_message:
             context["page_title"] = self.reply_message.reply_page_title
         return context
 
-    def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["add_document_formset"].media
-
     def get_success_url(self):
-        return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
+        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)
@@ -280,17 +242,20 @@ class MessageCreateView(
         for _, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, error)
-        return HttpResponseRedirect(self.obj.get_absolute_url())
+        return HttpResponseRedirect(self.fiche_objet.get_absolute_url())
 
 
 class MessageUpdateView(
     PreventActionIfVisibiliteBrouillonMixin,
     UserPassesTestMixin,
     MessageHandlingMixin,
-    MediaDefiningMixin,
     UpdateView,
 ):
     model = Message
+    context_object_name = "message"
+
+    def get_fiche_object(self):
+        return self.get_object().content_object
 
     def get_form_class(self):
         mapping = {
@@ -298,45 +263,27 @@ class MessageUpdateView(
             Message.NOTE: NoteForm,
             Message.POINT_DE_SITUATION: PointDeSituationForm,
             Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
-            Message.COMPTE_RENDU: self.obj.get_crdi_form(),
+            Message.COMPTE_RENDU: self.fiche_objet.get_crdi_form(),
         }
         return mapping.get(self.object.message_type)
-
-    def dispatch(self, request, *args, **kwargs):
-        self.content_object = self.get_object().content_object
-        self.obj = self.content_object
-        return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
         return self.get_object().can_be_updated(self.request.user)
 
-    def get_fiche_object(self):
-        return self.content_object
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
-        kwargs["obj"] = self.content_object
+        kwargs["obj"] = self.fiche_objet
         return kwargs
 
     def get_context_data(self, **kwargs):
-        instance = self.get_object()
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_formset"] = self.get_document_in_message_upload_formset(message=instance)
+        context["go_back_url"] = self.fiche_objet.get_absolute_url()
         context["message_status"] = Message.Status
-        context["object"] = self.obj
         return context
 
-    def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["add_document_formset"].media
-
     def get_success_url(self):
-        return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
-
-    def _create_documents(self, form):
-        super()._create_documents(form)
-        self.get_document_in_message_upload_formset(message=form.instance).save()
+        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)
