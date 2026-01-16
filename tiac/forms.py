@@ -83,7 +83,11 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"), js_module("tiac/evenement_simple.mjs")),
+            js=(
+                js_module("core/free_links.mjs"),
+                js_module("tiac/evenement_simple.mjs"),
+                js_module("tiac/ars_informee.mjs"),
+            ),
         )
 
     def __init__(self, *args, **kwargs):
@@ -325,6 +329,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 js_module("tiac/etiologie.mjs"),
                 js_module("tiac/agents_pathogene.mjs"),
                 js_module("tiac/tiac_conclusion.mjs"),
+                js_module("tiac/ars_informee.mjs"),
             ),
         )
 

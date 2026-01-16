@@ -173,3 +173,13 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
     assert etablissement.departement == Departement.objects.get(nom="Paris")
+
+
+def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("False")
+    creation_page.evenement_origin.select_option("ARS")
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("True")
