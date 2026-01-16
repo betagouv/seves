@@ -206,6 +206,25 @@ def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Pa
     expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
 
 
+def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = EtablissementFactory(numero_agrement="01.001.001")
+    to_be_found_2 = EtablissementFactory(numero_agrement="01.001.001", investigation=InvestigationTiacFactory())
+    not_to_be_found_1 = EtablissementFactory(numero_agrement="")
+    not_to_be_found_2 = EtablissementFactory(numero_agrement="02.002.002")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numero_agrement.fill("01.001.001")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
 def test_can_filter_by_departement(live_server, ensure_departements, mocked_authentification_user, page: Page):
     ensure_departements("Cantal", "Aveyron")
     to_be_found = EtablissementFactory(departement=Departement.objects.get(nom="Cantal"))
