@@ -139,9 +139,9 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
 
 
 def test_search_with_conclusion(live_server, page: Page):
-    evenement_1 = EvenementSimpleFactory()
-    evenement_2 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED)
-    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+    evenement_1 = EvenementSimpleFactory(numero_annee=2025)
+    evenement_2 = InvestigationTiacFactory(numero_annee=2024, suspicion_conclusion=SuspicionConclusion.CONFIRMED)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2023, suspicion_conclusion=None)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
@@ -154,12 +154,14 @@ def test_search_with_conclusion(live_server, page: Page):
 
 
 def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_from_element_with_value):
-    evenement_1 = EvenementSimpleFactory()
+    evenement_1 = EvenementSimpleFactory(numero_annee=2025)
     evenement_2 = InvestigationTiacFactory(
-        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS]
+        numero_annee=2024,
+        suspicion_conclusion=SuspicionConclusion.SUSPECTED,
+        selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS],
     )
-    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
-    evenement_4 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.DISCARDED)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2023, suspicion_conclusion=None)
+    evenement_4 = InvestigationTiacFactory(numero_annee=2022, suspicion_conclusion=SuspicionConclusion.DISCARDED)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
