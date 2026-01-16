@@ -35,14 +35,14 @@
             <fieldset class="fr-fieldset form-fieldset">
                 <legend class="fr-fieldset__legend fr-h3">Le contexte</legend>
 
-                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                <div class="fr-grid-row fr-grid-row--gutters fr-col" data-controller="ars-informee">
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="fr-input-group">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
                         {% dsfr_form_field form.date_reception %}
-                        {% dsfr_form_field form.evenement_origin %}
+                        {% dsfr_form_field form.evenement_origin|set_data:"ars-informee-target:origin"|set_data:"action:ars-informee#onOriginChanged" %}
                         {% dsfr_form_field form.modalites_declaration|dsfr_inline %}
                     </div>
 
