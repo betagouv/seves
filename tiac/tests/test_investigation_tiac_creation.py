@@ -29,6 +29,7 @@ from ..constants import (
     TypeRepas,
     SuspicionConclusion,
     DANGERS_COURANTS,
+    ModaliteDeclarationEvenement,
 )
 from ..models import (
     InvestigationTiac,
@@ -644,3 +645,22 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
     assert etablissement.departement == Departement.objects.get(nom="Paris")
+
+
+def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("False")
+    expect(creation_page.page.locator("#radio-id_modalites_declaration :checked")).to_have_count(0)
+    creation_page.evenement_origin.select_option("ARS")
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("True")
+    expect(creation_page.page.locator("#radio-id_modalites_declaration :checked")).to_have_value("autre")
+
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.notify_ars is True
+    assert investigation.modalites_declaration == ModaliteDeclarationEvenement.OTHER
