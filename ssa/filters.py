@@ -60,6 +60,9 @@ class WithEtablissementFilterMixin(django_filters.FilterSet):
     siret = django_filters.CharFilter(
         field_name="etablissements__siret", lookup_expr="contains", distinct=True, label="Siren/Siret"
     )
+    numero_agrement = django_filters.CharFilter(
+        field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
+    )
     commune = django_filters.CharFilter(field_name="etablissements__commune", distinct=True, label="Commune")
     departement = django_filters.ModelChoiceFilter(
         label="Département",
@@ -123,9 +126,6 @@ class EvenementFilter(
     )
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
-    )
-    numero_agrement = django_filters.CharFilter(
-        field_name="etablissements__numero_agrement", distinct=True, label="Numéro d'agrément"
     )
     categorie_produit = CharInFilter(field_name="categorie_produit", lookup_expr="in")
     categorie_danger = CharInFilter(field_name="categorie_danger", lookup_expr="in")

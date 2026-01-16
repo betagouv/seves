@@ -359,6 +359,10 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_siret")
 
     @property
+    def numero_agrement(self):
+        return self.page.locator("#id_numero_agrement")
+
+    @property
     def commune(self):
         return self.page.locator("#id_commune")
 
