@@ -96,7 +96,7 @@ django-post-office==3.11.0
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
-django-reversion==6.0.0
+django-reversion==6.1.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
