@@ -251,10 +251,10 @@
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
                     <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_repas %}
+                        {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas" %}
                     </div>
                     <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_aliment %}
+                        {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment"  %}
                     </div>
                 </div>
             </fieldset>
