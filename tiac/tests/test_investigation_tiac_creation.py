@@ -214,8 +214,8 @@ def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentific
     creation_page.add_danger_syndromique(DangersSyndromiques.TOXINE_DES_POISSONS.label)
     assert creation_page.nb_dangers == 1
 
-    creation_page.precisions.fill("Mes précisions")
     creation_page.set_analyses("Oui")
+    creation_page.precisions.fill("Mes précisions")
     creation_page.submit_as_draft()
     investigation = InvestigationTiac.objects.last()
     assert investigation.danger_syndromiques_suspectes == ["toxine des poissons"]

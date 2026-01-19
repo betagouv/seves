@@ -512,9 +512,13 @@ class InvestigationTiac(
                 name="selected_hazard_constraints",
             ),
             models.CheckConstraint(
-                check=~Q(suspicion_conclusion=SuspicionConclusion.UNKNOWN.value)
+                condition=~Q(suspicion_conclusion=SuspicionConclusion.UNKNOWN.value)
                 | (Q(conclusion_repas__isnull=True) & Q(conclusion_aliment__isnull=True)),
-                name="repas_ailment_only_if_conclusion_known",
+                name="repas_aliment_only_if_conclusion_known",
+            ),
+            models.CheckConstraint(
+                condition=Q(analyses_sur_les_malades=Analyses.OUI) | (Q(precisions="")),
+                name="precision_only_if_analyse",
             ),
         )
 

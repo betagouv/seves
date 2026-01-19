@@ -12,7 +12,7 @@ from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp, Analyses
 from tiac.tests.pages import EvenementListPage
 
 
@@ -437,7 +437,7 @@ def test_can_filter_by_follow_up(live_server, mocked_authentification_user, page
 
 def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked_authentification_user, page: Page):
     evenement_1 = InvestigationTiacFactory(contenu="Morbier")
-    evenement_2 = InvestigationTiacFactory(precisions="Morbier")
+    evenement_2 = InvestigationTiacFactory(precisions="Morbier", analyses_sur_les_malades=Analyses.OUI)
     evenement_3 = InvestigationTiacFactory()
     EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     evenement_4 = InvestigationTiacFactory()

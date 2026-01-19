@@ -10,7 +10,8 @@ class EtiologieFormController  extends Controller {
         "etiologieEmptyCardContainer",
         "etiologieCardContainer",
         "hiddenField",
-        "jsonConfig"
+        "jsonConfig",
+        "precisions",
     ]
     static values = {currentOption:String, selectedValues: Array, config: Object, hasConnected: {type: Boolean, default: false}};
 
@@ -89,6 +90,15 @@ class EtiologieFormController  extends Controller {
         dsfr(this.etiologieModalConfirmationTarget).modal.conceal();
         this.selectedValuesValue = [...this.selectedValuesValue, this.currentOption]
         this.currentOption = null
+    }
+
+    onAnalyseChange(event){
+        if (event.target.value === "oui"){
+            this.precisionsTarget.disabled = false
+        } else {
+            this.precisionsTarget.disabled = true
+            this.precisionsTarget.value = ""
+        }
     }
 }
 

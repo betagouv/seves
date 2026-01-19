@@ -279,9 +279,18 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput
     )
     analyses_sur_les_malades = forms.ChoiceField(
-        choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
+        choices=Analyses.choices,
+        widget=forms.RadioSelect(
+            attrs={
+                "data-action": "change->etiologie-form#onAnalyseChange",
+            }
+        ),
+        label="Analyses engagées sur les malades",
+        required=False,
     )
-    precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+    precisions = forms.CharField(
+        widget=forms.TextInput(attrs={"disabled": True}), required=False, label="Précisions", help_text="Type d'analyse"
+    )
     agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
 
     suspicion_conclusion = SEVESChoiceField(
