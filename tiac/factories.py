@@ -153,7 +153,6 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
         lambda: random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
     )
     analyses_sur_les_malades = FuzzyChoice(Analyses.values)
-    precisions = factory.Faker("sentence")
 
     agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
 
@@ -168,6 +167,12 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
         if self.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
             return random.sample(DangersSyndromiques.values, k=random.randint(1, 3))
         return []
+
+    @factory.lazy_attribute
+    def precisions(self):
+        if self.analyses_sur_les_malades == Analyses.OUI:
+            return Faker().sentence()
+        return ""
 
     @factory.post_generation
     def with_danger_syndromiques_suspectes_count(self, create, extracted, **_):

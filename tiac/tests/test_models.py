@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from ssa.constants import CategorieDanger
 from tiac.constants import SuspicionConclusion, DangersSyndromiques
 from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory
+from tiac.models import Analyses
 
 
 def test_investigation_tiac_selected_hazard_constraints(db):
@@ -51,3 +52,10 @@ def test_investigation_tiac_conclusion_constraints(db):
         InvestigationTiacFactory(
             suspicion_conclusion=SuspicionConclusion.UNKNOWN, conclusion_repas=AlimentSuspectFactory()
         )
+
+
+def test_investigation_tiac_etiogie_constraints(db):
+    with pytest.raises(IntegrityError):
+        InvestigationTiacFactory(analyses_sur_les_malades=Analyses.NON, precisions="Test")
+    with pytest.raises(IntegrityError):
+        InvestigationTiacFactory(analyses_sur_les_malades=Analyses.INCONNU, precisions="Test")

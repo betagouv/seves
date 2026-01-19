@@ -149,7 +149,7 @@
                 {% dsfr_form_field form.analyses_sur_les_malades|dsfr_inline %}
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-6">
-                        {% dsfr_form_field form.precisions %}
+                        {% dsfr_form_field form.precisions|set_data:"etiologie-form-target:precisions" %}
                     </div>
                 </div>
 
