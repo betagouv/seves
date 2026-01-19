@@ -7,7 +7,13 @@ body{
 
 body.environment-test *,
 body.environment-test *:before,
-body.environment-test *:after {
+body.environment-test *:after,
+.no-animate,
+.no-animate:before,
+.no-animate:after,
+.no-animate *,
+.no-animate *:before,
+.no-animate *:after {
     transition-property: none !important;
     transform: none !important;
     animation: none !important;

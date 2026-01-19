@@ -26,6 +26,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_delete_my_own_draft_message,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
     generic_test_can_search_in_message_list,
+    generic_test_handle_document_validation_error,
 )
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
@@ -161,6 +162,15 @@ def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
         InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS),
         mocked_authentification_user,
         mailoutbox,
+    )
+
+
+def test_handle_document_validation_error(live_server, page: Page, choice_js_fill, mocked_authentification_user):
+    generic_test_handle_document_validation_error(
+        live_server,
+        page,
+        choice_js_fill,
+        InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS),
     )
 
 

@@ -287,6 +287,29 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     assert len(mailoutbox) == 1
 
 
+def generic_test_handle_document_validation_error(live_server, page: Page, choice_js_fill, object):
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+    message_page.pick_recipient(active_contact, choice_js_fill)
+    expect(message_page.message_form_title).to_have_text("Nouveau message")
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.fill("My content \n with a line return")
+
+    message_page.add_basic_document(close=False)
+    message_page.document_type_input.select_option("Choisir dans la liste")
+    message_page.validate_document_modal()
+
+    message_page.save_as_draft_message()
+
+    expect(message_page.document_type_input).to_be_visible()
+    assert (
+        message_page.document_type_input.evaluate("el => el.validationMessage") == "Please select an item in the list."
+    )
+
+
 def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa"]):
     ContactAgentFactory(with_active_agent__with_groups=[])
     ContactStructureFactory(with_one_active_agent__with_groups=[])
