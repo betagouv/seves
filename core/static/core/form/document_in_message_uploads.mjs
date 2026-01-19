@@ -1,6 +1,6 @@
 import {Controller} from "Stimulus"
 import {BaseFormSetController} from "BaseFormset"
-import {applicationReady} from "Application"
+import {applicationReady, dsfrDisclosePromise} from "Application"
 import {createStore, useStore} from "StimulusStore"
 import {removeRequired} from "Forms"
 
@@ -57,6 +57,7 @@ class FileMeta {
  * @property {HTMLInputElement} documentFileTarget
  * @property {HTMLTemplateElement} formTplTarget
  * @property {HTMLButtonElement} submitBtnTarget
+ * @property {HTMLElement} formsetContainerTarget
  * @property {String[]} draggingClasses
  * @property {String[]} disabledClasses
  */
@@ -181,7 +182,7 @@ class DocumentFormset extends BaseFormSetController {
     onFilesUpdate(files) {
         const newKeys = new Set(Object.keys(files))
 
-        if(newKeys.length) {
+        if(newKeys.size === 0) {
             this.documentsAddedMsgTarget.innerText = "Aucun document ajouté"
         } else {
             this.documentsAddedMsgTarget.innerText = "Documents ajoutés au message"
@@ -246,7 +247,7 @@ class DocumentValidated extends Controller {
 /**
  * @extends StorePropertiesType
  * @property {HTMLElement} element
- * @property {HTMLFormElement} formTarget
+ * @property {HTMLFieldSetElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
  * @property {HTMLElement} accordionTitleTarget
@@ -272,6 +273,13 @@ class DocumentForm extends Controller {
     ]
     static values = {fileId: {type: String, default: ""}, initial: {type: Boolean, default: false}}
 
+    /** @return {DocumentFormset} */
+    get formset() {
+        return this.application.getControllerForElementAndIdentifier(
+            document.querySelector('[data-controller="document-formset"]'), "document-formset"
+        )
+    }
+
     initialize() {
         useStore(this)
     }
@@ -279,6 +287,14 @@ class DocumentForm extends Controller {
     connect() {
         if(this.initialValue) {
             this.initFile()
+        }
+    }
+
+    /** @param {HTMLFieldSetElement} fieldset */
+    formTargetConnected(fieldset) {
+        for(let element of fieldset.elements) {
+            const previousValue = element.dataset.action || ""
+            element.dataset.action = `invalid->${this.identifier}#onInvalid ${previousValue}`
         }
     }
 
@@ -325,6 +341,21 @@ class DocumentForm extends Controller {
             this.element.setAttribute("hidden", "hidden")
             delete this.element.dataset.controller
         }
+    }
+
+    /** @param {Event} evt */
+    async onInvalid(evt) {
+        if(this.skipEvent === true) return;
+        evt.preventDefault()
+        evt.stopPropagation()
+        await Promise.all([
+            dsfrDisclosePromise(dsfr(this.formset.modalTarget).modal),
+            dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse),
+        ])
+        this.skipEvent = true
+        evt.target.scrollIntoView({block: "center"})
+        evt.target.reportValidity()
+        this.skipEvent = false
     }
 
     onDocumentNameChanged({target: {value}}) {
