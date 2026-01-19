@@ -165,7 +165,7 @@ def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_fro
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.select_hazard("Bacillus Cereus - Staphylococcus Aureus")
+    search_page.select_hazard("Intoxination émétique bacillus cereus staphylococcus aureus")
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
