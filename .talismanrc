@@ -110,4 +110,6 @@ fileignoreconfig:
   checksum: fdeac6dc4a079cc9c2fdb65f7008793f9980fd4c3f68e1bcec3dc36538814fbc
 - filename: core/migrations/0046_alter_document_document_type.py
   checksum: d98b145d7469d9773d9d6cd7a162f6bd9e7a104e174612bb14385d0fd0b5ed08
+- filename: tiac/tests/test_models.py
+  checksum: 8ed9899d25e3fb10db5712869ed918e46ba4d749ed8270b1203fb0f6480925b6
 version: "1.0"
