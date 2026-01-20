@@ -158,6 +158,11 @@ class BaseMessagePage(ABC):
             self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
             expect(self.document_modal).not_to_be_visible()
 
+    def close_document_modal_no_validate(self):
+        if self.document_modal.is_visible():
+            self.page.locator("#document-modal").get_by_role("button", name="Fermer").click()
+            expect(self.document_modal).not_to_be_visible()
+
     def delete_document(self, nth):
         document_count = self.page.get_by_test_id("document-card").count()
         self.page.get_by_test_id("document-delete-btn").nth(nth).click()
@@ -195,8 +200,8 @@ class BaseMessagePage(ABC):
         # Accordion title changed so we must reselect
         accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
 
-        accordion.locator('[name$="document_type"]').select_option("Autre document")
-        accordion.locator('[name$="description"]').fill(f"Ma description {suffix}")
+        accordion.locator('[name$="document_type"]').last.select_option("Autre document")
+        accordion.locator('[name$="description"]').last.fill(f"Ma description {suffix}")
         if close:
             self.validate_document_modal()
 

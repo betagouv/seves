@@ -267,9 +267,15 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 3
 
+    # Test that adding document without validating doesn't add document
+    message_page.add_basic_document(close=False)
+    message_page.close_document_modal_no_validate()
+    assert len(message_page.get_existing_documents_title) == 3
+
     # Edit document
     with message_page.modify_document_by_name(document_to_edit.nom) as accordion:
         accordion.locator('[name$="nom"]').fill(f"New {document_to_edit.nom}")
+    expect(page.get_by_test_id("document-card").filter(has_text=f"New {document_to_edit.nom}")).to_have_count(1)
     message_page.submit_message()
 
     # Wait for the page to confirm message was sent
