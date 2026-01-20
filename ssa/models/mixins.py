@@ -109,6 +109,7 @@ class SsaBaseEvenementModel(models.Model):
             Document.TypeDocument.SIGNALEMENT_CERFA,
             Document.TypeDocument.SIGNALEMENT_RASFF,
             Document.TypeDocument.SIGNALEMENT_AUTRE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
             Document.TypeDocument.ANALYSE_RISQUE,
             Document.TypeDocument.TRACABILITE_INTERNE_TABLEAU,
             Document.TypeDocument.TRACABILITE_INTERNE_JUSTIFICATIF,
