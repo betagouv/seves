@@ -57,15 +57,15 @@ def test_can_edit_required_fields(live_server, page: Page, assert_models_are_equ
 
 def test_can_edit_etiologie(live_server, page: Page, assert_models_are_equal, choose_different_values):
     investigation = InvestigationTiacFactory(
-        suspicion_conclusion=SuspicionConclusion.UNKNOWN, with_danger_syndromiques_suspectes_count=3
+        suspicion_conclusion=SuspicionConclusion.UNKNOWN,
+        with_danger_syndromiques_suspectes_count=3,
+        analyses_sur_les_malades=Analyses.INCONNU,
     )
 
     new_danger_syndromique = choose_different_values(
         DangersSyndromiques.values, investigation.danger_syndromiques_suspectes, singleton=True
     )
-    new_analyses_sur_les_malades = choose_different_values(
-        list(Analyses), investigation.analyses_sur_les_malades, singleton=True
-    )
+    new_analyses_sur_les_malades = Analyses.OUI
     new_precision = Faker().sentence()
 
     previous_count = InvestigationTiac.objects.count()
