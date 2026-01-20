@@ -163,19 +163,16 @@ class DocumentFormset extends BaseFormSetController {
 
     /** @param {FileList} files */
     processFiles(files) {
-        const newObjects = {}
+        const keys = Object.keys(this.filesValue)
         for(const file of files) {
-            let id = this.getId(Object.keys(this.filesValue))
-            newObjects[id] = new FileMeta({file})
+            let id = this.getId(keys)
+            this.filesValue[id] = new FileMeta({file})
             const newForm = this.onAddForm()
             newForm.setAttribute("data-document-form-file-id-value", id)
         }
 
         // Disable dragging style if needed
         this.onDragLeave()
-        // Unpacking dictionnaries to force the creation of a new object to prevent
-        // stimulus-store from optimizing-out notifying other controllers
-        this.setFilesValue({...this.filesValue, ...newObjects})
     }
 
     /** @param {FileStoreStruct} files */
@@ -201,10 +198,20 @@ class DocumentFormset extends BaseFormSetController {
     }
 
     onModalClose() {
-        this.onFilesUpdate(this.filesValue)
+        for(const key of Object.keys(this.filesValue)) {
+            if(!this.cachedFileIds.has(key)) {
+                delete this.filesValue[key]
+            }
+        }
+        // Unpacking dictionnaries to force the creation of a new object to prevent
+        // stimulus-store from optimizing-out notifying other controllers
+        this.setFilesValue({...this.filesValue})
     }
 
     onSubmit() {
+        // Unpacking dictionnaries to force the creation of a new object to prevent
+        // stimulus-store from optimizing-out notifying other controllers
+        this.setFilesValue({...this.filesValue})
         dsfr(this.modalTarget).modal.conceal()
     }
 }

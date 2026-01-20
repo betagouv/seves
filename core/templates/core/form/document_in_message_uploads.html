@@ -24,12 +24,13 @@
     {% endif %}
 
     <button
+        class="fr-btn fr-btn--secondary"
+        type="button"
         aria-controls="document-modal"
         data-fr-opened="false"
-        type="button"
-        class="fr-btn"
         data-testid="add-document-btn"
-    >Ajouter des documents
+    >
+        Ajouter des documents
     </button>
 
     <section data-document-formset-target="validatedSection"></section>
@@ -118,7 +119,7 @@
                                 class="document-upload-drag-drop"
                                 data-document-formset-target="documentModalDragDropContainer"
                             >
-                                <div
+                                <p
                                     class="document-upload-drag-drop--zone"
                                     data-document-formset-target="documentModalDragDrop"
                                     data-action="dragover->document-formset#onDragOver
@@ -128,24 +129,22 @@
                                                  dragend->document-formset#onDragLeave:prevent:stop"
                                 >
 
-                                    <p class="document-upload-drag-drop--desc">
-                                        Glissez vos fichiers ici ou
-                                        <label
-                                            class="fr-label upload-btn"
-                                            for="filechooser-btn"
-                                            tabindex="0"
-                                        >cliquez pour les selectionner</label>
-                                        <input
-                                            id="filechooser-btn"
-                                            class="fr-sr-only"
-                                            type="file"
-                                            multiple
-                                            data-action="document-formset#onFileSelect:prevent:stop"
-                                            data-document-formset-target="documentFile"
-                                            data-testid="filechooser-link"
-                                        />
-                                    </p>
-                                </div>
+                                    Glissez vos fichiers ici ou
+                                    <label
+                                        class="fr-label upload-btn"
+                                        for="filechooser-btn"
+                                        tabindex="0"
+                                    >cliquez pour les selectionner</label>
+                                    <input
+                                        id="filechooser-btn"
+                                        class="fr-sr-only"
+                                        type="file"
+                                        multiple
+                                        data-action="document-formset#onFileSelect:prevent:stop"
+                                        data-document-formset-target="documentFile"
+                                        data-testid="filechooser-link"
+                                    />
+                                </p>
 
                                 <section
                                     class="document-upload-drag-drop--accordion-container"

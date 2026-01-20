@@ -63,8 +63,9 @@
                                 value="{{ message_status.BROUILLON }}"
                                 name="action"
                                 class="fr-btn fr-btn--secondary"
-                                data-testid="draft-fildesuivi-add-submit"
+                                data-action="message-form#onSend"
                                 data-message-form-target="draftBtn"
+                                data-testid="draft-fildesuivi-add-submit"
                             >
                                 Enregistrer comme brouillon
                             </button>
@@ -75,8 +76,9 @@
                                 value="{{ message_status.FINALISE }}"
                                 name="action"
                                 class="fr-btn"
-                                data-testid="fildesuivi-add-submit"
+                                data-action="message-form#onSend"
                                 data-message-form-target="sendBtn"
+                                data-testid="fildesuivi-add-submit"
                             >Envoyer
                             </button>
                         </li>

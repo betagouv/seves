@@ -11,3 +11,6 @@ trim_trailing_whitespace = true
 
 [package.json]
 indent_size = 2
+
+[.talismanrc]
+indent_size = 2
