@@ -110,9 +110,9 @@
 }
 
 .document-upload-drag-drop--accordion-container:has(*) {
-    margin: 2rem
+    margin: 0 2rem 2rem;
 }
 
-.document-upload-drag-drop--accordion-container .fr-accordion:not(:first-child) {
+.document-upload-drag-drop--accordion-container .document-upload-container:not(:first-child) {
     margin: .5rem 0 0;
 }

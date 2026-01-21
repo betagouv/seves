@@ -18,7 +18,6 @@ from core.tests.generic_tests.documents import (
     generic_test_cant_see_document_type_from_other_app,
     generic_test_can_add_document_to_evenement,
 )
-from core.validators import MAX_UPLOAD_SIZE_BYTES
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 
@@ -33,20 +32,26 @@ def test_can_add_document_to_evenement(live_server, page: Page, mocked_authentif
 def test_cant_add_document_with_incorrect_extension(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_test_id("documents-add")).to_be_visible()
-    page.get_by_test_id("documents-add").click()
 
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    document_page = WithDocumentsPage(page)
+    document_page.add_basic_document(close=False, document=settings.BASE_DIR / "scalingo.json")
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
 
-    page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("scalingo.json")
-    page.get_by_test_id("documents-send").click()
+    document_page.modal_submit_btn.click()
 
-    validation_message = page.locator("#fr-modal-add-doc #id_file").evaluate("el => el.validationMessage")
-    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
+    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        expect(accordion.locator(".errorlist")).to_have_text(
+            "L'extension de fichier « json » n’est pas autorisée pour le type de document « Compte rendu de réunion ». "
+            "Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, "
+            "txt, eml."
+        )
+        expect(accordion.locator('[name$="nom"]')).to_have_value(document_page.BASIC_DOCUMENT_NAME)
+        expect(accordion.locator('[name$="document_type"]')).to_have_value(Document.TypeDocument.COMPTE_RENDU_REUNION)
+
+    evenement.refresh_from_db()
     assert evenement.documents.count() == 0
 
 
@@ -54,25 +59,24 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
     live_server, page: Page, mocked_authentification_user: User
 ):
     evenement = EvenementFactory()
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+
     with open("test.csv", mode="w+") as file:
         file.write("<script>alert('Hello');</script>")
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_test_id("documents-add")).to_be_visible()
-    page.get_by_test_id("documents-add").click()
 
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    document_page.add_basic_document(document=settings.BASE_DIR / "test.csv", close=False)
+    document_page.modal_submit_btn.click()
 
-    page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files("test.csv")
-    page.get_by_test_id("documents-send").click()
+    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
 
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        expect(accordion.locator(".errorlist")).to_have_text("Type de fichier non autorisé: text/html")
+
+    evenement.refresh_from_db()
     assert evenement.documents.count() == 0
 
-    expect(page.get_by_text("Une erreur s'est produite lors de l'ajout du document")).to_be_visible()
-    expect(page.get_by_text("Type de fichier non autorisé: text/html")).to_be_visible()
     Path("test.csv").unlink()
 
 
@@ -249,28 +253,22 @@ def test_cant_edit_document_if_brouillon(client):
 def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Page, mocked_authentification_user: User):
     """Test que l'ajout d'un document ajoute l'agent et sa structure comme contacts"""
     evenement = EvenementFactory()
+    previous = evenement.documents.count()
 
     # Ajout du document
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
-    page.locator("#id_nom").fill("Test Document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description test")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
-        settings.BASE_DIR / "static/images/marianne.png"
-    )
-    page.get_by_test_id("documents-send").click()
+    document_page = WithDocumentsPage(page)
+    document_page.add_basic_document()
 
     # Vérification que le document a été créé
-    assert evenement.documents.count() == 1
-    document = evenement.documents.get()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == previous + 1
+    document = evenement.documents.last()
     assert document.created_by == mocked_authentification_user.agent
     assert document.created_by_structure == mocked_authentification_user.agent.structure
 
     # Vérification des contacts dans l'interface
-    page.get_by_test_id("contacts").click()
+    document_page.open_contact_tab()
 
     agents_section = page.locator("[data-testid='contacts-agents']")
     expect(agents_section.get_by_text(str(mocked_authentification_user.agent), exact=True)).to_be_visible()
@@ -288,29 +286,21 @@ def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Pa
 def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, mocked_authentification_user: User):
     """Test que l'ajout de plusieurs documents n'ajoute qu'une fois les contacts"""
     evenement = EvenementFactory()
+    previous = evenement.documents.count()
 
-    # Ajout du premier document
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
-    page.locator("#fr-modal-add-doc #id_nom").fill("Document 1")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description 1")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-    page.get_by_test_id("documents-send").click()
-
-    # Ajout du second document
-    page.get_by_test_id("documents-add").click()
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
-    page.locator("#fr-modal-add-doc #id_nom").fill("Document 2")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description 2")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-    page.get_by_test_id("documents-send").click()
+    documents_page = WithDocumentsPage(page)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png", close=False)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png")
 
     # Vérification que les deux documents ont été créés
-    assert evenement.documents.count() == 2
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == previous + 7
 
     # Vérification des contacts dans l'interface
     page.get_by_test_id("contacts").click()
@@ -394,34 +384,21 @@ def test_cant_delete_document_of_evenement_i_cant_see(client):
 def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_authentification_user: User, settings):
     settings.BYPASS_ANTIVIRUS = False
     evenement = EvenementFactory()
+    previous = evenement.documents.count()
+
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_test_id("documents-add")).to_be_visible()
-    page.get_by_test_id("documents-add").click()
+    documents_page = WithDocumentsPage(page)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png")
 
-    expect(page.locator("#fr-modal-add-doc")).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == previous + 1
+    document = evenement.documents.last()
 
-    page.locator("#id_nom").fill("Name of the document")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
-        settings.BASE_DIR / "static/images/marianne.png"
-    )
-    page.get_by_test_id("documents-send").click()
-
-    assert evenement.documents.count() == 1
-    document = evenement.documents.get()
-
-    assert document.document_type == Document.TypeDocument.COMPTE_RENDU_REUNION
-    assert document.nom == "Name of the document"
-    assert document.description == "Description"
-    assert document.created_by == mocked_authentification_user.agent
-    assert document.created_by_structure == mocked_authentification_user.agent.structure
     assert document.is_infected is None
 
     # Check the document is not listed on the page
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document Information")).to_be_visible()
+    documents_page.open_document_tab()
+    expect(page.get_by_text(f"{documents_page.BASIC_DOCUMENT_NAME} Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
     expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
@@ -432,8 +409,8 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
 
     page.reload()
     # Check the document is not listed on the page
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document Information")).not_to_be_visible()
+    documents_page.open_document_tab()
+    expect(page.get_by_text(f"{documents_page.BASIC_DOCUMENT_NAME} Information")).not_to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).not_to_be_visible()
     expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).not_to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).not_to_be_visible()
@@ -443,8 +420,8 @@ def test_add_document_is_scanned_by_antivirus(live_server, page: Page, mocked_au
 
     page.reload()
     # Check the document is now listed on the page
-    page.get_by_test_id("documents").click()
-    expect(page.get_by_text("Name of the document Information")).to_be_visible()
+    documents_page.open_document_tab()
+    expect(page.get_by_text(f"{documents_page.BASIC_DOCUMENT_NAME} Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
     expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
     expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
@@ -459,81 +436,26 @@ def test_document_upload_exceeding_max_size_shows_validation_error_and_prevents_
 
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
 
-    # Vérifier que le champ de fichier a la bonne valeur data-max-size
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    max_size_attr = file_input.get_attribute("data-max-size")
-    assert int(max_size_attr) == MAX_UPLOAD_SIZE_BYTES
+    document_page = WithDocumentsPage(page)
+    document_page.add_basic_document(document=Path(temp_path), close=False)
 
-    # Télécharger le fichier trop volumineux
-    page.locator("#id_nom").fill("Document trop volumineux")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Test validation taille")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(temp_path)
-    page.get_by_test_id("documents-send").click()
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
 
-    # Vérifier le message de validation
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "Le fichier est trop volumineux (maximum 15 Mo autorisés)" in validation_message
+    document_page.modal_submit_btn.click()
+
+    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        expect(accordion.locator(".errorlist")).to_have_text("La taille du fichier ne doit pas dépasser 15Mo")
+        expect(accordion.locator('[name$="nom"]')).to_have_value(document_page.BASIC_DOCUMENT_NAME)
+        expect(accordion.locator('[name$="document_type"]')).to_have_value(Document.TypeDocument.COMPTE_RENDU_REUNION)
+
+    evenement.refresh_from_db()
+    assert evenement.documents.count() == 0
 
     os.unlink(temp_path)
-
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
-def test_document_upload_with_missing_max_size_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-
-    # Supprimer l'attribut data-max-size du champ de fichier
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
-        fileInput.removeAttribute('data-max-size');
-    }""")
-
-    page.locator("#id_nom").fill("Test configuration manquante")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Test attribut manquant")
-    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "Erreur de configuration: limite de taille non définie" in validation_message
-
-    page.get_by_test_id("documents-send").click()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
-def test_document_upload_with_invalid_max_size_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-
-    # Définir une valeur non numérique pour data-max-size
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
-        fileInput.setAttribute('data-max-size', 'not-a-number');
-    }""")
-
-    page.locator("#id_nom").fill("Test configuration invalide")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Test attribut invalide")
-    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "Erreur de configuration: limite de taille invalide" in validation_message
-
-    page.get_by_test_id("documents-send").click()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
 
 
 def test_cant_see_add_document_btn_if_evenement_is_cloture(live_server, page: Page):
@@ -630,30 +552,24 @@ def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    accept_attr = file_input.get_attribute("accept")
-    assert accept_attr == ".png,.jpg,.jpeg"
-    assert page.locator("#fr-modal-add-doc #allowed-extensions-list").inner_text() == "png, jpg, jpeg"
+    documents_page = WithDocumentsPage(page)
+    documents_page.add_basic_document(close=False)
+    with documents_page.modify_document_by_name(documents_page.BASIC_DOCUMENT_NAME) as accordion:
+        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.CARTOGRAPHIE)
+        expect(accordion.locator('[name$="file"]')).to_have_attribute("accept", ".png,.jpg,.jpeg")
 
 
 @pytest.mark.django_db
 def test_can_upload_document_with_allowed_extension_for_cartographie(live_server, page: Page):
     evenement = EvenementFactory()
+    previous = evenement.documents.count()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    page.locator("#id_nom").fill("Test upload doc cartographie")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    page.locator("#fr-modal-add-doc #id_file").set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-    page.get_by_test_id("documents-send").click()
+    documents_page = WithDocumentsPage(page)
+    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png")
 
     evenement.refresh_from_db()
-    assert evenement.documents.count() == 1
+    assert evenement.documents.count() == previous + 1
 
 
 @pytest.mark.django_db
@@ -661,114 +577,60 @@ def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_s
     evenement = EvenementFactory()
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    page.locator("#id_nom").fill("Test upload doc cartographie")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
+    document_page = WithDocumentsPage(page)
 
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    page.locator("#fr-modal-add-doc #id_file").set_input_files("scalingo.json")
-    page.get_by_test_id("documents-send").click()
+    with open("test.txt", mode="w+") as file:
+        file.write("Test")
 
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
+    document_page.add_basic_document(document=settings.BASE_DIR / "test.txt", close=False)
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.CARTOGRAPHIE)
+    document_page.modal_submit_btn.click()
+
+    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
+        expect(accordion.locator(".errorlist")).to_have_text(
+            "L'extension de fichier « txt » n’est pas autorisée pour le type de document « Cartographie ». "
+            "Les extensions autorisées sont : png, jpg, jpeg."
+        )
+
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
 
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_missing_accept_allowed_extensions_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
-        fileInput.removeAttribute('data-accept-allowed-extensions');
-    }""")
-
-    page.locator("#id_nom").fill("Test configuration manquante")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    file_input.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-
-    expect(page.get_by_test_id("documents-send")).to_be_disabled()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_missing_accept_for_cartographie_shows_configuration_error(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-
-    page.evaluate("""() => {
-        const fileInput = document.querySelector('#fr-modal-add-doc #id_file');
-        fileInput.setAttribute('data-accept-allowed-extensions', '{"default": ".pdf"}');
-    }""")
-
-    page.locator("#id_nom").fill("Test configuration manquante pour cartographie")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    file_input.set_input_files("scalingo.json")
-
-    expect(page.get_by_test_id("documents-send")).to_be_disabled()
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_incompatible_extension_for_cartographie(live_server, page: Page):
-    evenement = EvenementFactory()
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-
-    page.locator("#id_nom").fill("Test upload doc cartographie")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    file_input = page.locator("#fr-modal-add-doc #id_file")
-    file_input.set_input_files("fake_contacts.csv")
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.CARTOGRAPHIE)
-    page.get_by_test_id("documents-send").click()
-
-    validation_message = file_input.evaluate("el => el.validationMessage")
-    assert "L'extension du fichier n'est pas autorisé pour le type de document sélectionné" in validation_message
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
+    Path("test.txt").unlink()
 
 
 def test_document_name_length_validation(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
+    previous = evenement.documents.count()
     long_name = "a" * 257
 
     # Test pour le formulaire d'ajout
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    page.get_by_test_id("documents").click()
-    page.get_by_test_id("documents-add").click()
-    page.locator("#id_nom").fill(long_name)
-    page.locator("#fr-modal-add-doc #id_document_type").select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
-    page.locator("#fr-modal-add-doc #id_description").fill("Description test")
-    page.locator("#fr-modal-add-doc").locator("#id_file").set_input_files(
-        settings.BASE_DIR / "static/images/marianne.png"
-    )
-    page.get_by_test_id("documents-send").click()
+    document_page = WithDocumentsPage(page)
+    document_page.add_basic_document(close=False)
+    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME) as accordion:
+        accordion.locator('[name$="nom"]').fill(long_name)
 
-    assert evenement.documents.count() == 1
+    assert evenement.documents.count() == previous + 1
     document = evenement.documents.get()
     assert len(document.nom) == 256
+    assert document.nom.startswith("aaaaaa")
     assert document.is_infected is False
 
     # Test pour le formulaire de mise à jour
+    long_name = "b" * 257
+
     page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{document.id}"]').click()
     expect(page.locator(f"#fr-modal-edit-{document.id}")).to_be_visible()
     page.locator(f"#fr-modal-edit-{document.id} #id_nom").fill(long_name)
     page.get_by_test_id(f"documents-edit-{document.pk}").click()
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-documents-panel")
+
     document.refresh_from_db()
     assert len(document.nom) == 256
+    assert document.nom.startswith("bbb")
 
 
 def test_can_edit_document_from_message(live_server, page: Page):

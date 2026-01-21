@@ -526,7 +526,7 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     message_page.add_basic_document(suffix=" numero 3")
     assert len(message_page.get_existing_documents_title) == 3
 
-    message_page.delete_document(nth=1)
+    message_page.remove_document_by_name_from_aside("Mon document numero 2")
     assert len(message_page.get_existing_documents_title) == 2
 
     message_page.submit_message()

@@ -113,4 +113,7 @@ fileignoreconfig:
   checksum: d98b145d7469d9773d9d6cd7a162f6bd9e7a104e174612bb14385d0fd0b5ed08
 - filename: tiac/tests/test_models.py
   checksum: 8ed9899d25e3fb10db5712869ed918e46ba4d749ed8270b1203fb0f6480925b6
+- filename: core/static/core/form/document_uploads.mjs
+  checksum: 9a817115e4a16b1bca9ece3de179dca152bb876d74a6d200c22fb13882728015
+
 version: "1.0"
