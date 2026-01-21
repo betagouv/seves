@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import random
 from zoneinfo import ZoneInfo
 
@@ -40,6 +41,9 @@ from tiac.models import (
 )
 
 fake = Faker()
+
+
+UNIQ_ID = itertools.count(start=1)
 
 
 def random_datetime_utc():
@@ -86,8 +90,8 @@ class BaseTiacFactory(DjangoModelFactory):
         return parse_date(fake.date_this_decade())
 
     @factory.sequence
-    def numero_evenement(n):
-        return n + 1
+    def numero_evenement(_):
+        return next(UNIQ_ID)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
