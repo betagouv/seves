@@ -439,10 +439,10 @@ def test_documents_panel_is_visible_when_clicking_on_documents_link_twice(live_s
 
     page.get_by_role("tab", name="Zone").click()
     page.get_by_role("link", name="documents").click()
-    expect(page.get_by_label("Documents")).to_be_visible()
+    expect(page.get_by_label("Documents", exact=True)).to_be_visible()
     page.get_by_test_id("contacts").click()
     page.get_by_role("link", name="documents").click()
-    expect(page.get_by_label("Documents")).to_be_visible()
+    expect(page.get_by_label("Documents", exact=True)).to_be_visible()
 
 
 @pytest.mark.django_db

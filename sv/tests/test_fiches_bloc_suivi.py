@@ -29,5 +29,5 @@ def test_fiche_locale_or_nationale_have_bloc_suivi_display(
     expect(page.get_by_label("Fil de suivi")).to_be_visible()
     expect(page.get_by_label("Contacts")).to_have_count(1)
     expect(page.get_by_label("Contacts")).to_be_hidden()
-    expect(page.get_by_label("Documents")).to_have_count(1)
-    expect(page.get_by_label("Documents")).to_be_hidden()
+    expect(page.get_by_label("Documents", exact=True)).to_have_count(1)
+    expect(page.get_by_label("Documents", exact=True)).to_be_hidden()
