@@ -1,4 +1,4 @@
-Django
+Django<6
 django-environ
 psycopg2-binary
 gunicorn
