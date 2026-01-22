@@ -37,7 +37,7 @@ def test_evenement_performances_with_messages_from_same_user(
 
     MessageFactory.create_batch(3, content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_filter"].qs) == 4
