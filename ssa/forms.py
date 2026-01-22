@@ -40,9 +40,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
     )
     numero_rasff = forms.CharField(
         required=False,
-        widget=forms.TextInput(
-            attrs={"pattern": r"^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$", "placeholder": "0000.0000 ou 000000"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
         label="N° RASFF/AAC",
     )
     description = forms.CharField(

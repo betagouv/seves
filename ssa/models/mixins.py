@@ -6,7 +6,6 @@ from core.versions import get_versions_from_ids
 from core.mixins import sort_tree, WithNumeroMixin
 from core.models import Structure, Document
 from ssa.constants import CategorieDanger
-from ssa.models.validators import validate_numero_rasff
 
 
 def build_combined_options(*enums, sorted_results=False):
@@ -22,9 +21,7 @@ class WithEvenementInformationMixin(models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     date_reception = models.DateField(verbose_name="Date de réception")
-    numero_rasff = models.CharField(
-        max_length=9, verbose_name="N° RASFF/AAC", blank=True, validators=[validate_numero_rasff]
-    )
+    numero_rasff = models.CharField(max_length=255, verbose_name="N° RASFF/AAC", blank=True)
 
     # Informations générales
     description = models.TextField(verbose_name="Description de l'événement")
