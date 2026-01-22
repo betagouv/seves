@@ -125,8 +125,11 @@ class WithMessageMixin:
         context = super().get_context_data(**kwargs)
         message_list = self.get_object().messages.for_user(self.request.user).optimized_for_list()
         message_filter = MessageFilter(self.request.GET, queryset=message_list)
+        contact_agent = None
+        if message_filter.qs:
+            contact_agent = self.request.user.agent.contact_set.get()
         for message in message_filter.qs:
-            message.can_be_deleted = message.can_user_delete(self.request.user)
+            message.can_be_deleted = message.can_agent_delete(contact_agent)
         context["message_filter"] = message_filter
         context["message_status"] = Message.Status
         context["message_content_type"] = ContentType.objects.get_for_model(Message)

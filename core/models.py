@@ -418,14 +418,18 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     def is_draft(self):
         return self.status == self.Status.BROUILLON
 
-    def _is_owner(self, user):
-        return self.sender == user.agent.contact_set.get()
+    def _is_owner(self, contact):
+        return self.sender == contact
 
     def can_be_updated(self, user):
-        return self.is_draft and self._is_owner(user)
+        return self.is_draft and self._is_owner(user.agent.contact_set.get())
 
     def can_user_delete(self, user):
-        return self._is_owner(user)
+        agent_contact = user.agent.contact_set.get()
+        return self._is_owner(agent_contact)
+
+    def can_agent_delete(self, agent):
+        return self._is_owner(agent)
 
     def get_soft_delete_success_message(self):
         return "L'élément a bien été supprimé"
