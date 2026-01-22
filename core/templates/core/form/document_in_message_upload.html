@@ -1,25 +1,5 @@
 {% load dsfr_tags widget_tweaks %}
 
-
-{% if form.errors %}
-    <div class="fr-alert fr-alert--error fr-mb-4v">
-        {% if form.errors.file %}
-            {% if form.file.data.name %}Il y a eu une erreur dans le traitement du document « {{ form.file.data.name }}
-                » :{% endif %}
-            {% if form.errors.file|length == 1 %}
-                <p>{{ form.errors.file.0 }}</p>
-            {% else %}
-                <ul>
-                    {% for error in form.errors.file %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% else %}
-            <p>Il y a des erreurs dans ce document. Veuillez ouvrir l'accordéon pour le corriger</p>
-        {% endif %}
-    </div>
-{% endif %}
 <fieldset
     class="document-upload-accordion fr-accordion"
     data-controller="document-form"
