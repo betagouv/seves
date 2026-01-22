@@ -119,6 +119,8 @@ class ConclusionFormController extends Controller {
 
     onSuspicionConclusionChanged({target: {value}}) {
         this.suspicionConclusionValue = value
+        this.conclusionRepasTarget.disabled = false;
+        this.conclusionAlimentTarget.disabled = false;
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
             this.treeselect.disabled = false;
             this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse";
@@ -135,7 +137,9 @@ class ConclusionFormController extends Controller {
             this.treeselect.options = [];
             this.treeselect.placeholder = "Choisir dans la liste";
             this.treeselect.disabled = true;
+            this.conclusionRepasTarget.value = '';
             this.conclusionRepasTarget.disabled = true;
+            this.conclusionAlimentTarget.value = '';
             this.conclusionAlimentTarget.disabled = true;
             this.selectedHazardTreeselectInputTarget.required = false;
             this.treeselect.mount()
