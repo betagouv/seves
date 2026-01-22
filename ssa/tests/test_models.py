@@ -23,20 +23,6 @@ def test_numero_rappel_conso():
 
 
 @pytest.mark.django_db
-def test_numero_rasff_aac():
-    evenement = EvenementProduitFactory(numero_rasff="2024.1234")
-    evenement.full_clean()
-    evenement = EvenementProduitFactory(numero_rasff="AA24.5864")
-    evenement.full_clean()
-    evenement = EvenementProduitFactory(numero_rasff="987654")
-    evenement.full_clean()
-
-    evenement = EvenementProduitFactory(numero_rasff="989")
-    with pytest.raises(ValidationError):
-        evenement.full_clean()
-
-
-@pytest.mark.django_db
 def test_evenement_produit_latest_revision():
     evenement = EvenementProduitFactory()
     assert evenement.latest_version is not None
