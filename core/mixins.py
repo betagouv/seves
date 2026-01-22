@@ -697,7 +697,10 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["add_document_formset"] = self.get_document_in_message_upload_formset(message=context["form"].instance)
+        if "add_document_formset" not in context:
+            context["add_document_formset"] = self.get_document_in_message_upload_formset(
+                message=context["form"].instance
+            )
         context["fiche_objet"] = self.fiche_objet
         return context
 
@@ -748,7 +751,15 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
         formset = self.get_document_in_message_upload_formset(message=form.instance)
 
         if not formset.is_valid():
-            return self.render_to_response(self.get_context_data(form=form, add_document_formset=formset))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    add_document_formset_error=formset,
+                    add_document_formset=self.get_document_in_message_upload_formset(
+                        data=None, files=None, message=form.instance
+                    ),
+                )
+            )
 
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)

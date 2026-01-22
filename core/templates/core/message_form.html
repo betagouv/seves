@@ -46,6 +46,22 @@
         <div class="fr-container--fluid">
             <div class="fr-grid-row fr-grid-row-xl--gutters">
                 <div class="fr-col-12 fr-col-xl-7 fr-col-offset-xl-1">
+                    {% for form in add_document_formset_error.forms %}
+                        <div class="fr-alert fr-alert--error fr-mb-4v">
+                            {% if form.errors %}
+                                {% if form.file.data.name %}
+                                    Il y a eu une erreur dans le traitement du document
+                                    « {{ form.file.data.name }} » :
+                                {% endif %}
+                                {% for errorlist in form.errors.values %}
+                                    {% for error in errorlist %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
                     <div class="white-container">
                         {% for field in form %}
                             <div class="fr-fieldset__element">

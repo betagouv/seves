@@ -14,15 +14,6 @@
         {% endif %}
     </p>
 
-    {% if formset.errors %}
-        <div class="fr-alert fr-alert--error fr-mb-4v">
-            <p>
-                Il y a des erreurs dans les documents attachés au message.
-                Veuillez ouvrir la modale pour les corriger
-            </p>
-        </div>
-    {% endif %}
-
     <button
         class="fr-btn fr-btn--secondary"
         type="button"
@@ -90,7 +81,8 @@
                                     <span data-document-formset-target="allowedExtensions">
                                         {{ formset.allowed_extensions|join:", " }}
                                     </span><br>
-                                    Taille maximale autorisée : {{ formset.max_upload_size_mb }} Mo
+                                    Taille maximale autorisée par fichier : {{ formset.max_upload_size_mb }} Mo<br>
+                                    Taille maximale autorisée pour tous les fichiers: 75 Mo<br>
                                 </p>
                             </hgroup>
 
