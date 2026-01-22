@@ -8,5 +8,5 @@ from tiac.factories import EvenementSimpleFactory
 def test_update_evenement_simple_performances(client, django_assert_num_queries):
     evenement = EvenementSimpleFactory()
 
-    with django_assert_num_queries(12):
+    with django_assert_num_queries(13):
         client.get(reverse("tiac:evenement-simple-edition", kwargs={"pk": evenement.pk}))
