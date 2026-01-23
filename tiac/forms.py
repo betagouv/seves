@@ -283,6 +283,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         widget=forms.RadioSelect(
             attrs={
                 "data-action": "change->etiologie-form#onAnalyseChange",
+                "data-etiologie-form-target": "analyses",
             }
         ),
         label="Analyses engagées sur les malades",
