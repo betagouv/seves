@@ -138,6 +138,13 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
     def test_func(self):
         return self.get_object().can_user_access(self.request.user)
 
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        self.object = super().get_object(queryset)
+        return self.object
+
     def form_valid(self, form):
         self.object_was_draft = form.instance.is_draft
         return super().form_valid(form)
