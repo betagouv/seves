@@ -1,6 +1,6 @@
 import pytest
 from faker import Faker
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory
@@ -279,3 +279,20 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
     assert set(mail.to) == {contact_1.email, contact_2.email, contact_3.email}
     assert "Conclusion suspicion TIAC" in mail.subject
     assert "TIAC à agent confirmé" in mail.body
+
+
+def test_can_update_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory(
+        precisions="Precisions", analyses_sur_les_malades=Analyses.OUI
+    )
+
+    creation_page = InvestigationTiacEditPage(
+        page,
+        live_server.url,
+        investigation=input_data,
+    )
+    creation_page.navigate()
+
+    expect(creation_page.precisions).to_be_enabled()
+    creation_page.set_analyses("Non")
+    expect(creation_page.precisions).to_be_disabled()
