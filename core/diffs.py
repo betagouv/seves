@@ -146,7 +146,7 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
                     diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 for item_1, _item_2 in change["changed_items"]:
-                    model_name = item_1._object_version.object._meta.model_name.title()
+                    model_name = item_1._object_version.object._meta.verbose_name.title()
                     prefix = f"{model_name} ({str(item_1._object_version.object)})"
                     nested_diff = self.compare(item_1._object_version.object, item_1, _item_2)[0]
                     for change in nested_diff:
