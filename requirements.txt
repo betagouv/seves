@@ -247,7 +247,7 @@ ruff==0.14.13
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.49.0
+sentry-sdk[django]==2.50.0
     # via -r requirements.in
 six==1.16.0
     # via
