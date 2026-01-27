@@ -25,10 +25,11 @@ from .managers import (
     DocumentQueryset,
     MessageManager,
     ContactManager,
+    MessagQueryset,
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import validate_upload_file, AllowedExtensions
+from .validators import validate_upload_file, AllowedExtensions, validate_numero_agrement
 
 User = get_user_model()
 
@@ -244,20 +245,23 @@ class Document(models.Model):
         SIGNALEMENT_RASFF = "fiche_rasff", "Signalement/notification : Fiche RASFF"
         SIGNALEMENT_AUTRE = "signalement_autre", "Signalement/notification : Autre"
         ANALYSE_RISQUE = "analyse_risque", "Analyse de risque"
-        TRACABILITE_INTERNE = "tracabilite_interne", "Traçabilité interne"
-        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité aval : « Recipient list »"
-        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité aval : Autre"
-        TRACABILITE_AVAL_GENERAL = "tracabilite_aval_general", "Traçabilité aval"
-        TRACABILITE_AMONT = "tracabilite_amont", "Traçabilité amont"
+        TRACABILITE_INTERNE_TABLEAU = "tracabilite_interne_tableau", "Traçabilité interne : tableau de suivi"
+        TRACABILITE_INTERNE_JUSTIFICATIF = "tracabilite_interne_justificatif", "Traçabilité interne : justificatif"
+        TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité externe : « Recipient list »"
+        TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité externe : Autre liste (tableau, relevé)"
+        TRACABILITE_AVAL_JUSTIFICATIF = (
+            "tracabilite_aval_justificatif",
+            "Traçabilité externe : Justificatif (BL, facture)",
+        )
         DSCE_CHED = "dsce_ched", "DSCE/CHED"
-        ETIQUETAGE = "etiquetage", "Étiquetage"
-        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
-        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
         CERTIFICAT_SANITAIRE = "certificat_sanitaire", "Certificat sanitaire"
-        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
-        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
-        PHOTO = "photo", "Photo (du produit, photo de l’établissement…)"
+        ETIQUETAGE = "etiquetage", "Étiquetage (y compris photo)"
+        PHOTO = "photo", "Photo (du danger, photo de l’établissement)"
         AFFICHETTE_RAPPEL = "affichette rappel", "Affichette de rappel"
+        COMMUNIQUE_PRESSE = "communique_presse", "Communiqué de presse"
+        COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
+        SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
+        COMPTE_RENDU = "compte_rendu", "Compte-rendu"
 
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
@@ -306,7 +310,14 @@ class Document(models.Model):
     def validate_file_extention_for_document_type(cls, file, document_type):
         if document_type not in Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE:
             return
-        FileExtensionValidator(Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type])(file)
+        document_type_label = Document.TypeDocument(document_type).label
+        FileExtensionValidator(
+            Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type],
+            message=(
+                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document"
+                f"« {document_type_label} ». Les extensions autorisées sont : %(allowed_extensions)s."
+            ),
+        )(file)
 
     @classmethod
     def get_accept_attribute_per_document_type(cls):
@@ -325,10 +336,7 @@ class Document(models.Model):
                 {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
             )
         if self.file and self.document_type:
-            try:
-                self.validate_file_extention_for_document_type(self.file, self.document_type)
-            except ValidationError as e:
-                raise ValidationError(e.message)
+            self.validate_file_extention_for_document_type(self.file, self.document_type)
 
 
 @reversion.register()
@@ -377,7 +385,7 @@ class Message(AllowsSoftDeleteMixin, models.Model):
 
     historical_data = models.JSONField(default=dict, blank=True)
 
-    objects = MessageManager()
+    objects = MessageManager.from_queryset(MessagQueryset)()
 
     class Meta:
         indexes = [
@@ -410,14 +418,18 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     def is_draft(self):
         return self.status == self.Status.BROUILLON
 
-    def _is_owner(self, user):
-        return self.sender == user.agent.contact_set.get()
+    def _is_owner(self, contact):
+        return self.sender == contact
 
     def can_be_updated(self, user):
-        return self.is_draft and self._is_owner(user)
+        return self.is_draft and self._is_owner(user.agent.contact_set.get())
 
     def can_user_delete(self, user):
-        return self._is_owner(user)
+        agent_contact = user.agent.contact_set.get()
+        return self._is_owner(agent_contact)
+
+    def can_agent_delete(self, agent):
+        return self._is_owner(agent)
 
     def get_soft_delete_success_message(self):
         return "L'élément a bien été supprimé"
@@ -447,10 +459,27 @@ class Message(AllowsSoftDeleteMixin, models.Model):
         return reverse("message-view", kwargs={"pk": self.pk})
 
     def can_reply_to(self, user):
-        return self.message_type == self.MESSAGE and self.content_object.can_user_access(user)
+        return self.message_type in (
+            self.MESSAGE,
+            self.POINT_DE_SITUATION,
+            self.COMPTE_RENDU,
+            self.DEMANDE_INTERVENTION,
+        ) and self.content_object.can_user_access(user)
+
+    @property
+    def reply_page_title(self):
+        if self.message_type == self.MESSAGE:
+            return "Réponse à un message"
+        if self.message_type == self.POINT_DE_SITUATION:
+            return "Réponse à un point de situation"
+        if self.message_type == self.COMPTE_RENDU:
+            return "Réponse à un compte rendu sur demande d'intervention"
+        if self.message_type == self.DEMANDE_INTERVENTION:
+            return "Réponse à une demande d'intervention"
 
     def get_reply_intro_text(self):
-        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {self.sender.display_with_agent_unit} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        sender = self.sender.display_with_agent_unit if self.sender else self.sender_structure
+        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
         if self.recipients_copy.all():
             intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
 
@@ -573,6 +602,9 @@ class BaseEtablissement(models.Model):
                 code="invalid_siret",
             ),
         ],
+    )
+    numero_agrement = models.CharField(
+        max_length=12, verbose_name="Numéro d'agrément", blank=True, validators=[validate_numero_agrement]
     )
     autre_identifiant = models.CharField(max_length=255, verbose_name="Autre identifiant", blank=True)
     raison_sociale = models.CharField(max_length=100, verbose_name="Raison sociale")

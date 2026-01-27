@@ -1,14 +1,19 @@
+import json
 import random
+from unittest import mock
 
 import pytest
+from django.http import JsonResponse
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import MUS_STRUCTURE
 from core.factories import DepartementFactory
-from core.models import Contact, LienLibre
+from core.models import Contact, LienLibre, Departement
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.constants import CategorieDanger
+from ssa.views import FindNumeroAgrementView
 from tiac.factories import (
     InvestigationTiacFactory,
     RepasSuspectFactory,
@@ -24,6 +29,7 @@ from ..constants import (
     TypeRepas,
     SuspicionConclusion,
     DANGERS_COURANTS,
+    ModaliteDeclarationEvenement,
 )
 from ..models import (
     InvestigationTiac,
@@ -32,6 +38,7 @@ from ..models import (
     EvenementSimple,
     AnalyseAlimentaire,
     InvestigationFollowUp,
+    Etablissement,
 )
 
 fields_to_exclude_repas = [
@@ -207,8 +214,8 @@ def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentific
     creation_page.add_danger_syndromique(DangersSyndromiques.TOXINE_DES_POISSONS.label)
     assert creation_page.nb_dangers == 1
 
-    creation_page.precisions.fill("Mes précisions")
     creation_page.set_analyses("Oui")
+    creation_page.precisions.fill("Mes précisions")
     creation_page.submit_as_draft()
     investigation = InvestigationTiac.objects.last()
     assert investigation.danger_syndromiques_suspectes == ["toxine des poissons"]
@@ -375,7 +382,7 @@ def test_can_create_investigation_tiac_with_aliment_simple(
     expect(card.get_by_text(input_data.denomination, exact=True)).to_be_visible()
     for motif in input_data.motif_suspicion:
         expect(card.get_by_text(MotifAliment(motif).label)).to_be_visible()
-    expect(card.get_by_text("Matières premières", exact=True)).to_be_visible()
+    expect(card.get_by_text("Matière première", exact=True)).to_be_visible()
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.get()
@@ -566,3 +573,94 @@ def test_create_investigation_tiac_with_investigation_coordonnee_notification(li
     mail = mailoutbox[0]
     assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
     assert "Investigation coordonnée" in mail.subject
+
+
+def test_can_create_etablissement_with_sirene_autocomplete(
+    live_server, page: Page, ensure_departements, choice_js_fill_from_element, settings
+):
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+    ensure_departements("Paris")
+    evenement = InvestigationTiacFactory.build()
+    call_count = {"count": 0}
+
+    def handle_insee_siret(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": "12007901700030",
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75115",
+                    },
+                }
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
+
+    def handle_insee_commune(route):
+        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    page.route("https://geo.api.gouv.fr/communes/.+", handle_insee_commune)
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+
+    mocked_view = mock.Mock()
+    mocked_view.side_effect = lambda request: JsonResponse({"numero_agrement": "03.223.432"})
+
+    with mock.patch.object(FindNumeroAgrementView, "get", new=mocked_view):
+        creation_page.navigate()
+
+        creation_page.fill_required_fields(evenement)
+
+        creation_page.open_etablissement_modal()
+        expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
+        creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill_from_element)
+        assert call_count["count"] == 1
+        creation_page.page.wait_for_timeout(1000)
+        mocked_view.assert_called_once()
+        assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
+        creation_page.close_etablissement_modal()
+        creation_page.submit_as_draft()
+
+    etablissement = Etablissement.objects.get()
+    assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
+    assert etablissement.commune == "PARIS"
+    assert etablissement.code_insee == "75115"
+    assert etablissement.pays.name == "France"
+    assert etablissement.numero_agrement == "03.223.432"
+    assert etablissement.siret == "12007901700030"
+    assert etablissement.departement == Departement.objects.get(nom="Paris")
+
+
+def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authentification_user, page: Page):
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("False")
+    expect(creation_page.page.locator("#radio-id_modalites_declaration :checked")).to_have_count(0)
+    creation_page.evenement_origin.select_option("ARS")
+    expect(creation_page.page.locator("#radio-id_notify_ars :checked")).to_have_value("True")
+    expect(creation_page.page.locator("#radio-id_modalites_declaration :checked")).to_have_value("autre")
+
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.notify_ars is True
+    assert investigation.modalites_declaration == ModaliteDeclarationEvenement.OTHER

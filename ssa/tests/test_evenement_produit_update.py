@@ -1,3 +1,4 @@
+import pytest
 from playwright.sync_api import expect
 
 from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
@@ -375,3 +376,11 @@ def test_update_reference_clusters_will_trigger_email(live_server, page, mailout
     assert evenement.numero in mail.subject
     assert "Souche / cluster" in mail.subject
     assert "Référence cluster : New value" in mail.body
+
+
+@pytest.mark.django_db
+def test_update_evenement_produit_performances(client, django_assert_num_queries):
+    evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
+
+    with django_assert_num_queries(15):
+        client.get(evenement.get_update_url())

@@ -46,5 +46,6 @@ export class BaseFormSetController extends Controller {
         const html = this.emptyFormTplTarget.innerHTML.replace(/__prefix__/g, `${this.TOTAL_FORMSValue}`)
         this.formsetContainerTarget.insertAdjacentHTML("beforeend", html)
         this.TOTAL_FORMSValue += 1
+        return this.formsetContainerTarget.lastElementChild
     }
 }

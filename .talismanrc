@@ -2,6 +2,8 @@ allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
 - '(from|import)[\w\s\.]+'  # Allow python imports
 - '(models\.)?ForeignKey\(.+\)?'
+- 'ValidationError\(.+\)?'
+- 'Object.keys\(.+\)?'
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -10,7 +12,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 8100ad5114ffe4d549a9761d9713c869bffbe0b585be1de2f7a92e779dedf1d5
+  checksum: 187533b0a152bf17db332d575f9fa054eae3ce05186a72d69c7b19e96bba5f8a
 - filename: ssa/static/ssa/etablissement_form.mjs
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e
 - filename: bin/fetch_contacts_agricoll_and_key.sh
@@ -36,7 +38,7 @@ fileignoreconfig:
 - filename: conftest.py
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
-  checksum: 292dc4f6a239dfc2068d4144f0dd2617271f6d42aa5f3b878877722907751204
+  checksum: 22e3841c86e809b2cd4961bdd208cd7ed7f92f8e01b5ed163649df2780529655
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: ssa/forms.py
@@ -107,4 +109,8 @@ fileignoreconfig:
   checksum: 783b605ce4242e1c04e58a4220ba63875303501b6573339e374aa6c81084e102
 - filename: account/static/account/permissions_admins.js
   checksum: fdeac6dc4a079cc9c2fdb65f7008793f9980fd4c3f68e1bcec3dc36538814fbc
+- filename: core/migrations/0046_alter_document_document_type.py
+  checksum: d98b145d7469d9773d9d6cd7a162f6bd9e7a104e174612bb14385d0fd0b5ed08
+- filename: tiac/tests/test_models.py
+  checksum: 8ed9899d25e3fb10db5712869ed918e46ba4d749ed8270b1203fb0f6480925b6
 version: "1.0"

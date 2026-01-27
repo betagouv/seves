@@ -1,0 +1,53 @@
+{% load dsfr_tags widget_tweaks %}
+
+<fieldset
+    class="document-upload-accordion fr-accordion"
+    data-controller="document-form"
+    data-document-form-target="form"
+    {% if form.instance.pk %}
+        data-document-form-file-id-value="{{ form.file_id }}"
+        data-document-form-initial-value="true"
+    {% endif %}
+    data-testid="document-upload"
+>
+    <div class="fr-accordion__title">
+        <div class="document-upload-accordion__label">
+            <h3
+                class="document-upload-accordion__title fr-text"
+                data-document-form-target="accordionTitle"
+                data-testid="document-upload-title"
+            >{% if form.instance.pk %}{{ form.instance.nom }}{% endif %}</h3>
+            <p class="fr-tag fr-tag--sm" data-document-form-target="accordionTypeLabel">
+                {% if form.instance.pk %}{{ form.instance.get_document_type_display }}{% endif %}
+            </p>
+        </div>
+        <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-mb-n4v">
+            <button
+                type="button"
+                class="fr-btn fr-btn--sm fr-icon-edit-line fr-btn--icon-left fr-btn--tertiary"
+                aria-expanded="false"
+                data-action="document-form#onModify:stop:prevent"
+                data-testid="open-accordion"
+            >Modifier
+            </button>
+            <button
+                type="button"
+                class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                data-action="document-form#onDelete:stop:prevent"
+            >Supprimer
+            </button>
+        </div>
+    </div>
+    <div class="fr-collapse" data-document-form-target="accordionContent">
+        {% dsfr_form_field form.nom|set_data:"document-form-target:documentName"|set_data:"action:document-form#onDocumentNameChanged" %}
+        {% dsfr_form_field form.document_type|set_data:"document-form-target:documentType"|set_data:"action:document-form#onDocumentTypeChanged"|set_data:"testid:document-upload-type" %}
+        {% if not form.instance.pk %}
+            {{ form.file|add_class:"fr-input fr-hidden fr-my-4v"|set_data:"document-form-target:documentFile" }}
+        {% endif %}
+        {% dsfr_form_field form.description %}
+        {{ form.id }}
+        {% with field=form.DELETE|set_data:"document-form-target:delete" %}
+            {{ field.as_hidden }}
+        {% endwith %}
+    </div>
+</fieldset>

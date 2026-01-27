@@ -61,19 +61,23 @@ class BaseTiacModel(models.Model):
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.SIGNALEMENT_CERFA,
+            Document.TypeDocument.SIGNALEMENT_RASFF,
             Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.RAPPORT_ANALYSE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
-            Document.TypeDocument.TRACABILITE_AVAL_GENERAL,
-            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.TRACABILITE_INTERNE_TABLEAU,
+            Document.TypeDocument.TRACABILITE_INTERNE_JUSTIFICATIF,
+            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
+            Document.TypeDocument.TRACABILITE_AVAL_JUSTIFICATIF,
             Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.ETIQUETAGE,
             Document.TypeDocument.PHOTO,
+            Document.TypeDocument.AFFICHETTE_RAPPEL,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMPTE_RENDU,
             Document.TypeDocument.AUTRE,
         ]
 
@@ -151,11 +155,6 @@ class EvenementSimple(
 
     def get_soft_delete_confirm_message(self):
         return "Cette action est irréversible. Confirmez-vous la suppression de cet évènement ?"
-
-    def get_message_form(self):
-        from tiac.forms import MessageForm
-
-        return MessageForm
 
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
@@ -359,11 +358,6 @@ class InvestigationTiac(
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
 
-    def get_message_form(self):
-        from tiac.forms import MessageForm
-
-        return MessageForm
-
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
 
@@ -517,6 +511,15 @@ class InvestigationTiac(
                 ),
                 name="selected_hazard_constraints",
             ),
+            models.CheckConstraint(
+                condition=~Q(suspicion_conclusion=SuspicionConclusion.UNKNOWN.value)
+                | (Q(conclusion_repas__isnull=True) & Q(conclusion_aliment__isnull=True)),
+                name="repas_aliment_only_if_conclusion_known",
+            ),
+            models.CheckConstraint(
+                condition=Q(analyses_sur_les_malades=Analyses.OUI) | (Q(precisions="")),
+                name="precision_only_if_analyse",
+            ),
         )
 
 
@@ -559,6 +562,8 @@ class RepasSuspect(models.Model):
         return self.type_repas == TypeRepas.RESTAURATION_COLLECTIVE
 
     def __str__(self):
+        if self.datetime_repas:
+            return f"{self.denomination} ({self.datetime_repas.strftime('%Y-%m-%d %H:%M')})"
         return self.denomination
 
 

@@ -1,3 +1,4 @@
+import itertools
 import random
 from datetime import datetime
 
@@ -29,6 +30,9 @@ from ssa.constants import (
 
 def generate_rappel_conso():
     return f"{random.randint(2000, 2030)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}"
+
+
+UNIQ_ID = itertools.count(start=1)
 
 
 class EvenementProduitFactory(DjangoModelFactory):
@@ -85,8 +89,8 @@ class EvenementProduitFactory(DjangoModelFactory):
         return ""
 
     @factory.sequence
-    def numero_evenement(n):
-        return n + 1
+    def numero_evenement(_):
+        return next(UNIQ_ID)
 
     class Params:
         not_bacterie = factory.Trait(
@@ -113,7 +117,6 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
 
     position_dossier = FuzzyChoice([choice[0] for choice in PositionDossier.choices])
     type_exploitant = factory.Faker("sentence", nb_words=2)
-    numero_agrement = factory.Faker("numerify", text="###.##.###")
 
     numeros_resytal = factory.Faker("numerify", text="######")
 
@@ -155,8 +158,8 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
             self.save()
 
     @factory.sequence
-    def numero_evenement(n):
-        return n + 1
+    def numero_evenement(_):
+        return next(UNIQ_ID)
 
     class Params:
         not_bacterie = factory.Trait(

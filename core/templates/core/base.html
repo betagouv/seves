@@ -161,6 +161,12 @@
 
         {% block content %}{% endblock %}
 
+        <div class="footer-links fr-mb-2w">
+            <a class="fr-link fr-mr-1w" href="{% url 'mentions-legales' %}">Mentions légales</a>
+            <a class="fr-link fr-mr-1w" href="{% url 'politique-de-confidentialite' %}">Politique de confidentialité</a>
+            Accessibilité : non conforme
+        </div>
+
         {% dsfr_js nonce=request.csp_nonce %}
         <script type="text/javascript" src="{% static 'core/base.js' %}"></script>
         {% if media %}{% for tag in media.render_js %}{{ tag }}{% endfor %}{% endif %}

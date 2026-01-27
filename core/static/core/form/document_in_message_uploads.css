@@ -1,0 +1,122 @@
+.document-card {
+    background-color: var(--background-default-grey);
+    border-radius: .225rem;
+    display: flex;
+    margin: 0.5rem 0 0;
+    padding: .5rem .75rem;
+    word-break: break-all;
+}
+
+.document-card:first-child {
+    margin-top: 1rem;
+}
+
+.document-card .document-title {
+    flex-grow: 1;
+    align-content: center;
+}
+
+.document-upload-drag-drop {
+    border-radius: .25rem;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--border-default-grey);
+}
+
+.document-upload-drag-drop .document-upload-drag-drop--zone {
+    padding: 3rem;
+    margin: 0;
+    text-align: center;
+}
+
+.document-upload-drag-drop .document-upload-drag-drop--zone + * {
+    margin-top: 0;
+}
+
+/* This prevent the dragging style from flickering when overing children elements by covering everything */
+.document-upload-drag-drop.document-upload-drag-drop--dragging .document-upload-drag-drop--zone:after {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--dragging {
+    background-color: var(--artwork-background-blue-france);
+    border: 1px solid var(--border-disabled-grey);
+    color: var(--text-disabled-grey);
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--dragging [for="filechooser-btn"] {
+    opacity: 30%;
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--disabled .document-upload-drag-drop--zone,
+.document-upload-drag-drop.document-upload-drag-drop--disabled .document-upload-drag-drop--zone * {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--disabled {
+    border: 1px solid var(--border-disabled-grey);
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--disabled .document-upload-drag-drop--zone {
+    color: var(--text-disabled-grey);
+}
+
+.document-upload-drag-drop.document-upload-drag-drop--disabled .document-upload-drag-drop--zone [for="filechooser-btn"] {
+    opacity: 30%;
+}
+
+/* Link design for file input label */
+.document-upload-drag-drop [for="filechooser-btn"] {
+    --hover-tint: var(--idle);
+    --active-tint: var(--active);
+    background-image: var(--underline-img), var(--underline-img);
+    background-position: var(--underline-x) 100%, var(--underline-x) calc(100% - var(--underline-thickness));
+    background-repeat: no-repeat, no-repeat;
+    background-size: var(--underline-hover-width) calc(var(--underline-thickness) * 2), var(--underline-idle-width) var(--underline-thickness);
+    color: var(--text-action-high-blue-france);
+    cursor: pointer;
+    display: inline;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    padding: 0;
+    text-decoration: var(--text-decoration);
+    transition: background-size 0s;
+}
+
+.document-upload-drag-drop [for="filechooser-btn"]:active,
+.document-upload-drag-drop [for="filechooser-btn"]:hover {
+    --underline-hover-width: var(--underline-max-width);
+}
+
+.document-upload-drag-drop [for="filechooser-btn"]:hover {
+    background-color: var(--hover-tint);
+}
+
+.document-upload-drag-drop [for="filechooser-btn"]:active {
+    background-color: var(--active-tint);
+}
+
+.document-upload-drag-drop [for="filechooser-btn"]:focus-visible {
+    outline-style: solid;
+}
+
+.document-upload-drag-drop [for="filechooser-btn"]:focus {
+    outline-offset: 2px;
+    outline: #0a76f6 solid 2px;
+}
+
+.document-upload-drag-drop--accordion-container {
+    margin: 2rem
+}
+
+.document-upload-drag-drop--accordion-container .fr-accordion:not(:first-child) {
+    margin: .5rem 0 0;
+}

@@ -52,6 +52,7 @@ class EtablissementFormController extends BaseFormInModal {
         "typeEtablissementInput",
         "codeInseeInput",
         "siretInput",
+        "numeroAgrementInput",
         "detailModal",
         "hasInspection",
         "inspectionFields",
@@ -104,6 +105,14 @@ class EtablissementFormController extends BaseFormInModal {
             this.addressChoices.setChoices(result, 'value', 'label', true)
 
         }
+
+        fetch(`/ssa/api/find-numero-agrement/?siret=${siret}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!!data["numero_agrement"]){
+                    this.numeroAgrementInputTarget.value = data["numero_agrement"]
+                }
+            });
 
         if (!!code_commune && !!this.communesApiValue) {
             fetch(`${this.communesApiValue}/${code_commune}?fields=departement`).then(async response => {

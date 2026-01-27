@@ -1,6 +1,5 @@
 import json
 import logging
-from functools import wraps
 
 import requests
 from celery.exceptions import OperationalError
@@ -10,17 +9,14 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.forms import Media
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView, ListView
-from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
-from waffle import flag_is_active
 
 from core.diffs import CompareMixin, get_diff_from_comment_version, Diff
 from .forms import (
@@ -32,8 +28,6 @@ from .forms import (
     NoteForm,
     PointDeSituationForm,
     DemandeInterventionForm,
-    DocumentInMessageUploadForm,
-    MessageDocumentForm,
 )
 from .mixins import (
     PreventActionIfVisibiliteBrouillonMixin,
@@ -47,33 +41,8 @@ from .mixins import (
 from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
 from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
-from .validators import AllowedExtensions, MAX_UPLOAD_SIZE_MEGABYTES
 
 logger = logging.getLogger(__name__)
-
-
-class MediaDefiningMixin(ContextMixin):
-    def __new__(cls):
-        """
-        Wrapping get_context_data in a decorator here ensures get_media is called at the very last moment
-        when all superclasses' get_context_data have been called.
-        """
-
-        def patch_get_context_data(get_context_data):
-            @wraps(get_context_data)
-            def wrapper(*args, **kwargs):
-                context = get_context_data(*args, **kwargs)
-                context.setdefault("media", obj.get_media(**context))
-                return context
-
-            return wrapper
-
-        obj = super().__new__(cls)
-        obj.get_context_data = patch_get_context_data(obj.get_context_data)
-        return obj
-
-    def get_media(self, **context_data) -> Media:
-        return context_data["form"].media if "form" in context_data else Media()
 
 
 class DocumentUploadView(
@@ -196,87 +165,75 @@ class MessageCreateView(
 ):
     model = Message
 
-    def get_form_class(self):
-        if flag_is_active(self.request, "message_v2"):
-            mapping = {
-                "message": BasicMessageForm,
-                "note": NoteForm,
-                "point_situation": PointDeSituationForm,
-                "demande_intervention": DemandeInterventionForm,
-                "cr_demande_intervention": self.obj.get_crdi_form(),
-            }
-            self.reply_id = self.request.GET.get("reply_id")
-            if self.reply_id:
-                return BasicMessageForm
-            message_form = mapping.get(self.request.GET.get("type"))
-
-            is_ac = self.request.user.agent.structure.is_ac
-            if message_form == DemandeInterventionForm and not is_ac:
-                raise PermissionDenied
-            if message_form == self.obj.get_crdi_form() and is_ac:
-                raise PermissionDenied
-            return message_form
-        return self.obj.get_message_form()
-
-    def dispatch(self, request, *args, **kwargs):
-        self.obj_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
-        self.obj = get_object_or_404(self.obj_class, pk=self.kwargs.get("obj_pk"))
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_user_access(self.request.user)
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.reply_message = None
 
     def get_fiche_object(self):
-        return self.obj
+        self.fiche_object_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
+        return get_object_or_404(self.fiche_object_class, pk=self.kwargs.get("obj_pk"))
+
+    def get_form_class(self):
+        mapping = {
+            "message": BasicMessageForm,
+            "note": NoteForm,
+            "point_situation": PointDeSituationForm,
+            "demande_intervention": DemandeInterventionForm,
+            "cr_demande_intervention": self.fiche_objet.get_crdi_form(),
+        }
+        self.reply_id = self.request.GET.get("reply_id")
+        if self.reply_id:
+            return BasicMessageForm
+        message_form = mapping.get(self.request.GET.get("type"))
+
+        is_ac = self.request.user.agent.structure.is_ac
+        if message_form == DemandeInterventionForm and not is_ac:
+            raise PermissionDenied
+        if message_form == self.fiche_objet.get_crdi_form() and is_ac:
+            raise PermissionDenied
+        return message_form
+
+    def test_func(self) -> bool | None:
+        return self.fiche_objet.can_user_access(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        if flag_is_active(self.request, "message_v2"):
-            kwargs.update(
-                {
-                    "obj": self.obj,
-                    "sender": self.request.user.agent.contact_set.get(),
-                }
-            )
-            if self.request.GET.get("contact"):
-                kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
-            if self.reply_id:
-                reply_message = Message.objects.get(id=self.reply_id)
-                if reply_message.can_reply_to(self.request.user):
-                    title = reply_message.title
-                    if not reply_message.title.startswith(settings.REPLY_PREFIX):
-                        title = f"{settings.REPLY_PREFIX} {reply_message.title}"
-                    kwargs.update(
-                        {
-                            "initial": {
-                                "title": title,
-                                "recipients": reply_message.sender_structure.contact_set.get(),
-                                "content": reply_message.get_reply_intro_text(),
-                            }
+        kwargs.update(
+            {
+                "obj": self.fiche_objet,
+                "sender": self.request.user.agent.contact_set.get(),
+            }
+        )
+        if self.request.GET.get("contact"):
+            kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
+        if self.reply_id:
+            reply_message = Message.objects.get(id=self.reply_id)
+            self.reply_message = reply_message
+            if reply_message.can_reply_to(self.request.user):
+                title = reply_message.title
+                if not reply_message.title.startswith(settings.REPLY_PREFIX):
+                    title = f"{settings.REPLY_PREFIX} {reply_message.title}"
+                kwargs.update(
+                    {
+                        "initial": {
+                            "title": title,
+                            "recipients": reply_message.sender_structure.contact_set.get(),
+                            "content": reply_message.get_reply_intro_text(),
                         }
-                    )
-        else:
-            kwargs.update(
-                {
-                    "obj": self.obj,
-                    "next": self.obj.get_absolute_url(),
-                    "sender": self.request.user.agent.contact_set.get(),
-                }
-            )
+                    }
+                )
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["go_back_url"] = self.fiche_objet.get_absolute_url()
         context["message_status"] = Message.Status
-        context["object"] = self.obj
+        if self.reply_message:
+            context["page_title"] = self.reply_message.reply_page_title
         return context
 
     def get_success_url(self):
-        return self.obj.get_absolute_url() + "#tabpanel-messages-panel"
+        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)
@@ -285,7 +242,7 @@ class MessageCreateView(
         for _, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, error)
-        return HttpResponseRedirect(self.obj.get_absolute_url())
+        return HttpResponseRedirect(self.fiche_objet.get_absolute_url())
 
 
 class MessageUpdateView(
@@ -295,54 +252,38 @@ class MessageUpdateView(
     UpdateView,
 ):
     model = Message
+    context_object_name = "message"
+
+    def get_fiche_object(self):
+        return self.get_object().content_object
 
     def get_form_class(self):
-        if flag_is_active(self.request, "message_v2"):
-            mapping = {
-                Message.MESSAGE: BasicMessageForm,
-                Message.NOTE: NoteForm,
-                Message.POINT_DE_SITUATION: PointDeSituationForm,
-                Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
-                Message.COMPTE_RENDU: self.obj.get_crdi_form(),
-            }
-            return mapping.get(self.object.message_type)
-        return self.obj.get_message_form()
-
-    def dispatch(self, request, *args, **kwargs):
-        self.content_object = self.get_object().content_object
-        self.obj = self.content_object
-        return super().dispatch(request, *args, **kwargs)
+        mapping = {
+            Message.MESSAGE: BasicMessageForm,
+            Message.NOTE: NoteForm,
+            Message.POINT_DE_SITUATION: PointDeSituationForm,
+            Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
+            Message.COMPTE_RENDU: self.fiche_objet.get_crdi_form(),
+        }
+        return mapping.get(self.object.message_type)
 
     def test_func(self):
         return self.get_object().can_be_updated(self.request.user)
 
-    def get_fiche_object(self):
-        return self.content_object
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
-        kwargs["obj"] = self.content_object
-        if not flag_is_active(self.request, "message_v2"):
-            kwargs["next"] = self.content_object.get_absolute_url()
+        kwargs["obj"] = self.fiche_objet
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.obj.get_absolute_url()
-        context["add_document_form"] = DocumentInMessageUploadForm(obj=self.obj)
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        context["go_back_url"] = self.fiche_objet.get_absolute_url()
         context["message_status"] = Message.Status
-        context["form"].documents_forms = [
-            MessageDocumentForm(instance=d, object=self.get_object(), with_nom=True)
-            for d in self.get_object().documents.all()
-        ]
-        context["object"] = self.obj
         return context
 
     def get_success_url(self):
-        return self.content_object.get_absolute_url() + "#tabpanel-messages-panel"
+        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)

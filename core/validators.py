@@ -1,3 +1,4 @@
+import re
 import magic
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -55,3 +56,9 @@ class MagicMimeValidator:
 
 def validate_upload_file(file):
     MagicMimeValidator()(file)
+
+
+def validate_numero_agrement(value):
+    pattern = r"^\d{2,3}\.\d{2,3}\.\d{2,3}$"
+    if not re.match(pattern, value):
+        raise ValidationError(f"{value} n'est pas un format valide.")

@@ -16,6 +16,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
 
+from core.diffs import create_manual_version
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -31,9 +32,9 @@ from core.mixins import (
     WithFinDeSuiviMixin,
     WithExportHeterogeneousQuerysetMixin,
     WithFormsetInvalidMixin,
+    MediaDefiningMixin,
 )
-from core.models import LienLibre
-from core.views import MediaDefiningMixin
+from core.models import LienLibre, CustomRevisionMetaData
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
@@ -136,6 +137,13 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
 
     def test_func(self):
         return self.get_object().can_user_access(self.request.user)
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        self.object = super().get_object(queryset)
+        return self.object
 
     def form_valid(self, form):
         self.object_was_draft = form.instance.is_draft
@@ -274,6 +282,12 @@ class EvenementTransformView(UpdateView):
             setattr(self.investigation, field, getattr(self.object, field))
         self.investigation.follow_up = InvestigationFollowUp.INVESTIGATION_DD
         self.investigation.save()
+        revision = create_manual_version(
+            self.investigation,
+            f"L'événement a été créé depuis un enregistrement simple ({self.object.numero}) passé en investigation de TIAC",
+            user=self.request.user,
+        )
+        CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Passé en investigation TIAC"})
 
     def _copy_etablissements(self):
         for etablissement in self.object.etablissements.all():
@@ -287,19 +301,29 @@ class EvenementTransformView(UpdateView):
             if self.object == free_link.related_object_1:
                 free_link.pk = None
                 free_link.related_object_1 = self.investigation
+                free_link._user = self.request.user
                 free_link.save()
             else:
                 free_link.pk = None
                 free_link.related_object_2 = self.investigation
+                free_link._user = self.request.user
                 free_link.save()
 
-        LienLibre.objects.create(related_object_1=self.object, related_object_2=self.investigation)
+        free_link = LienLibre(related_object_1=self.object, related_object_2=self.investigation)
+        free_link._user = self.request.user
+        free_link.save()
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        self._create_investigation_tiac()
+        revision = create_manual_version(
+            self.object,
+            f"L'événement a été passé en investigation de TIAC ({self.investigation.numero})",
+            user=self.request.user,
+        )
+        CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Passé en investigation TIAC"})
         for contact in self.object.get_contacts_structures_not_in_fin_suivi():
             self.object.add_fin_suivi(structure=contact.structure, made_by=self.request.user)
-        self._create_investigation_tiac()
         self.object.cloturer()
         self._copy_etablissements()
         self._copy_and_add_free_links()

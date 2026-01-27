@@ -1,5 +1,5 @@
 {% load waffle_tags %}
-{% for message in message_list %}
+{% for message in message_filter.qs %}
     {% if message.can_be_deleted %}
         {% include "core/_delete_modal.html" with object=message content_type=message_content_type next_url=object.get_absolute_url suffix=message.pk %}
     {% endif %}
@@ -32,73 +32,40 @@
         </tr>
     </thead>
     <tbody>
-        {% for message in message_list %}
+        {% for message in message_filter.qs %}
             <tr id="table-sm-row-key-{{ forloop.counter }}" class="{% if message.is_draft %}message-draft{% endif %}" data-row-key="{{ forloop.counter }}">
                 <td>
-                    {% if message_v2 %}
-                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.date_creation }}</a>
-                    {% else %}
-                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.date_creation }}</a>
-                    {% endif %}
+                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.date_creation }}</a>
                 </td>
                 <td>
-                    {% if message_v2 %}
-                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.sender_structure }}</a>
-                    {% else %}
-                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.sender_structure }}</a>
-                    {% endif %}
+                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.sender_structure }}</a>
                 </td>
                 <td>
                     {% if message.recipients.all|length == 0 %}
-                        {% if message_v2 %}
-                            <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link"></a>
-                        {% else %}
-                            <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"></a>
-                        {% endif %}
+                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link"></a>
                     {% elif message.recipients.all|length == 1 %}
-                        {% if message_v2 %}
-                            <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
-                        {% else %}
-                            <a href="#" class="fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
-                        {% endif %}
+                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer"><p class="fr-tag">{{ message.recipients.all.0 }}</p></a>
                     {%  elif message.recipients.all|length > 1 %}
-
-                        {% if message_v2 %}
-                            <a href="{{ message.get_message_url }}" class="fr-link"  {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" aria-describedby="message-tooltip-{{ message.pk }}">
-                        {% else %}
-                            <a href="#" class="fr-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}" aria-describedby="message-tooltip-{{ message.pk }}">
-                        {% endif %}
-                        <p class="fr-tag">{{ message.recipients.all.0 }} et
-                            {% with rest_length=message.recipients.all|length|add:"-1" %}
-                                {{ rest_length }} autre{{ rest_length|pluralize }}
-                            {% endwith %}
-                        </p>
+                        <a href="{{ message.get_message_url }}" class="fr-link"  {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" aria-describedby="message-tooltip-{{ message.pk }}">
+                            <p class="fr-tag">{{ message.recipients.all.0 }} et
+                                {% with rest_length=message.recipients.all|length|add:"-1" %}
+                                    {{ rest_length }} autre{{ rest_length|pluralize }}
+                                {% endwith %}
+                            </p>
                         </a>
                         <span class="fr-tooltip fr-placement" id="message-tooltip-{{ message.pk }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" role="tooltip" aria-hidden="true">{{ message.recipients.all|join:", " }}</span>
                     {% endif %}
                 </td>
                 <td>
-                    {% if message_v2 %}
-                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link fr-cell--multiline">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
-                    {% else %}
-                        <a href="#" class="cell-link fr-cell--multiline fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
-                    {% endif %}
+                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link fr-cell--multiline">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
                 </td>
                 <td>
                     {% if message.documents.exists %}
-                        {% if message_v2 %}
-                            <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
-                        {% else %}
-                            <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
-                        {% endif %}
+                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
                     {% endif %}
                 </td>
                 <td>
-                    {% if message_v2 %}
-                        <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
-                    {% else %}
-                        <a href="#" class="cell-link fil-de-suivi-sidebar" data-message-pk="{{ message.pk }}">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
-                    {% endif %}
+                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
                 </td>
                 <td>
                     {% if message.can_be_deleted %}

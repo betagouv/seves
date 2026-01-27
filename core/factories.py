@@ -19,7 +19,7 @@ class StructureFactory(DjangoModelFactory):
 
     niveau1 = factory.Faker("sentence", nb_words=2)
     niveau2 = factory.Faker("sentence", nb_words=2)
-    libelle = factory.Faker("sentence", nb_words=2)
+    libelle = factory.Faker("sentence", nb_words=3)
 
 
 class UserFactory(DjangoModelFactory):
@@ -232,6 +232,7 @@ class DepartementFactory(DjangoModelFactory):
 
 class BaseEtablissementFactory(DjangoModelFactory):
     siret = factory.Faker("numerify", text="##############")
+    numero_agrement = factory.Faker("numerify", text="###.##.###")
     autre_identifiant = factory.Faker("numerify", text="#####################")
     raison_sociale = factory.Faker("sentence", nb_words=5)
     enseigne_usuelle = factory.Faker("sentence", nb_words=5)

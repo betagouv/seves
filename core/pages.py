@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 
 from django.conf import settings
 from playwright.sync_api import Page, expect
@@ -24,9 +25,14 @@ class BaseMessagePage(ABC):
     def recipients_locator(self):
         return f'{self.container_id} label[for="id_recipients"] ~ div.choices'
 
+    @property
+    def document_modal(self):
+        return self.page.locator("#document-modal")
+
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Message").click()
+        self.page.wait_for_url("**/core/message-add/**")
 
     def delete_message(self):
         self.page.locator("table .fr-icon-delete-bin-line").click()
@@ -35,18 +41,22 @@ class BaseMessagePage(ABC):
     def new_note(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Note").click()
+        self.page.wait_for_timeout(600)
 
     def new_point_de_situation(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Point de situation").click()
+        self.page.wait_for_timeout(600)
 
-    def new_fin_de_suivi(self):
+    def new_compte_rendu(self):
         self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_role("link", name="Signaler la fin de suivi").click()
+        self.page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+        self.page.wait_for_timeout(600)
 
     def new_demande_intervention(self):
         self.page.get_by_test_id("element-actions").click()
         self.page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+        self.page.wait_for_timeout(600)
 
     def pick_recipient(self, contact, choice_js_fill):
         if isinstance(contact, Agent):
@@ -68,15 +78,6 @@ class BaseMessagePage(ABC):
         else:
             raise NotImplementedError
 
-    def pick_recipient_structure_only(self, structure, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            f'{self.container_id} label[for="id_recipients_structures_only"] ~ div.choices',
-            structure.libelle,
-            structure.libelle,
-            use_locator_as_parent_element=True,
-        )
-
     def pick_recipient_copy(self, contact, choice_js_fill):
         if isinstance(contact, Agent):
             choice_js_fill(
@@ -97,18 +98,9 @@ class BaseMessagePage(ABC):
         else:
             raise NotImplementedError
 
-    def pick_recipient_copy_structure_only(self, structure, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            f'{self.container_id} label[for="id_recipients_copy_structures_only"] ~ div.choices',
-            structure.libelle,
-            structure.libelle,
-            use_locator_as_parent_element=True,
-        )
-
     @property
     def message_form_title(self):
-        return self.page.locator("#message-type-title")
+        return self.page.locator("h1")
 
     @property
     def message_title(self):
@@ -116,7 +108,7 @@ class BaseMessagePage(ABC):
 
     @property
     def message_content(self):
-        return self.page.locator(f"{self.container_id} {self.CONTENT_ID}")
+        return self.page.locator(f"{self.CONTENT_ID}")
 
     @property
     def submit_button(self):
@@ -144,20 +136,38 @@ class BaseMessagePage(ABC):
     def message_type_in_table(self, index=1):
         return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
 
-    def open_message(self, index=1):
-        self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a").click()
-        self.page.wait_for_timeout(600)
+    def open_message(self, index=1) -> Page:
+        """Returns the new message page if page was opened in a new tab"""
+        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
+        if link.get_attribute("target") == "_blank":
+            with self.page.context.expect_page() as new_page_info:
+                link.click()
+            return new_page_info.value
+        else:
+            link.click()
+            self.page.wait_for_url("**/core/message/**/")
+            return self.page
+
+    def open_document_modal(self):
+        if self.document_modal.is_hidden():
+            self.page.get_by_test_id("add-document-btn").click()
+            expect(self.document_modal).to_be_visible()
+
+    def validate_document_modal(self):
+        if self.document_modal.is_visible():
+            self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
+            expect(self.document_modal).not_to_be_visible()
+
+    def close_document_modal_no_validate(self):
+        if self.document_modal.is_visible():
+            self.page.locator("#document-modal").get_by_role("button", name="Fermer").click()
+            expect(self.document_modal).not_to_be_visible()
 
     def delete_document(self, nth):
-        self.page.locator(".fr-icon-close-circle-line").nth(nth).click()
-
-    def add_document(self):
-        self.page.locator(f"{self.container_id}").get_by_role("button", name="Ajouter un document").click()
-        self.page.locator(f"{self.container_id} .document-form #id_document_type").select_option("Autre document")
-        self.page.locator(f"{self.container_id} .document-form #id_file").set_input_files(
-            settings.BASE_DIR / "static/images/login.jpeg"
-        )
-        self.page.locator(f"{self.container_id} #message-add-document").click()
+        document_count = self.page.get_by_test_id("document-card").count()
+        self.page.get_by_test_id("document-delete-btn").nth(nth).click()
+        # Check that deleting removes file bloc in both message aside and modal
+        expect(self.page.get_by_test_id("document-card")).to_have_count(document_count - 1)
 
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
@@ -166,37 +176,77 @@ class BaseMessagePage(ABC):
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
 
-    def add_basic_document(self, suffix=""):
-        self.page.locator("#id_nom").locator("visible=true").fill(f"Mon document{suffix}")
-        self.page.locator("#id_document_type").locator("visible=true").select_option("Autre document")
-        self.page.locator("#id_file").locator("visible=true").set_input_files(
-            settings.BASE_DIR / "static/images/login.jpeg"
+    def add_basic_document(self, suffix="", close=True):
+        self.open_document_modal()
+
+        # Open file chooser and select file
+        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
+
+        document_name = "login.jpeg"
+        self.page.get_by_test_id("filechooser-link").set_input_files(
+            settings.BASE_DIR / "static/images" / document_name
         )
-        self.page.locator("#id_description").locator("visible=true").fill(f"Ma description {suffix}")
-        self.page.get_by_role("button", name="Valider l'ajout du document").click()
+        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
+        self.page.get_by_test_id("filechooser-link").set_input_files([])
 
-    def remove_document(self, index):
-        self.page.locator(f"{self.container_id} #document_remove_{index}").click()
+        # Open modification accordion
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+        expect(accordion).to_be_visible()
+        accordion.get_by_test_id("open-accordion").click()
 
-    @property
-    def message_title_in_sidebar(self):
-        return self.page.locator(".sidebar.open h5")
+        document_name = f"Mon document{suffix}"
+        accordion.locator('[name$="nom"]').fill(document_name)
 
-    @property
-    def message_content_in_sidebar(self):
-        return self.page.locator(".sidebar.open").get_by_test_id("message-content")
+        # Accordion title changed so we must reselect
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+
+        accordion.locator('[name$="document_type"]').last.select_option("Autre document")
+        accordion.locator('[name$="description"]').last.fill(f"Ma description {suffix}")
+        if close:
+            self.validate_document_modal()
+
+    def remove_document_by_name_from_aside(self, document_name):
+        aside_card_list = self.page.get_by_test_id("document-card")
+        count = aside_card_list.count()
+        aside_card_list.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        expect(aside_card_list).to_have_count(count - 1)
+
+    def remove_document_by_name_from_modal(self, document_name):
+        self.open_document_modal()
+        accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
+        count = accordions.count()
+        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        expect(accordions).to_have_count(count - 1)
+        self.validate_document_modal()
+
+    @contextmanager
+    def modify_document_by_name(self, document_name):
+        accordion = self.page.get_by_test_id("document-upload").filter(has_text=document_name)
+        self.open_document_modal()
+        accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).to_be_visible()
+        yield accordion
+        accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).not_to_be_visible()
+        self.validate_document_modal()
 
     @property
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter un document")
 
     @property
+    def global_document_type_input(self):
+        return self.page.locator("#document-upload-type-all")
+
+    @property
     def document_type_input(self):
-        return self.page.locator(".sidebar #id_document_type")
+        return self.page.locator('[name$="document_type"]')
 
     @property
     def get_existing_documents_title(self):
-        cards = self.page.locator(self.container_id).locator("[id^='document_card_'] span")
+        cards = (
+            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
+        )
         texts = [cards.nth(i).inner_text() for i in range(cards.count())]
         return [t for t in texts if t]
 
@@ -204,9 +254,14 @@ class BaseMessagePage(ABC):
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
 
+    def search_in_message_list(self, query):
+        self.page.locator("#id_full_text_search").fill(query)
+        self.page.locator(".fr-icon-search-line").click()
+        self.page.wait_for_load_state("load")
+
 
 class CreateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, container_id="#sidebar"):
+    def __init__(self, page: Page, container_id="#message-form"):
         super().__init__(page)
         self._container_id = container_id
 
@@ -216,7 +271,7 @@ class CreateMessagePage(BaseMessagePage):
 
 
 class UpdateMessagePage(BaseMessagePage):
-    def __init__(self, page: Page, container_id):
+    def __init__(self, page: Page, container_id="#message-form"):
         super().__init__(page)
         self._container_id = container_id
 

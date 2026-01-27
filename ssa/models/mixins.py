@@ -95,11 +95,6 @@ class WithSharedNumeroMixin(WithNumeroMixin):
 
 
 class SsaBaseEvenementModel(models.Model):
-    def get_message_form(self):
-        from ssa.forms import MessageForm
-
-        return MessageForm
-
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
 
@@ -116,19 +111,20 @@ class SsaBaseEvenementModel(models.Model):
             Document.TypeDocument.SIGNALEMENT_AUTRE,
             Document.TypeDocument.RAPPORT_ANALYSE,
             Document.TypeDocument.ANALYSE_RISQUE,
-            Document.TypeDocument.TRACABILITE_INTERNE,
+            Document.TypeDocument.TRACABILITE_INTERNE_TABLEAU,
+            Document.TypeDocument.TRACABILITE_INTERNE_JUSTIFICATIF,
             Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
             Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
-            Document.TypeDocument.TRACABILITE_AMONT,
+            Document.TypeDocument.TRACABILITE_AVAL_JUSTIFICATIF,
             Document.TypeDocument.DSCE_CHED,
-            Document.TypeDocument.ETIQUETAGE,
-            Document.TypeDocument.SUITES_ADMINISTRATIVES,
-            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.CERTIFICAT_SANITAIRE,
-            Document.TypeDocument.COURRIERS_COURRIELS,
-            Document.TypeDocument.COMPTE_RENDU,
+            Document.TypeDocument.ETIQUETAGE,
             Document.TypeDocument.PHOTO,
             Document.TypeDocument.AFFICHETTE_RAPPEL,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
+            Document.TypeDocument.COURRIERS_COURRIELS,
+            Document.TypeDocument.SUITES_ADMINISTRATIVES,
+            Document.TypeDocument.COMPTE_RENDU,
             Document.TypeDocument.AUTRE,
         ]
 

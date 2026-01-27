@@ -59,7 +59,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     AUTRE_BACTERIE_OU_INDETERMINEE = "Autre bactérie ou indéterminée", "Bactérie > Autre bactérie ou indéterminée"
     BACILLUS = "Bacillus", "Bactérie > Bacillus"
     BACILLUS_ANTHRACIS = "Bacillus anthracis", "Bactérie > Bacillus > Bacillus anthracis"
-    BACILLUS_CEREUS = "Bacillus cereus", "Bactérie > Bacillus > Bacillus cereus"
+    BACILLUS_CEREUS = "Bacillus cereus", "Bactérie > Bacillus > Bacillus cereus et/ou sa toxine"
     BACILLUS_THURIGIENSIS = "Bacillus thurigiensis", "Bactérie > Bacillus > Bacillus thurigiensis"
     BRUCELLA = "Brucella", "Bactérie > Brucella"
     BRUCELLA_ABORTUS = "Brucella abortus", "Bactérie > Brucella > Brucella abortus"
@@ -69,7 +69,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     CAMPYLOBACTER_COLI = "Campylobacter coli", "Bactérie > Campylobacter > Campylobacter coli"
     CAMPYLOBACTER_JEJUNI = "Campylobacter jejuni", "Bactérie > Campylobacter > Campylobacter jejuni"
     CLOSTRIDIUM = "Clostridium", "Bactérie > Clostridium"
-    CLOSTRIDIUM_BOTULINUM = "Clostridium botulinum", "Bactérie > Clostridium > Clostridium botulinum"
+    CLOSTRIDIUM_BOTULINUM = "Clostridium botulinum", "Bactérie > Clostridium > Clostridium botulinum et/ou sa toxine"
     CLOSTRIDIUM_PERFRINGENS = "Clostridium perfringens", "Bactérie > Clostridium > Clostridium perfringens"
     COLIFORMES = "Coliformes", "Bactérie > Coliformes"
     COXIELLA = "Coxiella", "Bactérie > Coxiella"
@@ -126,16 +126,16 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     NITRATE = "Nitrate (hors additif)", "Contaminant - autre > Nitrate (hors additif)"
     NITRITE = "Nitrite (hors additif)", "Contaminant - autre > Nitrite (hors additif)"
     PERCHLORATE = "Perchlorate", "Contaminant - autre > Perchlorate"
-    ARSENIC = "Arsenic (As)", "Contaminant - métau et autre élément > Arsenic (As)"
+    ARSENIC = "Arsenic (As)", "Contaminant - métaux et autre élément > Arsenic (As)"
     AUTRE_ELEMENT_TRACE_METALLIQUE_OU_COMPOSE_INORGANIQUE = (
         "Autre élément trace métallique ou composé inorganique",
-        "Contaminant - métau et autre élément > Autre élément trace métallique ou composé inorganique",
+        "Contaminant - métaux et autre élément > Autre élément trace métallique ou composé inorganique",
     )
-    CADMIUM = "Cadmium (Cd)", "Contaminant - métau et autre élément > Cadmium (Cd)"
-    FLUOR = "Fluor (F)", "Contaminant - métau et autre élément > Fluor (F)"
-    MERCURE = "Mercure (Hg)", "Contaminant - métau et autre élément > Mercure (Hg)"
-    NICKEL = "Nickel (Ni)", "Contaminant - métau et autre élément > Nickel (Ni)"
-    PLOMB = "Plomb (Pb)", "Contaminant - métau et autre élément > Plomb (Pb)"
+    CADMIUM = "Cadmium (Cd)", "Contaminant - métaux et autre élément > Cadmium (Cd)"
+    FLUOR = "Fluor (F)", "Contaminant - métaux et autre élément > Fluor (F)"
+    MERCURE = "Mercure (Hg)", "Contaminant - métaux et autre élément > Mercure (Hg)"
+    NICKEL = "Nickel (Ni)", "Contaminant - métaux et autre élément > Nickel (Ni)"
+    PLOMB = "Plomb (Pb)", "Contaminant - métaux et autre élément > Plomb (Pb)"
     AFLATOXINE = "Aflatoxine", "Contaminant - mycotoxine > Aflatoxine"
     ALTERNARIOL_ALTERNARIOL_MONOMETHYL_ETHER_ACIDE_TENUAZONIQUE = (
         "Alternariol (AOH) Alternariol monométhyl éther (AME) Acide ténuazonique (TeA)",
@@ -160,7 +160,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
         "Autre polluant organique persistant",
         "Contaminant - polluant organique persistant > Autre polluant organique persistant",
     )
-    DIOXINES_ET_PCB = "Dioxines et  PCB", "Contaminant - polluant organique persistant > Dioxines et  PCB"
+    DIOXINES_ET_PCB = "Dioxines et PCB", "Contaminant - polluant organique persistant > Dioxines et PCB"
     PBDE_ET_AUTRE_RETARDATEUR_DE_FLAMME_BROME = (
         "PBDE et autre retardateur de flamme bromé",
         "Contaminant - polluant organique persistant > PBDE et autre retardateur de flamme bromé",
@@ -195,70 +195,70 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     NITROSAMINE = "Nitrosamine", "Contaminant - procédé de transformation > Nitrosamine"
     PHYCOTOXINE_ET_CYANOTOXINE = (
         "Phycotoxine et cyanotoxine",
-        "Contaminant - toxine végétale > Phycotoxine et cyanotoxine",
+        "Contaminant - toxine > Phycotoxine et cyanotoxine",
     )
     AUTRE_PHYCOTOXINE_ET_CYANOTOXINE = (
         "Autre phycotoxine et cyanotoxine",
-        "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Autre phycotoxine et cyanotoxine",
+        "Contaminant - toxine > Phycotoxine et cyanotoxine > Autre phycotoxine et cyanotoxine",
     )
-    CIGUATOXINE = "Ciguatoxine", "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Ciguatoxine"
-    HISTAMINE = "Histamine", "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Histamine"
-    TOXINE_ASP = "Toxine ASP", "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Toxine ASP"
+    CIGUATOXINE = "Ciguatoxine", "Contaminant - toxine > Phycotoxine et cyanotoxine > Ciguatoxine"
+    HISTAMINE = "Histamine", "Contaminant - toxine > Histamine"
+    TOXINE_ASP = "Toxine ASP", "Contaminant - toxine > Phycotoxine et cyanotoxine > Toxine ASP"
     TOXINE_DSP = (
         "Toxine DSP (toxines lipophiles)",
-        "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Toxine DSP (toxines lipophiles)",
+        "Contaminant - toxine > Phycotoxine et cyanotoxine > Toxine DSP (toxines lipophiles)",
     )
-    TOXINE_PSP = "Toxine PSP", "Contaminant - toxine végétale > Phycotoxine et cyanotoxine > Toxine PSP"
-    PHYTO_ESTROGENE = "Phyto-estrogène", "Contaminant - toxine végétale > Phyto-estrogène"
-    TOXINE_VEGETALE_AUTRE = "Toxine végétale autre", "Contaminant - toxine végétale > Toxine végétale autre"
+    TOXINE_PSP = "Toxine PSP", "Contaminant - toxine > Phycotoxine et cyanotoxine > Toxine PSP"
+    PHYTO_ESTROGENE = "Phyto-estrogène", "Contaminant - toxine > Phyto-estrogène"
+    TOXINE_VEGETALE_AUTRE = "Toxine végétale autre", "Contaminant - toxine > Toxine végétale autre"
     AUTRE_TOXINE_VEGETALE_OU_PLANTE_EN_CONTENANT = (
         "Autre toxine végétale ou plante en contenant",
-        "Contaminant - toxine végétale > Toxine végétale autre > Autre toxine végétale ou plante en contenant",
+        "Contaminant - toxine > Toxine végétale autre > Autre toxine végétale ou plante en contenant",
     )
     BETTERAVE_CRUE_TOXINE_INDETERMINEE = (
         "Betterave crue : toxine indéterminée",
-        "Contaminant - toxine végétale > Toxine végétale autre > Betterave crue : toxine indéterminée",
+        "Contaminant - toxine > Toxine végétale autre > Betterave crue : toxine indéterminée",
     )
     CHAMPIGNON_TOXIQUE_OU_VENENEU = (
         "Champignon toxique ou vénéneu(amanite, divers)",
-        "Contaminant - toxine végétale > Toxine végétale autre > Champignon toxique ou vénéneu(amanite, divers)",
+        "Contaminant - toxine > Toxine végétale autre > Champignon toxique ou vénéneu(amanite, divers)",
     )
     CUCURBITACINE_ET_AUTRES_TOXINES_DE_COURGES = (
         "Cucurbitacine et autres toxines de courges",
-        "Contaminant - toxine végétale > Toxine végétale autre > Cucurbitacine et autres toxines de courges",
+        "Contaminant - toxine > Toxine végétale autre > Cucurbitacine et autres toxines de courges",
     )
-    GOSSYPOL = "Gossypol", "Contaminant - toxine végétale > Toxine végétale autre > Gossypol"
+    GOSSYPOL = "Gossypol", "Contaminant - toxine > Toxine végétale autre > Gossypol"
     PIGNON_DE_PIN_AMER = (
         "Pignon de pin amer (dysgueusie)",
-        "Contaminant - toxine végétale > Toxine végétale autre > Pignon de pin amer (dysgueusie)",
+        "Contaminant - toxine > Toxine végétale autre > Pignon de pin amer (dysgueusie)",
     )
-    THEOBROMINE = "Théobromine", "Contaminant - toxine végétale > Toxine végétale autre > Théobromine"
+    THEOBROMINE = "Théobromine", "Contaminant - toxine > Toxine végétale autre > Théobromine"
     TOXINE_VEGETALE_REGLEMENTEE = (
         "Toxine végétale réglementée",
-        "Contaminant - toxine végétale > Toxine végétale réglementée",
+        "Contaminant - toxine > Toxine végétale réglementée",
     )
     ACIDE_CYANHYDRIQUE = (
         "Acide cyanhydrique",
-        "Contaminant - toxine végétale > Toxine végétale réglementée > Acide cyanhydrique",
+        "Contaminant - toxine > Toxine végétale réglementée > Acide cyanhydrique (HCN)",
     )
-    ACIDE_ERUCIQUE = "Acide érucique", "Contaminant - toxine végétale > Toxine végétale réglementée > Acide érucique"
+    ACIDE_ERUCIQUE = "Acide érucique", "Contaminant - toxine > Toxine végétale réglementée > Acide érucique"
     ALCALOIDE_OPIOIDE = (
         "Alcaloïde opioïde",
-        "Contaminant - toxine végétale > Toxine végétale réglementée > Alcaloïde opioïde",
+        "Contaminant - toxine > Toxine végétale réglementée > Alcaloïde opioïde",
     )
     ALCALOIDE_PYRROLIZIDINIQUE = (
         "Alcaloïde pyrrolizidinique",
-        "Contaminant - toxine végétale > Toxine végétale réglementée > Alcaloïde pyrrolizidinique",
+        "Contaminant - toxine > Toxine végétale réglementée > Alcaloïde pyrrolizidinique",
     )
     ALCALOIDE_TROPANIQUE_ET_GRAINE_DE_DATURA = (
         "Alcaloïde tropanique (Datura) et graine de Datura",
-        "Contaminant - toxine végétale > Toxine végétale réglementée > Alcaloïde tropanique (Datura) et graine de Datura",
+        "Contaminant - toxine > Toxine végétale réglementée > Alcaloïde tropanique (Datura) et graine de Datura",
     )
     DELTA_9_THC = (
         "Delta-9-THC (<=0,3%)",
-        "Contaminant - toxine végétale > Toxine végétale réglementée > Delta-9-THC (<=0,3%)",
+        "Contaminant - toxine > Toxine végétale réglementée > Delta-9-THC (<=0,3%)",
     )
-    GLYCOALCALOIDE = "Glycoalcaloïde", "Contaminant - toxine végétale > Toxine végétale réglementée > Glycoalcaloïde"
+    GLYCOALCALOIDE = "Glycoalcaloïde", "Contaminant - toxine > Toxine végétale réglementée > Glycoalcaloïde"
     AUTRE_CORPS_ETRANGER_OU_INDETERMINE = (
         "Autre corps étranger ou indéterminé",
         "Corps étranger et indésirable > Autre corps étranger ou indéterminé",
@@ -325,7 +325,7 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     )
     DEFAUT_ORGANOLEPTIQUE = (
         "Défaut organoleptique (toute cause)",
-        "Etablissement - perte de maîtrise sanitaire > Défaut organoleptique (toute cause)",
+        "Etablissement - perte de maîtrise sanitaire > Défaut organoleptique (toute cause dont ABVT)",
     )
     FEED_ANIMAL_NON_CIBLE = (
         "Feed - animal non-cible (contamination)",
@@ -571,7 +571,15 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     )
     VIRUS_DE_LA_GASTROENTERITE_AIGUE = (
         "Virus de la gastroentérite aigüe (GEA) (Calicivirus, Norovirus, Sapovirus, Rotavirus, Astrovirus, Adénovirus)",
-        "Virus > Virus de la gastroentérite aigüe (GEA) (Calicivirus, Norovirus, Sapovirus, Rotavirus, Astrovirus, Adénovirus)",
+        "Virus > Virus de la gastroentérite aigüe (GEA)",
+    )
+    VIRUS_DE_LA_GASTROENTERITE_AIGUE_NOROVIRUS = (
+        "Virus de la gastroentérite aigüe (GEA) Norovirus",
+        "Virus > Virus de la gastroentérite aigüe (GEA) > Norovirus",
+    )
+    VIRUS_DE_LA_GASTROENTERITE_AIGUE_AUTRES = (
+        "Virus de la gastroentérite aigüe (GEA) Autres",
+        "Virus > Virus de la gastroentérite aigüe (GEA) > Autres Calicivirus, Sapovirus, Rotavirus, Astrovirus, Adénovirus",
     )
     VIRUS_DE_L_ENCEPHALITE_A_TIQUE = (
         "Virus de l'encéphalite à tique (TBEV)",

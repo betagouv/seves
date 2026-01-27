@@ -7,7 +7,13 @@ body{
 
 body.environment-test *,
 body.environment-test *:before,
-body.environment-test *:after {
+body.environment-test *:after,
+.no-animate,
+.no-animate:before,
+.no-animate:after,
+.no-animate *,
+.no-animate *:before,
+.no-animate *:after {
     transition-property: none !important;
     transform: none !important;
     animation: none !important;
@@ -45,6 +51,10 @@ fieldset {
 }
 .main-container {
     margin: 2rem 1.5rem;
+}
+.main-container--sm {
+    margin: 2rem 1.5rem;
+    max-width: 992px;
 }
 #en-tete{
     display: flex;
@@ -167,6 +177,10 @@ fieldset {
     content: "RECETTE";
     background-color: red;
 }
+.environment-preprod::before {
+    content: "PREPROD";
+    background-color: darkred;
+}
 .environment-dev::before {
     content: "DEV";
     background-color: green;
@@ -244,4 +258,13 @@ fieldset {
 
 .history-added{
     color : var(--success-425-625);
+}
+
+.footer-links {
+    text-align: center;
+    color: var(--grey-425-625) !important;
+}
+
+.footer-links .fr-link{
+    color: var(--grey-425-625) !important;
 }

@@ -6,9 +6,7 @@ from core.models import Message, Contact, Export
 from django.conf import settings
 
 
-def _send_message(
-    recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message, message_v2_enabled
-):
+def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message):
     if settings.SEND_NOTIFICATIONS is False:
         return
     recipients = [r.get_email_for_object(message_obj.content_object) for r in recipients]
@@ -51,7 +49,7 @@ def _send_message(
             "content": content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
-            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url_with_message(message_obj.id, message_v2_enabled)}",
+            "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
         },
     )
 
@@ -62,13 +60,16 @@ def _filter_contacts_in_fin_de_suivi(recipients, object):
     return [r for r in recipients if r not in emails_to_exclude]
 
 
-def send_as_seves(*, recipients: list[Contact], subject, message, html_message, object):
+def send_as_seves(
+    *, recipients: list[Contact], subject, message, html_message, object, link_to_fiche=True, filter_fin_suivi=True
+):
     if settings.SEND_NOTIFICATIONS is False:
         return
-    if object:
-        recipients = [r.get_email_for_object(object) for r in recipients]
-        recipients = [r for r in recipients if r != ""]
+    recipients = [r.get_email_for_object(object) for r in recipients]
+    recipients = [r for r in recipients if r != ""]
+    if filter_fin_suivi:
         recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
+    if link_to_fiche:
         suffix_html = f"""<p>
             Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a>.
             <br>Merci de ne pas répondre directement à ce message.</p>"""
@@ -101,7 +102,7 @@ def send_as_seves(*, recipients: list[Contact], subject, message, html_message, 
     )
 
 
-def notify_message(message_obj: Message, message_v2_enabled=False):
+def notify_message(message_obj: Message):
     if message_obj.is_draft:
         return
     recipients, copy = [], []
@@ -127,7 +128,6 @@ def notify_message(message_obj: Message, message_v2_enabled=False):
             subject=message_obj.title,
             content=content,
             message_obj=message_obj,
-            message_v2_enabled=message_v2_enabled,
         )
 
 
@@ -175,6 +175,8 @@ Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide
     <p>Attention, le lien n'est valable que durant 1 heure.</p>
     <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.</p>
         """,
+        link_to_fiche=False,
+        filter_fin_suivi=False,
     )
 
 

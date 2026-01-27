@@ -18,6 +18,7 @@ from core.mixins import (
     WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
     WithFormsetInvalidMixin,
+    MediaDefiningMixin,
 )
 from core.mixins import (
     WithFormErrorsAsMessagesMixin,
@@ -30,7 +31,6 @@ from core.mixins import (
     WithBlocCommunPermission,
     WithAddUserContactsMixin,
 )
-from core.views import MediaDefiningMixin
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import EvenementProduit, Etablissement
@@ -161,6 +161,13 @@ class EvenementUpdateView(
 
     def test_func(self) -> bool | None:
         return self.get_object().can_be_updated(self.request.user)
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        self.object = super().get_object(queryset)
+        return self.object
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

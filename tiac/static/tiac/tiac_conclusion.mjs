@@ -17,6 +17,8 @@ import {findPath, hideHeader, patchItems, showHeader, tsDefaultOptions} from "Cu
 class ConclusionFormController extends Controller {
     static targets = [
         "suspicionConclusion",
+        "conclusionRepas",
+        "conclusionAliment",
         "selectedHazardTreeselect",
         "selectedHazardTreeselectInput",
         "selectedHazardTreeselectHeader",
@@ -117,6 +119,8 @@ class ConclusionFormController extends Controller {
 
     onSuspicionConclusionChanged({target: {value}}) {
         this.suspicionConclusionValue = value
+        this.conclusionRepasTarget.disabled = false;
+        this.conclusionAlimentTarget.disabled = false;
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
             this.treeselect.disabled = false;
             this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse";
@@ -129,7 +133,17 @@ class ConclusionFormController extends Controller {
             this.selectedHazardTreeselectInputTarget.required = true;
             this.treeselect.options = this.selectedHazardSuspectedChoicesValue;
             this.treeselect.mount()
-        } else {
+        } else if (value === this.suspicionConclusionChoicesValue.DISCARDED.value) {
+            this.treeselect.options = [];
+            this.treeselect.placeholder = "Choisir dans la liste";
+            this.treeselect.disabled = true;
+            this.conclusionRepasTarget.value = '';
+            this.conclusionRepasTarget.disabled = true;
+            this.conclusionAlimentTarget.value = '';
+            this.conclusionAlimentTarget.disabled = true;
+            this.selectedHazardTreeselectInputTarget.required = false;
+            this.treeselect.mount()
+        } else if (value === this.suspicionConclusionChoicesValue.UNKNOWN.value) {
             this.treeselect.options = [];
             this.treeselect.placeholder = "Choisir dans la liste";
             this.treeselect.disabled = true;

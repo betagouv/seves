@@ -66,14 +66,14 @@
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Le contexte</legend>
                 </div>
-                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                <div class="fr-grid-row fr-grid-row--gutters fr-col" data-controller="ars-informee">
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="fr-input-group">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
                         {% dsfr_form_field form.date_reception %}
-                        {% dsfr_form_field form.evenement_origin %}
+                        {% dsfr_form_field form.evenement_origin|set_data:"ars-informee-target:origin"|set_data:"action:ars-informee#onOriginChanged" %}
                         {% dsfr_inline_radio_field form.modalites_declaration %}
                     </div>
 
@@ -149,7 +149,7 @@
                 {% dsfr_form_field form.analyses_sur_les_malades|dsfr_inline %}
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-6">
-                        {% dsfr_form_field form.precisions %}
+                        {% dsfr_form_field form.precisions|set_data:"etiologie-form-target:precisions" %}
                     </div>
                 </div>
 
@@ -201,7 +201,7 @@
                         <div class="fr-notice__body">
                             <p>
                                 <span class="fr-notice__title">
-                                    Afin de préciser le scénario (établissement/repas/aliment/prélèvement), il est
+                                    Afin de préciser le scénario (repas/aliment), il est
                                     nécessaire d’avoir préalablement publié ou enregistré vos ajouts/modifications pour
                                     pouvoir les sélectionner dans les menus déroulants ci-dessous
                                 </span>
@@ -251,10 +251,10 @@
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
                     <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_repas %}
+                        {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas" %}
                     </div>
                     <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_aliment %}
+                        {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment"  %}
                     </div>
                 </div>
             </fieldset>

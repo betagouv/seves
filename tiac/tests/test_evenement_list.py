@@ -12,7 +12,7 @@ from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
+from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp, Analyses
 from tiac.tests.pages import EvenementListPage
 
 
@@ -139,9 +139,9 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
 
 
 def test_search_with_conclusion(live_server, page: Page):
-    evenement_1 = EvenementSimpleFactory()
-    evenement_2 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.CONFIRMED)
-    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
+    evenement_1 = EvenementSimpleFactory(numero_annee=2025)
+    evenement_2 = InvestigationTiacFactory(numero_annee=2024, suspicion_conclusion=SuspicionConclusion.CONFIRMED)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2023, suspicion_conclusion=None)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
@@ -154,16 +154,18 @@ def test_search_with_conclusion(live_server, page: Page):
 
 
 def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_from_element_with_value):
-    evenement_1 = EvenementSimpleFactory()
+    evenement_1 = EvenementSimpleFactory(numero_annee=2025)
     evenement_2 = InvestigationTiacFactory(
-        suspicion_conclusion=SuspicionConclusion.SUSPECTED, selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS]
+        numero_annee=2024,
+        suspicion_conclusion=SuspicionConclusion.SUSPECTED,
+        selected_hazard=[DangersSyndromiques.INTOXINATION_BACILLUS],
     )
-    evenement_3 = InvestigationTiacFactory(suspicion_conclusion=None)
-    evenement_4 = InvestigationTiacFactory(suspicion_conclusion=SuspicionConclusion.DISCARDED)
+    evenement_3 = InvestigationTiacFactory(numero_annee=2023, suspicion_conclusion=None)
+    evenement_4 = InvestigationTiacFactory(numero_annee=2022, suspicion_conclusion=SuspicionConclusion.DISCARDED)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.select_hazard("Bacillus Cereus - Staphylococcus Aureus")
+    search_page.select_hazard("Intoxination émétique bacillus cereus staphylococcus aureus")
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
@@ -202,6 +204,25 @@ def test_can_filter_by_siret(live_server, mocked_authentification_user, page: Pa
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_numero_agrement(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = EtablissementFactory(numero_agrement="01.001.001")
+    to_be_found_2 = EtablissementFactory(numero_agrement="01.001.001", investigation=InvestigationTiacFactory())
+    not_to_be_found_1 = EtablissementFactory(numero_agrement="")
+    not_to_be_found_2 = EtablissementFactory(numero_agrement="02.002.002")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numero_agrement.fill("01.001.001")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.evenement_simple.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.investigation.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.evenement_simple.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.evenement_simple.numero, exact=True)).not_to_be_visible()
 
@@ -416,7 +437,7 @@ def test_can_filter_by_follow_up(live_server, mocked_authentification_user, page
 
 def test_list_can_filter_with_free_search_investigation_tiac(live_server, mocked_authentification_user, page: Page):
     evenement_1 = InvestigationTiacFactory(contenu="Morbier")
-    evenement_2 = InvestigationTiacFactory(precisions="Morbier")
+    evenement_2 = InvestigationTiacFactory(precisions="Morbier", analyses_sur_les_malades=Analyses.OUI)
     evenement_3 = InvestigationTiacFactory()
     EtablissementFactory(raison_sociale="Morbier", investigation=evenement_3)
     evenement_4 = InvestigationTiacFactory()

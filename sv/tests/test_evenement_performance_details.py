@@ -10,7 +10,7 @@ from sv.factories import (
     LieuFactory,
 )
 
-BASE_NUM_QUERIES = 30  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 22  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -32,15 +32,15 @@ def test_evenement_performances_with_messages_from_same_user(
     sender = mocked_authentification_user.agent.contact_set.get()
     MessageFactory(content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 4):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         client.get(evenement.get_absolute_url())
 
     MessageFactory.create_batch(3, content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
         response = client.get(evenement.get_absolute_url())
 
-    assert len(response.context["message_list"]) == 4
+    assert len(response.context["message_filter"].qs) == 4
 
 
 @pytest.mark.django_db
@@ -63,7 +63,7 @@ def test_evenement_performances_with_multiple_messages_with_documents(
     with django_assert_max_num_queries(BASE_NUM_QUERIES + 14):
         response = client.get(evenement.get_absolute_url())
 
-    assert len(response.context["message_list"]) == 4
+    assert len(response.context["message_filter"].qs) == 4
 
 
 @pytest.mark.django_db
@@ -120,7 +120,7 @@ def test_evenement_performances_when_adding_structure(client, django_assert_num_
     for structure in ContactStructureFactory.create_batch(10):
         evenement.contacts.add(structure)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 2):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
         client.get(evenement.get_absolute_url())
 
 

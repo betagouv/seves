@@ -12,11 +12,10 @@ from dsfr.forms import DsfrBaseForm
 from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
 from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
-from core.forms import BaseMessageForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Message, Structure, Departement
-from ssa.models import EvenementProduit
+from core.models import Contact, Structure, Departement
 from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.models import EvenementProduit
 from tiac.constants import (
     DangersSyndromiques,
     DANGERS_COURANTS,
@@ -84,7 +83,11 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/free_links.mjs"), js_module("tiac/evenement_simple.mjs")),
+            js=(
+                js_module("core/free_links.mjs"),
+                js_module("tiac/evenement_simple.mjs"),
+                js_module("tiac/ars_informee.mjs"),
+            ),
         )
 
     def __init__(self, *args, **kwargs):
@@ -137,41 +140,6 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         )
 
 
-class MessageForm(BaseMessageForm):
-    recipients_limited_recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.get_tiac_structures(), label="Destinataires", required=False
-    )
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-        "recipients_limited_recipients",
-    ]
-
-    class Meta(BaseMessageForm.Meta):
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "recipients_limited_recipients",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        kwargs["limit_contacts_to"] = "ssa"
-        super().__init__(*args, **kwargs)
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
-
-
 class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
     recipients = ContactModelMultipleChoiceField(
         queryset=Contact.objects.get_tiac_structures(), label="Destinataires", required=True
@@ -217,6 +185,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
         fields = [
             "type_etablissement",
             "siret",
+            "numero_agrement",
             "autre_identifiant",
             "raison_sociale",
             "enseigne_usuelle",
@@ -310,9 +279,18 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput
     )
     analyses_sur_les_malades = forms.ChoiceField(
-        choices=Analyses.choices, widget=forms.RadioSelect, label="Analyses engagées sur les malades", required=False
+        choices=Analyses.choices,
+        widget=forms.RadioSelect(
+            attrs={
+                "data-action": "change->etiologie-form#onAnalyseChange",
+            }
+        ),
+        label="Analyses engagées sur les malades",
+        required=False,
     )
-    precisions = forms.CharField(widget=forms.TextInput, required=False, label="Précisions", help_text="Type d'analyse")
+    precisions = forms.CharField(
+        widget=forms.TextInput(attrs={"disabled": True}), required=False, label="Précisions", help_text="Type d'analyse"
+    )
     agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
 
     suspicion_conclusion = SEVESChoiceField(
@@ -360,6 +338,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 js_module("tiac/etiologie.mjs"),
                 js_module("tiac/agents_pathogene.mjs"),
                 js_module("tiac/tiac_conclusion.mjs"),
+                js_module("tiac/ars_informee.mjs"),
             ),
         )
 

@@ -1,7 +1,13 @@
 #message-add-document {
-    background-color: white;
+  background-color: white;
 }
 
 .document-to-add {
-    background-color: white !important;
+  background-color: white !important;
+}
+
+@media (max-width: 78em) {
+  .documents-col {
+    order: -1;
+  }
 }

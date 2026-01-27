@@ -9,9 +9,9 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
 from core.form_mixins import DSFRForm, js_module
-from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm, BaseMessageForm
+from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin, WithCommonContextVars
-from core.models import Contact, Message
+from core.models import Contact
 from ssa.constants import (
     CategorieDanger,
     CategorieProduit,
@@ -214,11 +214,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
 class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):
     template_name = "ssa/forms/etablissement.html"
 
-    numero_agrement = forms.CharField(
-        required=False,
-        label="Numéro d'agrément",
-        widget=forms.TextInput(attrs={"pattern": r"^\d{2,3}\.\d{2,3}\.\d{2,3}$", "placeholder": "00(0).00(0).00(0)"}),
-    )
     type_exploitant = forms.CharField(
         label="Type d'établissement",
         required=False,
@@ -250,41 +245,6 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
             "pays",
             "numeros_resytal",
         ]
-
-
-class MessageForm(BaseMessageForm):
-    recipients_limited_recipients = ContactModelMultipleChoiceField(
-        queryset=Contact.objects.get_ssa_structures(), label="Destinataires", required=False
-    )
-    manual_render_fields = [
-        "recipients_structures_only",
-        "recipients_copy_structures_only",
-        "recipients_limited_recipients",
-    ]
-
-    class Meta(BaseMessageForm.Meta):
-        fields = [
-            "recipients",
-            "recipients_structures_only",
-            "recipients_copy",
-            "recipients_copy_structures_only",
-            "recipients_limited_recipients",
-            "message_type",
-            "title",
-            "content",
-            "content_type",
-            "object_id",
-            "status",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        kwargs["limit_contacts_to"] = "ssa"
-        super().__init__(*args, **kwargs)
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["message_type"] in Message.TYPES_WITH_LIMITED_RECIPIENTS:
-            self.cleaned_data["recipients"] = self.cleaned_data["recipients_limited_recipients"]
 
 
 class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):

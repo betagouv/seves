@@ -39,6 +39,10 @@ class WithEtablissementMixin:
         self.current_modal.wait_for(state="visible")
         return self.current_modal
 
+    def add_etablissement_siren(self, value, full_value, choice_js_fill_from_element):
+        element = self.current_modal.locator('[id$="-siret"]').locator("..")
+        choice_js_fill_from_element(self.page, element, value, full_value)
+
     @property
     def current_modal_address_field(self):
         return self.current_modal.locator('[id$="_lieu_dit"]').locator("..")
@@ -62,6 +66,7 @@ class WithEtablissementMixin:
     def fill_etablissement(self, modal, etablissement: Etablissement):
         modal.locator('[id$="type_etablissement"]').fill(etablissement.type_etablissement)
         modal.locator('[id$="raison_sociale"]').fill(etablissement.raison_sociale)
+        modal.locator('[id$="numero_agrement"]').fill(etablissement.numero_agrement)
         modal.locator('[id$="autre_identifiant"]').fill(etablissement.autre_identifiant)
         modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
         self.force_etablissement_adresse(etablissement.adresse_lieu_dit, mock_call=True)
@@ -354,6 +359,10 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_siret")
 
     @property
+    def numero_agrement(self):
+        return self.page.locator("#id_numero_agrement")
+
+    @property
     def commune(self):
         return self.page.locator("#id_commune")
 
@@ -602,7 +611,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
 
         self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
         self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
-        self.current_modal.get_by_label("Matières premières").click(force=True)
+        self.current_modal.get_by_label("Matière première").click(force=True)
 
         for field in ["denomination", "description_produit"]:
             self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))

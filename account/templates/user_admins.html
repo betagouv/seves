@@ -54,7 +54,7 @@
                             <div class="fr-col-4">
 
                                 <div class="fr-fieldset">
-                                    <span>Donner accès à</span>
+                                    <span>Pour le(s) domaine(s)</span>
                                     <div class="fr-fieldset__element fr-fieldset__element--inline">
                                         <div class="fr-checkbox-group">
                                             <input name="domains" id="checkbox-10" type="checkbox" value="SSA" data-action="permissions-admin-form#handleButtonState">
@@ -156,7 +156,7 @@
                                                     <input type="hidden" name="action" value="remove">
                                                     <input type="hidden" name="user" value="{{ existing.pk }}">
                                                     {% csrf_token %}
-                                                    <a class="fr-btn fr-flex--align-end" href="#" aria-controls="fr-modal-remove-user-{{ existing.pk }}" data-fr-opened="false">
+                                                    <a class="fr-btn fr-btn--secondary fr-flex--align-end" href="#" aria-controls="fr-modal-remove-user-{{ existing.pk }}" data-fr-opened="false">
                                                         Révoquer le rôle d’administrateur
                                                     </a>
                                                 </form>
