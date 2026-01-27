@@ -158,7 +158,9 @@ class EvenementProduit(
         blank=True, max_length=100, choices=PretAManger.choices, verbose_name="Produit Prêt à manger (PAM)"
     )
 
-    actions_engagees = models.CharField(max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées")
+    actions_engagees = models.CharField(
+        max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées", blank=True
+    )
 
     numeros_rappel_conso = ArrayField(
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
