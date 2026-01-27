@@ -1,3 +1,5 @@
+import contextlib
+import mimetypes
 import re
 import magic
 from django.core.exceptions import ValidationError
@@ -50,6 +52,12 @@ class MagicMimeValidator:
     def __call__(self, file):
         file_mime = magic.from_buffer(file.read(2048), mime=True)
         file.seek(0)
+        if file_mime == "application/octet-stream" and magic.version() < 546:
+            # There's a knwon bug with libmagic where MS Office documents (xslx, docx, etc.) are detected as
+            # application/octet-stream. This is fixed in libmagic 5.46.
+            # See https://bugs.astron.com/view.php?id=517
+            with contextlib.suppress(Exception):
+                file_mime = mimetypes.guess_type(file.name)[0]
         if file_mime not in AllowedMimeTypes.values:
             raise ValidationError(f"Type de fichier non autorisé: {file_mime}")
 
