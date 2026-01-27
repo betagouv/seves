@@ -1071,6 +1071,7 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     )
     PSM_ESCARGOT = "PSM - Escargot", "Produit aquatique > Produit séparé mécaniquement > PSM - Escargot"
     PSM_GRENOUILLE = "PSM - Grenouille", "Produit aquatique > Produit séparé mécaniquement > PSM - Grenouille"
+    PRODUIT_AQUATIQUE_INDETERMINE = "Produit aquatique indéterminé", "Produit aquatique > Produit aquatique indéterminé"
     OEUF_COQUILLE = "Oeuf coquille", "Produit d'œuf > Oeuf coquille"
     OVOPRODUIT = "Ovoproduit", "Produit d'œuf > Ovoproduit"
     COULE_D_UF_FRAICHE_NON_PASTEURISEE = (
@@ -1187,6 +1188,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Chocolat (bouchée, tablette) (hors boisson)",
         "Entremet salé, dessert ou confiserie > Chocolat (bouchée, tablette) (hors boisson)",
     )
+    ENTREMET_INDETERMINE = (
+        "Entremet salé, dessert ou confiserie indéterminé",
+        "Entremet salé, dessert ou confiserie > Entremet salé, dessert ou confiserie indéterminé",
+    )
     HUILE_VEGETALE = "Huile végétale", "Huile et margarine végétale > Huile végétale"
     MARGARINE = "Margarine", "Huile et margarine végétale > Margarine"
     FRUIT_A_COQUE = (
@@ -1260,6 +1265,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     GC_ECRASE_MOULU_FARINE_SON_FLOCON = (
         "GC - Ecrasé, moulu, farine, son, flocon",
         "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Ecrasé, moulu, farine, son, flocon",
+    )
+    FRUIT_A_COQUE_INDETERMINE = (
+        "Fruit à coque, graine, céréale et dérivé indéterminé",
+        "Fruit à coque, graine, céréale et dérivé > Fruit à coque, graine, céréale et dérivé indéterminé",
     )
     BAIE_OU_PETIT_FRUIT = (
         "Baie ou petit fruit (myrtille, fraise…)",
@@ -1515,6 +1524,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Bouillon (cube, poudre) (yc avec DAOA)",
         "Condiment et herboristerie > Bouillon (cube, poudre) (yc avec DAOA)",
     )
+    CONDIMENT_INDETERMINE = (
+        "Condiment et herboristerie indéterminé",
+        "Condiment et herboristerie > Condiment et herboristerie indéterminé",
+    )
     HUILE_ESSENTIELLE = "Huile essentielle", "Condiment et herboristerie > Huile essentielle"
     EAU_MINERALE_ET_NATURELLE_EAU_EMBOUTEILLEE = (
         "Eau minérale et naturelle, eau embouteillée",
@@ -1567,6 +1580,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     ADDITIF_ALIMENTAIRE = "Additif alimentaire", "Améliorant ou auxiliaire > Additif alimentaire"
     AROME = "Arome", "Améliorant ou auxiliaire > Arome"
     FERMENT_ENZYME = "Ferment, enzyme", "Améliorant ou auxiliaire > Ferment, enzyme"
+    AMELIORANT_INDETERMINE = (
+        "Améliorant ou auxiliaire indéterminé",
+        "Améliorant ou auxiliaire > Améliorant ou auxiliaire indéterminé",
+    )
     COMPLEMENT_ALIMENTAIRE = "Complément alimentaire", "Complément alimentaire > Complément alimentaire"
     FEED_MP_CEREALE_ET_DERIVE = (
         "Feed - MP céréale et dérivé",
@@ -1591,6 +1608,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     FEED_MP_AUTRE = (
         "Feed - MP autre (coproduit, algue, bois, DVOV déclassée...)",
         "Alimentation animale - matière première végétale > Feed - MP autre (coproduit, algue, bois, DVOV déclassée...)",
+    )
+    FEED_MP_INDETERMINE = (
+        "Feed - Alimentation animale – matière première végétale indéterminée (catégorie à éviter)",
+        "Alimentation animale - matière première végétale > Feed - Alimentation animale – matière première végétale indéterminée (catégorie à éviter)",
     )
     FEED_MP_D_ORIGINE_MINERALE = (
         "Feed - MP d'origine minérale",
@@ -1628,6 +1649,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "AAMPAA - Autre",
         "Alimentation animale - matière première animale > Feed - MP produit d'animaux aquatiques > AAMPAA - Autre",
     )
+    AAMPAA_INDETERMINE = (
+        "Feed - Alimentation animale – matière première animale indéterminée (catégorie à éviter)",
+        "Alimentation animale - matière première animale > Feed - Alimentation animale – matière première animale indéterminée (catégorie à éviter)",
+    )
     FEED_ADDITIF = "Feed - additif", "Alimentation animale - additif, prémélange > Feed - additif"
     FEED_PREMELANGE_POUR_ANIMAUX_D_ELEVAGE = (
         "Feed - prémélange pour animaux d'élevage",
@@ -1636,6 +1661,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     FEED_PREMELANGE_POUR_ANIMAUX_FAMILIERS = (
         "Feed - prémélange pour animaux familiers",
         "Alimentation animale - additif, prémélange > Feed - prémélange pour animaux familiers",
+    )
+    FEED_PREMELANGE_INDETERMINE = (
+        "Feed - Alimentation animale – additif, prémélange indéterminé (catégorie à éviter)",
+        "Alimentation animale - additif, prémélange > Feed - Alimentation animale – additif, prémélange indéterminé (catégorie à éviter)",
     )
     FEED_ALIMENT_COMPOSE_POUR_ANIMAUX_FAMILIERS = (
         "Feed - Aliment composé pour animaux familiers",
@@ -1689,6 +1718,10 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "AACOMP - Pour autre (abeille, camélidé, animaux à fourrure …)",
         "Alimentation animale - aliment composé > Feed - Aliment composé pour animaux d'élevage > AACOMP - Pour autre (abeille, camélidé, animaux à fourrure …)",
     )
+    AA_INDETERMINE = (
+        "Feed - Alimentation animale – aliment composé indéterminé (catégorie à éviter)",
+        "Alimentation animale - aliment composé > Feed - Alimentation animale – aliment composé indéterminé (catégorie à éviter)",
+    )
     FEED_ALIMENT_MEDICAMENTEUX = (
         "Feed - Aliment médicamenteux",
         "Alimentation animale - médicamenteux > Feed - Aliment médicamenteux",
@@ -1704,6 +1737,14 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     PRODUIT_ALIMENTAIRE_INDETERMINE = (
         "Produit alimentaire indéterminé",
         "Produit alimentaire indéterminé > Produit alimentaire indéterminé",
+    )
+    PRODUIT_ALIMENTAIRE_INDETERMINE_ANIMAL = (
+        "Produit alimentaire indéterminé d’origine animale",
+        "Produit alimentaire indéterminé > Produit alimentaire indéterminé d’origine animale",
+    )
+    PRODUIT_ALIMENTAIRE_INDETERMINE_VEGETALE = (
+        "Produit alimentaire indéterminé d’origine végétale",
+        "Produit alimentaire indéterminé > Produit alimentaire indéterminé d’origine végétale",
     )
     SOUS_PRODUIT_ANIMAL_TECHNIQUE = (
         "Sous-produit animal technique (non destiné à l'alimentation animale)",
