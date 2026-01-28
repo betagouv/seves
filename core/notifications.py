@@ -31,7 +31,7 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
                     {% endif %}
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
-                    <p style="margin-top: 20px;">Consulter la fiche dans Sèves : <a href="{{ fiche_url }}">{{ fiche_url }}</a></p>
+                    <p style="margin-top: 20px;"><a href="{{ fiche_url }}">Consulter la fiche dans Sèves</a></p>
                     <p>Merci de ne pas répondre directement à ce message.</p>
                 </div>
                 </html>
@@ -71,7 +71,7 @@ def send_as_seves(
         recipients = _filter_contacts_in_fin_de_suivi(recipients, object)
     if link_to_fiche:
         suffix_html = f"""<p>
-            Consulter la fiche dans Sèves : <a href="{settings.ROOT_URL}{object.get_absolute_url()}">{settings.ROOT_URL}{object.get_absolute_url()}</a>.
+            <a href="{settings.ROOT_URL}{object.get_absolute_url()}">Consulter la fiche dans Sèves</a>.
             <br>Merci de ne pas répondre directement à ce message.</p>"""
         suffix = f"""Consulter la fiche dans Sèves : {settings.ROOT_URL}{object.get_absolute_url()}
         Merci de ne pas répondre directement à ce message."""
