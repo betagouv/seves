@@ -14,12 +14,11 @@ from dsfr.forms import DsfrBaseForm
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
 from core.fields import DSFRRadioButton, DSFRCheckboxSelectMultiple, AdresseLieuDitField
-from core.form_mixins import DSFRForm, js_module
+from core.form_mixins import DSFRForm, js_module, WithLatestVersionLocking
 from core.forms import VisibiliteUpdateBaseForm, BaseCompteRenduDemandeInterventionForm
 from core.models import Structure, Visibilite, Contact
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
-    WithLatestVersionLocking,
     WithEvenementFreeLinksMixin,
 )
 from sv.models import (

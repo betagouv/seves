@@ -264,3 +264,30 @@ def test_update_reference_clusters_will_trigger_email(live_server, page, mailout
     assert evenement.numero in mail.subject
     assert "Souche / cluster" in mail.subject
     assert "Référence cluster : New value" in mail.body
+
+
+def test_investigation_cas_humain_update_has_locking_protection(
+    live_server,
+    page,
+    mocked_authentification_user,
+):
+    evenement = InvestigationCasHumainFactory(description="AAA")
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.description.fill("BBB")
+
+    evenement.description = "CCC"
+    evenement.save()
+
+    update_page.publish(wait_for="modification")
+
+    evenement.refresh_from_db()
+    assert evenement.description == "CCC"
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
+    expect(
+        page.get_by_text(
+            "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. Fermer cette modale pour charger la dernière version."
+        )
+    ).to_be_visible()
+    page.keyboard.press("Escape")
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")

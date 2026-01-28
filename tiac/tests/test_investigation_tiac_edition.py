@@ -296,3 +296,31 @@ def test_can_update_investigation_tiac_etiologie(live_server, mocked_authentific
     expect(creation_page.precisions).to_be_enabled()
     creation_page.set_analyses("Non")
     expect(creation_page.precisions).to_be_disabled()
+
+
+def test_investigation_tiac_update_has_locking_protection(
+    live_server,
+    page,
+    mocked_authentification_user,
+):
+    evenement = InvestigationTiacFactory(contenu="AAA")
+    update_page = InvestigationTiacEditPage(page, live_server.url, evenement)
+    update_page.navigate()
+    update_page.contenu.fill("BBB")
+
+    evenement.contenu = "CCC"
+    evenement.save()
+
+    update_page.page.locator("button#submit_publish").first.click()
+    update_page.page.wait_for_url("**edition**")
+
+    evenement.refresh_from_db()
+    assert evenement.contenu == "CCC"
+    initial_timestamp = page.evaluate("performance.timing.navigationStart")
+    expect(
+        page.get_by_text(
+            "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. Fermer cette modale pour charger la dernière version."
+        )
+    ).to_be_visible()
+    page.keyboard.press("Escape")
+    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")

@@ -1,13 +1,12 @@
 {% load dsfr_tags widget_tweaks %}
-
+{{ form.latest_version }}
+{% if form.non_field_errors %}
+    <section class="fr-my-4v fr-input-group fr-input-group--error">
+        {{ form.non_field_errors }}
+    </section>
+{% endif %}
 <fieldset class="fr-fieldset form-fieldset">
     <legend class="fr-fieldset__legend fr-h3">Informations</legend>
-
-    {% if form.non_field_errors %}
-        <section class="fr-my-4v fr-input-group fr-input-group--error">
-            {{ form.non_field_errors }}
-        </section>
-    {% endif %}
 
     <div class="fr-grid-row fr-col">
         <div class="fr-col-12 fr-col-xl-8 fr-grid-row">

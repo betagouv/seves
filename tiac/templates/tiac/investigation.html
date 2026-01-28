@@ -11,6 +11,7 @@
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
+        {{ form.latest_version }}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
                 <h1 class="fr-col-6">
