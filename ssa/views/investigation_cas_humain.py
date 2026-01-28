@@ -11,6 +11,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, UpdateView
 from django.views.generic.detail import BaseDetailView
 from docxtpl import DocxTemplate
+from reversion.models import Version
 
 from core.mixins import (
     WithAddUserContactsMixin,
@@ -109,6 +110,11 @@ class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateV
         dirty_fields = self.object.get_dirty_fields()
         if ("reference_souches" in dirty_fields) or ("reference_clusters" in dirty_fields):
             notify_souches_clusters(self.object, self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
+        return kwargs
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
