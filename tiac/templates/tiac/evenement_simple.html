@@ -8,6 +8,7 @@
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post" data-controller="evenement-simple-form">
         {% csrf_token %}
+        {{ form.latest_version }}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
                 {% block title %}<h1 class="fr-col-6">Création d'un enregistrement simple</h1>{% endblock %}
