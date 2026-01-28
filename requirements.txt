@@ -84,7 +84,7 @@ django-csp==4.0
     # via -r requirements.in
 django-debug-toolbar==6.2.0
     # via -r requirements.in
-django-dirtyfields==1.9.8
+django-dirtyfields==1.9.9
     # via -r requirements.in
 django-dsfr==3.3.0
     # via -r requirements.in
