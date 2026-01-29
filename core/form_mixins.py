@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.forms import Script
 
@@ -39,22 +38,6 @@ class DSFRForm(forms.Form):
             widget = self.fields[field].widget
             class_to_add = self.input_to_class[type(widget).__name__]
             widget.attrs["class"] = widget.attrs.get("class", "") + " " + class_to_add
-
-
-class WithNextUrlMixin:
-    def add_next_field(self, next):
-        if next:
-            self.fields["next"] = forms.CharField(widget=forms.HiddenInput())
-            self.initial["next"] = next
-
-
-class WithContentTypeMixin:
-    def add_content_type_fields(self, obj):
-        if obj:
-            self.fields["content_type"].widget = forms.HiddenInput()
-            self.fields["object_id"].widget = forms.HiddenInput()
-            self.initial["content_type"] = ContentType.objects.get_for_model(obj)
-            self.initial["object_id"] = obj.pk
 
 
 class WithFreeLinksMixin:

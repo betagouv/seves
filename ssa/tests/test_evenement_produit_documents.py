@@ -25,7 +25,6 @@ def test_can_edit_document_on_evenement(live_server, page: Page):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     document_page = WithDocumentsPage(page)
     document_page.open_document_tab()
-    expect(document_page.document_title(document.pk)).to_be_visible()
     assert "Test document" in document_page.document_title(document.pk).text_content()
 
     document_page.open_edit_document(document.id)

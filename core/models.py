@@ -314,7 +314,7 @@ class Document(models.Model):
         FileExtensionValidator(
             Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type],
             message=(
-                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document"
+                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document "
                 f"« {document_type_label} ». Les extensions autorisées sont : %(allowed_extensions)s."
             ),
         )(file)

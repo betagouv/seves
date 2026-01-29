@@ -20,57 +20,15 @@ from core.fields import (
     MessageObjectField,
     SEVESChoiceField,
 )
-from core.form_mixins import DSFRForm, WithContentTypeMixin, WithNextUrlMixin
+from core.form_mixins import DSFRForm
 from core.models import Contact, Departement, Document, Message, Structure, Visibilite
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
-from core.widgets import RestrictedFileWidget
 
 User = get_user_model()
 
 
-class DocumentUploadForm(DSFRForm, WithNextUrlMixin, WithContentTypeMixin, forms.ModelForm):
+class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
     nom = forms.CharField(
-        help_text="Nommer le document de manière claire et compréhensible pour tous",
-        label="Intitulé du document",
-        widget=forms.TextInput(attrs={"maxlength": 256}),
-    )
-    document_type = SEVESChoiceField(choices=Document.TypeDocument.choices, label="Type de document")
-    description = forms.CharField(
-        widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
-    )
-    file = forms.FileField(label="Ajouter un document", widget=RestrictedFileWidget(attrs={"disabled": True}))
-
-    class Meta:
-        model = Document
-        fields = ["nom", "document_type", "description", "file", "content_type", "object_id"]
-
-    def __init__(self, *args, **kwargs):
-        obj = kwargs.pop("obj")
-        next = kwargs.pop("next", None)
-        super().__init__(*args, **kwargs)
-        self.fields["document_type"].choices = [
-            ("", settings.SELECT_EMPTY_CHOICE),
-            *[(c.value, c.label) for c in obj.get_allowed_document_types()],
-        ]
-        self.add_content_type_fields(obj)
-        self.add_next_field(next)
-
-    def clean_file(self):
-        file = self.cleaned_data.get("file")
-        if not file:
-            return
-        if file.size > MAX_UPLOAD_SIZE_BYTES:
-            raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
-        if document_type := self.cleaned_data.get("document_type"):
-            Document.validate_file_extention_for_document_type(file, document_type)
-        return file
-
-
-class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelForm):
-    template_name = "core/form/document_in_message_upload.html"
-
-    nom = forms.CharField(
-        help_text="",
         label="Intitulé du document",
         widget=forms.TextInput(attrs={"maxlength": 256, "required": True}),
     )
@@ -85,17 +43,13 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelFor
     file = forms.FileField(label="Ajouter un document")
 
     @property
-    def file_id(self):
-        return "" if not self.instance else uuid.uuid4()
-
-    @property
     def media(self):
         return super().media + Media(css={"all": ("core/form/document_in_message_upload.css",)})
 
-    def __init__(self, user, message, allowed_document_types, *args, **kwargs):
-        self.allowed_document_types = allowed_document_types
+    def __init__(self, user, related_to, allowed_document_types, *args, **kwargs):
         self.user = user
-        self.message = message
+        self.related_to = related_to
+        self.allowed_document_types = allowed_document_types
 
         super().__init__(*args, **kwargs)
 
@@ -104,31 +58,74 @@ class DocumentInMessageUploadForm(DsfrBaseForm, WithNextUrlMixin, forms.ModelFor
             *[(c.value, c.label) for c in self.allowed_document_types],
         ]
 
-        self.instance.content_object = self.message
-
     def clean_file(self):
         file = self.cleaned_data.get("file")
         if not file:
             return
         if file.size > MAX_UPLOAD_SIZE_BYTES:
-            raise forms.ValidationError(
-                f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo; "
-                f"Veuillez ajouter un fichier différent"
-            )
+            raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
         if document_type := self.cleaned_data.get("document_type"):
             Document.validate_file_extention_for_document_type(file, document_type)
         return file
+
+    def full_clean(self):
+        super().full_clean()
+        # Move errors related to the `file` field so they are visible on `nom` field
+        for error in self.errors.pop("file", []):
+            self.add_error("nom", error)
+
+    class Meta:
+        model = Document
+        fields = ["id", "nom", "document_type", "description", "file"]
+
+
+class DocumentUploadForm(BaseDocumentUploadForm):
+    template_name = "core/form/document_upload.html"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["content_type"].widget = forms.HiddenInput()
+        self.initial["content_type"] = ContentType.objects.get_for_model(self.related_to)
+        self.fields["object_id"].widget = forms.HiddenInput()
+        self.initial["object_id"] = self.related_to.pk
+
+    def clean(self):
+        self.instance.content_object = self.cleaned_data["content_type"].get_object_for_this_type(
+            pk=self.cleaned_data["object_id"]
+        )
+        return super().clean()
+
+    def save(self, commit=True):
+        agent = self.user.agent
+        self.instance.created_by = agent
+        self.instance.created_by_structure = agent.structure
+        return super().save(commit)
+
+    class Meta(BaseDocumentUploadForm.Meta):
+        fields = (*BaseDocumentUploadForm.Meta.fields, "content_type", "object_id")
+
+
+class DocumentInMessageUploadForm(BaseDocumentUploadForm):
+    template_name = "core/form/document_in_message_upload.html"
+
+    @property
+    def file_id(self):
+        return "" if not self.instance else uuid.uuid4()
+
+    def __init__(self, user, related_to, allowed_document_types, *args, **kwargs):
+        self.related_to = related_to
+        super().__init__(user, related_to, allowed_document_types, *args, **kwargs)
+        self.instance.content_object = self.related_to
 
     def save(self, commit=True):
         self.instance.created_by = self.user.agent
         self.instance.created_by_structure = self.user.agent.structure
         # Force setting object_id after Message instance was saved
-        self.instance.content_object = self.message
+        self.instance.content_object = self.related_to
         return super().save(commit)
 
-    class Meta:
-        model = Document
-        fields = ["id", "nom", "document_type", "description", "file"]
+    class Meta(BaseDocumentUploadForm.Meta):
+        pass
 
 
 class DocumentEditForm(DSFRForm, forms.ModelForm):
