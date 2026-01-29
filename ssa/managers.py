@@ -46,6 +46,20 @@ class EvenementProduitQueryset(EvenementBaseQueryset):
             "precision_danger",
         )
 
+    def optimized_for_list(self):
+        return self.only(
+            "id",
+            "numero_annee",
+            "numero_evenement",
+            "createur_id",
+            "description",
+            "categorie_danger",
+            "type_evenement",
+            "date_creation",
+            "etat",
+            "categorie_produit",
+        )
+
 
 class EvenementProduitManager(models.Manager):
     def get_queryset(self):
@@ -68,6 +82,18 @@ class InvestigationCasHumainQueryset(EvenementBaseQueryset):
             "evaluation",
             "etablissements__raison_sociale",
             "etablissements__enseigne_usuelle",
+        )
+
+    def optimized_for_list(self):
+        return self.only(
+            "id",
+            "numero_annee",
+            "numero_evenement",
+            "createur_id",
+            "description",
+            "categorie_danger",
+            "date_creation",
+            "etat",
         )
 
 
