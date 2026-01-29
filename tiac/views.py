@@ -15,6 +15,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from docxtpl import DocxTemplate
+from reversion.models import Version
 
 from core.diffs import create_manual_version
 from core.mixins import (
@@ -144,6 +145,11 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
 
         self.object = super().get_object(queryset)
         return self.object
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
+        return kwargs
 
     def form_valid(self, form):
         self.object_was_draft = form.instance.is_draft
@@ -504,6 +510,11 @@ class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
             if self.object_was_draft and not self.object.is_draft
             else "L’évènement a été mis à jour avec succès."
         )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
+        return kwargs
 
 
 class InvestigationTiacDetailView(

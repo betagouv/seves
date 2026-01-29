@@ -582,7 +582,7 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     def _submit(self, locator: Locator, *, wait_for=None):
         wait_for = wait_for or "/details/"
         locator.click()
-        self.page.wait_for_url(f"**{wait_for}")
+        self.page.wait_for_url(f"**{wait_for}**")
 
     def submit_as_draft(self, *, wait_for=None):
         self._submit(self.page.locator('button[value="draft"]'), wait_for=wait_for)
