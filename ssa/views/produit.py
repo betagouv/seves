@@ -136,7 +136,7 @@ class EvenementProduitDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        contact = self.request.user.agent.structure.contact_set.get()
+        contact = self.request.user.agent.structure.contact_set.all()[0]
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
