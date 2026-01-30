@@ -178,14 +178,14 @@ class FinSuiviContact(models.Model):
     def _can_change_fin_de_suivi(cls, object, user, contact):
         if not hasattr(object, "contacts"):
             return False
-        if not object.contacts.filter(id=contact.id).exists():
+        if contact not in object.contacts.all():
             return False
         if not object.can_user_access(user):
             return False
 
     @classmethod
     def can_add_fin_de_suivi(cls, object, user):
-        contact = user.agent.structure.contact_set.get()
+        contact = user.agent.structure.contact_set.all()[0]
         content_type = ContentType.objects.get_for_model(object).id
         can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
         if can_change_fin_de_suivi is False:
@@ -197,7 +197,7 @@ class FinSuiviContact(models.Model):
 
     @classmethod
     def can_remove_fin_de_suivi(cls, object, user):
-        contact = user.agent.structure.contact_set.get()
+        contact = user.agent.structure.contact_set.all()[0]
         content_type = ContentType.objects.get_for_model(object).id
         can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
         if can_change_fin_de_suivi is False:
