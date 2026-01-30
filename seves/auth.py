@@ -101,6 +101,7 @@ class CustomOIDCBackend(OIDCAuthenticationBackend):
             return (
                 self.UserModel.objects.filter(pk=user_id)
                 .select_related("agent", "agent__structure")
+                .prefetch_related("agent__structure__contact_set")
                 .prefetch_related("groups")
                 .first()
             )

@@ -135,7 +135,7 @@ class WithMessageMixin:
         message_filter = MessageFilter(self.request.GET, queryset=message_list)
         contact_agent = None
         if message_filter.qs:
-            contact_agent = self.request.user.agent.contact_set.get()
+            contact_agent = self.request.user.agent.contact_set.all()[0]
         for message in message_filter.qs:
             message.can_be_deleted = message.can_agent_delete(contact_agent)
         context["message_filter"] = message_filter
@@ -159,7 +159,7 @@ class WithContactFormsInContextMixin:
 
 class WithContactQuerysetMixin:
     def get_agents(self, obj):
-        return obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
+        return obj.contacts.agents_only().select_related("agent__structure").order_by_structure_and_name()
 
     def get_structures(self, obj):
         return obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
