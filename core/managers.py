@@ -79,7 +79,11 @@ class ContactQueryset(QuerySet):
                     groups.add(settings.SV_GROUP)
                 case "ssa":
                     groups.add(settings.SSA_GROUP)
-        return self.filter(Q(agent__user__groups__name__in=groups) | Q(structure__agent__user__groups__name__in=groups))
+        return self.filter(
+            Q(agent__user__groups__name__in=groups)
+            | Q(structure__agent__user__groups__name__in=groups)
+            | Q(structure__force_can_be_contacted=True)
+        ).distinct()
 
     def get_mus(self):
         return self.get(structure__niveau2=MUS_STRUCTURE)
@@ -150,7 +154,7 @@ class LienLibreQueryset(QuerySet):
 
 class StructureQueryset(QuerySet):
     def has_at_least_one_active_contact(self):
-        return self.filter(agent__user__is_active=True).distinct()
+        return self.filter(Q(agent__user__is_active=True) | Q(force_can_be_contacted=True))
 
     def can_be_contacted_and_agent_has_group(self, group):
         return (
@@ -163,12 +167,10 @@ class StructureQueryset(QuerySet):
         )
 
     def can_be_contacted(self):
-        return (
-            self.has_at_least_one_active_contact()
-            .exclude(niveau1=SERVICE_ACCOUNT_NAME)
-            .exclude(niveau1=SEVES_STRUCTURE)
-            .exclude(contact__email="")
-        )
+        base_qs = self.exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(niveau1=SEVES_STRUCTURE).exclude(contact__email="")
+        structures = base_qs.has_at_least_one_active_contact()
+        forced_structures = base_qs.filter(force_can_be_contacted=True)
+        return (structures | forced_structures).distinct()
 
     def only_DD(self):
         return self.filter(libelle__startswith="DD").can_be_contacted()
