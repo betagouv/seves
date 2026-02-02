@@ -1,15 +1,16 @@
-{% load dsfr_tags stimulus widget_tweaks %}
+{% load dsfr_tags partials stimulus widget_tweaks %}
 
 <div
     data-controller="document-formset"
     data-document-formset-next-url-value="{{ formset.next_url }}"
+    data-document-formset-generic-error-value="Vous pouvez consulter ci-dessous les fichiers problématiques (intitulé en rouge) avant de réessayer."
     data-document-formset-dragging-class="document-upload-drag-drop--dragging"
-    data-document-formset-disabled-class="document-upload-drag-drop--disabled"
+    data-document-formset-upload-disabled-class="document-upload-drag-drop--disabled"
     data-document-formset-loading-class="document-modal--loading"
     data-document-formset-allowed-extensions-value="{{ formset.allowed_extensions_per_document_type }}"
     data-document-formset-document-form-outlet="[data-controller='document-form']"
 >
-    <template data-document-formset-target="messagesTpl">
+    <template data-document-formset-target="successMessageTpl">
         <div
             id="document-upload-messages"
             class="fr-alert fr-alert--success fr-alert--sm"
@@ -119,17 +120,38 @@
                                     </p>
                                 </div>
 
-                                <section
-                                    class="document-upload-drag-drop--accordion-container"
-                                    data-document-formset-target="formsetContainer"
-                                >
-                                    {% for form in formset %}
-                                        {{ form }}
-                                    {% endfor %}
+                                <section class="fr-mx-8v">
+                                    <div
+                                        class="fr-alert fr-alert--error fr-mb-6v"
+                                        data-document-formset-target="errorContainer"
+                                        data-controller="dismissable-alert"
+                                        data-dismissable-alert-hide="true"
+                                        {% if not form.errors %}hidden{% endif %}
+                                    >
+                                        <h3 class="fr-alert__title">Le formulaire contient des erreurs.</h3>
+                                        <p>
+                                            Vous pouvez consulter ci-dessous les fichiers problématiques
+                                            (intitulé en rouge) avant de réessayer.
+                                        </p>
+                                        <button
+                                            type="button" class="fr-btn--close fr-btn" title="Masquer le message"
+                                            data-dismissable-alert-target="close"
+                                        >
+                                            Masquer le message
+                                        </button>
+                                    </div>
+                                    <div
+                                        class="document-upload-drag-drop--accordion-container"
+                                        data-document-formset-target="formsetContainer"
+                                    >
+                                        {% for form in formset %}
+                                            {{ form }}
+                                        {% endfor %}
+                                    </div>
                                 </section>
                             </section>
 
-                            <section class="fr-btns-group fr-btns-group--inline  fr-btns-group--right fr-btns-group--icon-left fr-mt-6v fr-mb-n4v">
+                            <section class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-btns-group--icon-left fr-mt-6v fr-mb-n4v">
                                 <button
                                     class="fr-btn"
                                     type="submit"

@@ -5,30 +5,10 @@
     data-controller="document-form"
     {% if not form.instance.pk %}data-document-form-file-id-value="__file_id__"{% endif %}
     data-document-form-loading-class="loading"
+    data-document-form-error-class="error"
+    data-document-form-document-formset-outlet="[data-controller='document-formset']"
 >
     {% partialdef form_content inline %}
-        <div data-document-form-target="errorContainer">
-            {% if form.errors %}
-                <div class="fr-m-4v fr-input-group fr-input-group--error">
-                    {% if form.non_field_errors %}
-                        {{ form.non_field_errors }}
-                    {% else %}
-                        <ul class="errorlist nonfield">
-                            <li class="fr-error-text">Il y a une erreur dans ce formulaire</li>
-                        </ul>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            <template data-document-form-target="errorTpl">
-                <div class="fr-m-4v fr-input-group fr-input-group--error">
-                    <ul class="errorlist nonfield">
-                        <li class="fr-error-text">__error__</li>
-                    </ul>
-                </div>
-            </template>
-        </div>
-
         <section class="document-upload-accordion fr-accordion" data-testid="document-upload">
             <div class="fr-accordion__title">
                 <div class="document-upload-accordion__label">
@@ -82,5 +62,15 @@
                 </form>
             </div>
         </section>
+
+        <template data-document-form-target="networkErrorTpl">
+            <div id="id_nom-desc-error">
+                <ul class="errorlist">
+                    <li class="fr-error-text">
+                        Il y a eu un problème réseau lors de la soumission du document ; veuillez réessayer.
+                    </li>
+                </ul>
+            </div>
+        </template>
     {% endpartialdef %}
 </div>

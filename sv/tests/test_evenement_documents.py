@@ -17,6 +17,7 @@ from core.pages import WithDocumentsPage
 from core.tests.generic_tests.documents import (
     generic_test_cant_see_document_type_from_other_app,
     generic_test_can_add_document_to_evenement,
+    generic_test_document_modal_front_behavior,
 )
 from sv.factories import EvenementFactory
 from sv.models import Evenement
@@ -38,9 +39,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
 
-    document_page.modal_submit_btn.click()
-
-    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+    document_page.validate_document_modal(expect_error=True)
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text(
@@ -67,9 +66,7 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
         file.write("<script>alert('Hello');</script>")
 
     document_page.add_basic_document(document=settings.BASE_DIR / "test.csv", close=False)
-    document_page.modal_submit_btn.click()
-
-    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+    document_page.validate_document_modal(expect_error=True)
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text("Type de fichier non autorisé: text/html")
@@ -443,9 +440,7 @@ def test_document_upload_exceeding_max_size_shows_validation_error_and_prevents_
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.COMPTE_RENDU_REUNION)
 
-    document_page.modal_submit_btn.click()
-
-    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+    document_page.validate_document_modal(expect_error=True)
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text("La taille du fichier ne doit pas dépasser 15Mo")
@@ -585,9 +580,8 @@ def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_s
     document_page.add_basic_document(document=settings.BASE_DIR / "test.txt", close=False)
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.CARTOGRAPHIE)
-    document_page.modal_submit_btn.click()
 
-    expect(page.get_by_text("Il y a une erreur dans ce formulaire")).to_be_visible()
+    document_page.validate_document_modal(expect_error=True)
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text(
@@ -661,3 +655,8 @@ def test_cant_see_document_from_message_with_brouillon_status(live_server, page:
 def test_cant_see_document_type_from_other_app(live_server, page: Page, check_select_options_from_element):
     evenement = EvenementFactory()
     generic_test_cant_see_document_type_from_other_app(live_server, page, check_select_options_from_element, evenement)
+
+
+def test_document_modal_front_behavior(live_server, page: Page):
+    evenement = EvenementFactory()
+    generic_test_document_modal_front_behavior(live_server, page, evenement)
