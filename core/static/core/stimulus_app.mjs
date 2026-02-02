@@ -1,4 +1,4 @@
-import {Application as StimulusApp} from "Stimulus";
+import {Application as StimulusApp, Controller} from "Stimulus";
 
 // Drop when adoption is 99%; see https://caniuse.com/wf-promise-withresolvers
 if(typeof Promise.withResolvers !== "function") {
@@ -81,8 +81,32 @@ class FetchPool {
  */
 const fetchPool = FetchPool.createFetchPool()
 
+/** @param {HTMLElement} closeTarget */
+class AlertController extends Controller {
+    static targets = ["close"]
+
+    /**@param {HTMLElement} target */
+    closeTargetConnected(target) {
+        const action = `click->${this.identifier}#onClose`
+        const previous = target.dataset.action
+        if(previous === undefined || !previous.includes(action)) {
+            target.dataset.action = `${previous} ${action}`.trim()
+        }
+    }
+
+    /** @param {Event} evt */
+    onClose(evt) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        this.element.remove()
+    }
+}
+
 const Application = new StimulusApp();
 /** @type {Promise<StimulusApp>} */
-const applicationReady = Application.start().then(() => Application)
+const applicationReady = Application.start().then(() => {
+    Application.register("dismissable-alert", AlertController)
+    return Application
+})
 
 export {applicationReady, dsfrDisclosePromise, fetchPool}

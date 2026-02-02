@@ -5,7 +5,7 @@ import {createStore, useStore} from "StimulusStore"
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
-const LOCAL_STORAGE_MESSAGES_KEY = "document-formset-messages"
+const STORAGE_DOCUMENT_SUCCESS = "STORAGE_DOCUMENT_SUCCESS"
 
 const globalFileTypeIndexStore = createStore({
     name: "globalFileTypeIndex",
@@ -51,6 +51,7 @@ const allowedExtensionsStore = createStore({
  * @property {String} nextUrlValue
  *
  * @property {HTMLDialogElement} modalTarget
+ * @property {HTMLTemplateElement} messagesTplTarget
  * @property {HTMLTemplateElement} emptyFormTplTarget
  * @property {HTMLElement} formsetContainerTarget
  * @property {HTMLElement} allowedExtensionsTarget
@@ -74,6 +75,7 @@ class DocumentFormset extends Controller {
     }
     static targets = [
         "modal",
+        "messagesTpl",
         "emptyFormTpl",
         "formsetContainer",
         "fileType",
@@ -84,15 +86,19 @@ class DocumentFormset extends Controller {
     static classes = ["disabled", "dragging", "loading"]
     static outlets = ["document-form"]
 
+    get messagesContainer() {
+        return document.querySelector("#tabpanel-documents-panel .document-messages")
+    }
+
     initialize() {
         useStore(this)
+        const dataAction = this.element.getAttribute("data-action") || ""
+        this.element.setAttribute("data-action", `${dataAction} storage@window->${this.identifier}#onStorage`.trim())
     }
 
     connect() {
-        document.querySelector("#tabpanel-documents-panel .document-messages").insertAdjacentHTML(
-            "beforeend", localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY) || ""
-        )
-        localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY)
+        this.processStorage(JSON.parse(sessionStorage[STORAGE_DOCUMENT_SUCCESS] || "[]"))
+        delete sessionStorage[STORAGE_DOCUMENT_SUCCESS]
     }
 
     getNextId() {
@@ -124,7 +130,7 @@ class DocumentFormset extends Controller {
         this.disabledValue = value === ""
         const optionIdx = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
         this.setGlobalFileTypeIndexValue(optionIdx)
-        this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[optionIdx] || ""
+        this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[value || ""]
     }
 
     onDragEnter() {
@@ -183,6 +189,13 @@ class DocumentFormset extends Controller {
         }
     }
 
+    onStorage({key, newValue}) {
+        if(key === STORAGE_DOCUMENT_SUCCESS) {
+            this.messagesContainer.innerHTML = ""
+            this.processStorage(JSON.parse(newValue))
+        }
+    }
+
     /** @param {FileList} files */
     processFiles(files) {
         for(const file of files) {
@@ -197,6 +210,13 @@ class DocumentFormset extends Controller {
         // Disable dragging style if needed
         this.onDragLeave()
     }
+
+    /** @param {String[]} names */
+    processStorage(names) {
+        if(names.length === 0) return;
+        const messages = names.reduce((previousValue, name) => `${previousValue}<li>${name}</li>`, "")
+        this.messagesContainer.insertAdjacentHTML("beforeend", this.messagesTplTarget.innerHTML.replace("__html__", messages))
+    }
 }
 
 /**
@@ -206,6 +226,7 @@ class DocumentFormset extends Controller {
  * @property {Number} fileIdValue
  * @property {HTMLElement} errorContainerTarget
  * @property {HTMLTemplateElement} errorTplTarget
+ * @property {HTMLScriptElement} errorDictTarget
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
@@ -224,6 +245,7 @@ class DocumentForm extends Controller {
     static targets = [
         "errorContainer",
         "errorTpl",
+        "errorDict",
         "form",
         "documentFile",
         "documentName",
@@ -292,16 +314,22 @@ class DocumentForm extends Controller {
                 {method: this.formTarget.method, body: new FormData(this.formTarget)}
             )
             if(result.ok || result.status === 400) {
-                const tmpNode = document.createElement("div")
-                tmpNode.innerHTML = await result.text()
-                this.element.innerHTML = tmpNode.querySelector(`[data-controller="${this.identifier}"]`).innerHTML
-
-                // Storing messages until reload
-                for(const msgNode of tmpNode.querySelectorAll(".document-messages")) {
-                    const previous = localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY) || ""
-                    localStorage.setItem(LOCAL_STORAGE_MESSAGES_KEY, previous + msgNode.innerHTML)
-                    msgNode.remove()
+                if(result.ok) {
+                    const oldValue = sessionStorage[STORAGE_DOCUMENT_SUCCESS]
+                    const parsed = new Set(JSON.parse(oldValue || "[]"))
+                    parsed.add(this.documentNameTarget.value.trim())
+                    sessionStorage[STORAGE_DOCUMENT_SUCCESS] = JSON.stringify(Array.from(parsed))
+                    window.dispatchEvent(
+                        new StorageEvent("storage", {
+                            key: STORAGE_DOCUMENT_SUCCESS,
+                            oldValue,
+                            newValue: sessionStorage[STORAGE_DOCUMENT_SUCCESS],
+                            storageArea: sessionStorage
+                        })
+                    )
                 }
+
+                this.element.innerHTML = await result.text()
             }
             return result.status
         } catch(e) {
