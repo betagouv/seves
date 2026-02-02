@@ -7,6 +7,12 @@ const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
 const STORAGE_DOCUMENT_SUCCESS = "STORAGE_DOCUMENT_SUCCESS"
 
+const DOCUMENT_STATE = Object.freeze({
+    IDLE: 1,
+    LOADING: 2,
+    ERROR: 3,
+})
+
 const globalFileTypeIndexStore = createStore({
     name: "globalFileTypeIndex",
     type: Number,
@@ -24,6 +30,8 @@ const allowedExtensionsStore = createStore({
     type: Object,
     initialValue: {},
 });
+
+const FormValidationError = Error("invalid")
 
 /** @typedef {Object<String, FileMeta>} FileStoreStruct */
 
@@ -46,12 +54,16 @@ const allowedExtensionsStore = createStore({
 /**
  * @extends StorePropertiesType
  *
- * @property {Boolean} disabledValue
+ * @property {Number} stateValue
+ * @property {Boolean} uploadDisabledValue
  * @property {Object} allowedExtensionsValue
  * @property {String} nextUrlValue
+ * @property {String} genericErrorValue
  *
+ * @property {HTMLElement} errorContainerTarget
+ * @property {HTMLTemplateElement} errorMessageTplTarget
  * @property {HTMLDialogElement} modalTarget
- * @property {HTMLTemplateElement} messagesTplTarget
+ * @property {HTMLTemplateElement} successMessageTplTarget
  * @property {HTMLTemplateElement} emptyFormTplTarget
  * @property {HTMLElement} formsetContainerTarget
  * @property {HTMLElement} allowedExtensionsTarget
@@ -60,7 +72,7 @@ const allowedExtensionsStore = createStore({
  * @property {HTMLButtonElement} submitBtnTarget
  *
  * @property {String[]} draggingClasses
- * @property {String[]} disabledClasses
+ * @property {String[]} uploadDisabledClasses
  * @property {String[]} loadingClasses
  *
  * @property {DocumentForm[]} documentFormOutlets
@@ -69,13 +81,16 @@ class DocumentFormset extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
 
     static values = {
-        disabled: {type: Boolean, default: true},
+        state: {type: Number, default: DOCUMENT_STATE.IDLE},
+        uploadDisabled: {type: Boolean, default: true},
         allowedExtensions: Object,
         nextUrl: String,
+        genericError: String
     }
     static targets = [
+        "successMessageTpl",
+        "errorContainer",
         "modal",
-        "messagesTpl",
         "emptyFormTpl",
         "formsetContainer",
         "fileType",
@@ -83,7 +98,7 @@ class DocumentFormset extends Controller {
         "submitBtn",
         "documentModalDragDropContainer",
     ]
-    static classes = ["disabled", "dragging", "loading"]
+    static classes = ["uploadDisabled", "dragging", "loading"]
     static outlets = ["document-form"]
 
     get messagesContainer() {
@@ -92,12 +107,10 @@ class DocumentFormset extends Controller {
 
     initialize() {
         useStore(this)
-        const dataAction = this.element.getAttribute("data-action") || ""
-        this.element.setAttribute("data-action", `${dataAction} storage@window->${this.identifier}#onStorage`.trim())
     }
 
     connect() {
-        this.processStorage(JSON.parse(sessionStorage[STORAGE_DOCUMENT_SUCCESS] || "[]"))
+        this.processSuccessMessages()
         delete sessionStorage[STORAGE_DOCUMENT_SUCCESS]
     }
 
@@ -117,17 +130,34 @@ class DocumentFormset extends Controller {
         this.setAllowedExtensionsValue(value)
     }
 
-    disabledValueChanged(value) {
-        this.submitBtnTarget.disabled = value
-        if(value) {
-            this.documentModalDragDropContainerTarget.classList.add(...this.disabledClasses)
+    stateValueChanged(state) {
+        this.modalTarget.classList.remove(...this.loadingClasses)
+        this.submitBtnTarget.disabled = false
+        this.errorContainerTarget.hidden = true
+
+        if(state === DOCUMENT_STATE.LOADING) {
+            this.modalTarget.classList.add(...this.loadingClasses)
+            this.submitBtnTarget.disabled = true
+        } else if(state === DOCUMENT_STATE.ERROR) {
+            this.errorContainerTarget.hidden = false
+        }
+    }
+
+    uploadDisabledValueChanged(value) {
+        if(this.documentFormOutlets.length === 0) {
+            this.submitBtnTarget.disabled = value
         } else {
-            this.documentModalDragDropContainerTarget.classList.remove(...this.disabledClasses)
+            this.submitBtnTarget.disabled = false
+        }
+        if(value) {
+            this.documentModalDragDropContainerTarget.classList.add(...this.uploadDisabledClasses)
+        } else {
+            this.documentModalDragDropContainerTarget.classList.remove(...this.uploadDisabledClasses)
         }
     }
 
     onChangeType({target: {options, value}}) {
-        this.disabledValue = value === ""
+        this.uploadDisabledValue = value === ""
         const optionIdx = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
         this.setGlobalFileTypeIndexValue(optionIdx)
         this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[value || ""]
@@ -163,41 +193,50 @@ class DocumentFormset extends Controller {
 
     onModalClose() {
         this.formsetContainerTarget.innerHTML = ""
+        this.errorContainerTarget.hidden = true
+        this.processSuccessMessages()
     }
 
     async onSubmit() {
         try {
-            this.disabledValue = true
-            this.modalTarget.classList.add(...this.loadingClasses)
-            const statusCodes = await Promise.all(this.documentFormOutlets.map(controller => controller.submit()))
+            this.stateValue = DOCUMENT_STATE.LOADING
 
-            // Redirect only if all requests where successful
-            if(statusCodes.filter(status => status < 200 || status >= 300).length === 0) {
-                const nextURL = URL.parse(this.nextUrlValue, window.location.origin)
-                window.location.href = this.nextUrlValue
-                dsfr(this.modalTarget).modal.conceal()
-                if(nextURL.pathname === window.location.pathname) {
-                    // Force reload if we're on the same path otherwise browser won't trigger an HTTP query
-                    window.location.reload()
+            let hasErrors = false
+            let successMessage = ""
+            const promiseResults = await Promise.allSettled(this.documentFormOutlets.map(controller => controller.submit()))
+            for(const promiseResult of promiseResults) {
+                if(promiseResult.status === "fulfilled") {
+                    successMessage = `${successMessage}<li>${promiseResult.value}</li>`
+                } else {
+                    hasErrors = true
                 }
             }
-        } catch(_) {
-            /* Do nothing */
-        } finally {
-            this.disabledValue = false
-            this.modalTarget.classList.remove(...this.loadingClasses)
-        }
-    }
 
-    onStorage({key, newValue}) {
-        if(key === STORAGE_DOCUMENT_SUCCESS) {
-            this.messagesContainer.innerHTML = ""
-            this.processStorage(JSON.parse(newValue))
+            sessionStorage[STORAGE_DOCUMENT_SUCCESS] = successMessage
+
+            if(hasErrors) {
+                throw FormValidationError
+            }
+
+            this.stateValue = DOCUMENT_STATE.IDLE
+
+            // Redirect only if all requests where successful
+            const nextURL = URL.parse(this.nextUrlValue, window.location.origin)
+            window.location.href = this.nextUrlValue
+            dsfr(this.modalTarget).modal.conceal()
+            if(nextURL.pathname === window.location.pathname) {
+                // Force reload if we're on the same path otherwise browser won't trigger an HTTP query
+                window.location.reload()
+            }
+        } catch(_) {
+            this.stateValue = DOCUMENT_STATE.ERROR
         }
     }
 
     /** @param {FileList} files */
     processFiles(files) {
+        if(this.uploadDisabledValue) return;
+
         for(const file of files) {
             const nextId = this.getNextId()
             this.setFilesValue(value => ({...value, [nextId]: file}))
@@ -211,11 +250,11 @@ class DocumentFormset extends Controller {
         this.onDragLeave()
     }
 
-    /** @param {String[]} names */
-    processStorage(names) {
-        if(names.length === 0) return;
-        const messages = names.reduce((previousValue, name) => `${previousValue}<li>${name}</li>`, "")
-        this.messagesContainer.insertAdjacentHTML("beforeend", this.messagesTplTarget.innerHTML.replace("__html__", messages))
+    processSuccessMessages() {
+        const html = sessionStorage[STORAGE_DOCUMENT_SUCCESS]
+        if((typeof html) == "string" && html.length > 0) {
+            this.messagesContainer.innerHTML = this.successMessageTplTarget.innerHTML.replace("__html__", html)
+        }
     }
 }
 
@@ -224,9 +263,7 @@ class DocumentFormset extends Controller {
  *
  * @property {HTMLElement} element
  * @property {Number} fileIdValue
- * @property {HTMLElement} errorContainerTarget
- * @property {HTMLTemplateElement} errorTplTarget
- * @property {HTMLScriptElement} errorDictTarget
+ * @property {Number} stateValue
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
@@ -235,17 +272,18 @@ class DocumentFormset extends Controller {
  * @property {HTMLElement} accordionTitleTarget
  * @property {HTMLElement} accordionTypeLabelTarget
  * @property {HTMLElement} accordionContentTarget
- * @property {HTMLInputElement} deleteTarget
- * @property {HTMLElement} successMessageTarget
+ * @property {HTMLTemplateElement} networkErrorTplTarget
  * @property {String[]} loadingClasses
+ * @property {String[]} errorClasses
+ * @property {DocumentFormset} documentFormsetOutlet
  */
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
-    static values = {fileId: {type: Number, default: -1}}
+    static values = {
+        fileId: {type: Number, default: -1},
+        state: {type: Number, default: DOCUMENT_STATE.IDLE},
+    }
     static targets = [
-        "errorContainer",
-        "errorTpl",
-        "errorDict",
         "form",
         "documentFile",
         "documentName",
@@ -253,23 +291,22 @@ class DocumentForm extends Controller {
         "accordionTitle",
         "accordionTypeLabel",
         "accordionContent",
-        "delete",
+        "networkErrorTpl"
     ]
-    static classes = ["loading"]
-
-    /** @return {DocumentFormset} */
-    get formset() {
-        if(this._formset === undefined) {
-            this._formset = this.application.getControllerForElementAndIdentifier(
-                document.querySelector(`[data-controller="${DOCUMENT_FORMSET_ID}"]`), DOCUMENT_FORMSET_ID
-            )
-        }
-
-        return this._formset
-    }
+    static classes = ["loading", "error"]
+    static outlets = ["document-formset"]
 
     initialize() {
         useStore(this)
+    }
+
+    stateValueChanged(state) {
+        this.element.classList.remove(...this.loadingClasses, ...this.errorClasses)
+        if(state === DOCUMENT_STATE.LOADING) {
+            this.element.classList.add(...this.loadingClasses)
+        } else if(state === DOCUMENT_STATE.ERROR) {
+            this.element.classList.add(...this.errorClasses)
+        }
     }
 
     /** @param {HTMLFormElement} form */
@@ -303,43 +340,40 @@ class DocumentForm extends Controller {
         el.dispatchEvent(new Event("input"))
     }
 
+    /** @return {Promise<string>} Returns the name of the document that was successfully uploaded */
     async submit() {
-        if(!this.formTarget.reportValidity()) throw "invalid"
+        if(!this.formTarget.reportValidity()) throw FormValidationError
 
         try {
-            this.element.classList.add(...this.loadingClasses)
+            this.stateValue = DOCUMENT_STATE.LOADING
             /** @type {Response} */
             const result = await fetchPool(
                 this.formTarget.action,
                 {method: this.formTarget.method, body: new FormData(this.formTarget)}
             )
-            if(result.ok || result.status === 400) {
-                if(result.ok) {
-                    const oldValue = sessionStorage[STORAGE_DOCUMENT_SUCCESS]
-                    const parsed = new Set(JSON.parse(oldValue || "[]"))
-                    parsed.add(this.documentNameTarget.value.trim())
-                    sessionStorage[STORAGE_DOCUMENT_SUCCESS] = JSON.stringify(Array.from(parsed))
-                    window.dispatchEvent(
-                        new StorageEvent("storage", {
-                            key: STORAGE_DOCUMENT_SUCCESS,
-                            oldValue,
-                            newValue: sessionStorage[STORAGE_DOCUMENT_SUCCESS],
-                            storageArea: sessionStorage
-                        })
-                    )
-                }
 
+            if(result.ok || result.status === 400) {
                 this.element.innerHTML = await result.text()
             }
-            return result.status
+
+            if(result.ok) {
+                this.stateValue = DOCUMENT_STATE.IDLE
+                return this.documentNameTarget.value.trim()
+            } else {
+                throw FormValidationError
+            }
         } catch(e) {
-            console.error(e)
-            this.errorContainerTarget.innerHTML = this.errorTplTarget.innerHTML.replace(
-                "__error__", "Il y a eu un problème réseau lors de la soumission du document ; veuillez réessayer."
-            )
+            this.stateValue = DOCUMENT_STATE.ERROR
+            if(e !== FormValidationError) {
+                console.error(e)
+                // TypeError means the request never reach the backend
+                // See https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch#exceptions
+                if(e instanceof TypeError) {
+                    this.documentNameTarget.insertAdjacentHTML("afterend", this.networkErrorTplTarget.innerHTML)
+                    this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
+                }
+            }
             throw e
-        } finally {
-            this.element.classList.remove(...this.loadingClasses)
         }
     }
 
@@ -348,8 +382,9 @@ class DocumentForm extends Controller {
         if(this.skipEvent === true) return;
         evt.preventDefault()
         evt.stopPropagation()
+        debugger
         await Promise.all([
-            dsfrDisclosePromise(dsfr(this.formset.modalTarget).modal),
+            dsfrDisclosePromise(dsfr(this.documentFormsetOutlet.modalTarget).modal),
             dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse),
         ])
         try {
@@ -389,7 +424,7 @@ class DocumentForm extends Controller {
         )
         this.accordionTypeLabelTarget.textContent = option.textContent
         if(this.hasDocumentFileTarget) {
-            this.documentFileTarget.accept = this.formset.allowedExtensionsValue[option.value]
+            this.documentFileTarget.accept = this.documentFormsetOutlet.allowedExtensionsValue[option.value]
         }
     }
 

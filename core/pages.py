@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
 
+import pytest
 from django.conf import settings
 from playwright.sync_api import Page, expect, Locator
 
@@ -36,10 +37,14 @@ class BaseDocumentPage(ABC):
     @property
     def get_existing_documents_title(self):
         cards = (
-            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
+            self.page.locator(self.container_id)
+            .get_by_test_id("document-card")
+            .get_by_test_id("document-card-title")
+            .filter(visible=True)
+            .all()
         )
-        texts = [cards.nth(i).inner_text() for i in range(cards.count())]
-        return [t for t in texts if t]
+
+        return [c.inner_text() for c in cards]
 
     @property
     def modal_submit_btn(self):
@@ -50,27 +55,43 @@ class BaseDocumentPage(ABC):
             self.page.get_by_test_id("add-document-btn").click()
             expect(self.document_modal).to_be_visible()
 
-    def validate_document_modal(self):
+    def validate_document_modal(self, *, expect_error=False):
         if self.document_modal.is_visible():
             self.modal_submit_btn.click()
-            expect(self.document_modal).not_to_be_visible()
+            if expect_error:
+                expect(self.document_modal).to_contain_text(
+                    "Le formulaire contient des erreurs. Vous pouvez consulter ci-dessous les fichiers problématiques "
+                    "(intitulé en rouge) avant de réessayer.",
+                    use_inner_text=True,
+                )
+            else:
+                expect(self.document_modal).not_to_be_visible()
+        elif expect_error:
+            pytest.fail("Modal is expected to generate an error but it is already closed")
 
     def close_document_modal_no_validate(self):
         if self.document_modal.is_visible():
             self.page.locator("#document-modal").get_by_role("button", name="Fermer").click()
             expect(self.document_modal).not_to_be_visible()
 
+    def set_global_document_type(self, select_option: str):
+        self.page.locator("#document-upload-type-all").locator("visible=true").select_option(select_option)
+
+    def set_input_file(self, document: str | Path):
+        document = Path(document).resolve()
+        self.page.get_by_test_id("filechooser-link").set_input_files(document)
+        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
+        self.page.get_by_test_id("filechooser-link").set_input_files([])
+
     def add_basic_document(self, suffix="", *, close=True, document: Path | str | None = None):
         self.open_document_modal()
 
         # Open file chooser and select file
-        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
+        self.set_global_document_type("Autre document")
 
         document = Path(document or settings.BASE_DIR / "static/images/login.jpeg").resolve()
         document_name = document.name
-        self.page.get_by_test_id("filechooser-link").set_input_files(document)
-        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
-        self.page.get_by_test_id("filechooser-link").set_input_files([])
+        self.set_input_file(document)
 
         # Open modification accordion
         accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
@@ -298,21 +319,25 @@ class UpdateMessagePage(BaseMessagePage):
 
 class WithDocumentsPage(BaseDocumentPage):
     @property
+    def container_id(self):
+        return "#tabpanel-documents-panel"
+
+    @property
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter des documents")
 
     def open_document_tab(self):
-        if not self.page.locator("#tabpanel-documents-panel").is_visible():
+        if not self.page.locator(self.container_id).is_visible():
             self.page.get_by_test_id("documents").click()
-            expect(self.page.locator("#tabpanel-documents-panel")).to_be_visible()
+            expect(self.page.locator(self.container_id)).to_be_visible()
 
     def open_contact_tab(self):
         self.page.get_by_test_id("contacts").click()
         expect(self.page.locator("#tabpanel-contacts-panel")).to_be_visible()
 
-    def add_basic_document(self, suffix="", *, close=True, document=None):
+    def open_document_modal(self):
         self.open_document_tab()
-        super().add_basic_document(suffix, close=close, document=document)
+        super().open_document_modal()
 
     def open_edit_document(self, doc_id):
         self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{doc_id}"]').click()
