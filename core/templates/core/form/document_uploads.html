@@ -9,23 +9,23 @@
     data-document-formset-allowed-extensions-value="{{ formset.allowed_extensions_per_document_type }}"
     data-document-formset-document-form-outlet="[data-controller='document-form']"
 >
-    <template data-document-formset-target="validatedSectionTpl">
+    <template data-document-formset-target="messagesTpl">
         <div
-            class="document-card"
-            data-controller="document-validated"
-            data-testid="document-card"
+            id="document-upload-messages"
+            class="fr-alert fr-alert--success fr-alert--sm"
+            data-controller="dismissable-alert"
         >
-            <span
-                class="document-title"
-                data-document-validated-target="title"
-                data-testid="document-card-title"
-            ></span>
+            <h3 class="fr-alert__title">
+                Les fichiers suivants ont été ajoutés avec succès et seront disponibles après l'analyse antivirus :
+            </h3>
+            <ul>__html__</ul>
             <button
+                title="Masquer le message"
                 type="button"
-                class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
-                data-action="document-validated#onDelete:stop:prevent"
-                data-testid="document-delete-btn"
-            >Supprimer
+                class="fr-btn--close fr-btn"
+                data-dismissable-alert-target="close"
+            >
+                Masquer le message
             </button>
         </div>
     </template>

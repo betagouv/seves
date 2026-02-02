@@ -115,7 +115,7 @@ fileignoreconfig:
 - filename: tiac/tests/test_models.py
   checksum: 8ed9899d25e3fb10db5712869ed918e46ba4d749ed8270b1203fb0f6480925b6
 - filename: core/static/core/form/document_uploads.mjs
-  checksum: 9a817115e4a16b1bca9ece3de179dca152bb876d74a6d200c22fb13882728015
+  checksum: ca4f8573158b1f2853e9cc2916f6e0d6bc978220006f4e767b5dfe40ebac74b4
 - filename: tiac/tests/test_investigation_history.py
   checksum: 9a8f61ba3909f3c00b796f0fb4e66f4f6374aad4371f8a0e8395e444e64c32ea
 - filename: core/migrations/0048_alter_document_document_type.py

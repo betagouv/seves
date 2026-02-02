@@ -52,7 +52,7 @@ class DocumentUploadView(
     PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView
 ):
     form_class = DocumentUploadForm
-    template_name = "core/document_upload.html"
+    template_name = "core/form/document_upload.html#form_content"
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -85,11 +85,6 @@ class DocumentUploadView(
     def form_valid(self, form):
         form.save()
         self.add_user_contacts(self.fiche_objet)
-        messages.success(
-            self.request,
-            f"Le document « {form.instance.nom} » a été ajouté avec succès, il sera disponible après l'analyse antivirus.",
-            extra_tags="core documents",
-        )
         return super().render_to_response(self.get_context_data(form=form))
 
 
