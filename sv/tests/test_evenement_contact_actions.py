@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect, Page
 
-from core.constants import MUS_STRUCTURE
+from core.constants import MUS_STRUCTURE, SEVES_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact
 from core.tests.generic_tests.contacts import (
@@ -332,6 +332,17 @@ def test_add_structure_form_service_account_is_hidden(live_server, page):
     page.get_by_role("tab", name="Contacts").click()
     page.query_selector("#add-contact-structure-form .choices").click()
     expect(page.get_by_text("service_account")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_add_structure_form_seves_is_hidden(live_server, page):
+    contact = ContactStructureFactory(structure__niveau1=SEVES_STRUCTURE, structure__libelle=SEVES_STRUCTURE)
+    ContactAgentFactory(with_active_agent__with_groups=[settings.SV_GROUP], agent__structure=contact.structure)
+    page.goto(f"{live_server.url}{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+
+    expect(page.get_by_text(SEVES_STRUCTURE)).not_to_be_visible()
 
 
 @pytest.mark.django_db

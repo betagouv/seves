@@ -5,7 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager, OuterRef, Subquery, Func, F, Exists
 from django.contrib.auth import get_user_model
 
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, SERVICE_ACCOUNT_NAME, SSA_STRUCTURES, TIAC_STRUCTURES
+from core.constants import (
+    MUS_STRUCTURE,
+    BSV_STRUCTURE,
+    SERVICE_ACCOUNT_NAME,
+    SSA_STRUCTURES,
+    TIAC_STRUCTURES,
+    SEVES_STRUCTURE,
+)
 
 User = get_user_model()
 
@@ -105,7 +112,9 @@ class ContactQueryset(QuerySet):
         return self.filter(structure__libelle__in=TIAC_STRUCTURES).prefetch_related("structure")
 
     def can_be_emailed(self):
-        return self.exclude_empty_emails().with_active_agent() | self.exclude_empty_emails().structures_only()
+        return self.exclude_empty_emails().with_active_agent().exclude(
+            agent__structure__niveau1=SEVES_STRUCTURE
+        ) | self.exclude_empty_emails().structures_only().exclude(structure__niveau1=SEVES_STRUCTURE)
 
     def order_by_structure_and_name(self):
         return self.order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
@@ -147,13 +156,19 @@ class StructureQueryset(QuerySet):
         return (
             self.has_at_least_one_active_contact()
             .exclude(niveau1=SERVICE_ACCOUNT_NAME)
+            .exclude(niveau1=SEVES_STRUCTURE)
             .exclude(contact__email="")
             .filter(agent__user__groups__name__in=[group])
             .distinct()
         )
 
     def can_be_contacted(self):
-        return self.has_at_least_one_active_contact().exclude(niveau1=SERVICE_ACCOUNT_NAME).exclude(contact__email="")
+        return (
+            self.has_at_least_one_active_contact()
+            .exclude(niveau1=SERVICE_ACCOUNT_NAME)
+            .exclude(niveau1=SEVES_STRUCTURE)
+            .exclude(contact__email="")
+        )
 
     def only_DD(self):
         return self.filter(libelle__startswith="DD").can_be_contacted()
