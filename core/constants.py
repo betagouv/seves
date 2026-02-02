@@ -8,6 +8,7 @@ from dsfr.enums import ExtendedChoices, enum_property
 AC_STRUCTURE = "AC/DAC/DGAL"
 MUS_STRUCTURE = "MUS"
 BSV_STRUCTURE = "SAS/SDSPV/BSV"
+SEVES_STRUCTURE = "Seves"
 SERVICE_ACCOUNT_NAME = "service_account"
 SV_DOMAIN = "Santé des végétaux"
 SSA_DOMAIN = "SSA (Produit & cas + TIAC & plaintes)"
