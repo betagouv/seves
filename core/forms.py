@@ -40,7 +40,7 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
-    file = forms.FileField(label="Ajouter un document")
+    file = forms.FileField(label="Ajouter un document", widget=forms.FileInput)
 
     @property
     def media(self):
@@ -76,7 +76,7 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
 
     class Meta:
         model = Document
-        fields = ["id", "nom", "document_type", "description", "file"]
+        fields = ["nom", "document_type", "description", "file"]
 
 
 class DocumentUploadForm(BaseDocumentUploadForm):

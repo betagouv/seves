@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 
@@ -53,6 +54,12 @@ class DocumentUploadView(
     form_class = DocumentUploadForm
     template_name = "core/document_upload.html"
 
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.document = None
+        with contextlib.suppress(Document.DoesNotExist):
+            self.document = self.fiche_objet.documents.get(pk=self.request.POST.get("id"))
+
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
         ModelClass = content_type.model_class()
@@ -69,6 +76,7 @@ class DocumentUploadView(
             "related_to": self.fiche_objet,
             "data": self.request.POST,
             "files": self.request.FILES,
+            "instance": self.document,
         }
 
     def form_invalid(self, form):

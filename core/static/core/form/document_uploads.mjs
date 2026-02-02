@@ -1,15 +1,53 @@
 import {Controller} from "Stimulus"
 import {applicationReady, dsfrDisclosePromise, fetchPool} from "Application"
+import {createStore, useStore} from "StimulusStore"
 
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
 const LOCAL_STORAGE_MESSAGES_KEY = "document-formset-messages"
 
+const globalFileTypeIndexStore = createStore({
+    name: "globalFileTypeIndex",
+    type: Number,
+    initialValue: 0,
+});
+
+const fileStore = createStore({
+    name: "files",
+    type: Object,
+    initialValue: {},
+});
+
+const allowedExtensionsStore = createStore({
+    name: "allowedExtensions",
+    type: Object,
+    initialValue: {},
+});
+
+/** @typedef {Object<String, FileMeta>} FileStoreStruct */
+
 /**
+ * @typedef {Object} StorePropertiesType
+ *
+ * @property {FileStoreStruct} filesValue
+ * @property {import("StimulusStore/dist/types/updateMethod").UpdateMethod} setFilesValue
+ * @property {function(FileStoreStruct): void} onFilesUpdate
+ *
+ * @property {Number} globalFileTypeIndexValue
+ * @property {import("StimulusStore/dist/types/updateMethod").UpdateMethod} setGlobalFileTypeIndexValue
+ * @property {function(Number): void} onGlobalFileTypeIndexUpdate
+ *
+ * @property {Number} allowedExtensionsValue
+ * @property {import("StimulusStore/dist/types/updateMethod").UpdateMethod} setAllowedExtensionsValue
+ * @property {function(Number): void} onAllowedExtensionsValueUpdate
+ */
+
+/**
+ * @extends StorePropertiesType
+ *
  * @property {Boolean} disabledValue
- * @property {Number} fileTypeIdxValue
- * @property {Object} allowedExtensionsPerDocumentTypeValue
+ * @property {Object} allowedExtensionsValue
  * @property {String} nextUrlValue
  *
  * @property {HTMLDialogElement} modalTarget
@@ -27,10 +65,11 @@ const LOCAL_STORAGE_MESSAGES_KEY = "document-formset-messages"
  * @property {DocumentForm[]} documentFormOutlets
  */
 class DocumentFormset extends Controller {
+    static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
+
     static values = {
         disabled: {type: Boolean, default: true},
-        fileTypeIdx: Number,
-        allowedExtensionsPerDocumentType: Object,
+        allowedExtensions: Object,
         nextUrl: String,
     }
     static targets = [
@@ -38,7 +77,6 @@ class DocumentFormset extends Controller {
         "emptyFormTpl",
         "formsetContainer",
         "fileType",
-        "fileTypeIdx",
         "allowedExtensions",
         "submitBtn",
         "documentModalDragDropContainer",
@@ -46,14 +84,31 @@ class DocumentFormset extends Controller {
     static classes = ["disabled", "dragging", "loading"]
     static outlets = ["document-form"]
 
-    connect() {
-        this.fileTypeTarget.dispatchEvent(new Event("change"))
-        this.cachedContainer = document.createElement("div")
+    initialize() {
+        useStore(this)
+    }
 
+    connect() {
         document.querySelector("#tabpanel-documents-panel .document-messages").insertAdjacentHTML(
             "beforeend", localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY) || ""
         )
         localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY)
+    }
+
+    getNextId() {
+        if(this._currentId === undefined) {
+            this._currentId = 0
+        }
+        return this._currentId++
+    }
+
+    /** @param {HTMLSelectElement} el */
+    fileTypeTargetConnected(el) {
+        el.dispatchEvent(new Event("change"))
+    }
+
+    allowedExtensionsValueChanged(value) {
+        this.setAllowedExtensionsValue(value)
     }
 
     disabledValueChanged(value) {
@@ -68,13 +123,8 @@ class DocumentFormset extends Controller {
     onChangeType({target: {options, value}}) {
         this.disabledValue = value === ""
         const optionIdx = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
-        const allowedExtensions = this.allowedExtensionsPerDocumentTypeValue[optionIdx]
-        if(allowedExtensions !== undefined) {
-            this.allowedExtensionsTarget.textContent = allowedExtensions
-        } else {
-            this.allowedExtensionsTarget.textContent = this.allowedExtensionsPerDocumentTypeValue[""]
-        }
-        this.fileTypeIdxValue = optionIdx
+        this.setGlobalFileTypeIndexValue(optionIdx)
+        this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[optionIdx] || ""
     }
 
     onDragEnter() {
@@ -111,7 +161,7 @@ class DocumentFormset extends Controller {
 
     async onSubmit() {
         try {
-            this.submitBtnTarget.disabled = true
+            this.disabledValue = true
             this.modalTarget.classList.add(...this.loadingClasses)
             const statusCodes = await Promise.all(this.documentFormOutlets.map(controller => controller.submit()))
 
@@ -125,8 +175,10 @@ class DocumentFormset extends Controller {
                     window.location.reload()
                 }
             }
+        } catch(_) {
+            /* Do nothing */
         } finally {
-            this.submitBtnTarget.disabled = false
+            this.disabledValue = false
             this.modalTarget.classList.remove(...this.loadingClasses)
         }
     }
@@ -134,21 +186,12 @@ class DocumentFormset extends Controller {
     /** @param {FileList} files */
     processFiles(files) {
         for(const file of files) {
-            this.cachedContainer.innerHTML = this.emptyFormTplTarget.innerHTML
-
-            /** @type {HTMLSelectElement} */
-            const documentTypeNode = this.cachedContainer.querySelector('[name$="document_type"]')
-            documentTypeNode.options[this.fileTypeIdxValue].selected = true
-
-            /** @type {HTMLInputElement} */
-            const fileNode = this.cachedContainer.querySelector('[name$="file"]')
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file)
-            fileNode.files = dataTransfer.files
-
-            for(const child of this.cachedContainer.children) {
-                this.formsetContainerTarget.insertAdjacentElement("beforeend", child)
-            }
+            const nextId = this.getNextId()
+            this.setFilesValue(value => ({...value, [nextId]: file}))
+            this.formsetContainerTarget.insertAdjacentHTML(
+                "beforeend",
+                this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId)
+            )
         }
 
         // Disable dragging style if needed
@@ -157,7 +200,12 @@ class DocumentFormset extends Controller {
 }
 
 /**
+ * @extends StorePropertiesType
+ *
  * @property {HTMLElement} element
+ * @property {Number} fileIdValue
+ * @property {HTMLElement} errorContainerTarget
+ * @property {HTMLTemplateElement} errorTplTarget
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
@@ -171,7 +219,11 @@ class DocumentFormset extends Controller {
  * @property {String[]} loadingClasses
  */
 class DocumentForm extends Controller {
+    static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
+    static values = {fileId: {type: Number, default: -1}}
     static targets = [
+        "errorContainer",
+        "errorTpl",
         "form",
         "documentFile",
         "documentName",
@@ -194,6 +246,10 @@ class DocumentForm extends Controller {
         return this._formset
     }
 
+    initialize() {
+        useStore(this)
+    }
+
     /** @param {HTMLFormElement} form */
     formTargetConnected(form) {
         for(let element of form.elements) {
@@ -202,26 +258,32 @@ class DocumentForm extends Controller {
         }
     }
 
+    /** @param {HTMLInputElement} el */
     documentFileTargetConnected(el) {
-        if(this.cachedFileList !== undefined) {
-            // Silently update the file to not trigger a name change
-            el.files = this.cachedFileList
-            delete this.cachedFileList
-        } else {
-            el.dispatchEvent(new Event("input"))
+        if(this.fileIdValue >= 0) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(this.filesValue[this.fileIdValue])
+            this.documentFileTarget.files = dataTransfer.files
         }
+        el.dispatchEvent(new Event("input"))
     }
 
+    /** @param {HTMLSelectElement} el */
     documentTypeTargetConnected(el) {
+        if(el.value === "") {
+            el.options[this.globalFileTypeIndexValue].selected = true
+        }
         el.dispatchEvent(new Event("change"))
     }
 
+    /** @param {HTMLInputElement} el */
     documentNameTargetConnected(el) {
         el.dispatchEvent(new Event("input"))
     }
 
     async submit() {
-        if(!this.formTarget.reportValidity()) return;
+        if(!this.formTarget.reportValidity()) throw "invalid"
+
         try {
             this.element.classList.add(...this.loadingClasses)
             /** @type {Response} */
@@ -230,7 +292,6 @@ class DocumentForm extends Controller {
                 {method: this.formTarget.method, body: new FormData(this.formTarget)}
             )
             if(result.ok || result.status === 400) {
-                this.cachedFileList = this.documentFileTarget.files
                 const tmpNode = document.createElement("div")
                 tmpNode.innerHTML = await result.text()
                 this.element.innerHTML = tmpNode.querySelector(`[data-controller="${this.identifier}"]`).innerHTML
@@ -245,6 +306,9 @@ class DocumentForm extends Controller {
             return result.status
         } catch(e) {
             console.error(e)
+            this.errorContainerTarget.innerHTML = this.errorTplTarget.innerHTML.replace(
+                "__error__", "Il y a eu un problème réseau lors de la soumission du document ; veuillez réessayer."
+            )
             throw e
         } finally {
             this.element.classList.remove(...this.loadingClasses)
@@ -260,22 +324,27 @@ class DocumentForm extends Controller {
             dsfrDisclosePromise(dsfr(this.formset.modalTarget).modal),
             dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse),
         ])
-        this.skipEvent = true
-        if(evt.target === this.documentFileTarget) {
-            // Affect any validation error form file to name field so it is visible
-            this.documentNameTarget.setCustomValidity(evt.target.validationMessage)
-            this.documentNameTarget.reportValidity()
-        } else {
-            evt.target.scrollIntoView({block: "center"})
-            evt.target.reportValidity()
+        try {
+            this.skipEvent = true
+            let target = evt.target
+            if(evt.target === this.documentFileTarget) {
+                // Affect any file validation error to `[name="nom"]` field so it is visible
+                this.documentNameTarget.setCustomValidity(evt.target.validationMessage)
+                target = this.documentNameTarget
+            }
+            target.scrollIntoView({block: "center"})
+            target.reportValidity()
+        } finally {
+            this.skipEvent = false
         }
-        this.skipEvent = false
     }
 
     /** @param {FileList} files */
     onFileChanged({target: {files}}) {
-        this.documentNameTarget.value = files.length === 0 ? "" : files[0].name
-        this.documentNameTarget.dispatchEvent(new Event("input"))
+        if(this.documentNameTarget.value.trim() === "") {
+            this.documentNameTarget.value = files.length === 0 ? "" : files[0].name
+            this.documentNameTarget.dispatchEvent(new Event("input"))
+        }
     }
 
     onDelete() {
@@ -292,7 +361,7 @@ class DocumentForm extends Controller {
         )
         this.accordionTypeLabelTarget.textContent = option.textContent
         if(this.hasDocumentFileTarget) {
-            this.documentFileTarget.accept = this.formset.allowedExtensionsPerDocumentTypeValue[option.value]
+            this.documentFileTarget.accept = this.formset.allowedExtensionsValue[option.value]
         }
     }
 
@@ -304,7 +373,7 @@ class DocumentForm extends Controller {
         }
     }
 
-    /** Just prevent submitting directly*/
+    /** Just prevent submitting directly */
     async onSubmit(evt) {
         evt.preventDefault()
         evt.stopPropagation()

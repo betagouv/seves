@@ -99,8 +99,8 @@ class BaseDocumentPage(ABC):
     @contextmanager
     def modify_document_by_name(self, document_name, *, validate_modal=True) -> Generator[Locator, None, None]:
         accordion = self.page.get_by_test_id("document-upload").filter(has_text=document_name)
+        # Setting a temporary data-testid to resist `nom` field changes
         # language=javascript
-        # Setting a temporate data-testid to resist `nom` field changes
         accordion.evaluate('el => el.setAttribute("data-testid", "document-upload-tmp")')
         accordion = self.page.get_by_test_id("document-upload-tmp")
         self.open_document_modal()
