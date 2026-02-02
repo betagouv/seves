@@ -460,9 +460,13 @@ class StructureAddForm(DSFRForm):
         obj = kwargs.pop("obj")
         super().__init__(*args, **kwargs)
         needed_group = Domains.group_for_value(obj._meta.app_label)
+        structures = (
+            Structure.objects.can_be_contacted_and_agent_has_group(needed_group)
+            | Structure.objects.filter(force_can_be_contacted=True).distinct()
+        ).distinct()
         queryset = (
             Contact.objects.structures_only()
-            .filter(structure__in=Structure.objects.can_be_contacted_and_agent_has_group(needed_group))
+            .filter(structure__in=structures)
             .order_by("structure__libelle")
             .select_related("structure")
         )

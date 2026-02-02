@@ -645,6 +645,7 @@ def test_delete_fiche_zone_creates_revision_on_evenement():
     expected_data = {
         "id": fiche_zone_id,
         "createur": {
+            "force_can_be_contacted": False,
             "id": fiche_zone.createur.id,
             "libelle": fiche_zone.createur.libelle,
             "niveau1": fiche_zone.createur.niveau1,

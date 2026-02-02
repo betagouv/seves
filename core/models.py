@@ -78,6 +78,8 @@ class Structure(models.Model):
     niveau2 = models.CharField(max_length=255, blank=True)
     libelle = models.CharField(max_length=255, blank=True)
 
+    force_can_be_contacted = models.BooleanField(default=False)
+
     objects = StructureQueryset.as_manager()
 
     def __str__(self):

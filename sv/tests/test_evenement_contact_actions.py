@@ -346,6 +346,24 @@ def test_add_structure_form_seves_is_hidden(live_server, page):
 
 
 @pytest.mark.django_db
+def test_can_add_structure_with_no_active_contacts_when_forced_is_true(live_server, page):
+    contact = ContactStructureFactory(structure__niveau1="DDPP59", structure__libelle="DDPP59")
+    page.goto(f"{live_server.url}{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+    expect(page.get_by_text("DDPP59")).not_to_be_visible()
+
+    structure = contact.structure
+    structure.force_can_be_contacted = True
+    structure.save()
+
+    page.goto(f"{live_server.url}{EvenementFactory().get_absolute_url()}")
+    page.get_by_role("tab", name="Contacts").click()
+    page.query_selector("#add-contact-structure-form .choices").click()
+    expect(page.locator(".choices__item--selectable").get_by_text("DDPP59", exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
 def test_structure_niveau2_without_emails_are_not_visible(live_server, page):
     ContactStructureFactory(
         structure__niveau1="Level 1", structure__libelle="Foo", with_one_active_agent__with_groups=(SV_GROUP,)
