@@ -57,7 +57,7 @@ class DocumentUploadView(
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.document = None
-        with contextlib.suppress(Document.DoesNotExist):
+        with contextlib.suppress(Exception):
             self.document = self.fiche_objet.documents.get(pk=self.request.POST.get("id"))
 
     def get_fiche_object(self):
