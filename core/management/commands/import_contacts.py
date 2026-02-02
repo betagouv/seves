@@ -32,6 +32,9 @@ class Command(BaseCommand):
             elif row["Structure"].startswith(("SD/DRAAF", "SD/DAAF", "DDI/DDPP", "DDI/DDETSPP")):
                 niveau1 = "/".join(parts[:2])
                 niveau2 = parts[2]
+            elif row["Structure"].startswith("UE/MINISTERES/MEEDDM/DDE"):
+                niveau1 = "/".join(parts[:4])
+                niveau2 = parts[4]
 
             if not niveau1:
                 return
