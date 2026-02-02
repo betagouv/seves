@@ -42,7 +42,7 @@ class FetchPool {
         this.ids = [...Array(this.poolSize + 1).keys()]
         /** @type {(function(): Promise<void>)[]} */
         this.queue = []
-        /** @type {Promise[]}*/
+        /** @type {Object<Number, Promise>}*/
         this.active = {}
         this.current = Promise.resolve()
     }

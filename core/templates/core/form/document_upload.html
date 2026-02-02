@@ -3,23 +3,30 @@
 <div
     class="document-upload-container"
     data-controller="document-form"
-    {% if form.instance.pk %}
-        data-document-form-file-id-value="{{ form.file_id }}"
-        data-document-form-initial-value="true"
-    {% endif %}
+    {% if not form.instance.pk %}data-document-form-file-id-value="__file_id__"{% endif %}
     data-document-form-loading-class="loading"
 >
-    {% if form.errors %}
-        <div class="fr-m-4v fr-input-group fr-input-group--error">
-            {% if form.non_field_errors %}
-                {{ form.non_field_errors }}
-            {% else %}
+    <div data-document-form-target="errorContainer">
+        {% if form.errors %}
+            <div class="fr-m-4v fr-input-group fr-input-group--error">
+                {% if form.non_field_errors %}
+                    {{ form.non_field_errors }}
+                {% else %}
+                    <ul class="errorlist nonfield">
+                        <li class="fr-error-text">Il y a une erreur dans ce formulaire</li>
+                    </ul>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <template data-document-form-target="errorTpl">
+            <div class="fr-m-4v fr-input-group fr-input-group--error">
                 <ul class="errorlist nonfield">
-                    <li class="fr-error-text">Il y a une erreur dans ce formulaire</li>
+                    <li class="fr-error-text">__error__</li>
                 </ul>
-            {% endif %}
-        </div>
-    {% endif %}
+            </div>
+        </template>
+    </div>
 
     <section class="document-upload-accordion fr-accordion" data-testid="document-upload">
         <div class="fr-accordion__title">
@@ -62,11 +69,13 @@
             >
                 {% dsfr_form_field form.nom|set_data:"document-form-target:documentName"|set_data:"action:document-form#onDocumentNameChanged" %}
                 {% dsfr_form_field form.document_type|set_data:"document-form-target:documentType"|set_data:"action:document-form#onDocumentTypeChanged"|set_data:"testid:document-upload-type" %}
-                {% if not form.instance.pk %}
+                {% dsfr_form_field form.description %}
+                {% if form.instance.pk %}
+                    {# Don't render the file input if document exists in database to allow editing #}
+                    <input name="id" type="hidden" value="{{ form.instance.pk }}" />
+                {% else %}
                     {{ form.file|add_class:"fr-hidden"|set_data:"document-form-target:documentFile"|set_data:"action:document-form#onFileChanged" }}
                 {% endif %}
-                {% dsfr_form_field form.description %}
-                {{ form.id }}
                 {{ form.content_type }}
                 {{ form.object_id }}
             </form>
