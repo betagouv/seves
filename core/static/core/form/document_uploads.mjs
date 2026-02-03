@@ -10,7 +10,8 @@ const STORAGE_DOCUMENT_SUCCESS = "STORAGE_DOCUMENT_SUCCESS"
 const DOCUMENT_STATE = Object.freeze({
     IDLE: 1,
     LOADING: 2,
-    ERROR: 3,
+    SUCCESS: 3,
+    ERROR: 4,
 })
 
 const globalFileTypeIndexStore = createStore({
@@ -274,6 +275,7 @@ class DocumentFormset extends Controller {
  * @property {HTMLElement} accordionContentTarget
  * @property {HTMLTemplateElement} networkErrorTplTarget
  * @property {String[]} loadingClasses
+ * @property {String[]} successClasses
  * @property {String[]} errorClasses
  * @property {DocumentFormset} documentFormsetOutlet
  */
@@ -293,7 +295,7 @@ class DocumentForm extends Controller {
         "accordionContent",
         "networkErrorTpl"
     ]
-    static classes = ["loading", "error"]
+    static classes = ["loading", "success", "error"]
     static outlets = ["document-formset"]
 
     initialize() {
@@ -304,6 +306,8 @@ class DocumentForm extends Controller {
         this.element.classList.remove(...this.loadingClasses, ...this.errorClasses)
         if(state === DOCUMENT_STATE.LOADING) {
             this.element.classList.add(...this.loadingClasses)
+        } else if(state === DOCUMENT_STATE.SUCCESS) {
+            this.element.classList.add(...this.successClasses)
         } else if(state === DOCUMENT_STATE.ERROR) {
             this.element.classList.add(...this.errorClasses)
         }
@@ -357,7 +361,7 @@ class DocumentForm extends Controller {
             }
 
             if(result.ok) {
-                this.stateValue = DOCUMENT_STATE.IDLE
+                this.stateValue = DOCUMENT_STATE.SUCCESS
                 return escapeHTML(this.documentNameTarget.value.trim())
             } else {
                 throw FormValidationError
