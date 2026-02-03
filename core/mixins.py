@@ -20,7 +20,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
-from django.views.generic.base import ContextMixin
+from django.views.generic.base import ContextMixin, View
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import BaseCreateView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
@@ -28,7 +29,6 @@ from queryset_sequence import QuerySetSequence
 from core.forms import (
     AgentAddForm,
     DocumentEditForm,
-    DocumentUploadForm,
     StructureAddForm,
 )
 from core.models import (
@@ -47,7 +47,6 @@ from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter, MessageFilter
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
-from .validators import MAX_UPLOAD_SIZE_MEGABYTES, AllowedExtensions
 
 if typing.TYPE_CHECKING:
     from .formsets import DocumentInMessageUploadFormSet
@@ -79,7 +78,7 @@ class MediaDefiningMixin(ContextMixin):
         return context_data["form"].media if "form" in context_data else Media()
 
 
-class WithDocumentUploadFormMixin:
+class WithDocumentUploadFormMixin(MediaDefiningMixin, SingleObjectMixin, View):
     def get_object_linked_to_document(self):
         raise NotImplementedError
 
@@ -87,12 +86,21 @@ class WithDocumentUploadFormMixin:
         raise NotImplementedError
 
     def get_context_data(self, **kwargs):
+        from .formsets import DocumentUploadFormSet
+
         context = super().get_context_data(**kwargs)
-        obj = self.get_object()
-        context["document_form"] = DocumentUploadForm(obj=obj, next=obj.get_absolute_url())
-        context["allowed_extensions"] = AllowedExtensions.values
-        context["max_upload_size_mb"] = MAX_UPLOAD_SIZE_MEGABYTES
+        if not (related_to := context.get(self.context_object_name)):
+            related_to = self.get_object()
+        context["document_formset"] = DocumentUploadFormSet(
+            user=self.request.user,
+            related_to=related_to,
+            allowed_document_types=related_to.get_allowed_document_types(),
+            next_url=f"{related_to.get_absolute_url()}#tabpanel-documents-panel",
+        )
         return context
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["document_formset"].media
 
 
 class WithDocumentListInContextMixin:
@@ -127,7 +135,7 @@ class WithMessageMixin:
         message_filter = MessageFilter(self.request.GET, queryset=message_list)
         contact_agent = None
         if message_filter.qs:
-            contact_agent = self.request.user.agent.contact_set.get()
+            contact_agent = self.request.user.agent.contact_set.all()[0]
         for message in message_filter.qs:
             message.can_be_deleted = message.can_agent_delete(contact_agent)
         context["message_filter"] = message_filter
@@ -151,7 +159,7 @@ class WithContactFormsInContextMixin:
 
 class WithContactQuerysetMixin:
     def get_agents(self, obj):
-        return obj.contacts.agents_only().prefetch_related("agent__structure").order_by_structure_and_name()
+        return obj.contacts.agents_only().select_related("agent__structure").order_by_structure_and_name()
 
     def get_structures(self, obj):
         return obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
@@ -688,7 +696,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
         form_kwargs.update(
             {
                 "user": self.request.user,
-                "message": message,
+                "related_to": message,
                 "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
                 **kwargs,
             }

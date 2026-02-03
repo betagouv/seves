@@ -13,6 +13,7 @@
 {% block content %}
     <form method="post" id="main-form">
         {% csrf_token %}
+        {{ form.latest_version }}
         <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
         <div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>
         <div class="fr-hidden" id="categorie-danger-header">

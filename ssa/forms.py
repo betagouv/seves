@@ -8,7 +8,7 @@ from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
-from core.form_mixins import DSFRForm, js_module
+from core.form_mixins import DSFRForm, js_module, WithLatestVersionLocking
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin, WithCommonContextVars
 from core.models import Contact
@@ -40,9 +40,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
     )
     numero_rasff = forms.CharField(
         required=False,
-        widget=forms.TextInput(
-            attrs={"pattern": r"^(\d{4}\.\d{4}|AA\d{2}\.\d{4}|\d{6})$", "placeholder": "0000.0000 ou 000000"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
         label="N° RASFF/AAC",
     )
     description = forms.CharField(
@@ -94,7 +92,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         ]
 
 
-class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
+class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     source = SEVESChoiceField(choices=Source.choices, required=False)
 
@@ -198,6 +196,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, forms.ModelForm):
             "reference_clusters",
             "actions_engagees",
             "numeros_rappel_conso",
+            "latest_version",
         ]
         widgets = {
             "evaluation": forms.Textarea(
@@ -253,7 +252,7 @@ class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm)
     )
 
 
-class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.ModelForm):
+class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
     template_name = "ssa/forms/investigation_cas_humain.html"
 
     source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=False)
@@ -299,6 +298,7 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, forms.M
             "reference_souches",
             "reference_clusters",
             "evaluation",
+            "latest_version",
         )
         widgets = {
             "evaluation": forms.Textarea(

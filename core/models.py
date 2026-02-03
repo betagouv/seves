@@ -78,6 +78,8 @@ class Structure(models.Model):
     niveau2 = models.CharField(max_length=255, blank=True)
     libelle = models.CharField(max_length=255, blank=True)
 
+    force_can_be_contacted = models.BooleanField(default=False)
+
     objects = StructureQueryset.as_manager()
 
     def __str__(self):
@@ -178,14 +180,14 @@ class FinSuiviContact(models.Model):
     def _can_change_fin_de_suivi(cls, object, user, contact):
         if not hasattr(object, "contacts"):
             return False
-        if not object.contacts.filter(id=contact.id).exists():
+        if contact not in object.contacts.all():
             return False
         if not object.can_user_access(user):
             return False
 
     @classmethod
     def can_add_fin_de_suivi(cls, object, user):
-        contact = user.agent.structure.contact_set.get()
+        contact = user.agent.structure.contact_set.all()[0]
         content_type = ContentType.objects.get_for_model(object).id
         can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
         if can_change_fin_de_suivi is False:
@@ -197,7 +199,7 @@ class FinSuiviContact(models.Model):
 
     @classmethod
     def can_remove_fin_de_suivi(cls, object, user):
-        contact = user.agent.structure.contact_set.get()
+        contact = user.agent.structure.contact_set.all()[0]
         content_type = ContentType.objects.get_for_model(object).id
         can_change_fin_de_suivi = cls._can_change_fin_de_suivi(object, user, contact)
         if can_change_fin_de_suivi is False:
@@ -244,9 +246,21 @@ class Document(models.Model):
         SIGNALEMENT_CERFA = "cerfa", "Signalement/notification : Cerfa"
         SIGNALEMENT_RASFF = "fiche_rasff", "Signalement/notification : Fiche RASFF"
         SIGNALEMENT_AUTRE = "signalement_autre", "Signalement/notification : Autre"
+        SIGNALEMENT_MULTIPLE = (
+            "signalement_multiple",
+            "Signalement/notification : Cerfa, DO ARS, Autre",
+        )
+        ENQUETE = "enquete_alimentaire", "Enquête alimentaire de l’ARS/SpF"
+        MENU = "menu", "Menu"
         ANALYSE_RISQUE = "analyse_risque", "Analyse de risque"
-        TRACABILITE_INTERNE_TABLEAU = "tracabilite_interne_tableau", "Traçabilité interne : tableau de suivi"
-        TRACABILITE_INTERNE_JUSTIFICATIF = "tracabilite_interne_justificatif", "Traçabilité interne : justificatif"
+        TRACABILITE_INTERNE_TABLEAU = (
+            "tracabilite_interne_tableau",
+            "Traçabilité interne : tableau de suivi (des productions et autocontrôles)",
+        )
+        TRACABILITE_INTERNE_JUSTIFICATIF = (
+            "tracabilite_interne_justificatif",
+            "Traçabilité interne : justificatif (enregistrement, autocontrôle…)",
+        )
         TRACABILITE_AVAL_RECIPIENT = "tracabilite_aval_recipient", "Traçabilité externe : « Recipient list »"
         TRACABILITE_AVAL_AUTRE = "tracabilite_aval_autre", "Traçabilité externe : Autre liste (tableau, relevé)"
         TRACABILITE_AVAL_JUSTIFICATIF = (
@@ -262,6 +276,7 @@ class Document(models.Model):
         COURRIERS_COURRIELS = "courriers", "Courriers/courriels"
         SUITES_ADMINISTRATIVES = "suites_administratives", "Suites administratives"
         COMPTE_RENDU = "compte_rendu", "Compte-rendu"
+        FICHE_PRODUIT = "fiche_produit", "Fiche produit à risque particulier : œuf, huitre…"
 
     ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
         lambda: list(AllowedExtensions),
@@ -314,7 +329,7 @@ class Document(models.Model):
         FileExtensionValidator(
             Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type],
             message=(
-                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document"
+                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document "
                 f"« {document_type_label} ». Les extensions autorisées sont : %(allowed_extensions)s."
             ),
         )(file)

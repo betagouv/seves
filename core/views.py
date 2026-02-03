@@ -1,8 +1,8 @@
+import contextlib
 import json
 import logging
 
 import requests
-from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -12,8 +12,10 @@ from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import ngettext
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from reversion.models import Version
@@ -45,10 +47,18 @@ from .redirect import safe_redirect
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class DocumentUploadView(
     PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView
 ):
     form_class = DocumentUploadForm
+    template_name = "core/form/document_upload.html#form_content"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.document = None
+        with contextlib.suppress(Document.DoesNotExist):
+            self.document = self.fiche_objet.documents.get(pk=self.request.POST.get("id"))
 
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
@@ -58,37 +68,24 @@ class DocumentUploadView(
     def test_func(self):
         return self.get_fiche_object().can_add_document(self.request.user)
 
-    def post(self, request, *args, **kwargs):
-        fiche = self.get_fiche_object()
-        form = DocumentUploadForm(request.POST, request.FILES, obj=fiche)
-        if form.is_valid():
-            document = form.save(commit=False)
-            agent = request.user.agent
-            document.created_by = agent
-            document.created_by_structure = agent.structure
-            try:
-                document.save()
-            except OperationalError:
-                messages.error(
-                    request, "Une erreur s'est produite lors de l'ajout du document.", extra_tags="core documents"
-                )
-                logger.error("Could not connect to Redis")
-                return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
+    def get_form_kwargs(self):
+        return {
+            **super().get_form_kwargs(),
+            "user": self.request.user,
+            "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
+            "related_to": self.fiche_objet,
+            "data": self.request.POST,
+            "files": self.request.FILES,
+            "instance": self.document,
+        }
 
-            self.add_user_contacts(fiche)
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form), status=400)
 
-            messages.success(
-                request,
-                "Le document a été ajouté avec succès, il sera disponible après l'analyse antivirus.",
-                extra_tags="core documents",
-            )
-            return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
-
-        messages.error(request, "Une erreur s'est produite lors de l'ajout du document", extra_tags="core documents")
-        for _, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, error, extra_tags="core documents")
-        return safe_redirect(self.request.POST.get("next") + "#tabpanel-documents-panel")
+    def form_valid(self, form):
+        form.save()
+        self.add_user_contacts(self.fiche_objet)
+        return super().render_to_response(self.get_context_data(form=form))
 
 
 class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):

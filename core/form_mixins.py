@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.forms import Script
 
@@ -39,22 +38,6 @@ class DSFRForm(forms.Form):
             widget = self.fields[field].widget
             class_to_add = self.input_to_class[type(widget).__name__]
             widget.attrs["class"] = widget.attrs.get("class", "") + " " + class_to_add
-
-
-class WithNextUrlMixin:
-    def add_next_field(self, next):
-        if next:
-            self.fields["next"] = forms.CharField(widget=forms.HiddenInput())
-            self.initial["next"] = next
-
-
-class WithContentTypeMixin:
-    def add_content_type_fields(self, obj):
-        if obj:
-            self.fields["content_type"].widget = forms.HiddenInput()
-            self.fields["object_id"].widget = forms.HiddenInput()
-            self.initial["content_type"] = ContentType.objects.get_for_model(obj)
-            self.initial["object_id"] = obj.pk
 
 
 class WithFreeLinksMixin:
@@ -95,3 +78,20 @@ class WithFreeLinksMixin:
         if self.instance and self.instance in self.cleaned_data["free_link"]:
             raise ValidationError("Vous ne pouvez pas lier un objet a lui-même.")
         return self.cleaned_data["free_link"]
+
+
+class WithLatestVersionLocking(forms.Form):
+    latest_version = forms.IntegerField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        self.latest_version = kwargs.pop("latest_version", 0)
+        super().__init__(*args, **kwargs)
+        self.fields["latest_version"].widget.attrs["value"] = self.latest_version
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data.get("latest_version") and self.latest_version != self.cleaned_data["latest_version"]:
+            raise ValidationError(
+                "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche.",
+                code="blocking_error",
+            )

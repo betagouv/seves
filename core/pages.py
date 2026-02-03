@@ -1,20 +1,125 @@
+import abc
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Generator
 
 from django.conf import settings
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, expect, Locator
 
-from core.models import Document, Agent, Structure
+from core.models import Agent, Structure
 
 
-class BaseMessagePage(ABC):
+class BaseDocumentPage(ABC):
+    BASIC_DOCUMENT_NAME = "Mon document"
+
+    def __init__(self, page: Page):
+        self.page = page
+
+    @property
+    @abc.abstractmethod
+    def add_document_button(self):
+        pass
+
+    @property
+    def document_modal(self):
+        return self.page.locator("#document-modal")
+
+    @property
+    def global_document_type_input(self):
+        return self.page.locator("#document-upload-type-all")
+
+    @property
+    def document_type_input(self):
+        return self.page.locator('[name$="document_type"]')
+
+    @property
+    def get_existing_documents_title(self):
+        cards = (
+            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
+        )
+        texts = [cards.nth(i).inner_text() for i in range(cards.count())]
+        return [t for t in texts if t]
+
+    @property
+    def modal_submit_btn(self):
+        return self.page.locator("#document-modal").get_by_test_id("document-submit-btn")
+
+    def open_document_modal(self):
+        if self.document_modal.is_hidden():
+            self.page.get_by_test_id("add-document-btn").click()
+            expect(self.document_modal).to_be_visible()
+
+    def validate_document_modal(self):
+        if self.document_modal.is_visible():
+            self.modal_submit_btn.click()
+            expect(self.document_modal).not_to_be_visible()
+
+    def close_document_modal_no_validate(self):
+        if self.document_modal.is_visible():
+            self.page.locator("#document-modal").get_by_role("button", name="Fermer").click()
+            expect(self.document_modal).not_to_be_visible()
+
+    def add_basic_document(self, suffix="", *, close=True, document: Path | str | None = None):
+        self.open_document_modal()
+
+        # Open file chooser and select file
+        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
+
+        document = Path(document or settings.BASE_DIR / "static/images/login.jpeg").resolve()
+        document_name = document.name
+        self.page.get_by_test_id("filechooser-link").set_input_files(document)
+        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
+        self.page.get_by_test_id("filechooser-link").set_input_files([])
+
+        # Open modification accordion
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+        expect(accordion).to_be_visible()
+        accordion.get_by_test_id("open-accordion").click()
+
+        document_name = f"{self.BASIC_DOCUMENT_NAME}{suffix}"
+        accordion.locator('[name$="nom"]').fill(document_name)
+
+        # Accordion title changed so we must reselect
+        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+
+        accordion.locator('[name$="document_type"]').last.select_option("Autre document")
+        accordion.locator('[name$="description"]').last.fill(f"Ma description {suffix}")
+        if close:
+            self.validate_document_modal()
+
+    def remove_document_by_name_from_modal(self, document_name):
+        self.open_document_modal()
+        accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
+        count = accordions.count()
+        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        expect(accordions).to_have_count(count - 1)
+        self.validate_document_modal()
+
+    @contextmanager
+    def modify_document_by_name(self, document_name, *, validate_modal=True) -> Generator[Locator, None, None]:
+        accordion = self.page.get_by_test_id("document-upload").filter(has_text=document_name)
+        # Setting a temporary data-testid to resist `nom` field changes
+        # language=javascript
+        accordion.evaluate('el => el.setAttribute("data-testid", "document-upload-tmp")')
+        accordion = self.page.get_by_test_id("document-upload-tmp")
+        self.open_document_modal()
+        if not accordion.locator('[name$="nom"]').is_visible():
+            accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).to_be_visible()
+        yield accordion
+        accordion.get_by_role(role="button", name="Modifier").click()
+        expect(accordion.locator('[name$="nom"]')).not_to_be_visible()
+        accordion.evaluate('el => el.setAttribute("data-testid", "document-upload")')
+        if validate_modal:
+            self.validate_document_modal()
+
+
+class BaseMessagePage(BaseDocumentPage, ABC):
     TITLE_ID = "#id_title"
     CONTENT_ID = "#id_content"
     DRAFT_BTN_TEST_ID = "draft-fildesuivi-add-submit"
     SUBMIT_BTN_TEST_ID = "fildesuivi-add-submit"
-
-    def __init__(self, page: Page):
-        self.page = page
 
     @property
     @abstractmethod
@@ -24,10 +129,6 @@ class BaseMessagePage(ABC):
     @property
     def recipients_locator(self):
         return f'{self.container_id} label[for="id_recipients"] ~ div.choices'
-
-    @property
-    def document_modal(self):
-        return self.page.locator("#document-modal")
 
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
@@ -148,27 +249,6 @@ class BaseMessagePage(ABC):
             self.page.wait_for_url("**/core/message/**/")
             return self.page
 
-    def open_document_modal(self):
-        if self.document_modal.is_hidden():
-            self.page.get_by_test_id("add-document-btn").click()
-            expect(self.document_modal).to_be_visible()
-
-    def validate_document_modal(self):
-        if self.document_modal.is_visible():
-            self.page.locator("#document-modal").get_by_test_id("document-submit-btn").click()
-            expect(self.document_modal).not_to_be_visible()
-
-    def close_document_modal_no_validate(self):
-        if self.document_modal.is_visible():
-            self.page.locator("#document-modal").get_by_role("button", name="Fermer").click()
-            expect(self.document_modal).not_to_be_visible()
-
-    def delete_document(self, nth):
-        document_count = self.page.get_by_test_id("document-card").count()
-        self.page.get_by_test_id("document-delete-btn").nth(nth).click()
-        # Check that deleting removes file bloc in both message aside and modal
-        expect(self.page.get_by_test_id("document-card")).to_have_count(document_count - 1)
-
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
         expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
@@ -176,79 +256,15 @@ class BaseMessagePage(ABC):
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
 
-    def add_basic_document(self, suffix="", close=True):
-        self.open_document_modal()
-
-        # Open file chooser and select file
-        self.page.locator("#document-upload-type-all").locator("visible=true").select_option("Autre document")
-
-        document_name = "login.jpeg"
-        self.page.get_by_test_id("filechooser-link").set_input_files(
-            settings.BASE_DIR / "static/images" / document_name
-        )
-        # There's a bug in Chrome where the event is never dispatched again if the field is not reset
-        self.page.get_by_test_id("filechooser-link").set_input_files([])
-
-        # Open modification accordion
-        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
-        expect(accordion).to_be_visible()
-        accordion.get_by_test_id("open-accordion").click()
-
-        document_name = f"Mon document{suffix}"
-        accordion.locator('[name$="nom"]').fill(document_name)
-
-        # Accordion title changed so we must reselect
-        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
-
-        accordion.locator('[name$="document_type"]').last.select_option("Autre document")
-        accordion.locator('[name$="description"]').last.fill(f"Ma description {suffix}")
-        if close:
-            self.validate_document_modal()
-
     def remove_document_by_name_from_aside(self, document_name):
         aside_card_list = self.page.get_by_test_id("document-card")
         count = aside_card_list.count()
         aside_card_list.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
         expect(aside_card_list).to_have_count(count - 1)
 
-    def remove_document_by_name_from_modal(self, document_name):
-        self.open_document_modal()
-        accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
-        count = accordions.count()
-        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
-        expect(accordions).to_have_count(count - 1)
-        self.validate_document_modal()
-
-    @contextmanager
-    def modify_document_by_name(self, document_name):
-        accordion = self.page.get_by_test_id("document-upload").filter(has_text=document_name)
-        self.open_document_modal()
-        accordion.get_by_role(role="button", name="Modifier").click()
-        expect(accordion.locator('[name$="nom"]')).to_be_visible()
-        yield accordion
-        accordion.get_by_role(role="button", name="Modifier").click()
-        expect(accordion.locator('[name$="nom"]')).not_to_be_visible()
-        self.validate_document_modal()
-
     @property
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter un document")
-
-    @property
-    def global_document_type_input(self):
-        return self.page.locator("#document-upload-type-all")
-
-    @property
-    def document_type_input(self):
-        return self.page.locator('[name$="document_type"]')
-
-    @property
-    def get_existing_documents_title(self):
-        cards = (
-            self.page.locator(self.container_id).get_by_test_id("document-card").get_by_test_id("document-card-title")
-        )
-        texts = [cards.nth(i).inner_text() for i in range(cards.count())]
-        return [t for t in texts if t]
 
     @property
     def recipents_dropdown_items(self):
@@ -280,61 +296,39 @@ class UpdateMessagePage(BaseMessagePage):
         return self._container_id
 
 
-class WithDocumentsPage:
-    def __init__(self, page: Page):
-        self.page = page
+class WithDocumentsPage(BaseDocumentPage):
+    @property
+    def add_document_button(self):
+        return self.page.get_by_role("button", name="Ajouter des documents")
 
     def open_document_tab(self):
-        self.page.get_by_test_id("documents").click()
+        if not self.page.locator("#tabpanel-documents-panel").is_visible():
+            self.page.get_by_test_id("documents").click()
+            expect(self.page.locator("#tabpanel-documents-panel")).to_be_visible()
 
-    def document_title(self, id):
-        return self.page.get_by_test_id(f"document-title-{id}")
+    def open_contact_tab(self):
+        self.page.get_by_test_id("contacts").click()
+        expect(self.page.locator("#tabpanel-contacts-panel")).to_be_visible()
 
-    def open_add_document(self):
-        self.page.get_by_test_id("documents-add").click()
-        expect(self.page.locator("#fr-modal-add-doc")).to_be_visible()
-
-    @property
-    def add_document_types(self):
-        return self.page.locator(".fr-modal__body").locator("visible=true").locator("#id_document_type")
-
-    def open_edit_document(self, id):
-        self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{id}"]').click()
-        expect(self.page.locator(f"#fr-modal-edit-{id}")).to_be_visible()
-
-    @property
-    def document_add_title(self):
-        return self.page.locator("#fr-modal-add-doc #id_nom")
-
-    @property
-    def document_add_type(self):
-        return self.page.locator("#fr-modal-add-doc #id_document_type")
-
-    @property
-    def document_add_description(self):
-        return self.page.locator("#fr-modal-add-doc #id_description")
-
-    @property
-    def document_add_file(self):
-        return self.page.locator("#fr-modal-add-doc #id_file")
-
-    def add_document(self):
+    def add_basic_document(self, suffix="", *, close=True, document=None):
         self.open_document_tab()
-        self.open_add_document()
-        self.document_add_title.fill("Name of the document")
-        self.document_add_type.select_option(Document.TypeDocument.AUTRE)
-        self.document_add_description.fill("Description")
-        self.document_add_file.set_input_files(settings.BASE_DIR / "static/images/marianne.png")
-        self.page.get_by_test_id("documents-send").click()
+        super().add_basic_document(suffix, close=close, document=document)
 
-    def document_edit_title(self, id):
-        return self.page.locator(f"#fr-modal-edit-{id} #id_nom")
+    def open_edit_document(self, doc_id):
+        self.page.locator(f'.fr-btns-group button[aria-controls="fr-modal-edit-{doc_id}"]').click()
+        expect(self.page.locator(f"#fr-modal-edit-{doc_id}")).to_be_visible()
 
-    def document_edit_description(self, id):
-        return self.page.locator(f"#fr-modal-edit-{id} #id_description")
+    def document_title(self, doc_id):
+        return self.page.get_by_test_id(f"document-title-{doc_id}")
 
-    def document_edit_save(self, id):
-        self.page.get_by_test_id(f"documents-edit-{id}").click()
+    def document_edit_title(self, doc_id):
+        return self.page.locator(f"#fr-modal-edit-{doc_id} #id_nom")
+
+    def document_edit_description(self, doc_id):
+        return self.page.locator(f"#fr-modal-edit-{doc_id} #id_description")
+
+    def document_edit_save(self, doc_id):
+        self.page.get_by_test_id(f"documents-edit-{doc_id}").click()
 
 
 class WithContactsPage:

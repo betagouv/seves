@@ -26,17 +26,17 @@ class WithFilteredListMixin(WithOrderingMixin):
         contact = user.agent.structure.contact_set.get()
 
         evenement_produit_qs = (
-            EvenementProduit.objects.with_departement_prefetched()
-            .select_related("createur")
+            EvenementProduit.objects.select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
+            .optimized_for_list()
         )
 
         ich_qs = (
-            EvenementInvestigationCasHumain.objects.with_departement_prefetched()
-            .select_related("createur")
+            EvenementInvestigationCasHumain.objects.select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
+            .optimized_for_list()
         )
 
         return QuerySetSequence(evenement_produit_qs, ich_qs, model=EvenementProduit)

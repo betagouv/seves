@@ -12,6 +12,7 @@ class EtiologieFormController  extends Controller {
         "hiddenField",
         "jsonConfig",
         "precisions",
+        "analyses",
     ]
     static values = {currentOption:String, selectedValues: Array, config: Object, hasConnected: {type: Boolean, default: false}};
 
@@ -19,6 +20,8 @@ class EtiologieFormController  extends Controller {
         this.config = JSON.parse(this.jsonConfigTarget.textContent)
         this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
         this.hasConnectedValue = true
+        let currentValue = this.analysesTargets.find(el => el.checked);
+        this.precisionsTarget.disabled = !(currentValue.value==='oui')
     }
 
     onShowFirstModal() {

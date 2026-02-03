@@ -47,8 +47,8 @@
             <div class="fr-grid-row fr-grid-row-xl--gutters">
                 <div class="fr-col-12 fr-col-xl-7 fr-col-offset-xl-1">
                     {% for form in add_document_formset_error.forms %}
-                        <div class="fr-alert fr-alert--error fr-mb-4v">
-                            {% if form.errors %}
+                        {% if form.errors %}
+                            <div class="fr-alert fr-alert--error fr-mb-4v">
                                 {% if form.file.data.name %}
                                     Il y a eu une erreur dans le traitement du document
                                     « {{ form.file.data.name }} » :
@@ -58,8 +58,8 @@
                                         <p>{{ error }}</p>
                                     {% endfor %}
                                 {% endfor %}
-                            {% endif %}
-                        </div>
+                            </div>
+                        {% endif %}
                     {% endfor %}
 
                     <div class="white-container">

@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "widget_tweaks",
     "dsfr",
+    "django.forms",
     "waffle",
     "tiac",
     "sv",
@@ -121,6 +122,9 @@ TEMPLATES = [
         },
     },
 ]
+
+# Use template renderer declared in TEMPLATES for forms too
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 WSGI_APPLICATION = "seves.wsgi.application"
 

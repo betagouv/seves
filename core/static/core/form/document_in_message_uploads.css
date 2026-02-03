@@ -30,10 +30,6 @@
     text-align: center;
 }
 
-.document-upload-drag-drop .document-upload-drag-drop--zone + * {
-    margin-top: 0;
-}
-
 /* This prevent the dragging style from flickering when overing children elements by covering everything */
 .document-upload-drag-drop.document-upload-drag-drop--dragging .document-upload-drag-drop--zone:after {
     content: " ";
@@ -113,10 +109,10 @@
     outline: #0a76f6 solid 2px;
 }
 
-.document-upload-drag-drop--accordion-container {
-    margin: 2rem
+.document-upload-drag-drop--accordion-container:has(*) {
+    margin: 0 2rem 2rem;
 }
 
-.document-upload-drag-drop--accordion-container .fr-accordion:not(:first-child) {
+.document-upload-drag-drop--accordion-container .document-upload-container:not(:first-child) {
     margin: .5rem 0 0;
 }

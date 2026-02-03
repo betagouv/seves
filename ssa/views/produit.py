@@ -12,6 +12,7 @@ from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
+from reversion.models import Version
 
 from core.mixins import (
     WithClotureContextMixin,
@@ -135,7 +136,7 @@ class EvenementProduitDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        contact = self.request.user.agent.structure.contact_set.get()
+        contact = self.request.user.agent.structure.contact_set.all()[0]
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
@@ -172,6 +173,7 @@ class EvenementUpdateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["latest_version"] = Version.objects.get_for_object(self.get_object()).first().pk
         return kwargs
 
     def get_media(self, **context_data) -> Media:

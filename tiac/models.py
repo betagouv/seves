@@ -60,20 +60,19 @@ class BaseTiacModel(models.Model):
 
     def get_allowed_document_types(self):
         return [
-            Document.TypeDocument.SIGNALEMENT_CERFA,
-            Document.TypeDocument.SIGNALEMENT_RASFF,
-            Document.TypeDocument.SIGNALEMENT_AUTRE,
-            Document.TypeDocument.ANALYSE_RISQUE,
+            Document.TypeDocument.SIGNALEMENT_MULTIPLE,
+            Document.TypeDocument.ENQUETE,
+            Document.TypeDocument.MENU,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.FICHE_PRODUIT,
             Document.TypeDocument.TRACABILITE_INTERNE_TABLEAU,
             Document.TypeDocument.TRACABILITE_INTERNE_JUSTIFICATIF,
-            Document.TypeDocument.TRACABILITE_AVAL_RECIPIENT,
-            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
             Document.TypeDocument.TRACABILITE_AVAL_JUSTIFICATIF,
+            Document.TypeDocument.TRACABILITE_AVAL_AUTRE,
             Document.TypeDocument.DSCE_CHED,
             Document.TypeDocument.CERTIFICAT_SANITAIRE,
             Document.TypeDocument.ETIQUETAGE,
             Document.TypeDocument.PHOTO,
-            Document.TypeDocument.AFFICHETTE_RAPPEL,
             Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.COURRIERS_COURRIELS,
             Document.TypeDocument.SUITES_ADMINISTRATIVES,
@@ -523,6 +522,7 @@ class InvestigationTiac(
         )
 
 
+@reversion.register()
 class RepasSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="repas")
     denomination = models.CharField(max_length=255, verbose_name="Dénomination du repas")
@@ -566,7 +566,12 @@ class RepasSuspect(models.Model):
             return f"{self.denomination} ({self.datetime_repas.strftime('%Y-%m-%d %H:%M')})"
         return self.denomination
 
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
 
+
+@reversion.register()
 class AlimentSuspect(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="aliments")
     denomination = models.CharField(max_length=255, verbose_name="Dénomination de l'aliment")
@@ -615,7 +620,12 @@ class AlimentSuspect(models.Model):
     def __str__(self):
         return self.denomination
 
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
 
+
+@reversion.register()
 class AnalyseAlimentaire(models.Model):
     investigation = models.ForeignKey(InvestigationTiac, on_delete=models.PROTECT, related_name="analyses_alimentaires")
 
@@ -640,3 +650,7 @@ class AnalyseAlimentaire(models.Model):
 
     def __str__(self):
         return self.reference_prelevement
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)

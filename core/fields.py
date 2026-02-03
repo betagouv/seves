@@ -11,7 +11,10 @@ class MultiModelChoiceField(forms.MultipleChoiceField):
         choices = []
         for label, queryset in model_choices:
             content_type = ContentType.objects.get_for_model(queryset.model)
-            model_choices = [(f"{content_type.id}-{obj.id}", f"{label} : {obj}") for obj in queryset]
+            model_choices = [
+                (f"{content_type.id}-{obj.id}", f"{label} : {obj}")
+                for obj in queryset.only("id", "numero_annee", "numero_evenement")
+            ]
             choices.extend(model_choices)
         super().__init__(choices=choices, *args, **kwargs)
 

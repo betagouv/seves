@@ -10,7 +10,7 @@ from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
-from core.form_mixins import WithFreeLinksMixin, js_module
+from core.form_mixins import WithFreeLinksMixin, js_module, WithLatestVersionLocking
 from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Structure, Departement
@@ -46,7 +46,7 @@ from tiac.models import (
 )
 
 
-class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     date_reception = forms.DateTimeField(
         label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
@@ -75,6 +75,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "notify_ars",
             "nb_sick_persons",
             "follow_up",
+            "latest_version",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
@@ -215,7 +216,7 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
         fields = ["transfered_to"]
 
 
-class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     SuspicionConclusion = SuspicionConclusion
     CategorieDanger = CategorieDanger
     DangersSyndromiques = DangersSyndromiques
@@ -283,6 +284,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         widget=forms.RadioSelect(
             attrs={
                 "data-action": "change->etiologie-form#onAnalyseChange",
+                "data-etiologie-form-target": "analyses",
             }
         ),
         label="Analyses engagées sur les malades",
@@ -324,6 +326,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "conclusion_comment",
             "conclusion_repas",
             "conclusion_aliment",
+            "latest_version",
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),

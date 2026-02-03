@@ -39,3 +39,41 @@
     width: initial !important;
     max-width: initial !important;
 }
+
+.document-modal--loading button[type="submit"] {
+    max-height: none;
+    max-width: 100%;
+    overflow: initial;
+    pointer-events: none;
+}
+
+.document-modal--loading button[type="submit"]::before {
+    --icon-size: 1rem;
+
+    animation: rotation 1s linear infinite;
+    border: .225rem solid var(--text-inverted-blue-france);
+    border-bottom-color: transparent !important;
+    border-radius: 50%;
+    background-color: transparent;
+    box-sizing: border-box;
+    content: " ";
+    display: inline-block;
+    height: var(--icon-size);
+    margin-left: -.125rem;
+    margin-right: .5rem;
+    mask-size: 100% 100%;
+    width: var(--icon-size);
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.document-modal--loading button[type="submit"]:disabled::before {
+    border-color: var(--text-disabled-grey);
+}
