@@ -73,6 +73,7 @@ class BaseTiacModel(models.Model):
             Document.TypeDocument.CERTIFICAT_SANITAIRE,
             Document.TypeDocument.ETIQUETAGE,
             Document.TypeDocument.PHOTO,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.COURRIERS_COURRIELS,
             Document.TypeDocument.SUITES_ADMINISTRATIVES,
             Document.TypeDocument.COMPTE_RENDU,
