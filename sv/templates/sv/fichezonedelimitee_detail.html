@@ -3,7 +3,7 @@
 
 <div class="fiche-header">
     <div>
-        {% include "core/_latest_revision.html" with latest_version=fiche.latest_version content_type_pk=fiche_zone_content_type.pk object_pk=fiche.pk %}
+        {% include "sv/_latest_revision.html" with latest_version=fiche.latest_version content_type_pk=fiche_zone_content_type.pk object_pk=fiche.pk %}
     </div>
     <div class="fiche-action">
         {% if can_delete_fiche_zone_delimitee %}
