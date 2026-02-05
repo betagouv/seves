@@ -6,6 +6,7 @@ from core.mixins import WithOrderingMixin
 from ssa.filters import EvenementFilter
 from ssa.models import EvenementProduit, EvenementInvestigationCasHumain
 from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.models.evenement_produit import EvenementProduitReadOnly
 
 
 class WithFilteredListMixin(WithOrderingMixin):
@@ -26,7 +27,7 @@ class WithFilteredListMixin(WithOrderingMixin):
         contact = user.agent.structure.contact_set.get()
 
         evenement_produit_qs = (
-            EvenementProduit.objects.select_related("createur")
+            EvenementProduitReadOnly.objects.select_related("createur")
             .get_user_can_view(user)
             .with_fin_de_suivi(contact)
             .optimized_for_list()

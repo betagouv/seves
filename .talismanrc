@@ -8,7 +8,7 @@ fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
 - filename: ssa/models/evenement_produit.py
-  checksum: 7ccb261773dbfaf7198e498afaaf320784524d4f50ec9a1096ea516a77695c35
+  checksum: b91a4ffcf71fd7dc350f23e402fbdfd46de3a3d41ce4b79102edaadd4d7ce56d
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
