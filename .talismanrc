@@ -120,4 +120,6 @@ fileignoreconfig:
   checksum: 9a8f61ba3909f3c00b796f0fb4e66f4f6374aad4371f8a0e8395e444e64c32ea
 - filename: core/migrations/0048_alter_document_document_type.py
   checksum: cdc474f71870194e7c13ef7969feca2aeb7f77e981905ba25aad2d6ec6970e4d
+- filename: ssa/static/ssa/free_links.mjs
+  checksum: d17d361c32de70d76581504e5ec6e17a8f710644e02bbd813edaacf5edc14d06
 version: "1.0"

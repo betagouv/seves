@@ -435,6 +435,22 @@ class WithFreeLinkIdsMixin:
         return link_ids
 
     @property
+    def free_links_values_and_labels(self):
+        content_type = ContentType.objects.get_for_model(self)
+        links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
+        result = []
+        for link in links:
+            if link.object_id_1 == self.id and link.content_type_1 == content_type:
+                result.append(
+                    {"value": f"{link.content_type_2.pk}-{link.object_id_2}", "label": str(link.related_object_2)}
+                )
+            else:
+                result.append(
+                    {"value": f"{link.content_type_1.pk}-{link.object_id_1}", "label": str(link.related_object_1)}
+                )
+        return result
+
+    @property
     def free_link_ids_json(self):
         try:
             return json.dumps(self.free_link_ids)

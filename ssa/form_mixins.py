@@ -4,9 +4,7 @@ from ssa.models import EvenementProduit
 from tiac.models import EvenementSimple, InvestigationTiac
 
 
-class WithEvenementProduitFreeLinksMixin(WithFreeLinksMixin):
-    model_label = "Événement produit"
-
+class WithFreeLinksQuerysetsMixin:
     def get_queryset(self, model, user, instance):
         queryset = (
             model.objects.all().order_by_numero().get_user_can_view(user).exclude(etat=EvenementProduit.Etat.BROUILLON)
@@ -46,6 +44,10 @@ class WithEvenementProduitFreeLinksMixin(WithFreeLinksMixin):
             .get_user_can_view(user)
             .exclude(etat=WithEtatMixin.Etat.BROUILLON)
         )
+
+
+class WithEvenementProduitFreeLinksMixin(WithFreeLinksQuerysetsMixin, WithFreeLinksMixin):
+    model_label = "Événement produit"
 
     def _add_free_links(self, model):
         instance = getattr(self, "instance", None)

@@ -37,9 +37,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
 
     expect(update_page.numero_rasff).not_to_be_visible()
 
-    assert choice_js_get_values(page, "#id_free_link") == [
-        f"Investigation de cas humain : {for_free_link.numero}Remove item"
-    ]
+    assert choice_js_get_values(page, "#id_free_link") == [f"{for_free_link.numero}Remove item"]
 
     # Making changes on all fields
     for field in inputs_fields:

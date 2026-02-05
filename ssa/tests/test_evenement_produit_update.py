@@ -46,7 +46,7 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     expect(update_page.numero_rasff).not_to_be_visible()
 
     assert choice_js_get_values(page, "#id_quantification_unite") == [evenement.get_quantification_unite_display()]
-    assert choice_js_get_values(page, "#id_free_link") == [f"Événement produit : {for_free_link.numero}Remove item"]
+    assert choice_js_get_values(page, "#id_free_link") == [f"{for_free_link.numero}Remove item"]
     expect(update_page.page.get_by_text("2000-01-1111", exact=True)).to_be_visible()
 
     assert update_page.get_treeselect_options("categorie-danger") == [
