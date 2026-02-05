@@ -1142,3 +1142,25 @@ def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server,
 
 def test_can_search_in_message_list(live_server, page: Page):
     generic_test_can_search_in_message_list(live_server, page, EvenementFactory())
+
+
+def test_choices_js_only_search_in_label(live_server, page: Page, choice_js_get_all_values):
+    evenement = EvenementFactory()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+
+    ContactStructureFactory(structure__libelle="Structure 11", structure__force_can_be_contacted=True)
+    ContactStructureFactory(structure__libelle="Ma structure", id=11, structure__force_can_be_contacted=True)
+    page.get_by_test_id("element-actions").click()
+    page.get_by_role("link", name="Message", exact=True).click()
+    page.wait_for_url("**core/message**")
+
+    results = choice_js_get_all_values(page, 'label[for="id_recipients"] ~ div.choices')
+    assert "Ma structure" in results
+    assert "Structure 11" in results
+
+    page.locator('label[for="id_recipients"] ~ div.choices').click()
+    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
+    page.locator("*:focus").fill("11")
+    results = choice_js_get_all_values(page, 'label[for="id_recipients"] ~ div.choices')
+    assert "Ma structure" not in results
+    assert "Structure 11" in results
