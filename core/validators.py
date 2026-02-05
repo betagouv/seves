@@ -50,8 +50,8 @@ class AllowedMimeTypes(models.TextChoices):
 @deconstructible
 class MagicMimeValidator:
     def __call__(self, file):
-        file_mime = magic.from_buffer(file.read(2048), mime=True)
         file.seek(0)
+        file_mime = magic.from_buffer(file.read(), mime=True)
         if file_mime == "application/octet-stream" and magic.version() < 546:
             # There's a knwon bug with libmagic where MS Office documents (xslx, docx, etc.) are detected as
             # application/octet-stream. This is fixed in libmagic 5.46.
