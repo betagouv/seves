@@ -7,7 +7,7 @@ from django.views import View
 from io import StringIO
 
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
-from ssa.models import EvenementProduit
+from ssa.models.evenement_produit import EvenementProduitReadOnly
 
 CSV_URLS = [
     "https://fichiers-publics.agriculture.gouv.fr/dgal/ListesOfficielles/SSA1_ACTIV_GEN.txt",
@@ -50,7 +50,7 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
             return JsonResponse({"error": "Le terme de recherche est trop pour une recherche"}, status=400)
         user = self.request.user
         choices = [
-            ("Événement produit", self.get_queryset(EvenementProduit, user, instance=None)),
+            ("Événement produit", self.get_queryset(EvenementProduitReadOnly, user, instance=None)),
             ("Investigation de cas humain", self._get_cas_humain_queryset(user)),
             ("Enregistrement simple", self._get_evenement_simple_queryset(user)),
             ("Investigation de tiac", self._get_investigation_tiac_queryset(user)),
@@ -65,6 +65,8 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
                 )
             if len(parts) == 2:
                 queryset = queryset.filter(numero_annee__icontains=parts[0], numero_evenement__icontains=parts[1])
+
+            queryset = queryset.only("id", "numero_annee", "numero_evenement")
 
             if not queryset:
                 continue
