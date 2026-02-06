@@ -72,7 +72,7 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.numero_field.fill("2025")
+    search_page.annee_field.fill("2025")
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "T-2025.2"
     assert search_page.numero_cell(line_index=2).text_content() == "T-2025.1"
@@ -396,7 +396,8 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.numero_field.fill("2025.2")
+    search_page.annee_field.fill("2025")
+    search_page.numero_field.fill("2")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
@@ -405,7 +406,8 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
-    search_page.numero_field.fill("2025.2")
+    search_page.annee_field.fill("2025")
+    search_page.numero_field.fill("2")
     search_page.with_links.check()
     search_page.submit_search()
 

@@ -6,7 +6,7 @@ import {patchItems, tsDefaultOptions, showHeader, addLevel2CategoryIfAllChildren
 
 
 class SearchFormController extends Controller {
-    static targets = ["agent_contact", "structure_contact", "sidebar", "counter", "dangerSyndromique", "with_free_links", "numero",
+    static targets = ["agent_contact", "structure_contact", "sidebar", "counter", "dangerSyndromique", "with_free_links", "numero", "annee",
         "jsonConfig",
         "categorieProduitInput",
         "categorieProduitContainer",
@@ -54,7 +54,7 @@ class SearchFormController extends Controller {
     }
 
     disableCheckboxIfNeeded(){
-        this.with_free_linksTarget.disabled = !this.numeroTarget.value
+        this.with_free_linksTarget.disabled = !(this.numeroTarget.value || this.anneeTarget.value)
     }
 
     updateFilterCounter(){

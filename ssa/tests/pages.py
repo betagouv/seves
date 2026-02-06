@@ -438,6 +438,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self._cell_content(line_index, 8)
 
     @property
+    def annee_field(self):
+        return self.page.locator("#id_annee")
+
+    @property
     def numero_field(self):
         return self.page.locator("#id_numero")
 

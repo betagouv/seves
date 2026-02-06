@@ -76,7 +76,7 @@ def test_export_tiac_from_ui(live_server, mocked_authentification_user, page: Pa
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.numero_field.fill("2025")
+    search_page.annee_field.fill("2025")
     search_page.submit_search()
     search_page.submit_export()
 
@@ -104,7 +104,7 @@ def test_export_tiac_from_ui_with_only_one_type_of_object_in_filter(
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.numero_field.fill("2025")
+    search_page.annee_field.fill("2025")
     search_page.conclusion_field.select_option("TIAC à agent confirmé")
     search_page.submit_search()
     search_page.submit_export()
