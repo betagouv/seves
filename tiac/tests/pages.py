@@ -251,6 +251,10 @@ class EvenementListPage(WithTreeSelect):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
 
     @property
+    def annee_field(self):
+        return self.page.locator("#id_annee")
+
+    @property
     def numero_field(self):
         return self.page.locator("#id_numero")
 

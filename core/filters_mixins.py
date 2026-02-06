@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.forms.widgets import TextInput
 import django_filters
 
@@ -8,26 +7,35 @@ from seves import settings
 
 
 class WithNumeroFilterMixin(django_filters.FilterSet):
-    numero = django_filters.CharFilter(
-        method="filter_numero",
-        label="Numéro évènement",
+    annee = django_filters.CharFilter(
+        method="filter_annee",
+        label="Année",
         widget=TextInput(
             attrs={
-                "placeholder": "2024",
+                "placeholder": "AAAA",
+            }
+        ),
+    )
+    numero = django_filters.CharFilter(
+        method="filter_numero",
+        label="N° événement",
+        widget=TextInput(
+            attrs={
+                "placeholder": "XXXXX",
             }
         ),
     )
 
+    def filter_annee(self, queryset, name, value):
+        if self.errors.get("annee") or not value:
+            return queryset
+
+        return queryset.filter(numero_annee=value)
+
     def filter_numero(self, queryset, name, value):
         if self.errors.get("numero") or not value:
             return queryset
-
-        parts = value.split(".")
-        if len(parts) == 1:
-            return queryset.filter(Q(numero_annee__icontains=parts[0]) | Q(numero_evenement__icontains=parts[0]))
-        if len(parts) == 2:
-            return queryset.filter(numero_annee__icontains=parts[0], numero_evenement__icontains=parts[1])
-        return queryset
+        return queryset.filter(numero_evenement=value.lstrip("0"))
 
 
 class WithStructureContactFilterMixin(django_filters.FilterSet):

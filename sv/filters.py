@@ -44,6 +44,7 @@ class EvenementFilter(
     class Meta:
         model = Evenement
         fields = [
+            "annee",
             "numero",
             "region",
             "organisme_nuisible",
