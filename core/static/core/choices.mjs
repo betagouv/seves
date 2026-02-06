@@ -6,5 +6,8 @@ export const choicesDefaults = {
     classNames: {containerInner: "fr-select"},
     itemSelectText: "",
     shouldSort: false,
+    fuseOptions: {
+        threshold : 0.2
+    }
 };
 export default choicesDefaults;
