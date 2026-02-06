@@ -85,7 +85,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
     def media(self):
         return super().media + Media(
             js=(
-                js_module("core/free_links.mjs"),
+                js_module("ssa/free_links.mjs"),
                 js_module("tiac/evenement_simple.mjs"),
                 js_module("tiac/ars_informee.mjs"),
             ),
@@ -337,7 +337,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     def media(self):
         return super().media + Media(
             js=(
-                js_module("core/free_links.mjs"),
+                js_module("ssa/free_links.mjs"),
                 js_module("tiac/etiologie.mjs"),
                 js_module("tiac/agents_pathogene.mjs"),
                 js_module("tiac/tiac_conclusion.mjs"),
