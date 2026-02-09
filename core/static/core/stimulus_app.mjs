@@ -31,6 +31,10 @@ async function dsfrDisclosePromise(dsfrDisclosable) {
     return promise.then(() => dsfrDisclosable.node.removeEventListener("dsfr.disclose", cb))
 }
 
+function escapeHTML(value) {
+    return new Option(`${value}`).innerHTML
+}
+
 class FetchPool {
     static createFetchPool() {
         const instance = new FetchPool()
@@ -119,4 +123,4 @@ const applicationReady = Application.start().then(() => {
     return Application
 })
 
-export {applicationReady, dsfrDisclosePromise, fetchPool}
+export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML}

@@ -1,6 +1,7 @@
 from threading import Lock
 from unittest.mock import patch
 
+import pytest
 from django.core.exceptions import ValidationError
 from django.forms import Form, FileField
 from django.urls import reverse
@@ -46,6 +47,26 @@ def generic_test_can_add_document_to_evenement(live_server, page: Page, mocked_a
     expect(page.get_by_text(f"{document_page.BASIC_DOCUMENT_NAME} Information")).to_be_visible()
     expect(page.get_by_text(str(mocked_authentification_user.agent.structure).upper(), exact=True)).to_be_visible()
     expect(page.locator(".fr-tag", has_text=f"{document.get_document_type_display()}")).to_be_visible()
+
+
+def generic_test_document_modal_xss_mitigated(live_server, page: Page, content_object):
+    DocumentFactory.create_batch(4, content_object=content_object)
+
+    page.goto(f"{live_server.url}{content_object.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+
+    document_page.open_document_modal()
+    # language=html
+    document_page.add_basic_document(suffix="><img src=1 onerror=alert(1)>.jpg")
+    message_box = page.locator("#tabpanel-documents-panel #document-upload-messages")
+    try:
+        expect(message_box).to_contain_text(
+            "Les fichiers suivants ont été ajoutés avec succès et seront disponibles après l'analyse antivirus :\n"
+            "Mon document&gt;&lt;img src=1 onerror=alert(1)&gt;.jpg",
+            use_inner_text=True,
+        )
+    except AssertionError:
+        pytest.fail("XSS vulerability on document name")
 
 
 @patch("core.views.DocumentUploadForm.clean_file", autospec=True, wraps=True)
@@ -148,6 +169,7 @@ def generic_test_document_modal_front_behavior(live_server, page: Page, content_
 
     # Test step 5
     # Assert the succes message is disaplayed after redirect and can be closed
+
     content_object.refresh_from_db()
     last_uploaded = list(content_object.documents.order_by("-date_creation"))[:2]
     message_box = page.locator("#tabpanel-documents-panel #document-upload-messages")
