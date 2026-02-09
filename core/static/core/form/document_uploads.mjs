@@ -216,6 +216,10 @@ class DocumentFormset extends Controller {
             sessionStorage[STORAGE_DOCUMENT_SUCCESS] = successMessage
 
             if(hasErrors) {
+                // Focus first erroneous field
+                const autofocus = this.modalTarget.querySelector("[autofocus]")
+                autofocus?.scrollIntoView({block: "center"})
+                autofocus?.focus({focusVisible: true})
                 throw FormValidationError
             }
 
@@ -293,7 +297,8 @@ class DocumentForm extends Controller {
         "accordionTitle",
         "accordionTypeLabel",
         "accordionContent",
-        "networkErrorTpl"
+        "networkErrorTpl",
+        "erroneousField",
     ]
     static classes = ["loading", "success", "error"]
     static outlets = ["document-formset"]
@@ -377,6 +382,7 @@ class DocumentForm extends Controller {
                     this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
                 }
             }
+            await this.#forceOpenAccordion()
             throw e
         }
     }
@@ -386,10 +392,9 @@ class DocumentForm extends Controller {
         if(this.skipEvent === true) return;
         evt.preventDefault()
         evt.stopPropagation()
-        debugger
         await Promise.all([
             dsfrDisclosePromise(dsfr(this.documentFormsetOutlet.modalTarget).modal),
-            dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse),
+            this.#forceOpenAccordion()
         ])
         try {
             this.skipEvent = true
@@ -444,6 +449,11 @@ class DocumentForm extends Controller {
     async onSubmit(evt) {
         evt.preventDefault()
         evt.stopPropagation()
+    }
+
+    async #forceOpenAccordion() {
+        await new Promise(resolve => requestAnimationFrame(resolve))
+        await dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse)
     }
 }
 

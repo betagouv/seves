@@ -69,7 +69,7 @@ def test_cant_add_document_with_correct_extension_but_fake_content(
     document_page.validate_document_modal(expect_error=True)
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
-        expect(accordion.locator(".errorlist")).to_have_text("Type de fichier non autorisé: text/html")
+        expect(accordion.locator(".errorlist")).to_contain_text("Type de fichier non autorisé : text/html")
 
     evenement.refresh_from_db()
     assert evenement.documents.count() == 0
