@@ -15,7 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from reversion.models import Revision
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE, SEVES_STRUCTURE
 from seves import settings
 from .managers import (
     ContactQueryset,
@@ -97,6 +97,10 @@ class Structure(models.Model):
     @property
     def is_mus_or_bsv(self):
         return self.niveau2 in [MUS_STRUCTURE, BSV_STRUCTURE]
+
+    @property
+    def is_seves(self):
+        return self.niveau1 == SEVES_STRUCTURE
 
 
 @reversion.register()
