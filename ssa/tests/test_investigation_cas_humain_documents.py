@@ -7,6 +7,7 @@ from core.tests.generic_tests.documents import (
     generic_test_cant_see_document_type_from_other_app,
     generic_test_can_add_document_to_evenement,
     generic_test_document_modal_front_behavior,
+    generic_test_document_modal_xss_mitigated,
 )
 from ssa.factories import InvestigationCasHumainFactory
 from ssa.models import EvenementInvestigationCasHumain
@@ -48,6 +49,11 @@ def test_can_edit_document_on_evenement(live_server, page: Page):
 def test_cant_see_document_type_from_other_app(live_server, page: Page, check_select_options_from_element):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_cant_see_document_type_from_other_app(live_server, page, check_select_options_from_element, evenement)
+
+
+def test_document_modal_xss_mitigated(live_server, page: Page):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_document_modal_xss_mitigated(live_server, page, evenement)
 
 
 def test_document_modal_front_behavior(live_server, page: Page):

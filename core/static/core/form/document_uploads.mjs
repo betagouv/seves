@@ -1,5 +1,5 @@
 import {Controller} from "Stimulus"
-import {applicationReady, dsfrDisclosePromise, fetchPool} from "Application"
+import {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML} from "Application"
 import {createStore, useStore} from "StimulusStore"
 
 
@@ -206,7 +206,7 @@ class DocumentFormset extends Controller {
             const promiseResults = await Promise.allSettled(this.documentFormOutlets.map(controller => controller.submit()))
             for(const promiseResult of promiseResults) {
                 if(promiseResult.status === "fulfilled") {
-                    successMessage = `${successMessage}<li>${promiseResult.value}</li>`
+                    successMessage = `${successMessage}<li>${escapeHTML(promiseResult.value)}</li>`
                 } else {
                     hasErrors = true
                 }
@@ -358,7 +358,7 @@ class DocumentForm extends Controller {
 
             if(result.ok) {
                 this.stateValue = DOCUMENT_STATE.IDLE
-                return this.documentNameTarget.value.trim()
+                return escapeHTML(this.documentNameTarget.value.trim())
             } else {
                 throw FormValidationError
             }

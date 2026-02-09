@@ -94,7 +94,7 @@ class BaseDocumentPage(ABC):
         self.set_input_file(document)
 
         # Open modification accordion
-        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
+        accordion = self.page.locator(".fr-accordion", has_text=document_name)
         expect(accordion).to_be_visible()
         accordion.get_by_test_id("open-accordion").click()
 
@@ -102,8 +102,7 @@ class BaseDocumentPage(ABC):
         accordion.locator('[name$="nom"]').fill(document_name)
 
         # Accordion title changed so we must reselect
-        accordion = self.page.locator(f'.fr-accordion:has-text("{document_name}")')
-
+        accordion = self.page.locator(".fr-accordion", has_text=document_name)
         accordion.locator('[name$="document_type"]').last.select_option("Autre document")
         accordion.locator('[name$="description"]').last.fill(f"Ma description {suffix}")
         if close:
