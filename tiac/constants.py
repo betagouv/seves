@@ -65,6 +65,7 @@ class EvenementFollowUp(TextChoices):
     TRANSMISSION_DELEGATAIRE = "programmation au delegataire pour controle", "Transmis au délégataire pour contrôle"
     TRANSMISSION_DD = "programmation a une autre DD", "Transféré à une autre structure"
     INVESGTIGATION_TIAC = "investigation tiac", "Passé en investigation de TIAC"
+    PASSE_EVENEMENT_PRODUIT = "passe en evenement produit", "Passé en événement produit"
 
 
 @dataclass
