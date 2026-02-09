@@ -30,7 +30,7 @@ from .managers import (
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import AllowedExtensions, validate_numero_agrement, validate_upload_file
+from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
 
 User = get_user_model()
 
@@ -295,7 +295,7 @@ class Document(models.Model):
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
         upload_to=get_timestamped_filename,
-        validators=[validate_upload_file, FileExtensionValidator(AllowedExtensions.values)],
+        validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)

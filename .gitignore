@@ -165,4 +165,7 @@ cython_debug/
 /staticfiles/
 *.encrypted
 package-lock.json
+
+# Exclude assets from tests
 **/test-results/
+/test.csv

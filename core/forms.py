@@ -74,6 +74,9 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
         for error in self.errors.pop("file", []):
             self.add_error("nom", error)
 
+        for field in self.errors.keys():
+            self.fields[field].widget.attrs["autofocus"] = "true"
+
     class Meta:
         model = Document
         fields = ["nom", "document_type", "description", "file"]

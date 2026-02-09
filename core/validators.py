@@ -49,6 +49,18 @@ class AllowedMimeTypes(models.TextChoices):
 
 
 @deconstructible
+class AnyOfValidator:
+    """A validator that runs multiple validator, failing fast"""
+
+    def __init__(self, *validators):
+        self.validators = validators
+
+    def __call__(self, value):
+        for validator in self.validators:
+            validator(value)
+
+
+@deconstructible
 class MagicMimeValidator:
     def __call__(self, file):
         file.seek(0)
@@ -60,7 +72,7 @@ class MagicMimeValidator:
             with contextlib.suppress(Exception):
                 file_mime = mimetypes.guess_type(file.name)[0]
         if file_mime not in AllowedMimeTypes.values:
-            raise ValidationError(f"Type de fichier non autorisé: {file_mime}")
+            raise ValidationError(f"Type de fichier non autorisé : {file_mime}")
 
 
 def validate_upload_file(file):
