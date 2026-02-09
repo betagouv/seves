@@ -1,4 +1,4 @@
-{% load partials %}
+{% load partials dsfr_tags %}
 {% load static importmap dsfr_tags groups waffle_tags %}
 
 <!doctype html>
@@ -138,6 +138,13 @@
                 </div>
             </div>
         </header>
+
+        {% if request.user.agent.structure.is_seves and env == "prod" %}
+            <div class="prod-warning-message">
+                {% dsfr_notice title="Attention vous êtes sur l'environnement de production de Sèves" type="alert" %}
+            </div>
+        {% endif %}
+
         {% if messages %}
             <div class="alert-container">
                 {% for message in messages %}

@@ -8,6 +8,7 @@ def common_settings(request):
     return {
         "COMMUNES_API": settings.COMMUNES_API,
         "siret_api_endpoint": reverse_lazy("siret-api", kwargs={"siret": "__siret__"}),
+        "env": settings.ENVIRONMENT,
     }
 
 
