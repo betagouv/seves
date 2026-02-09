@@ -59,6 +59,9 @@
             {% if object.display_transfer_notice %}
               {% dsfr_notice title='Publiez la fiche, puis passez-la en investigation de TIAC depuis le menu "+ Action"' %}
             {% endif %}
+            {% if object.display_evenement_produit_notice %}
+              {% dsfr_notice title='Publiez la fiche, puis créez un nouvel évènement dans "Produit & cas" et mettez les deux fiches en lien.' %}
+            {% endif %}
           </div>
         </div>
       </div>
