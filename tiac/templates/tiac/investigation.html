@@ -263,10 +263,7 @@
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
                 </div>
-                <span class="fr-hint-text fr-mb-1w">Pour lier un événement saisissez son numéro ci-dessous.</span>
-                <div data-controller="free-links" class="free-links" data-free-links-ids-value='{{ form.instance.free_link_ids_json|default:"[]" }}'>
-                    {{ form.free_link|set_data:"free-links-target:select"  }}
-                </div>
+                {% include "ssa/_free_links_block.html" %}
             </fieldset>
             <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-mt-4v">
                 {% block bottom_buttons %}

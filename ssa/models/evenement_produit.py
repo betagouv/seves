@@ -27,6 +27,18 @@ from .mixins import (
     SsaBaseEvenementModel,
 )
 
+original_init = DirtyFieldsMixin.__init__
+
+
+def readonly_init(self, *args, **kwargs):
+    if getattr(self, "bypass_dirty_fields", False):
+        models.Model.__init__(self, *args, **kwargs)
+        return
+    original_init(self, *args, **kwargs)
+
+
+DirtyFieldsMixin.__init__ = readonly_init
+
 
 class TemperatureConservation(models.TextChoices):
     REFRIGERE = "refrigere", "Réfrigéré"
@@ -316,3 +328,10 @@ class EvenementProduit(
                 name="pam_requires_danger_bacterien",
             ),
         ]
+
+
+class EvenementProduitReadOnly(EvenementProduit):
+    bypass_dirty_fields = True
+
+    class Meta:
+        proxy = True

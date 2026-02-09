@@ -9,6 +9,7 @@ from .views import (
     EvenementUpdateView,
     InvestigationCasHumainCreateView,
 )
+from .views.api import FindFreeLinksView
 from .views.investigation_cas_humain import (
     InvestigationCasHumainDetailView,
     InvestigationCasHumainUpdateView,
@@ -60,6 +61,11 @@ urlpatterns = [
         "api/find-numero-agrement/",
         FindNumeroAgrementView.as_view(),
         name="find-numero-agrement",
+    ),
+    path(
+        "api/freelinks/recherche/",
+        FindFreeLinksView.as_view(),
+        name="find-free-link",
     ),
     path(
         "investigation-cas-humain/creation/",
