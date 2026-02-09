@@ -22,7 +22,8 @@ django-template-partials
 django-waffle
 django-querysetsequence
 django-reversion-compare
-docxtpl[subdoc]
+docxtpl
+docxcompose3
 django-dirtyfields
 # Dev
 djhtml
