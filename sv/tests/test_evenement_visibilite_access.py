@@ -1,15 +1,15 @@
 from unittest.mock import patch
 
-import pytest
-from playwright.sync_api import Page, expect
-from django.urls import reverse
 from django.contrib.auth.models import Group
+from django.urls import reverse
+from playwright.sync_api import Page, expect
+import pytest
 
-from core.factories import StructureFactory, ContactStructureFactory, ContactAgentFactory
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
+from core.models import Structure, Visibilite
 from seves import settings
 from sv.factories import EvenementFactory, FicheDetectionFactory
-from core.models import Structure, Visibilite
-from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, AC_STRUCTURE
 from sv.models import Evenement
 
 

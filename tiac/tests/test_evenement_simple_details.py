@@ -1,8 +1,8 @@
 from playwright.sync_api import Page, expect
 
 from core.models import LienLibre
-from tiac.factories import EvenementSimpleFactory, EtablissementFactory
-from tiac.models import EvenementSimple, Etablissement
+from tiac.factories import EtablissementFactory, EvenementSimpleFactory
+from tiac.models import Etablissement, EvenementSimple
 from tiac.tests.pages import EvenementSimpleDetailsPage
 
 

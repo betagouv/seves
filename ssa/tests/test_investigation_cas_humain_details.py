@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-from ssa.factories import InvestigationCasHumainFactory, EtablissementFactory
+from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
 
 

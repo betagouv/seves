@@ -8,64 +8,65 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Prefetch
 from django.forms import Media
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, HttpResponse, Http404
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import (
-    ListView,
-    DetailView,
     CreateView,
-    UpdateView,
     DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
 )
 from reversion.models import Version
 
 from core.mixins import (
-    WithDocumentUploadFormMixin,
-    WithDocumentListInContextMixin,
-    WithMessageMixin,
-    WithContactListInContextMixin,
     CanUpdateVisibiliteRequiredMixin,
-    WithFreeLinksListInContextMixin,
-    WithFormErrorsAsMessagesMixin,
-    WithContactFormsInContextMixin,
-    WithBlocCommunPermission,
-    WithAddUserContactsMixin,
-    WithClotureContextMixin,
-    WithOrderingMixin,
-    WithFinDeSuiviMixin,
     MediaDefiningMixin,
+    WithAddUserContactsMixin,
+    WithBlocCommunPermission,
+    WithClotureContextMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithFinDeSuiviMixin,
+    WithFormErrorsAsMessagesMixin,
+    WithFreeLinksListInContextMixin,
+    WithMessageMixin,
+    WithOrderingMixin,
 )
-from core.models import Visibilite, Contact
+from core.models import Contact, Visibilite
 from core.redirect import safe_redirect
 from sv.forms import (
-    FicheZoneDelimiteeForm,
-    ZoneInfesteeFormSet,
-    ZoneInfesteeFormSetUpdate,
+    EvenementForm,
+    EvenementUpdateForm,
+    EvenementVisibiliteUpdateForm,
     FicheDetectionForm,
+    FicheZoneDelimiteeForm,
     LieuFormSet,
     PrelevementForm,
-    EvenementForm,
-    EvenementVisibiliteUpdateForm,
-    EvenementUpdateForm,
     StructureSelectionForVisibiliteForm,
+    ZoneInfesteeFormSet,
+    ZoneInfesteeFormSetUpdate,
 )
+
 from .export import FicheDetectionExport
 from .filters import EvenementFilter
 from .models import (
+    Evenement,
     FicheDetection,
+    FicheZoneDelimitee,
+    Laboratoire,
     Lieu,
     Prelevement,
-    FicheZoneDelimitee,
     StructurePreleveuse,
-    Laboratoire,
-    Evenement,
 )
 from .view_mixins import (
     WithPrelevementHandlingMixin,
-    WithStatusToOrganismeNuisibleMixin,
     WithPrelevementResultatsMixin,
+    WithStatusToOrganismeNuisibleMixin,
 )
 
 

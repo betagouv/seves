@@ -1,13 +1,14 @@
 import logging
 
-import reversion
 from celery.exceptions import OperationalError
 from django.conf import settings
 from django.db import transaction
-from django.db.models.signals import pre_save, post_save, post_migrate, pre_delete
+from django.db.models.signals import post_migrate, post_save, pre_delete, pre_save
 from django.dispatch import receiver
+import reversion
 
-from core.models import Document, LienLibre, Message, FinSuiviContact, CustomRevisionMetaData
+from core.models import CustomRevisionMetaData, Document, FinSuiviContact, LienLibre, Message
+
 from .diffs import create_manual_version
 from .notifications import notify_message_deleted
 from .tasks import scan_for_viruses

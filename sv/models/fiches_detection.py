@@ -1,21 +1,22 @@
 from functools import cached_property
 
-import reversion
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+import reversion
 from reversion.models import Version
 
-from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.models import Structure
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.versions import get_versions_from_ids
 from sv.managers import (
     FicheDetectionManager,
 )
-from .lieux import Lieu
-from .prelevements import Prelevement
-from .models_mixins import WithDerniereMiseAJourMixin
+
 from ..validators import validate_numero_detection
+from .lieux import Lieu
+from .models_mixins import WithDerniereMiseAJourMixin
+from .prelevements import Prelevement
 
 
 class Contexte(models.Model):

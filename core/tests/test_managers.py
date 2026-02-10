@@ -1,12 +1,12 @@
 from datetime import datetime
 
-import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+import pytest
 
-from core.factories import DocumentFactory, UserFactory, ContactStructureFactory, ContactAgentFactory, StructureFactory
-from core.models import Document, Contact
+from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, StructureFactory, UserFactory
+from core.models import Contact, Document
 from sv.factories import EvenementFactory
 
 User = get_user_model()

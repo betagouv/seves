@@ -1,6 +1,6 @@
-import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
+import pytest
 
 from tiac.factories import EvenementSimpleFactory
 from tiac.tests.pages import EvenementSimpleEditFormPage

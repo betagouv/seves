@@ -1,13 +1,13 @@
-import json
 from dataclasses import dataclass
 from enum import auto
+import json
 
 from django.db.models import TextChoices
 from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 
-from ssa.constants import CategorieDanger
 from core.mixins import WithChoicesToJS
+from ssa.constants import CategorieDanger
 
 
 class EvenementOrigin(TextChoices):

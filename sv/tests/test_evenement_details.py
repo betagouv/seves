@@ -1,27 +1,27 @@
 import re
 from zoneinfo import ZoneInfo
 
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.utils import timezone, formats
-from playwright.sync_api import expect, Page
+from django.utils import formats, timezone
+from playwright.sync_api import Page, expect
+import pytest
 from reversion.models import Version
 
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE
+from core.constants import BSV_STRUCTURE, MUS_STRUCTURE
 from core.factories import StructureFactory
-from core.models import Structure, Visibilite, Contact
+from core.models import Contact, Structure, Visibilite
 from seves import settings
 from sv.factories import (
     EvenementFactory,
-    FicheZoneFactory,
     FicheDetectionFactory,
+    FicheZoneFactory,
     LieuFactory,
+    OrganismeNuisibleFactory,
     PrelevementFactory,
     ZoneInfesteeFactory,
-    OrganismeNuisibleFactory,
 )
-from sv.models import Evenement, FicheDetection, Etat, Prelevement, FicheZoneDelimitee
+from sv.models import Etat, Evenement, FicheDetection, FicheZoneDelimitee, Prelevement
 
 
 def get_date_formated(date_derniere_mise_a_jour):

@@ -2,14 +2,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import MessageFactory, DepartementFactory
+from core.factories import DepartementFactory, MessageFactory
 from core.models import LienLibre
 from tiac.factories import (
-    InvestigationTiacFactory,
-    EtablissementFactory,
-    RepasSuspectFactory,
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
+    EtablissementFactory,
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
 )
 from tiac.models import InvestigationTiac
 from tiac.tests.pages import (

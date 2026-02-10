@@ -3,24 +3,24 @@ from django.views.generic import TemplateView
 
 from . import auth_views
 from .views import (
-    DocumentUploadView,
-    DocumentDeleteView,
-    DocumentUpdateView,
-    ContactDeleteView,
-    MessageCreateView,
-    SoftDeleteView,
     ACNotificationView,
-    PublishView,
-    StructureAddView,
     AgentAddView,
     CloturerView,
-    PublishAndACNotificationView,
+    ContactDeleteView,
+    DocumentDeleteView,
+    DocumentUpdateView,
+    DocumentUploadView,
     EvenementOuvrirView,
-    MessageUpdateView,
-    sirene_api,
-    RevisionsListView,
-    MessageDetailsView,
     FinDeSuiviHandlingView,
+    MessageCreateView,
+    MessageDetailsView,
+    MessageUpdateView,
+    PublishAndACNotificationView,
+    PublishView,
+    RevisionsListView,
+    SoftDeleteView,
+    StructureAddView,
+    sirene_api,
 )
 
 urlpatterns = [

@@ -2,24 +2,24 @@ from django.contrib import admin
 from reversion.admin import VersionAdmin
 
 from .models import (
-    OrganismeNuisible,
-    StatutReglementaire,
     Contexte,
-    Lieu,
-    StatutEtablissement,
-    PositionChaineDistribution,
-    StructurePreleveuse,
-    SiteInspection,
-    MatricePrelevee,
     EspeceEchantillon,
-    Laboratoire,
-    Prelevement,
-    StatutEvenement,
-    FicheDetection,
-    ZoneInfestee,
-    FicheZoneDelimitee,
     Evenement,
+    FicheDetection,
+    FicheZoneDelimitee,
+    Laboratoire,
+    Lieu,
+    MatricePrelevee,
+    OrganismeNuisible,
+    PositionChaineDistribution,
+    Prelevement,
+    SiteInspection,
+    StatutEtablissement,
+    StatutEvenement,
+    StatutReglementaire,
+    StructurePreleveuse,
     VersionFicheZoneDelimitee,
+    ZoneInfestee,
 )
 
 admin.site.site_header = "Administration de Sèves"

@@ -2,7 +2,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 
-from core.models import Document, Message, Contact, FinSuiviContact
+from core.models import Contact, Document, FinSuiviContact, Message
 from core.notifications import notify_fin_de_suivi
 
 

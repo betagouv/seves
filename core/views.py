@@ -2,7 +2,6 @@ import contextlib
 import json
 import logging
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -17,30 +16,32 @@ from django.utils.translation import ngettext
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView
-from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.views.generic.edit import CreateView, FormView, UpdateView
+import requests
 from reversion.models import Version
 
-from core.diffs import CompareMixin, get_diff_from_comment_version, Diff
+from core.diffs import CompareMixin, Diff, get_diff_from_comment_version
+
 from .forms import (
-    DocumentUploadForm,
-    DocumentEditForm,
-    StructureAddForm,
     AgentAddForm,
     BasicMessageForm,
+    DemandeInterventionForm,
+    DocumentEditForm,
+    DocumentUploadForm,
     NoteForm,
     PointDeSituationForm,
-    DemandeInterventionForm,
+    StructureAddForm,
 )
 from .mixins import (
-    PreventActionIfVisibiliteBrouillonMixin,
-    WithAddUserContactsMixin,
-    WithPublishMixin,
-    WithACNotificationMixin,
     MessageHandlingMixin,
-    WithFormErrorsAsMessagesMixin,
+    PreventActionIfVisibiliteBrouillonMixin,
+    WithACNotificationMixin,
+    WithAddUserContactsMixin,
     WithEtatMixin,
+    WithFormErrorsAsMessagesMixin,
+    WithPublishMixin,
 )
-from .models import Document, Message, Contact, user_is_referent_national, FinSuiviContact
+from .models import Contact, Document, FinSuiviContact, Message, user_is_referent_national
 from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
 

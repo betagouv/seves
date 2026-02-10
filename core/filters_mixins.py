@@ -1,6 +1,6 @@
-import django_filters
 from django.db.models import Q
 from django.forms.widgets import TextInput
+import django_filters
 
 from core.mixins import WithEtatMixin
 from core.models import Contact, Structure

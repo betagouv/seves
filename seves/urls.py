@@ -15,11 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from mozilla_django_oidc.urls import OIDCCallbackClass
-from django.urls import path, include
-from django.views.generic.base import RedirectView
 from django.conf import settings
-
+from django.urls import include, path
+from django.views.generic.base import RedirectView
+from mozilla_django_oidc.urls import OIDCCallbackClass
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="sv:evenement-liste"), name="index"),

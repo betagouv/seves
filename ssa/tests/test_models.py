@@ -1,11 +1,11 @@
-import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+import pytest
 
 from core.factories import DocumentFactory
 from core.models import Document
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
 from ssa.constants import CategorieDanger, PretAManger
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
 
 
 @pytest.mark.django_db

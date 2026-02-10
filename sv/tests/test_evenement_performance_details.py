@@ -1,13 +1,13 @@
 import pytest
 
-from core.factories import DocumentFactory, MessageFactory, ContactStructureFactory
+from core.factories import ContactStructureFactory, DocumentFactory, MessageFactory
 from sv.factories import (
     EvenementFactory,
     FicheDetectionFactory,
-    PrelevementFactory,
     FicheZoneFactory,
-    ZoneInfesteeFactory,
     LieuFactory,
+    PrelevementFactory,
+    ZoneInfesteeFactory,
 )
 
 BASE_NUM_QUERIES = 22  # Please note a first call is made without assertion to warm up any possible cache

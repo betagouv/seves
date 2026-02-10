@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import HandlePermissionsView, HandleAdminsView
+
+from .views import HandleAdminsView, HandlePermissionsView
 
 urlpatterns = [
     path(

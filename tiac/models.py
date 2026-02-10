@@ -1,4 +1,3 @@
-import reversion
 from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
@@ -6,34 +5,36 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import strip_tags
+import reversion
 from reversion.models import Version
 
 from core.mixins import (
+    AllowModificationMixin,
+    EmailNotificationMixin,
     WithContactPermissionMixin,
+    WithDocumentPermissionMixin,
     WithEtatMixin,
     WithFreeLinkIdsMixin,
-    WithDocumentPermissionMixin,
     WithMessageUrlsMixin,
-    EmailNotificationMixin,
-    AllowModificationMixin,
 )
-from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.model_mixins import WithBlocCommunFieldsMixin
-from core.models import Structure, BaseEtablissement, Document, Departement
+from core.models import BaseEtablissement, Departement, Document, Structure
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import (
-    ModaliteDeclarationEvenement,
-    EvenementOrigin,
-    EvenementFollowUp,
-    Motif,
-    TypeRepas,
-    TypeCollectivite,
-    TypeAliment,
-    MotifAliment,
-    EtatPrelevement,
     DANGERS_COURANTS,
     SELECTED_HAZARD_CHOICES,
+    EtatPrelevement,
+    EvenementFollowUp,
+    EvenementOrigin,
+    ModaliteDeclarationEvenement,
+    Motif,
+    MotifAliment,
+    TypeAliment,
+    TypeCollectivite,
+    TypeRepas,
 )
+
 from .constants import DangersSyndromiques, SuspicionConclusion
 from .managers import EvenementSimpleManager, InvestigationTiacManager
 from .model_mixins import WithSharedNumeroMixin

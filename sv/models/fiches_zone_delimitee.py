@@ -1,18 +1,16 @@
 from functools import cached_property
 
-import reversion
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import TextChoices
 from django.urls import reverse
-from reversion.models import Version, Revision
+import reversion
+from reversion.models import Revision, Version
 
 from core.models import Structure, UnitesMesure
 from core.versions import get_versions_from_ids
-from sv.managers import (
-    FicheZoneManager,
-)
-from sv.models import WithDerniereMiseAJourMixin
+from sv.managers import FicheZoneManager
+from sv.models.models_mixins import WithDerniereMiseAJourMixin
 
 
 @reversion.register()

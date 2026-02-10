@@ -1,7 +1,7 @@
-import pytest
 from playwright.sync_api import expect
+import pytest
 
-from core.factories import ContactAgentFactory, StructureFactory, ContactStructureFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import Contact
 from seves import settings
 from sv.factories import EvenementFactory

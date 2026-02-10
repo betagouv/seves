@@ -1,11 +1,11 @@
 from .api import FindNumeroAgrementView
+from .investigation_cas_humain import InvestigationCasHumainCreateView
 from .produit import (
     EvenementProduitCreateView,
     EvenementProduitDetailView,
     EvenementsListView,
     EvenementUpdateView,
 )
-from .investigation_cas_humain import InvestigationCasHumainCreateView
 
 __all__ = (
     "EvenementProduitCreateView",

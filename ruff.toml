@@ -1,1 +1,7 @@
 line-length = 120
+lint.extend-select = ["I"]
+
+[lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+known-third-party = ["django", "requests", "pytest", "reversion", "playwright", "faker", "mozilla_django_oidc", "post_office", "queryset_sequence", "waffle"]

@@ -11,15 +11,15 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
-import tempfile
 from pathlib import Path
+import tempfile
 from urllib.parse import urlparse
 
-import environ
-import sentry_sdk
-from csp.constants import SELF, NONCE
+from csp.constants import NONCE, SELF
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
+import environ
+import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

@@ -1,11 +1,10 @@
 import dataclasses
-import typing
 from datetime import datetime
-
+import typing
 
 if typing.TYPE_CHECKING:
     from core.models import Structure
-    from ssa.models import EvenementProduit, EvenementInvestigationCasHumain
+    from ssa.models import EvenementInvestigationCasHumain, EvenementProduit
 
 
 @dataclasses.dataclass

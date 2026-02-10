@@ -1,7 +1,7 @@
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from sv.factories import FicheDetectionFactory, LieuFactory, EvenementFactory
+from sv.factories import EvenementFactory, FicheDetectionFactory, LieuFactory
 
 
 def test_commune_column_with_multiple_communes(live_server, page: Page):

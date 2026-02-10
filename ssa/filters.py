@@ -1,22 +1,22 @@
-import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from django.db.models import Q
-from django.forms import DateInput, TextInput, CheckboxInput
+from django.forms import CheckboxInput, DateInput, TextInput
 from django_countries import Countries
+import django_filters
 from django_filters.filters import BaseInFilter, CharFilter
 from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
-    WithNumeroFilterMixin,
-    WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtatFilterMixin,
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
 )
 from core.forms import DSFRForm
-from core.models import LienLibre, Departement
-from ssa.constants import TypeEvenement, SourceInvestigationCasHumain, Source
+from core.models import Departement, LienLibre
+from ssa.constants import Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
 
 

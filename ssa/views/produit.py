@@ -1,5 +1,5 @@
-import io
 import datetime
+import io
 import json
 import os
 
@@ -8,37 +8,36 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.forms import Media
-from django.http import HttpResponseRedirect, Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
 from core.mixins import (
-    WithClotureContextMixin,
-    WithDocumentExportContextMixin,
-    WithFinDeSuiviMixin,
-    WithFormsetInvalidMixin,
     MediaDefiningMixin,
-)
-from core.mixins import (
+    WithAddUserContactsMixin,
+    WithBlocCommunPermission,
+    WithClotureContextMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    WithDocumentExportContextMixin,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
+    WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
+    WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
-    WithContactListInContextMixin,
-    WithDocumentUploadFormMixin,
-    WithDocumentListInContextMixin,
-    WithContactFormsInContextMixin,
-    WithBlocCommunPermission,
-    WithAddUserContactsMixin,
 )
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import EvenementProduit, Etablissement
+from ssa.models import Etablissement, EvenementProduit
+
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
-from .mixins import WithFilteredListMixin, EvenementProduitValuesMixin
 from ..display import EvenementDisplay
-from ..notifications import notify_type_evenement_fna, notify_souches_clusters, notify_alimentation_animale
+from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
+from .mixins import EvenementProduitValuesMixin, WithFilteredListMixin
 
 
 class EvenementProduitCreateView(

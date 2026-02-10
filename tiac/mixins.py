@@ -1,7 +1,8 @@
+from queryset_sequence import QuerySetSequence
+
 from core.mixins import WithOrderingMixin
 from tiac.filters import TiacFilter
 from tiac.models import EvenementSimple, InvestigationTiac
-from queryset_sequence import QuerySetSequence
 
 
 class WithFilteredListMixin(WithOrderingMixin):

@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-from sv.factories import EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory, FicheDetectionFactory
+from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory, ZoneInfesteeFactory
 
 
 def test_fichezonedelimitee_with_zoneinfestee_detail(live_server, page: Page, mocked_authentification_user):

@@ -3,9 +3,9 @@ import json
 from queryset_sequence import QuerySetSequence
 
 from core.mixins import WithOrderingMixin
-from ssa.filters import EvenementFilter
-from ssa.models import EvenementProduit, EvenementInvestigationCasHumain
 from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.filters import EvenementFilter
+from ssa.models import EvenementInvestigationCasHumain, EvenementProduit
 from ssa.models.evenement_produit import EvenementProduitReadOnly
 
 

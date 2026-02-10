@@ -1,30 +1,30 @@
 from functools import cached_property
 
-import django_filters
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import DateInput, Media, CheckboxInput, TextInput, HiddenInput
+from django.forms import CheckboxInput, DateInput, HiddenInput, Media, TextInput
+import django_filters
 from dsfr.forms import DsfrBaseForm
 
 from core.filters_mixins import (
-    WithNumeroFilterMixin,
-    WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtatFilterMixin,
+    WithNumeroFilterMixin,
+    WithStructureContactFilterMixin,
 )
 from core.form_mixins import js_module
 from core.models import LienLibre
-from ssa.filters import WithEtablissementFilterMixin, CharInFilter
+from ssa.filters import CharInFilter, WithEtablissementFilterMixin
 from tiac.constants import (
-    TypeRepas,
-    TypeAliment,
+    DANGERS_COURANTS,
     DangersSyndromiques,
     EvenementFollowUp,
-    DANGERS_COURANTS,
     SuspicionConclusion,
+    TypeAliment,
+    TypeRepas,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
+from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
 
 
 class TiacFilterForm(DsfrBaseForm):

@@ -1,35 +1,34 @@
-import pytest
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
-from core.constants import REGIONS, DEPARTEMENTS
+from core.constants import DEPARTEMENTS, REGIONS
 from core.factories import DepartementFactory
 from core.models import Structure
 from sv.constants import STRUCTURE_EXPLOITANT
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+
 from ..factories import (
-    FicheDetectionFactory,
-    LieuFactory,
-    LaboratoireFactory,
-    PrelevementFactory,
     EvenementFactory,
-    SiteInspectionFactory,
+    FicheDetectionFactory,
+    LaboratoireFactory,
+    LieuFactory,
     PositionChaineDistributionFactory,
+    PrelevementFactory,
+    SiteInspectionFactory,
 )
 from ..models import (
+    Departement,
+    Evenement,
     FicheDetection,
+    Laboratoire,
     Lieu,
     Prelevement,
-    Departement,
-    StructurePreleveuse,
-    Laboratoire,
-    Evenement,
-)
-from ..models import (
     Region,
+    StructurePreleveuse,
 )
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
 @pytest.fixture(autouse=True)

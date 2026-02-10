@@ -1,14 +1,15 @@
 from unittest import mock
 
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactStructureFactory, StructureFactory
-from core.models import Structure, Contact, Message
-from core.constants import MUS_STRUCTURE, BSV_STRUCTURE, AC_STRUCTURE
+from core.models import Contact, Message, Structure
+
 from ..factories import EvenementFactory, FicheDetectionFactory
 from ..models import Evenement
 

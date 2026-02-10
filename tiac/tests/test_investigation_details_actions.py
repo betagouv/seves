@@ -3,6 +3,7 @@ from playwright.sync_api import expect
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
+
 from .pages import InvestigationTiacDetailsPage
 
 

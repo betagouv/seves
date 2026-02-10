@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import reversion
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -9,27 +8,29 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
-from django.db.models import Q, CheckConstraint
+from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+import reversion
 from reversion.models import Revision
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE, SEVES_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, SEVES_STRUCTURE
 from seves import settings
+
 from .managers import (
+    ContactManager,
     ContactQueryset,
-    LienLibreQueryset,
-    StructureQueryset,
     DocumentManager,
     DocumentQueryset,
+    LienLibreQueryset,
     MessageManager,
-    ContactManager,
     MessagQueryset,
+    StructureQueryset,
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import validate_upload_file, AllowedExtensions, validate_numero_agrement
+from .validators import AllowedExtensions, validate_numero_agrement, validate_upload_file
 
 User = get_user_model()
 

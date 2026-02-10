@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.forms import Media, CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, Media
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import DSFRCheckboxInput

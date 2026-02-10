@@ -1,5 +1,4 @@
 from django.core.management import call_command
-
 import pytest
 
 from sv.models import EspeceEchantillon

@@ -1,59 +1,59 @@
 import datetime
+from functools import cached_property
 import io
 import json
 import os
-from functools import cached_property
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404, HttpResponse
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
-from django.views.generic.edit import ProcessFormView, ModelFormMixin
+from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
 from core.diffs import create_manual_version
 from core.mixins import (
-    WithFormErrorsAsMessagesMixin,
-    WithFreeLinksListInContextMixin,
-    WithClotureContextMixin,
+    MediaDefiningMixin,
+    WithAddUserContactsMixin,
     WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
-    WithMessageMixin,
+    WithClotureContextMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
-    WithAddUserContactsMixin,
     WithDocumentExportContextMixin,
-    WithFinDeSuiviMixin,
+    WithDocumentListInContextMixin,
+    WithDocumentUploadFormMixin,
     WithExportHeterogeneousQuerysetMixin,
+    WithFinDeSuiviMixin,
+    WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
-    MediaDefiningMixin,
+    WithFreeLinksListInContextMixin,
+    WithMessageMixin,
 )
-from core.models import LienLibre, CustomRevisionMetaData
+from core.models import CustomRevisionMetaData, LienLibre
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
+from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from tiac.tasks import export_tiac_task
+
 from .constants import DangersSyndromiques
 from .display import DisplayItem
 from .filters import TiacFilter
 from .forms import EvenementSimpleTransferForm
 from .formsets import (
-    EvenementSimpleEtablissementFormSet,
-    RepasFormSet,
     AlimentFormSet,
-    InvestigationTiacEtablissementFormSet,
     AnalysesAlimentairesFormSet,
+    EvenementSimpleEtablissementFormSet,
+    InvestigationTiacEtablissementFormSet,
+    RepasFormSet,
 )
-from .notifications import notify_transfer, notify_transformation, notify_investigation_coordonnee, notify_conclusion
+from .notifications import notify_conclusion, notify_investigation_coordonnee, notify_transfer, notify_transformation
 
 
 class EvenementSimpleManipulationMixin(

@@ -1,10 +1,9 @@
 from typing import Optional, Tuple, Union
 
 from django.urls import reverse
-from playwright.sync_api import Page, Locator
-from playwright.sync_api import expect
+from playwright.sync_api import Locator, Page, expect
 
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Prelevement
+from sv.models import FicheDetection, FicheZoneDelimitee, Prelevement, ZoneInfestee
 
 
 class FicheDetectionFormDomElements:

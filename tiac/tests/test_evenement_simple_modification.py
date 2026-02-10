@@ -3,9 +3,10 @@ from playwright.sync_api import Page
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from ssa.factories import EvenementProduitFactory
-from tiac.factories import EvenementSimpleFactory, EtablissementFactory, InvestigationTiacFactory
-from .pages import EvenementSimpleEditFormPage
+from tiac.factories import EtablissementFactory, EvenementSimpleFactory, InvestigationTiacFactory
+
 from ..models import EvenementSimple
+from .pages import EvenementSimpleEditFormPage
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",

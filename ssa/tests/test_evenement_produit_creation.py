@@ -7,9 +7,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
-from core.models import LienLibre, Contact, Departement
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement
+from core.models import Contact, Departement, LienLibre
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
+from ssa.models import Etablissement, EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory

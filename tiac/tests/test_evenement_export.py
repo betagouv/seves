@@ -5,12 +5,12 @@ from core.models import Export
 from tiac.constants import SuspicionConclusion
 from tiac.export import TiacExport
 from tiac.factories import (
-    EvenementSimpleFactory,
-    InvestigationTiacFactory,
-    RepasSuspectFactory,
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
     EtablissementFactory,
+    EvenementSimpleFactory,
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
 )
 from tiac.tests.pages import EvenementListPage
 

@@ -1,11 +1,11 @@
 import random
 
-import pytest
 from django.db import IntegrityError
+import pytest
 
 from ssa.constants import CategorieDanger
-from tiac.constants import SuspicionConclusion, DangersSyndromiques
-from tiac.factories import InvestigationTiacFactory, RepasSuspectFactory, AlimentSuspectFactory
+from tiac.constants import DangersSyndromiques, SuspicionConclusion
+from tiac.factories import AlimentSuspectFactory, InvestigationTiacFactory, RepasSuspectFactory
 from tiac.models import Analyses
 
 

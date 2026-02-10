@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.conf import settings
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView
 
 User = get_user_model()

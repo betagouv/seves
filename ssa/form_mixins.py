@@ -14,9 +14,8 @@ class WithFreeLinksQuerysetsMixin:
         return queryset
 
     def _get_cas_humain_queryset(self, user):
-        from ssa.models import EvenementInvestigationCasHumain
-
         from core.mixins import WithEtatMixin
+        from ssa.models import EvenementInvestigationCasHumain
 
         return (
             EvenementInvestigationCasHumain.objects.all()

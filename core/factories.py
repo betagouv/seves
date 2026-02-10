@@ -1,16 +1,16 @@
 import random
 
-import factory
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django_countries import Countries
+import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
-from core.constants import REGIONS, DEPARTEMENTS
-from core.models import Structure, Agent, Contact, Document, Message, Region, Departement
+from core.constants import DEPARTEMENTS, REGIONS
+from core.models import Agent, Contact, Departement, Document, Message, Region, Structure
 
 
 class StructureFactory(DjangoModelFactory):

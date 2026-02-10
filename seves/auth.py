@@ -1,14 +1,13 @@
 from functools import wraps
-
 import os
-import requests
+
 from django.core.exceptions import SuspiciousOperation
 from django.utils.encoding import smart_str
 from josepy.jws import JWS, Header
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from mozilla_django_oidc.utils import import_from_settings
+import requests
 from requests.auth import HTTPBasicAuth
-
 
 _bundle_file_path = "bundle.pem"
 

@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 ON = (
     {
         "code_oepp": "ACEETW",

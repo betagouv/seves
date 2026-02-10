@@ -1,14 +1,14 @@
 from datetime import datetime
 
-import pytest
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page
+import pytest
 
 from core.factories import StructureFactory
 from core.models import Visibilite
-from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory
-from sv.models import Evenement, Etat
+from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory
+from sv.models import Etat, Evenement
 
 
 @pytest.mark.parametrize(

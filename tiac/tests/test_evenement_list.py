@@ -1,18 +1,18 @@
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory, ContactAgentFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import Departement, LienLibre
 from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import DangersSyndromiques, SuspicionConclusion
 from tiac.factories import (
-    EvenementSimpleFactory,
-    InvestigationTiacFactory,
-    EtablissementFactory,
-    RepasSuspectFactory,
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
+    EtablissementFactory,
+    EvenementSimpleFactory,
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
 )
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp, Analyses
+from tiac.models import Analyses, EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from tiac.tests.pages import EvenementListPage
 
 
