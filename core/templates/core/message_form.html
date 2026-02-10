@@ -10,6 +10,7 @@
 {% block content %}
     <form method="post" enctype="multipart/form-data" action="" id="message-form" data-controller="message-form">
         {% csrf_token %}
+        {{ form.id }}
         <div class="fr-container--fluid fr-pt-4w">
             <div class="fr-grid-row">
                 <div class="fr-col-1"></div>
@@ -22,15 +23,10 @@
                     <div class="fr-flex fr-flex--row fr-flex--space-between">
                         <div>
                             <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
-                                {% if form.instance.pk %}
-                                    [Brouillon] {{ message.title }}
-                                {% else %}
-                                    {% if page_title %}
-                                        {{ page_title }}
-                                    {% else %}
-                                        {{ form.page_title }}
-                                    {% endif %}
-                                {% endif %}
+                                {% with page_title=page_title|default:form.page_title %}
+                                    {% if form.instance.status == form.instance.Status.BROUILLON %}[Brouillon]{% endif %}
+                                    {{ message.title|default:page_title }}
+                                {% endwith %}
                             </h1>
                             {% if form.help_text %}
                                 <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
