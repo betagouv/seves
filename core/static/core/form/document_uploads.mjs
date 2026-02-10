@@ -1,17 +1,17 @@
 import {Controller} from "Stimulus"
-import {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML} from "Application"
+import {COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool} from "Application"
 import {createStore, useStore} from "StimulusStore"
 
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
-const STORAGE_DOCUMENT_SUCCESS = "STORAGE_DOCUMENT_SUCCESS"
 
 const DOCUMENT_STATE = Object.freeze({
     IDLE: 1,
     LOADING: 2,
-    SUCCESS: 3,
-    ERROR: 4,
+    DELETING: 3,
+    SUCCESS: 4,
+    ERROR: 5,
 })
 
 const globalFileTypeIndexStore = createStore({
@@ -32,9 +32,21 @@ const allowedExtensionsStore = createStore({
     initialValue: {},
 });
 
-const FormValidationError = Error("invalid")
+class FormValidationError extends Error {
+    constructor() {
+        super("Invalid form");
+        this.name = "FormValidationError"
+    }
+}
 
-/** @typedef {Object<String, FileMeta>} FileStoreStruct */
+class ServerError extends Error {
+    constructor() {
+        super("Server error");
+        this.name = "ServerError"
+    }
+}
+
+/** @typedef {Object<String, File>} FileStoreStruct */
 
 /**
  * @typedef {Object} StorePropertiesType
@@ -64,7 +76,6 @@ const FormValidationError = Error("invalid")
  * @property {HTMLElement} errorContainerTarget
  * @property {HTMLTemplateElement} errorMessageTplTarget
  * @property {HTMLDialogElement} modalTarget
- * @property {HTMLTemplateElement} successMessageTplTarget
  * @property {HTMLTemplateElement} emptyFormTplTarget
  * @property {HTMLElement} formsetContainerTarget
  * @property {HTMLElement} allowedExtensionsTarget
@@ -78,18 +89,17 @@ const FormValidationError = Error("invalid")
  *
  * @property {DocumentForm[]} documentFormOutlets
  */
-class DocumentFormset extends Controller {
+class BaseDocumentFormset extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
 
     static values = {
         state: {type: Number, default: DOCUMENT_STATE.IDLE},
         uploadDisabled: {type: Boolean, default: true},
         allowedExtensions: Object,
-        nextUrl: String,
-        genericError: String
+        nextUrl: {type: String, default: undefined},
+        genericError: String,
     }
     static targets = [
-        "successMessageTpl",
         "errorContainer",
         "modal",
         "emptyFormTpl",
@@ -102,17 +112,8 @@ class DocumentFormset extends Controller {
     static classes = ["uploadDisabled", "dragging", "loading"]
     static outlets = ["document-form"]
 
-    get messagesContainer() {
-        return document.querySelector("#tabpanel-documents-panel .document-messages")
-    }
-
     initialize() {
         useStore(this)
-    }
-
-    connect() {
-        this.processSuccessMessages()
-        delete sessionStorage[STORAGE_DOCUMENT_SUCCESS]
     }
 
     getNextId() {
@@ -193,9 +194,7 @@ class DocumentFormset extends Controller {
     }
 
     onModalClose() {
-        this.formsetContainerTarget.innerHTML = ""
         this.errorContainerTarget.hidden = true
-        this.processSuccessMessages()
     }
 
     async onSubmit() {
@@ -203,17 +202,20 @@ class DocumentFormset extends Controller {
             this.stateValue = DOCUMENT_STATE.LOADING
 
             let hasErrors = false
-            let successMessage = ""
+            const successFileNames = {}
             const promiseResults = await Promise.allSettled(this.documentFormOutlets.map(controller => controller.submit()))
             for(const promiseResult of promiseResults) {
                 if(promiseResult.status === "fulfilled") {
-                    successMessage = `${successMessage}<li>${escapeHTML(promiseResult.value)}</li>`
+                    successFileNames[promiseResult.value.pk] = promiseResult.value.documentName
                 } else {
                     hasErrors = true
                 }
             }
 
-            sessionStorage[STORAGE_DOCUMENT_SUCCESS] = successMessage
+            this.dispatch(
+                COMMON_EVENTS.DOCUMENT_SUCCESS,
+                {detail: {[COMMON_EVENTS.DOCUMENT_SUCCESS]: successFileNames}, target: window, prefix: "window"}
+            )
 
             if(hasErrors) {
                 // Focus first erroneous field
@@ -224,15 +226,10 @@ class DocumentFormset extends Controller {
             }
 
             this.stateValue = DOCUMENT_STATE.IDLE
-
-            // Redirect only if all requests where successful
-            const nextURL = URL.parse(this.nextUrlValue, window.location.origin)
-            window.location.href = this.nextUrlValue
-            dsfr(this.modalTarget).modal.conceal()
-            if(nextURL.pathname === window.location.pathname) {
-                // Force reload if we're on the same path otherwise browser won't trigger an HTTP query
-                window.location.reload()
-            }
+            this.dispatch(COMMON_EVENTS.ALL_DOCUMENTS_SUCCES, {target: window, prefix: "window"})
+            requestAnimationFrame(() => {
+                dsfr(this.modalTarget).modal.conceal()
+            })
         } catch(_) {
             this.stateValue = DOCUMENT_STATE.ERROR
         }
@@ -254,13 +251,6 @@ class DocumentFormset extends Controller {
         // Disable dragging style if needed
         this.onDragLeave()
     }
-
-    processSuccessMessages() {
-        const html = sessionStorage[STORAGE_DOCUMENT_SUCCESS]
-        if((typeof html) == "string" && html.length > 0) {
-            this.messagesContainer.innerHTML = this.successMessageTplTarget.innerHTML.replace("__html__", html)
-        }
-    }
 }
 
 /**
@@ -269,48 +259,71 @@ class DocumentFormset extends Controller {
  * @property {HTMLElement} element
  * @property {Number} fileIdValue
  * @property {Number} stateValue
+ * @property {String} deleteUrlValue
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
  * @property {HTMLInputElement} documentNameTarget
  * @property {HTMLSelectElement} documentTypeTarget
+ * @property {HTMLInputElement} inputIdTarget
+ * @property {Boolean} hasInputIdTarget
  * @property {HTMLElement} accordionTitleTarget
  * @property {HTMLElement} accordionTypeLabelTarget
  * @property {HTMLElement} accordionContentTarget
+ * @property {HTMLButtonElement} deleteBtnTarget
  * @property {HTMLTemplateElement} networkErrorTplTarget
+ * @property {HTMLTemplateElement} serverErrorTplTarget
  * @property {String[]} loadingClasses
+ * @property {String[]} deletingClasses
  * @property {String[]} successClasses
  * @property {String[]} errorClasses
- * @property {DocumentFormset} documentFormsetOutlet
+ * @property {BaseDocumentFormset} documentFormsetOutlet
  */
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
     static values = {
-        fileId: {type: Number, default: -1},
         state: {type: Number, default: DOCUMENT_STATE.IDLE},
+        fileId: {type: Number, default: -1},
+        deleteUrl: {type: String, default: ""}
     }
     static targets = [
         "form",
         "documentFile",
         "documentName",
         "documentType",
+        "inputId",
         "accordionTitle",
         "accordionTypeLabel",
         "accordionContent",
+        "deleteBtn",
         "networkErrorTpl",
+        "serverErrorTpl",
         "erroneousField",
     ]
-    static classes = ["loading", "success", "error"]
+    static classes = ["loading", "deleting", "success", "error"]
     static outlets = ["document-formset"]
 
     initialize() {
         useStore(this)
+        const dataAction = [
+            this.element.dataset.action || "",
+            `window:${COMMON_EVENTS.DOCUMENT_DELETE}@window->${this.identifier}#onDocumentRemoved`
+        ]
+        this.element.dataset.action = dataAction.join(" ").trim()
+        /** @type {AbortController | null} */
+        this.abortController = null
     }
 
     stateValueChanged(state) {
-        this.element.classList.remove(...this.loadingClasses, ...this.errorClasses)
+        this.element.classList.remove(...this.loadingClasses, ...this.errorClasses, ...this.deletingClasses)
+        this.deleteBtnTarget.disabled = false
+
         if(state === DOCUMENT_STATE.LOADING) {
+            this.deleteBtnTarget.disabled = true
             this.element.classList.add(...this.loadingClasses)
+        } else if(state === DOCUMENT_STATE.DELETING) {
+            this.deleteBtnTarget.disabled = true
+            this.element.classList.add(...this.deletingClasses)
         } else if(state === DOCUMENT_STATE.SUCCESS) {
             this.element.classList.add(...this.successClasses)
         } else if(state === DOCUMENT_STATE.ERROR) {
@@ -349,41 +362,62 @@ class DocumentForm extends Controller {
         el.dispatchEvent(new Event("input"))
     }
 
-    /** @return {Promise<string>} Returns the name of the document that was successfully uploaded */
+    /**
+     * @return {Promise<{pk: string, documentName: string}>}
+     *          Returns the name and id of the document that was successfully uploaded.
+     */
     async submit() {
-        if(!this.formTarget.reportValidity()) throw FormValidationError
+        if(!this.formTarget.reportValidity()) throw FormValidationError()
 
         try {
             this.stateValue = DOCUMENT_STATE.LOADING
+            this.abortController = new AbortController()
             /** @type {Response} */
             const result = await fetchPool(
                 this.formTarget.action,
-                {method: this.formTarget.method, body: new FormData(this.formTarget)}
+                {
+                    method: this.formTarget.method,
+                    body: new FormData(this.formTarget),
+                    redirect: "error",
+                    signal: this.abortController.signal
+                }
             )
 
             if(result.ok || result.status === 400) {
                 this.element.innerHTML = await result.text()
             }
 
+            if(result.status === 500) {
+                throw new ServerError()
+            }
+
             if(result.ok) {
                 this.stateValue = DOCUMENT_STATE.SUCCESS
-                return escapeHTML(this.documentNameTarget.value.trim())
+                return {
+                    pk: this.element.querySelector('[name="id"]').value,
+                    documentName: escapeHTML(this.documentNameTarget.value.trim())
+                }
             } else {
-                throw FormValidationError
+                throw new FormValidationError()
             }
         } catch(e) {
             this.stateValue = DOCUMENT_STATE.ERROR
-            if(e !== FormValidationError) {
+            if(!(e instanceof FormValidationError)) {
                 console.error(e)
                 // TypeError means the request never reach the backend
                 // See https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch#exceptions
                 if(e instanceof TypeError) {
                     this.documentNameTarget.insertAdjacentHTML("afterend", this.networkErrorTplTarget.innerHTML)
                     this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
+                } else if(e instanceof ServerError) {
+                    this.documentNameTarget.insertAdjacentHTML("afterend", this.serverErrorTplTarget.innerHTML)
+                    this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
                 }
             }
             await this.#forceOpenAccordion()
             throw e
+        } finally {
+            this.abortController = null
         }
     }
 
@@ -419,8 +453,28 @@ class DocumentForm extends Controller {
         }
     }
 
-    onDelete() {
-        this.element.remove()
+    onDocumentRemoved({detail}) {
+        if(detail[COMMON_EVENTS.DOCUMENT_DELETE] === this.inputIdTarget.value) {
+            this.element.remove()
+        }
+    }
+
+    async onDelete() {
+        try {
+            this.stateValue = DOCUMENT_STATE.DELETING
+            if(this.deleteUrlValue.length > 0) {
+                this.abortController = new AbortController()
+                await fetchPool(this.deleteUrlValue, {method: "POST"})
+            }
+            this.element.remove()
+            this.dispatch(
+                COMMON_EVENTS.DOCUMENT_DELETE,
+                {detail: {[COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value}, target: window, prefix: "window"}
+            )
+        } finally {
+            this.stateValue = DOCUMENT_STATE.IDLE
+            this.abortController = null
+        }
     }
 
     onDocumentNameChanged({target: {value}}) {
@@ -445,6 +499,13 @@ class DocumentForm extends Controller {
         }
     }
 
+    onModalClose() {
+        if(!this.hasInputIdTarget) {
+            this.abortController?.abort()
+            this.element.remove()
+        }
+    }
+
     /** Just prevent submitting directly */
     async onSubmit(evt) {
         evt.preventDefault()
@@ -457,7 +518,5 @@ class DocumentForm extends Controller {
     }
 }
 
-applicationReady.then(app => {
-    app.register(DOCUMENT_FORMSET_ID, DocumentFormset)
-    app.register(DOCUMENT_FORM_ID, DocumentForm)
-})
+
+export {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset}

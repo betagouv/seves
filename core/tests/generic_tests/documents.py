@@ -187,10 +187,11 @@ def generic_test_document_modal_front_behavior(live_server, page: Page, content_
     last_uploaded = list(content_object.documents.order_by("-date_creation"))[:2]
     message_box = page.locator("#tabpanel-documents-panel #document-upload-messages")
     expect(message_box).to_contain_text(
-        "Les fichiers suivants ont été ajoutés avec succès et seront disponibles après l'analyse antivirus :\n"
-        f"{'\n'.join([it.nom for it in last_uploaded])}",
+        "Les fichiers suivants ont été ajoutés avec succès et seront disponibles après l'analyse antivirus :",
         use_inner_text=True,
     )
+    expect(message_box).to_contain_text(last_uploaded[0].nom, use_inner_text=True)
+    expect(message_box).to_contain_text(last_uploaded[1].nom, use_inner_text=True)
 
     message_box.get_by_role("button", name="Masquer le message").click()
     expect(message_box).not_to_be_visible()

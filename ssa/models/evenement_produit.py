@@ -15,7 +15,7 @@ from core.model_mixins import (
     EmailableObjectMixin,
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
 )
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -134,7 +134,7 @@ class EvenementProduit(
     WithEvenementRisqueMixin,
     WithBlocCommunFieldsMixin,
     WithLatestVersionMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     WithContactPermissionMixin,

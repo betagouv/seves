@@ -14,7 +14,11 @@ from core.mixins import (
     WithMessageUrlsMixin,
     WithVisibiliteMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
+from core.model_mixins import (
+    WithBlocCommunFieldsMixin,
+    WithContactPermissionMixin,
+    WithFicheDocumentPermissionMixin,
+)
 from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 
@@ -33,7 +37,7 @@ class Evenement(
     WithFreeLinkIdsMixin,
     AllowsSoftDeleteMixin,
     EmailNotificationMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithDerniereMiseAJourMixin,
     WithBlocCommunFieldsMixin,

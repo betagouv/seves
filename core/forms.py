@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import uuid
 
 from django import forms
 from django.conf import settings
@@ -7,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.forms import Media
+from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
@@ -44,7 +44,7 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
 
     @property
     def media(self):
-        return super().media + Media(css={"all": ("core/form/document_in_message_upload.css",)})
+        return super().media + Media(css={"all": ("core/form/document_upload.css",)})
 
     def __init__(self, user, related_to, allowed_document_types, *args, **kwargs):
         self.user = user
@@ -108,29 +108,6 @@ class DocumentUploadForm(BaseDocumentUploadForm):
         fields = (*BaseDocumentUploadForm.Meta.fields, "content_type", "object_id")
 
 
-class DocumentInMessageUploadForm(BaseDocumentUploadForm):
-    template_name = "core/form/document_in_message_upload.html"
-
-    @property
-    def file_id(self):
-        return "" if not self.instance else uuid.uuid4()
-
-    def __init__(self, user, related_to, allowed_document_types, *args, **kwargs):
-        self.related_to = related_to
-        super().__init__(user, related_to, allowed_document_types, *args, **kwargs)
-        self.instance.content_object = self.related_to
-
-    def save(self, commit=True):
-        self.instance.created_by = self.user.agent
-        self.instance.created_by_structure = self.user.agent.structure
-        # Force setting object_id after Message instance was saved
-        self.instance.content_object = self.related_to
-        return super().save(commit)
-
-    class Meta(BaseDocumentUploadForm.Meta):
-        pass
-
-
 class DocumentEditForm(DSFRForm, forms.ModelForm):
     nom = forms.CharField(
         help_text="Nommer le document de manière claire et compréhensible pour tous",
@@ -154,7 +131,42 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class CommonMessageMixin:
+class CommonMessageForm(forms.ModelForm):
+    def __init__(
+        self,
+        sender,
+        obj,
+        data=None,
+        files=None,
+        auto_id="id_%s",
+        prefix=None,
+        initial=None,
+        error_class=ErrorList,
+        label_suffix=None,
+        empty_permitted=False,
+        instance=None,
+        use_required_attribute=None,
+        renderer=None,
+    ):
+        if not instance or not instance.pk:
+            raise TypeError("You need to pass a saved `instance`")
+
+        self.sender = sender
+        self.obj = obj
+        super().__init__(
+            data,
+            files,
+            auto_id,
+            prefix,
+            initial,
+            error_class,
+            label_suffix,
+            empty_permitted,
+            instance,
+            use_required_attribute,
+            renderer,
+        )
+
     def _add_files_inputs(self, data, files):
         document_types = {k: v for k, v in data.items() if k.startswith("document_type_")}
         documents = {k: v for k, v in files.items() if k.startswith("document_file_")}
@@ -240,8 +252,6 @@ class CommonMessageMixin:
         self.instance.status = self.status
         self.instance.sender = self.sender
         self.instance.sender_structure = self.sender.agent.structure
-        self.instance.object_id = self.obj.id
-        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
 
     def clean(self):
         super().clean()
@@ -266,18 +276,15 @@ class CommonMessageMixin:
         self.fields = OrderedDict(fields)
 
 
-class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class BasicMessageForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouveau message"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     message_object = None
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.MESSAGE)
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
@@ -309,15 +316,12 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         ]
 
 
-class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class NoteForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouvelle note"
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.NOTE)
 
         self.handle_files(kwargs)
@@ -333,16 +337,13 @@ class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         fields = ["title", "content"]
 
 
-class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class PointDeSituationForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouveau point de situation"
     help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.POINT_DE_SITUATION)
 
         self.handle_files(kwargs)
@@ -365,17 +366,14 @@ class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         fields = ["title", "content"]
 
 
-class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouvelle demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.DEMANDE_INTERVENTION)
 
         queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
@@ -407,16 +405,13 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
         ]
 
 
-class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouveau compte rendu sur demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.COMPTE_RENDU)
 
         self.handle_files(kwargs)

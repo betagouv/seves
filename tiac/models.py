@@ -15,7 +15,11 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
+from core.model_mixins import (
+    WithBlocCommunFieldsMixin,
+    WithContactPermissionMixin,
+    WithFicheDocumentPermissionMixin,
+)
 from core.models import BaseEtablissement, Departement, Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import CategorieDanger, CategorieProduit
@@ -89,7 +93,7 @@ class EvenementSimple(
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     WithBlocCommunFieldsMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,
@@ -284,7 +288,7 @@ class InvestigationTiac(
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
     WithBlocCommunFieldsMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,

@@ -124,7 +124,9 @@
     pointer-events: none;
 }
 
-.document-modal--loading button[type="submit"]::before {
+.document-modal--loading button[type="submit"]::before,
+.document-cards-container .document-card.loading button[type="submit"]::before,
+.document-upload-container.deleting button.delete-btn[type="button"]::before {
     --icon-size: 1rem;
 
     animation: rotation 1s linear infinite;
@@ -136,10 +138,17 @@
     content: " ";
     display: inline-block;
     height: var(--icon-size);
-    margin-left: -.125rem;
+    margin-left: calc(-.125rem + 3px);
     margin-right: .5rem;
     mask-size: 100% 100%;
+    mask-image: none;
     width: var(--icon-size);
+}
+
+.document-modal--loading button[type="submit"].fr-btn--tertiary::before,
+.document-cards-container .document-card.loading button[type="submit"].fr-btn--tertiary::before,
+.document-upload-container.deleting button.delete-btn[type="button"].fr-btn--tertiary::before {
+    border-color: var(--text-action-high-blue-france);
 }
 
 @keyframes rotation {

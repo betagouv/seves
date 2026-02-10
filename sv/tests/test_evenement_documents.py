@@ -202,11 +202,7 @@ def test_cant_add_document_if_brouillon(client):
         follow=True,
     )
 
-    assert response.status_code == 200
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+    assert response.status_code == 403
 
 
 def test_cant_delete_document_if_brouillon(client):
@@ -222,10 +218,7 @@ def test_cant_delete_document_if_brouillon(client):
     document.refresh_from_db()
 
     assert document.is_deleted is False
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+    assert response.status_code == 403
 
 
 def test_cant_edit_document_if_brouillon(client):
@@ -242,10 +235,7 @@ def test_cant_edit_document_if_brouillon(client):
 
     assert document.nom == "Test document"
     assert document.description == "un document"
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+    assert response.status_code == 403
 
 
 def test_adding_document_adds_agent_and_structure_contacts(live_server, page: Page, mocked_authentification_user: User):
