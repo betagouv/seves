@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.forms import Media
+from django.forms import HiddenInput, Media, ModelForm
+from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
@@ -147,7 +148,70 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         fields = ["nom", "document_type", "description"]
 
 
-class CommonMessageMixin:
+class CommonMessageForm(ModelForm):
+    def __init__(
+        self,
+        sender,
+        obj,
+        data=None,
+        files=None,
+        auto_id="id_%s",
+        prefix=None,
+        initial=None,
+        error_class=ErrorList,
+        label_suffix=None,
+        empty_permitted=False,
+        instance=None,
+        use_required_attribute=None,
+        renderer=None,
+    ):
+        self.sender = sender
+        self.obj = obj
+        super().__init__(
+            data,
+            files,
+            auto_id,
+            prefix,
+            initial,
+            error_class,
+            label_suffix,
+            empty_permitted,
+            instance,
+            use_required_attribute,
+            renderer,
+        )
+
+        self._init_instance(passed_instance=instance)
+
+    def _init_instance(self, passed_instance):
+        """
+        Will init self.passed_instance with an instance that always exists in DB. Init goes as follows:
+        1. `passed_instance` must corresponds to the `__init__`'s `instance` argument; if it had a pk, it is picked
+        2. otherwise if form is bound to data (`self.is_bound == True`), then `self.data` should have a valid id that
+           it cleaned and picked,
+        3. if form is not bound, it will insert a default `Message` with status `AVANT_SAUVEGARDE`.
+
+        It will also add an `id` field so that templates can render the corresponding `<input>`.
+        """
+        content_object = dict(
+            content_type=ContentType.objects.get_for_model(self.obj),
+            object_id=self.obj.pk,
+        )
+        self.fields["id"] = forms.ModelChoiceField(
+            Message.objects.get_base_queryset().filter(sender=self.sender, **content_object),
+            required=True,
+            widget=HiddenInput,
+        )
+
+        if passed_instance and passed_instance.pk:
+            self.instance = passed_instance
+        elif self.is_bound:
+            self.instance = self.fields["id"].clean(self.data["id"])
+        else:
+            self.instance = Message.objects.create_unsaved(self.sender, **content_object)
+
+        self.fields["id"].initial = self.instance.pk
+
     def _add_files_inputs(self, data, files):
         document_types = {k: v for k, v in data.items() if k.startswith("document_type_")}
         documents = {k: v for k, v in files.items() if k.startswith("document_file_")}
@@ -233,8 +297,6 @@ class CommonMessageMixin:
         self.instance.status = self.status
         self.instance.sender = self.sender
         self.instance.sender_structure = self.sender.agent.structure
-        self.instance.object_id = self.obj.id
-        self.instance.content_type_id = ContentType.objects.get_for_model(self.obj).pk
 
     def clean(self):
         super().clean()
@@ -259,18 +321,15 @@ class CommonMessageMixin:
         self.fields = OrderedDict(fields)
 
 
-class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class BasicMessageForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouveau message"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     message_object = None
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.MESSAGE)
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
@@ -302,15 +361,12 @@ class BasicMessageForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         ]
 
 
-class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class NoteForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouvelle note"
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.NOTE)
 
         self.handle_files(kwargs)
@@ -326,16 +382,13 @@ class NoteForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         fields = ["title", "content"]
 
 
-class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class PointDeSituationForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouveau point de situation"
     help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.POINT_DE_SITUATION)
 
         self.handle_files(kwargs)
@@ -358,17 +411,14 @@ class PointDeSituationForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
         fields = ["title", "content"]
 
 
-class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouvelle demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.DEMANDE_INTERVENTION)
 
         queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
@@ -400,16 +450,13 @@ class DemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm)
         ]
 
 
-class BaseCompteRenduDemandeInterventionForm(DsfrBaseForm, CommonMessageMixin, forms.ModelForm):
+class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouveau compte rendu sur demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, **kwargs):
-        obj = kwargs.pop("obj", None)
-        self.obj = obj
-        self.sender = sender
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sender, obj, **kwargs):
+        super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.COMPTE_RENDU)
 
         self.handle_files(kwargs)

@@ -734,3 +734,21 @@ def generic_test_can_search_in_message_list(live_server, page: Page, object):
     expect(
         message_page.page.locator("#tabpanel-messages-panel .cell-link").get_by_text("Message", exact=True)
     ).to_have_count(16)
+
+
+def generic_test_cant_see_messages_in_internal_state(live_server, page: Page, mocked_authentification_user, obj):
+    params = {
+        "content_object": obj,
+        "message_type": Message.MESSAGE,
+        "sender": mocked_authentification_user.agent.contact_set.get(),
+    }
+    msg1 = MessageFactory(status=Message.Status.AVANT_SAUVEGARDE, **params)
+    msg2 = MessageFactory(status=Message.Status.BROUILLON, **params)
+    msg3 = MessageFactory(status=Message.Status.FINALISE, **params)
+
+    page.goto(f"{live_server.url}{obj.get_absolute_url()}#tabpanel-messages-panel")
+    obj.refresh_from_db()
+    assert obj.messages.get_base_queryset().count() == 3
+    expect(page.locator("body")).not_to_contain_text(msg1.title, use_inner_text=True)
+    expect(page.locator("body")).to_contain_text(msg2.title, use_inner_text=True)
+    expect(page.locator("body")).to_contain_text(msg3.title, use_inner_text=True)
