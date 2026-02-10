@@ -198,7 +198,7 @@ class MessageCreateView(
         kwargs = super().get_form_kwargs()
         kwargs.update(
             {
-                "obj": self.fiche_objet,
+                "fiche_object": self.fiche_objet,
                 "sender": self.request.user.agent.contact_set.get(),
             }
         )
@@ -271,7 +271,7 @@ class MessageUpdateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
-        kwargs["obj"] = self.fiche_objet
+        kwargs["fiche_object"] = self.fiche_objet
         return kwargs
 
     def get_context_data(self, **kwargs):
