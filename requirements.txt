@@ -100,7 +100,7 @@ django-reversion==6.1.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
-django-reversion-compare==0.19.1
+django-reversion-compare==0.19.2
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
