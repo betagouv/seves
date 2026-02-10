@@ -222,13 +222,12 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
 
 
 def test_compteur_fiche(live_server, page: Page):
-    nb_evenements = 101
-    EvenementProduitFactory.create_batch(nb_evenements)
+    EvenementProduitFactory.create_batch(101)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    expect(page.get_by_text(f"100 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
     page.get_by_role("link", name="Dernière page").click()
-    expect(page.get_by_text(f"1 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
 
 
 def test_list_can_filter_with_free_search(live_server, mocked_authentification_user, page: Page):
