@@ -84,7 +84,13 @@ def choice_js_fill(db, page):
         if use_locator_as_parent_element:
             page.locator(locator).locator("input.choices__input").click()
         else:
-            page.query_selector(locator).click()
+            locator = page.locator(locator)
+            locator.evaluate("el => el.scrollIntoView()")
+            input_locator = locator.locator("input").first
+            if input_locator.count() > 0:
+                input_locator.click()
+            else:
+                locator.first.click()
         page.wait_for_selector("input:focus", state="visible", timeout=2_000)
         page.locator("*:focus").fill(fill_content)
         if use_locator_as_parent_element:
