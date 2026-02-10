@@ -8,17 +8,17 @@ from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
-from core.form_mixins import DSFRForm, js_module, WithLatestVersionLocking
+from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
-from core.mixins import WithEtatMixin, WithCommonContextVars
+from core.mixins import WithCommonContextVars, WithEtatMixin
 from core.models import Contact
 from ssa.constants import (
     CategorieDanger,
     CategorieProduit,
-    Source,
-    TypeEvenement,
-    SourceInvestigationCasHumain,
     PretAManger,
+    Source,
+    SourceInvestigationCasHumain,
+    TypeEvenement,
 )
 from ssa.form_mixins import WithEvenementProduitFreeLinksMixin
 from ssa.models import (

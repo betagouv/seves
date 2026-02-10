@@ -1,12 +1,12 @@
-import pytest
 from playwright.sync_api import expect
+import pytest
 
-from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, DepartementFactory, StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
-from ssa.models import EvenementProduit, Etablissement
 from ssa.constants import CategorieDanger, CategorieProduit, TypeEvenement
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
+from ssa.models import Etablissement, EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
 from ssa.tests.test_evenement_produit_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 

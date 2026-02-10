@@ -7,7 +7,7 @@ import pytest
 
 from core.models import Visibilite
 from sv.export import FicheDetectionExport
-from sv.factories import PrelevementFactory, FicheZoneFactory, ZoneInfesteeFactory, FicheDetectionFactory, LieuFactory
+from sv.factories import FicheDetectionFactory, FicheZoneFactory, LieuFactory, PrelevementFactory, ZoneInfesteeFactory
 from sv.models import StructurePreleveuse
 
 

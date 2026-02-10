@@ -2,11 +2,11 @@ from playwright.sync_api import Page, expect
 
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
-    InvestigationTiacFactory,
-    EtablissementFactory,
     AlimentSuspectFactory,
-    RepasSuspectFactory,
     AnalyseAlimentaireFactory,
+    EtablissementFactory,
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
 )
 from tiac.tests.pages import InvestigationTiacDetailsPage
 

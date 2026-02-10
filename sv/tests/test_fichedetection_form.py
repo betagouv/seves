@@ -1,15 +1,15 @@
 import re
 
-import pytest
-from playwright.sync_api import Page, expect
 from django.urls import reverse
+from playwright.sync_api import Page, expect
+import pytest
 
-from core.models import Region, Departement
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
-from ..factories import EvenementFactory, FicheDetectionFactory
-from ..models import StructurePreleveuse, Prelevement
-
+from core.models import Departement, Region
 from sv.constants import STRUCTURES_PRELEVEUSES
+
+from ..factories import EvenementFactory, FicheDetectionFactory
+from ..models import Prelevement, StructurePreleveuse
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
 @pytest.fixture(autouse=True)

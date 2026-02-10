@@ -1,14 +1,15 @@
-import pytest
+from unittest.mock import MagicMock
+
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
-from django.urls import reverse
-from unittest.mock import MagicMock
-from core.factories import UserFactory
 from django.test import RequestFactory
+from django.urls import reverse
+import pytest
 
+from core.factories import UserFactory
 from seves import settings
-from seves.middlewares import LoginAndGroupRequiredMiddleware, HomeRedirectMiddleware
+from seves.middlewares import HomeRedirectMiddleware, LoginAndGroupRequiredMiddleware
 
 
 @pytest.mark.django_db

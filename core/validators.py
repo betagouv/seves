@@ -1,10 +1,11 @@
 import contextlib
 import mimetypes
 import re
-import magic
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.deconstruct import deconstructible
+import magic
 
 MAX_UPLOAD_SIZE_MEGABYTES = 15
 MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MEGABYTES * 1024 * 1024

@@ -9,11 +9,11 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import FormView
 
-from account.forms import UserPermissionForm, AddAdminForm
-from account.notifications import notify_new_permission, notify_remove_permission, notify_new_admin_permission
+from account.forms import AddAdminForm, UserPermissionForm
+from account.notifications import notify_new_admin_permission, notify_new_permission, notify_remove_permission
+from core.mixins import MediaDefiningMixin
 from core.models import Contact
 from core.redirect import safe_redirect
-from core.mixins import MediaDefiningMixin
 from seves import settings
 from seves.settings import CAN_GIVE_ACCESS_GROUP
 

@@ -1,11 +1,11 @@
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import StructureFactory, DepartementFactory, ContactStructureFactory, ContactAgentFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, DepartementFactory, StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
-from ssa.factories import InvestigationCasHumainFactory, EtablissementFactory
-from ssa.models import EvenementInvestigationCasHumain, Etablissement
+from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
+from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
 from ssa.tests.test_investigation_cas_humain_creation import FIELD_TO_EXCLUDE_ETABLISSEMENT
 

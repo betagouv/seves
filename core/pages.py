@@ -4,9 +4,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
 
-import pytest
 from django.conf import settings
-from playwright.sync_api import Page, expect, Locator
+from playwright.sync_api import Locator, Page, expect
+import pytest
 
 from core.models import Agent, Structure
 

@@ -1,40 +1,40 @@
-import pytest
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
+import pytest
 from reversion.models import Version
 
-from core.factories import StructureFactory, DocumentFactory
-from core.models import Visibilite, Document
+from core.factories import DocumentFactory, StructureFactory
+from core.models import Document, Visibilite
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import (
+    EvenementFactory,
     FicheDetectionFactory,
+    FicheZoneFactory,
     LieuFactory,
     PrelevementFactory,
-    FicheZoneFactory,
-    ZoneInfesteeFactory,
-    EvenementFactory,
     StructurePreleveuseFactory,
+    ZoneInfesteeFactory,
 )
 from sv.models import (
-    ZoneInfestee,
-    FicheDetection,
-    Lieu,
-    OrganismeNuisible,
-    StatutReglementaire,
-    Departement,
-    Region,
     Contexte,
-    StatutEtablissement,
-    PositionChaineDistribution,
-    StructurePreleveuse,
-    SiteInspection,
-    MatricePrelevee,
+    Departement,
     EspeceEchantillon,
-    StatutEvenement,
-    Prelevement,
+    FicheDetection,
     Laboratoire,
+    Lieu,
+    MatricePrelevee,
+    OrganismeNuisible,
+    PositionChaineDistribution,
+    Prelevement,
+    Region,
+    SiteInspection,
+    StatutEtablissement,
+    StatutEvenement,
+    StatutReglementaire,
+    StructurePreleveuse,
     VersionFicheZoneDelimitee,
+    ZoneInfestee,
 )
 
 

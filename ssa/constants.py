@@ -1,5 +1,5 @@
+from enum import auto, property as enum_property
 import re
-from enum import property as enum_property, auto
 
 from django.db import models
 

@@ -4,18 +4,18 @@ from urllib.parse import quote
 
 from django.template.defaultfilters import striptags
 from django.urls import reverse
-from playwright.sync_api import Page, expect, Locator
+from playwright.sync_api import Locator, Page, expect
 
 from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
-from tiac.constants import TypeRepas, SuspicionConclusion, DangersSyndromiques
+from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from tiac.models import (
-    EvenementSimple,
-    Etablissement,
-    InvestigationTiac,
-    RepasSuspect,
     AlimentSuspect,
     AnalyseAlimentaire,
+    Etablissement,
+    EvenementSimple,
+    InvestigationTiac,
+    RepasSuspect,
 )
 
 

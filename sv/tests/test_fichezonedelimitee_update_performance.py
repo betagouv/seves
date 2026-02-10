@@ -1,4 +1,4 @@
-from sv.factories import FicheZoneFactory, EvenementFactory, FicheDetectionFactory
+from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory
 
 BASE_NUM_QUERIES = 14
 

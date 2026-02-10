@@ -1,5 +1,5 @@
-import json
 from functools import cached_property
+import json
 
 from django.forms import Media
 from django.forms.models import BaseModelFormSet, modelformset_factory

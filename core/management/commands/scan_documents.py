@@ -1,12 +1,13 @@
 import os
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
+
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 import requests
-from django.core.management.base import CommandError, BaseCommand
 
 from core.models import Document
-from django.conf import settings
 
 
 class Command(BaseCommand):

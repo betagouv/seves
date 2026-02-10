@@ -1,11 +1,11 @@
+from collections import defaultdict
 import datetime
+from functools import cached_property, wraps
 import json
 import logging
 import typing
-import unicodedata
-from collections import defaultdict
-from functools import cached_property, wraps
 from typing import Mapping
+import unicodedata
 from urllib.parse import urlencode
 
 from celery.exceptions import OperationalError
@@ -43,6 +43,7 @@ from core.models import (
     Visibilite,
     user_is_referent_national,
 )
+
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE
 from .filters import DocumentFilter, MessageFilter
 from .notifications import notify_message, notify_object_cloture

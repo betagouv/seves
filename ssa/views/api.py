@@ -1,9 +1,10 @@
 import csv
-import requests
+from io import StringIO
+
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.views import View
-from io import StringIO
+import requests
 
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
 from ssa.models.evenement_produit import EvenementProduitReadOnly

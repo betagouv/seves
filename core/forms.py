@@ -1,5 +1,5 @@
-import uuid
 from collections import OrderedDict
+import uuid
 
 from django import forms
 from django.conf import settings

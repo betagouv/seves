@@ -2,44 +2,45 @@ import json
 import random
 from unittest import mock
 
-import pytest
 from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.constants import MUS_STRUCTURE
 from core.factories import DepartementFactory
-from core.models import Contact, LienLibre, Departement
+from core.models import Contact, Departement, LienLibre
+from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from ssa.constants import CategorieDanger
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import (
+    AlimentSuspectFactory,
+    AnalyseAlimentaireFactory,
+    EvenementSimpleFactory,
     InvestigationTiacFactory,
     RepasSuspectFactory,
-    AlimentSuspectFactory,
-    EvenementSimpleFactory,
-    AnalyseAlimentaireFactory,
 )
-from .pages import InvestigationTiacFormPage
+
 from ..constants import (
+    DANGERS_COURANTS,
     DangersSyndromiques,
+    ModaliteDeclarationEvenement,
     MotifAliment,
+    SuspicionConclusion,
     TypeCollectivite,
     TypeRepas,
-    SuspicionConclusion,
-    DANGERS_COURANTS,
-    ModaliteDeclarationEvenement,
 )
 from ..models import (
+    AlimentSuspect,
+    AnalyseAlimentaire,
+    Etablissement,
+    EvenementSimple,
+    InvestigationFollowUp,
     InvestigationTiac,
     RepasSuspect,
-    AlimentSuspect,
-    EvenementSimple,
-    AnalyseAlimentaire,
-    InvestigationFollowUp,
-    Etablissement,
 )
+from .pages import InvestigationTiacFormPage
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",

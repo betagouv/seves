@@ -1,10 +1,10 @@
-from django.db.models.signals import pre_delete, post_save
-from django.dispatch import receiver
 from django.db import transaction
-import reversion
+from django.db.models.signals import post_save, pre_delete
+from django.dispatch import receiver
 from django.forms.models import model_to_dict
+import reversion
 
-from sv.models import Lieu, Prelevement, ZoneInfestee, FicheZoneDelimitee, VersionFicheZoneDelimitee, Evenement
+from sv.models import Evenement, FicheZoneDelimitee, Lieu, Prelevement, VersionFicheZoneDelimitee, ZoneInfestee
 
 
 @receiver(pre_delete, sender=Lieu)

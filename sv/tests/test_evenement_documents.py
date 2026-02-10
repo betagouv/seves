@@ -1,22 +1,21 @@
 import os
-import tempfile
 from pathlib import Path
+import tempfile
 
-import pytest
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
-from core.factories import DocumentFactory, StructureFactory, MessageFactory
-from core.models import Structure, Document, Message
-from django.contrib.auth import get_user_model
-
+from core.factories import DocumentFactory, MessageFactory, StructureFactory
+from core.models import Document, Message, Structure
 from core.pages import WithDocumentsPage
 from core.tests.generic_tests.documents import (
-    generic_test_cant_see_document_type_from_other_app,
     generic_test_can_add_document_to_evenement,
+    generic_test_cant_see_document_type_from_other_app,
     generic_test_document_modal_front_behavior,
     generic_test_document_modal_xss_mitigated,
 )

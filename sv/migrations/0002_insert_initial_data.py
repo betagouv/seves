@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-
 ADMINISTRATIONS = ["Administration centrale", "Service régional"]
 
 UNITES_ADMINISTRATION_CENTRALE_NOMS = [

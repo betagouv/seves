@@ -1,13 +1,12 @@
-import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from playwright.sync_api import expect
+import pytest
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.factories import AgentFactory
-from core.factories import ContactAgentFactory
+from core.factories import AgentFactory, ContactAgentFactory
 from core.models import Structure
 from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP
 

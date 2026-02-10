@@ -1,5 +1,6 @@
-import pytest
 from django.urls import reverse
+import pytest
+
 from sv.models import EspeceEchantillon
 
 

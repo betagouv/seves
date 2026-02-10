@@ -1,7 +1,7 @@
-import pytest
 from django.db.models.signals import post_save
+import pytest
 
-from core.factories import RegionFactory, ContactAgentFactory, ContactStructureFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory, RegionFactory
 from core.models import FinSuiviContact
 from core.notifications import send_as_seves
 from core.signals import fin_suivi_added

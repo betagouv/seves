@@ -4,8 +4,8 @@ from django.conf import settings
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
-from core.factories import ContactAgentFactory, MessageFactory, ContactStructureFactory, DocumentFactory
-from core.models import Message, FinSuiviContact, Structure, Contact
+from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
+from core.models import Contact, FinSuiviContact, Message, Structure
 from core.pages import CreateMessagePage, UpdateMessagePage
 
 

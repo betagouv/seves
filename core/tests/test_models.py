@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+import pytest
 
 from core.factories import ContactAgentFactory
-from core.models import Structure, LienLibre, Contact, Agent
+from core.models import Agent, Contact, LienLibre, Structure
 
 
 @pytest.mark.django_db

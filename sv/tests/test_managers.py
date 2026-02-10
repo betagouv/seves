@@ -1,6 +1,6 @@
 import pytest
 
-from sv.factories import FicheZoneFactory, FicheDetectionFactory, ZoneInfesteeFactory
+from sv.factories import FicheDetectionFactory, FicheZoneFactory, ZoneInfesteeFactory
 from sv.models import FicheZoneDelimitee
 
 

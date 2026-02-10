@@ -1,23 +1,24 @@
-import pytest
 from faker import Faker
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory
-from core.models import LienLibre, Contact
+from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import (
-    InvestigationTiacFactory,
-    EtablissementFactory,
-    RepasSuspectFactory,
-    AnalyseAlimentaireFactory,
     AlimentSuspectFactory,
+    AnalyseAlimentaireFactory,
+    EtablissementFactory,
     EvenementSimpleFactory,
+    InvestigationTiacFactory,
+    RepasSuspectFactory,
 )
+
+from ..constants import DangersSyndromiques, SuspicionConclusion
+from ..models import Analyses, EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from .pages import InvestigationTiacEditPage
-from ..constants import SuspicionConclusion, DangersSyndromiques
-from ..models import InvestigationTiac, Analyses, EvenementSimple, InvestigationFollowUp
 
 pytestmark = pytest.mark.usefixtures("mus_contact")
 

@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date, datetime
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import FieldDoesNotExist

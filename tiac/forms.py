@@ -1,6 +1,6 @@
+from functools import cached_property
 import json
 import re
-from functools import cached_property
 
 from django import forms
 from django.conf import settings
@@ -9,40 +9,38 @@ from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
-from core.fields import SEVESChoiceField, MultiModelChoiceField, ContactModelMultipleChoiceField
-from core.form_mixins import WithFreeLinksMixin, js_module, WithLatestVersionLocking
-from core.forms import BaseEtablissementForm, BaseCompteRenduDemandeInterventionForm
+from core.fields import ContactModelMultipleChoiceField, MultiModelChoiceField, SEVESChoiceField
+from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_module
+from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
-from core.models import Contact, Structure, Departement
+from core.models import Contact, Departement, Structure
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
-    DangersSyndromiques,
     DANGERS_COURANTS,
+    DangersSyndromiques,
     EtatPrelevement,
-    SuspicionConclusion,
-)
-from tiac.constants import (
-    EvenementOrigin,
     EvenementFollowUp,
-    TypeRepas,
+    EvenementOrigin,
+    ModaliteDeclarationEvenement,
     Motif,
     MotifAliment,
+    SuspicionConclusion,
     TypeAliment,
     TypeCollectivite,
+    TypeRepas,
 )
-from tiac.constants import ModaliteDeclarationEvenement
 from tiac.fields import SelectWithAttributeField
 from tiac.models import (
-    EvenementSimple,
-    Etablissement,
-    InvestigationTiac,
-    InvestigationFollowUp,
-    Analyses,
-    validate_resytal,
-    RepasSuspect,
     AlimentSuspect,
     AnalyseAlimentaire,
+    Analyses,
+    Etablissement,
+    EvenementSimple,
+    InvestigationFollowUp,
+    InvestigationTiac,
+    RepasSuspect,
+    validate_resytal,
 )
 
 

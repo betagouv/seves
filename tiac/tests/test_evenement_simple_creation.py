@@ -5,14 +5,15 @@ from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.models import LienLibre, Contact, Departement
+from core.models import Contact, Departement, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory
+
+from ..constants import EvenementFollowUp, ModaliteDeclarationEvenement
+from ..models import Etablissement, EvenementSimple
 from .pages import EvenementSimpleFormPage
-from ..constants import ModaliteDeclarationEvenement, EvenementFollowUp
-from ..models import EvenementSimple, Etablissement
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",

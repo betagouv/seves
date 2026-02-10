@@ -1,11 +1,11 @@
 from threading import Lock
 from unittest.mock import patch
 
-import pytest
 from django.core.exceptions import ValidationError
-from django.forms import Form, FileField
+from django.forms import FileField, Form
 from django.urls import reverse
-from playwright.sync_api import Page, expect, Route
+from playwright.sync_api import Page, Route, expect
+import pytest
 
 from core.factories import DocumentFactory
 from core.models import Document

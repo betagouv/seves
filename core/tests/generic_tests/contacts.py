@@ -1,6 +1,6 @@
 from playwright.sync_api import expect
 
-from core.factories import ContactStructureFactory, ContactAgentFactory
+from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.pages import WithContactsPage
 from seves.settings import SSA_GROUP, SV_GROUP
 

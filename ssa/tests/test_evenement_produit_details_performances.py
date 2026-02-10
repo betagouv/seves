@@ -1,5 +1,5 @@
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
 
 NUMBER_BASE_QUERIES = 19
 

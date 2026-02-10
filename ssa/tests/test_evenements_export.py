@@ -1,13 +1,13 @@
 import csv
 from io import StringIO
 
-import pytest
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import ContactAgentFactory
 from core.models import Export, LienLibre
 from ssa.export import SsaExport
-from ssa.factories import EvenementProduitFactory, EtablissementFactory, InvestigationCasHumainFactory
+from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import EvenementProduitListPage
 
 NB_QUERIES = 17

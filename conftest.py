@@ -1,11 +1,9 @@
 import contextlib
+from datetime import datetime
 import os
 import random
-from datetime import datetime
-from typing import Iterable, Any
+from typing import Any, Iterable
 from unittest.mock import patch
-
-import pytest
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -13,11 +11,12 @@ from django.contrib.postgres.fields import ArrayField
 from django.urls import resolve
 from django.urls.base import reverse
 from django.utils.timezone import localdate
-from playwright.sync_api import expect, Page
+from playwright.sync_api import Page, expect
+import pytest
 
-from core.constants import DEPARTEMENTS, AC_STRUCTURE, MUS_STRUCTURE
-from core.factories import StructureFactory, UserFactory, ContactStructureFactory
-from core.models import Agent, Contact, Region, Departement, Structure
+from core.constants import AC_STRUCTURE, DEPARTEMENTS, MUS_STRUCTURE
+from core.factories import ContactStructureFactory, StructureFactory, UserFactory
+from core.models import Agent, Contact, Departement, Region, Structure
 
 User = get_user_model()
 

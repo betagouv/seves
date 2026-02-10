@@ -1,10 +1,12 @@
+import csv
 import time
-from django.db.utils import DataError
+
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.contrib.auth import get_user_model
-import csv
-from core.models import Contact, Structure, Agent
+from django.db.utils import DataError
+
+from core.models import Agent, Contact, Structure
 
 
 class Command(BaseCommand):

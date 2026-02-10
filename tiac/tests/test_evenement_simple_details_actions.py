@@ -1,11 +1,12 @@
-from playwright.sync_api import expect, Page
+from playwright.sync_api import Page, expect
 
-from core.factories import ContactStructureFactory, ContactAgentFactory
-from core.models import LienLibre, FinSuiviContact
+from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.models import FinSuiviContact, LienLibre
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from seves.settings import SSA_GROUP
-from tiac.factories import EvenementSimpleFactory, EtablissementFactory
-from tiac.models import EvenementSimple, InvestigationTiac, InvestigationFollowUp
+from tiac.factories import EtablissementFactory, EvenementSimpleFactory
+from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
+
 from .pages import EvenementSimpleDetailsPage, EvenementSimpleFormPage
 
 

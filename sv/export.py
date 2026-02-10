@@ -1,7 +1,7 @@
+import csv
 from functools import reduce
 
 from .models import FicheDetection
-import csv
 
 
 class FicheDetectionExport:

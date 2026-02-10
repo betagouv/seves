@@ -1,8 +1,8 @@
 from playwright.sync_api import Page
 
 from core.tests.generic_tests.documents import (
-    generic_test_cant_see_document_type_from_other_app,
     generic_test_can_add_document_to_evenement,
+    generic_test_cant_see_document_type_from_other_app,
     generic_test_document_modal_front_behavior,
     generic_test_document_modal_xss_mitigated,
 )

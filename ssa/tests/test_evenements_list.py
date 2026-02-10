@@ -4,7 +4,7 @@ from pytest_django.asserts import assertRedirects
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import LienLibre
-from ssa.constants import Source, TypeEvenement, PretAManger, SourceInvestigationCasHumain
+from ssa.constants import PretAManger, Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.models import EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import ActionEngagees

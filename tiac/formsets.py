@@ -1,11 +1,12 @@
-from django.forms import inlineformset_factory, BaseInlineFormSet, Media
+from django import forms
+from django.forms import BaseInlineFormSet, Media, inlineformset_factory
 
 from core.form_mixins import js_module
 from core.mixins import WithCommonContextVars
+
 from .constants import TypeAliment
-from .forms import EtablissementForm, RepasSuspectForm, AlimentSuspectForm, AnalyseAlimentaireForm
-from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect, AnalyseAlimentaire
-from django import forms
+from .forms import AlimentSuspectForm, AnalyseAlimentaireForm, EtablissementForm, RepasSuspectForm
+from .models import AlimentSuspect, AnalyseAlimentaire, Etablissement, EvenementSimple, InvestigationTiac, RepasSuspect
 
 
 class EtablissementBaseFormSet(WithCommonContextVars, BaseInlineFormSet):

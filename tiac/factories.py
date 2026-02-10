@@ -3,41 +3,41 @@ import itertools
 import random
 from zoneinfo import ZoneInfo
 
-import factory
 from django.conf import settings
 from django.utils import timezone
+import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from core.factories import BaseEtablissementFactory
 from core.mixins import WithEtatMixin
-from core.models import Structure, LienLibre
-from ssa.factories import EvenementProduitFactory
+from core.models import LienLibre, Structure
 from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.factories import EvenementProduitFactory
 from tiac.constants import (
-    EvenementOrigin,
-    ModaliteDeclarationEvenement,
-    EvenementFollowUp,
-    TypeRepas,
-    Motif,
-    TypeCollectivite,
     DangersSyndromiques,
     EtatPrelevement,
+    EvenementFollowUp,
+    EvenementOrigin,
+    ModaliteDeclarationEvenement,
+    Motif,
     SuspicionConclusion,
+    TypeCollectivite,
+    TypeRepas,
 )
 from tiac.models import (
     AlimentSuspect,
-    TypeAliment,
-    MotifAliment,
-    EvenementSimple,
+    AnalyseAlimentaire,
+    Analyses,
     Etablissement,
     Evaluation,
-    InvestigationTiac,
-    RepasSuspect,
-    AnalyseAlimentaire,
+    EvenementSimple,
     InvestigationFollowUp,
-    Analyses,
+    InvestigationTiac,
+    MotifAliment,
+    RepasSuspect,
+    TypeAliment,
 )
 
 fake = Faker()

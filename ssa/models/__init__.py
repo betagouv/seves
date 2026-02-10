@@ -1,5 +1,4 @@
-from .etablissement import Etablissement
-from .etablissement import PositionDossier
+from .etablissement import Etablissement, PositionDossier
 from .evenement_produit import (
     ActionEngagees,
     EvenementProduit,

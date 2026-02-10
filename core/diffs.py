@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,11 +9,9 @@ from django.utils import timezone
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
 from reversion_compare.compare import CompareObjects
-from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin
-from reversion_compare.mixins import CompareMixin as OriginalCompareMixin
+from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin, CompareMixin as OriginalCompareMixin
 
 from core.models import Agent, Structure
-from datetime import datetime
 
 
 @dataclass

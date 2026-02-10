@@ -1,39 +1,40 @@
-import json
 from datetime import datetime
+import json
 
-import pytest
 from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
-from core.factories import StructureFactory, DepartementFactory
+from core.factories import DepartementFactory, StructureFactory
 from core.models import Contact, Visibilite
-from sv.constants import STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES, CONTEXTES
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+from sv.constants import CONTEXTES, STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES
+
 from ..factories import (
-    LaboratoireFactory,
-    EvenementFactory,
-    LieuFactory,
-    SiteInspectionFactory,
-    OrganismeNuisibleFactory,
-    StatutReglementaireFactory,
-    PositionChaineDistributionFactory,
-    StructurePreleveuseFactory,
-    FicheDetectionFactory,
     EspeceEchantillonFactory,
+    EvenementFactory,
+    FicheDetectionFactory,
+    LaboratoireFactory,
+    LieuFactory,
+    OrganismeNuisibleFactory,
+    PositionChaineDistributionFactory,
+    SiteInspectionFactory,
+    StatutReglementaireFactory,
+    StructurePreleveuseFactory,
 )
 from ..models import (
+    Contexte,
+    Departement,
+    Evenement,
     FicheDetection,
+    Laboratoire,
+    Lieu,
+    OrganismeNuisible,
+    Prelevement,
     StatutEvenement,
     StatutReglementaire,
-    Contexte,
-    OrganismeNuisible,
-    Departement,
-    Laboratoire,
-    Evenement,
-    Prelevement,
-    Lieu,
 )
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
 @pytest.fixture(autouse=True)

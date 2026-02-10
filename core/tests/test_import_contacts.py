@@ -1,10 +1,11 @@
-import pytest
 from io import StringIO
-from django.core.management import call_command
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import get_user_model
 
-from core.models import Contact, Agent, Structure
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.management import call_command
+import pytest
+
+from core.models import Agent, Contact, Structure
 
 
 @pytest.fixture
