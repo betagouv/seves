@@ -37,11 +37,7 @@ class BaseDocumentPage(ABC):
     @property
     def get_existing_documents_title(self):
         cards = (
-            self.page.locator(self.container_id)
-            .get_by_test_id("document-card")
-            .get_by_test_id("document-card-title")
-            .filter(visible=True)
-            .all()
+            self.page.get_by_test_id("document-card").get_by_test_id("document-card-title").filter(visible=True).all()
         )
 
         return [c.inner_text() for c in cards]

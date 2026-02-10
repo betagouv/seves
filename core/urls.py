@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.views.generic import TemplateView
 
 from . import auth_views
@@ -29,8 +29,8 @@ urlpatterns = [
         DocumentUploadView.as_view(),
         name="document-upload",
     ),
-    path(
-        "document-delete/<int:pk>/",
+    re_path(
+        r"^document-delete/(?:(?P<pk>[0-9]+)/)?$",
         DocumentDeleteView.as_view(),
         name="document-delete",
     ),

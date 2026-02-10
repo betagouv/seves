@@ -2,35 +2,14 @@
 
 <div
     data-controller="document-formset"
-    data-document-formset-next-url-value="{{ formset.next_url }}"
+    {% if formset.next_url %}data-document-formset-next-url-value="{{ formset.next_url }}"{% endif %}
     data-document-formset-generic-error-value="Vous pouvez consulter ci-dessous les fichiers problématiques (intitulé en rouge) avant de réessayer."
+    data-document-formset-allowed-extensions-value="{{ formset.allowed_extensions_per_document_type }}"
     data-document-formset-dragging-class="document-upload-drag-drop--dragging"
     data-document-formset-upload-disabled-class="document-upload-drag-drop--disabled"
     data-document-formset-loading-class="document-modal--loading"
-    data-document-formset-allowed-extensions-value="{{ formset.allowed_extensions_per_document_type }}"
     data-document-formset-document-form-outlet="[data-controller='document-form']"
 >
-    <template data-document-formset-target="successMessageTpl">
-        <div
-            id="document-upload-messages"
-            class="fr-alert fr-alert--success fr-alert--sm"
-            data-controller="dismissable-alert"
-        >
-            <h3 class="fr-alert__title">
-                Les fichiers suivants ont été ajoutés avec succès et seront disponibles après l'analyse antivirus :
-            </h3>
-            <ul>__html__</ul>
-            <button
-                title="Masquer le message"
-                type="button"
-                class="fr-btn--close fr-btn"
-                data-dismissable-alert-target="close"
-            >
-                Masquer le message
-            </button>
-        </div>
-    </template>
-
     <dialog
         id="document-modal"
         class="fr-modal fr-modal--top"

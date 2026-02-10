@@ -3,8 +3,13 @@
 <div
     class="document-upload-container"
     data-controller="document-form"
-    {% if not form.instance.pk %}data-document-form-file-id-value="__file_id__"{% endif %}
+    {% if not form.instance.pk %}
+        data-document-form-file-id-value="__file_id__"
+    {% else %}
+        data-document-form-delete-url-value="{% url 'document-delete' pk=form.instance.pk %}"
+    {% endif %}
     data-document-form-loading-class="loading"
+    data-document-form-deleting-class="deleting"
     data-document-form-success-class="success"
     data-document-form-error-class="error"
     data-document-form-document-formset-outlet="[data-controller='document-formset']"
@@ -35,7 +40,8 @@
                         </button>
                         <button
                             type="button"
-                            class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                            class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary delete-btn"
+                            data-document-form-target="deleteBtn"
                             data-action="document-form#onDelete:stop:prevent"
                         >
                             Supprimer
@@ -61,7 +67,12 @@
                     {% dsfr_form_field form.description %}
                     {% if form.instance.pk %}
                         {# Don't render the file input if document exists in database to allow editing #}
-                        <input name="id" type="hidden" value="{{ form.instance.pk }}" />
+                        <input
+                            name="id"
+                            type="hidden"
+                            value="{{ form.instance.pk }}"
+                            data-document-form-target="inputId"
+                        >
                     {% else %}
                         {{ form.file|add_class:"fr-hidden"|set_data:"document-form-target:documentFile"|set_data:"action:document-form#onFileChanged" }}
                     {% endif %}
@@ -75,7 +86,18 @@
             <div id="id_nom-desc-error">
                 <ul class="errorlist">
                     <li class="fr-error-text">
-                        Il y a eu un problème réseau lors de la soumission du document ; veuillez réessayer.
+                        Il y a eu un problème réseau lors de la soumission du document ; veuillez réessayer.
+                    </li>
+                </ul>
+            </div>
+        </template>
+
+        <template data-document-form-target="serverErrorTpl">
+            <div id="id_nom-desc-error">
+                <ul class="errorlist">
+                    <li class="fr-error-text">
+                        Il y a eu un problème avec le serveur lors de la soumission du document ;
+                        veuillez réessayer plus tard.
                     </li>
                 </ul>
             </div>

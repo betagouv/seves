@@ -123,4 +123,10 @@ const applicationReady = Application.start().then(() => {
     return Application
 })
 
-export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML}
+const COMMON_EVENTS = Object.freeze({
+    DOCUMENT_SUCCESS: "DOCUMENT_SUCCESS",
+    ALL_DOCUMENTS_SUCCES: "ALL_DOCUMENTS_SUCCES",
+    DOCUMENT_DELETE: "DOCUMENT_DELETE",
+});
+
+export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML, COMMON_EVENTS}

@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load partials %}
 {% load static dsfr_tags widget_tweaks %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/message_page.css' %}">
@@ -8,60 +9,46 @@
 {% endblock %}
 
 {% block content %}
-    <form method="post" enctype="multipart/form-data" action="" id="message-form" data-controller="message-form">
-        {% csrf_token %}
-        <div class="fr-container--fluid fr-pt-4w">
-            <div class="fr-grid-row">
-                <div class="fr-col-1"></div>
-                <div class="fr-col-10">
-                    <a
-                        href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
-                        target="_blank"
-                    >Ouvrir la fiche {{ fiche_objet.numero }}</a>
+    <div class="fr-container--fluid fr-pt-4w">
+        <div class="fr-grid-row">
+            <div class="fr-col-1"></div>
+            <div class="fr-col-10">
+                <a
+                    href="{{ go_back_url }}" class="fr-btn fr-btn--sm fr-btn--secondary"
+                    target="_blank"
+                >Ouvrir la fiche {{ fiche_objet.numero }}</a>
 
-                    <div class="fr-flex fr-flex--row fr-flex--space-between">
-                        <div>
-                            <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
-                                {% if form.instance.pk %}
-                                    [Brouillon] {{ message.title }}
-                                {% else %}
-                                    {% if page_title %}
-                                        {{ page_title }}
-                                    {% else %}
-                                        {{ form.page_title }}
-                                    {% endif %}
-                                {% endif %}
-                            </h1>
-                            {% if form.help_text %}
-                                <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
-                            {% endif %}
-                        </div>
-                        <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
-                    </div>
-                </div>
-                <div class="fr-col-1"></div>
-            </div>
-        </div>
-
-        <div class="fr-container--fluid">
-            <div class="fr-grid-row fr-grid-row-xl--gutters">
-                <div class="fr-col-12 fr-col-xl-7 fr-col-offset-xl-1">
-                    {% for form in add_document_formset_error.forms %}
-                        {% if form.errors %}
-                            <div class="fr-alert fr-alert--error fr-mb-4v">
-                                {% if form.file.data.name %}
-                                    Il y a eu une erreur dans le traitement du document
-                                    « {{ form.file.data.name }} » :
-                                {% endif %}
-                                {% for errorlist in form.errors.values %}
-                                    {% for error in errorlist %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                {% endfor %}
-                            </div>
+                <div class="fr-flex fr-flex--row fr-flex--space-between">
+                    <div>
+                        <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
+                            {% with page_title=page_title|default:form.page_title %}
+                                {% if form.instance.status == form.instance.Status.BROUILLON %}[Brouillon]{% endif %}
+                                {{ message.title|default:page_title }}
+                            {% endwith %}
+                        </h1>
+                        {% if form.help_text %}
+                            <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
                         {% endif %}
-                    {% endfor %}
+                    </div>
+                    <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
+                </div>
+            </div>
+            <div class="fr-col-1"></div>
+        </div>
+    </div>
 
+    <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row-xl--gutters">
+            <div class="fr-col-12 fr-col-xl-7 fr-col-offset-xl-1">
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    action=""
+                    id="message-form"
+                    data-controller="message-form"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="id" value="{{ form.instance.pk }}">
                     <div class="white-container">
                         {% for field in form %}
                             <div class="fr-fieldset__element">
@@ -99,16 +86,85 @@
                             </button>
                         </li>
                     </ul>
-                </div>
-                <div class="fr-col-12 fr-col-xl-3 documents-col">
-                    <div class="fr-p-2w grey-container">
-                        <h2 class="fr-h4">Documents</h2>
-
-                        {{ add_document_formset }}
-                    </div>
-                </div>
-                <div class="fr-col-1"></div>
+                </form>
             </div>
+            <div class="fr-col-12 fr-col-xl-3 documents-col">
+                <div
+                    id="message-form"
+                    class="fr-p-2w grey-container document-cards-container"
+                    data-controller="message-documents"
+                    data-message-documents-card-outlet="[data-controller='message-document-card']"
+                >
+                    <h2 class="fr-h4">Documents</h2>
+
+                    <button
+                        class="fr-btn fr-btn--secondary"
+                        type="button"
+                        aria-controls="document-modal"
+                        data-fr-opened="false"
+                        data-testid="add-document-btn"
+                    >
+                        Ajouter des documents
+                    </button>
+
+                    <p data-message-documents-target="documentsAddedMsg"></p>
+
+                    <section data-message-documents-target="validatedSection">
+                        {% for form in document_formset %}
+                            {% with document_title=form.nom.value pk=form.instance.pk %}
+                                {% partialdef existing_document inline %}
+                                    <form
+                                        id="document-form-{{ pk }}"
+                                        class="document-card"
+                                        action="{% url 'document-delete' %}"
+                                        method="post"
+                                        data-controller="message-document-card"
+                                        data-message-document-card-loading-class="loading"
+                                        data-action="message-document-card#onDelete:stop:prevent"
+                                        data-testid="document-card"
+                                    >
+                                        {% csrf_token %}
+                                        <input
+                                            type="hidden"
+                                            name="pk"
+                                            value="{{ pk }}"
+                                            data-message-document-card-target="inputId"
+                                        >
+                                        {{ document_formset.empty_form.content_type }}
+                                        {{ document_formset.empty_form.object_id }}
+
+                                        <span
+                                            class="document-title"
+                                            data-message-document-card-target="title"
+                                            data-testid="document-card-title"
+                                        >
+                                            {{ document_title }}
+                                        </span>
+                                        <button
+                                            type="submit"
+                                            class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                                            data-action="document-validated#onDelete:stop:prevent"
+                                            data-message-document-card-target="deleteBtn"
+                                            data-testid="document-delete-btn"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    </form>
+                                {% endpartialdef %}
+                            {% endwith %}
+                        {% endfor %}
+                    </section>
+
+                    <template data-message-documents-target="validatedTpl">
+                        {% with document_title="__document_title__" pk="__pk__" %}
+                            {% partial existing_document %}
+                        {% endwith %}
+                    </template>
+
+                    {{ document_formset }}
+                </div>
+            </div>
+            <div class="fr-col-1"></div>
         </div>
-    </form>
+    </div>
 {% endblock %}

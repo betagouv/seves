@@ -248,23 +248,12 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     assert len(message_page.get_existing_documents_title) == 5
 
     # Remove previous document from the document aside
-    required_fields = (
-        page.get_by_test_id("document-upload").filter(has_text=document_to_remove.nom).locator("[required]")
-    )
-    expect(required_fields).not_to_have_count(0)
     message_page.remove_document_by_name_from_aside(document_to_remove.nom)
-    # Asserts that removed document won't be checked during form submission
-    expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 4
 
     # Remove previous document from the document modal
-    required_fields = (
-        page.get_by_test_id("document-upload").filter(has_text=document_to_remove_2.nom).locator("[required]")
-    )
-    expect(required_fields).not_to_have_count(0)
     message_page.remove_document_by_name_from_modal(document_to_remove_2.nom)
     # Asserts that removed document won't be checked during form submission
-    expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 3
 
     # Test that adding document without validating doesn't add document
@@ -285,10 +274,11 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     document_to_edit_nom_old = document_to_edit.nom
     document_to_edit.refresh_from_db()
     assert message.status == Message.Status.FINALISE
-    assert message.documents.count() == 3, f"Expected 3 documents found {message.documents.count()}"
-    assert document_to_keep in message.documents.all()
-    assert document_to_remove not in message.documents.all()
-    assert document_to_remove_2 not in message.documents.all()
+    not_deleted = message.documents.filter(is_deleted=False).all()
+    assert not_deleted.count() == 3, f"Expected 3 documents found {not_deleted.count()}"
+    assert document_to_keep in not_deleted.all()
+    assert document_to_remove not in not_deleted.all()
+    assert document_to_remove_2 not in not_deleted.all()
     assert document_to_edit.nom == f"New {document_to_edit_nom_old}"
     assert len(mailoutbox) == 1
 
@@ -306,11 +296,8 @@ def generic_test_handle_document_validation_error(live_server, page: Page, choic
 
     message_page.add_basic_document(close=False)
     message_page.document_type_input.select_option("Choisir dans la liste")
-    message_page.validate_document_modal()
+    message_page.validate_document_modal(expect_error=True)
 
-    message_page.save_as_draft_message()
-
-    expect(message_page.document_type_input).to_be_visible()
     assert (
         message_page.document_type_input.evaluate("el => el.validationMessage") == "Please select an item in the list."
     )
@@ -535,8 +522,9 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
 
     assert message_page.message_sender_in_table() == "Structure Test"
     message = Message.objects.get()
-    assert message.documents.count() == 2
-    assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}
+    not_deleted = message.documents.filter(is_deleted=False)
+    assert not_deleted.count() == 2
+    assert {d.nom for d in not_deleted.all()} == {"Mon document", "Mon document numero 3"}
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
@@ -559,7 +547,7 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     assert message_page.message_title_in_table() == message.title
 
     message_page.delete_message()
-    assert Message.objects.count() == 0
+    assert Message.objects.filter(is_deleted=False).count() == 0
     assert Message._base_manager.count() == 1
 
     assert len(mailoutbox) == 1
@@ -587,7 +575,7 @@ def generic_test_can_delete_my_own_draft_message(
     assert message_page.message_title_in_table() == f"[BROUILLON] {message.title}"
 
     message_page.delete_message()
-    assert Message.objects.count() == 0
+    assert Message.objects.filter(is_deleted=False).count() == 0
     assert Message._base_manager.count() == 1
 
     assert len(mailoutbox) == 0
@@ -749,6 +737,6 @@ def generic_test_cant_see_messages_in_internal_state(live_server, page: Page, mo
     page.goto(f"{live_server.url}{obj.get_absolute_url()}#tabpanel-messages-panel")
     obj.refresh_from_db()
     assert obj.messages.get_base_queryset().count() == 3
-    expect(page.locator("body")).not_to_contain_text(msg1.title, use_inner_text=True)
-    expect(page.locator("body")).to_contain_text(msg2.title, use_inner_text=True)
-    expect(page.locator("body")).to_contain_text(msg3.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).not_to_contain_text(msg1.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg2.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg3.title, use_inner_text=True)

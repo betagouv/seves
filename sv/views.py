@@ -31,7 +31,7 @@ from core.mixins import (
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
     WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
+    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
@@ -133,7 +133,7 @@ class EvenementListView(WithOrderingMixin, ListView):
 class EvenementDetailView(
     WithBlocCommunPermission,
     WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
+    WithFicheObjectDocumentUploadFormMixin,
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,

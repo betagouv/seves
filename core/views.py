@@ -16,7 +16,7 @@ from django.utils.translation import ngettext
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView
-from django.views.generic.edit import CreateView, FormView, UpdateView
+from django.views.generic.edit import FormView, UpdateView
 import requests
 from reversion.models import Version
 
@@ -33,7 +33,8 @@ from .forms import (
     StructureAddForm,
 )
 from .mixins import (
-    MessageHandlingMixin,
+    AbstractMessageHandlingView,
+    GetFicheObjectMixin,
     PreventActionIfVisibiliteBrouillonMixin,
     WithACNotificationMixin,
     WithAddUserContactsMixin,
@@ -49,9 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class DocumentUploadView(
-    PreventActionIfVisibiliteBrouillonMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView
-):
+class DocumentUploadView(GetFicheObjectMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView):
     form_class = DocumentUploadForm
     template_name = "core/form/document_upload.html#form_content"
 
@@ -64,7 +63,9 @@ class DocumentUploadView(
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
         ModelClass = content_type.model_class()
-        return get_object_or_404(ModelClass, pk=self.request.POST.get("object_id"))
+        return get_object_or_404(
+            getattr(ModelClass, "_base_objects", ModelClass), pk=self.request.POST.get("object_id")
+        )
 
     def test_func(self):
         return self.get_fiche_object().can_add_document(self.request.user)
@@ -89,9 +90,10 @@ class DocumentUploadView(
         return super().render_to_response(self.get_context_data(form=form))
 
 
-class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
+@method_decorator(csrf_exempt, name="dispatch")
+class DocumentDeleteView(GetFicheObjectMixin, UserPassesTestMixin, View):
     def get_fiche_object(self):
-        self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
+        self.document = get_object_or_404(Document, pk=self.kwargs.get("pk", self.request.POST.get("pk")))
 
         if isinstance(self.document.content_object, Message):
             return self.document.content_object.content_object
@@ -105,12 +107,14 @@ class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         self.document.deleted_by = self.request.user.agent
         self.document.save()
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
-        return safe_redirect(request.POST.get("next") + "#tabpanel-documents-panel")
+        return (
+            safe_redirect(next_url + "#tabpanel-documents-panel")
+            if (next_url := request.POST.get("next", None))
+            else HttpResponse(status=200)
+        )
 
 
-class DocumentUpdateView(
-    PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
-):
+class DocumentUpdateView(GetFicheObjectMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView):
     model = Document
     form_class = DocumentEditForm
     http_method_names = ["post"]
@@ -160,17 +164,17 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
         return safe_redirect(request.POST.get("next") + "#tabpanel-contacts-panel")
 
 
-class MessageCreateView(
-    PreventActionIfVisibiliteBrouillonMixin,
-    UserPassesTestMixin,
-    MessageHandlingMixin,
-    CreateView,
-):
-    model = Message
+class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, AbstractMessageHandlingView):
+    def test_func(self) -> bool | None:
+        return self.fiche_objet.can_user_access(self.request.user)
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.reply_message = None
+        if self.request.method == "GET":
+            self.message = Message.objects.create_unsaved(self.request.user.agent, related_to=self.fiche_objet)
+        else:
+            self.message = Message.objects.get_base_queryset().get(pk=self.request.POST.get("id"))
 
     def get_fiche_object(self):
         self.fiche_object_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
@@ -196,17 +200,9 @@ class MessageCreateView(
             raise PermissionDenied
         return message_form
 
-    def test_func(self) -> bool | None:
-        return self.fiche_objet.can_user_access(self.request.user)
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update(
-            {
-                "obj": self.fiche_objet,
-                "sender": self.request.user.agent.contact_set.get(),
-            }
-        )
+
         if self.request.GET.get("contact"):
             kwargs.update({"initial": {"recipients": [self.request.GET.get("contact")]}})
         if self.reply_id:
@@ -235,12 +231,6 @@ class MessageCreateView(
             context["page_title"] = self.reply_message.reply_page_title
         return context
 
-    def get_success_url(self):
-        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
-
-    def form_valid(self, form):
-        return self.handle_message_form(form)
-
     def form_invalid(self, form):
         for _, errors in form.errors.items():
             for error in errors:
@@ -248,14 +238,9 @@ class MessageCreateView(
         return HttpResponseRedirect(self.fiche_objet.get_absolute_url())
 
 
-class MessageUpdateView(
-    PreventActionIfVisibiliteBrouillonMixin,
-    UserPassesTestMixin,
-    MessageHandlingMixin,
-    UpdateView,
-):
-    model = Message
-    context_object_name = "message"
+class MessageUpdateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, AbstractMessageHandlingView):
+    def test_func(self):
+        return self.get_object().can_be_updated(self.request.user)
 
     def get_fiche_object(self):
         return self.get_object().content_object
@@ -269,27 +254,6 @@ class MessageUpdateView(
             Message.COMPTE_RENDU: self.fiche_objet.get_crdi_form(),
         }
         return mapping.get(self.object.message_type)
-
-    def test_func(self):
-        return self.get_object().can_be_updated(self.request.user)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["sender"] = self.request.user.agent.contact_set.get()
-        kwargs["obj"] = self.fiche_objet
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.fiche_objet.get_absolute_url()
-        context["message_status"] = Message.Status
-        return context
-
-    def get_success_url(self):
-        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
-
-    def form_valid(self, form):
-        return self.handle_message_form(form)
 
 
 class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, DetailView):

@@ -341,10 +341,12 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification_user, message_type, message_label):
     active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+    message = Message.objects.create_unsaved(active_contact, related_to=evenement)
 
     response = client.post(
         evenement.add_message_url,
         data={
+            "id": message.pk,
             "sender": Contact.objects.get(agent=mocked_authentification_user.agent).pk,
             "recipients": [active_contact.pk],
             "message_type": message_type,
@@ -660,11 +662,13 @@ def test_cant_forge_post_of_message_in_evenement_we_cant_see(client, mocked_auth
     contact = ContactAgentFactory()
     contact.agent.user.is_active = True
     contact.agent.user.save()
+    message = Message.objects.create_unsaved(contact.agent, evenement)
 
     assert response.status_code == 403
     content_type = ContentType.objects.get_for_model(evenement).id
 
     payload = {
+        "id": message.pk,
         "content_type": content_type,
         "object_id": evenement.pk,
         "recipients": contact.pk,
