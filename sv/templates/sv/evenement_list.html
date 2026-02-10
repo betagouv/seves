@@ -40,13 +40,13 @@
 
     <div class="main-container">
         <div class="evenements_liste__table--header">
-            <div>{{ object_list.count }} sur un total de {{ total_object_count }}</div>
+            <div>{{ paginator.count  }} sur un total de {{ total_object_count }}</div>
             <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
                 Extraire
             </button>
         </div>
 
-        {% if evenement_list|length > 0 %}
+        {% if paginator.count > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="evenements__list-table">
                     <thead>
