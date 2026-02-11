@@ -475,7 +475,7 @@ class CanUpdateVisibiliteRequiredMixin:
 
 class GetFicheObjectMixin:
     @cached_property
-    def fiche_objet(self):
+    def fiche_object(self):
         return self.get_fiche_object()
 
     def get_fiche_object(self):
@@ -488,10 +488,9 @@ class PreventActionIfVisibiliteBrouillonMixin(GetFicheObjectMixin):
     """
 
     def dispatch(self, request, *args, **kwargs):
-        obj = self.get_fiche_object()
-        if obj.is_draft:
+        if self.fiche_object.is_draft:
             messages.error(request, "Action impossible car la fiche est en brouillon")
-            return safe_redirect(request.POST.get("next") or obj.get_absolute_url() or "/")
+            return safe_redirect(request.POST.get("next") or self.fiche_object.get_absolute_url() or "/")
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -714,7 +713,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
             {
                 "user": self.request.user,
                 "related_to": message,
-                "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
+                "allowed_document_types": self.fiche_object.get_allowed_document_types(),
                 **kwargs,
             }
         )
@@ -726,7 +725,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
             context["add_document_formset"] = self.get_document_in_message_upload_formset(
                 message=context["form"].instance
             )
-        context["fiche_objet"] = self.fiche_objet
+        context["fiche_objet"] = self.fiche_object
         return context
 
     def get_media(self, **context_data) -> Media:
@@ -739,20 +738,20 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
         return len(structures) <= 1
 
     def _handle_visibilite_if_needed(self, message):
-        if not hasattr(self.fiche_objet, "visibilite"):
+        if not hasattr(self.fiche_object, "visibilite"):
             return
 
-        structures = [c.structure for c in self.fiche_objet.contacts.structures_only()]
+        structures = [c.structure for c in self.fiche_object.contacts.structures_only()]
 
         if self._is_internal_communication(structures):
             return
-        if self.fiche_objet.visibilite == Visibilite.LOCALE:
+        if self.fiche_object.visibilite == Visibilite.LOCALE:
             with transaction.atomic():
-                self.fiche_objet.allowed_structures.set(structures)
-                self.fiche_objet.visibilite = Visibilite.LIMITEE
-                self.fiche_objet.save()
-        if self.fiche_objet.visibilite == Visibilite.LIMITEE:
-            self.fiche_objet.allowed_structures.set(structures)
+                self.fiche_object.allowed_structures.set(structures)
+                self.fiche_object.visibilite = Visibilite.LIMITEE
+                self.fiche_object.save()
+        if self.fiche_object.visibilite == Visibilite.LIMITEE:
+            self.fiche_object.allowed_structures.set(structures)
 
     def _add_contacts_to_object(self, message):
         """
@@ -762,7 +761,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
         structures_with_agents = defaultdict(list)
 
         for contact in message.recipients.all().union(message.recipients_copy.all()):
-            self.fiche_objet.contacts.add(contact)
+            self.fiche_object.contacts.add(contact)
             if contact.agent:
                 structures_with_agents[contact.agent.structure].append(contact)
 
@@ -770,7 +769,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
             all_referents_nationaux = all(user_is_referent_national(contact.agent.user) for contact in contacts_agents)
             add_structure = not all_referents_nationaux
             if add_structure and (structure := contacts_agents[0].get_structure_contact()):
-                self.fiche_objet.contacts.add(structure)
+                self.fiche_object.contacts.add(structure)
 
     def handle_message_form(self, form):
         formset = self.get_document_in_message_upload_formset(message=form.instance)
@@ -788,7 +787,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
 
         response = super().form_valid(form)
         self._add_contacts_to_object(form.instance)
-        self.add_user_contacts(self.fiche_objet)
+        self.add_user_contacts(self.fiche_object)
         self._handle_visibilite_if_needed(form.instance)
         formset.save()
         try:

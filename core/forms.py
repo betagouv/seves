@@ -152,7 +152,7 @@ class CommonMessageForm(ModelForm):
     def __init__(
         self,
         sender,
-        obj,
+        fiche_object,
         data=None,
         files=None,
         auto_id="id_%s",
@@ -166,7 +166,7 @@ class CommonMessageForm(ModelForm):
         renderer=None,
     ):
         self.sender = sender
-        self.obj = obj
+        self.fiche_object = fiche_object
         super().__init__(
             data,
             files,
@@ -194,8 +194,8 @@ class CommonMessageForm(ModelForm):
         It will also add an `id` field so that templates can render the corresponding `<input>`.
         """
         content_object = dict(
-            content_type=ContentType.objects.get_for_model(self.obj),
-            object_id=self.obj.pk,
+            content_type=ContentType.objects.get_for_model(self.fiche_object),
+            object_id=self.fiche_object.pk,
         )
         self.fields["id"] = forms.ModelChoiceField(
             Message.objects.get_base_queryset().filter(sender=self.sender, **content_object),
@@ -328,20 +328,20 @@ class BasicMessageForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     message_object = None
     content = MessageContentField()
 
-    def __init__(self, *args, sender, obj, **kwargs):
-        super().__init__(*args, sender=sender, obj=obj, **kwargs)
-        self._add_object_field(obj, Message.MESSAGE)
+    def __init__(self, *args, sender, fiche_object, **kwargs):
+        super().__init__(*args, sender=sender, fiche_object=fiche_object, **kwargs)
+        self._add_object_field(fiche_object, Message.MESSAGE)
         queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
 
-        if hasattr(obj, "limit_contacts_to_user_from_app"):
-            queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+        if hasattr(fiche_object, "limit_contacts_to_user_from_app"):
+            queryset = queryset.for_apps(fiche_object.limit_contacts_to_user_from_app).distinct()
 
         self.fields["recipients"].queryset = queryset
         self.fields["recipients_copy"].queryset = queryset
 
-        if self._get_structures(obj):
-            self.fields["recipients"].label = self._get_recipients_label(obj)
-            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
+        if self._get_structures(fiche_object):
+            self.fields["recipients"].label = self._get_recipients_label(fiche_object)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(fiche_object)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -365,9 +365,9 @@ class NoteForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouvelle note"
     content = MessageContentField()
 
-    def __init__(self, *args, sender, obj, **kwargs):
-        super().__init__(*args, sender=sender, obj=obj, **kwargs)
-        self._add_object_field(obj, Message.NOTE)
+    def __init__(self, *args, sender, fiche_object, **kwargs):
+        super().__init__(*args, sender=sender, fiche_object=fiche_object, **kwargs)
+        self._add_object_field(fiche_object, Message.NOTE)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -382,14 +382,14 @@ class NoteForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
         fields = ["title", "content"]
 
 
-class PointDeSituationForm(DsfrBaseForm, CommonMessageForm, forms.ModelForm):
+class PointDeSituationForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     page_title = "Nouveau point de situation"
     help_text = "Ce point de situation sera envoyé à tous les agents et les structures en contact de cet évènement "
     content = MessageContentField()
 
-    def __init__(self, *args, sender, obj, **kwargs):
-        super().__init__(*args, sender=sender, obj=obj, **kwargs)
-        self._add_object_field(obj, Message.POINT_DE_SITUATION)
+    def __init__(self, *args, sender, fiche_object, **kwargs):
+        super().__init__(*args, sender=sender, fiche_object=fiche_object, **kwargs)
+        self._add_object_field(fiche_object, Message.POINT_DE_SITUATION)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -403,7 +403,7 @@ class PointDeSituationForm(DsfrBaseForm, CommonMessageForm, forms.ModelForm):
         instance = super().save(commit=False)
         if commit:
             instance.save()
-            instance.recipients.set(self.obj.contacts.all())
+            instance.recipients.set(self.fiche_object.contacts.all())
         return instance
 
     class Meta:
@@ -417,20 +417,20 @@ class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm, forms.ModelForm):
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, obj, **kwargs):
-        super().__init__(*args, sender=sender, obj=obj, **kwargs)
-        self._add_object_field(obj, Message.DEMANDE_INTERVENTION)
+    def __init__(self, *args, sender, fiche_object, **kwargs):
+        super().__init__(*args, sender=sender, fiche_object=fiche_object, **kwargs)
+        self._add_object_field(fiche_object, Message.DEMANDE_INTERVENTION)
 
         queryset_structures = Contact.objects.structures_only().can_be_emailed().select_related("structure")
-        if hasattr(obj, "limit_contacts_to_user_from_app"):
-            queryset_structures = queryset_structures.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+        if hasattr(fiche_object, "limit_contacts_to_user_from_app"):
+            queryset_structures = queryset_structures.for_apps(fiche_object.limit_contacts_to_user_from_app).distinct()
 
         self.fields["recipients"].queryset = queryset_structures
         self.fields["recipients_copy"].queryset = queryset_structures
 
-        if self._get_structures(obj):
-            self.fields["recipients"].label = self._get_recipients_structures_only_label(obj)
-            self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(obj)
+        if self._get_structures(fiche_object):
+            self.fields["recipients"].label = self._get_recipients_structures_only_label(fiche_object)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(fiche_object)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -455,9 +455,9 @@ class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm, fo
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     content = MessageContentField()
 
-    def __init__(self, *args, sender, obj, **kwargs):
-        super().__init__(*args, sender=sender, obj=obj, **kwargs)
-        self._add_object_field(obj, Message.COMPTE_RENDU)
+    def __init__(self, *args, sender, fiche_object, **kwargs):
+        super().__init__(*args, sender=sender, fiche_object=fiche_object, **kwargs)
+        self._add_object_field(fiche_object, Message.COMPTE_RENDU)
 
         self.handle_files(kwargs)
         self.set_labels()
