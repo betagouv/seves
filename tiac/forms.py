@@ -164,7 +164,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
     date_inspection = forms.DateTimeField(
         required=False,
         label="Date d'inspection",
-        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date", "value": ""}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
 
     def __init__(self, *args, **kwargs):
