@@ -74,6 +74,13 @@ class WithEtablissementMixin:
         modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
 
+        if etablissement.has_inspection:
+            modal.get_by_text("Inspection", exact=True).click()
+            modal.locator('[id$="-numero_resytal"]').fill(etablissement.numero_resytal)
+            modal.locator('[id$="-date_inspection"]').fill(etablissement.date_inspection.strftime("%Y-%m-%d"))
+            modal.locator('[id$="-evaluation"]').select_option(etablissement.evaluation)
+            modal.locator('[id$="-commentaire"]').fill(etablissement.commentaire)
+
     def close_etablissement_modal(self):
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
@@ -725,7 +732,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage:
+class InvestigationTiacDetailsPage(WithEtablissementMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url

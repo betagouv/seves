@@ -73,6 +73,21 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
+def test_can_add_etablissement_with_inspection(live_server, page: Page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+    evenement = EvenementSimpleFactory()
+
+    etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement, inspection=True)
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement)
+    creation_page.submit_as_draft()
+
+    assert Etablissement.objects.count() == 1
+    assert_models_are_equal(Etablissement.objects.get(), etablissement, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
 def test_etablissement_card(live_server, page: Page, ensure_departements, assert_models_are_equal):
     departement, *_ = ensure_departements("Paris")
     evenement = EvenementSimpleFactory()
