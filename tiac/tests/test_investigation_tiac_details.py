@@ -120,7 +120,7 @@ def test_evenement_produit_detail_page_content_repas(live_server, page: Page):
     card = details_page.repas_card()
     expect(card.get_by_text(repas.denomination, exact=True)).to_be_visible()
     expect(card.get_by_text(repas.get_type_repas_display(), exact=True)).to_be_visible()
-    expect(card.get_by_text(repas.nombre_participant, exact=True)).to_be_visible()
+    expect(card.get_by_text(f"Participants : {repas.nombre_participant}", exact=True)).to_be_visible()
 
     details_page.repas_open_modal()
     expect(details_page.current_modal.get_by_text(repas.denomination, exact=True)).to_be_visible()
