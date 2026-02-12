@@ -109,8 +109,9 @@ class WithDocumentListInContextMixin:
         context = super().get_context_data(**kwargs)
         documents = Document.objects.for_fiche(self.get_object()).prefetch_related("created_by_structure")
         document_filter = DocumentFilter(self.request.GET, queryset=documents)
+        allowed_document_types = self.get_object().get_allowed_document_types()
         for document in document_filter.qs:
-            document.edit_form = DocumentEditForm(instance=document)
+            document.edit_form = DocumentEditForm(instance=document, allowed_document_types=allowed_document_types)
         context["document_filter"] = document_filter
         return context
 
