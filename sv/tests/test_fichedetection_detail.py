@@ -1,6 +1,6 @@
 from playwright.sync_api import expect
 
-from sv.factories import LieuFactory, EvenementFactory, FicheDetectionFactory, PrelevementFactory
+from sv.factories import EvenementFactory, FicheDetectionFactory, LieuFactory, PrelevementFactory
 from sv.models import Prelevement
 
 

@@ -1,11 +1,11 @@
-import pytest
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import StructureFactory
-from sv.factories import FicheDetectionFactory, EvenementFactory, FicheZoneFactory, ZoneInfesteeFactory
-from sv.models import FicheZoneDelimitee, ZoneInfestee, FicheDetection, Evenement
+from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory, ZoneInfesteeFactory
+from sv.models import Evenement, FicheDetection, FicheZoneDelimitee, ZoneInfestee
 from sv.tests.test_utils import FicheZoneDelimiteeFormPage
 
 

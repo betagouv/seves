@@ -1,15 +1,17 @@
-from django.core.exceptions import ValidationError
 from collections import defaultdict
+
+from django.core.exceptions import ValidationError
 
 from sv.forms import (
     PrelevementForm,
 )
-from .constants import KNOWN_OEPPS, KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES
+
+from .constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES, KNOWN_OEPPS
 from .models import (
-    Prelevement,
-    OrganismeNuisible,
-    StatutReglementaire,
     Laboratoire,
+    OrganismeNuisible,
+    Prelevement,
+    StatutReglementaire,
     StructurePreleveuse,
 )
 

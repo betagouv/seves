@@ -1,9 +1,10 @@
 import json
-import pytest
+
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import StructureFactory
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
 

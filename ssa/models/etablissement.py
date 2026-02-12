@@ -1,5 +1,5 @@
-import reversion
 from django.db import models
+import reversion
 
 from core.models import BaseEtablissement
 

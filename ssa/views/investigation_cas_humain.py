@@ -1,7 +1,7 @@
 import datetime
+from functools import cached_property
 import io
 import os
-from functools import cached_property
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -14,6 +14,7 @@ from docxtpl import DocxTemplate
 from reversion.models import Version
 
 from core.mixins import (
+    MediaDefiningMixin,
     WithAddUserContactsMixin,
     WithBlocCommunPermission,
     WithClotureContextMixin,
@@ -24,10 +25,9 @@ from core.mixins import (
     WithDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
+    WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
-    WithFormsetInvalidMixin,
-    MediaDefiningMixin,
 )
 
 from ..forms import InvestigationCasHumainForm

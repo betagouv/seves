@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.mixins import WithEtatMixin
-from core.models import Departement, LienLibre, Contact
+from core.models import Contact, Departement, LienLibre
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage

@@ -1,7 +1,7 @@
 from django.conf import settings
 from post_office.mail import send
 
-from core.constants import SV_DOMAIN, SSA_DOMAIN
+from core.constants import SSA_DOMAIN, SV_DOMAIN
 from core.models import Contact
 
 

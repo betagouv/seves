@@ -1,6 +1,6 @@
-import pytest
 from django.contrib.auth.models import Group
 from django.test import RequestFactory
+import pytest
 
 from core.constants import Domains
 from core.factories import UserFactory

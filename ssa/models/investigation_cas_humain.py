@@ -1,14 +1,14 @@
-import reversion
 from dirtyfields import DirtyFieldsMixin
 from django.db import models, transaction
 from django.urls import reverse
+import reversion
 
 from core.mixins import (
-    WithFreeLinkIdsMixin,
     AllowModificationMixin,
-    WithDocumentPermissionMixin,
-    WithContactPermissionMixin,
     EmailNotificationMixin,
+    WithContactPermissionMixin,
+    WithDocumentPermissionMixin,
+    WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
 from core.model_mixins import WithBlocCommunFieldsMixin
@@ -17,11 +17,11 @@ from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
 from ssa.managers import InvestigationCasHumainManager
 from ssa.models.mixins import (
+    SsaBaseEvenementModel,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
-    WithSharedNumeroMixin,
     WithLatestVersionMixin,
-    SsaBaseEvenementModel,
+    WithSharedNumeroMixin,
 )
 
 

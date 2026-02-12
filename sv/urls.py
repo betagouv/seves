@@ -2,17 +2,17 @@ from django.urls import path
 
 from .api_views import search_espece_echantillon
 from .views import (
-    FicheDetectionCreateView,
-    FicheDetectionUpdateView,
-    FicheDetectionExportView,
-    EvenementVisibiliteUpdateView,
-    FicheZoneDelimiteeCreateView,
-    FicheZoneDelimiteeUpdateView,
     EvenementDetailView,
-    EvenementUpdateView,
-    VisibiliteStructureView,
-    FicheZoneDelimiteeDeleteView,
     EvenementListView,
+    EvenementUpdateView,
+    EvenementVisibiliteUpdateView,
+    FicheDetectionCreateView,
+    FicheDetectionExportView,
+    FicheDetectionUpdateView,
+    FicheZoneDelimiteeCreateView,
+    FicheZoneDelimiteeDeleteView,
+    FicheZoneDelimiteeUpdateView,
+    VisibiliteStructureView,
 )
 
 app_name = "sv"

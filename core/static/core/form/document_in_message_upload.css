@@ -5,12 +5,20 @@
 .document-upload-accordion.fr-accordion .fr-accordion__title {
     border-radius: .25rem;
     display: flex;
-    padding: .75rem 1.25rem;
+    flex-direction: column;
     background-color: var(--background-alt-grey);
     word-break: break-all;
+    overflow: hidden;
 }
 
-.document-upload-accordion .document-upload-accordion__label {
+.document-upload-accordion.fr-accordion .document-upload-accordion__header {
+    display: flex;
+    flex-direction: row;
+    padding: .75rem 1.25rem;
+    width: 100%;
+}
+
+.document-upload-accordion .document-upload-accordion__title-group {
     display: flex;
     flex-flow: row nowrap;
     flex-grow: 10;
@@ -18,7 +26,7 @@
     margin-left: -.5rem;
 }
 
-.document-upload-accordion .document-upload-accordion__label > * {
+.document-upload-accordion .document-upload-accordion__title-group > * {
     margin-left: .5rem;
     margin-right: .5rem;
     margin-bottom: 0;
@@ -40,40 +48,15 @@
     max-width: initial !important;
 }
 
-.document-modal--loading button[type="submit"] {
-    max-height: none;
-    max-width: 100%;
-    overflow: initial;
-    pointer-events: none;
+/* States styles (loading, success, error…) */
+.document-upload-container.error .document-upload-accordion.fr-accordion .fr-accordion__title {
+    border: 1px solid var(--border-plain-error);
 }
 
-.document-modal--loading button[type="submit"]::before {
-    --icon-size: 1rem;
-
-    animation: rotation 1s linear infinite;
-    border: .225rem solid var(--text-inverted-blue-france);
-    border-bottom-color: transparent !important;
-    border-radius: 50%;
-    background-color: transparent;
-    box-sizing: border-box;
-    content: " ";
-    display: inline-block;
-    height: var(--icon-size);
-    margin-left: -.125rem;
-    margin-right: .5rem;
-    mask-size: 100% 100%;
-    width: var(--icon-size);
+.document-upload-container.success .document-upload-accordion.fr-accordion .fr-accordion__title {
+    border: 1px solid var(--border-plain-success);
 }
 
-@keyframes rotation {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.document-modal--loading button[type="submit"]:disabled::before {
-    border-color: var(--text-disabled-grey);
+.document-upload-container:not(.loading) .fr-progress {
+    display: none;
 }

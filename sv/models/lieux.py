@@ -1,8 +1,8 @@
-import reversion
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django_countries.fields import CountryField
+import reversion
 
 from core.models import Departement, Region  # noqa F403
 

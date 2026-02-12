@@ -1,23 +1,22 @@
-import pytest
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
-from core.factories import ContactStructureFactory, ContactAgentFactory, RegionFactory
-from core.models import Contact, Region
 from core.constants import REGION_STRUCTURE_MAPPING
-from core.factories import StructureFactory
-from core.models import Visibilite
+from core.factories import ContactAgentFactory, ContactStructureFactory, RegionFactory, StructureFactory
+from core.models import Contact, Region, Visibilite
 from seves import settings
+
 from ..factories import (
-    FicheDetectionFactory,
-    LieuFactory,
-    FicheZoneFactory,
     EvenementFactory,
+    FicheDetectionFactory,
+    FicheZoneFactory,
+    LieuFactory,
     OrganismeNuisibleFactory,
 )
 from ..models import (
-    OrganismeNuisible,
     Evenement,
+    OrganismeNuisible,
 )
 
 

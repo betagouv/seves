@@ -1,9 +1,9 @@
+from django.conf import settings
 from post_office.mail import send
 from post_office.models import EmailTemplate
 
 from core.constants import MUS_STRUCTURE
-from core.models import Message, Contact, Export
-from django.conf import settings
+from core.models import Contact, Export, Message
 
 
 def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, content: str, message_obj: Message):

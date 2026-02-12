@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Document, Structure, Contact, Agent, Message, FinSuiviContact, Export, Region, Departement
 
+from .models import Agent, Contact, Departement, Document, Export, FinSuiviContact, Message, Region, Structure
 
 admin.site.register(Document)
 admin.site.register(Message)

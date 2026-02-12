@@ -1,16 +1,17 @@
 import re
 
-import reversion
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+import reversion
 
 from core.mixins import IsActiveMixin
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.managers import (
-    StructurePreleveuseManager,
     LaboratoireManager,
+    StructurePreleveuseManager,
 )
+
 from .lieux import Lieu
 
 

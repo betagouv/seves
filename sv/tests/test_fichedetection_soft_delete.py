@@ -1,12 +1,11 @@
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-
-from playwright.sync_api import expect, Page
+from playwright.sync_api import Page, expect
+import pytest
 
 from core.models import Structure
 from sv.factories import FicheDetectionFactory
-from sv.models import FicheDetection, Evenement
+from sv.models import Evenement, FicheDetection
 
 
 @pytest.mark.django_db

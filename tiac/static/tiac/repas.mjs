@@ -62,6 +62,7 @@ class RepasFormController extends BaseFormInModal {
      */
     renderCard(repas) {
         // language=HTML
+        const nbParticpants = `Participants : ${repas.nombre_participant}`
         return `<div class="repas-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
@@ -71,7 +72,7 @@ class RepasFormController extends BaseFormInModal {
                     <div class="fr-card__desc">
                         ${this.optionalText(repas.datetime_repas, `<p class="fr-card__detail fr-icon-calendar-2-line fr-my-2v">${this.formatDate(repas.datetime_repas)}</p>`)}
                         ${this.optionalText(repas.type_repas, `<p>${repas.type_repas}</p>`)}
-                        ${this.optionalText(repas.nombre_participant, this.renderBadges([repas.nombre_participant]))}
+                        ${this.optionalText(repas.nombre_participant, this.renderBadges([nbParticpants]))}
                     </div>
                 </div>
                 <div class="fr-card__footer">

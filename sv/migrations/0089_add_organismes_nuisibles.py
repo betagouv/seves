@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-
 organismes_nuisibles = [
     {
         "code_oepp": "MELASP",

@@ -1,6 +1,6 @@
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+import pytest
 
 from core.factories import StructureFactory
 from sv.factories import EvenementFactory

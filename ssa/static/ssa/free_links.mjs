@@ -46,12 +46,14 @@ class FreeLinksViaApiController  extends Controller {
             ...choicesDefaults,
             searchResultLimit: 500,
             removeItemButton: true,
+            placeholderValue: "0000.0000",
+            position: 'top',
             noChoicesText: 'Aucune fiche à sélectionner',
             searchFields: ['label'],
         });
         this.freeLinksChoices.input.element.addEventListener('input', this.debounce(() =>{
             const query = this.freeLinksChoices.input.element.value
-            if (query.length >= 5) {
+            if (query.length >= 3) {
                 this.fetchFreeLink(query).then(results => {
                     this.freeLinksChoices.setChoices(results, 'value', 'label', false)
                 })

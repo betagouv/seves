@@ -1,30 +1,31 @@
-import reversion
 from dirtyfields import DirtyFieldsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+import reversion
 
 from core.mixins import (
-    WithDocumentPermissionMixin,
-    WithContactPermissionMixin,
-    WithMessageUrlsMixin,
-    EmailNotificationMixin,
-    WithFreeLinkIdsMixin,
     AllowModificationMixin,
+    EmailNotificationMixin,
+    WithContactPermissionMixin,
+    WithDocumentPermissionMixin,
+    WithFreeLinkIdsMixin,
+    WithMessageUrlsMixin,
 )
-from core.soft_delete_mixins import AllowsSoftDeleteMixin
-from core.model_mixins import WithBlocCommunFieldsMixin, EmailableObjectMixin
+from core.model_mixins import EmailableObjectMixin, WithBlocCommunFieldsMixin
 from core.models import LienLibre
+from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.managers import EvenementProduitManager
 from ssa.models.validators import rappel_conso_validator
-from ..constants import CategorieDanger, CategorieProduit, Source, TypeEvenement, PretAManger
+
+from ..constants import CategorieDanger, CategorieProduit, PretAManger, Source, TypeEvenement
 from .mixins import (
+    SsaBaseEvenementModel,
     WithEvenementInformationMixin,
     WithEvenementRisqueMixin,
-    WithSharedNumeroMixin,
     WithLatestVersionMixin,
-    SsaBaseEvenementModel,
+    WithSharedNumeroMixin,
 )
 
 original_init = DirtyFieldsMixin.__init__

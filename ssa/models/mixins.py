@@ -1,10 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from reversion.models import Version
-from core.versions import get_versions_from_ids
 
-from core.mixins import sort_tree, WithNumeroMixin
-from core.models import Structure, Document
+from core.mixins import WithNumeroMixin, sort_tree
+from core.models import Document, Structure
+from core.versions import get_versions_from_ids
 from ssa.constants import CategorieDanger
 
 

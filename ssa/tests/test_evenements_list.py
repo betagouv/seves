@@ -4,7 +4,7 @@ from pytest_django.asserts import assertRedirects
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
 from core.models import LienLibre
-from ssa.constants import Source, TypeEvenement, PretAManger, SourceInvestigationCasHumain
+from ssa.constants import PretAManger, Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.models import EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import ActionEngagees
@@ -222,13 +222,12 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
 
 
 def test_compteur_fiche(live_server, page: Page):
-    nb_evenements = 101
-    EvenementProduitFactory.create_batch(nb_evenements)
+    EvenementProduitFactory.create_batch(101)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    expect(page.get_by_text(f"100 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
     page.get_by_role("link", name="Dernière page").click()
-    expect(page.get_by_text(f"1 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
 
 
 def test_list_can_filter_with_free_search(live_server, mocked_authentification_user, page: Page):
@@ -256,21 +255,21 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
 
     search_page.full_text_field.fill("Morbier")
     search_page.submit_search()
-    expect(search_page.page.get_by_text(evenement_1.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_2.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_3.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_4.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_5.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_6.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_7.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_8.numero)).not_to_be_visible()
-    expect(search_page.page.get_by_text(evenement_9.numero)).not_to_be_visible()
-    expect(search_page.page.get_by_text(evenement_10.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_11.numero)).not_to_be_visible()
-    expect(search_page.page.get_by_text(evenement_12.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_13.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_14.numero)).to_be_visible()
-    expect(search_page.page.get_by_text(evenement_15.numero)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_3.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_5.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_6.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_7.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_8.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_9.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_10.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_11.numero, exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_text(evenement_12.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_13.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_14.numero, exact=True)).to_be_visible()
+    expect(search_page.page.get_by_text(evenement_15.numero, exact=True)).to_be_visible()
 
 
 def test_more_filters_interactions(live_server, page: Page):

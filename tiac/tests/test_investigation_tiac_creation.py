@@ -2,44 +2,45 @@ import json
 import random
 from unittest import mock
 
-import pytest
 from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.constants import MUS_STRUCTURE
 from core.factories import DepartementFactory
-from core.models import Contact, LienLibre, Departement
+from core.models import Contact, Departement, LienLibre
+from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
-from ssa.constants import CategorieDanger
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import (
+    AlimentSuspectFactory,
+    AnalyseAlimentaireFactory,
+    EvenementSimpleFactory,
     InvestigationTiacFactory,
     RepasSuspectFactory,
-    AlimentSuspectFactory,
-    EvenementSimpleFactory,
-    AnalyseAlimentaireFactory,
 )
-from .pages import InvestigationTiacFormPage
+
 from ..constants import (
+    DANGERS_COURANTS,
     DangersSyndromiques,
+    ModaliteDeclarationEvenement,
     MotifAliment,
+    SuspicionConclusion,
     TypeCollectivite,
     TypeRepas,
-    SuspicionConclusion,
-    DANGERS_COURANTS,
-    ModaliteDeclarationEvenement,
 )
 from ..models import (
+    AlimentSuspect,
+    AnalyseAlimentaire,
+    Etablissement,
+    EvenementSimple,
+    InvestigationFollowUp,
     InvestigationTiac,
     RepasSuspect,
-    AlimentSuspect,
-    EvenementSimple,
-    AnalyseAlimentaire,
-    InvestigationFollowUp,
-    Etablissement,
 )
+from .pages import InvestigationTiacFormPage
 
 fields_to_exclude_repas = [
     "_prefetched_objects_cache",
@@ -267,7 +268,9 @@ def test_can_create_investigation_tiac_with_repas(
     creation_page.add_repas(input_data)
     expect(creation_page.get_repas_card(0).get_by_text(input_data.denomination, exact=True)).to_be_visible()
     expect(creation_page.get_repas_card(0).get_by_text(input_data.get_type_repas_display())).to_be_visible()
-    expect(creation_page.get_repas_card(0).get_by_text(input_data.nombre_participant, exact=True)).to_be_visible()
+    expect(
+        creation_page.get_repas_card(0).get_by_text(f"Participants : {input_data.nombre_participant}", exact=True)
+    ).to_be_visible()
 
     creation_page.submit_as_draft()
 

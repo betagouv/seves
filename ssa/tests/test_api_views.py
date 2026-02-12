@@ -1,5 +1,6 @@
-from django.urls import reverse
 from unittest.mock import patch
+
+from django.urls import reverse
 
 
 @patch("ssa.views.api.requests.get")

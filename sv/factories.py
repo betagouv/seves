@@ -1,41 +1,42 @@
+from datetime import datetime
 import random
 import string
-from datetime import datetime
-from django.utils import timezone
 
+from django.utils import timezone
+from django_countries import Countries
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
-from django_countries import Countries
 
-from core.models import Visibilite, Structure
+from core.models import Structure, Visibilite
+
 from .constants import (
-    STATUTS_REGLEMENTAIRES,
-    STRUCTURES_PRELEVEUSES,
-    STRUCTURE_EXPLOITANT,
-    STATUTS_EVENEMENT,
     CONTEXTES,
-    SITES_INSPECTION,
     POSITION_CHAINE_DISTRIBUTION,
+    SITES_INSPECTION,
+    STATUTS_EVENEMENT,
+    STATUTS_REGLEMENTAIRES,
+    STRUCTURE_EXPLOITANT,
+    STRUCTURES_PRELEVEUSES,
 )
 from .models import (
-    Prelevement,
-    Lieu,
+    Contexte,
+    EspeceEchantillon,
+    Evenement,
     FicheDetection,
-    OrganismeNuisible,
     FicheZoneDelimitee,
+    Laboratoire,
+    Lieu,
+    MatricePrelevee,
+    OrganismeNuisible,
+    PositionChaineDistribution,
+    Prelevement,
+    SiteInspection,
+    StatutEvenement,
     StatutReglementaire,
     StructurePreleveuse,
     ZoneInfestee,
-    Evenement,
-    MatricePrelevee,
-    EspeceEchantillon,
-    Laboratoire,
-    StatutEvenement,
-    Contexte,
-    SiteInspection,
-    PositionChaineDistribution,
 )
 
 fake = Faker()

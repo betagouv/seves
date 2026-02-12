@@ -57,7 +57,7 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==5.2.10
+django==5.2.11
     # via
     #   -r requirements.in
     #   dj-importmap
@@ -100,7 +100,7 @@ django-reversion==6.1.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
-django-reversion-compare==0.19.1
+django-reversion-compare==0.19.2
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -172,7 +172,7 @@ packaging==24.0
     #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.57.0
+playwright==1.58.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -243,11 +243,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.14.14
+ruff==0.15.0
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.49.0
+sentry-sdk[django]==2.52.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -270,7 +270,7 @@ tzdata==2025.2
     #   kombu
 tzlocal==5.3.1
     # via celery
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   botocore
     #   requests

@@ -1,8 +1,8 @@
 from datetime import datetime
 
-import pytest
 from django.utils import timezone
 from playwright.sync_api import Page
+import pytest
 
 from core.factories import StructureFactory
 from core.mixins import WithEtatMixin

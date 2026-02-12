@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from playwright.sync_api import expect, Page
+from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory
 from core.models import Structure

@@ -1,5 +1,5 @@
-import pytest
 from django.urls import reverse
+import pytest
 
 from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory
 

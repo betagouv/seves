@@ -31,6 +31,10 @@ async function dsfrDisclosePromise(dsfrDisclosable) {
     return promise.then(() => dsfrDisclosable.node.removeEventListener("dsfr.disclose", cb))
 }
 
+function escapeHTML(value) {
+    return new Option(`${value}`).innerHTML
+}
+
 class FetchPool {
     static createFetchPool() {
         const instance = new FetchPool()
@@ -42,7 +46,7 @@ class FetchPool {
         this.ids = [...Array(this.poolSize + 1).keys()]
         /** @type {(function(): Promise<void>)[]} */
         this.queue = []
-        /** @type {Object<Number, Promise>}*/
+        /** @type {Object<Number, Promise<void>>}*/
         this.active = {}
         this.current = Promise.resolve()
     }
@@ -55,20 +59,21 @@ class FetchPool {
             if(promises.length <= this.poolSize) {
                 const func = this.queue.shift()
                 const nextId = this.ids.pop()
-                this.active[nextId] = func().then(() => nextId)
+                this.active[nextId] = func().finally(() => {
+                    delete this.active[nextId]
+                    this.ids.push(nextId)
+                })
             } else {
-                const id = await Promise.race(promises)
-                delete this.active[id]
-                this.ids.push(id)
+                await Promise.race(promises)
             }
         }
 
-        await Promise.all(Object.values(this.active));
+        await Promise.allSettled(Object.values(this.active));
     }
 
     fetchPool(input, init) {
         const {promise, resolve, reject} = Promise.withResolvers()
-        this.enqueue(async () => fetch(input, init).then(resolve).catch(reject))
+        this.enqueue(async () => fetch(input, init).then(resolve, reject))
         return promise
     }
 }
@@ -81,8 +86,13 @@ class FetchPool {
  */
 const fetchPool = FetchPool.createFetchPool()
 
-/** @param {HTMLElement} closeTarget */
+/**
+ * @property {HTMLElement} element
+ * @property {Boolean} hideValue
+ * @property {HTMLElement} closeTarget
+ */
 class AlertController extends Controller {
+    static values = {hide: {type: Boolean, default: false}}
     static targets = ["close"]
 
     /**@param {HTMLElement} target */
@@ -98,7 +108,11 @@ class AlertController extends Controller {
     onClose(evt) {
         evt.preventDefault()
         evt.stopPropagation()
-        this.element.remove()
+        if(this.hideValue) {
+            this.element.hidden = true
+        } else {
+            this.element.remove()
+        }
     }
 }
 
@@ -109,4 +123,4 @@ const applicationReady = Application.start().then(() => {
     return Application
 })
 
-export {applicationReady, dsfrDisclosePromise, fetchPool}
+export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML}

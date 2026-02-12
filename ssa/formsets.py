@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import Media, inlineformset_factory, BaseInlineFormSet
+from django.forms import BaseInlineFormSet, Media, inlineformset_factory
 from django.forms.formsets import DELETION_FIELD_NAME
 
 from core.form_mixins import js_module

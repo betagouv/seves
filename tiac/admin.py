@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import EvenementSimple, Etablissement, InvestigationTiac, RepasSuspect, AlimentSuspect, AnalyseAlimentaire
+
+from .models import AlimentSuspect, AnalyseAlimentaire, Etablissement, EvenementSimple, InvestigationTiac, RepasSuspect
 
 admin.site.register(EvenementSimple)
 admin.site.register(Etablissement)

@@ -1,13 +1,13 @@
 import logging
-
-from celery import shared_task
 import os
 import subprocess
+from urllib.parse import urlparse
+
+from celery import shared_task
+from django.conf import settings
 import requests
 
 from core.models import Document
-from django.conf import settings
-from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 

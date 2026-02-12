@@ -1,5 +1,5 @@
-import uuid
 from collections import OrderedDict
+import uuid
 
 from django import forms
 from django.conf import settings
@@ -73,6 +73,9 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
         # Move errors related to the `file` field so they are visible on `nom` field
         for error in self.errors.pop("file", []):
             self.add_error("nom", error)
+
+        for field in self.errors.keys():
+            self.fields[field].widget.attrs["autofocus"] = "true"
 
     class Meta:
         model = Document

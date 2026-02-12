@@ -1,10 +1,11 @@
-import pytest
 from django.contrib.auth import get_user_model
 from playwright.sync_api import Page
+import pytest
 
 from sv.models import StatutReglementaire
-from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
+
 from ..constants import STATUTS_REGLEMENTAIRES
+from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 User = get_user_model()
 

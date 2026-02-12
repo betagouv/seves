@@ -2,9 +2,10 @@ import re
 
 from playwright.sync_api import Page
 
-from tiac.factories import EvenementSimpleFactory, EtablissementFactory
-from .pages import EvenementSimpleFormPage
+from tiac.factories import EtablissementFactory, EvenementSimpleFactory
+
 from ..models import Etablissement, EvenementSimple
+from .pages import EvenementSimpleFormPage
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",

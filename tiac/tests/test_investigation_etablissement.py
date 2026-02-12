@@ -1,10 +1,12 @@
 import re
-import pytest
+
 from playwright.sync_api import Page
+import pytest
 
 from tiac.factories import EtablissementFactory, InvestigationTiacFactory
-from .pages import InvestigationTiacFormPage
+
 from ..models import Etablissement, InvestigationTiac
+from .pages import InvestigationTiacFormPage
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",

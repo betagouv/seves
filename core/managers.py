@@ -1,17 +1,17 @@
 from typing import Literal
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, When, Value, IntegerField, QuerySet, Q, Manager, OuterRef, Subquery, Func, F, Exists
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Case, Exists, F, Func, IntegerField, Manager, OuterRef, Q, QuerySet, Subquery, Value, When
 
 from core.constants import (
-    MUS_STRUCTURE,
     BSV_STRUCTURE,
+    MUS_STRUCTURE,
     SERVICE_ACCOUNT_NAME,
+    SEVES_STRUCTURE,
     SSA_STRUCTURES,
     TIAC_STRUCTURES,
-    SEVES_STRUCTURE,
 )
 
 User = get_user_model()

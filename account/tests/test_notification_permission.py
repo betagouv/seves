@@ -1,12 +1,11 @@
 import re
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.urls import reverse
 from playwright.sync_api import Page
 
-from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
-from django.urls import reverse
-
-from core.constants import SV_DOMAIN, SSA_DOMAIN
+from core.constants import SSA_DOMAIN, SV_DOMAIN
 from core.factories import ContactAgentFactory
 from seves import settings
 from seves.settings import CAN_GIVE_ACCESS_GROUP

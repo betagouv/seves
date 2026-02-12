@@ -1,6 +1,5 @@
 from django.db import models
-from django.db.models import IntegerField, Func, Value
-from django.db.models import Q, Prefetch, OuterRef, Subquery, Count
+from django.db.models import Count, Func, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Cast, Greatest
 
 from core.managers import EvenementManagerMixin
@@ -145,7 +144,7 @@ class EvenementQueryset(EvenementManagerMixin, models.QuerySet):
         )
 
     def with_list_of_lieux_with_commune(self):
-        from sv.models import Lieu, FicheDetection
+        from sv.models import FicheDetection, Lieu
 
         lieux_prefetch = Prefetch(
             "lieux", queryset=Lieu.objects.exclude(commune="").order_by("id"), to_attr="lieux_list_with_commune"

@@ -1,7 +1,8 @@
 import csv
-from faker import Faker
-from django.core.management.base import BaseCommand
 from itertools import islice
+
+from django.core.management.base import BaseCommand
+from faker import Faker
 
 fake = Faker("fr_FR")
 

@@ -1,10 +1,10 @@
 import csv
-import requests
+from io import StringIO
+
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 from django.http import JsonResponse
 from django.views import View
-from io import StringIO
+import requests
 
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
 from ssa.models.evenement_produit import EvenementProduitReadOnly
@@ -46,7 +46,7 @@ class FindNumeroAgrementView(View):
 class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
     def get(self, request):
         query = self.request.GET.get("q")
-        if not query or len(query) < 5:
+        if not query or len(query) < 3:
             return JsonResponse({"error": "Le terme de recherche est trop pour une recherche"}, status=400)
         user = self.request.user
         choices = [
@@ -60,12 +60,9 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
         results = []
         for prefix, queryset in choices:
             if len(parts) == 1:
-                queryset = queryset.filter(
-                    Q(numero_annee__icontains=parts[0]) | Q(numero_evenement__icontains=parts[0])
-                )
+                queryset = queryset.filter(numero_evenement__icontains=parts[0])
             if len(parts) == 2:
-                queryset = queryset.filter(numero_annee__icontains=parts[0], numero_evenement__icontains=parts[1])
-
+                queryset = queryset.filter(numero_annee__endswith=parts[0], numero_evenement__startswith=parts[1])
             queryset = queryset.only("id", "numero_annee", "numero_evenement")
 
             if not queryset:

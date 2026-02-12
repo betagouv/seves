@@ -1,10 +1,11 @@
 import contextlib
 import mimetypes
 import re
-import magic
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.deconstruct import deconstructible
+import magic
 
 MAX_UPLOAD_SIZE_MEGABYTES = 15
 MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MEGABYTES * 1024 * 1024
@@ -48,6 +49,18 @@ class AllowedMimeTypes(models.TextChoices):
 
 
 @deconstructible
+class AnyOfValidator:
+    """A validator that runs multiple validator, failing fast"""
+
+    def __init__(self, *validators):
+        self.validators = validators
+
+    def __call__(self, value):
+        for validator in self.validators:
+            validator(value)
+
+
+@deconstructible
 class MagicMimeValidator:
     def __call__(self, file):
         file.seek(0)
@@ -59,7 +72,7 @@ class MagicMimeValidator:
             with contextlib.suppress(Exception):
                 file_mime = mimetypes.guess_type(file.name)[0]
         if file_mime not in AllowedMimeTypes.values:
-            raise ValidationError(f"Type de fichier non autorisé: {file_mime}")
+            raise ValidationError(f"Type de fichier non autorisé : {file_mime}")
 
 
 def validate_upload_file(file):

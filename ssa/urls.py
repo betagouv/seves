@@ -2,23 +2,23 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from .views import (
-    EvenementProduitDetailView,
     EvenementProduitCreateView,
+    EvenementProduitDetailView,
     EvenementsListView,
-    FindNumeroAgrementView,
     EvenementUpdateView,
+    FindNumeroAgrementView,
     InvestigationCasHumainCreateView,
 )
 from .views.api import FindFreeLinksView
+from .views.common import CsvExportView
 from .views.investigation_cas_humain import (
     InvestigationCasHumainDetailView,
-    InvestigationCasHumainUpdateView,
     InvestigationCasHumainDocumentExportView,
+    InvestigationCasHumainUpdateView,
 )
 from .views.produit import (
     EvenementProduitDocumentExportView,
 )
-from .views.common import CsvExportView
 
 app_name = "ssa"
 urlpatterns = [

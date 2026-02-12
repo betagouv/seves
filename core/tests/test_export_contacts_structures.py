@@ -1,8 +1,10 @@
-import pytest
-from io import StringIO
-from django.core.management import call_command
-from core.models import Structure, Contact
 from contextlib import redirect_stdout
+from io import StringIO
+
+from django.core.management import call_command
+import pytest
+
+from core.models import Contact, Structure
 
 
 @pytest.mark.django_db

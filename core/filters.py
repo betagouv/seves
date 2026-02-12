@@ -1,9 +1,9 @@
+from django.forms import TextInput, forms
 import django_filters
-from django.forms import forms, TextInput
 from dsfr.forms import DsfrBaseForm
 
-from .models import Document, Structure
 from .form_mixins import DSFRForm
+from .models import Document, Structure
 
 
 class FilterForm(DSFRForm, forms.Form):

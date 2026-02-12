@@ -4,7 +4,7 @@ from playwright.sync_api import expect
 
 from core.factories import DepartementFactory, MessageFactory
 from core.models import LienLibre
-from ssa.factories import EvenementProduitFactory, EtablissementFactory
+from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
 

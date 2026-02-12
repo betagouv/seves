@@ -1,7 +1,7 @@
 import re
 
-import pytest
 from django.utils import html
+import pytest
 
 from core.constants import AC_STRUCTURE, BSV_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, MessageFactory

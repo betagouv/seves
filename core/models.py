@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import reversion
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -9,27 +8,29 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
-from django.db.models import Q, CheckConstraint
+from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+import reversion
 from reversion.models import Revision
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE, BSV_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, SEVES_STRUCTURE
 from seves import settings
+
 from .managers import (
+    ContactManager,
     ContactQueryset,
-    LienLibreQueryset,
-    StructureQueryset,
     DocumentManager,
     DocumentQueryset,
+    LienLibreQueryset,
     MessageManager,
-    ContactManager,
     MessagQueryset,
+    StructureQueryset,
 )
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import validate_upload_file, AllowedExtensions, validate_numero_agrement
+from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
 
 User = get_user_model()
 
@@ -97,6 +98,10 @@ class Structure(models.Model):
     @property
     def is_mus_or_bsv(self):
         return self.niveau2 in [MUS_STRUCTURE, BSV_STRUCTURE]
+
+    @property
+    def is_seves(self):
+        return self.niveau1 == SEVES_STRUCTURE
 
 
 @reversion.register()
@@ -290,7 +295,7 @@ class Document(models.Model):
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
         upload_to=get_timestamped_filename,
-        validators=[validate_upload_file, FileExtensionValidator(AllowedExtensions.values)],
+        validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     is_deleted = models.BooleanField(default=False)

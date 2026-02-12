@@ -1,12 +1,12 @@
-import pytest
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.constants import AC_STRUCTURE
 from core.factories import StructureFactory
 from core.models import LienLibre, Structure, Visibilite
-from ..factories import EvenementFactory, OrganismeNuisibleFactory
-from ..factories import StatutReglementaireFactory
-from ..models import StatutReglementaire, Evenement
+
+from ..factories import EvenementFactory, OrganismeNuisibleFactory, StatutReglementaireFactory
+from ..models import Evenement, StatutReglementaire
 
 
 def test_update_evenement(live_server, page: Page, choice_js_fill):

@@ -1,30 +1,30 @@
+from datetime import datetime
 import itertools
 import random
-from datetime import datetime
 
-import factory
 from django.utils import timezone
+import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
 from core.factories import BaseEtablissementFactory
 from core.models import Structure
-from ssa.models import (
-    EvenementProduit,
-    TemperatureConservation,
-    QuantificationUnite,
-    ActionEngagees,
-    Etablissement,
-    PositionDossier,
-    EvenementInvestigationCasHumain,
-)
 from ssa.constants import (
     CategorieDanger,
     CategorieProduit,
-    TypeEvenement,
+    PretAManger,
     Source,
     SourceInvestigationCasHumain,
-    PretAManger,
+    TypeEvenement,
+)
+from ssa.models import (
+    ActionEngagees,
+    Etablissement,
+    EvenementInvestigationCasHumain,
+    EvenementProduit,
+    PositionDossier,
+    QuantificationUnite,
+    TemperatureConservation,
 )
 
 

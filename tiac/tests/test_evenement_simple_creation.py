@@ -5,14 +5,15 @@ from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
-from core.models import LienLibre, Contact, Departement
+from core.models import Contact, Departement, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.views import FindNumeroAgrementView
 from tiac.factories import EvenementSimpleFactory, InvestigationTiacFactory
+
+from ..constants import EvenementFollowUp, ModaliteDeclarationEvenement
+from ..models import Etablissement, EvenementSimple
 from .pages import EvenementSimpleFormPage
-from ..constants import ModaliteDeclarationEvenement
-from ..models import EvenementSimple, Etablissement
 
 FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_prefetched_objects_cache",
@@ -192,3 +193,29 @@ def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authenti
     evenement_simple = EvenementSimple.objects.get()
     assert evenement_simple.notify_ars is True
     assert evenement_simple.modalites_declaration == ModaliteDeclarationEvenement.OTHER
+
+
+def test_evenement_simple_follow_up_evement_produit_notice(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.set_follow_up(EvenementFollowUp.PASSE_EVENEMENT_PRODUIT)
+    expect(
+        creation_page.page.get_by_text(
+            'Publiez la fiche, puis créez un nouvel évènement dans "Produit & cas" et mettez les deux fiches en lien.',
+            exact=True,
+        )
+    ).to_be_visible()
+    creation_page.submit_as_draft()
+
+    evenement = EvenementSimple.objects.get()
+    assert evenement.follow_up == EvenementFollowUp.PASSE_EVENEMENT_PRODUIT
+
+    expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
+    expect(
+        creation_page.page.get_by_text(
+            'Publiez la fiche, puis créez un nouvel évènement dans "Produit & cas" et mettez les deux fiches en lien.',
+            exact=True,
+        )
+    ).to_have_count(2)
