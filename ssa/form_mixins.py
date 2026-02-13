@@ -50,13 +50,17 @@ class WithEvenementProduitFreeLinksMixin(WithFreeLinksQuerysetsMixin, WithFreeLi
 
     def _add_free_links(self, model):
         instance = getattr(self, "instance", None)
-        self.fields["free_link"] = MultiModelChoiceField(
-            required=False,
-            label="Sélectionner un objet",
-            model_choices=[
+        if self.is_bound:
+            choices = [
                 (self.model_label, self.get_queryset(model, self.user, instance)),
                 ("Investigation de cas humain", self._get_cas_humain_queryset(self.user)),
                 ("Enregistrement simple", self._get_evenement_simple_queryset(self.user)),
                 ("Investigation de tiac", self._get_investigation_tiac_queryset(self.user)),
-            ],
+            ]
+        else:
+            choices = []
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=choices,
         )
