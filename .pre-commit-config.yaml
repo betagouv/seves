@@ -20,9 +20,14 @@ repos:
   rev: '3.0.7'
   hooks:
     - id: djhtml
-    - id: djcss
-    - id: djjs
 - repo: https://github.com/thoughtworks/talisman
   rev: 'v1.33.2'
   hooks:
     - id: talisman-commit
+- repo: local
+  hooks:
+    - id: biome-format
+      name: biome-format
+      entry: biome format --write --no-errors-on-unmatched
+      language: system
+      files: "\\.(js|css)$"

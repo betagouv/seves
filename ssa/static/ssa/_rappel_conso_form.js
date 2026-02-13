@@ -1,5 +1,5 @@
 let rappelConso = []
-document.documentElement.addEventListener('dsfr.ready', () => {
+document.documentElement.addEventListener("dsfr.ready", () => {
     const rappelPart1Container = document.getElementById("rappel-1")
     const rappelPart2Container = document.getElementById("rappel-2")
     const rappelPart3Container = document.getElementById("rappel-3")
@@ -18,8 +18,8 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         handleDisabledRappelConsoBtn()
     }
 
-    function initExistingRappelConso(){
-        if (!document.getElementById("id_numeros_rappel_conso").value) return;
+    function initExistingRappelConso() {
+        if (!document.getElementById("id_numeros_rappel_conso").value) return
         rappelConso = document.getElementById("id_numeros_rappel_conso").value.split(",")
         showRappelConso()
     }
@@ -27,13 +27,13 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     function showRappelConso() {
         const rappelContainer = document.getElementById("rappel-container")
         let innerHtml = ""
-        rappelConso.forEach(numero => {
+        rappelConso.forEach((numero) => {
             innerHtml += `<button class="fr-tag fr-mr-2v fr-mb-1w fr-tag--dismiss">${numero}</button>`
         })
         rappelContainer.innerHTML = innerHtml
 
-        rappelContainer.querySelectorAll(".fr-tag--dismiss").forEach(tagElement => {
-            tagElement.addEventListener("click", event => {
+        rappelContainer.querySelectorAll(".fr-tag--dismiss").forEach((tagElement) => {
+            tagElement.addEventListener("click", (event) => {
                 event.preventDefault()
                 deleteRappelConso(event)
             })
@@ -48,10 +48,10 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     }
 
     function handleDisabledRappelConsoBtn() {
-        addRappelConsoBtn.disabled = rappelContainer.some(input => input.value.trim() === '');
+        addRappelConsoBtn.disabled = rappelContainer.some((input) => input.value.trim() === "")
     }
 
-    function goToNextIfNeeded(element){
+    function goToNextIfNeeded(element) {
         if (element.value.length == element.maxLength) {
             element.nextElementSibling.focus()
         }
@@ -65,33 +65,33 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         if (!form.checkValidity()) {
             return
         }
-        const values = Array.from(document.querySelectorAll("#rappel-container .fr-tag")).map(e => e.innerText)
+        const values = Array.from(document.querySelectorAll("#rappel-container .fr-tag")).map((e) => e.innerText)
         document.getElementById("id_numeros_rappel_conso").value = values.join(",")
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'action';
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = "action"
         input.value = event.target.value
-        form.appendChild(input);
+        form.appendChild(input)
         form.submit()
     }
 
-    addRappelConsoBtn.addEventListener("click", event => {
+    addRappelConsoBtn.addEventListener("click", (event) => {
         event.preventDefault()
         for (const input of rappelContainer) {
             if (!input.checkValidity()) {
-                input.reportValidity();
-                return;
+                input.reportValidity()
+                return
             }
         }
         addRappelConso()
         showRappelConso()
     })
 
-    rappelContainer.forEach(input => input.addEventListener('input', handleDisabledRappelConsoBtn))
-    if (!!submitDraftBtn){
+    rappelContainer.forEach((input) => input.addEventListener("input", handleDisabledRappelConsoBtn))
+    if (!!submitDraftBtn) {
         submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     }
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
-    toNextInput.forEach(element => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
+    toNextInput.forEach((element) => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
     initExistingRappelConso()
 })

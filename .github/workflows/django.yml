@@ -34,6 +34,9 @@ jobs:
         with:
           python-version: 3.13
           cache: pip
+      - uses: biomejs/setup-biome@v2
+        with:
+          version: latest
       - name: Install dependencies
         run: |
           pip install --upgrade "pip!=25.3" pip-tools
@@ -46,6 +49,8 @@ jobs:
         run: ruff format --check .
       - name: Run DjHTML
         run: ./bin/check_html_format.sh
+      - name: Run Biome
+        run: biome format --check .
   test:
     needs: [build]
     runs-on: ubuntu-latest

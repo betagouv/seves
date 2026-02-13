@@ -27,13 +27,13 @@
     height: 200px;
     width: auto;
 }
-.cursor-pointer{
+.cursor-pointer {
     cursor: pointer;
 }
 .img-cartographie {
     width: 95%;
 }
-.img-cartographie img{
+.img-cartographie img {
     max-width: 95%;
 }
 
@@ -41,7 +41,7 @@
     display: flex;
 }
 
-
-.cartographies .fr-modal--opened, .cartographies .fr-modal {
+.cartographies .fr-modal--opened,
+.cartographies .fr-modal {
     transition: none !important;
 }
