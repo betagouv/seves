@@ -272,6 +272,19 @@ def test_list_can_filter_with_free_search(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text(evenement_15.numero, exact=True)).to_be_visible()
 
 
+def test_list_can_filter_with_free_search_without_duplicates(live_server, mocked_authentification_user, page: Page):
+    evenement = EvenementProduitFactory(description="Mon test")
+    EtablissementFactory(evenement_produit=evenement)
+    EtablissementFactory(evenement_produit=evenement)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.full_text_field.fill("Mon test")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text(evenement.numero, exact=True)).to_have_count(1)
+
+
 def test_more_filters_interactions(live_server, page: Page):
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
