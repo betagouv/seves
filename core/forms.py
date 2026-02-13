@@ -142,6 +142,13 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
 
+    def __init__(self, *args, allowed_document_types, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in allowed_document_types],
+        ]
+
     class Meta:
         model = Document
         fields = ["nom", "document_type", "description"]
