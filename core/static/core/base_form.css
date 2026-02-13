@@ -1,5 +1,3 @@
-
-
 /* -- Champs obligatoires -- */
 label:has(+ input:required),
 label:has(+ input[data-required="true"]),

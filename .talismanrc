@@ -4,6 +4,7 @@ allowed_patterns:
 - '(models\.)?ForeignKey\(.+\)?'
 - 'ValidationError\(.+\)?'
 - 'Object.keys\(.+\)?'
+- 'passedElement.element.addEventListener'
 fileignoreconfig:
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
@@ -21,7 +22,9 @@ fileignoreconfig:
 - filename: sv/views.py
   checksum: 17381b88af7a141fb85a3ee9607583404107a063715bed7c406d53d397c63345
 - filename: ssa/static/ssa/_rappel_conso_form.js
-  checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
+  checksum: ad6a6af4210dd4e3a0b8bc7751b42f5d304d30c13365f849b4cdfa3a5ec36c19
+- filename: ssa/static/ssa/treeselectjs.umd.js
+  checksum: d74ba4f6d601cd593ec37ef4e9f7e5eecb4e0c62183461aaf3eaacd4054b5a9c
 - filename: core/views.py
   checksum: 2110553427b8fbda6c2c77fbc178ced52a1cd0574d24974f728ee97dcd334698
 - filename: sv/static/sv/fichedetection_lieux_form.js
@@ -40,8 +43,6 @@ fileignoreconfig:
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
   checksum: 22e3841c86e809b2cd4961bdd208cd7ed7f92f8e01b5ed163649df2780529655
-- filename: ssa/static/ssa/treeselectjs.umd.js
-  checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: ssa/forms.py
   checksum: 81cfbcafe674609598356abbfee6ea13464258219b2c38a0088a6de0985c7a3a
 - filename: core/migrations/0034_alter_document_document_type.py

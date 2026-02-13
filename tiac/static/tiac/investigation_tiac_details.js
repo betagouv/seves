@@ -1,4 +1,4 @@
-import {ViewManager, evenementViewModeConfig} from 'ViewManager'
+import { ViewManager, evenementViewModeConfig } from "ViewManager"
 
-const viewManager = new ViewManager(evenementViewModeConfig, "evenementViewMode");
-viewManager.initialize();
+const viewManager = new ViewManager(evenementViewModeConfig, "evenementViewMode")
+viewManager.initialize()

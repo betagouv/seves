@@ -1,6 +1,6 @@
-import {ViewManager, evenementViewModeConfig} from 'ViewManager'
+import { ViewManager, evenementViewModeConfig } from "ViewManager"
 
-document.addEventListener('DOMContentLoaded', function() {
-    const viewManager = new ViewManager(evenementViewModeConfig, "SSAInvestigationCasHumainViewMode");
+document.addEventListener("DOMContentLoaded", function () {
+    const viewManager = new ViewManager(evenementViewModeConfig, "SSAInvestigationCasHumainViewMode")
     viewManager.initialize()
-});
+})

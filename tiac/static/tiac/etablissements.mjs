@@ -1,9 +1,9 @@
-import {BaseFormSetController} from "BaseFormset"
-import {applicationReady} from "Application";
-import {setUpAddressChoices} from "BanAutocomplete"
-import {setUpSiretChoices} from "siret"
-import {collectFormValues} from "Forms"
-import {BaseFormInModal} from "BaseFormInModal"
+import { BaseFormSetController } from "BaseFormset"
+import { applicationReady } from "Application"
+import { setUpAddressChoices } from "BanAutocomplete"
+import { setUpSiretChoices } from "siret"
+import { collectFormValues } from "Forms"
+import { BaseFormInModal } from "BaseFormInModal"
 
 /**
  * @typedef EtablissementData
@@ -57,7 +57,7 @@ class EtablissementFormController extends BaseFormInModal {
         "hasInspection",
         "inspectionFields",
     ]
-    static values = {communesApi: String, shouldImmediatelyShow: {type: Boolean, default: false}}
+    static values = { communesApi: String, shouldImmediatelyShow: { type: Boolean, default: false } }
 
     connect() {
         this.raisonSocialeInputTarget.required = true
@@ -68,9 +68,9 @@ class EtablissementFormController extends BaseFormInModal {
         } else {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
-                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
-                    skipValidation: true
-                })
+                    nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true,
+                }),
             )
         }
         // Forces the has_inspection toggle to deliver an initial value
@@ -87,7 +87,11 @@ class EtablissementFormController extends BaseFormInModal {
         }
     }
 
-    onSiretChoice({detail: {customProperties: {code_commune, commune, raison, siret, streetData}}}) {
+    onSiretChoice({
+        detail: {
+            customProperties: { code_commune, commune, raison, siret, streetData },
+        },
+    }) {
         this.siretInputTarget.value = siret
         this.raisonSocialeInputTarget.value = raison
         this.communeInputTarget.value = commune
@@ -97,29 +101,31 @@ class EtablissementFormController extends BaseFormInModal {
         if (!!streetData) {
             let result = [
                 {
-                    "value": streetData,
-                    "label": streetData,
-                    selected: true
-                }
+                    value: streetData,
+                    label: streetData,
+                    selected: true,
+                },
             ]
-            this.addressChoices.setChoices(result, 'value', 'label', true)
-
+            this.addressChoices.setChoices(result, "value", "label", true)
         }
 
         fetch(`/ssa/api/find-numero-agrement/?siret=${siret}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!!data["numero_agrement"]){
+            .then((response) => response.json())
+            .then((data) => {
+                if (!!data["numero_agrement"]) {
                     this.numeroAgrementInputTarget.value = data["numero_agrement"]
                 }
-            });
+            })
 
         if (!!code_commune && !!this.communesApiValue) {
-            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`).then(async response => {
-                const json = await response.json()
-                this.departementInputTarget.value = json.departement.code
-            }).catch(() => {/* NOOP */
-            })
+            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`)
+                .then(async (response) => {
+                    const json = await response.json()
+                    this.departementInputTarget.value = json.departement.code
+                })
+                .catch(() => {
+                    /* NOOP */
+                })
         }
     }
 
@@ -129,7 +135,7 @@ class EtablissementFormController extends BaseFormInModal {
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onInspectionToggle({target: {checked}}) {
+    onInspectionToggle({ target: { checked } }) {
         if (checked) {
             this.inspectionFieldsTarget.classList.remove("fr-hidden")
         } else {
@@ -139,8 +145,8 @@ class EtablissementFormController extends BaseFormInModal {
 
     /** @param {EtablissementData} etablissement */
     initCard(etablissement) {
-        this.shouldImmediatelyShowValue = false;
-        this.cardContainerTargets.forEach(it => it.remove())
+        this.shouldImmediatelyShowValue = false
+        this.cardContainerTargets.forEach((it) => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderCard(etablissement))
         requestAnimationFrame(() => dsfr(this.dialogTarget).modal.conceal())
@@ -186,16 +192,16 @@ class EtablissementFormController extends BaseFormInModal {
         </div>`
     }
 
-    getDeleteConfirmationSentence(etablissement){
+    getDeleteConfirmationSentence(etablissement) {
         return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
 
-    getDeleteConfirmationTitle(etablissement){
+    getDeleteConfirmationTitle(etablissement) {
         return "Suppression d'un établissement"
     }
 }
 
-applicationReady.then(app => {
+applicationReady.then((app) => {
     app.register("etablissement-formset", BaseFormSetController)
     app.register("etablissement-form", EtablissementFormController)
 })

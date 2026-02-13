@@ -1,43 +1,47 @@
 import choicesDefaults from "choicesDefaults"
-import Choices from "Choices";
+import Choices from "Choices"
 
 function debounce(func, wait) {
-    let timeout;
+    let timeout
     return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
+        clearTimeout(timeout)
+        timeout = setTimeout(() => func.apply(this, args), wait)
+    }
 }
 
 function improveResults(value, results) {
-    const filteredResults = results.filter(item =>
-        item.customProperties?.siret?.startsWith(value)
-    )
+    const filteredResults = results.filter((item) => item.customProperties?.siret?.startsWith(value))
 
     if (value.length === 14) {
-        return [{
-            value: value,
-            label: `${value} (Forcer la valeur)`,
-            customProperties: {
-                "streetData": null,
-                "fullStreetData": null,
-                "siret": value,
-                "raison": null,
-                "commune": null,
-                "code_commune": null,
-            }
-        }, ...filteredResults]
+        return [
+            {
+                value: value,
+                label: `${value} (Forcer la valeur)`,
+                customProperties: {
+                    streetData: null,
+                    fullStreetData: null,
+                    siret: value,
+                    raison: null,
+                    commune: null,
+                    code_commune: null,
+                },
+            },
+            ...filteredResults,
+        ]
     }
     return filteredResults
 }
 
 export function fetchSiret(value) {
-    const cleanedValue =  value.replaceAll(" ", "")
-    const endpoint = document.querySelector('meta[name="siret-api-endpoint"]').getAttribute("content").replace("__siret__", value);
+    const cleanedValue = value.replaceAll(" ", "")
+    const endpoint = document
+        .querySelector('meta[name="siret-api-endpoint"]')
+        .getAttribute("content")
+        .replace("__siret__", value)
     let results = []
     return fetch(endpoint)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
             if (!data["etablissements"]) {
                 return improveResults(cleanedValue, [])
             }
@@ -52,17 +56,18 @@ export function fetchSiret(value) {
                     value: etablissement["siret"],
                     label: resultUnite + " " + resultEtablissement,
                     customProperties: {
-                        "streetData": streetData,
-                        "fullStreetData": fullStreetData,
-                        "siret": etablissement["siret"],
-                        "raison": uniteLegale["denominationUniteLegale"],
-                        "commune": address["libelleCommuneEtablissement"],
-                        "code_commune": address["codeCommuneEtablissement"],
-                    }
+                        streetData: streetData,
+                        fullStreetData: fullStreetData,
+                        siret: etablissement["siret"],
+                        raison: uniteLegale["denominationUniteLegale"],
+                        commune: address["libelleCommuneEtablissement"],
+                        code_commune: address["codeCommuneEtablissement"],
+                    },
                 })
-            });
+            })
             return improveResults(cleanedValue, results)
-        }).catch(() =>  improveResults(cleanedValue, []));
+        })
+        .catch(() => improveResults(cleanedValue, []))
 }
 
 /**
@@ -75,19 +80,22 @@ export function setUpSiretChoices(element, position) {
     const choicesSIRET = new Choices(element, {
         ...choicesDefaults,
         removeItemButton: true,
-        placeholderValue: 'N° SIRET',
+        placeholderValue: "N° SIRET",
         searchResultLimit: 20,
         position: position,
-    });
+    })
 
-    choicesSIRET.input.element.addEventListener('input', debounce((event) => {
-        const query = choicesSIRET.input.element.value
-        if (query.length > 5) {
-            fetchSiret(query).then(results => {
-                choicesSIRET.clearChoices()
-                choicesSIRET.setChoices(results, 'value', 'label', true)
-            })
-        }
-    }, 300))
+    choicesSIRET.input.element.addEventListener(
+        "input",
+        debounce((event) => {
+            const query = choicesSIRET.input.element.value
+            if (query.length > 5) {
+                fetchSiret(query).then((results) => {
+                    choicesSIRET.clearChoices()
+                    choicesSIRET.setChoices(results, "value", "label", true)
+                })
+            }
+        }, 300),
+    )
     return choicesSIRET
 }
