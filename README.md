@@ -64,6 +64,10 @@ pip install pip-tools
 pip-sync
 ```
 
+## Installer Biome
+
+Pour le pre-commit qui format le JavaScript et le CSS une installation locale de Biome est requise: [Comment installer biome](https://biomejs.dev/guides/getting-started/)
+
 ## Création de la base de données
 Créez la base de données via un client PosgreSQL ou la ligne de commande `psql` (exemple: `seves`).
 
