@@ -22,6 +22,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
     generic_test_cant_see_drafts_from_other_users,
+    generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
     generic_test_handle_document_validation_error,
     generic_test_only_displays_app_contacts,
@@ -203,3 +204,8 @@ def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server,
 def test_can_search_in_message_list(live_server, page: Page):
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_can_search_in_message_list(live_server, page, evenement)
+
+
+def test_cant_see_messages_in_internal_state(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    generic_test_cant_see_messages_in_internal_state(live_server, page, mocked_authentification_user, evenement)

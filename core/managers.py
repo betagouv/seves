@@ -204,8 +204,26 @@ class EvenementManagerMixin:
 
 
 class MessageManager(Manager):
-    def get_queryset(self):
+    def create_unsaved(self, sender: User, **kwargs):
+        from core.models import Message
+
+        kwargs["status"] = Message.Status.AVANT_SAUVEGARDE
+        kwargs["sender"] = sender
+        kwargs.setdefault("sender_structure", sender.agent.structure)
+        return self.create(**kwargs)
+
+    def get_base_queryset(self):
         return MessagQueryset(self.model, using=self._db).filter(is_deleted=False)
+
+    def get_queryset(self):
+        from core.models import Message
+
+        return self.get_base_queryset().exclude(status=Message.Status.AVANT_SAUVEGARDE)
+
+    def unsaved(self):
+        from core.models import Message
+
+        return self.get_base_queryset().filter(status=Message.Status.AVANT_SAUVEGARDE)
 
 
 class MessagQueryset(QuerySet):

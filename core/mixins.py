@@ -130,7 +130,7 @@ class WithBlocCommunPermission:
         return context
 
 
-class WithMessageMixin:
+class WithMessageMixin(SingleObjectMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         message_list = self.get_object().messages.for_user(self.request.user).optimized_for_list()

@@ -5,6 +5,8 @@ allowed_patterns:
 - 'ValidationError\(.+\)?'
 - 'Object.keys\(.+\)?'
 fileignoreconfig:
+- filename: core/forms.py
+  checksum: 5a1b5f58ad9a86eba63e40ed849afb3a9795141c52ee64555ffae52319fd2299
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
 - filename: ssa/models/evenement_produit.py
