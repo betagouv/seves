@@ -59,7 +59,7 @@ class DocumentUploadView(
         super().setup(request, *args, **kwargs)
         self.document = None
         with contextlib.suppress(Document.DoesNotExist):
-            self.document = self.fiche_objet.documents.get(pk=self.request.POST.get("id"))
+            self.document = self.fiche_object.documents.get(pk=self.request.POST.get("id"))
 
     def get_fiche_object(self):
         content_type = ContentType.objects.get(id=self.request.POST.get("content_type"))
@@ -67,14 +67,14 @@ class DocumentUploadView(
         return get_object_or_404(ModelClass, pk=self.request.POST.get("object_id"))
 
     def test_func(self):
-        return self.get_fiche_object().can_add_document(self.request.user)
+        return self.fiche_object.can_add_document(self.request.user)
 
     def get_form_kwargs(self):
         return {
             **super().get_form_kwargs(),
             "user": self.request.user,
-            "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
-            "related_to": self.fiche_objet,
+            "allowed_document_types": self.fiche_object.get_allowed_document_types(),
+            "related_to": self.fiche_object,
             "data": self.request.POST,
             "files": self.request.FILES,
             "instance": self.document,
@@ -85,7 +85,7 @@ class DocumentUploadView(
 
     def form_valid(self, form):
         form.save()
-        self.add_user_contacts(self.fiche_objet)
+        self.add_user_contacts(self.fiche_object)
         return super().render_to_response(self.get_context_data(form=form))
 
 
@@ -98,7 +98,7 @@ class DocumentDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return self.document.content_object
 
     def test_func(self):
-        return self.get_fiche_object().can_delete_document(self.request.user)
+        return self.fiche_object.can_delete_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
         self.document.is_deleted = True
@@ -116,7 +116,7 @@ class DocumentUpdateView(
     http_method_names = ["post"]
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_update_document(self.request.user)
+        return self.fiche_object.can_update_document(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -130,7 +130,7 @@ class DocumentUpdateView(
         return self.document.content_object
 
     def get_success_url(self):
-        return self.get_fiche_object().get_absolute_url() + "#tabpanel-documents-panel"
+        return self.fiche_object.get_absolute_url() + "#tabpanel-documents-panel"
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -150,7 +150,7 @@ class ContactDeleteView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
         return self.fiche
 
     def test_func(self):
-        return self.get_fiche_object().can_delete_contact(self.request.user)
+        return self.fiche_object.can_delete_contact(self.request.user)
 
     def post(self, request, *args, **kwargs):
         contact = Contact.objects.get(pk=self.request.POST.get("pk"))
@@ -182,7 +182,7 @@ class MessageCreateView(
             "note": NoteForm,
             "point_situation": PointDeSituationForm,
             "demande_intervention": DemandeInterventionForm,
-            "cr_demande_intervention": self.fiche_objet.get_crdi_form(),
+            "cr_demande_intervention": self.fiche_object.get_crdi_form(),
         }
         self.reply_id = self.request.GET.get("reply_id")
         if self.reply_id:
@@ -192,18 +192,18 @@ class MessageCreateView(
         is_ac = self.request.user.agent.structure.is_ac
         if message_form == DemandeInterventionForm and not is_ac:
             raise PermissionDenied
-        if message_form == self.fiche_objet.get_crdi_form() and is_ac:
+        if message_form == self.fiche_object.get_crdi_form() and is_ac:
             raise PermissionDenied
         return message_form
 
     def test_func(self) -> bool | None:
-        return self.fiche_objet.can_user_access(self.request.user)
+        return self.fiche_object.can_user_access(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update(
             {
-                "obj": self.fiche_objet,
+                "fiche_object": self.fiche_object,
                 "sender": self.request.user.agent.contact_set.get(),
             }
         )
@@ -229,14 +229,14 @@ class MessageCreateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.fiche_objet.get_absolute_url()
+        context["go_back_url"] = self.fiche_object.get_absolute_url()
         context["message_status"] = Message.Status
         if self.reply_message:
             context["page_title"] = self.reply_message.reply_page_title
         return context
 
     def get_success_url(self):
-        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
+        return self.fiche_object.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)
@@ -245,7 +245,7 @@ class MessageCreateView(
         for _, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, error)
-        return HttpResponseRedirect(self.fiche_objet.get_absolute_url())
+        return HttpResponseRedirect(self.fiche_object.get_absolute_url())
 
 
 class MessageUpdateView(
@@ -266,7 +266,7 @@ class MessageUpdateView(
             Message.NOTE: NoteForm,
             Message.POINT_DE_SITUATION: PointDeSituationForm,
             Message.DEMANDE_INTERVENTION: DemandeInterventionForm,
-            Message.COMPTE_RENDU: self.fiche_objet.get_crdi_form(),
+            Message.COMPTE_RENDU: self.fiche_object.get_crdi_form(),
         }
         return mapping.get(self.object.message_type)
 
@@ -276,17 +276,17 @@ class MessageUpdateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["sender"] = self.request.user.agent.contact_set.get()
-        kwargs["obj"] = self.fiche_objet
+        kwargs["fiche_object"] = self.fiche_object
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["go_back_url"] = self.fiche_objet.get_absolute_url()
+        context["go_back_url"] = self.fiche_object.get_absolute_url()
         context["message_status"] = Message.Status
         return context
 
     def get_success_url(self):
-        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
+        return self.fiche_object.get_absolute_url() + "#tabpanel-messages-panel"
 
     def form_valid(self, form):
         return self.handle_message_form(form)
@@ -390,27 +390,26 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
         content_type_id = self.request.POST.get("content_type_id")
         content_id = self.request.POST.get("content_id")
         model_class = ContentType.objects.get(pk=content_type_id).model_class()
-        self.obj = model_class.objects.get(pk=content_id)
-        return self.obj
+        return model_class.objects.get(pk=content_id)
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_add_structure(self.request.user)
+        return self.fiche_object.can_add_structure(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        self.obj = self.get_fiche_object()
-
-        form = StructureAddForm(request.POST, obj=self.obj)
+        form = StructureAddForm(request.POST, obj=self.fiche_object)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de la structure.")
-            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+            return safe_redirect(self.fiche_object.get_absolute_url() + "#tabpanel-contacts-panel")
 
         contacts_structures = form.cleaned_data["contacts_structures"]
         with transaction.atomic():
             for contact_structure in contacts_structures:
-                self.obj.contacts.add(contact_structure)
-                notify_contact_agent_added_or_removed(contact_structure, self.obj, added=True, user=self.request.user)
-            if hasattr(self.obj, "update_allowed_structures_and_visibility"):
-                self.obj.update_allowed_structures_and_visibility(contacts_structures)
+                self.fiche_object.contacts.add(contact_structure)
+                notify_contact_agent_added_or_removed(
+                    contact_structure, self.fiche_object, added=True, user=self.request.user
+                )
+            if hasattr(self.fiche_object, "update_allowed_structures_and_visibility"):
+                self.fiche_object.update_allowed_structures_and_visibility(contacts_structures)
 
         message = ngettext(
             "La structure a été ajoutée avec succès.",
@@ -418,7 +417,7 @@ class StructureAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMi
             len(contacts_structures),
         ) % {"count": len(contacts_structures)}
         messages.success(request, message, extra_tags="core contacts")
-        return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+        return safe_redirect(self.fiche_object.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
 class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin, View):
@@ -428,31 +427,32 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
         content_type_id = self.request.POST.get("content_type_id")
         content_id = self.request.POST.get("content_id")
         model_class = ContentType.objects.get(pk=content_type_id).model_class()
-        self.obj = model_class.objects.get(pk=content_id)
-        return self.obj
+        self.fiche_object = model_class.objects.get(pk=content_id)
+        return self.fiche_object
 
     def test_func(self) -> bool | None:
-        return self.get_fiche_object().can_add_agent(self.request.user)
+        return self.fiche_object.can_add_agent(self.request.user)
 
     def post(self, request, *args, **kwargs):
-        self.obj = self.get_fiche_object()
-        form = AgentAddForm(request.POST, obj=self.obj)
+        form = AgentAddForm(request.POST, obj=self.fiche_object)
         if not form.is_valid():
             messages.error(request, "Erreur lors de l'ajout de l'agent.")
-            return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+            return safe_redirect(self.fiche_object.get_absolute_url() + "#tabpanel-contacts-panel")
 
         contacts_agents = form.cleaned_data["contacts_agents"]
         allowed_contacts_structures_to_add = []
         with transaction.atomic():
             for contact_agent in contacts_agents:
-                self.obj.contacts.add(contact_agent)
-                notify_contact_agent_added_or_removed(contact_agent, self.obj, added=True, user=self.request.user)
+                self.fiche_object.contacts.add(contact_agent)
+                notify_contact_agent_added_or_removed(
+                    contact_agent, self.fiche_object, added=True, user=self.request.user
+                )
                 if not user_is_referent_national(contact_agent.agent.user):
                     contact_structure = contact_agent.get_structure_contact()
-                    self.obj.contacts.add(contact_structure)
+                    self.fiche_object.contacts.add(contact_structure)
                     allowed_contacts_structures_to_add.append(contact_structure)
-            if hasattr(self.obj, "update_allowed_structures_and_visibility"):
-                self.obj.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
+            if hasattr(self.fiche_object, "update_allowed_structures_and_visibility"):
+                self.fiche_object.update_allowed_structures_and_visibility(allowed_contacts_structures_to_add)
 
         message = ngettext(
             "L'agent a été ajouté avec succès.",
@@ -460,7 +460,7 @@ class AgentAddView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestMixin,
             len(contacts_agents),
         ) % {"count": len(contacts_agents)}
         messages.success(request, message, extra_tags="core contacts")
-        return safe_redirect(self.obj.get_absolute_url() + "#tabpanel-contacts-panel")
+        return safe_redirect(self.fiche_object.get_absolute_url() + "#tabpanel-contacts-panel")
 
 
 class CloturerView(View):

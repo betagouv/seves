@@ -204,15 +204,41 @@ class EvenementManagerMixin:
 
 
 class MessageManager(Manager):
-    def get_queryset(self):
+    def create_unsaved(self, sender: User, **kwargs):
+        from core.models import Message
+
+        kwargs["status"] = Message.Status.AVANT_SAUVEGARDE
+        kwargs["sender"] = sender
+        kwargs.setdefault("sender_structure", sender.agent.structure)
+        return self.create(**kwargs)
+
+    def get_base_queryset(self):
         return MessagQueryset(self.model, using=self._db).filter(is_deleted=False)
+
+    def get_queryset(self):
+        from core.models import Message
+
+        return self.get_base_queryset().exclude(status=Message.Status.AVANT_SAUVEGARDE)
+
+    def unsaved(self):
+        from core.models import Message
+
+        return self.get_base_queryset().filter(status=Message.Status.AVANT_SAUVEGARDE)
 
 
 class MessagQueryset(QuerySet):
+    def create_unsaved(self, **kwargs):
+        from core.models import Message
+
+        kwargs["status"] = Message.Status.AVANT_SAUVEGARDE
+        return self.create(**kwargs)
+
     def for_user(self, user):
         from core.models import Message
 
-        return self.filter(Q(status=Message.Status.FINALISE) | Q(sender=user.agent.contact_set.get()))
+        return self.user_displayable().filter(
+            Q(status=Message.Status.FINALISE) | Q(sender=user.agent.contact_set.get())
+        )
 
     def optimized_for_list(self):
         return self.select_related("sender__agent__structure", "sender_structure").prefetch_related(
@@ -252,3 +278,15 @@ class MessagQueryset(QuerySet):
         query_object |= Q(pk__in=Subquery(doc_qs))
 
         return self.filter(query_object).distinct()
+
+    def user_displayable(self):
+        """Excludes messages in Message.Status.AVANT_SAUVEGARDE state as it is internale"""
+        from core.models import Message
+
+        return self.exclude(status=Message.Status.AVANT_SAUVEGARDE)
+
+    def unsaved(self):
+        """Excludes messages in Message.Status.AVANT_SAUVEGARDE state as it is internale"""
+        from core.models import Message
+
+        return self.filter(status=Message.Status.AVANT_SAUVEGARDE)

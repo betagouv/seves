@@ -383,6 +383,7 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 
     class Status(models.TextChoices):
+        AVANT_SAUVEGARDE = "avant_sauvegarde", "Avant sauvegarde"
         BROUILLON = "brouillon", "Brouillon"
         FINALISE = "finalise", "Finalisé"
 
