@@ -28,7 +28,7 @@ class EvenementBaseQueryset(EvenementManagerMixin, models.QuerySet, abc.ABC):
         query_object = Q()
         for f in self.search_fields:
             query_object |= Q(**{f"{f}__unaccent__icontains": query})
-        return self.filter(query_object)
+        return self.filter(query_object).distinct()
 
 
 class EvenementProduitQueryset(EvenementBaseQueryset):
