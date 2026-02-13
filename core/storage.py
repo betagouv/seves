@@ -3,7 +3,8 @@ import os
 
 
 def get_timestamped_filename(instance, filename):
-    new_filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+    name, ext = os.path.splitext(filename)
+    new_filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{name[:150]}{ext}"
     return os.path.join("documents/", new_filename)
 
 
