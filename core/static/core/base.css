@@ -1,8 +1,8 @@
 @import url("./base_dsfr.css");
 @import url("./base_form.css");
 
-body{
-    background-color: #F6F6F6;
+body {
+    background-color: #f6f6f6;
 }
 
 body.environment-test *,
@@ -19,7 +19,7 @@ body.environment-test *:after,
     animation: none !important;
 }
 
-header{
+header {
     border-bottom: 2px solid #000091;
 }
 header .fr-menu {
@@ -36,17 +36,17 @@ fieldset {
     border: none;
 }
 
-.product-switch .fr-menu .fr-nav__link{
+.product-switch .fr-menu .fr-nav__link {
     padding: 0.25rem 0.5rem;
 }
-.product-switch .fr-menu__list{
+.product-switch .fr-menu__list {
     background: transparent;
 }
 .product-switch .fr-translate .fr-translate__btn::before {
     width: 0px;
 }
 
-.alert-container{
+.alert-container {
     margin: 2rem 1.5rem;
 }
 .main-container {
@@ -56,7 +56,7 @@ fieldset {
     margin: 2rem 1.5rem;
     max-width: 992px;
 }
-#en-tete{
+#en-tete {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -80,7 +80,7 @@ fieldset {
     /* Customize ChoicesJS multiple choices picker */
     min-width: 0px;
     min-height: 0px;
-    padding: .25rem .75rem !important;
+    padding: 0.25rem 0.75rem !important;
     background-color: var(--background-active-blue-france) !important;
     border: 1px solid var(--background-active-blue-france) !important;
     color: var(--text-inverted-blue-france) !important;
@@ -92,14 +92,14 @@ fieldset {
 .fr-select .choices__input,
 .fr-select .choices__list {
     background-color: var(--background-contrast-grey) !important;
-    margin: 0 !important;  /* margin should be carried by .fr-select parent */
+    margin: 0 !important; /* margin should be carried by .fr-select parent */
     padding: 0 !important;
 }
 
-.choices__list--dropdown{
+.choices__list--dropdown {
     z-index: 10 !important;
 }
-.choices__placeholder{
+.choices__placeholder {
     color: black;
     opacity: 0.8 !important;
 }
@@ -123,7 +123,6 @@ fieldset {
         padding: 2rem !important;
     }
 }
-
 
 .white-container--lite {
     background-color: white;
@@ -153,8 +152,8 @@ fieldset {
 .ac-notified {
     background-color: #faa18d;
     min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: .25rem;
+    padding: 0 0.5rem;
+    border-radius: 0.25rem;
     color: white;
 }
 
@@ -198,14 +197,14 @@ fieldset {
     -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
     mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
-.details-top-row--actions .fr-translate__btn{
+.details-top-row--actions .fr-translate__btn {
     height: 100%;
 }
 .details-top-row--actions {
     margin-left: auto;
 }
 @media (min-width: 992px) {
-    .details-top-row--actions{
+    .details-top-row--actions {
         margin-left: unset;
     }
 }
@@ -214,12 +213,12 @@ fieldset {
         height: 100%;
     }
 }
-.details-top-row--actions .fr-nav__link{
+.details-top-row--actions .fr-nav__link {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
 }
 @media (min-width: 992px) {
-    .details-top-row--actions .fr-nav__link{
+    .details-top-row--actions .fr-nav__link {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
@@ -247,17 +246,17 @@ fieldset {
 }
 
 .generic-card-container {
-    padding : 1.5rem;
+    padding: 1.5rem;
     border: 1px var(--grey-975-100-hover) solid;
     margin-bottom: 2rem;
 }
 
 .history-removed {
-    color : var(--red-marianne-main-472);
+    color: var(--red-marianne-main-472);
 }
 
-.history-added{
-    color : var(--success-425-625);
+.history-added {
+    color: var(--success-425-625);
 }
 
 .footer-links {
@@ -265,11 +264,11 @@ fieldset {
     color: var(--grey-425-625) !important;
 }
 
-.footer-links .fr-link{
+.footer-links .fr-link {
     color: var(--grey-425-625) !important;
 }
 
-.prod-warning-message .fr-notice__body p{
+.prod-warning-message .fr-notice__body p {
     margin-left: auto;
     margin-right: auto;
 }

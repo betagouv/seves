@@ -11,7 +11,7 @@
     justify-content: space-between;
     margin-bottom: 1rem;
 }
-.evenements_liste__header--title h2{
+.evenements_liste__header--title h2 {
     margin-bottom: 0;
 }
 .evenements_liste__header--actions {
@@ -25,7 +25,7 @@
     justify-content: space-between;
     margin-bottom: 1.5rem;
 }
-.more-filters-title h4{
+.more-filters-title h4 {
     margin-bottom: 0;
 }
 .evenements_liste__table--header {
@@ -38,17 +38,17 @@
     align-items: flex-end;
     gap: 0.5rem;
 }
-.evenements_liste__search-form .fr-fieldset__element{
+.evenements_liste__search-form .fr-fieldset__element {
     flex: 1 1 250px;
     max-width: 300px;
 }
-.evenements_liste__search-form .choices__item{
+.evenements_liste__search-form .choices__item {
     line-height: 1rem;
 }
 .evenements_liste__search-form .single-checkbox-no-legend,
 .evenements_liste__search-form .single-checkbox-no-legend .fr-fieldset__element {
     margin: 0;
 }
-.evenements_liste__search-form .single-checkbox-no-legend  .fr-checkbox-group {
-    margin: 2rem 0 .5rem 0;
+.evenements_liste__search-form .single-checkbox-no-legend .fr-checkbox-group {
+    margin: 2rem 0 0.5rem 0;
 }

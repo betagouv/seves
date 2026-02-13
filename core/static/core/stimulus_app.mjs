@@ -1,26 +1,27 @@
-import {Application as StimulusApp, Controller} from "Stimulus";
+import { Application as StimulusApp, Controller } from "Stimulus"
 
 // Drop when adoption is 99%; see https://caniuse.com/wf-promise-withresolvers
-if(typeof Promise.withResolvers !== "function") {
+if (typeof Promise.withResolvers !== "function") {
     Promise.withResolvers = function withResolvers() {
-        let resolve, reject;
+        let resolve, reject
         const promise = new Promise((res, rej) => {
-            resolve = res;
-            reject = rej;
-        });
-        return {promise, resolve, reject}
+            resolve = res
+            reject = rej
+        })
+        return { promise, resolve, reject }
     }
 }
 
 async function dsfrDisclosePromise(dsfrDisclosable) {
-    const {promise, resolve} = Promise.withResolvers()
+    const { promise, resolve } = Promise.withResolvers()
 
-    if(dsfrDisclosable.isDisclosed) {
+    if (dsfrDisclosable.isDisclosed) {
         resolve()
         return promise
     }
 
-    const cb = () => requestAnimationFrame(() => {
+    const cb = () =>
+    requestAnimationFrame(() => {
         dsfrDisclosable.node.classList.remove("no-animate")
         resolve()
     })
@@ -54,9 +55,9 @@ class FetchPool {
     async enqueue(func) {
         this.queue.push(func)
 
-        while(this.queue.length > 0) {
+        while (this.queue.length > 0) {
             const promises = Object.values(this.active)
-            if(promises.length <= this.poolSize) {
+            if (promises.length <= this.poolSize) {
                 const func = this.queue.shift()
                 const nextId = this.ids.pop()
                 this.active[nextId] = func().finally(() => {
@@ -68,16 +69,15 @@ class FetchPool {
             }
         }
 
-        await Promise.allSettled(Object.values(this.active));
+        await Promise.allSettled(Object.values(this.active))
     }
 
     fetchPool(input, init) {
-        const {promise, resolve, reject} = Promise.withResolvers()
+        const { promise, resolve, reject } = Promise.withResolvers()
         this.enqueue(async () => fetch(input, init).then(resolve, reject))
         return promise
     }
 }
-
 
 /**
  * @param {RequestInfo | URL} input
@@ -92,14 +92,14 @@ const fetchPool = FetchPool.createFetchPool()
  * @property {HTMLElement} closeTarget
  */
 class AlertController extends Controller {
-    static values = {hide: {type: Boolean, default: false}}
+    static values = { hide: { type: Boolean, default: false } }
     static targets = ["close"]
 
     /**@param {HTMLElement} target */
     closeTargetConnected(target) {
         const action = `click->${this.identifier}#onClose`
         const previous = target.dataset.action
-        if(previous === undefined || !previous.includes(action)) {
+        if (previous === undefined || !previous.includes(action)) {
             target.dataset.action = `${previous} ${action}`.trim()
         }
     }
@@ -108,7 +108,7 @@ class AlertController extends Controller {
     onClose(evt) {
         evt.preventDefault()
         evt.stopPropagation()
-        if(this.hideValue) {
+        if (this.hideValue) {
             this.element.hidden = true
         } else {
             this.element.remove()
@@ -116,11 +116,11 @@ class AlertController extends Controller {
     }
 }
 
-const Application = new StimulusApp();
+const Application = new StimulusApp()
 /** @type {Promise<StimulusApp>} */
 const applicationReady = Application.start().then(() => {
     Application.register("dismissable-alert", AlertController)
     return Application
 })
 
-export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML}
+export { applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML }

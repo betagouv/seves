@@ -1,7 +1,6 @@
-import {Controller} from "Stimulus"
-import {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML} from "Application"
-import {createStore, useStore} from "StimulusStore"
-
+import { Controller } from "Stimulus"
+import { applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML } from "Application"
+import { createStore, useStore } from "StimulusStore"
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
@@ -18,19 +17,19 @@ const globalFileTypeIndexStore = createStore({
     name: "globalFileTypeIndex",
     type: Number,
     initialValue: 0,
-});
+})
 
 const fileStore = createStore({
     name: "files",
     type: Object,
     initialValue: {},
-});
+})
 
 const allowedExtensionsStore = createStore({
     name: "allowedExtensions",
     type: Object,
     initialValue: {},
-});
+})
 
 const FormValidationError = Error("invalid")
 
@@ -82,11 +81,11 @@ class DocumentFormset extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
 
     static values = {
-        state: {type: Number, default: DOCUMENT_STATE.IDLE},
-        uploadDisabled: {type: Boolean, default: true},
+        state: { type: Number, default: DOCUMENT_STATE.IDLE },
+        uploadDisabled: { type: Boolean, default: true },
         allowedExtensions: Object,
         nextUrl: String,
-        genericError: String
+        genericError: String,
     }
     static targets = [
         "successMessageTpl",
@@ -116,7 +115,7 @@ class DocumentFormset extends Controller {
     }
 
     getNextId() {
-        if(this._currentId === undefined) {
+        if (this._currentId === undefined) {
             this._currentId = 0
         }
         return this._currentId++
@@ -136,30 +135,33 @@ class DocumentFormset extends Controller {
         this.submitBtnTarget.disabled = false
         this.errorContainerTarget.hidden = true
 
-        if(state === DOCUMENT_STATE.LOADING) {
+        if (state === DOCUMENT_STATE.LOADING) {
             this.modalTarget.classList.add(...this.loadingClasses)
             this.submitBtnTarget.disabled = true
-        } else if(state === DOCUMENT_STATE.ERROR) {
+        } else if (state === DOCUMENT_STATE.ERROR) {
             this.errorContainerTarget.hidden = false
         }
     }
 
     uploadDisabledValueChanged(value) {
-        if(this.documentFormOutlets.length === 0) {
+        if (this.documentFormOutlets.length === 0) {
             this.submitBtnTarget.disabled = value
         } else {
             this.submitBtnTarget.disabled = false
         }
-        if(value) {
+        if (value) {
             this.documentModalDragDropContainerTarget.classList.add(...this.uploadDisabledClasses)
         } else {
             this.documentModalDragDropContainerTarget.classList.remove(...this.uploadDisabledClasses)
         }
     }
 
-    onChangeType({target: {options, value}}) {
+    onChangeType({ target: { options, value } }) {
         this.uploadDisabledValue = value === ""
-        const optionIdx = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
+        const optionIdx = Math.max(
+            Array.from(options).findIndex((option) => option.value === value),
+            0,
+        )
         this.setGlobalFileTypeIndexValue(optionIdx)
         this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[value || ""]
     }
@@ -183,12 +185,12 @@ class DocumentFormset extends Controller {
     }
 
     /** @param {FileList} files */
-    onDrop({dataTransfer: {files}}) {
+    onDrop({ dataTransfer: { files } }) {
         this.processFiles(files)
     }
 
     /** @param {FileList} files */
-    onFileSelect({target: {files}}) {
+    onFileSelect({ target: { files } }) {
         this.processFiles(files)
     }
 
@@ -204,9 +206,11 @@ class DocumentFormset extends Controller {
 
             let hasErrors = false
             let successMessage = ""
-            const promiseResults = await Promise.allSettled(this.documentFormOutlets.map(controller => controller.submit()))
-            for(const promiseResult of promiseResults) {
-                if(promiseResult.status === "fulfilled") {
+            const promiseResults = await Promise.allSettled(
+                this.documentFormOutlets.map((controller) => controller.submit()),
+            )
+            for (const promiseResult of promiseResults) {
+                if (promiseResult.status === "fulfilled") {
                     successMessage = `${successMessage}<li>${escapeHTML(promiseResult.value)}</li>`
                 } else {
                     hasErrors = true
@@ -215,11 +219,11 @@ class DocumentFormset extends Controller {
 
             sessionStorage[STORAGE_DOCUMENT_SUCCESS] = successMessage
 
-            if(hasErrors) {
+            if (hasErrors) {
                 // Focus first erroneous field
                 const autofocus = this.modalTarget.querySelector("[autofocus]")
-                autofocus?.scrollIntoView({block: "center"})
-                autofocus?.focus({focusVisible: true})
+                autofocus?.scrollIntoView({ block: "center" })
+                autofocus?.focus({ focusVisible: true })
                 throw FormValidationError
             }
 
@@ -229,25 +233,25 @@ class DocumentFormset extends Controller {
             const nextURL = URL.parse(this.nextUrlValue, window.location.origin)
             window.location.href = this.nextUrlValue
             dsfr(this.modalTarget).modal.conceal()
-            if(nextURL.pathname === window.location.pathname) {
+            if (nextURL.pathname === window.location.pathname) {
                 // Force reload if we're on the same path otherwise browser won't trigger an HTTP query
                 window.location.reload()
             }
-        } catch(_) {
+        } catch (_) {
             this.stateValue = DOCUMENT_STATE.ERROR
         }
     }
 
     /** @param {FileList} files */
     processFiles(files) {
-        if(this.uploadDisabledValue) return;
+        if (this.uploadDisabledValue) return
 
-        for(const file of files) {
+        for (const file of files) {
             const nextId = this.getNextId()
-            this.setFilesValue(value => ({...value, [nextId]: file}))
+            this.setFilesValue((value) => ({ ...value, [nextId]: file }))
             this.formsetContainerTarget.insertAdjacentHTML(
                 "beforeend",
-                this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId)
+                this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId),
             )
         }
 
@@ -257,7 +261,7 @@ class DocumentFormset extends Controller {
 
     processSuccessMessages() {
         const html = sessionStorage[STORAGE_DOCUMENT_SUCCESS]
-        if((typeof html) == "string" && html.length > 0) {
+        if (typeof html == "string" && html.length > 0) {
             this.messagesContainer.innerHTML = this.successMessageTplTarget.innerHTML.replace("__html__", html)
         }
     }
@@ -286,8 +290,8 @@ class DocumentFormset extends Controller {
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
     static values = {
-        fileId: {type: Number, default: -1},
-        state: {type: Number, default: DOCUMENT_STATE.IDLE},
+        fileId: { type: Number, default: -1 },
+        state: { type: Number, default: DOCUMENT_STATE.IDLE },
     }
     static targets = [
         "form",
@@ -309,18 +313,18 @@ class DocumentForm extends Controller {
 
     stateValueChanged(state) {
         this.element.classList.remove(...this.loadingClasses, ...this.errorClasses)
-        if(state === DOCUMENT_STATE.LOADING) {
+        if (state === DOCUMENT_STATE.LOADING) {
             this.element.classList.add(...this.loadingClasses)
-        } else if(state === DOCUMENT_STATE.SUCCESS) {
+        } else if (state === DOCUMENT_STATE.SUCCESS) {
             this.element.classList.add(...this.successClasses)
-        } else if(state === DOCUMENT_STATE.ERROR) {
+        } else if (state === DOCUMENT_STATE.ERROR) {
             this.element.classList.add(...this.errorClasses)
         }
     }
 
     /** @param {HTMLFormElement} form */
     formTargetConnected(form) {
-        for(let element of form.elements) {
+        for (let element of form.elements) {
             const previousValue = element.dataset.action || ""
             element.dataset.action = `invalid->${this.identifier}#onInvalid ${previousValue}`
         }
@@ -328,8 +332,8 @@ class DocumentForm extends Controller {
 
     /** @param {HTMLInputElement} el */
     documentFileTargetConnected(el) {
-        if(this.fileIdValue >= 0) {
-            const dataTransfer = new DataTransfer();
+        if (this.fileIdValue >= 0) {
+            const dataTransfer = new DataTransfer()
             dataTransfer.items.add(this.filesValue[this.fileIdValue])
             this.documentFileTarget.files = dataTransfer.files
         }
@@ -338,7 +342,7 @@ class DocumentForm extends Controller {
 
     /** @param {HTMLSelectElement} el */
     documentTypeTargetConnected(el) {
-        if(el.value === "") {
+        if (el.value === "") {
             el.options[this.globalFileTypeIndexValue].selected = true
         }
         el.dispatchEvent(new Event("change"))
@@ -351,33 +355,33 @@ class DocumentForm extends Controller {
 
     /** @return {Promise<string>} Returns the name of the document that was successfully uploaded */
     async submit() {
-        if(!this.formTarget.reportValidity()) throw FormValidationError
+        if (!this.formTarget.reportValidity()) throw FormValidationError
 
         try {
             this.stateValue = DOCUMENT_STATE.LOADING
             /** @type {Response} */
-            const result = await fetchPool(
-                this.formTarget.action,
-                {method: this.formTarget.method, body: new FormData(this.formTarget)}
-            )
+            const result = await fetchPool(this.formTarget.action, {
+                method: this.formTarget.method,
+                body: new FormData(this.formTarget),
+            })
 
-            if(result.ok || result.status === 400) {
+            if (result.ok || result.status === 400) {
                 this.element.innerHTML = await result.text()
             }
 
-            if(result.ok) {
+            if (result.ok) {
                 this.stateValue = DOCUMENT_STATE.SUCCESS
                 return escapeHTML(this.documentNameTarget.value.trim())
             } else {
                 throw FormValidationError
             }
-        } catch(e) {
+        } catch (e) {
             this.stateValue = DOCUMENT_STATE.ERROR
-            if(e !== FormValidationError) {
+            if (e !== FormValidationError) {
                 console.error(e)
                 // TypeError means the request never reach the backend
                 // See https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch#exceptions
-                if(e instanceof TypeError) {
+                if (e instanceof TypeError) {
                     this.documentNameTarget.insertAdjacentHTML("afterend", this.networkErrorTplTarget.innerHTML)
                     this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
                 }
@@ -389,22 +393,22 @@ class DocumentForm extends Controller {
 
     /** @param {Event} evt */
     async onInvalid(evt) {
-        if(this.skipEvent === true) return;
+        if (this.skipEvent === true) return
         evt.preventDefault()
         evt.stopPropagation()
         await Promise.all([
             dsfrDisclosePromise(dsfr(this.documentFormsetOutlet.modalTarget).modal),
-            this.#forceOpenAccordion()
+            this.#forceOpenAccordion(),
         ])
         try {
             this.skipEvent = true
             let target = evt.target
-            if(evt.target === this.documentFileTarget) {
+            if (evt.target === this.documentFileTarget) {
                 // Affect any file validation error to `[name="nom"]` field so it is visible
                 this.documentNameTarget.setCustomValidity(evt.target.validationMessage)
                 target = this.documentNameTarget
             }
-            target.scrollIntoView({block: "center"})
+            target.scrollIntoView({ block: "center" })
             target.reportValidity()
         } finally {
             this.skipEvent = false
@@ -412,8 +416,8 @@ class DocumentForm extends Controller {
     }
 
     /** @param {FileList} files */
-    onFileChanged({target: {files}}) {
-        if(this.documentNameTarget.value.trim() === "") {
+    onFileChanged({ target: { files } }) {
+        if (this.documentNameTarget.value.trim() === "") {
             this.documentNameTarget.value = files.length === 0 ? "" : files[0].name
             this.documentNameTarget.dispatchEvent(new Event("input"))
         }
@@ -423,22 +427,20 @@ class DocumentForm extends Controller {
         this.element.remove()
     }
 
-    onDocumentNameChanged({target: {value}}) {
+    onDocumentNameChanged({ target: { value } }) {
         this.accordionTitleTarget.textContent = value
     }
 
-    onDocumentTypeChanged({target: {value}}) {
-        const option = Array.from(this.documentTypeTarget.options).find(
-            option => option.value === value
-        )
+    onDocumentTypeChanged({ target: { value } }) {
+        const option = Array.from(this.documentTypeTarget.options).find((option) => option.value === value)
         this.accordionTypeLabelTarget.textContent = option.textContent
-        if(this.hasDocumentFileTarget) {
+        if (this.hasDocumentFileTarget) {
             this.documentFileTarget.accept = this.documentFormsetOutlet.allowedExtensionsValue[option.value]
         }
     }
 
     onModify() {
-        if(this.accordionContentTarget.classList.contains("fr-collapse--expanded")) {
+        if (this.accordionContentTarget.classList.contains("fr-collapse--expanded")) {
             dsfr(this.accordionContentTarget).collapse.conceal()
         } else {
             dsfr(this.accordionContentTarget).collapse.disclose()
@@ -452,12 +454,12 @@ class DocumentForm extends Controller {
     }
 
     async #forceOpenAccordion() {
-        await new Promise(resolve => requestAnimationFrame(resolve))
+        await new Promise((resolve) => requestAnimationFrame(resolve))
         await dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse)
     }
 }
 
-applicationReady.then(app => {
+applicationReady.then((app) => {
     app.register(DOCUMENT_FORMSET_ID, DocumentFormset)
     app.register(DOCUMENT_FORM_ID, DocumentForm)
 })

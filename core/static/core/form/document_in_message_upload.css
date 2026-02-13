@@ -3,7 +3,7 @@
 }
 
 .document-upload-accordion.fr-accordion .fr-accordion__title {
-    border-radius: .25rem;
+    border-radius: 0.25rem;
     display: flex;
     flex-direction: column;
     background-color: var(--background-alt-grey);
@@ -14,7 +14,7 @@
 .document-upload-accordion.fr-accordion .document-upload-accordion__header {
     display: flex;
     flex-direction: row;
-    padding: .75rem 1.25rem;
+    padding: 0.75rem 1.25rem;
     width: 100%;
 }
 
@@ -23,12 +23,12 @@
     flex-flow: row nowrap;
     flex-grow: 10;
     flex-wrap: wrap;
-    margin-left: -.5rem;
+    margin-left: -0.5rem;
 }
 
 .document-upload-accordion .document-upload-accordion__title-group > * {
-    margin-left: .5rem;
-    margin-right: .5rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
     margin-bottom: 0;
 }
 

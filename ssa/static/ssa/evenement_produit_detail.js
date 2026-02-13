@@ -1,6 +1,6 @@
-import {ViewManager, evenementViewModeConfig} from 'ViewManager'
+import { ViewManager, evenementViewModeConfig } from "ViewManager"
 
-document.addEventListener('DOMContentLoaded', function() {
-    const viewManager = new ViewManager(evenementViewModeConfig, "SSAEvenementProduitViewMode");
+document.addEventListener("DOMContentLoaded", function () {
+    const viewManager = new ViewManager(evenementViewModeConfig, "SSAEvenementProduitViewMode")
     viewManager.initialize()
-});
+})

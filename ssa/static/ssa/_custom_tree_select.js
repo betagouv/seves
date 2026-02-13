@@ -1,58 +1,57 @@
 import "TreeSelect"
 
-export function patchItems(element){
+export function patchItems(element) {
     setTimeout(() => {
-        element.querySelectorAll('.treeselect-list__item').forEach(itemElement => {
-
-      // Show checkbox / radio is the element can be selected
-            if (!itemElement.classList.contains("treeselect-list__item--non-selectable-group")){
+        element.querySelectorAll(".treeselect-list__item").forEach((itemElement) => {
+            // Show checkbox / radio is the element can be selected
+            if (!itemElement.classList.contains("treeselect-list__item--non-selectable-group")) {
                 const checkboxContainer = itemElement.querySelector(".treeselect-list__item-checkbox-container")
-                if (!!checkboxContainer){
+                if (!!checkboxContainer) {
                     checkboxContainer.style.display = "initial"
                 }
             }
 
-            const iconElement =  itemElement.querySelector(".treeselect-list__item-icon")
+            const iconElement = itemElement.querySelector(".treeselect-list__item-icon")
             if (!iconElement) {
                 return
             }
 
-      // If element has children hide the label (which triggers on click the selection of the element)
-      // and copy the text from the label next to the icon (which triggers on click the opening/closing of the group)
+            // If element has children hide the label (which triggers on click the selection of the element)
+            // and copy the text from the label next to the icon (which triggers on click the opening/closing of the group)
             const label = itemElement.querySelector(".treeselect-list__item-label")
             label.style.display = "none"
-            if (iconElement.innerHTML.includes(label.innerText)) return;
+            if (iconElement.innerHTML.includes(label.innerText)) return
             iconElement.innerHTML += label.innerText
-        });
-    }, 0);
+        })
+    }, 0)
 }
 
 export function findPath(value, options, path = []) {
     for (const node of options) {
         if (node.value === value) {
-            return [...path, node];
+            return [...path, node]
         }
         if (node.children) {
-            const result = findPath(value, node.children, [...path, node]);
-            if (result) return result;
+            const result = findPath(value, node.children, [...path, node])
+            if (result) return result
         }
     }
-    return null;
+    return null
 }
 
-export function addLevel2CategoryIfAllChildrenAreSelected(options, selectedOptions){
+export function addLevel2CategoryIfAllChildrenAreSelected(options, selectedOptions) {
     const result = [...selectedOptions]
 
-    options.forEach(level1 => {
-        level1.children.forEach(level2 => {
-            const level3Ids = level2.children .map(c => c.value)
-            if (level3Ids.length && level3Ids.every(value => selectedOptions.includes(value))) {
+    options.forEach((level1) => {
+        level1.children.forEach((level2) => {
+            const level3Ids = level2.children.map((c) => c.value)
+            if (level3Ids.length && level3Ids.every((value) => selectedOptions.includes(value))) {
                 if (!result.includes(level2.value)) {
-                    result.push(level2.value);
+                    result.push(level2.value)
                 }
             }
-        });
-    });
+        })
+    })
     return result
 }
 
@@ -60,35 +59,34 @@ export function isLevel2WithChildren(data, value) {
     for (const item of data) {
         for (const child of item.children || []) {
             if (child.value === value) {
-                return child.children && child.children.length > 0;
+                return child.children && child.children.length > 0
             }
         }
     }
-    return false;
+    return false
 }
 
-export function showHeader(element, headerClass){
-    element.querySelectorAll(headerClass).forEach(el => {
-        el.removeAttribute("hidden");
-        el.removeAttribute("aria-hidden");
+export function showHeader(element, headerClass) {
+    element.querySelectorAll(headerClass).forEach((el) => {
+        el.removeAttribute("hidden")
+        el.removeAttribute("aria-hidden")
     })
 }
-export function hideHeader(element, headerClass){
-    element.querySelectorAll(headerClass).forEach(el => {
-        el.setAttribute("hidden", "hidden");
-        el.setAttribute("aria-hidden", "true");
+export function hideHeader(element, headerClass) {
+    element.querySelectorAll(headerClass).forEach((el) => {
+        el.setAttribute("hidden", "hidden")
+        el.setAttribute("aria-hidden", "true")
     })
 }
 
-
-export function shortcutClicked(event, treeselect, input){
+export function shortcutClicked(event, treeselect, input) {
     const label = event.target.getElementsByTagName("label")[0]
     const value = label.textContent.trim()
-    const checkbox = treeselect.srcElement.querySelector('[id$=' + label.getAttribute("for") + ']')
+    const checkbox = treeselect.srcElement.querySelector("[id$=" + label.getAttribute("for") + "]")
     checkbox.checked = !checkbox.checked
 
     let valuesToSet = treeselect.value
-    if (checkbox.checked){
+    if (checkbox.checked) {
         valuesToSet.push(value)
     } else {
         valuesToSet.pop(value)
@@ -97,7 +95,7 @@ export function shortcutClicked(event, treeselect, input){
     treeselect.updateValue(valuesToSet)
     input.value = valuesToSet.join("||")
     let text = ""
-    if (valuesToSet.length === 1){
+    if (valuesToSet.length === 1) {
         text = valuesToSet[0]
     } else {
         text = `${valuesToSet.length} ${treeselect.tagsCountText}`
@@ -106,16 +104,15 @@ export function shortcutClicked(event, treeselect, input){
 }
 
 export function addCategoryHeader(element, text, position) {
-    if (element.dataset.headerAdded === "true"){
+    if (element.dataset.headerAdded === "true") {
         return
     }
     let list = element.querySelector(".treeselect-list")
-    const div = document.createElement('div');
-    div.textContent = text;
+    const div = document.createElement("div")
+    div.textContent = text
     div.classList.add("fr-ml-1v")
-    list.insertBefore(div, list.children[position]);
+    list.insertBefore(div, list.children[position])
 }
-
 
 export const tsDefaultOptions = {
     showTags: false,
@@ -123,5 +120,5 @@ export const tsDefaultOptions = {
     placeholder: "Choisir dans la liste",
     emptyText: "Pas de résultat",
     direction: "bottom",
-    tagsCountText: "éléments sélectionnés"
+    tagsCountText: "éléments sélectionnés",
 }

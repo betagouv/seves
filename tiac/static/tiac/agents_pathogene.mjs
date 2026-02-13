@@ -1,7 +1,7 @@
-import {applicationReady} from "Application"
+import { applicationReady } from "Application"
 import "TreeSelect"
-import {Controller} from "Stimulus";
-import {patchItems, showHeader, hideHeader, tsDefaultOptions, findPath, shortcutClicked} from "CustomTreeSelect"
+import { Controller } from "Stimulus"
+import { patchItems, showHeader, hideHeader, tsDefaultOptions, findPath, shortcutClicked } from "CustomTreeSelect"
 
 class AgentsPathogeneController extends Controller {
     static targets = ["jsonConfig", "categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
@@ -10,7 +10,7 @@ class AgentsPathogeneController extends Controller {
         this.setupCategorieDanger()
     }
 
-    onShortcut(event){
+    onShortcut(event) {
         shortcutClicked(event, this.treeselect, this.categorieDangerInputTarget)
     }
 
@@ -19,7 +19,7 @@ class AgentsPathogeneController extends Controller {
         const controller = this
         const treeselect = new Treeselect({
             parentHtmlContainer: this.categorieDangerContainerTarget,
-            value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
+            value: this.categorieDangerInputTarget.value.split("||").map((v) => v.trim()),
             options: options,
             isSingleSelect: false,
             isIndependentNodes: true,
@@ -27,12 +27,12 @@ class AgentsPathogeneController extends Controller {
                 patchItems(treeselect.srcElement)
                 if (this._customHeaderAdded) {
                     showHeader(treeselect.srcElement, ".categorie-danger-header")
-                    return;
+                    return
                 }
                 const list = controller.element.querySelector(".treeselect-list")
                 if (list) {
-                    const fragment = controller.categorieDangerHeaderTarget.content.cloneNode(true);
-                    list.prepend(fragment);
+                    const fragment = controller.categorieDangerHeaderTarget.content.cloneNode(true)
+                    list.prepend(fragment)
                     this._customHeaderAdded = true
                 }
             },
@@ -50,9 +50,9 @@ class AgentsPathogeneController extends Controller {
         treeselect.srcElement.addEventListener("update-dom", () => {
             patchItems(treeselect.srcElement)
         })
-        treeselect.srcElement.addEventListener('input', (e) => {
+        treeselect.srcElement.addEventListener("input", (e) => {
             if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox =>{
+                this.element.querySelectorAll("[id^='shortcut_']").forEach((checkbox) => {
                     checkbox.checked = false
                 })
             } else {
@@ -62,6 +62,6 @@ class AgentsPathogeneController extends Controller {
     }
 }
 
-applicationReady.then(app => {
+applicationReady.then((app) => {
     app.register("agents-pathogene", AgentsPathogeneController)
 })

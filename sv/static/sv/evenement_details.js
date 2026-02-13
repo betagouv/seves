@@ -1,47 +1,47 @@
-import {ViewManager, evenementViewModeConfig} from 'ViewManager'
+import { ViewManager, evenementViewModeConfig } from "ViewManager"
 
-function showOnlyActionsForDetection(detectionId){
-    document.querySelectorAll('[id^="detection-actions-"]').forEach(element =>{
+function showOnlyActionsForDetection(detectionId) {
+    document.querySelectorAll('[id^="detection-actions-"]').forEach((element) => {
         element.classList.add("fr-hidden")
     })
     document.querySelector(`[id^="detection-actions-${detectionId}"]`).classList.remove("fr-hidden")
 }
 
 function initializeDetectionTags() {
-    const tags = document.querySelectorAll('.fr-tag');
+    const tags = document.querySelectorAll(".fr-tag")
 
-    tags.forEach(tag => {
-        tag.addEventListener('click', () => {
+    tags.forEach((tag) => {
+        tag.addEventListener("click", () => {
             // Retirer la classe selected de tous les tags
-            tags.forEach(t => t.classList.remove('selected'));
+            tags.forEach((t) => t.classList.remove("selected"))
 
             // Ajouter la classe selected au tag cliqué
-            tag.classList.add('selected');
-        });
-    });
+            tag.classList.add("selected")
+        })
+    })
 }
 
 function selectZoneTab() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('tab') === 'zone') {
-        const tabzone = document.getElementById("tabpanel-zone-panel");
-        dsfr(tabzone).tabPanel.disclose();
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab") === "zone") {
+        const tabzone = document.getElementById("tabpanel-zone-panel")
+        dsfr(tabzone).tabPanel.disclose()
     }
 }
 
 function updateURLParameters(paramName, paramValue) {
-    const params = new URLSearchParams(window.location.search);
-    params.set(paramName, paramValue);
-    window.history.pushState({}, '', `?${params.toString()}`);
+    const params = new URLSearchParams(window.location.search)
+    params.set(paramName, paramValue)
+    window.history.pushState({}, "", `?${params.toString()}`)
 }
 
-function showImage(element, direction){
+function showImage(element, direction) {
     const currentModal = element.closest("dialog")
     dsfr(currentModal).modal.conceal()
-    const modalBtn = document.querySelector(`[aria-controls="${currentModal.getAttribute('id')}"]`)
+    const modalBtn = document.querySelector(`[aria-controls="${currentModal.getAttribute("id")}"]`)
 
     let button = null
-    if (direction === "left"){
+    if (direction === "left") {
         button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) - 1}"]`)
     } else {
         button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) + 1}"]`)
@@ -49,41 +49,41 @@ function showImage(element, direction){
     button.click()
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
-        selectZoneTab();
-    }, 500);
+        selectZoneTab()
+    }, 500)
 
-    const viewManager = new ViewManager(evenementViewModeConfig, "evenementViewMode");
-    viewManager.initialize();
+    const viewManager = new ViewManager(evenementViewModeConfig, "evenementViewMode")
+    viewManager.initialize()
 
-    document.querySelectorAll(".no-tab-look .fr-tabs__panel").forEach(element =>{
-        element.addEventListener('dsfr.disclose', event=>{
-            if (!event.target.getAttribute("id").includes("tabpanel")) return;
+    document.querySelectorAll(".no-tab-look .fr-tabs__panel").forEach((element) => {
+        element.addEventListener("dsfr.disclose", (event) => {
+            if (!event.target.getAttribute("id").includes("tabpanel")) return
             const tabId = event.target.getAttribute("id").replace("tabpanel-", "").replace("-panel", "")
             showOnlyActionsForDetection(tabId)
-            updateURLParameters('detection', tabId);
+            updateURLParameters("detection", tabId)
         })
     })
 
     const selectedTagDocument = document.querySelector(".no-tab-look .fr-tag.selected")
     showOnlyActionsForDetection(selectedTagDocument.getAttribute("id").replace("tabpanel-", ""))
 
-    initializeDetectionTags();
+    initializeDetectionTags()
 
-    document.querySelectorAll(".next-modal").forEach(element =>{
-        element.addEventListener("click", event =>{
+    document.querySelectorAll(".next-modal").forEach((element) => {
+        element.addEventListener("click", (event) => {
             showImage(element, "right")
         })
     })
-    document.querySelectorAll(".previous-modal").forEach(element =>{
-        element.addEventListener("click", event =>{
+    document.querySelectorAll(".previous-modal").forEach((element) => {
+        element.addEventListener("click", (event) => {
             showImage(element, "left")
         })
     })
-    document.querySelectorAll(".bloc-commun-gestion .fr-tabs__tab").forEach(element => {
-        element.addEventListener("click", event => {
-            window.location.hash = event.target.getAttribute("id");
-        });
-    });
-});
+    document.querySelectorAll(".bloc-commun-gestion .fr-tabs__tab").forEach((element) => {
+        element.addEventListener("click", (event) => {
+            window.location.hash = event.target.getAttribute("id")
+        })
+    })
+})

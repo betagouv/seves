@@ -18,7 +18,7 @@
     align-self: stretch;
 }
 
-.stretch-column .white-container{
+.stretch-column .white-container {
     height: 100%;
     max-height: 450px;
     overflow-y: auto;

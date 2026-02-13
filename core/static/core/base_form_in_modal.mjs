@@ -1,5 +1,5 @@
-import {Controller} from "Stimulus"
-import {collectFormValues, removeRequired} from "Forms"
+import { Controller } from "Stimulus"
+import { collectFormValues, removeRequired } from "Forms"
 
 /**
  * Base controller for forms that generate cards and handle deletion.
@@ -11,14 +11,8 @@ import {collectFormValues, removeRequired} from "Forms"
  * @property {String} formPrefixValue
  */
 export class BaseFormInModal extends Controller {
-    static targets = [
-        "fieldset",
-        "deleteInput",
-        "dialog",
-        "cardContainer",
-        "deleteModal",
-    ]
-    static values = {formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
+    static targets = ["fieldset", "deleteInput", "dialog", "cardContainer", "deleteModal"]
+    static values = { formPrefix: String, shouldImmediatelyShow: { type: Boolean, default: false } }
 
     openDialog() {
         dsfr(this.dialogTarget).modal.disclose()
@@ -29,7 +23,9 @@ export class BaseFormInModal extends Controller {
     }
 
     onValidateForm() {
-        const formValues = collectFormValues(this.fieldsetTarget, {nameTransform: name => name.replace(`${this.formPrefixValue}-`, "")})
+        const formValues = collectFormValues(this.fieldsetTarget, {
+            nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+        })
         if (formValues === undefined) {
             return
         }
@@ -97,26 +93,25 @@ export class BaseFormInModal extends Controller {
     }
 
     optionalText(value, text) {
-        return value ? (text || `${value}`) : ""
+        return value ? text || `${value}` : ""
     }
 
     joinText(delimiter, ...items) {
-        return items.filter(it => !!it.length).join(delimiter)
+        return items.filter((it) => !!it.length).join(delimiter)
     }
 
     renderBadges(items) {
         return items
-            .filter(it => !!it?.length)
-            .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
-            .join('')
+            .filter((it) => !!it?.length)
+            .map((it) => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
+            .join("")
     }
 
-    formatDate(value){
-        const [date, time] = value.split("T");
-        const [year, month, day] = date.split("-");
-        return`${day}/${month}/${year} ${time}`;
+    formatDate(value) {
+        const [date, time] = value.split("T")
+        const [year, month, day] = date.split("-")
+        return `${day}/${month}/${year} ${time}`
     }
-
 
     /**
      * Renders the HTML for the delete confirmation modal.

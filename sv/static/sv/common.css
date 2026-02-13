@@ -1,4 +1,4 @@
-.fiche-header{
+.fiche-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -12,7 +12,7 @@
 .fiche-action .fr-translate__btn {
     line-height: 1.5rem;
     min-height: 2.5rem;
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
 }
 
 .fiche-action .fr-translate .fr-translate__btn::before {
