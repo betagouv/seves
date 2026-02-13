@@ -28,6 +28,6 @@ repos:
   hooks:
     - id: biome-format
       name: biome-format
-      entry: biome format --write
+      entry: biome format --write --no-errors-on-unmatched
       language: system
       files: "\\.(js|css)$"
