@@ -34,7 +34,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
 )
-from core.models import CustomRevisionMetaData, LienLibre
+from core.models import Contact, CustomRevisionMetaData, LienLibre
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
@@ -463,9 +463,11 @@ class InvestigationTiacBaseView(
         if dirty_fields is None:
             if self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
                 notify_investigation_coordonnee(self.object, self.request.user)
+                self.object.contacts.add(Contact.objects.get_mus())
         else:
             if "follow_up" in dirty_fields and self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
                 notify_investigation_coordonnee(self.object, self.request.user)
+                self.object.contacts.add(Contact.objects.get_mus())
             if "suspicion_conclusion" in dirty_fields:
                 notify_conclusion(self.object, self.request.user)
 
