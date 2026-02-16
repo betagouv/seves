@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from core.models import Visibilite
+from core.constants import Visibilite
 from sv.export import FicheDetectionExport
 from sv.factories import FicheDetectionFactory, FicheZoneFactory, LieuFactory, PrelevementFactory, ZoneInfesteeFactory
 from sv.models import StructurePreleveuse

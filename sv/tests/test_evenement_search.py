@@ -2,9 +2,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import REGION_STRUCTURE_MAPPING
+from core.constants import REGION_STRUCTURE_MAPPING, Visibilite
 from core.factories import ContactAgentFactory, ContactStructureFactory, RegionFactory, StructureFactory
-from core.models import Contact, Region, Visibilite
+from core.models import Contact, Region
 from seves import settings
 
 from ..factories import (

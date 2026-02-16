@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
-from core.constants import Domains
+from core.constants import Domains, Visibilite
 from core.fields import (
     AdresseLieuDitField,
     ContactModelMultipleChoiceField,
@@ -21,7 +21,7 @@ from core.fields import (
     SEVESChoiceField,
 )
 from core.form_mixins import DSFRForm
-from core.models import Contact, Departement, Document, Message, Structure, Visibilite
+from core.models import Contact, Departement, Document, Message, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 
 User = get_user_model()

@@ -9,14 +9,12 @@ from reversion.models import Version
 from core.mixins import (
     AllowACNotificationMixin,
     EmailNotificationMixin,
-    WithContactPermissionMixin,
-    WithDocumentPermissionMixin,
     WithEtatMixin,
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
     WithVisibiliteMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin
+from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
 from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 

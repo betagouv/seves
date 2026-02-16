@@ -5,8 +5,8 @@ from django.utils import timezone
 from playwright.sync_api import Page
 import pytest
 
+from core.constants import Visibilite
 from core.factories import StructureFactory
-from core.models import Visibilite
 from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory
 from sv.models import Etat, Evenement
 

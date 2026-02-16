@@ -8,12 +8,15 @@ import reversion
 from core.mixins import (
     AllowModificationMixin,
     EmailNotificationMixin,
-    WithContactPermissionMixin,
-    WithDocumentPermissionMixin,
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
-from core.model_mixins import EmailableObjectMixin, WithBlocCommunFieldsMixin
+from core.model_mixins import (
+    EmailableObjectMixin,
+    WithBlocCommunFieldsMixin,
+    WithContactPermissionMixin,
+    WithDocumentPermissionMixin,
+)
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.managers import EvenementProduitManager

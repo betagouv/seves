@@ -6,12 +6,10 @@ import reversion
 from core.mixins import (
     AllowModificationMixin,
     EmailNotificationMixin,
-    WithContactPermissionMixin,
-    WithDocumentPermissionMixin,
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin
+from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain

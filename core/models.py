@@ -10,7 +10,6 @@ from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
-from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Revision
@@ -548,25 +547,6 @@ class LienLibre(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
-
-
-class UnitesMesure(models.TextChoices):
-    METRE = "m", _("Mètre")
-    KILOMETRE = "km", _("Kilomètre")
-    HECTARE = "ha", _("Hectare")
-    METRE_CARRE = "m2", _("Mètre carré")
-    KILOMETRE_CARRE = "km2", _("Kilomètre carré")
-
-
-class Visibilite(models.TextChoices):
-    LOCALE = "locale", "Votre structure et l'administration centrale pourront consulter et modifier la fiche"
-    LIMITEE = "limitee", "Les structures de votre choix pourront consulter et modifier la fiche"
-    NATIONALE = "nationale", "La fiche sera visible et modifiable par toutes les structures"
-
-    @classmethod
-    def get_masculine_label(cls, value):
-        masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
-        return masculine_labels.get(value)
 
 
 class Export(models.Model):

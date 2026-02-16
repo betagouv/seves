@@ -1,8 +1,10 @@
 import contextlib
 
+from django.db import models
 from django.db.models.enums import StrEnum
 from django.urls import reverse_lazy
 from django.utils.functional import classproperty
+from django.utils.translation import gettext_lazy as _
 from dsfr.enums import ExtendedChoices, enum_property
 
 AC_STRUCTURE = "AC/DAC/DGAL"
@@ -201,3 +203,22 @@ class Domains(StrEnum, ExtendedChoices):
         with contextlib.suppress(ValueError):
             return Domains(value).group
         return None
+
+
+class UnitesMesure(models.TextChoices):
+    METRE = "m", _("Mètre")
+    KILOMETRE = "km", _("Kilomètre")
+    HECTARE = "ha", _("Hectare")
+    METRE_CARRE = "m2", _("Mètre carré")
+    KILOMETRE_CARRE = "km2", _("Kilomètre carré")
+
+
+class Visibilite(models.TextChoices):
+    LOCALE = "locale", "Votre structure et l'administration centrale pourront consulter et modifier la fiche"
+    LIMITEE = "limitee", "Les structures de votre choix pourront consulter et modifier la fiche"
+    NATIONALE = "nationale", "La fiche sera visible et modifiable par toutes les structures"
+
+    @classmethod
+    def get_masculine_label(cls, value):
+        masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
+        return masculine_labels.get(value)

@@ -1,9 +1,9 @@
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import AC_STRUCTURE
+from core.constants import AC_STRUCTURE, Visibilite
 from core.factories import StructureFactory
-from core.models import LienLibre, Structure, Visibilite
+from core.models import LienLibre, Structure
 
 from ..factories import EvenementFactory, OrganismeNuisibleFactory, StatutReglementaireFactory
 from ..models import Evenement, StatutReglementaire
