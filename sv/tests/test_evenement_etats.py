@@ -5,9 +5,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import ContactStructureFactory, StructureFactory
-from core.models import Contact, FinSuiviContact, Visibilite
+from core.models import Contact, FinSuiviContact
 from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
 from sv.factories import EvenementFactory
 from sv.models import Evenement, Structure

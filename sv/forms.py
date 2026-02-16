@@ -12,11 +12,11 @@ from django.utils.translation import ngettext
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.fields import AdresseLieuDitField, DSFRCheckboxSelectMultiple, DSFRRadioButton
 from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, VisibiliteUpdateBaseForm
-from core.models import Contact, Structure, Visibilite
+from core.models import Contact, Structure
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithEvenementFreeLinksMixin,

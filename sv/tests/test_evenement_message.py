@@ -9,7 +9,7 @@ from django.utils import timezone
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import AC_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import (
     ContactAgentFactory,
     ContactStructureFactory,
@@ -17,7 +17,7 @@ from core.factories import (
     MessageFactory,
     StructureFactory,
 )
-from core.models import Contact, Document, Message, Structure, Visibilite
+from core.models import Contact, Document, Message, Structure
 from core.pages import CreateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,

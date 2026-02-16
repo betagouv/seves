@@ -2,9 +2,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import ContactAgentFactory, ContactStructureFactory, StructureFactory
-from core.models import Structure, Visibilite
+from core.models import Structure
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 

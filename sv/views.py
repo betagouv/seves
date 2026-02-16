@@ -21,6 +21,7 @@ from django.views.generic import (
 )
 from reversion.models import Version
 
+from core.constants import Visibilite
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     MediaDefiningMixin,
@@ -37,7 +38,7 @@ from core.mixins import (
     WithMessageMixin,
     WithOrderingMixin,
 )
-from core.models import Contact, Visibilite
+from core.models import Contact
 from core.redirect import safe_redirect
 from sv.forms import (
     EvenementForm,

@@ -4,8 +4,9 @@ from django.db.utils import IntegrityError
 import pytest
 from reversion.models import Version
 
+from core.constants import Visibilite
 from core.factories import DocumentFactory, StructureFactory
-from core.models import Document, Visibilite
+from core.models import Document
 from sv.constants import STRUCTURE_EXPLOITANT
 from sv.factories import (
     EvenementFactory,
