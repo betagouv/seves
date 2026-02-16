@@ -258,6 +258,7 @@ def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live
     mail = mailoutbox[0]
     assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
     assert "Investigation coordonnée" in mail.subject
+    assert contact_structure_mus in investigation.contacts.all()
 
 
 def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
