@@ -3,12 +3,14 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import CheckboxInput, DateInput, HiddenInput, Media, TextInput
+from django.forms import CheckboxInput, HiddenInput, Media, TextInput
 import django_filters
 from dsfr.forms import DsfrBaseForm
 
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
+    WithDateCreationFilterMixin,
+    WithDateReceptionFilterMixin,
     WithEtatFilterMixin,
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
@@ -61,6 +63,8 @@ class TiacFilterForm(DsfrBaseForm):
 
 class TiacFilter(
     WithNumeroFilterMixin,
+    WithDateCreationFilterMixin,
+    WithDateReceptionFilterMixin,
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtablissementFilterMixin,
@@ -69,15 +73,6 @@ class TiacFilter(
 ):
     with_free_links = django_filters.BooleanFilter(
         label="Inclure les liaisons", method="filter_with_free_links", widget=CheckboxInput
-    )
-    start_date = django_filters.DateFilter(
-        field_name="date_reception",
-        lookup_expr="gte",
-        label="Réception entre le",
-        widget=DateInput(attrs={"type": "date"}),
-    )
-    end_date = django_filters.DateFilter(
-        field_name="date_reception", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
     )
     follow_up = django_filters.ChoiceFilter(
         label="Type d'événement/suites",

@@ -82,6 +82,15 @@ class EvenementProduitFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        value = kwargs.get("date_reception")
+
+        if isinstance(value, str):
+            kwargs["date_reception"] = datetime.strptime(value, "%Y-%m-%d").date()
+
+        return super()._adjust_kwargs(**kwargs)
+
     @factory.lazy_attribute
     def produit_pret_a_manger(self):
         if self.categorie_danger in CategorieDanger.dangers_bacteriens():

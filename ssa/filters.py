@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from django.db.models import Q
-from django.forms import CheckboxInput, DateInput, TextInput
+from django.forms import CheckboxInput, TextInput
 from django_countries import Countries
 import django_filters
 from django_filters.filters import BaseInFilter, CharFilter
@@ -10,6 +10,8 @@ from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
+    WithDateCreationFilterMixin,
+    WithDateReceptionFilterMixin,
     WithEtatFilterMixin,
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
@@ -78,6 +80,8 @@ class WithEtablissementFilterMixin(django_filters.FilterSet):
 
 class EvenementFilter(
     WithNumeroFilterMixin,
+    WithDateCreationFilterMixin,
+    WithDateReceptionFilterMixin,
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtablissementFilterMixin,
@@ -95,15 +99,6 @@ class EvenementFilter(
                 "placeholder": "0000.0000 ou 000000",
             }
         ),
-    )
-    start_date = django_filters.DateFilter(
-        field_name="date_creation__date",
-        lookup_expr="gte",
-        label="Période du",
-        widget=DateInput(attrs={"type": "date"}),
-    )
-    end_date = django_filters.DateFilter(
-        field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
     type_evenement = django_filters.ChoiceFilter(
         label="Type d'événement ", choices=[], empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_type_evenement"
@@ -146,6 +141,8 @@ class EvenementFilter(
             "end_date",
             "full_text_search",
             "etat",
+            "start_date_reception",
+            "end_date_reception",
             "aliments_animaux",
             "temperature_conservation",
             "produit_pret_a_manger",

@@ -190,7 +190,7 @@ def test_list_can_filter_by_common_source(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
 
-def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
+def test_list_can_filter_by_date_creation(live_server, mocked_authentification_user, page: Page):
     EvenementProduitFactory(date_creation="2024-06-18", numero_annee=2025, numero_evenement=3)
     EvenementProduitFactory(date_creation="2024-06-19", numero_annee=2025, numero_evenement=2)
     EvenementProduitFactory(date_creation="2024-06-22", numero_annee=2025, numero_evenement=1)
@@ -200,6 +200,24 @@ def test_list_can_filter_by_date(live_server, mocked_authentification_user, page
 
     search_page.start_date_field.fill("2024-06-19")
     search_page.end_date_field.fill("2024-06-20")
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.3")).not_to_be_visible()
+
+
+def test_list_can_filter_by_date_reception(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(date_reception="2024-06-18", numero_annee=2025, numero_evenement=3)
+    EvenementProduitFactory(date_reception="2024-06-19", numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(date_reception="2024-06-22", numero_annee=2025, numero_evenement=1)
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.open_sidebar()
+    search_page.start_date_reception_field.fill("2024-06-19")
+    search_page.end_date_reception_field.fill("2024-06-20")
+    search_page.add_filters()
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()

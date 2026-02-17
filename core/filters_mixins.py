@@ -1,3 +1,4 @@
+from django.forms import DateInput
 from django.forms.widgets import TextInput
 import django_filters
 
@@ -84,3 +85,27 @@ class WithEtatFilterMixin(django_filters.FilterSet):
         if value == "fin de suivi":
             return queryset.filter(has_fin_de_suivi=True)
         return queryset.filter(etat=value, has_fin_de_suivi=False)
+
+
+class WithDateCreationFilterMixin(django_filters.FilterSet):
+    start_date = django_filters.DateFilter(
+        field_name="date_creation",
+        lookup_expr="gte",
+        label="Création entre le",
+        widget=DateInput(attrs={"type": "date"}),
+    )
+    end_date = django_filters.DateFilter(
+        field_name="date_creation", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
+    )
+
+
+class WithDateReceptionFilterMixin(django_filters.FilterSet):
+    start_date_reception = django_filters.DateFilter(
+        field_name="date_reception",
+        lookup_expr="gte",
+        label="Réception entre le",
+        widget=DateInput(attrs={"type": "date"}),
+    )
+    end_date_reception = django_filters.DateFilter(
+        field_name="date_reception", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
+    )

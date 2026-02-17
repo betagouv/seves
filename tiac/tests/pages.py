@@ -271,12 +271,20 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_start_date")
 
     @property
-    def conclusion_field(self):
-        return self.page.locator("#id_suspicion_conclusion")
-
-    @property
     def end_date_field(self):
         return self.page.locator("#id_end_date")
+
+    @property
+    def start_date_reception_field(self):
+        return self.page.locator("#id_start_date_reception")
+
+    @property
+    def end_date_reception_field(self):
+        return self.page.locator("#id_end_date_reception")
+
+    @property
+    def conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
 
     @property
     def full_text_field(self):
@@ -309,7 +317,7 @@ class EvenementListPage(WithTreeSelect):
     def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
-    def date_reception_cell(self, line_index=1):
+    def date_creation_cell(self, line_index=1):
         return self._cell_content(line_index, 3)
 
     def etablissement_cell(self, line_index=1):
