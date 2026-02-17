@@ -470,6 +470,14 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_end_date")
 
     @property
+    def start_date_reception_field(self):
+        return self.page.locator("#id_start_date_reception")
+
+    @property
+    def end_date_reception_field(self):
+        return self.page.locator("#id_end_date_reception")
+
+    @property
     def etat(self):
         return self.page.locator("#id_etat")
 

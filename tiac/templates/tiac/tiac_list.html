@@ -70,7 +70,7 @@
                         <tr>
                             <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
                             <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Créateur' %}</th>
-                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='date_reception' display_name='Réception' %}</th>
+                            <th class="fr-col-1" scope="col">{% include 'core/_evenement_sort_link.html' with field='date_creation' display_name='Création' %}</th>
                             <th class="fr-col-3" scope="col">Établissement</th>
                             <th class="fr-col-1" scope="col">Malades</th>
                             <th class="fr-col-2" scope="col">Type d'événement/suites</th>
@@ -84,7 +84,7 @@
                             <tr class="evenements__list-row">
                                 <td><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></td>
                                 <td>{{ evenement.createur }}</td>
-                                <td>{{ evenement.date_reception }}</td>
+                                <td>{{ evenement.date_creation }}</td>
                                 <td>{{ evenement.etablissement }}
 
                                     {% if evenement.etablissements|length == 0 %}
