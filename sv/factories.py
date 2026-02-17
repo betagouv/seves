@@ -1,8 +1,6 @@
-from datetime import datetime
 import random
 import string
 
-from django.utils import timezone
 from django_countries import Countries
 import factory
 from factory.django import DjangoModelFactory
@@ -10,6 +8,7 @@ from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from core.constants import Visibilite
+from core.factories import AcceptsDateCreationAsStrFactoryMixin
 from core.models import Structure
 
 from .constants import (
@@ -235,7 +234,7 @@ class LieuFactory(DjangoModelFactory):
         )
 
 
-class FicheDetectionFactory(DjangoModelFactory):
+class FicheDetectionFactory(AcceptsDateCreationAsStrFactoryMixin, DjangoModelFactory):
     class Meta:
         model = FicheDetection
 
@@ -254,15 +253,6 @@ class FicheDetectionFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
-
-    @factory.post_generation
-    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = datetime.strptime(extracted, "%Y-%m-%d").date()
-            else:
-                self.date_creation = extracted
-            self.save()
 
     @factory.post_generation
     def with_lieu(self, create, extracted, **kwargs):
@@ -313,7 +303,7 @@ class ZoneInfesteeFactory(DjangoModelFactory):
     caracteristique_principale = factory.fuzzy.FuzzyChoice(ZoneInfestee.CaracteristiquePrincipale)
 
 
-class EvenementFactory(DjangoModelFactory):
+class EvenementFactory(AcceptsDateCreationAsStrFactoryMixin, DjangoModelFactory):
     class Meta:
         model = Evenement
 
@@ -329,15 +319,6 @@ class EvenementFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
-
-    @factory.post_generation
-    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
-            else:
-                self.date_creation = extracted
-            self.save()
 
     @factory.sequence
     def numero_evenement(n):

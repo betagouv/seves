@@ -2,12 +2,11 @@ from datetime import datetime
 import itertools
 import random
 
-from django.utils import timezone
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
-from core.factories import BaseEtablissementFactory
+from core.factories import AcceptsDateCreationAsStrFactoryMixin, BaseEtablissementFactory
 from core.models import Structure
 from ssa.constants import (
     CategorieDanger,
@@ -35,7 +34,7 @@ def generate_rappel_conso():
 UNIQ_ID = itertools.count(start=1)
 
 
-class EvenementProduitFactory(DjangoModelFactory):
+class EvenementProduitFactory(AcceptsDateCreationAsStrFactoryMixin, DjangoModelFactory):
     class Meta:
         model = EvenementProduit
 
@@ -73,14 +72,12 @@ class EvenementProduitFactory(DjangoModelFactory):
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
 
-    @factory.post_generation
-    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
-            else:
-                self.date_creation = extracted
-            self.save()
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        value = kwargs.get("date_reception")
+        if isinstance(value, str):
+            kwargs["date_reception"] = datetime.strptime(value, "%Y-%m-%d").date()
+        return super()._adjust_kwargs(**kwargs)
 
     @factory.lazy_attribute
     def produit_pret_a_manger(self):
@@ -127,7 +124,7 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
         return None
 
 
-class InvestigationCasHumainFactory(DjangoModelFactory):
+class InvestigationCasHumainFactory(AcceptsDateCreationAsStrFactoryMixin, DjangoModelFactory):
     class Meta:
         model = EvenementInvestigationCasHumain
 
@@ -147,15 +144,6 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
-
-    @factory.post_generation
-    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
-            else:
-                self.date_creation = extracted
-            self.save()
 
     @factory.sequence
     def numero_evenement(_):

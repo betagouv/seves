@@ -1,6 +1,3 @@
-from datetime import datetime
-
-from django.utils import timezone
 from playwright.sync_api import Page
 import pytest
 
@@ -42,9 +39,9 @@ def test_order_by_date_creation(
     live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
 ):
     evenements = {
-        "evenement_1": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 1, 1))),
-        "evenement_2": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 3, 1))),
-        "evenement_3": EvenementProduitFactory(date_creation=timezone.make_aware(datetime(2023, 2, 1))),
+        "evenement_1": EvenementProduitFactory(date_creation="2023-01-01"),
+        "evenement_2": EvenementProduitFactory(date_creation="2023-03-01"),
+        "evenement_3": EvenementProduitFactory(date_creation="2023-02-01"),
     }
     page.goto(url_builder_for_list_ordering("creation", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="Création").click()

@@ -1,9 +1,11 @@
+from datetime import datetime
 import random
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from django_countries import Countries
 import factory
 from factory.django import DjangoModelFactory
@@ -245,3 +247,15 @@ class BaseEtablissementFactory(DjangoModelFactory):
 
     class Meta:
         abstract = True
+
+
+class AcceptsDateCreationAsStrFactoryMixin(DjangoModelFactory):
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        value = kwargs.get("date_creation")
+        if isinstance(value, str):
+            kwargs["date_creation"] = timezone.make_aware(datetime.strptime(value, "%Y-%m-%d"))
+        return super()._adjust_kwargs(**kwargs)

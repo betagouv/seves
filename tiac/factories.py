@@ -4,13 +4,12 @@ import random
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.utils import timezone
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
-from core.factories import BaseEtablissementFactory
+from core.factories import AcceptsDateCreationAsStrFactoryMixin, BaseEtablissementFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre, Structure
 from ssa.constants import CategorieDanger, CategorieProduit
@@ -60,7 +59,7 @@ def parse_date(value):
     return None
 
 
-class BaseTiacFactory(DjangoModelFactory):
+class BaseTiacFactory(AcceptsDateCreationAsStrFactoryMixin, DjangoModelFactory):
     class Meta:
         abstract = True
 
@@ -75,15 +74,6 @@ class BaseTiacFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
-
-    @factory.post_generation
-    def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = timezone.make_aware(datetime.datetime.strptime(extracted, "%Y-%m-%d"))
-            else:
-                self.date_creation = extracted
-            self.save()
 
     @factory.lazy_attribute
     def date_reception(self):

@@ -597,12 +597,12 @@ class AlimentSuspect(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
+                condition=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
                 | ~Q(type_aliment=TypeAliment.SIMPLE),
                 name="produit_simple_constraint",
             ),
             models.CheckConstraint(
-                check=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
+                condition=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
                 | ~Q(type_aliment=TypeAliment.CUISINE),
                 name="cuisiné_pas_de_categorie_emballage",
             ),
