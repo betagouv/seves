@@ -1,5 +1,10 @@
 {% extends "core/base.html" %}
-{% load waffle_tags %}
+{% load waffle_tags static %}
+
+{% block base_override %}
+    <link rel="stylesheet" href="{% static 'ssa/base.css' %}"/>
+{% endblock %}
+
 
 {% block product_nav %}
     <li class="btn-add-group fr-my-auto">

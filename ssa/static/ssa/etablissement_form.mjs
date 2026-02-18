@@ -125,7 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!!baseCard.querySelector(".etablissement-card")){
             baseCard.querySelector(".etablissement-card").id = `etablissement-card-${getPrefix(currentID)}`
         }
-        baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
+
+        const enseigneUsuelle = currentModal.querySelector('[id$=enseigne_usuelle]').value
+        const raisonSociale = currentModal.querySelector('[id$=raison_sociale]').value
+
+        if (!!enseigneUsuelle){
+            baseCard.querySelector('.raison-sociale').textContent = enseigneUsuelle
+            baseCard.querySelector('.card-subtitle').textContent = raisonSociale
+            baseCard.querySelector('.card-subtitle').classList.remove("fr-hidden")
+        } else {
+            baseCard.querySelector('.raison-sociale').textContent = raisonSociale
+            baseCard.querySelector('.card-subtitle').textContent = ''
+            baseCard.querySelector('.card-subtitle').classList.add("fr-hidden")
+        }
+
 
         const typeExploitant = currentModal.querySelector('[id$=type_exploitant]').value
         if (typeExploitant != null) {

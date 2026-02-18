@@ -637,6 +637,12 @@ class BaseEtablissement(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def displayed_name(self):
+        if self.enseigne_usuelle:
+            return f"{self.enseigne_usuelle} ({self.raison_sociale})"
+        return self.raison_sociale
+
 
 class CustomRevisionMetaData(models.Model):
     revision = models.OneToOneField(Revision, on_delete=models.CASCADE)

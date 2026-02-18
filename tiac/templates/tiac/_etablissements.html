@@ -9,7 +9,8 @@
                     <div class="fr-card__body">
                         <div class="fr-card__content">
                             <div>
-                                <p class="fr-card__title">{{ etablissement.raison_sociale }}</p>
+                                <p class="fr-card__title">{% if etablissement.enseigne_usuelle %}{{ etablissement.enseigne_usuelle }}{% else %}{{ etablissement.raison_sociale }}{% endif %}</p>
+                                {% if etablissement.enseigne_usuelle %}<p class="fr-text--sm card-subtitle">{{ etablissement.raison_sociale }}</p>{% endif %}
                             </div>
                             {% if etablissement.address_summary %}
                                 <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v">{{ etablissement.address_summary }}</p>
