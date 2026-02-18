@@ -105,6 +105,7 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
     content = [it for it in re.split(r"\s*\n\s*", creation_page.get_etablissement_card(0).text_content()) if it]
 
     assert content == [
+        etablissement.enseigne_usuelle,
         etablissement.raison_sociale,
         f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,
@@ -114,11 +115,13 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
 
     # Check that modifying the form modifies the card
     raison_sociale = "Ascaponts"
-    creation_page.edit_etablissement(0, raison_sociale=raison_sociale)
+    enseigne_usuelle = "Test"
+    creation_page.edit_etablissement(0, raison_sociale=raison_sociale, enseigne_usuelle=enseigne_usuelle)
 
     content = [it for it in re.split(r"\s*\n\s*", creation_page.get_etablissement_card(0).text_content()) if it]
 
     assert content == [
+        enseigne_usuelle,
         raison_sociale,
         f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,

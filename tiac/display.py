@@ -31,7 +31,7 @@ class DisplayItem:
             danger_retenu=[],
             etat=evenement_simple.etat,
             readable_etat=evenement_simple.readable_etat,
-            etablissements=[e.raison_sociale for e in evenement_simple.etablissements.all()],
+            etablissements=[e.displayed_name for e in evenement_simple.etablissements.all()],
         )
 
     @classmethod
@@ -48,7 +48,7 @@ class DisplayItem:
             danger_retenu=investigation_tiac.short_conclusion_selected_hazard,
             etat=investigation_tiac.etat,
             readable_etat=investigation_tiac.readable_etat,
-            etablissements=[e.raison_sociale for e in investigation_tiac.etablissements.all()],
+            etablissements=[e.displayed_name for e in investigation_tiac.etablissements.all()],
         )
 
     @classmethod

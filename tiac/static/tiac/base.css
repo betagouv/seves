@@ -1,3 +1,7 @@
 .etablissment-filters {
     background-color: var(--background-alt-grey);
 }
+
+.card-subtitle {
+    order: 3;
+}

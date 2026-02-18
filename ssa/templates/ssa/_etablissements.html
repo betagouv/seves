@@ -14,8 +14,9 @@
                                 {% if etablissement.pays %}<p class="pays fr-tag fr-mb-4v">{{ etablissement.get_pays_display }}</p>{% endif %}
                                 <h3 class="fr-card__title">
                                     <a href="#{{ etablissement.pk }}" id="{{ etablissement.pk }}" data-fr-opened="false"
-                                       aria-controls="fr-modal-etablissement-{{ etablissement.pk }}" >{{ etablissement.raison_sociale }}</a>
+                                       aria-controls="fr-modal-etablissement-{{ etablissement.pk }}" >{% if etablissement.enseigne_usuelle %}{{ etablissement.enseigne_usuelle }}{% endif %}</a>
                                 </h3>
+                                {% if etablissement.enseigne_usuelle %}<p class="fr-text--sm card-subtitle">{{ etablissement.raison_sociale }}</p>{% endif %}
                                 <div class="fr-card__desc">
                                     {% if etablissement.formated_geo_data %}
                                         <p class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v">{{ etablissement.formated_geo_data }}</p>
