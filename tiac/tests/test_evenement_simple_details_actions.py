@@ -7,6 +7,7 @@ from seves.settings import SSA_GROUP
 from tiac.factories import EtablissementFactory, EvenementSimpleFactory
 from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
 
+from ..constants import EvenementFollowUp
 from .pages import EvenementSimpleDetailsPage, EvenementSimpleFormPage
 
 
@@ -44,7 +45,7 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
 def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill, mailoutbox):
     contact = ContactStructureFactory(structure__libelle="DDPP52")
     ContactAgentFactory(agent__structure=contact.structure, with_active_agent=True)
-    evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS, follow_up=EvenementFollowUp.INSPECTION)
 
     details_page = EvenementSimpleDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -53,6 +54,7 @@ def test_can_transfer_evenement_simple(live_server, page: Page, choice_js_fill, 
     evenement.refresh_from_db()
     expect(page.get_by_text("L’évènement a bien été transféré à la DDPP52")).to_be_visible()
     assert evenement.transfered_to == contact.structure
+    assert evenement.follow_up == EvenementFollowUp.TRANSMISSION_DD
     assert contact in evenement.contacts.all()
 
     assert len(mailoutbox) == 1
@@ -82,6 +84,7 @@ def test_can_transform_evenement_simple_into_investigation_tiac(
     assert EvenementSimple.objects.count() == 2
     evenement.refresh_from_db()
     assert evenement.is_cloture is True
+    assert evenement.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
     investigation = InvestigationTiac.objects.get()
     assert investigation.is_draft is True

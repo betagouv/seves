@@ -209,9 +209,16 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
         required=True,
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["follow_up"].initial = EvenementFollowUp.TRANSMISSION_DD
+
     class Meta:
         model = EvenementSimple
-        fields = ["transfered_to"]
+        fields = ["transfered_to", "follow_up"]
+        widgets = {
+            "follow_up": forms.HiddenInput(),
+        }
 
 
 class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
