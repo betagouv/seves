@@ -253,7 +253,7 @@ six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
-sqlparse==0.5.3
+sqlparse==0.5.4
     # via
     #   django
     #   django-debug-toolbar
