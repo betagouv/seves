@@ -21,7 +21,10 @@ class EtiologieFormController  extends Controller {
         this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
         this.hasConnectedValue = true
         let currentValue = this.analysesTargets.find(el => el.checked);
-        this.precisionsTarget.disabled = !(currentValue.value==='oui')
+
+        if (!!currentValue){
+            this.precisionsTarget.disabled = !(currentValue.value==='oui')
+        }
     }
 
     onShowFirstModal() {
