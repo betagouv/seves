@@ -177,12 +177,16 @@ class EvenementSimple(
         return "Enregistrement simple"
 
     @property
-    def display_transfer_notice(self):
+    def display_transformed_notice(self):
         return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
     @property
     def display_evenement_produit_notice(self):
         return self.follow_up == EvenementFollowUp.PASSE_EVENEMENT_PRODUIT
+
+    @property
+    def display_transfer_notice(self):
+        return self.follow_up == EvenementFollowUp.TRANSMISSION_DD
 
     def get_short_email_display_name(self):
         return f"Enregistrement simple {self.numero}"
