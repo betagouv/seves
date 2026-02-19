@@ -27,6 +27,7 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
                 label: item.properties.label,
                 customProperties: {
                     inseeCode: item.properties.citycode,
+                    postCode: item.properties.postcode,
                     city: item.properties.city,
                     context: item.properties.context,
                 },
@@ -66,6 +67,7 @@ export function setUpAddressChoices(element) {
                 label: `${query} (Forcer la valeur)`,
                 customProperties: {
                     inseeCode: null,
+                    postCode: null,
                     city: null,
                     context: null,
                 },

@@ -201,7 +201,9 @@ def test_added_lieu_content_in_list(
     _add_new_lieu(page, form_elements, lieu_form_elements)
     expect(page.locator("#lieux").get_by_text("nom lieu")).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("nom lieu")
-    expect(page.get_by_text("Lille", exact=True)).to_be_visible()
+    expect(
+        page.locator("#lieux-list").get_by_text(re.compile(f".*{re.escape('Lille (59000)')}.*"), exact=True)
+    ).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("Lille")
     expect(page.get_by_role("button", name="Modifier le lieu")).to_be_visible()
     expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
@@ -310,7 +312,8 @@ def test_edit_lieu_form_have_all_fields(
 
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value("59350")
-    expect(page.get_by_text("Lille (59)Remove item")).to_be_visible()
+    expect(lieu_form_elements.code_postal_hidden_input).to_have_value("59000")
+    expect(page.get_by_text("Lille (59000)Remove item")).to_be_visible()
     expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
@@ -494,7 +497,9 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "ipsum"}]
+    assert page.evaluate("document.lieuxCards") == [
+        {"commune": "", "departement": "", "codePostal": "", "id": "1", "nom": "ipsum"}
+    ]
 
 
 def test_delete_correct_lieu(
@@ -561,7 +566,9 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "0", "nom": "lorem"}]
+    assert page.evaluate("document.lieuxCards") == [
+        {"commune": "", "departement": "", "codePostal": "", "id": "0", "nom": "lorem"}
+    ]
 
 
 # =============
