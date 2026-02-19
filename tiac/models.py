@@ -253,11 +253,11 @@ class Etablissement(BaseEtablissement, models.Model):
 
     @property
     def address_summary(self):
-        value = ""
+        value = "nc."
         if self.commune:
             value = self.commune
         if self.departement:
-            value += f" ({self.departement.numero}) | {self.departement.nom}"
+            value += f" | {self.departement.numero} - {self.departement.nom}"
         return value
 
 

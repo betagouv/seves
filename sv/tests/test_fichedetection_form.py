@@ -494,7 +494,7 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "1", "nom": "ipsum"}]
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "departement": "", "id": "1", "nom": "ipsum"}]
 
 
 def test_delete_correct_lieu(
@@ -561,7 +561,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
-    assert page.evaluate("document.lieuxCards") == [{"commune": "", "id": "0", "nom": "lorem"}]
+    assert page.evaluate("document.lieuxCards") == [{"commune": "", "departement": "", "id": "0", "nom": "lorem"}]
 
 
 # =============

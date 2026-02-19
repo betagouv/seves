@@ -147,6 +147,15 @@ class Lieu(models.Model):
         "position_chaine_distribution_etablissement",
     ]
 
+    @property
+    def address_summary(self):
+        value = "nc."
+        if self.commune:
+            value = self.commune
+        if self.departement:
+            value += f" | {self.departement.numero} - {self.departement.nom}"
+        return value
+
     def __str__(self):
         return str(self.nom)
 

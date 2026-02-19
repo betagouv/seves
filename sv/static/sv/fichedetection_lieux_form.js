@@ -30,7 +30,8 @@ function displayLieuxCards() {
         const clone = lieuTemplateElement.cloneNode(true);
         clone.classList.remove('fr-hidden');
         clone.querySelector('.lieu-nom').textContent = card.nom;
-        clone.querySelector('.lieu-commune').textContent = card.commune;
+        const departement = card.departement.length !== 0 ? ` | ${card.departement}`: ""
+        clone.querySelector('.lieu-commune').innerHTML = `<p class="fr-card__detail fr-icon-map-pin-2-line">${card.commune}${departement}</p>`;
         clone.querySelector('.lieu-delete-btn').setAttribute("data-id", card.id)
         clone.querySelector('.lieu-delete-btn').setAttribute("aria-describedby", "tooltip-delete-lieu-" + card.id)
         clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-lieu-" + card.id)
@@ -81,10 +82,13 @@ function handleHasNotImplemented(modal) {
 }
 
 function buildLieuCardFromModal(element){
+    /** @type {HTMLSelectElement} */
+    const dptSelect = element.querySelector('[id$=departement]');
     return {
         "id": element.dataset.id,
         "nom": element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
         "commune": element.querySelector(`[id^="id_lieux-"][id$="-commune"]`).value,
+        "departement": dptSelect.options[dptSelect.value]?.textContent ?? ""
     }
 }
 
@@ -129,6 +133,7 @@ function setUpCommune(element) {
     const currentModal = element.closest("dialog");
     const communeInput = currentModal.querySelector('[id$=commune]');
     const inseeInput = currentModal.querySelector('[id$=code_insee]');
+    /** @type {HTMLSelectElement} */
     const departementInput = currentModal.querySelector('[id$=departement]');
 
     setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput);
@@ -136,7 +141,12 @@ function setUpCommune(element) {
     choicesCommunes.passedElement.element.addEventListener("choice", (event)=> {
         communeInput.value = event.detail.value
         inseeInput.value = event.detail.customProperties.inseeCode
-        departementInput.value = event.detail.customProperties.departementCode
+        for(const it of departementInput.options) {
+            if(it.value === event.detail.customProperties.departementCode) {
+                it.selected = true
+                break
+            }
+        }
     })
 
     choicesCommunes.passedElement.element.addEventListener('removeItem', function (event) {
