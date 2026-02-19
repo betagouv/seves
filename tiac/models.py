@@ -259,15 +259,6 @@ class Etablissement(BaseEtablissement, models.Model):
             ),
         ]
 
-    @property
-    def address_summary(self):
-        value = ""
-        if self.commune:
-            value = self.commune
-        if self.departement:
-            value += f" ({self.departement.numero}) | {self.departement.nom}"
-        return value
-
 
 class InvestigationFollowUp(models.TextChoices):
     INVESTIGATION_DD = "investigation par ma dd", "Investigation locale"

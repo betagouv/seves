@@ -32,7 +32,18 @@ function displayLieuxCards() {
         const clone = lieuTemplateElement.cloneNode(true)
         clone.classList.remove("fr-hidden")
         clone.querySelector(".lieu-nom").textContent = card.nom
-        clone.querySelector(".lieu-commune").textContent = card.commune
+        let departement = (card.departement || null) ?? ""
+        let lieuCommune = card.commune
+        if (card.codePostal || null) {
+            lieuCommune += ` (${card.codePostal})`
+            departement = departement.replaceAll(/^\s*\w+\s*-\s*/g, "")
+        }
+        if (departement.length > 0) {
+            lieuCommune += ` | ${departement}`
+        }
+
+        clone.querySelector(".lieu-commune").innerHTML =
+            `<p class="fr-card__detail fr-icon-map-pin-2-line">${lieuCommune}</p>`
         clone.querySelector(".lieu-delete-btn").setAttribute("data-id", card.id)
         clone.querySelector(".lieu-delete-btn").setAttribute("aria-describedby", "tooltip-delete-lieu-" + card.id)
         clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-lieu-" + card.id)
@@ -83,10 +94,17 @@ function handleHasNotImplemented(modal) {
 }
 
 function buildLieuCardFromModal(element) {
+    /** @type {HTMLSelectElement} */
+    const dptSelect = element.querySelector("[id$=departement]")
     return {
         id: element.dataset.id,
         nom: element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
         commune: element.querySelector(`[id^="id_lieux-"][id$="-commune"]`).value,
+        departement:
+            dptSelect.selectedOptions.length > 0 && dptSelect.selectedOptions[0].value !== ""
+                ? dptSelect.selectedOptions[0].textContent
+                : "",
+        codePostal: element.querySelector(`[id^="id_lieux-"][id$="-code_postal"]`)?.value ?? "",
     }
 }
 
@@ -110,7 +128,7 @@ function saveLieu(event) {
     modal.querySelector(".fr-modal__title").textContent = "Modifier le lieu"
 }
 
-function setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput) {
+function setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput, codePostalInput) {
     if (communeInput.value) {
         choicesCommunes.setChoiceByValue(communeInput.value)
         choicesCommunes.setChoices(
@@ -122,6 +140,7 @@ function setupPreselection(choicesCommunes, communeInput, departementInput, inse
                     customProperties: {
                         departementCode: departementInput.value,
                         inseeCode: inseeInput.value,
+                        postCode: codePostalInput.value,
                     },
                 },
             ],
@@ -138,19 +157,29 @@ function setUpCommune(element) {
     const currentModal = element.closest("dialog")
     const communeInput = currentModal.querySelector("[id$=commune]")
     const inseeInput = currentModal.querySelector("[id$=code_insee]")
+    const codePostalInput = currentModal.querySelector("[id$=code_postal]")
+
+    /** @type {HTMLSelectElement} */
     const departementInput = currentModal.querySelector("[id$=departement]")
 
-    setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput)
+    setupPreselection(choicesCommunes, communeInput, departementInput, inseeInput, codePostalInput)
 
     choicesCommunes.passedElement.element.addEventListener("choice", event => {
         communeInput.value = event.detail.value
         inseeInput.value = event.detail.customProperties.inseeCode
-        departementInput.value = event.detail.customProperties.departementCode
+        codePostalInput.value = event.detail.customProperties.postCode
+        for (const it of departementInput.options) {
+            if (it.value === event.detail.customProperties.departementCode) {
+                it.selected = true
+                break
+            }
+        }
     })
 
     choicesCommunes.passedElement.element.addEventListener("removeItem", function (event) {
         communeInput.value = ""
         inseeInput.value = ""
+        codePostalInput.value = ""
         departementInput.value = ""
     })
 
@@ -161,6 +190,7 @@ function onAdresseLieuChoice(event, modal, communeChoice) {
     communeChoice.setValue([event.detail.customProperties.city])
     modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
     modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
+    modal.querySelector("[id$=code_postal]").value = event.detail.customProperties.postCode
     if (!!event.detail.customProperties.context) {
         modal.querySelector("[id$=departement]").value = event.detail.customProperties.context.split(",")[0].trim()
     }

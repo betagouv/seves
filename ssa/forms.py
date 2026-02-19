@@ -243,6 +243,7 @@ class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementFo
             "adresse_lieu_dit",
             "commune",
             "code_insee",
+            "code_postal",
             "departement",
             "pays",
             "numeros_resytal",
