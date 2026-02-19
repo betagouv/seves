@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addressChoices.passedElement.element.addEventListener("choice", event => {
             modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
             modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
+            modal.querySelector("[id$=code_postal]").value = event.detail.customProperties.postCode
             if (event.detail.customProperties.context) {
                 modal.querySelector("[id$=pays]").value = "FR"
                 const [num, _dept, _reg, ..._rest] = event.detail.customProperties.context.split(/\s*,\s*/)
@@ -45,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
             field.closest("dialog").querySelector("[id$=raison_sociale]").value = event.detail.customProperties.raison
             field.closest("dialog").querySelector("[id$=commune]").value = event.detail.customProperties.commune
             field.closest("dialog").querySelector("[id$=code_insee]").value = codeCommune
+            field.closest("dialog").querySelector("[id$=code_postal]").value = event.detail.customProperties.code_postal
             field.closest("dialog").querySelector("[id$=pays]").value = "FR"
 
             if (event.detail.customProperties.streetData) {
@@ -164,11 +166,22 @@ document.addEventListener("DOMContentLoaded", () => {
             const select = currentModal.querySelector("[id$=departement]")
             const option = select.options[select.selectedIndex]
 
-            const communeInput = currentModal.querySelector("[id$=commune]")
-            const communeValue = communeInput?.value?.trim()
+            const communeValue = currentModal.querySelector("[id$=commune]")?.value?.trim()
+            const postCodeValue = currentModal.querySelector("[id$=code_postal]")?.value?.trim()
             const parts = []
-            if (communeValue) parts.push(communeValue)
-            if (option.innerText) parts.push(option.innerText)
+            if (communeValue) {
+                let communePart = communeValue
+                if (postCodeValue) {
+                    communePart += ` (${postCodeValue})`
+                }
+                parts.push(communePart)
+            }
+            if (option.innerText) {
+                const departementPart = postCodeValue
+                    ? option.innerText.replaceAll(/^\s*\w+\s*-\s*/g, "")
+                    : option.innerText
+                parts.push(departementPart)
+            }
             const value = parts.join(" | ")
 
             if (value) {

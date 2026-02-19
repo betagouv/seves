@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Tuple, Union
 
 from django.urls import reverse
@@ -170,15 +171,22 @@ class LieuFormDomElements:
 
     def force_commune(self, config=None):
         if not config:
+            response_body = [
+                {
+                    "codesPostaux": ["59000", "59160", "59260", "59777", "59800"],
+                    "nom": "Lille",
+                    "code": "59350",
+                    "_score": 1.8082078747980779,
+                    "departement": {"code": "59", "nom": "Nord"},
+                }
+            ]
             config = {
                 "search_text": "Lille",
-                "option_name": "Lille (59)",
-                "response_body": """[{"nom":"Lille","code":"59350","_score":1.8106081554689044,"departement":{"code":"59","nom":"Nord"}}]""",
+                "option_name": f"Lille ({response_body[0]['codesPostaux'][0]})",
+                "response_body": json.dumps(response_body),
             }
 
-        url = (
-            f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement&boost=population&limit=15"
-        )
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
 
         self.page.route(
             url,
@@ -249,6 +257,10 @@ class LieuFormDomElements:
     @property
     def code_insee_hidden_input(self) -> Locator:
         return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_insee"]')
+
+    @property
+    def code_postal_hidden_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_postal"]')
 
     @property
     def departement_hidden_input(self) -> Locator:

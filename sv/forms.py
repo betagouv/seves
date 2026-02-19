@@ -62,6 +62,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     commune = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    code_postal = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = DepartementModelChoiceField(
         queryset=Departement.objects.all(),
         to_field_name="numero",

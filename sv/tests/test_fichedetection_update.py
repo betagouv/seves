@@ -1,3 +1,6 @@
+import json
+import re
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
@@ -418,11 +421,42 @@ def test_update_two_lieux(
         if index == 0:
             lieu_form_elements.force_commune()
         else:
+            response_body = [
+                {
+                    "codesPostaux": [
+                        "75001",
+                        "75002",
+                        "75003",
+                        "75004",
+                        "75005",
+                        "75006",
+                        "75007",
+                        "75008",
+                        "75009",
+                        "75010",
+                        "75011",
+                        "75012",
+                        "75013",
+                        "75014",
+                        "75015",
+                        "75016",
+                        "75017",
+                        "75018",
+                        "75019",
+                        "75020",
+                        "75116",
+                    ],
+                    "nom": "Paris",
+                    "code": "75056",
+                    "_score": 9.535435286815508,
+                    "departement": {"code": "75", "nom": "Paris"},
+                }
+            ]
             lieu_form_elements.force_commune(
                 {
                     "search_text": "Paris",
-                    "option_name": "Paris (75)",
-                    "response_body": """[{"nom":"Paris","code":"75056","_score":1.8,"departement":{"code":"75","nom":"Île-de-France"}}]""",
+                    "option_name": f"Paris ({response_body[0]['codesPostaux'][0]})",
+                    "response_body": json.dumps(response_body),
                 }
             )
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
@@ -537,10 +571,12 @@ def test_commune_display_in_card_and_edit_modal(live_server, page: Page):
     lieu = LieuFactory(fiche_detection=fiche_detection)
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    expect(page.get_by_text(lieu.commune, exact=True)).to_be_visible()
+    expect(
+        page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*"), exact=True)
+    ).to_be_visible()
 
     page.get_by_role("button", name="Modifier le lieu").click()
-    expect(page.get_by_text(f"{lieu.commune} ({lieu.departement.numero})Remove item"))
+    expect(page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*Remove item")))
 
 
 @pytest.mark.django_db

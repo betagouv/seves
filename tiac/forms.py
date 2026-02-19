@@ -191,6 +191,7 @@ class EtablissementForm(DsfrBaseForm, BaseEtablissementForm, forms.ModelForm):
             "adresse_lieu_dit",
             "commune",
             "code_insee",
+            "code_postal",
             "departement",
             "pays",
             "has_inspection",
