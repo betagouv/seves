@@ -706,8 +706,10 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = EvenementProduitFactory()
+    evenement_4 = InvestigationCasHumainFactory()
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
     evenement_2.contacts.add(contact_structure)
+    evenement_4.contacts.add(contact_structure)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -717,14 +719,17 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
 
 
 def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = InvestigationCasHumainFactory()
+    evenement_4 = InvestigationCasHumainFactory()
     contact_agent = ContactAgentFactory(with_active_agent=True)
     evenement_2.contacts.add(contact_agent)
+    evenement_4.contacts.add(contact_agent)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -734,6 +739,7 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choi
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
 
 
 def test_number_of_total_items(live_server, mocked_authentification_user, page: Page):
