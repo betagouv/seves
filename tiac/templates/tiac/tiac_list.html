@@ -24,8 +24,8 @@
                 </button>
             </div>
             <div class="evenements_liste__search-form">
-                {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
                 {% dsfr_form_field filter.form.annee|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:annee"  %}
+                {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
                 {% for field in filter.form %}
                     {% if field.name in filter.form.main_filters %}
                         <div class="fr-fieldset__element">
