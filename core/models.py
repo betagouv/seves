@@ -293,6 +293,7 @@ class Document(models.Model):
     description = models.TextField(blank=True)
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
+        max_length=180,
         upload_to=get_timestamped_filename,
         validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
