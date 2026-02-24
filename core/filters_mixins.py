@@ -89,13 +89,13 @@ class WithEtatFilterMixin(django_filters.FilterSet):
 
 class WithDateCreationFilterMixin(django_filters.FilterSet):
     start_date = django_filters.DateFilter(
-        field_name="date_creation",
+        field_name="date_creation__date",
         lookup_expr="gte",
         label="Création entre le",
         widget=DateInput(attrs={"type": "date"}),
     )
     end_date = django_filters.DateFilter(
-        field_name="date_creation", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
+        field_name="date_creation__date", lookup_expr="lte", label="et le", widget=DateInput(attrs={"type": "date"})
     )
 
 
