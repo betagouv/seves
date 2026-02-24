@@ -590,6 +590,36 @@ class Departement(models.Model):
         return f"{self.numero} - {self.nom}"
 
 
+class Commune(models.Model):
+    nom = models.CharField(max_length=100, verbose_name="Nom", blank=True)
+    libelle_acheminement = models.CharField(max_length=100, verbose_name="Libellé de tri postal", blank=True)
+    code_insee = models.CharField(
+        max_length=5,
+        verbose_name="Code INSEE de la commune",
+        unique=True,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^((?:\d{5}|2A\d{3}|2B\d{3}))?$",
+                message="Le code INSEE doit être valide",
+                code="code_postal_must_be_valid_or_empty",
+            ),
+        ],
+    )
+    code_postal = models.CharField(
+        max_length=5,
+        verbose_name="Code INSEE de la commune",
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^((?:\d{5}))?$",
+                message="Le code postal doit être valide ou vide",
+                code="code_postal_must_be_valid_or_empty",
+            ),
+        ],
+    )
+
+
 class BaseEtablissement(models.Model):
     siret = models.CharField(
         max_length=14,
@@ -631,6 +661,14 @@ class BaseEtablissement(models.Model):
         related_name="%(app_label)s_%(class)ss",
         blank=True,
         null=True,
+    )
+    new_commune = models.ForeignKey(
+        Commune,
+        on_delete=models.PROTECT,
+        verbose_name="Commune",
+        null=True,
+        default=None,
+        related_name="%(app_label)s_%(class)ss",
     )
     pays = CountryField(null=True)
 

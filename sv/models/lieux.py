@@ -4,7 +4,7 @@ from django.db import models, transaction
 from django_countries.fields import CountryField
 import reversion
 
-from core.models import Departement, Region  # noqa F403
+from core.models import Commune, Departement, Region  # noqa F403
 
 
 class PositionChaineDistribution(models.Model):
@@ -73,6 +73,13 @@ class Lieu(models.Model):
                 code="invalid_code_insee",
             ),
         ],
+    )
+    new_commune = models.ForeignKey(
+        Commune,
+        on_delete=models.PROTECT,
+        verbose_name="Commune",
+        null=True,
+        default=None,
     )
     departement = models.ForeignKey(
         Departement,
