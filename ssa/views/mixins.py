@@ -22,10 +22,20 @@ class WithFilteredListMixin(WithOrderingMixin):
     def get_default_order_by(self):
         return "numero_evenement"
 
-    def get_raw_queryset(self):
-        user = self.request.user
-        contact = user.agent.structure.contact_set.get()
+    def get_nb_objects(self, user):
+        count_1 = EvenementProduitReadOnly.objects.all().get_user_can_view(user).count()
+        count_2 = EvenementInvestigationCasHumain.objects.all().get_user_can_view(user).count()
+        return count_1 + count_2
 
+    def get_raw_queryset(self, enable_pagination=True):
+        user = self.request.user
+
+        if hasattr(self, "paginate_by") and enable_pagination:
+            ep_light_qs = EvenementProduitReadOnly.objects.all().get_user_can_view(user).optimized_for_list()
+            ich_light_qs = EvenementInvestigationCasHumain.objects.all().get_user_can_view(user).optimized_for_list()
+            return QuerySetSequence(ep_light_qs, ich_light_qs, model=EvenementProduit)
+
+        contact = user.agent.structure.contact_set.get()
         evenement_produit_qs = (
             EvenementProduitReadOnly.objects.select_related("createur")
             .get_user_can_view(user)
@@ -45,6 +55,9 @@ class WithFilteredListMixin(WithOrderingMixin):
     def get_queryset(self):
         queryset = self.apply_ordering(self.get_raw_queryset())
         self.filter = EvenementFilter(self.request.GET, queryset=queryset)
+        self.nb_filtered_objects = EvenementFilter(
+            self.request.GET, queryset=self.get_raw_queryset(enable_pagination=False)
+        ).qs.count()
         return self.filter.qs
 
 

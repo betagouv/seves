@@ -10,7 +10,7 @@ from django.db import transaction
 from django.forms import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
@@ -32,11 +32,13 @@ from core.mixins import (
 )
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
-from ssa.models import Etablissement, EvenementProduit
+from ssa.models import Etablissement, EvenementInvestigationCasHumain, EvenementProduit
 
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ..display import EvenementDisplay
+from ..models.evenement_produit import EvenementProduitReadOnly
 from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
+from ..paginator import TotalCountPaginator
 from .mixins import EvenementProduitValuesMixin, WithFilteredListMixin
 
 
@@ -233,20 +235,61 @@ class EvenementUpdateView(
         return HttpResponseRedirect(self.get_success_url())
 
 
-class EvenementsListView(WithFilteredListMixin, ListView):
+class EvenementsListView(WithFilteredListMixin, TemplateView):
     template_name = "ssa/evenements_list.html"
     model = EvenementProduit
     paginate_by = 100
 
+    def set_object_list(self, page_obj, context):
+        """
+        Transform the list of IDS (filtered and sorted) into a iterable of EvenementDisplay in the correct order
+        with all the data prefetched
+        """
+        evenement_produit_ids = [obj.id for obj in page_obj.object_list if isinstance(obj, EvenementProduitReadOnly)]
+        ich_ids = [obj.id for obj in page_obj.object_list if isinstance(obj, EvenementInvestigationCasHumain)]
+        user = self.request.user
+        contact = user.agent.structure.contact_set.get()
+
+        evenement_produit_dict = (
+            EvenementProduitReadOnly.objects.select_related("createur")
+            .with_fin_de_suivi(contact)
+            .optimized_for_list()
+            .in_bulk(evenement_produit_ids)
+        )
+
+        ich_dict = (
+            EvenementInvestigationCasHumain.objects.select_related("createur")
+            .with_fin_de_suivi(contact)
+            .optimized_for_list()
+            .in_bulk(ich_ids)
+        )
+
+        context["object_list"] = []
+        for light_obj in page_obj.object_list:
+            if isinstance(light_obj, EvenementProduitReadOnly):
+                context["object_list"].append(EvenementDisplay.from_evenement(evenement_produit_dict.get(light_obj.id)))
+            else:
+                context["object_list"].append(EvenementDisplay.from_evenement(ich_dict.get(light_obj.id)))
+
+        page_obj.object_list = context["object_list"]
+
     def get_context_data(self, **kwargs):
+        qs = self.get_queryset()
         context = super().get_context_data(**kwargs)
+        page_number = self.request.GET.get("page", 1)
+
+        paginator = TotalCountPaginator(qs, self.paginate_by, total_count=self.nb_filtered_objects)
+        self.set_object_list(paginator.page(page_number), context)
+
         context["filter"] = self.filter
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
 
-        context["total_object_count"] = self.get_raw_queryset().count()
-        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
-
+        paginator = TotalCountPaginator(qs, self.paginate_by, total_count=self.nb_filtered_objects)
+        context["paginator"] = paginator
+        context["page_obj"] = paginator.page(page_number)
+        context["is_paginated"] = paginator.num_pages > 1
+        context["total_object_count"] = self.get_nb_objects(self.request.user)
         return context
 
 

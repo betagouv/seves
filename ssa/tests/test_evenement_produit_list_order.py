@@ -1,12 +1,13 @@
 from datetime import datetime
 
 from django.utils import timezone
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 import pytest
 
 from core.factories import StructureFactory
 from core.mixins import WithEtatMixin
 from ssa.factories import EvenementProduitFactory
+from ssa.tests.pages import EvenementProduitListPage
 
 
 @pytest.mark.parametrize(
@@ -97,3 +98,25 @@ def test_order_by_etat(
     page.goto(url_builder_for_list_ordering("etat", direction, "ssa:evenements-liste"))
     page.get_by_role("link", name="État").click()
     assert_events_order(page, evenements, expected_order, 1)
+
+
+def test_order_by_numero_evenement_with_a_filter_on_year(live_server, page: Page, assert_events_order):
+    evenement_1 = EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
+    evenement_2 = EvenementProduitFactory(numero_annee=2025, numero_evenement=3)
+    evenement_3 = EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    (EvenementProduitFactory(numero_annee=2024, numero_evenement=1),)
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.annee_field.fill("2025")
+    search_page.submit_search()
+    expect(search_page.page.get_by_text("2024.1")).not_to_be_visible()
+    assert page.text_content(".evenements__list-row:nth-child(1) td:nth-child(1)").strip() == evenement_2.numero
+    assert page.text_content(".evenements__list-row:nth-child(2) td:nth-child(1)").strip() == evenement_1.numero
+    assert page.text_content(".evenements__list-row:nth-child(3) td:nth-child(1)").strip() == evenement_3.numero
+
+    search_page.page.get_by_role("link", name="N°", exact=True).click()
+    expect(search_page.page.get_by_text("2024.1")).not_to_be_visible()
+    assert page.text_content(".evenements__list-row:nth-child(1) td:nth-child(1)").strip() == evenement_3.numero
+    assert page.text_content(".evenements__list-row:nth-child(2) td:nth-child(1)").strip() == evenement_1.numero
+    assert page.text_content(".evenements__list-row:nth-child(3) td:nth-child(1)").strip() == evenement_2.numero
