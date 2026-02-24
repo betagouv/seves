@@ -30,6 +30,12 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
                     </p>
                     {% endif %}
                     <p style="font-weight: bold; margin-top: 20px; margin-bottom: 0px;">{{ message_obj.sender.agent.prenom }} {{ message_obj.sender.agent.nom }}</p>
+                    {% if message_obj.sender.agent.telephone %}
+                        <p style="margin-top: 0px;">{{ message_obj.sender.agent.telephone }}</p>
+                    {% endif %}
+                    {% if message_obj.sender.agent.mobile %}
+                        <p style="margin-top: 0px;">{{ message_obj.sender.agent.mobile }}</p>
+                    {% endif %}
                     <p style="margin-top: 0px;">{{ message_obj.sender.agent.structure }}</p>
                     <p style="margin-top: 20px;"><a href="{{ fiche_url }}">Consulter la fiche dans Sèves</a></p>
                     <p>Merci de ne pas répondre directement à ce message.</p>
