@@ -30,6 +30,9 @@ def test_can_edit_required_fields(live_server, page: Page, assert_models_are_equ
 
     edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
     edit_page.navigate()
+    expect(
+        edit_page.page.get_by_text(f"Modification de l'événement {investigation.numero}", exact=True)
+    ).to_be_visible()
     edit_page.fill_context_block(new_data)
     edit_page.submit()
 
