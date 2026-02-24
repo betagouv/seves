@@ -191,7 +191,7 @@ def test_export_evenements_from_ui(live_server, mocked_authentification_user, pa
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.numero_field.fill("2025")
+    search_page.annee_field.fill("2025")
     search_page.submit_search()
     search_page.submit_export()
 
@@ -204,8 +204,7 @@ def test_export_evenements_from_ui(live_server, mocked_authentification_user, pa
     assert '"A-2025.21"' in lines_starts
     assert '"A-2025.1"' in lines_starts
     assert '"A-2025.2"' in lines_starts
-    assert '"A-2023.2025"' in lines_starts
-    assert len(lines) == 6
+    assert len(lines) == 5
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]

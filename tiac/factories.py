@@ -130,9 +130,10 @@ class EtablissementFactory(BaseEtablissementFactory, DjangoModelFactory):
     class Params:
         inspection = factory.Trait(
             has_inspection=True,
-            numero_resytal=factory.Faker("numerify", text="##############"),
-            evaluation=random.choice([c[0] for c in Evaluation.values]),
+            numero_resytal=factory.Faker("numerify", text="##-######"),
+            evaluation=random.choice(Evaluation.values),
             commentaire=factory.Faker("paragraph"),
+            date_inspection=factory.Faker("date_this_decade"),
         )
 
 

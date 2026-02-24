@@ -77,7 +77,7 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
 
 
 def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
-    input_data = InvestigationTiacFactory.build()
+    input_data = InvestigationTiacFactory.build(follow_up=InvestigationFollowUp.INVESTIGATION_DD)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_required_fields(input_data)
@@ -576,6 +576,7 @@ def test_create_investigation_tiac_with_investigation_coordonnee_notification(li
     mail = mailoutbox[0]
     assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
     assert "Investigation coordonnée" in mail.subject
+    assert contact_structure_mus in investigation.contacts.all()
 
 
 def test_can_create_etablissement_with_sirene_autocomplete(

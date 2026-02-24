@@ -34,7 +34,7 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
 )
-from core.models import CustomRevisionMetaData, LienLibre
+from core.models import Contact, CustomRevisionMetaData, LienLibre
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models.mixins import build_combined_options
 from tiac import forms
@@ -42,7 +42,7 @@ from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from tiac.tasks import export_tiac_task
 
-from .constants import DangersSyndromiques
+from .constants import DangersSyndromiques, EvenementFollowUp
 from .display import DisplayItem
 from .filters import TiacFilter
 from .forms import EvenementSimpleTransferForm
@@ -260,7 +260,7 @@ class EvenementSimpleTransferView(UpdateView):
     form_class = EvenementSimpleTransferForm
 
     def get_queryset(self):
-        return EvenementSimple.objects.all()
+        return EvenementSimple.objects.all().get_user_can_view(user=self.request.user)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -272,7 +272,7 @@ class EvenementSimpleTransferView(UpdateView):
 
 class EvenementTransformView(UpdateView):
     def get_queryset(self):
-        return EvenementSimple.objects.all()
+        return EvenementSimple.objects.all().get_user_can_view(user=self.request.user)
 
     def _create_investigation_tiac(self):
         fields_to_copy = [
@@ -331,6 +331,8 @@ class EvenementTransformView(UpdateView):
         for contact in self.object.get_contacts_structures_not_in_fin_suivi():
             self.object.add_fin_suivi(structure=contact.structure, made_by=self.request.user)
         self.object.cloturer()
+        self.object.follow_up = EvenementFollowUp.INVESGTIGATION_TIAC
+        self.object.save()
         self._copy_etablissements()
         self._copy_and_add_free_links()
         notify_transformation(self.object, self.investigation)
@@ -463,9 +465,11 @@ class InvestigationTiacBaseView(
         if dirty_fields is None:
             if self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
                 notify_investigation_coordonnee(self.object, self.request.user)
+                self.object.contacts.add(Contact.objects.get_mus())
         else:
             if "follow_up" in dirty_fields and self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
                 notify_investigation_coordonnee(self.object, self.request.user)
+                self.object.contacts.add(Contact.objects.get_mus())
             if "suspicion_conclusion" in dirty_fields:
                 notify_conclusion(self.object, self.request.user)
 

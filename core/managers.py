@@ -1,3 +1,4 @@
+import typing
 from typing import Literal
 
 from django.conf import settings
@@ -13,6 +14,9 @@ from core.constants import (
     SSA_STRUCTURES,
     TIAC_STRUCTURES,
 )
+
+if typing.TYPE_CHECKING:
+    from core.models import Agent
 
 User = get_user_model()
 
@@ -204,8 +208,23 @@ class EvenementManagerMixin:
 
 
 class MessageManager(Manager):
-    def get_queryset(self):
+    def create_unsaved(self, agent: "Agent", related_to, **kwargs):
+        from core.models import Message
+
+        kwargs["status"] = Message.Status.AVANT_SAUVEGARDE
+        kwargs["sender"] = agent.contact_set.get()
+        kwargs.setdefault("sender_structure", agent.structure)
+        kwargs["content_type"] = ContentType.objects.get_for_model(related_to)
+        kwargs["object_id"] = related_to.pk
+        return self.create(**kwargs)
+
+    def get_base_queryset(self):
         return MessagQueryset(self.model, using=self._db).filter(is_deleted=False)
+
+    def get_queryset(self):
+        from core.models import Message
+
+        return self.get_base_queryset().exclude(status=Message.Status.AVANT_SAUVEGARDE)
 
 
 class MessagQueryset(QuerySet):

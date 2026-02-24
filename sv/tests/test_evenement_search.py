@@ -2,9 +2,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import REGION_STRUCTURE_MAPPING
+from core.constants import REGION_STRUCTURE_MAPPING, Visibilite
 from core.factories import ContactAgentFactory, ContactStructureFactory, RegionFactory, StructureFactory
-from core.models import Contact, Region, Visibilite
+from core.models import Contact, Region
 from seves import settings
 
 from ..factories import (
@@ -29,8 +29,10 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
 
     expect(page.get_by_role("heading", name="Rechercher un événement")).to_be_visible()
-    expect(page.get_by_label("Numéro évènement")).to_be_visible()
-    expect(page.get_by_label("Numéro évènement")).to_be_empty()
+    expect(page.get_by_label("N° événement")).to_be_visible()
+    expect(page.get_by_label("N° événement")).to_be_empty()
+    expect(page.get_by_label("Année")).to_be_visible()
+    expect(page.get_by_label("Année")).to_be_empty()
     expect(page.locator("#search-form").get_by_text("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_be_visible()
     expect(page.get_by_label("Région")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
@@ -66,7 +68,8 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     contact_agent = Contact.objects.filter(agent__isnull=False).first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Numéro").fill("2024")
+    page.get_by_label("Année").fill("2024")
+    page.get_by_label("N° événement").fill("1")
     page.get_by_label("Région").select_option(index=1)
     organisme = OrganismeNuisible.objects.first().libelle_court
     choice_js_fill(page, "#id_organisme_nuisible ~ .choices__list--single", organisme, organisme)
@@ -77,7 +80,8 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     choice_js_fill(page, "#id_agent_contact ~ .choices__list--single", str(contact_agent), str(contact_agent))
     page.get_by_role("button", name="Effacer").click()
 
-    expect(page.get_by_label("Numéro")).to_be_empty()
+    expect(page.get_by_label("Année")).to_be_empty()
+    expect(page.get_by_label("N° événement")).to_be_empty()
     expect(page.get_by_label("Région")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(page.get_by_label("Période du")).to_be_empty()
@@ -101,7 +105,7 @@ def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, c
     expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     assert (
         page.url
-        == f"{live_server.url}{get_fiche_detection_search_form_url()}?numero=&region=&organisme_nuisible=&start_date=&end_date=&etat=&structure_contact=&agent_contact="
+        == f"{live_server.url}{get_fiche_detection_search_form_url()}?annee=&numero=&region=&organisme_nuisible=&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
 
@@ -112,28 +116,12 @@ def test_search_with_evenement_number(live_server, page: Page) -> None:
     EvenementFactory(numero_annee=2024, numero_evenement=2)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Numéro").fill("2024.1")
+    page.get_by_label("Année").fill("2024")
+    page.get_by_label("N° événement").fill("1")
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
     expect(page.get_by_role("cell", name="2024.2")).not_to_be_visible()
-
-
-@pytest.mark.django_db
-def test_search_with_evenement_number_loose_case(live_server, page: Page) -> None:
-    EvenementFactory(numero_annee=2024, numero_evenement=1)
-    EvenementFactory(numero_annee=2024, numero_evenement=2)
-    EvenementFactory(numero_annee=2023, numero_evenement=1243)
-    EvenementFactory(numero_annee=2023, numero_evenement=23)
-
-    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Numéro").fill("24")
-    page.get_by_role("button", name="Rechercher").click()
-
-    expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
-    expect(page.get_by_role("cell", name="2024.2")).to_be_visible()
-    expect(page.get_by_role("cell", name="2023.1243")).to_be_visible()
-    expect(page.get_by_role("cell", name="2023.23")).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -143,7 +131,7 @@ def test_search_with_evenement_number_allows_year_only(live_server, page: Page):
     EvenementFactory(numero_annee=2023, numero_evenement=1)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Numéro").fill("2024")
+    page.get_by_label("Année").fill("2024")
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name="2024.1", exact=True)).to_be_visible()
@@ -225,7 +213,7 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
@@ -247,7 +235,7 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
     expect(page.get_by_role("cell", name=evenement_1.numero)).to_be_visible()

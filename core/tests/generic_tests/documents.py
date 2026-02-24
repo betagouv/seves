@@ -24,6 +24,19 @@ def generic_test_cant_see_document_type_from_other_app(
     check_select_options_from_element(document_page.global_document_type_input, expected, with_default_value=False)
 
 
+def generic_test_cant_see_document_type_from_other_app_when_editing_document(
+    live_server, page: Page, check_select_options_from_element, object
+):
+    document = DocumentFactory(content_object=object)
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    document_page.open_edit_document(document.id)
+
+    expected = [settings.SELECT_EMPTY_CHOICE, *[t.label for t in object.get_allowed_document_types()]]
+    check_select_options_from_element(document_page.document_edit_type(document.id), expected, with_default_value=False)
+
+
 def generic_test_can_add_document_to_evenement(live_server, page: Page, mocked_authentification_user, object):
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     previous = object.documents.count()

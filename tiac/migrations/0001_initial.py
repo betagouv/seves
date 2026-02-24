@@ -3,6 +3,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
+from core import model_mixins
 import core.mixins
 
 
@@ -109,7 +110,7 @@ class Migration(migrations.Migration):
                 "abstract": False,
             },
             bases=(
-                core.mixins.WithContactPermissionMixin,
+                model_mixins.WithContactPermissionMixin,
                 core.mixins.WithFreeLinkIdsMixin,
                 models.Model,
             ),

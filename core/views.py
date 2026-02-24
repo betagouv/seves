@@ -118,6 +118,11 @@ class DocumentUpdateView(
     def test_func(self) -> bool | None:
         return self.get_fiche_object().can_update_document(self.request.user)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["allowed_document_types"] = self.document.content_object.get_allowed_document_types()
+        return kwargs
+
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk"))
         if isinstance(self.document.content_object, Message):

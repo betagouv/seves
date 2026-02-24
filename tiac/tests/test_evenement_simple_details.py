@@ -1,3 +1,4 @@
+from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
 from core.models import LienLibre
@@ -56,5 +57,8 @@ def test_evenement_simple_detail_page_content_etablissement(
     expect(details_page.etablissement_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(str(etablissement.departement), exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.numero_resytal, exact=True)).to_be_visible()
+    expect(
+        details_page.etablissement_modal.get_by_text(localize(etablissement.date_inspection), exact=True)
+    ).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.evaluation, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.commentaire, exact=True)).to_be_visible()

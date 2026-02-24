@@ -60,6 +60,15 @@ class Etablissement(BaseEtablissement, models.Model):
     def position_dossier_css_class(self):
         return self.get_position_dossier_css_class(self.position_dossier)
 
+    @property
+    def formated_geo_data(self):
+        if self.commune and self.departement:
+            return f"{self.commune} | {self.departement}"
+        if self.commune:
+            return self.commune
+        if self.departement:
+            return self.departement
+
     class Meta:
         constraints = (
             models.CheckConstraint(

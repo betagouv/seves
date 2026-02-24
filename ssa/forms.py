@@ -29,7 +29,7 @@ from ssa.models import (
     PositionDossier,
     TemperatureConservation,
 )
-from ssa.models.evenement_produit import QuantificationUnite
+from ssa.models.evenement_produit import EvenementProduitReadOnly, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
 
 
@@ -150,7 +150,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-        self._add_free_links(model=EvenementProduit)
+        self._add_free_links(model=EvenementProduitReadOnly)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
@@ -260,7 +260,7 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-        self._add_free_links(model=EvenementProduit)
+        self._add_free_links(model=EvenementProduitReadOnly)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")

@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
-from core.constants import Domains
+from core.constants import Domains, Visibilite
 from core.fields import (
     AdresseLieuDitField,
     ContactModelMultipleChoiceField,
@@ -21,7 +21,7 @@ from core.fields import (
     SEVESChoiceField,
 )
 from core.form_mixins import DSFRForm
-from core.models import Contact, Departement, Document, Message, Structure, Visibilite
+from core.models import Contact, Departement, Document, Message, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 
 User = get_user_model()
@@ -141,6 +141,13 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
     description = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Commentaire - facultatif", required=False
     )
+
+    def __init__(self, *args, allowed_document_types, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["document_type"].choices = [
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *[(c.value, c.label) for c in allowed_document_types],
+        ]
 
     class Meta:
         model = Document

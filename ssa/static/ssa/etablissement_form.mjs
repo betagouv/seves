@@ -125,11 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!!baseCard.querySelector(".etablissement-card")){
             baseCard.querySelector(".etablissement-card").id = `etablissement-card-${getPrefix(currentID)}`
         }
-        baseCard.querySelector('.raison-sociale').textContent = currentModal.querySelector('[id$=raison_sociale]').value
+
+        const enseigneUsuelle = currentModal.querySelector('[id$=enseigne_usuelle]').value
+        const raisonSociale = currentModal.querySelector('[id$=raison_sociale]').value
+
+        if (!!enseigneUsuelle){
+            baseCard.querySelector('.raison-sociale').textContent = enseigneUsuelle
+            baseCard.querySelector('.card-subtitle').textContent = raisonSociale
+            baseCard.querySelector('.card-subtitle').classList.remove("fr-hidden")
+        } else {
+            baseCard.querySelector('.raison-sociale').textContent = raisonSociale
+            baseCard.querySelector('.card-subtitle').textContent = ''
+            baseCard.querySelector('.card-subtitle').classList.add("fr-hidden")
+        }
+
 
         const typeExploitant = currentModal.querySelector('[id$=type_exploitant]').value
         if (typeExploitant != null) {
-            baseCard.querySelector('.type-exploitant').innerText = typeExploitant
+            baseCard.querySelector('.type-exploitant').innerText = "Type exploitant : " + typeExploitant
             baseCard.querySelector('.type-exploitant').classList.remove("fr-hidden")
         }
 
@@ -142,9 +155,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const select = currentModal.querySelector('[id$=departement]');
             const option = select.options[select.selectedIndex];
-            baseCard.querySelector('.structure').textContent = `Département : ${option.innerText}`;
+
+            const communeInput = currentModal.querySelector('[id$=commune]');
+            const communeValue = communeInput?.value?.trim();
+            const parts = [];
+            if (communeValue) parts.push(communeValue);
+            if (option.innerText) parts.push(option.innerText);
+            const value = parts.join(' | ');
+
+            if (value) {
+                baseCard.querySelector('.geo-data').textContent = value;
+            } else {
+                baseCard.querySelector('.geo-data').innerHTML ='<span class="empty-value">Vide</span>';
+            }
         } catch {
-            baseCard.querySelector('.structure').textContent = '<span class="empty-value">Vide</span>';
+            baseCard.querySelector('.geo-data').innerHTML = '<span class="empty-value">Vide</span>';
         }
 
         const numeroAgrementValue = currentModal.querySelector('[id$=numero_agrement]').value
@@ -201,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = getEtablissementCard(clone, currentModal, etablissementId)
         card.querySelector('.etablissement-delete-btn').addEventListener("click", () => {deleteEtablissement(etablissementId)})
         card.querySelector('.etablissement-edit-btn').setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
+        card.querySelector('.raison-sociale').setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
         card.querySelector('.etablissement-edit-btn').addEventListener("click", () => {
             modalEtablissementHTMLContent[etablissementId] = document.querySelector(`#fr-modal-etablissement-${prefix} .fr-modal__content`).cloneNode(true)
             document.querySelector(`#fr-modal-etablissement-${prefix} [id$=raison_sociale]`).required = true

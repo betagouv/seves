@@ -1,7 +1,7 @@
 from playwright.sync_api import expect
 import pytest
 
-from core.models import Visibilite
+from core.constants import Visibilite
 from sv.factories import EvenementFactory
 from sv.models import Evenement
 

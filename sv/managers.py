@@ -2,8 +2,9 @@ from django.db import models
 from django.db.models import Count, Func, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Cast, Greatest
 
+from core.constants import Visibilite
 from core.managers import EvenementManagerMixin
-from core.models import Visibilite, user_is_referent_national
+from core.models import user_is_referent_national
 from sv.managers_mixins import WithDerniereMiseAJourManagerMixin
 
 

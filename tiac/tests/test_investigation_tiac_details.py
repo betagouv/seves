@@ -1,3 +1,4 @@
+from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
 from tiac.constants import DangersSyndromiques
@@ -44,7 +45,7 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
         expect(details_page.etiologie_block.get_by_text(DangersSyndromiques(motif).help_text)).to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_etablissement(
+def test_investigation_tiac_detail_page_content_etablissement(
     live_server, page: Page, assert_etablissement_card_is_correct
 ):
     evenement = InvestigationTiacFactory()
@@ -67,6 +68,9 @@ def test_evenement_produit_detail_page_content_etablissement(
     expect(details_page.current_modal.get_by_text(etablissement.commune, exact=True)).to_be_visible()
     expect(details_page.current_modal.get_by_text(str(etablissement.departement), exact=True)).to_be_visible()
     expect(details_page.current_modal.get_by_text(etablissement.numero_resytal, exact=True)).to_be_visible()
+    expect(
+        details_page.etablissement_modal.get_by_text(localize(etablissement.date_inspection), exact=True)
+    ).to_be_visible()
     expect(details_page.current_modal.get_by_text(etablissement.evaluation, exact=True)).to_be_visible()
     expect(details_page.current_modal.get_by_text(etablissement.commentaire, exact=True)).to_be_visible()
 

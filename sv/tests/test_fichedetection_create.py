@@ -6,8 +6,9 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
+from core.constants import Visibilite
 from core.factories import DepartementFactory, StructureFactory
-from core.models import Contact, Visibilite
+from core.models import Contact
 from sv.constants import CONTEXTES, STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES
 
 from ..factories import (

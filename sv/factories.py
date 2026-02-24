@@ -9,7 +9,8 @@ from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
-from core.models import Structure, Visibilite
+from core.constants import Visibilite
+from core.models import Structure
 
 from .constants import (
     CONTEXTES,

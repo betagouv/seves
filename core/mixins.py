@@ -40,11 +40,10 @@ from core.models import (
     Message,
     Structure,
     User,
-    Visibilite,
     user_is_referent_national,
 )
 
-from .constants import BSV_STRUCTURE, MUS_STRUCTURE
+from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from .filters import DocumentFilter, MessageFilter
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
@@ -109,8 +108,9 @@ class WithDocumentListInContextMixin:
         context = super().get_context_data(**kwargs)
         documents = Document.objects.for_fiche(self.get_object()).prefetch_related("created_by_structure")
         document_filter = DocumentFilter(self.request.GET, queryset=documents)
+        allowed_document_types = self.get_object().get_allowed_document_types()
         for document in document_filter.qs:
-            document.edit_form = DocumentEditForm(instance=document)
+            document.edit_form = DocumentEditForm(instance=document, allowed_document_types=allowed_document_types)
         context["document_filter"] = document_filter
         return context
 
@@ -547,36 +547,6 @@ class WithNumeroMixin(models.Model):
     @property
     def numero(self):
         return f"{self.numero_annee}.{self.numero_evenement}"
-
-
-class BasePermissionMixin:
-    def _user_can_interact(self, user):
-        raise NotImplementedError
-
-
-class WithDocumentPermissionMixin(BasePermissionMixin):
-    def can_add_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_update_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_delete_document(self, user):
-        return self._user_can_interact(user)
-
-    def can_download_document(self, user):
-        return self.can_user_access(user)
-
-
-class WithContactPermissionMixin(BasePermissionMixin):
-    def can_add_agent(self, user):
-        return self._user_can_interact(user)
-
-    def can_add_structure(self, user):
-        return self._user_can_interact(user)
-
-    def can_delete_contact(self, user):
-        return self._user_can_interact(user)
 
 
 class WithAddUserContactsMixin:

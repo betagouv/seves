@@ -44,11 +44,14 @@
         <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-5 bold">Suite donnée</div>
           <div class="fr-col-7">{{ object.get_follow_up_display }}</div>
-          {% if object.display_transfer_notice %}
+          {% if object.display_transformed_notice %}
             {% dsfr_notice title='Publiez la fiche, puis passez-la en investigation de TIAC depuis le menu "+ Action"' %}
           {% endif %}
           {% if object.display_evenement_produit_notice %}
             {% dsfr_notice title='Publiez la fiche, puis créez un nouvel évènement dans "Produit & cas" et mettez les deux fiches en lien.' %}
+          {% endif %}
+          {% if object.display_transfer_notice %}
+            {% dsfr_notice title='Publiez la fiche, puis transférez-la depuis le menu "+ Action"' %}
           {% endif %}
         </div>
       </div>

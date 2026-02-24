@@ -151,13 +151,15 @@ class EtablissementFormController extends BaseFormInModal {
      * @return {string} HTML
      */
     renderCard(etablissement) {
-        // language=HTML
+        const title = etablissement.enseigne_usuelle || etablissement.raison_sociale
+        const subTitle = etablissement.enseigne_usuelle ? etablissement.raison_sociale : ""
         return `<div class="etablissement-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
-                    <h3 class="fr-card__title raison-sociale" data-${this.identifier}-target="raisonSociale">
-                      ${etablissement.raison_sociale}
+                    <h3 class="fr-card__title">
+                      ${title}
                     </h3>
+                    ${this.optionalText(subTitle, `<p class="fr-text--sm card-subtitle">${subTitle}</p>`)}
                     <div class="fr-card__desc">
                         <address class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v adresse">
                             ${this.joinText(" | ", etablissement.commune, etablissement.departement)}

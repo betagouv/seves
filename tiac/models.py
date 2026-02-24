@@ -11,13 +11,11 @@ from reversion.models import Version
 from core.mixins import (
     AllowModificationMixin,
     EmailNotificationMixin,
-    WithContactPermissionMixin,
-    WithDocumentPermissionMixin,
     WithEtatMixin,
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin
+from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
 from core.models import BaseEtablissement, Departement, Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import CategorieDanger, CategorieProduit
@@ -179,12 +177,16 @@ class EvenementSimple(
         return "Enregistrement simple"
 
     @property
-    def display_transfer_notice(self):
+    def display_transformed_notice(self):
         return self.follow_up == EvenementFollowUp.INVESGTIGATION_TIAC
 
     @property
     def display_evenement_produit_notice(self):
         return self.follow_up == EvenementFollowUp.PASSE_EVENEMENT_PRODUIT
+
+    @property
+    def display_transfer_notice(self):
+        return self.follow_up == EvenementFollowUp.TRANSMISSION_DD
 
     def get_short_email_display_name(self):
         return f"Enregistrement simple {self.numero}"
@@ -599,12 +601,12 @@ class AlimentSuspect(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
+                condition=Q(type_aliment=TypeAliment.SIMPLE, description_composition="")
                 | ~Q(type_aliment=TypeAliment.SIMPLE),
                 name="produit_simple_constraint",
             ),
             models.CheckConstraint(
-                check=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
+                condition=Q(type_aliment=TypeAliment.CUISINE, categorie_produit="", description_produit="")
                 | ~Q(type_aliment=TypeAliment.CUISINE),
                 name="cuisiné_pas_de_categorie_emballage",
             ),

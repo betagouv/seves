@@ -88,7 +88,7 @@ django-dirtyfields==1.9.9
     # via -r requirements.in
 django-dsfr==3.3.0
     # via -r requirements.in
-django-environ==0.12.0
+django-environ==0.12.1
     # via -r requirements.in
 django-filter==25.2
     # via -r requirements.in
@@ -124,7 +124,7 @@ faker==37.12.0
     # via
     #   -r requirements.in
     #   factory-boy
-filelock==3.13.4
+filelock==3.20.3
     # via virtualenv
 greenlet==3.1.1
     # via playwright
@@ -205,7 +205,7 @@ pytest==8.4.2
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
-pytest-django==4.11.1
+pytest-django==4.12.0
     # via -r requirements.in
 pytest-env==1.2.0
     # via -r requirements.in
@@ -231,7 +231,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.1.0
+redis==7.1.1
     # via -r requirements.in
 requests==2.32.4
     # via
@@ -253,7 +253,7 @@ six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
-sqlparse==0.5.3
+sqlparse==0.5.4
     # via
     #   django
     #   django-debug-toolbar
@@ -280,7 +280,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.1
+virtualenv==20.36.1
     # via pre-commit
 wcwidth==0.2.13
     # via prompt-toolkit

@@ -10,7 +10,6 @@ from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
-from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Revision
@@ -294,6 +293,7 @@ class Document(models.Model):
     description = models.TextField(blank=True)
     document_type = models.CharField(max_length=100, choices=TypeDocument.choices, verbose_name="Type de document")
     file = models.FileField(
+        max_length=180,
         upload_to=get_timestamped_filename,
         validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
@@ -383,6 +383,7 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     TYPES_WITH_STRUCTURES_ONLY = (DEMANDE_INTERVENTION,)
 
     class Status(models.TextChoices):
+        AVANT_SAUVEGARDE = "avant_sauvegarde", "Avant sauvegarde"
         BROUILLON = "brouillon", "Brouillon"
         FINALISE = "finalise", "Finalisé"
 
@@ -550,25 +551,6 @@ class LienLibre(models.Model):
         super().save(*args, **kwargs)
 
 
-class UnitesMesure(models.TextChoices):
-    METRE = "m", _("Mètre")
-    KILOMETRE = "km", _("Kilomètre")
-    HECTARE = "ha", _("Hectare")
-    METRE_CARRE = "m2", _("Mètre carré")
-    KILOMETRE_CARRE = "km2", _("Kilomètre carré")
-
-
-class Visibilite(models.TextChoices):
-    LOCALE = "locale", "Votre structure et l'administration centrale pourront consulter et modifier la fiche"
-    LIMITEE = "limitee", "Les structures de votre choix pourront consulter et modifier la fiche"
-    NATIONALE = "nationale", "La fiche sera visible et modifiable par toutes les structures"
-
-    @classmethod
-    def get_masculine_label(cls, value):
-        masculine_labels = {cls.LOCALE: "Local", cls.LIMITEE: "Limité", cls.NATIONALE: "National"}
-        return masculine_labels.get(value)
-
-
 class Export(models.Model):
     object_ids = ArrayField(models.BigIntegerField(), null=True)
     task_done = models.BooleanField(default=False)
@@ -656,6 +638,12 @@ class BaseEtablissement(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def displayed_name(self):
+        if self.enseigne_usuelle:
+            return f"{self.enseigne_usuelle} ({self.raison_sociale})"
+        return self.raison_sociale
 
 
 class CustomRevisionMetaData(models.Model):

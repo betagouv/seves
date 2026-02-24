@@ -38,8 +38,11 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
 
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
-    assert search_page.date_reception_cell().text_content() == evenement.date_reception.strftime("%d/%m/%Y")
-    assert search_page.etablissement_cell().text_content().strip().replace("\n", "") == etablissement.raison_sociale
+    assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert (
+        search_page.etablissement_cell().text_content().strip().replace("\n", "")
+        == f"{etablissement.enseigne_usuelle} ({etablissement.raison_sociale})"
+    )
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == f"Enr. simple / {evenement.get_follow_up_display()}"
     assert search_page.conclusion_cell().text_content() == "-"
@@ -55,8 +58,11 @@ def test_row_content_investigation_tiac(live_server, mocked_authentification_use
 
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
-    assert search_page.date_reception_cell().text_content() == evenement.date_reception.strftime("%d/%m/%Y")
-    assert search_page.etablissement_cell().text_content().strip().replace("\n", "") == etablissement.raison_sociale
+    assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert (
+        search_page.etablissement_cell().text_content().strip().replace("\n", "")
+        == f"{etablissement.enseigne_usuelle} ({etablissement.raison_sociale})"
+    )
     assert search_page.malades_cell().text_content() == str(evenement.nb_sick_persons)
     assert search_page.type_cell().text_content() == "Invest. coord. / MUS informée"
     assert search_page.conclusion_cell().text_content() == evenement.get_suspicion_conclusion_display()
@@ -72,7 +78,7 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.numero_field.fill("2025")
+    search_page.annee_field.fill("2025")
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "T-2025.2"
     assert search_page.numero_cell(line_index=2).text_content() == "T-2025.1"
@@ -80,7 +86,25 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
     expect(search_page.page.get_by_text("2024.2")).not_to_be_visible()
 
 
-def test_list_can_filter_by_date(live_server, mocked_authentification_user, page: Page):
+def test_list_can_filter_by_date_creation(live_server, mocked_authentification_user, page: Page):
+    EvenementSimpleFactory(date_creation="2024-06-18", numero_annee=2025, numero_evenement=3)
+    InvestigationTiacFactory(date_creation="2024-06-19", numero_annee=2025, numero_evenement=2)
+    EvenementSimpleFactory(date_creation="2024-06-22", numero_annee=2025, numero_evenement=1)
+    InvestigationTiacFactory(date_creation="2024-06-03", numero_annee=2025, numero_evenement=4)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+
+    search_page.start_date_field.fill("2024-06-17")
+    search_page.end_date_field.fill("2024-06-20")
+    search_page.submit_search()
+    assert search_page.numero_cell().text_content() == "T-2025.3"
+    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
+    expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+    expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
+
+
+def test_list_can_filter_by_date_reception(live_server, mocked_authentification_user, page: Page):
     EvenementSimpleFactory(date_reception="2024-06-18", numero_annee=2025, numero_evenement=3)
     InvestigationTiacFactory(date_reception="2024-06-19", numero_annee=2025, numero_evenement=2)
     EvenementSimpleFactory(date_reception="2024-06-22", numero_annee=2025, numero_evenement=1)
@@ -89,8 +113,10 @@ def test_list_can_filter_by_date(live_server, mocked_authentification_user, page
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.start_date_field.fill("2024-06-17")
-    search_page.end_date_field.fill("2024-06-20")
+    search_page.open_sidebar()
+    search_page.start_date_reception_field.fill("2024-06-17")
+    search_page.end_date_reception_field.fill("2024-06-20")
+    search_page.add_filters()
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "T-2025.3"
     assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
@@ -396,7 +422,8 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.numero_field.fill("2025.2")
+    search_page.annee_field.fill("2025")
+    search_page.numero_field.fill("2")
     search_page.submit_search()
 
     expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
@@ -405,7 +432,8 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
-    search_page.numero_field.fill("2025.2")
+    search_page.annee_field.fill("2025")
+    search_page.numero_field.fill("2")
     search_page.with_links.check()
     search_page.submit_search()
 

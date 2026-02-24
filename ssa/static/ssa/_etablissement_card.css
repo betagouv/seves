@@ -1,16 +1,7 @@
-.etablissement-card {
-    background-color: var(--background-contrast-grey);
-    margin-bottom: 1rem;
-    padding: 1rem;
-    width: 400px;
-}
-.etablissement-card--header {
-    display: flex;
-    justify-content: space-between;
-}
-.raison-sociale {
-    font-weight: bold;
-}
 .position-dossier::before {
     content: none;
+}
+
+.etablissement-card .fr-card__title a{
+    background-image: none !important;
 }

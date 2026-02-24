@@ -73,6 +73,21 @@ def test_can_add_etablissements(live_server, page: Page, ensure_departements, as
     assert_models_are_equal(etablissements[0], etablissement_1, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
 
 
+def test_can_add_etablissement_with_inspection(live_server, page: Page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+    evenement = EvenementSimpleFactory()
+
+    etablissement = EtablissementFactory.build(evenement_simple=evenement, departement=departement, inspection=True)
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(evenement)
+    creation_page.add_etablissement(etablissement)
+    creation_page.submit_as_draft()
+
+    assert Etablissement.objects.count() == 1
+    assert_models_are_equal(Etablissement.objects.get(), etablissement, to_exclude=FIELD_TO_EXCLUDE_ETABLISSEMENT)
+
+
 def test_etablissement_card(live_server, page: Page, ensure_departements, assert_models_are_equal):
     departement, *_ = ensure_departements("Paris")
     evenement = EvenementSimpleFactory()
@@ -85,8 +100,8 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
     creation_page.add_etablissement(etablissement)
 
     content = [it for it in re.split(r"\s*\n\s*", creation_page.get_etablissement_card(0).text_content()) if it]
-
     assert content == [
+        etablissement.enseigne_usuelle,
         etablissement.raison_sociale,
         f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,
@@ -96,11 +111,13 @@ def test_etablissement_card(live_server, page: Page, ensure_departements, assert
 
     # Check that modifying the form modifies the card
     raison_sociale = "Ascaponts"
-    creation_page.edit_etablissement(0, raison_sociale=raison_sociale)
+    enseigne_usuelle = "Test"
+    creation_page.edit_etablissement(0, raison_sociale=raison_sociale, enseigne_usuelle=enseigne_usuelle)
 
     content = [it for it in re.split(r"\s*\n\s*", creation_page.get_etablissement_card(0).text_content()) if it]
 
     assert content == [
+        enseigne_usuelle,
         raison_sociale,
         f"{etablissement.commune} | {etablissement.departement}",
         etablissement.type_etablissement,

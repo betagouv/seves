@@ -8,9 +8,9 @@ from playwright.sync_api import Page, expect
 import pytest
 from reversion.models import Version
 
-from core.constants import BSV_STRUCTURE, MUS_STRUCTURE
+from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
-from core.models import Contact, Structure, Visibilite
+from core.models import Contact, Structure
 from seves import settings
 from sv.factories import (
     EvenementFactory,

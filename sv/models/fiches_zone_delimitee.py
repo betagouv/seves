@@ -7,7 +7,8 @@ from django.urls import reverse
 import reversion
 from reversion.models import Revision, Version
 
-from core.models import Structure, UnitesMesure
+from core.constants import UnitesMesure
+from core.models import Structure
 from core.versions import get_versions_from_ids
 from sv.managers import FicheZoneManager
 from sv.models.models_mixins import WithDerniereMiseAJourMixin

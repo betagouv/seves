@@ -352,6 +352,9 @@ class WithDocumentsPage(BaseDocumentPage):
     def document_edit_title(self, doc_id):
         return self.page.locator(f"#fr-modal-edit-{doc_id} #id_nom")
 
+    def document_edit_type(self, doc_id):
+        return self.page.locator(f"#fr-modal-edit-{doc_id} #id_document_type")
+
     def document_edit_description(self, doc_id):
         return self.page.locator(f"#fr-modal-edit-{doc_id} #id_description")
 

@@ -16,6 +16,12 @@
 
                         <div class="fr-container--fluid">
                             <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Enseigne usuelle</div>
+                                <div class="fr-col-3">{{ etablissement.enseigne_usuelle|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Numero Resytal</div>
+                                <div class="fr-col-3">{{ etablissement.numero_resytal|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Type d'établissement</div>
                                 <div class="fr-col-3">
                                     {% if etablissement.type_etablissement %}
@@ -24,26 +30,25 @@
                                         <span class="empty-value">Vide</span>
                                     {% endif %}
                                 </div>
-                                <div class="fr-col-3 bold">Numero Resytal</div>
-                                <div class="fr-col-3">{{ etablissement.numero_resytal|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Date d'inspection</div>
+                                <div class="fr-col-3">{{ etablissement.date_inspection|or_empty_value_tag }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Siret</div>
                                 <div class="fr-col-3">{{ etablissement.siret|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Évaluation globale</div>
                                 <div class="fr-col-3">{{ etablissement.evaluation|or_empty_value_tag }}</div>
+
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Numéro d'agrément</div>
                                 <div class="fr-col-3">{{ etablissement.numero_agrement|or_empty_value_tag }}</div>
-                                <div class="fr-col-3 bold">Enseigne usuelle</div>
-                                <div class="fr-col-3">{{ etablissement.enseigne_usuelle|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Commentaire</div>
+                                <div class="fr-col-3">{{ etablissement.commentaire|or_empty_value_tag }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Autre identifiant</div>
                                 <div class="fr-col-3">{{ etablissement.autre_identifiant|or_empty_value_tag }}</div>
-                                <div class="fr-col-3 bold">Commentaire</div>
-                                <div class="fr-col-3">{{ etablissement.commentaire|or_empty_value_tag }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters">
                                 <div class="fr-col-3 bold">Adresse</div>

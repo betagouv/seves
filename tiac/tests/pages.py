@@ -74,6 +74,13 @@ class WithEtablissementMixin:
         modal.locator('[id$="-departement"]').select_option(f"{etablissement.departement}")
         modal.locator('[id$="-pays"]').select_option(etablissement.pays.code)
 
+        if etablissement.has_inspection:
+            modal.get_by_text("Inspection", exact=True).click()
+            modal.locator('[id$="-numero_resytal"]').fill(etablissement.numero_resytal)
+            modal.locator('[id$="-date_inspection"]').fill(etablissement.date_inspection.strftime("%Y-%m-%d"))
+            modal.locator('[id$="-evaluation"]').select_option(etablissement.evaluation)
+            modal.locator('[id$="-commentaire"]').fill(etablissement.commentaire)
+
     def close_etablissement_modal(self):
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
@@ -244,6 +251,10 @@ class EvenementListPage(WithTreeSelect):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
 
     @property
+    def annee_field(self):
+        return self.page.locator("#id_annee")
+
+    @property
     def numero_field(self):
         return self.page.locator("#id_numero")
 
@@ -260,12 +271,20 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_start_date")
 
     @property
-    def conclusion_field(self):
-        return self.page.locator("#id_suspicion_conclusion")
-
-    @property
     def end_date_field(self):
         return self.page.locator("#id_end_date")
+
+    @property
+    def start_date_reception_field(self):
+        return self.page.locator("#id_start_date_reception")
+
+    @property
+    def end_date_reception_field(self):
+        return self.page.locator("#id_end_date_reception")
+
+    @property
+    def conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
 
     @property
     def full_text_field(self):
@@ -298,7 +317,7 @@ class EvenementListPage(WithTreeSelect):
     def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
-    def date_reception_cell(self, line_index=1):
+    def date_creation_cell(self, line_index=1):
         return self._cell_content(line_index, 3)
 
     def etablissement_cell(self, line_index=1):
@@ -725,7 +744,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage:
+class InvestigationTiacDetailsPage(WithEtablissementMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url

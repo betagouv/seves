@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('search-form').addEventListener('reset', function (e) {
         e.preventDefault();
+        this.elements['annee'].value = '';
         this.elements['numero'].value = '';
         this.elements['region'].value = '';
         this.elements['organisme_nuisible'].value = '';
