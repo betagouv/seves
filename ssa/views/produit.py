@@ -10,7 +10,7 @@ from django.db import transaction
 from django.forms import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views import View
-from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
@@ -37,7 +37,6 @@ from ssa.models import Etablissement, EvenementProduit
 from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
 from ..display import EvenementDisplay
 from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
-from ..paginator import TotalCountPaginator
 from .mixins import EvenementProduitValuesMixin, WithFilteredListMixin
 
 
@@ -234,26 +233,20 @@ class EvenementUpdateView(
         return HttpResponseRedirect(self.get_success_url())
 
 
-class EvenementsListView(WithFilteredListMixin, TemplateView):
+class EvenementsListView(WithFilteredListMixin, ListView):
     template_name = "ssa/evenements_list.html"
     model = EvenementProduit
     paginate_by = 100
 
     def get_context_data(self, **kwargs):
-        qs = self.get_queryset()
         context = super().get_context_data(**kwargs)
-        page_number = self.request.GET.get("page", 1)
-
         context["filter"] = self.filter
         context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
         context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
 
-        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in qs]
-        paginator = TotalCountPaginator(qs, self.paginate_by, total_count=self.nb_filtered_objects)
-        context["paginator"] = paginator
-        context["page_obj"] = paginator.page(page_number)
-        context["is_paginated"] = paginator.num_pages > 1
-        context["total_object_count"] = self.get_nb_objects(self.request.user)
+        context["total_object_count"] = self.get_raw_queryset().count()
+        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
+
         return context
 
 
