@@ -39,6 +39,8 @@ def assert_mail_common(mails, message, evenement):
     assert mail.from_email == "no-reply@seves.beta.gouv.fr"
     assert message.sender.agent.prenom in mail.body
     assert message.sender.agent.nom in mail.body
+    assert message.sender.agent.telephone in mail.body
+    assert message.sender.agent.mobile in mail.body
     assert str(message.sender.agent.structure) in mail.body
     assert evenement.get_absolute_url() in mail.body
     return mail
