@@ -380,12 +380,16 @@ class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
         if hasattr(obj, "limit_contacts_to_user_from_app"):
             queryset_structures = queryset_structures.for_apps(obj.limit_contacts_to_user_from_app).distinct()
 
+        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+
         self.fields["recipients"].queryset = queryset_structures
-        self.fields["recipients_copy"].queryset = queryset_structures
+        self.fields["recipients_copy"].queryset = queryset
 
         if self._get_structures(obj):
             self.fields["recipients"].label = self._get_recipients_structures_only_label(obj)
-            self.fields["recipients_copy"].label = self._get_recipients_copy_structures_only_label(obj)
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
 
         self.handle_files(kwargs)
         self.set_labels()
