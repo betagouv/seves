@@ -440,12 +440,14 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     groups = (settings.SSA_GROUP, settings.SV_GROUP)
     contact = ContactStructureFactory(structure__libelle="Foo", with_one_active_agent__with_groups=groups)
     contact_cc = ContactStructureFactory(structure__libelle="Bar", with_one_active_agent__with_groups=groups)
+    contact_cc_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_demande_intervention()
     message_page.pick_recipient(contact.structure, choice_js_fill)
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc.structure, choice_js_fill)
+    message_page.pick_recipient_copy(contact_cc_agent.agent, choice_js_fill)
     message_page.save_as_draft_message()
 
     expect((message_page.page.get_by_text("Nouvelle demande d'intervention"))).to_be_visible()
@@ -472,7 +474,11 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
         )
     ).to_be_visible()
     expect(new_page.get_by_text(f"À : {contact.display_with_agent_unit}", exact=True)).to_be_visible()
-    expect(new_page.get_by_text(f"CC : {contact_cc.display_with_agent_unit}", exact=True)).to_be_visible()
+    expect(
+        new_page.get_by_text(
+            f"CC : {contact_cc.display_with_agent_unit}, {contact_cc_agent.display_with_agent_unit}", exact=True
+        )
+    ).to_be_visible()
 
 
 def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page, object):
