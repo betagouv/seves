@@ -408,11 +408,21 @@ class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
 class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouveau compte rendu sur demande d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
+    recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     content = MessageContentField()
 
     def __init__(self, *args, sender, obj, **kwargs):
         super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.COMPTE_RENDU)
+
+        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+
+        if hasattr(obj, "limit_contacts_to_user_from_app"):
+            queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
+
+        self.fields["recipients_copy"].queryset = queryset
+        if self._get_structures(obj):
+            self.fields["recipients_copy"].label = self._get_recipients_copy_label(obj)
 
         self.handle_files(kwargs)
         self.set_labels()
@@ -426,6 +436,7 @@ class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
         model = Message
         fields = [
             "recipients",
+            "recipients_copy",
             "title",
             "content",
         ]
