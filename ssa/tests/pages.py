@@ -201,6 +201,7 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
 
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
+        self.source.select_option(evenement_produit.source)
         self.description.fill(evenement_produit.description)
 
     def set_categorie_produit(self, evenement_produit, clear_input=False):
@@ -588,8 +589,9 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     def navigate_update_page(self, evenement):
         self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-update', kwargs={'pk': evenement.pk})}")
 
-    def fill_required_fields(self, evenement_produit):
-        self.description.fill(evenement_produit.description)
+    def fill_required_fields(self, evenement):
+        self.description.fill(evenement.description)
+        self.source.select_option(evenement.source)
 
     def _submit(self, locator: Locator, *, wait_for=None):
         wait_for = wait_for or "/details/"
