@@ -1,8 +1,9 @@
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import MUS_STRUCTURE
+from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import Message
+from core.pages import CreateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
     generic_test_can_add_and_see_message_in_new_tab_without_document,
@@ -28,9 +29,9 @@ from core.tests.generic_tests.messages import (
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
 )
+from seves import settings
 from tiac.factories import EvenementSimpleFactory
 from tiac.models import EvenementSimple
-from tiac.tests.pages import EvenementSimpleDetailsPage
 
 
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
@@ -75,21 +76,30 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
 
 def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill, mus_contact):
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
+    contact_copy_agent = ContactAgentFactory(with_active_agent__with_groups=[settings.SSA_GROUP])
+    contact_copy_structure = ContactStructureFactory(with_one_active_agent__with_groups=[settings.SSA_GROUP])
 
-    details_page = EvenementSimpleDetailsPage(page, live_server.url)
-    details_page.navigate(evenement)
-    details_page.page.get_by_test_id("element-actions").click()
-    details_page.page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_compte_rendu()
     expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
-    details_page.add_recipient_to_message(MUS_STRUCTURE, choice_js_fill)
-    details_page.add_message_content_and_send()
+    message_page.add_basic_message_content()
+    message_page.pick_recipient(mus_contact.structure, choice_js_fill)
+    message_page.pick_recipient_copy(contact_copy_agent.agent, choice_js_fill)
+    message_page.pick_recipient_copy(contact_copy_structure.structure, choice_js_fill)
+    message_page.submit_message()
 
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
 
-    assert details_page.fil_de_suivi_sender == "Structure Test"
-    assert details_page.fil_de_suivi_recipients == "MUS"
-    assert details_page.fil_de_suivi_title == "Title of the message"
-    assert details_page.fil_de_suivi_type == "Compte rendu sur demande d'intervention"
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == "MUS"
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Compte rendu sur demande d'intervention"
+
+    message = evenement.messages.get()
+    assert message.recipients_copy.all().count() == 2
+    assert contact_copy_structure in message.recipients_copy.all()
+    assert contact_copy_agent in message.recipients_copy.all()
 
 
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
