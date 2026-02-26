@@ -155,6 +155,9 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
 
+        if not self.instance.pk:
+            self.fields["source"].required = True
+
     def clean(self):
         super().clean()
         if self.cleaned_data["categorie_danger"] not in CategorieDanger.dangers_bacteriens():
@@ -264,6 +267,8 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
+        if not self.instance.pk:
+            self.fields["source"].required = True
 
     def danger_plus_courants(self):
         return [
