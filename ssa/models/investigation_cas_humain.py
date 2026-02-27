@@ -136,3 +136,8 @@ class EvenementInvestigationCasHumain(
                     self.numero_annee = annee
                     self.numero_evenement = numero
                 super().save(*args, **kwargs)
+
+    def get_prefetch_for_revision_list_view(self):
+        from ssa.models import Etablissement
+
+        return [("_prefetched_etablissements", Etablissement.objects.filter(investigation_cas_humain=self))]

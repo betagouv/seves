@@ -1,16 +1,19 @@
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
+import pytest
+import reversion
 
 from core.factories import DepartementFactory, MessageFactory
 from core.models import LienLibre
+from core.pages import WithDocumentsPage
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
 
 
 def test_can_view_evenement_produit_history(live_server, page):
-    evenement = EvenementProduitFactory()
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     evenement.description = "I changed"
     evenement.save()
 
@@ -20,7 +23,7 @@ def test_can_view_evenement_produit_history(live_server, page):
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
     update_page.add_etablissement_with_required_fields(etablissement)
-    update_page.submit_as_draft()
+    update_page.publish()
 
     etablissement.raison_sociale = "New"
     etablissement.numeros_resytal = "123456"
@@ -33,7 +36,18 @@ def test_can_view_evenement_produit_history(live_server, page):
     modal.locator('[id$="enseigne_usuelle"]').fill(etablissement.enseigne_usuelle)
     modal.locator('[id$="-numeros_resytal"]').fill(etablissement.numeros_resytal)
     update_page.close_etablissement_modal()
-    update_page.submit_as_draft()
+    update_page.publish()
+
+    document_page = WithDocumentsPage(page)
+    document_page.add_basic_document()
+    document_page.validate_document_modal()
+    assert evenement.documents.count() == 1
+
+    document = evenement.documents.get()
+    document_page.open_edit_document(document.id)
+    document_page.document_edit_title(document.id).fill("New name of doc")
+    document_page.document_edit_description(document.id).fill("My description")
+    document_page.document_edit_save(document.id)
 
     message = MessageFactory(content_object=evenement)
     message.is_deleted = True
@@ -58,6 +72,9 @@ def test_can_view_evenement_produit_history(live_server, page):
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
                 "One line created for each modification of the etablissement",
+                "One line for the document that was uploaded",
+                "One line for the edit of the document (title)",
+                "One line for the edit of the document (description)",
                 "One for the deletion of the message",
                 "One for creation of the LienLibre",
                 "One for deletion of the LienLibre",
@@ -67,3 +84,58 @@ def test_can_view_evenement_produit_history(live_server, page):
 
     expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été ajouté à la fiche", exact=True)).to_be_visible()
     expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été supprimé à la fiche", exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_can_evenement_produit_history_performances_with_etablissement(client, django_assert_max_num_queries):
+    evenement = EvenementProduitFactory()
+    evenement.description = "I changed"
+    evenement.save()
+    base_queries = 30
+
+    content_type = ContentType.objects.get_for_model(EvenementProduit)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+
+    with django_assert_max_num_queries(base_queries):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 2
+
+    with reversion.create_revision():
+        EtablissementFactory(evenement_produit=evenement)
+        evenement.save()
+    with django_assert_max_num_queries(base_queries + 8):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 3
+
+    with reversion.create_revision():
+        EtablissementFactory(evenement_produit=evenement)
+        evenement.save()
+    with django_assert_max_num_queries(base_queries + 17):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 4
+
+
+@pytest.mark.django_db
+def test_can_evenement_produit_history_performances_with_messages(client, django_assert_max_num_queries):
+    evenement = EvenementProduitFactory()
+    base_queries = 22
+
+    content_type = ContentType.objects.get_for_model(EvenementProduit)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+
+    with django_assert_max_num_queries(base_queries):
+        client.get(url)
+
+    with reversion.create_revision():
+        MessageFactory.create(content_object=evenement)
+        evenement.save()
+    with django_assert_max_num_queries(base_queries + 7):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 2
+
+    with reversion.create_revision():
+        MessageFactory.create(content_object=evenement)
+        evenement.save()
+    with django_assert_max_num_queries(base_queries + 16):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 3
