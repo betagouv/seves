@@ -35,11 +35,11 @@ textarea {
 }
 
 fieldset.form-fieldset {
-    margin: 0;
-    padding: 1.25rem;
     --idle: transparent;
     --hover: var(--background-default-grey-hover);
     --active: var(--background-default-grey-active);
+    padding: 1.25rem;
+    margin: 0;
     background-color: var(--background-default-grey);
     border: none;
 }
@@ -47,8 +47,8 @@ fieldset.form-fieldset {
 fieldset.form-fieldset .fr-fieldset__legend {
     float: left;
     width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
     padding-right: 0;
+    padding-left: 0;
+    margin-right: 0;
+    margin-left: 0;
 }

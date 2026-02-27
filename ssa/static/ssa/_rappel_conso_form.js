@@ -41,9 +41,7 @@ document.documentElement.addEventListener("dsfr.ready", () => {
     }
 
     function deleteRappelConso(event) {
-        rappelConso = rappelConso.filter(function (item) {
-            return item != event.target.innerText
-        })
+        rappelConso = rappelConso.filter(item => item !== event.target.innerText)
         showRappelConso()
     }
 
@@ -52,7 +50,7 @@ document.documentElement.addEventListener("dsfr.ready", () => {
     }
 
     function goToNextIfNeeded(element) {
-        if (element.value.length == element.maxLength) {
+        if (element.value.length === element.maxLength) {
             element.nextElementSibling.focus()
         }
     }
@@ -88,7 +86,7 @@ document.documentElement.addEventListener("dsfr.ready", () => {
     })
 
     rappelContainer.forEach(input => input.addEventListener("input", handleDisabledRappelConsoBtn))
-    if (!!submitDraftBtn) {
+    if (submitDraftBtn) {
         submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     }
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)

@@ -10,7 +10,7 @@ function setUpOrganismeNuisible() {
         let found = false
         const statutElement = document.getElementById("id_statut_reglementaire")
         statusToNuisibleId.forEach(status => {
-            if (status.nuisibleIds.includes(parseInt(event.detail.value))) {
+            if (status.nuisibleIds.includes(parseInt(event.detail.value, 10))) {
                 statutElement.value = status.statusID
                 statutElement.dispatchEvent(new Event("change"))
                 found = true
@@ -23,7 +23,7 @@ function setUpOrganismeNuisible() {
     })
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     setUpOrganismeNuisible()
     setUpFreeLinks(document.getElementById("id_free_link"), document.getElementById("free-links-id"))
 })

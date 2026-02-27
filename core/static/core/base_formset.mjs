@@ -1,5 +1,4 @@
 import {Controller} from "Stimulus"
-import {useStore} from "StimulusStore"
 
 /**
  * @property {boolean} hasEmptyFormTplTarget

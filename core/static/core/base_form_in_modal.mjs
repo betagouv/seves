@@ -1,5 +1,5 @@
-import {Controller} from "Stimulus"
 import {collectFormValues, removeRequired} from "Forms"
+import {Controller} from "Stimulus"
 
 /**
  * Base controller for forms that generate cards and handle deletion.
@@ -58,37 +58,37 @@ export class BaseFormInModal extends Controller {
     /**
      * Initializes the card with form data.
      * @abstract
-     * @param {Object} data - The data to display.
+     * @param {Object} _data - The data to display.
      */
-    initCard(data) {
+    initCard(_data) {
         throw new Error("initCard must be implemented in the child class.")
     }
 
     /**
      * Renders the HTML for the card.
      * @abstract
-     * @param {Object} data - The data to render.
+     * @param {Object} _data - The data to render.
      * @returns {string} HTML
      */
-    renderCard(data) {
+    renderCard(_data) {
         throw new Error("renderCard must be implemented in the child class.")
     }
 
     /**
      * @abstract
-     * @param {Object} data
+     * @param {Object} _data
      * @return {string}
      */
-    getDeleteConfirmationSentence(data) {
+    getDeleteConfirmationSentence(_data) {
         throw new Error("getDeleteConfirmationSentence must be implemented in the child class.")
     }
 
     /**
      * @abstract
-     * @param {Object} data
+     * @param {Object} _data
      * @return {string}
      */
-    getDeleteConfirmationTitle(data) {
+    getDeleteConfirmationTitle(_data) {
         throw new Error("getDeleteConfirmationTitle must be implemented in the child class.")
     }
 

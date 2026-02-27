@@ -6,12 +6,12 @@ const modalHTMLContent = {}
 function fetchEspecesEchantillon(query) {
     return fetch(`/sv/api/espece/recherche/?q=${query}`)
         .then(response => response.json())
-        .then(data => {
-            return data.results.map(item => ({
+        .then(data =>
+            data.results.map(item => ({
                 value: item.id,
                 label: item.name,
-            }))
-        })
+            })),
+        )
         .catch(error => {
             console.error("Erreur lors de la récupération des données:", error)
             return []
@@ -26,7 +26,7 @@ function addChoicesEspeceEchantillon(element) {
         searchResultLimit: 50,
         position: "top",
     })
-    choicesEspece.input.element.addEventListener("input", function (event) {
+    choicesEspece.input.element.addEventListener("input", () => {
         const query = choicesEspece.input.element.value
         if (query.length >= 2) {
             fetchEspecesEchantillon(query).then(results => {
@@ -67,10 +67,8 @@ function duplicatePrelevement(evt) {
 
 function deletePrelevement(event) {
     const id = event.target.dataset.id
-    document.prelevementCards = document.prelevementCards.filter(function (item) {
-        return item.id !== id
-    })
-    resetForm(document.getElementById("modal-add-edit-prelevement-" + id))
+    document.prelevementCards = document.prelevementCards.filter(item => item.id !== id)
+    resetForm(document.getElementById(`modal-add-edit-prelevement-${id}`))
     displayPrelevementsCards()
     dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.conceal()
 }
@@ -83,18 +81,18 @@ function displayPrelevementsCards() {
         const clone = prelevementTemplateElement.cloneNode(true)
         clone.classList.remove("fr-hidden")
         clone.querySelector(".prelevement-nom").textContent = card.structure
-        clone.querySelector(".prelevement-lieu").textContent = "Lieu : " + card.lieu
+        clone.querySelector(".prelevement-lieu").textContent = `Lieu·:·${card.lieu}`
         clone.querySelector(".prelevement-type").textContent = `${card.officiel} | ${card.resultat}`
         clone.querySelector(".prelevement-delete-btn").setAttribute("data-id", card.id)
         clone
             .querySelector(".prelevement-delete-btn")
-            .setAttribute("aria-describedby", "tooltip-delete-prelevement-" + card.id)
-        clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-prelevement-" + card.id)
+            .setAttribute("aria-describedby", `tooltip-delete-prelevement-${card.id}`)
+        clone.querySelector(".delete-tooltip").setAttribute("id", `tooltip-delete-prelevement-${card.id}`)
         clone
             .querySelector(".prelevement-edit-btn")
-            .setAttribute("aria-controls", "modal-add-edit-prelevement-" + card.id)
-        clone.querySelector(".prelevement-edit-btn").setAttribute("aria-describedby", "tooltip-prelevement-" + card.id)
-        clone.querySelector(".edit-tooltip").setAttribute("id", "tooltip-prelevement-" + card.id)
+            .setAttribute("aria-controls", `modal-add-edit-prelevement-${card.id}`)
+        clone.querySelector(".prelevement-edit-btn").setAttribute("aria-describedby", `tooltip-prelevement-${card.id}`)
+        clone.querySelector(".edit-tooltip").setAttribute("id", `tooltip-prelevement-${card.id}`)
         clone.querySelector(".prelevement-delete-btn").addEventListener("click", event => {
             dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
             document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)
@@ -251,7 +249,7 @@ function handleModalClose(event) {
     dsfr(modal).modal.conceal()
 }
 
-;(function () {
+;(() => {
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)

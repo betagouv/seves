@@ -21,8 +21,8 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
     }
     return fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=15`, init)
         .then(response => response.json())
-        .then(data => {
-            return data["features"].map(item => ({
+        .then(data =>
+            data.features.map(item => ({
                 value: item.properties.name,
                 label: item.properties.label,
                 customProperties: {
@@ -30,8 +30,8 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
                     city: item.properties.city,
                     context: item.properties.context,
                 },
-            }))
-        })
+            })),
+        )
         .catch(error => {
             if (error.name === "AbortError") return undefined
             console.error("Erreur lors de la récupération des données:", error)
@@ -51,7 +51,7 @@ export function setUpAddressChoices(element) {
         addressCommunes.abortController = new AbortController()
     }
 
-    addressCommunes.input.element.addEventListener("input", function (event) {
+    addressCommunes.input.element.addEventListener("input", () => {
         const query = addressCommunes.input.element.value
         addressCommunes.clearChoices()
         if (query.length === 0) {

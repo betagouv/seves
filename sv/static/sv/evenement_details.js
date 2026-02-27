@@ -1,4 +1,4 @@
-import {ViewManager, evenementViewModeConfig} from "ViewManager"
+import {evenementViewModeConfig, ViewManager} from "ViewManager"
 
 function showOnlyActionsForDetection(detectionId) {
     document.querySelectorAll('[id^="detection-actions-"]').forEach(element => {
@@ -42,14 +42,14 @@ function showImage(element, direction) {
 
     let button = null
     if (direction === "left") {
-        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) - 1}"]`)
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail, 10) - 1}"]`)
     } else {
-        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail) + 1}"]`)
+        button = document.querySelector(`[data-thumbnail="${parseInt(modalBtn.dataset.thumbnail, 10) + 1}"]`)
     }
     button.click()
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         selectZoneTab()
     }, 500)
@@ -72,12 +72,12 @@ document.addEventListener("DOMContentLoaded", function () {
     initializeDetectionTags()
 
     document.querySelectorAll(".next-modal").forEach(element => {
-        element.addEventListener("click", event => {
+        element.addEventListener("click", () => {
             showImage(element, "right")
         })
     })
     document.querySelectorAll(".previous-modal").forEach(element => {
-        element.addEventListener("click", event => {
+        element.addEventListener("click", () => {
             showImage(element, "left")
         })
     })

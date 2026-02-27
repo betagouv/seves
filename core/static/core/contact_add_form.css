@@ -5,8 +5,8 @@ label[for="id_contacts_agents"] {
 }
 .contact-form-container {
     display: flex;
-    align-items: center;
     gap: 1rem;
+    align-items: center;
 }
 .contact-form-input {
     flex-grow: 1;

@@ -1,4 +1,4 @@
-import {Application as StimulusApp, Controller} from "Stimulus"
+import {Controller, Application as StimulusApp} from "Stimulus"
 
 // Drop when adoption is 99%; see https://caniuse.com/wf-promise-withresolvers
 if (typeof Promise.withResolvers !== "function") {

@@ -17,8 +17,8 @@ main {
 }
 #lieux,
 #prelevements {
-    overflow-y: auto;
     max-height: 690px;
+    overflow-y: auto;
 }
 
 /* -- Styles des blocs (intérieur) -- */
@@ -27,15 +27,15 @@ main {
 #lieux,
 #prelevements,
 #mesures-gestion {
-    background-color: white;
     padding: 1.5rem;
+    background-color: white;
 }
 
 /* Entête (titre et boutons) */
 #fiche-detection-form-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 #fiche-detection-form-header h1 {
     margin-bottom: 0.5rem;
@@ -45,8 +45,8 @@ main {
 #informations-content {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    column-gap: 4rem;
     row-gap: 1rem;
+    column-gap: 4rem;
 }
 #date-creation,
 #statut-evenement {
@@ -74,13 +74,13 @@ main {
 /* Lieux */
 #lieux-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
 }
 #lieux .lieu-nom {
+    margin-bottom: 0.5rem;
     font-weight: bold;
     color: black;
-    margin-bottom: 0.5rem;
 }
 #lieux .lieu-header {
     display: flex;
@@ -132,9 +132,9 @@ main {
 
 .lieu-initial,
 .prelevement {
-    background-color: #e3e3fd;
-    margin-bottom: 1rem;
     padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #e3e3fd;
 }
 .etablissement-fields {
     display: none;
@@ -156,22 +156,22 @@ main {
 /* Prélèvements */
 #prelevements-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
 }
 .prelevement-header {
     display: flex;
     justify-content: space-between;
 }
 .prelevement-nom {
+    margin-bottom: 0.5rem;
     font-weight: bold;
     color: black;
-    margin-bottom: 0.5rem;
 }
 .prelevement-type {
+    margin-bottom: 0.5rem;
     font-weight: bold;
     color: #000091;
-    margin-bottom: 0.5rem;
 }
 #prelevements .prelevement-edit-btn,
 #prelevements .prelevement-delete-btn {

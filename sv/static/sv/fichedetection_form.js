@@ -13,7 +13,7 @@ function setUpOrganismeNuisible() {
         let found = false
         const statutElement = document.getElementById("id_statut_reglementaire")
         statusToNuisibleId.forEach(status => {
-            if (status.nuisibleIds.includes(parseInt(event.detail.value))) {
+            if (status.nuisibleIds.includes(parseInt(event.detail.value, 10))) {
                 statutElement.value = status.statusID
                 statutElement.dispatchEvent(new Event("change"))
                 found = true
@@ -30,7 +30,7 @@ function hasStatusToOrganismeNuisibleData() {
     return document.getElementById("status-to-organisme-nuisible-id") !== null
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("cancel-link").addEventListener("click", event => {
         event.preventDefault()
         window.location = document.referrer

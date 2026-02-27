@@ -1,5 +1,5 @@
+import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import choicesDefaults from "choicesDefaults"
-import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener("DOMContentLoaded", () => {
     function handleNoticeProduitDisplay(options, value) {

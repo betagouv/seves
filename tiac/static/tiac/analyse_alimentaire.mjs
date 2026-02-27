@@ -1,8 +1,8 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
-import {collectFormValues} from "Forms"
+import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
 import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
+import {collectFormValues} from "Forms"
 
 /**
  * @typedef AnalyseAlimentaireData
@@ -94,7 +94,7 @@ class AlimentFormController extends BaseFormInModal {
         const checkbox = this.categorieDangerContainerTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
         checkbox.checked = !checkbox.checked
 
-        let valuesToSet = this.treeselect.value
+        const valuesToSet = this.treeselect.value
         if (checkbox.checked) {
             valuesToSet.push(value)
         } else {

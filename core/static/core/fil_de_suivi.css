@@ -4,10 +4,10 @@
 
 .cell-link {
     display: block !important;
-    padding-right: 1.5rem !important;
-    padding-left: 1.5rem !important;
     padding-top: 0.75rem !important;
+    padding-right: 1.5rem !important;
     padding-bottom: 0.75rem !important;
+    padding-left: 1.5rem !important;
 }
 .fil-de-suivi td a {
     background-image: none !important;
@@ -19,8 +19,8 @@
 }
 
 .message-filter {
-    flex-grow: 0.4;
     display: flex;
+    flex-grow: 0.4;
 }
 .message-filter .fr-input-group {
     flex-grow: 1;

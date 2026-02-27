@@ -1,5 +1,5 @@
 import {applicationReady} from "Application"
-import {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset} from "DocumentUploads"
+import {BaseDocumentFormset, DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm} from "DocumentUploads"
 
 class DocumentFormset extends BaseDocumentFormset {
     onModalClose() {

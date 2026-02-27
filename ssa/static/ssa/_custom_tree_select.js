@@ -6,7 +6,7 @@ export function patchItems(element) {
             // Show checkbox / radio is the element can be selected
             if (!itemElement.classList.contains("treeselect-list__item--non-selectable-group")) {
                 const checkboxContainer = itemElement.querySelector(".treeselect-list__item-checkbox-container")
-                if (!!checkboxContainer) {
+                if (checkboxContainer) {
                     checkboxContainer.style.display = "initial"
                 }
             }
@@ -82,10 +82,10 @@ export function hideHeader(element, headerClass) {
 export function shortcutClicked(event, treeselect, input) {
     const label = event.target.getElementsByTagName("label")[0]
     const value = label.textContent.trim()
-    const checkbox = treeselect.srcElement.querySelector("[id$=" + label.getAttribute("for") + "]")
+    const checkbox = treeselect.srcElement.querySelector(`[id$=${label.getAttribute("for")}]`)
     checkbox.checked = !checkbox.checked
 
-    let valuesToSet = treeselect.value
+    const valuesToSet = treeselect.value
     if (checkbox.checked) {
         valuesToSet.push(value)
     } else {
@@ -107,7 +107,7 @@ export function addCategoryHeader(element, text, position) {
     if (element.dataset.headerAdded === "true") {
         return
     }
-    let list = element.querySelector(".treeselect-list")
+    const list = element.querySelector(".treeselect-list")
     const div = document.createElement("div")
     div.textContent = text
     div.classList.add("fr-ml-1v")

@@ -1,19 +1,19 @@
 @media (min-width: 62em) {
     .fr-header__body-row {
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
         min-height: 4rem;
+        padding-top: 0.75rem !important;
+        padding-right: 1.5rem !important;
+        padding-bottom: 0.75rem !important;
+        padding-left: 1.5rem !important;
     }
 }
 
 .fr-header__tools-links .fr-btn--header-blue {
     --hover: var(--background-action-high-blue-france-hover);
-    background-color: var(--background-action-high-blue-france);
-    color: var(--text-inverted-blue-france);
-    margin-right: 1rem !important;
     padding: 0.5rem 1rem !important;
+    margin-right: 1rem !important;
+    color: var(--text-inverted-blue-france);
+    background-color: var(--background-action-high-blue-france);
 }
 
 .fr-header__body-row .fr-btns-group .fr-btn {
@@ -30,9 +30,9 @@
 .fr-icon-ri[class*=" ri-"]:before,
 .fr-icon-ri[class^="ri-"]:after,
 .fr-icon-ri[class^="ri-"]:before {
-    background-color: transparent;
-    font-size: var(--icon-size);
     align-self: baseline;
+    font-size: var(--icon-size);
+    background-color: transparent;
 }
 
 .fr-header .fr-nav__list {
@@ -88,10 +88,10 @@
 }
 
 .fr-container-xxl {
-    max-width: 90rem;
-    margin-left: auto;
-    margin-right: auto;
     width: 100%;
+    max-width: 90rem;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 /* Fixes behavior of .fr-links in .fr-btns-group */
@@ -124,24 +124,24 @@
 }
 
 .fr-progress {
-    background-color: transparent;
-    border-radius: 2px;
-    height: 0.312rem;
+    position: relative;
     display: block;
+    width: 100%;
+    height: 0.312rem;
     margin: 0;
     overflow: hidden;
-    position: relative;
-    width: 100%;
+    background-color: transparent;
+    border-radius: 2px;
 }
 
 .fr-progress.fr-progress--indeterminate:before,
 .fr-progress.fr-progress--indeterminate:after {
-    content: "";
     position: absolute;
-    background-color: var(--border-plain-info);
     top: 0;
-    left: 0;
     bottom: 0;
+    left: 0;
+    content: "";
+    background-color: var(--border-plain-info);
     will-change: left, right;
 }
 

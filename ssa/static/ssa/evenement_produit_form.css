@@ -1,6 +1,6 @@
 .main-container label {
-    margin-bottom: 0.5rem;
     display: inline-block;
+    margin-bottom: 0.5rem;
 }
 
 .main-container input,
@@ -11,13 +11,13 @@
 
 .evenement-produit-form-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
 .evenement-produit-form-header .action-buttons {
-    margin: var(--title-spacing);
     display: flex;
+    margin: var(--title-spacing);
 }
 
 .evenement-produit-form-header .action-buttons .fr-link {
@@ -80,6 +80,6 @@
 }
 
 .treeselect-list__item-checkbox-container {
-    border-radius: 40px !important;
     margin-right: 10px;
+    border-radius: 40px !important;
 }

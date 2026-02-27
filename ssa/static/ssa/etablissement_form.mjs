@@ -1,8 +1,8 @@
 import {setUpAddressChoices} from "BanAutocomplete"
-import {setUpSiretChoices} from "siret"
 import {formIsValid, removeRequired} from "Forms"
+import {setUpSiretChoices} from "siret"
 
-let modalEtablissementHTMLContent = {}
+const modalEtablissementHTMLContent = {}
 
 const prefix = document.querySelector("#etablissement-template").dataset.prefix
 
@@ -28,9 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
         addressChoices.passedElement.element.addEventListener("choice", event => {
             modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
             modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
-            if (!!event.detail.customProperties.context) {
+            if (event.detail.customProperties.context) {
                 modal.querySelector("[id$=pays]").value = "FR"
-                const [num, dept, reg, ...rest] = event.detail.customProperties.context.split(/\s*,\s*/)
+                const [num, _dept, _reg, ..._rest] = event.detail.customProperties.context.split(/\s*,\s*/)
                 modal.querySelector("[id$=departement]").value = num
             }
         })
@@ -47,8 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
             field.closest("dialog").querySelector("[id$=code_insee]").value = codeCommune
             field.closest("dialog").querySelector("[id$=pays]").value = "FR"
 
-            if (!!event.detail.customProperties.streetData) {
-                let result = [
+            if (event.detail.customProperties.streetData) {
+                const result = [
                     {
                         value: event.detail.customProperties.streetData,
                         label: event.detail.customProperties.streetData,
@@ -61,8 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
             fetch(`/ssa/api/find-numero-agrement/?siret=${event.detail.customProperties.siret}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (!!data["numero_agrement"]) {
-                        field.closest("dialog").querySelector("[id$=agrement]").value = data["numero_agrement"]
+                    if (data.numero_agrement) {
+                        field.closest("dialog").querySelector("[id$=agrement]").value = data.numero_agrement
                     }
                 })
 
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function setupEtablisementModal(modal) {
-        let addressChoices = setupAdresseField(modal)
+        const addressChoices = setupAdresseField(modal)
         setupSiretBlock(modal, addressChoices)
 
         modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return
                 }
                 removeRequired(modal)
-                if (!!modalEtablissementHTMLContent[nextIdToUse]) {
+                if (modalEtablissementHTMLContent[nextIdToUse]) {
                     event.target
                         .querySelector(".fr-modal__content")
                         .replaceWith(modalEtablissementHTMLContent[nextIdToUse])
@@ -131,14 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getEtablissementCard(baseCard, currentModal, currentID) {
-        if (!!baseCard.querySelector(".etablissement-card")) {
+        if (baseCard.querySelector(".etablissement-card")) {
             baseCard.querySelector(".etablissement-card").id = `etablissement-card-${getPrefix(currentID)}`
         }
 
         const enseigneUsuelle = currentModal.querySelector("[id$=enseigne_usuelle]").value
         const raisonSociale = currentModal.querySelector("[id$=raison_sociale]").value
 
-        if (!!enseigneUsuelle) {
+        if (enseigneUsuelle) {
             baseCard.querySelector(".raison-sociale").textContent = enseigneUsuelle
             baseCard.querySelector(".card-subtitle").textContent = raisonSociale
             baseCard.querySelector(".card-subtitle").classList.remove("fr-hidden")
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const typeExploitant = currentModal.querySelector("[id$=type_exploitant]").value
         if (typeExploitant != null) {
-            baseCard.querySelector(".type-exploitant").innerText = "Type exploitant : " + typeExploitant
+            baseCard.querySelector(".type-exploitant").innerText = `Type exploitant : ${typeExploitant}`
             baseCard.querySelector(".type-exploitant").classList.remove("fr-hidden")
         }
 
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const numeroAgrementValue = currentModal.querySelector("[id$=numero_agrement]").value
-        if (!!numeroAgrementValue) {
+        if (numeroAgrementValue) {
             baseCard.querySelector(".numero-agrement").textContent = `N° d'agrément : ${numeroAgrementValue}`
             baseCard.querySelector(".numero-agrement").classList.remove("fr-hidden")
         } else {
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseCard.querySelector(".position-dossier").classList.remove("fr-hidden")
             const extraClass = positionDossierInput.options[positionDossierInput.selectedIndex].dataset.extraClass
             const basePositionDossier = baseCard.querySelector(".position-dossier")
-            if (!!extraClass) {
+            if (extraClass) {
                 basePositionDossier.classList.add(extraClass)
             } else {
                 basePositionDossier.classList.value = basePositionDossier.dataset.resetClasses

@@ -5,15 +5,15 @@
 }
 
 .bloc-commun-gestion .fr-tabs__tab:not([aria-selected="true"]) {
+    color: var(--text-action-high-grey);
     background-color: var(--background-contrast-grey);
     box-shadow: 0 2px 0 0 var(--background-open-blue-france);
-    color: var(--text-action-high-grey);
 }
 
 .bloc-commun-gestion .fr-tabs__tab[aria-selected="true"] {
+    color: var(--background-active-blue-france);
     background-color: var(--background-open-blue-france);
     box-shadow: 0 2px 0 0 var(--background-open-blue-france);
-    color: var(--background-active-blue-france);
 }
 .bloc-commun-gestion .fr-tabs__panel {
     background-color: var(--background-open-blue-france);
@@ -24,8 +24,8 @@
     align-items: end;
 }
 .no-border {
-    box-shadow: none !important;
     margin-bottom: 0px !important;
+    box-shadow: none !important;
 }
 .document-deleted td {
     background-color: var(--background-disabled-grey) !important;

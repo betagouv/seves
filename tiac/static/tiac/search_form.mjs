@@ -1,15 +1,15 @@
-import {Controller} from "Stimulus"
 import {applicationReady} from "Application"
-import {resetForm} from "Forms"
-import choicesDefaults from "choicesDefaults"
 import {
-    patchItems,
-    tsDefaultOptions,
-    showHeader,
-    addLevel2CategoryIfAllChildrenAreSelected,
-    shortcutClicked,
     addCategoryHeader,
+    addLevel2CategoryIfAllChildrenAreSelected,
+    patchItems,
+    shortcutClicked,
+    showHeader,
+    tsDefaultOptions,
 } from "CustomTreeSelect"
+import choicesDefaults from "choicesDefaults"
+import {resetForm} from "Forms"
+import {Controller} from "Stimulus"
 
 class SearchFormController extends Controller {
     static targets = [
