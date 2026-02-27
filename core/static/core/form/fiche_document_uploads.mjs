@@ -1,6 +1,5 @@
-import {applicationReady} from "Application"
-import {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset} from "DocumentUploads"
-
+import { applicationReady } from "Application"
+import { DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset } from "DocumentUploads"
 
 class DocumentFormset extends BaseDocumentFormset {
     onModalClose() {
@@ -9,7 +8,7 @@ class DocumentFormset extends BaseDocumentFormset {
     }
 }
 
-applicationReady.then(app => {
+applicationReady.then((app) => {
     app.register(DOCUMENT_FORM_ID, DocumentForm)
     app.register(DOCUMENT_FORMSET_ID, DocumentFormset)
 })

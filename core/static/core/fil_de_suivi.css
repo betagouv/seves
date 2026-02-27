@@ -1,39 +1,39 @@
 .fil-de-suivi td {
-        padding: 0px !important;
+    padding: 0px !important;
 }
 
-.cell-link{
-        display: block !important;
-        padding-right: 1.5rem !important;
-        padding-left: 1.5rem !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
+.cell-link {
+    display: block !important;
+    padding-right: 1.5rem !important;
+    padding-left: 1.5rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
 }
 .fil-de-suivi td a {
-        background-image: none !important;
+    background-image: none !important;
 }
 
-.fil-de-suivi tr:hover td{
-        background: var(--background-alt-grey) !important;
-        border-bottom: 1px var(--border-contrast-grey) solid !important;
+.fil-de-suivi tr:hover td {
+    background: var(--background-alt-grey) !important;
+    border-bottom: 1px var(--border-contrast-grey) solid !important;
 }
 
 .message-filter {
-        flex-grow: 0.4;
-        display: flex;
+    flex-grow: 0.4;
+    display: flex;
 }
 .message-filter .fr-input-group {
-        flex-grow: 1;
+    flex-grow: 1;
 }
 #id_full_text_search {
-        margin-top: 0 !important;
+    margin-top: 0 !important;
 }
 .message-actions .fr-translate__btn {
-        padding: .5rem 1rem;
-        font-size: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
 }
 
 .message-actions .fr-translate .fr-translate__btn::before {
-        -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
-        mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+    mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }

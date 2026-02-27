@@ -1,15 +1,10 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
-import {applicationReady} from "Application";
-import {collectFormValues} from 'Forms'
-
+import { BaseFormSetController } from "BaseFormset"
+import { BaseFormInModal } from "BaseFormInModal"
+import { applicationReady } from "Application"
+import { collectFormValues } from "Forms"
 
 class RepasFormController extends BaseFormInModal {
-    static targets = [
-        "denominationInput",
-        "typeCollectiviteInputContainer",
-        "typeCollectiviteInput",
-    ]
+    static targets = ["denominationInput", "typeCollectiviteInputContainer", "typeCollectiviteInput"]
 
     connect() {
         if (this.shouldImmediatelyShowValue) {
@@ -17,9 +12,9 @@ class RepasFormController extends BaseFormInModal {
         } else {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
-                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
-                    skipValidation: true
-                })
+                    nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+                    skipValidation: true,
+                }),
             )
         }
     }
@@ -30,30 +25,29 @@ class RepasFormController extends BaseFormInModal {
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onTypeRepasChoice(event){
+    onTypeRepasChoice(event) {
         const selectedOption = event.target.options[event.target.selectedIndex]
-        if (selectedOption.getAttribute('data-needs-type-collectivite') === 'true') {
+        if (selectedOption.getAttribute("data-needs-type-collectivite") === "true") {
             this.typeCollectiviteInputContainerTarget.classList.remove("fr-hidden")
         } else {
             this.typeCollectiviteInputContainerTarget.classList.add("fr-hidden")
             this.typeCollectiviteInputTarget.value = ""
         }
-
     }
 
     initCard(repas) {
-        this.shouldImmediatelyShowValue = false;
-        this.cardContainerTargets.forEach(it => it.remove())
+        this.shouldImmediatelyShowValue = false
+        this.cardContainerTargets.forEach((it) => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(repas))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(repas))
         dsfr(this.dialogTarget).modal.conceal()
     }
 
-    getDeleteConfirmationSentence(repas){
+    getDeleteConfirmationSentence(repas) {
         return `Confimez-vous vouloir supprimer le repas ${repas.denomination} ?`
     }
 
-    getDeleteConfirmationTitle(repas){
+    getDeleteConfirmationTitle(repas) {
         return "Suppression d'un repas"
     }
 
@@ -94,7 +88,7 @@ class RepasFormController extends BaseFormInModal {
     }
 }
 
-applicationReady.then(app => {
+applicationReady.then((app) => {
     app.register("repas-formset", BaseFormSetController)
     app.register("repas-form", RepasFormController)
 })

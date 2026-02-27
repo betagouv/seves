@@ -13,7 +13,7 @@
     background-color: var(--background-action-high-blue-france);
     color: var(--text-inverted-blue-france);
     margin-right: 1rem !important;
-    padding: .5rem 1rem !important;
+    padding: 0.5rem 1rem !important;
 }
 
 .fr-header__body-row .fr-btns-group .fr-btn {
@@ -28,8 +28,8 @@
 /* Enbables using Remix icons with DSFR styles */
 .fr-icon-ri[class*=" ri-"]:after,
 .fr-icon-ri[class*=" ri-"]:before,
-.fr-icon-ri[class^=ri-]:after,
-.fr-icon-ri[class^=ri-]:before {
+.fr-icon-ri[class^="ri-"]:after,
+.fr-icon-ri[class^="ri-"]:before {
     background-color: transparent;
     font-size: var(--icon-size);
     align-self: baseline;
@@ -97,7 +97,7 @@
 /* Fixes behavior of .fr-links in .fr-btns-group */
 .fr-btns-group .fr-link {
     align-self: center !important;
-    margin: 0 .5rem 1rem !important;
+    margin: 0 0.5rem 1rem !important;
 }
 
 .btn-add-group .fr-menu {
@@ -117,7 +117,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-
 }
 
 .fr-textarea-grow .fr-input-group textarea {
@@ -137,7 +136,7 @@
 
 .fr-progress.fr-progress--indeterminate:before,
 .fr-progress.fr-progress--indeterminate:after {
-    content: '';
+    content: "";
     position: absolute;
     background-color: var(--border-plain-info);
     top: 0;
@@ -146,7 +145,7 @@
     will-change: left, right;
 }
 
-.fr-progress.fr-progress--indeterminate:before{
+.fr-progress.fr-progress--indeterminate:before {
     -webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
     animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
 }
@@ -154,65 +153,65 @@
     -webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
     animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
     -webkit-animation-delay: 1.15s;
-    animation-delay: 1.15s
+    animation-delay: 1.15s;
 }
 
 @-webkit-keyframes indeterminate {
     0% {
         left: -35%;
-        right: 100%
+        right: 100%;
     }
     60% {
         left: 100%;
-        right: -90%
+        right: -90%;
     }
     100% {
         left: 100%;
-        right: -90%
+        right: -90%;
     }
 }
 
 @keyframes indeterminate {
     0% {
         left: -35%;
-        right: 100%
+        right: 100%;
     }
     60% {
         left: 100%;
-        right: -90%
+        right: -90%;
     }
     100% {
         left: 100%;
-        right: -90%
+        right: -90%;
     }
 }
 
 @-webkit-keyframes indeterminate-short {
     0% {
         left: -200%;
-        right: 100%
+        right: 100%;
     }
     60% {
         left: 107%;
-        right: -8%
+        right: -8%;
     }
     100% {
         left: 107%;
-        right: -8%
+        right: -8%;
     }
 }
 
 @keyframes indeterminate-short {
     0% {
         left: -200%;
-        right: 100%
+        right: 100%;
     }
     60% {
         left: 107%;
-        right: -8%
+        right: -8%;
     }
     100% {
         left: 107%;
-        right: -8%
+        right: -8%;
     }
 }

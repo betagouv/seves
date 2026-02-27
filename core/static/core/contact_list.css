@@ -6,24 +6,24 @@
 }
 .contact-agent .name,
 .contact-structure .libelle {
-    font-size: .875rem;
+    font-size: 0.875rem;
     font-weight: bold;
 }
 .contact-agent .email,
 .contact-structure .email {
-    font-size: .75rem;
+    font-size: 0.75rem;
 }
 
 .contact-agent .phone {
-    font-size: .875rem;
+    font-size: 0.875rem;
     text-align: center;
 }
 
 @media (min-width: 992px) and (max-width: 1248px) {
     .contact-agent .structure {
-        font-size: .70rem;
+        font-size: 0.7rem;
     }
     .contact-agent .phone {
-        font-size: .75rem;
+        font-size: 0.75rem;
     }
 }

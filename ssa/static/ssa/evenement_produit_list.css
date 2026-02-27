@@ -1,4 +1,5 @@
-.fr-fieldset__element:has([id=id_categorie_produit]), .fr-fieldset__element:has([id=id_categorie_danger]) {
+.fr-fieldset__element:has([id="id_categorie_produit"]),
+.fr-fieldset__element:has([id="id_categorie_danger"]) {
     display: None;
 }
 
@@ -10,11 +11,15 @@
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 1rem;
-    align-items: stretch
+    align-items: stretch;
 }
 
-.filter-grid-2 { grid-column: span 2; }
-.filter-grid-4 { grid-column: span 4; }
+.filter-grid-2 {
+    grid-column: span 2;
+}
+.filter-grid-4 {
+    grid-column: span 4;
+}
 
 .with_free_links .fr-checkbox-group {
     margin-bottom: 0 !important;

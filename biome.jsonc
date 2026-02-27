@@ -1,0 +1,38 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120,
+        "useEditorconfig": true,
+        "bracketSpacing": false
+    },
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "source": {
+                "useSortedProperties": {
+                    "level": "on",
+                    "options": {}
+                }
+            }
+        }
+    },
+    "files": {
+        "includes": ["**/*.js", "**/*.css", "!**/treeselectjs.umd.js", "!venv/**"]
+    },
+    "vcs": {
+        "useIgnoreFile": true
+    },
+    "javascript": {
+        "formatter": {
+            "semicolons": "asNeeded",
+            "arrowParentheses": "asNeeded",
+            "bracketSpacing": false,
+            /* like Python */
+            "operatorLinebreak": "before"
+        },
+        "globals": ["dsfr", "Choices"]
+    }
+}

@@ -11,14 +11,14 @@
     background-repeat: no-repeat;
     background-size: 1rem 1rem;
     border: 0 !important;
-    border-radius: .25rem .25rem 0 0 !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
     box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
     color: var(--treeselect-text-color) !important;
     display: block;
     font-size: 1rem !important;
     line-height: 1.5rem;
-    padding: .5rem 2.5rem .5rem 1rem !important;
-    margin-top: .5rem !important;
+    padding: 0.5rem 2.5rem 0.5rem 1rem !important;
+    margin-top: 0.5rem !important;
     width: 100%;
 }
 
@@ -40,7 +40,7 @@
 
 .treeselect-list {
     border: 1px solid var(--border-default-grey) !important;
-    border-radius: .25rem !important;
+    border-radius: 0.25rem !important;
     margin-top: 0.125rem;
 }
 
@@ -49,14 +49,14 @@
 }
 
 .treeselect-list__item-icon {
-    fill : var(--text-action-high-blue-france);
+    fill: var(--text-action-high-blue-france);
 }
 
 .treeselect-list__item {
     height: 2.25rem !important;
 }
 
-.treeselect-list__item-label{
+.treeselect-list__item-label {
     font-size: 1rem !important;
     margin-bottom: 0 !important;
     padding-left: 0 !important;
@@ -68,19 +68,18 @@
     background-color: var(--background-contrast-grey) !important;
 }
 
-.treeselect-list__item[level="1"]{
-    border-bottom: 1px solid #BBBBBB;
+.treeselect-list__item[level="1"] {
+    border-bottom: 1px solid #bbbbbb;
     padding-left: 20px !important;
 }
 
-
 .treeselect-list__item[level="2"] {
-    background-color: #DDDDDD;
+    background-color: #dddddd;
     padding-left: 40px !important;
 }
 
 .treeselect-list__group-container .treeselect-list__item--focused {
-    background-color : #dfdfdf !important
+    background-color: #dfdfdf !important;
 }
 
 .treeselect-list__item--checked .treeselect-list__item-checkbox-container {
@@ -89,9 +88,9 @@
 
 .treeselect-list__item-icon {
     width: 100% !important;
-    order: 2
+    order: 2;
 }
-.treeselect-list__item-icon svg{
+.treeselect-list__item-icon svg {
     width: 20px !important;
     order: 2;
     margin-left: auto;
