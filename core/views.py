@@ -1,3 +1,4 @@
+from collections import defaultdict
 import contextlib
 import json
 import logging
@@ -8,7 +9,6 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Prefetch, prefetch_related_objects
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -541,32 +541,33 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             .exclude(serialized_data={})
         )
 
-        obj_ct = ContentType.objects.get_for_model(self.object)
-
-        models = [(Message, "messages"), (Document, "documents")]
-        object_ids = [v.object_id for v in qs]
-        for related_model, prefetch_name in models:
-            related_qs = related_model.objects.filter(content_type=obj_ct, object_id__in=object_ids)
-            for version in qs:
-                prefetch_related_objects([version._object_version.object], Prefetch(prefetch_name, queryset=related_qs))
-        return qs
-
-        # TODO idée de v2?
+        # V1
         # obj_ct = ContentType.objects.get_for_model(self.object)
-        # object_ids = [v.object_id for v in qs]
         #
         # models = [(Message, "messages"), (Document, "documents")]
-        #
+        # object_ids = [v.object_id for v in qs]
         # for related_model, prefetch_name in models:
         #     related_qs = related_model.objects.filter(content_type=obj_ct, object_id__in=object_ids)
-        #
-        #     related_map = defaultdict(list)
-        #     for obj in related_qs:
-        #         related_map[obj.object_id].append(obj)
-        #
         #     for version in qs:
-        #         obj = version._object_version.object
-        #         setattr(obj, f"_prefetched_{prefetch_name}", related_map.get(obj.pk, []))
+        #         prefetch_related_objects([version._object_version.object], Prefetch(prefetch_name, queryset=related_qs))
+        # return qs
+
+        # TODO idée de v2?
+        obj_ct = ContentType.objects.get_for_model(self.object)
+        object_ids = [v.object_id for v in qs]
+
+        models = [(Message, "messages"), (Document, "documents")]
+
+        for related_model, prefetch_name in models:
+            related_qs = related_model.objects.filter(content_type=obj_ct, object_id__in=object_ids)
+
+            related_map = defaultdict(list)
+            for obj in related_qs:
+                related_map[obj.object_id].append(obj)
+
+            for version in qs:
+                obj = version._object_version.object
+                setattr(obj, f"_prefetched_{prefetch_name}", related_map.get(obj.pk, []))
 
         return qs
 

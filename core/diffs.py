@@ -89,7 +89,13 @@ class CompareObject(InitialCompareObject):
         if not isinstance(self.field, GenericRelation):
             raise NotImplementedError
 
-        ids = {str(v.pk) for v in getattr(obj, self.field_name).all()}
+        prefetch_attr = f"_prefetched_{self.field_name}"
+        if hasattr(obj, prefetch_attr):
+            related_objects = getattr(obj, prefetch_attr, None)
+        else:
+            related_objects = getattr(obj, self.field_name).all()
+
+        ids = {str(v.pk) for v in related_objects}
 
         # Get the related model of the current field:
         related_model = self.field.remote_field.model
