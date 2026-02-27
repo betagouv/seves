@@ -3,24 +3,23 @@ main {
     margin: 2rem 1.5rem;
 }
 
-
 /* -- Grid pour les blocs informations, objet de l'évènement, lieux, prélèvements et mesures de gestion -- */
-#fiche-detection-form{
+#fiche-detection-form {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 1.5rem;
 }
-#informations{
+#informations {
     grid-column: span 3;
 }
-#mesures-gestion{
+#mesures-gestion {
     grid-column: span 3;
 }
-#lieux, #prelevements {
+#lieux,
+#prelevements {
     overflow-y: auto;
     max-height: 690px;
 }
-
 
 /* -- Styles des blocs (intérieur) -- */
 #informations,
@@ -93,70 +92,66 @@ main {
     margin-bottom: 0;
 }
 
-
-
 #modal-add-edit-lieu-title,
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
 }
 
-[id^=lieu-form] p, [id^=lieu-form] .commune {
+[id^="lieu-form"] p,
+[id^="lieu-form"] .commune {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-[id^=lieu-form] p label, [id^=lieu-form] .commune label {
+[id^="lieu-form"] p label,
+[id^="lieu-form"] .commune label {
     flex: 0.75;
 }
-[id^=lieu-form] p input,
-[id^=lieu-form] p textarea,
+[id^="lieu-form"] p input,
+[id^="lieu-form"] p textarea,
 #lieu-form .adresse-lieu .choices,
 #lieu-form .commune .choices,
-#lieu-form .adresse-etablissement .choices
-{
+#lieu-form .adresse-etablissement .choices {
     flex: 1.25;
-    margin-top: .5rem;
+    margin-top: 0.5rem;
 }
-[id^=lieu-form] p select {
+[id^="lieu-form"] p select {
     flex: 1.15;
 }
-[id^=lieu-form] .character-counter {
+[id^="lieu-form"] .character-counter {
     text-align: right;
 }
-[id^=lieu-form] .wgs-latitude-field{
+[id^="lieu-form"] .wgs-latitude-field {
     flex: 0.55;
-    margin-top: .5rem;
+    margin-top: 0.5rem;
 }
-[id^=lieu-form] .wgs-longitude-field{
+[id^="lieu-form"] .wgs-longitude-field {
     flex: 0.55;
-    margin-right: .5rem;
+    margin-right: 0.5rem;
 }
-
 
 .lieu-initial,
 .prelevement {
-    background-color: #E3E3FD;
+    background-color: #e3e3fd;
     margin-bottom: 1rem;
     padding: 1rem;
 }
 .etablissement-fields {
     display: none;
 }
-.etablissement-fields--lookup{
+.etablissement-fields--lookup {
     text-align: center;
 }
-.etablissement-fields--lookup .fr-search-bar{
+.etablissement-fields--lookup .fr-search-bar {
     text-align: start;
 }
 .fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields,
 .fr-modal__content.is-etablissement .etablissement-fields {
     display: block;
 }
-.fr-search-bar .choices{
+.fr-search-bar .choices {
     flex: 1.25;
 }
-
-
 
 /* Prélèvements */
 #prelevements-header {
@@ -187,19 +182,16 @@ main {
     margin-bottom: 0.5rem;
 }
 
-
-[id^=modal-add-edit-prelevement] .fr-input:not(textarea) {
+[id^="modal-add-edit-prelevement"] .fr-input:not(textarea) {
     max-height: 2rem !important;
 }
 
-[id^=modal-add-edit-prelevement] .fr-select {
+[id^="modal-add-edit-prelevement"] .fr-select {
     line-height: 1rem !important;
 }
 
-
-
 /* Mesures de gestion */
-#mesures-gestion-content{
+#mesures-gestion-content {
     display: flex;
     gap: 2rem;
 }
@@ -221,7 +213,6 @@ label[for="id_contexte"],
 label[for="id_date_premier_signalement"],
 label[for="id_commentaire"],
 label[for^="commune"],
-label[for^="id_lieux-"][for$="-wgs84_longitude"]
-{
+label[for^="id_lieux-"][for$="-wgs84_longitude"] {
     font-weight: bold;
 }

@@ -1,4 +1,4 @@
-.no-tab-look .fr-tabs__panel{
+.no-tab-look .fr-tabs__panel {
     padding: 0px !important;
     border: none !important;
 }
@@ -8,10 +8,10 @@
     order: 0 !important;
     flex-wrap: wrap;
 }
-.no-tab-look .fr-tabs__list li{
+.no-tab-look .fr-tabs__list li {
     margin-bottom: 5px;
 }
-.no-tab-look::before{
+.no-tab-look::before {
     box-shadow: none !important;
 }
 [id^="detection-actions-"] {
@@ -21,11 +21,11 @@
     min-width: 440px;
     margin-left: auto;
 }
-.fr-btn--delete{
+.fr-btn--delete {
     color: var(--text-default-error);
     background-color: transparent;
 }
-.fr-btn--delete:hover{
+.fr-btn--delete:hover {
     color: white;
     background-color: var(--text-default-error) !important;
 }
@@ -35,7 +35,7 @@
 .zone-button .fr-btn {
     height: 100%;
 }
-.main-container .fr-translate__btn{
+.main-container .fr-translate__btn {
     max-width: 200px !important;
     align-self: flex-end;
 }
@@ -52,7 +52,7 @@
     color: var(--text-mention-grey);
     margin-bottom: 0.5rem;
 }
-.fr-tag--tertiary{
+.fr-tag--tertiary {
     background-color: transparent !important;
     border: 1px solid var(--background-action-high-blue-france);
     color: var(--background-action-high-blue-france);

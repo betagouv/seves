@@ -1,8 +1,8 @@
-body{
+body {
     background-color: var(--background-default-grey);
 }
 
-.evenements__list-table{
+.evenements__list-table {
     border-collapse: collapse;
 }
 .evenements__table-header {
@@ -22,8 +22,8 @@ body{
     background-color: var(--background-contrast-grey) !important;
 }
 .evenements__list-row td {
-    padding-top: 0.50rem !important;
-    padding-bottom: 0.50rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
 }
 .evenement__list-organisme {
     display: -webkit-box !important;
@@ -36,9 +36,9 @@ body{
 .ac-not-notified {
     background-color: var(--background-contrast-grey);
     min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: .25rem;
+    padding: 0 0.5rem;
+    border-radius: 0.25rem;
 }
-.evenements__list-row .fr-checkbox-group input[type="checkbox"] + label::before{
+.evenements__list-row .fr-checkbox-group input[type="checkbox"] + label::before {
     top: -10px !important;
 }

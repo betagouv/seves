@@ -17,7 +17,8 @@
 .info-text {
     color: var(--text-mention-grey);
 }
-#organisme-nuisible-label, #statut-reglementaire-label {
+#organisme-nuisible-label,
+#statut-reglementaire-label {
     font-weight: bold;
 }
 

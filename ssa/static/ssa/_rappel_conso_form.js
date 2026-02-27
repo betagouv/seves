@@ -1,5 +1,5 @@
 let rappelConso = []
-document.documentElement.addEventListener('dsfr.ready', () => {
+document.documentElement.addEventListener("dsfr.ready", () => {
     const rappelPart1Container = document.getElementById("rappel-1")
     const rappelPart2Container = document.getElementById("rappel-2")
     const rappelPart3Container = document.getElementById("rappel-3")
@@ -18,8 +18,8 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         handleDisabledRappelConsoBtn()
     }
 
-    function initExistingRappelConso(){
-        if (!document.getElementById("id_numeros_rappel_conso").value) return;
+    function initExistingRappelConso() {
+        if (!document.getElementById("id_numeros_rappel_conso").value) return
         rappelConso = document.getElementById("id_numeros_rappel_conso").value.split(",")
         showRappelConso()
     }
@@ -48,10 +48,10 @@ document.documentElement.addEventListener('dsfr.ready', () => {
     }
 
     function handleDisabledRappelConsoBtn() {
-        addRappelConsoBtn.disabled = rappelContainer.some(input => input.value.trim() === '');
+        addRappelConsoBtn.disabled = rappelContainer.some(input => input.value.trim() === "")
     }
 
-    function goToNextIfNeeded(element){
+    function goToNextIfNeeded(element) {
         if (element.value.length == element.maxLength) {
             element.nextElementSibling.focus()
         }
@@ -67,11 +67,11 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         }
         const values = Array.from(document.querySelectorAll("#rappel-container .fr-tag")).map(e => e.innerText)
         document.getElementById("id_numeros_rappel_conso").value = values.join(",")
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'action';
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = "action"
         input.value = event.target.value
-        form.appendChild(input);
+        form.appendChild(input)
         form.submit()
     }
 
@@ -79,16 +79,16 @@ document.documentElement.addEventListener('dsfr.ready', () => {
         event.preventDefault()
         for (const input of rappelContainer) {
             if (!input.checkValidity()) {
-                input.reportValidity();
-                return;
+                input.reportValidity()
+                return
             }
         }
         addRappelConso()
         showRappelConso()
     })
 
-    rappelContainer.forEach(input => input.addEventListener('input', handleDisabledRappelConsoBtn))
-    if (!!submitDraftBtn){
+    rappelContainer.forEach(input => input.addEventListener("input", handleDisabledRappelConsoBtn))
+    if (!!submitDraftBtn) {
         submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     }
     submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)

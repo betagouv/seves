@@ -1,7 +1,6 @@
-import {Controller} from "Stimulus"
-import {COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool} from "Application"
-import {createStore, useStore} from "StimulusStore"
-
+import { Controller } from "Stimulus"
+import { COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool } from "Application"
+import { createStore, useStore } from "StimulusStore"
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
@@ -18,30 +17,30 @@ const globalFileTypeIndexStore = createStore({
     name: "globalFileTypeIndex",
     type: Number,
     initialValue: 0,
-});
+})
 
 const fileStore = createStore({
     name: "files",
     type: Object,
     initialValue: {},
-});
+})
 
 const allowedExtensionsStore = createStore({
     name: "allowedExtensions",
     type: Object,
     initialValue: {},
-});
+})
 
 class FormValidationError extends Error {
     constructor() {
-        super("Invalid form");
+        super("Invalid form")
         this.name = "FormValidationError"
     }
 }
 
 class ServerError extends Error {
     constructor() {
-        super("Server error");
+        super("Server error")
         this.name = "ServerError"
     }
 }
@@ -93,10 +92,10 @@ class BaseDocumentFormset extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
 
     static values = {
-        state: {type: Number, default: DOCUMENT_STATE.IDLE},
-        uploadDisabled: {type: Boolean, default: true},
+        state: { type: Number, default: DOCUMENT_STATE.IDLE },
+        uploadDisabled: { type: Boolean, default: true },
         allowedExtensions: Object,
-        nextUrl: {type: String, default: undefined},
+        nextUrl: { type: String, default: undefined },
         genericError: String,
     }
     static targets = [
@@ -117,7 +116,7 @@ class BaseDocumentFormset extends Controller {
     }
 
     getNextId() {
-        if(this._currentId === undefined) {
+        if (this._currentId === undefined) {
             this._currentId = 0
         }
         return this._currentId++
@@ -137,30 +136,33 @@ class BaseDocumentFormset extends Controller {
         this.submitBtnTarget.disabled = false
         this.errorContainerTarget.hidden = true
 
-        if(state === DOCUMENT_STATE.LOADING) {
+        if (state === DOCUMENT_STATE.LOADING) {
             this.modalTarget.classList.add(...this.loadingClasses)
             this.submitBtnTarget.disabled = true
-        } else if(state === DOCUMENT_STATE.ERROR) {
+        } else if (state === DOCUMENT_STATE.ERROR) {
             this.errorContainerTarget.hidden = false
         }
     }
 
     uploadDisabledValueChanged(value) {
-        if(this.documentFormOutlets.length === 0) {
+        if (this.documentFormOutlets.length === 0) {
             this.submitBtnTarget.disabled = value
         } else {
             this.submitBtnTarget.disabled = false
         }
-        if(value) {
+        if (value) {
             this.documentModalDragDropContainerTarget.classList.add(...this.uploadDisabledClasses)
         } else {
             this.documentModalDragDropContainerTarget.classList.remove(...this.uploadDisabledClasses)
         }
     }
 
-    onChangeType({target: {options, value}}) {
+    onChangeType({ target: { options, value } }) {
         this.uploadDisabledValue = value === ""
-        const optionIdx = Math.max(Array.from(options).findIndex(option => option.value === value), 0)
+        const optionIdx = Math.max(
+            Array.from(options).findIndex((option) => option.value === value),
+            0,
+        )
         this.setGlobalFileTypeIndexValue(optionIdx)
         this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[value || ""]
     }
@@ -184,12 +186,12 @@ class BaseDocumentFormset extends Controller {
     }
 
     /** @param {FileList} files */
-    onDrop({dataTransfer: {files}}) {
+    onDrop({ dataTransfer: { files } }) {
         this.processFiles(files)
     }
 
     /** @param {FileList} files */
-    onFileSelect({target: {files}}) {
+    onFileSelect({ target: { files } }) {
         this.processFiles(files)
     }
 
@@ -203,48 +205,51 @@ class BaseDocumentFormset extends Controller {
 
             let hasErrors = false
             const successFileNames = {}
-            const promiseResults = await Promise.allSettled(this.documentFormOutlets.map(controller => controller.submit()))
-            for(const promiseResult of promiseResults) {
-                if(promiseResult.status === "fulfilled") {
+            const promiseResults = await Promise.allSettled(
+                this.documentFormOutlets.map((controller) => controller.submit()),
+            )
+            for (const promiseResult of promiseResults) {
+                if (promiseResult.status === "fulfilled") {
                     successFileNames[promiseResult.value.pk] = promiseResult.value.documentName
                 } else {
                     hasErrors = true
                 }
             }
 
-            this.dispatch(
-                COMMON_EVENTS.DOCUMENT_SUCCESS,
-                {detail: {[COMMON_EVENTS.DOCUMENT_SUCCESS]: successFileNames}, target: window, prefix: "window"}
-            )
+            this.dispatch(COMMON_EVENTS.DOCUMENT_SUCCESS, {
+                detail: { [COMMON_EVENTS.DOCUMENT_SUCCESS]: successFileNames },
+                target: window,
+                prefix: "window",
+            })
 
-            if(hasErrors) {
+            if (hasErrors) {
                 // Focus first erroneous field
                 const autofocus = this.modalTarget.querySelector("[autofocus]")
-                autofocus?.scrollIntoView({block: "center"})
-                autofocus?.focus({focusVisible: true})
+                autofocus?.scrollIntoView({ block: "center" })
+                autofocus?.focus({ focusVisible: true })
                 throw FormValidationError
             }
 
             this.stateValue = DOCUMENT_STATE.IDLE
-            this.dispatch(COMMON_EVENTS.ALL_DOCUMENTS_SUCCES, {target: window, prefix: "window"})
+            this.dispatch(COMMON_EVENTS.ALL_DOCUMENTS_SUCCES, { target: window, prefix: "window" })
             requestAnimationFrame(() => {
                 dsfr(this.modalTarget).modal.conceal()
             })
-        } catch(_) {
+        } catch (_) {
             this.stateValue = DOCUMENT_STATE.ERROR
         }
     }
 
     /** @param {FileList} files */
     processFiles(files) {
-        if(this.uploadDisabledValue) return;
+        if (this.uploadDisabledValue) return
 
-        for(const file of files) {
+        for (const file of files) {
             const nextId = this.getNextId()
-            this.setFilesValue(value => ({...value, [nextId]: file}))
+            this.setFilesValue((value) => ({ ...value, [nextId]: file }))
             this.formsetContainerTarget.insertAdjacentHTML(
                 "beforeend",
-                this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId)
+                this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId),
             )
         }
 
@@ -282,9 +287,9 @@ class BaseDocumentFormset extends Controller {
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
     static values = {
-        state: {type: Number, default: DOCUMENT_STATE.IDLE},
-        fileId: {type: Number, default: -1},
-        deleteUrl: {type: String, default: ""}
+        state: { type: Number, default: DOCUMENT_STATE.IDLE },
+        fileId: { type: Number, default: -1 },
+        deleteUrl: { type: String, default: "" },
     }
     static targets = [
         "form",
@@ -307,7 +312,7 @@ class DocumentForm extends Controller {
         useStore(this)
         const dataAction = [
             this.element.dataset.action || "",
-            `window:${COMMON_EVENTS.DOCUMENT_DELETE}@window->${this.identifier}#onDocumentRemoved`
+            `window:${COMMON_EVENTS.DOCUMENT_DELETE}@window->${this.identifier}#onDocumentRemoved`,
         ]
         this.element.dataset.action = dataAction.join(" ").trim()
         /** @type {AbortController | null} */
@@ -318,22 +323,22 @@ class DocumentForm extends Controller {
         this.element.classList.remove(...this.loadingClasses, ...this.errorClasses, ...this.deletingClasses)
         this.deleteBtnTarget.disabled = false
 
-        if(state === DOCUMENT_STATE.LOADING) {
+        if (state === DOCUMENT_STATE.LOADING) {
             this.deleteBtnTarget.disabled = true
             this.element.classList.add(...this.loadingClasses)
-        } else if(state === DOCUMENT_STATE.DELETING) {
+        } else if (state === DOCUMENT_STATE.DELETING) {
             this.deleteBtnTarget.disabled = true
             this.element.classList.add(...this.deletingClasses)
-        } else if(state === DOCUMENT_STATE.SUCCESS) {
+        } else if (state === DOCUMENT_STATE.SUCCESS) {
             this.element.classList.add(...this.successClasses)
-        } else if(state === DOCUMENT_STATE.ERROR) {
+        } else if (state === DOCUMENT_STATE.ERROR) {
             this.element.classList.add(...this.errorClasses)
         }
     }
 
     /** @param {HTMLFormElement} form */
     formTargetConnected(form) {
-        for(let element of form.elements) {
+        for (let element of form.elements) {
             const previousValue = element.dataset.action || ""
             element.dataset.action = `invalid->${this.identifier}#onInvalid ${previousValue}`
         }
@@ -341,8 +346,8 @@ class DocumentForm extends Controller {
 
     /** @param {HTMLInputElement} el */
     documentFileTargetConnected(el) {
-        if(this.fileIdValue >= 0) {
-            const dataTransfer = new DataTransfer();
+        if (this.fileIdValue >= 0) {
+            const dataTransfer = new DataTransfer()
             dataTransfer.items.add(this.filesValue[this.fileIdValue])
             this.documentFileTarget.files = dataTransfer.files
         }
@@ -351,7 +356,7 @@ class DocumentForm extends Controller {
 
     /** @param {HTMLSelectElement} el */
     documentTypeTargetConnected(el) {
-        if(el.value === "") {
+        if (el.value === "") {
             el.options[this.globalFileTypeIndexValue].selected = true
         }
         el.dispatchEvent(new Event("change"))
@@ -367,49 +372,46 @@ class DocumentForm extends Controller {
      *          Returns the name and id of the document that was successfully uploaded.
      */
     async submit() {
-        if(!this.formTarget.reportValidity()) throw FormValidationError()
+        if (!this.formTarget.reportValidity()) throw FormValidationError()
 
         try {
             this.stateValue = DOCUMENT_STATE.LOADING
             this.abortController = new AbortController()
             /** @type {Response} */
-            const result = await fetchPool(
-                this.formTarget.action,
-                {
-                    method: this.formTarget.method,
-                    body: new FormData(this.formTarget),
-                    redirect: "error",
-                    signal: this.abortController.signal
-                }
-            )
+            const result = await fetchPool(this.formTarget.action, {
+                method: this.formTarget.method,
+                body: new FormData(this.formTarget),
+                redirect: "error",
+                signal: this.abortController.signal,
+            })
 
-            if(result.ok || result.status === 400) {
+            if (result.ok || result.status === 400) {
                 this.element.innerHTML = await result.text()
             }
 
-            if(result.status === 500) {
+            if (result.status === 500) {
                 throw new ServerError()
             }
 
-            if(result.ok) {
+            if (result.ok) {
                 this.stateValue = DOCUMENT_STATE.SUCCESS
                 return {
                     pk: this.element.querySelector('[name="id"]').value,
-                    documentName: escapeHTML(this.documentNameTarget.value.trim())
+                    documentName: escapeHTML(this.documentNameTarget.value.trim()),
                 }
             } else {
                 throw new FormValidationError()
             }
-        } catch(e) {
+        } catch (e) {
             this.stateValue = DOCUMENT_STATE.ERROR
-            if(!(e instanceof FormValidationError)) {
+            if (!(e instanceof FormValidationError)) {
                 console.error(e)
                 // TypeError means the request never reach the backend
                 // See https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch#exceptions
-                if(e instanceof TypeError) {
+                if (e instanceof TypeError) {
                     this.documentNameTarget.insertAdjacentHTML("afterend", this.networkErrorTplTarget.innerHTML)
                     this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
-                } else if(e instanceof ServerError) {
+                } else if (e instanceof ServerError) {
                     this.documentNameTarget.insertAdjacentHTML("afterend", this.serverErrorTplTarget.innerHTML)
                     this.documentNameTarget.closest(".fr-input-group").classList.add("fr-input-group--error")
                 }
@@ -423,22 +425,22 @@ class DocumentForm extends Controller {
 
     /** @param {Event} evt */
     async onInvalid(evt) {
-        if(this.skipEvent === true) return;
+        if (this.skipEvent === true) return
         evt.preventDefault()
         evt.stopPropagation()
         await Promise.all([
             dsfrDisclosePromise(dsfr(this.documentFormsetOutlet.modalTarget).modal),
-            this.#forceOpenAccordion()
+            this.#forceOpenAccordion(),
         ])
         try {
             this.skipEvent = true
             let target = evt.target
-            if(evt.target === this.documentFileTarget) {
+            if (evt.target === this.documentFileTarget) {
                 // Affect any file validation error to `[name="nom"]` field so it is visible
                 this.documentNameTarget.setCustomValidity(evt.target.validationMessage)
                 target = this.documentNameTarget
             }
-            target.scrollIntoView({block: "center"})
+            target.scrollIntoView({ block: "center" })
             target.reportValidity()
         } finally {
             this.skipEvent = false
@@ -446,15 +448,15 @@ class DocumentForm extends Controller {
     }
 
     /** @param {FileList} files */
-    onFileChanged({target: {files}}) {
-        if(this.documentNameTarget.value.trim() === "") {
+    onFileChanged({ target: { files } }) {
+        if (this.documentNameTarget.value.trim() === "") {
             this.documentNameTarget.value = files.length === 0 ? "" : files[0].name
             this.documentNameTarget.dispatchEvent(new Event("input"))
         }
     }
 
-    onDocumentRemoved({detail}) {
-        if(detail[COMMON_EVENTS.DOCUMENT_DELETE] === this.inputIdTarget.value) {
+    onDocumentRemoved({ detail }) {
+        if (detail[COMMON_EVENTS.DOCUMENT_DELETE] === this.inputIdTarget.value) {
             this.element.remove()
         }
     }
@@ -462,37 +464,36 @@ class DocumentForm extends Controller {
     async onDelete() {
         try {
             this.stateValue = DOCUMENT_STATE.DELETING
-            if(this.deleteUrlValue.length > 0) {
+            if (this.deleteUrlValue.length > 0) {
                 this.abortController = new AbortController()
-                await fetchPool(this.deleteUrlValue, {method: "POST"})
+                await fetchPool(this.deleteUrlValue, { method: "POST" })
             }
             this.element.remove()
-            this.dispatch(
-                COMMON_EVENTS.DOCUMENT_DELETE,
-                {detail: {[COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value}, target: window, prefix: "window"}
-            )
+            this.dispatch(COMMON_EVENTS.DOCUMENT_DELETE, {
+                detail: { [COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value },
+                target: window,
+                prefix: "window",
+            })
         } finally {
             this.stateValue = DOCUMENT_STATE.IDLE
             this.abortController = null
         }
     }
 
-    onDocumentNameChanged({target: {value}}) {
+    onDocumentNameChanged({ target: { value } }) {
         this.accordionTitleTarget.textContent = value
     }
 
-    onDocumentTypeChanged({target: {value}}) {
-        const option = Array.from(this.documentTypeTarget.options).find(
-            option => option.value === value
-        )
+    onDocumentTypeChanged({ target: { value } }) {
+        const option = Array.from(this.documentTypeTarget.options).find((option) => option.value === value)
         this.accordionTypeLabelTarget.textContent = option.textContent
-        if(this.hasDocumentFileTarget) {
+        if (this.hasDocumentFileTarget) {
             this.documentFileTarget.accept = this.documentFormsetOutlet.allowedExtensionsValue[option.value]
         }
     }
 
     onModify() {
-        if(this.accordionContentTarget.classList.contains("fr-collapse--expanded")) {
+        if (this.accordionContentTarget.classList.contains("fr-collapse--expanded")) {
             dsfr(this.accordionContentTarget).collapse.conceal()
         } else {
             dsfr(this.accordionContentTarget).collapse.disclose()
@@ -500,7 +501,7 @@ class DocumentForm extends Controller {
     }
 
     onModalClose() {
-        if(!this.hasInputIdTarget) {
+        if (!this.hasInputIdTarget) {
             this.abortController?.abort()
             this.element.remove()
         }
@@ -513,10 +514,9 @@ class DocumentForm extends Controller {
     }
 
     async #forceOpenAccordion() {
-        await new Promise(resolve => requestAnimationFrame(resolve))
+        await new Promise((resolve) => requestAnimationFrame(resolve))
         await dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse)
     }
 }
 
-
-export {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset}
+export { DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset }

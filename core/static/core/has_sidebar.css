@@ -1,33 +1,33 @@
 :root {
-  --sidebar-width: 480px;
+    --sidebar-width: 480px;
 }
 .sidebar {
-  width: var(--sidebar-width);
-  height: 100vh;
-  position: fixed;
-  top: 0px;
-  right: calc(-1 * var(--sidebar-width) - 20px);
-  transition: right 0.3s ease;
-  z-index: 1000;
-  overflow-y: scroll;
-  -webkit-box-shadow: -7px 0px 15px -6px rgba(0,0,0,0.85);
-  box-shadow: -7px 0px 15px -6px rgba(0,0,0,0.85);
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0px;
+    right: calc(-1 * var(--sidebar-width) - 20px);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: scroll;
+    -webkit-box-shadow: -7px 0px 15px -6px rgba(0, 0, 0, 0.85);
+    box-shadow: -7px 0px 15px -6px rgba(0, 0, 0, 0.85);
 }
 .body {
-  display: flex;
-  transition: transform 0.3s ease;
+    display: flex;
+    transition: transform 0.3s ease;
 }
-main{
-  flex: 1;
-  padding: 20px;
-  transition: transform 0.3s ease;
+main {
+    flex: 1;
+    padding: 20px;
+    transition: transform 0.3s ease;
 }
 .sidebar.open {
-  right: 0;
+    right: 0;
 }
 .main-container.open {
-  width: calc(100% - var(--sidebar-width) - 30px);
+    width: calc(100% - var(--sidebar-width) - 30px);
 }
 .close-sidebar-container {
-  text-align: right;
+    text-align: right;
 }
