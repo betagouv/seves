@@ -37,7 +37,6 @@ def test_can_view_evenement_produit_history(live_server, page):
     update_page.close_etablissement_modal()
     update_page.submit_as_draft()
 
-    # TODO why message not in table ?
     message = MessageFactory(content_object=evenement)
     message.is_deleted = True
     message.save()
@@ -83,15 +82,22 @@ def test_can_evenement_produit_history_performances_with_etablissement(client, d
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
 
     with django_assert_num_queries(base_queries):
-        client.get(url)
+        response = client.get(url)
+        assert len(response.context["patches"]) == 2
 
-    EtablissementFactory(evenement_produit=evenement)
-    with django_assert_num_queries(base_queries + 12):
-        client.get(url)
+    with reversion.create_revision():
+        EtablissementFactory(evenement_produit=evenement)
+        evenement.save()
+    with django_assert_num_queries(base_queries + 8):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 3
 
-    EtablissementFactory(evenement_produit=evenement)
-    with django_assert_num_queries(base_queries + 20):
-        client.get(url)
+    with reversion.create_revision():
+        EtablissementFactory(evenement_produit=evenement)
+        evenement.save()
+    with django_assert_num_queries(base_queries + 16):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 4
 
 
 @pytest.mark.django_db

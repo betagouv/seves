@@ -126,7 +126,7 @@ class QuantificationUnite(models.TextChoices):
         ]
 
 
-@reversion.register(follow=["contacts", "messages", "documents"])
+@reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementProduit(
     SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
