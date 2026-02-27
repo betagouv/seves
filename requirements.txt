@@ -88,7 +88,7 @@ django-dirtyfields==1.9.9
     # via -r requirements.in
 django-dsfr==3.3.0
     # via -r requirements.in
-django-environ==0.12.1
+django-environ==0.13.0
     # via -r requirements.in
 django-filter==25.2
     # via -r requirements.in
