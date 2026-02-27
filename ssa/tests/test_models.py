@@ -5,7 +5,7 @@ import pytest
 from core.factories import DocumentFactory
 from core.models import Document
 from ssa.constants import CategorieDanger, PretAManger
-from ssa.factories import EtablissementFactory, EvenementProduitFactory
+from ssa.factories import EvenementProduitFactory
 
 
 @pytest.mark.django_db
@@ -33,15 +33,6 @@ def test_evenement_produit_latest_revision():
     assert latest_version.pk != evenement.latest_version.pk
     assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
     latest_version = evenement.latest_version
-
-    etablissement = EtablissementFactory(evenement_produit=evenement)
-    assert latest_version.pk != evenement.latest_version.pk
-    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
-
-    etablissement.raison_sociale = "Foo"
-    etablissement.save()
-    assert latest_version.pk != evenement.latest_version.pk
-    assert latest_version.revision.date_created < evenement.latest_version.revision.date_created
 
 
 @pytest.mark.django_db

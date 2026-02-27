@@ -324,6 +324,10 @@ class Document(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.document_type})"
 
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE
@@ -410,6 +414,9 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     objects = MessageManager.from_queryset(MessagQueryset)()
 
+    show_nested_diff_in_revision_list = False
+    show_deleted_state_in_revision_list = False
+
     @classproperty
     def _base_objects(self):
         return self.objects.get_base_queryset()
@@ -425,7 +432,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
         self._initial_is_deleted = self.is_deleted
 
     def __str__(self):
-        return f"Message de type {self.message_type}: {self.content[:150]}..."
+        return f"{self.message_type}: {self.content[:150]}..."
 
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
@@ -444,6 +451,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     @property
     def is_draft(self):
         return self.status == self.Status.BROUILLON
+
+    @property
+    def is_finalise(self):
+        return self.status == self.Status.FINALISE
 
     def _is_owner(self, contact):
         return self.sender == contact
@@ -515,6 +526,13 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     def _user_can_interact(self, user):
         return self._is_owner(user.agent.contact_set.get())
+
+    def save(self, *args, **kwargs):
+        if self.is_finalise:
+            with reversion.create_revision():
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
 
 @reversion.register()
