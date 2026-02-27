@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
 from django.utils import timezone
+from django.utils.encoding import force_str
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
-from reversion_compare.compare import CompareObjects
+from reversion_compare.compare import CompareObject as InitialCompareObject, CompareObjects as InitialCompareObjects
 from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin, CompareMixin as OriginalCompareMixin
 
 from core.models import Agent, Structure
@@ -78,6 +80,106 @@ def create_manual_version(obj, comment, user=None):
     return revision
 
 
+class CompareObject(InitialCompareObject):
+    def get_reverse_generic_relation(self):
+        obj = self.get_object_version().object
+
+        if not isinstance(self.field, GenericRelation):
+            raise NotImplementedError
+
+        ct = ContentType.objects.get_for_model(obj, for_concrete_model=False)
+
+        qs = self.field.remote_field.model.objects.filter(
+            **{
+                self.field.content_type_field_name: ct,
+                self.field.object_id_field_name: obj.pk,
+            }
+        )
+
+        ids = {force_str(v.pk) for v in qs}
+
+        # Get the related model of the current field:
+        related_model = self.field.remote_field.model
+        return self.get_many_to_something(ids, related_model, is_reverse=True)
+
+
+class CompareObjects(InitialCompareObjects):
+    def __init__(self, field, field_name, obj, version1, version2, is_reversed):
+        self.field = field
+        self.field_name = field_name
+        self.obj = obj
+
+        # is a related field (ForeignKey, ManyToManyField etc.)
+        self.is_related = getattr(self.field, "related_model", None) is not None
+        self.is_reversed = is_reversed
+        if not self.is_related:
+            self.follow = None
+        elif self.field_name in _get_options(self.obj.__class__).follow:
+            self.follow = True
+        else:
+            self.follow = False
+
+        self.compare_obj1 = CompareObject(field, field_name, obj, version1, self.follow)
+        self.compare_obj2 = CompareObject(field, field_name, obj, version2, self.follow)
+
+        self.value1 = self.compare_obj1.value
+        self.value2 = self.compare_obj2.value
+
+        self.M2O_CHANGE_INFO = None
+        self.M2M_CHANGE_INFO = None
+        self.GENERIC_RELATION_CHANGE_INFO = None
+
+    def get_generic_relation_change_info(self):
+        if self.GENERIC_RELATION_CHANGE_INFO is not None:
+            return self.GENERIC_RELATION_CHANGE_INFO
+
+        version_1_data = self.compare_obj1.get_reverse_generic_relation()
+        version_2_data = self.compare_obj2.get_reverse_generic_relation()
+
+        self.GENERIC_RELATION_CHANGE_INFO = self.get_m2s_change_info(version_1_data, version_2_data)
+        return self.GENERIC_RELATION_CHANGE_INFO
+
+    def changed(self) -> bool:
+        info = None
+        if isinstance(self.field, GenericRelation):
+            info = self.get_generic_relation_change_info()
+            # version_1_data = self.compare_obj1.get_reverse_generic_relation()
+            # version_2_data = self.compare_obj2.get_reverse_generic_relation()
+            #
+            # data = self.get_m2s_change_info(version_1_data, version_2_data)
+            # # print(data)
+            # info = data
+            # info = {
+            #     "changed_items": "",
+            #     "removed_items": "",
+            #     "added_items": "",
+            #     "removed_missing_objects": "",
+            #     "added_missing_objects": "",
+            #     "deleted_items": "",
+            # }
+        else:
+            if hasattr(self.field, "get_internal_type") and self.field.get_internal_type() == "ManyToManyField":
+                info = self.get_m2m_change_info()
+
+            elif self.is_reversed:
+                info = self.get_m2o_change_info()
+        if info:
+            keys = (
+                "changed_items",
+                "removed_items",
+                "added_items",
+                "removed_missing_objects",
+                "added_missing_objects",
+                "deleted_items",
+            )
+            for key in keys:
+                if info[key]:
+                    return True
+            return False
+
+        return self.compare_obj1 != self.compare_obj2
+
+
 class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
     def _get_pretty_field(self, field, prefix=""):
         value = str(field)
@@ -106,6 +208,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
             f = getattr(field, "field", None)
             if isinstance(f, models.ForeignKey) and f not in fields:
                 self.reverse_fields.append(f.remote_field)
+            if isinstance(field, GenericRelation) and f not in fields:
+                self.reverse_fields.append(field)
 
         fields += self.reverse_fields
 
@@ -137,7 +241,10 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 continue
 
             if is_reversed:
-                change = obj_compare.get_m2o_change_info()
+                if isinstance(field, GenericRelation):
+                    change = obj_compare.get_generic_relation_change_info()
+                else:
+                    change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:
                     new = f"Objet supprimé : {item._object_version.object.__class__.__name__} {item}"
                     diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))

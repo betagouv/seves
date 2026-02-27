@@ -516,6 +516,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     def _user_can_interact(self, user):
         return self._is_owner(user.agent.contact_set.get())
 
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
 
 @reversion.register()
 class LienLibre(models.Model):
