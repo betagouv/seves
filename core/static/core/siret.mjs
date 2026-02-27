@@ -1,5 +1,5 @@
-import choicesDefaults from "choicesDefaults"
 import Choices from "Choices"
+import choicesDefaults from "choicesDefaults"
 
 function debounce(func, wait) {
     let timeout
@@ -38,30 +38,30 @@ export function fetchSiret(value) {
         .querySelector('meta[name="siret-api-endpoint"]')
         .getAttribute("content")
         .replace("__siret__", value)
-    let results = []
+    const results = []
     return fetch(endpoint)
         .then(response => response.json())
         .then(data => {
-            if (!data["etablissements"]) {
+            if (!data.etablissements) {
                 return improveResults(cleanedValue, [])
             }
-            data["etablissements"].forEach(etablissement => {
-                let address = etablissement["adresseEtablissement"]
-                let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]}`
-                let fullStreetData = `${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
-                let resultEtablissement = `${etablissement["siret"]} - ${fullStreetData}`
-                const uniteLegale = etablissement["uniteLegale"]
-                let resultUnite = `${uniteLegale["denominationUniteLegale"] ?? ""} ${uniteLegale["denominationUniteLegale"] ?? ""} ${uniteLegale["prenom1UniteLegale"] ?? ""} ${uniteLegale["nomUniteLegale"] ?? ""}`
+            data.etablissements.forEach(etablissement => {
+                const address = etablissement.adresseEtablissement
+                const streetData = `${address.numeroVoieEtablissement} ${address.typeVoieEtablissement} ${address.libelleVoieEtablissement}`
+                const fullStreetData = `${streetData} - ${address.codePostalEtablissement} ${address.libelleCommuneEtablissement}`
+                const resultEtablissement = `${etablissement.siret} - ${fullStreetData}`
+                const uniteLegale = etablissement.uniteLegale
+                const resultUnite = `${uniteLegale.denominationUniteLegale ?? ""} ${uniteLegale.denominationUniteLegale ?? ""} ${uniteLegale.prenom1UniteLegale ?? ""} ${uniteLegale.nomUniteLegale ?? ""}`
                 results.push({
-                    value: etablissement["siret"],
-                    label: resultUnite + " " + resultEtablissement,
+                    value: etablissement.siret,
+                    label: `${resultUnite} ${resultEtablissement}`,
                     customProperties: {
                         streetData: streetData,
                         fullStreetData: fullStreetData,
-                        siret: etablissement["siret"],
-                        raison: uniteLegale["denominationUniteLegale"],
-                        commune: address["libelleCommuneEtablissement"],
-                        code_commune: address["codeCommuneEtablissement"],
+                        siret: etablissement.siret,
+                        raison: uniteLegale.denominationUniteLegale,
+                        commune: address.libelleCommuneEtablissement,
+                        code_commune: address.codeCommuneEtablissement,
                     },
                 })
             })
@@ -87,7 +87,7 @@ export function setUpSiretChoices(element, position) {
 
     choicesSIRET.input.element.addEventListener(
         "input",
-        debounce(event => {
+        debounce(() => {
             const query = choicesSIRET.input.element.value
             if (query.length > 5) {
                 fetchSiret(query).then(results => {

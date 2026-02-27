@@ -1,6 +1,6 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
+import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
 import {collectFormValues} from "Forms"
 
 class RepasFormController extends BaseFormInModal {
@@ -47,7 +47,7 @@ class RepasFormController extends BaseFormInModal {
         return `Confimez-vous vouloir supprimer le repas ${repas.denomination} ?`
     }
 
-    getDeleteConfirmationTitle(repas) {
+    getDeleteConfirmationTitle(_repas) {
         return "Suppression d'un repas"
     }
 

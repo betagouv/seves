@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".btn--close-js").forEach(element =>
         element.addEventListener("click", event => {
             event.preventDefault()
@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     )
 })
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".btn--close-notice-js").forEach(element =>
         element.addEventListener("click", event => {
             event.preventDefault()
@@ -18,9 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
     )
 })
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const blockingErrorModal = document.getElementById("fr-modal-blocking-error")
-    if (!!blockingErrorModal) {
+    if (blockingErrorModal) {
         setTimeout(() => {
             dsfr(blockingErrorModal).modal.disclose()
             blockingErrorModal.addEventListener("dsfr.conceal", () => {

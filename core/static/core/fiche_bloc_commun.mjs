@@ -1,5 +1,5 @@
-import {Controller} from "Stimulus"
 import {applicationReady, COMMON_EVENTS, escapeHTML} from "Application"
+import {Controller} from "Stimulus"
 
 /**
  * @property {HTMLElement} tabsTarget
@@ -64,7 +64,7 @@ class FicheBlocCommun extends Controller {
                 "__html__",
                 html,
             )
-        } catch (e) {
+        } catch (_e) {
             delete sessionStorage[COMMON_EVENTS.DOCUMENT_SUCCESS]
         }
     }

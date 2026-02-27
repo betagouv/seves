@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     function openSidebar(sidebar) {
         sidebar.classList.add("open")
         document.querySelector(".main-container").classList.add("open")

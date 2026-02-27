@@ -50,7 +50,7 @@ jobs:
       - name: Run DjHTML
         run: ./bin/check_html_format.sh
       - name: Run Biome
-        run: biome format .
+        run: biome ci .
   test:
     needs: [build]
     runs-on: ubuntu-latest

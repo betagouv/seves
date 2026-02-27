@@ -9,9 +9,9 @@ export function setUpFreeLinks(element, dataElement) {
         searchFields: ["label"],
     })
 
-    if (!!dataElement) {
+    if (dataElement) {
         const freeLinksIds = JSON.parse(dataElement.textContent)
-        if (!!freeLinksIds) {
+        if (freeLinksIds) {
             freeLinksIds.forEach(value => {
                 freeLinksChoices.setChoiceByValue(value)
             })

@@ -1,6 +1,6 @@
 #search-form {
-    background-color: var(--background-open-blue-france);
     --background-disabled-grey: var(--grey-625-425);
+    background-color: var(--background-open-blue-france);
 }
 .evenements_liste__header {
     padding: 20px;
@@ -35,8 +35,8 @@
 .evenements_liste__search-form {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
     gap: 0.5rem;
+    align-items: flex-end;
 }
 .evenements_liste__search-form .fr-fieldset__element {
     flex: 1 1 250px;

@@ -1,6 +1,6 @@
+import {setUpAddressChoices} from "BanAutocomplete"
 import {setUpSiretChoices} from "siret"
 import {setUpCommuneChoices} from "/static/core/commune.js"
-import {setUpAddressChoices} from "BanAutocomplete"
 
 document.lieuxCards = []
 const modalHTMLContent = {}
@@ -8,12 +8,10 @@ document.choicesInstances = {}
 
 function deleteLieu(event) {
     const id = event.target.dataset.id
-    document.lieuxCards = document.lieuxCards.filter(function (item) {
-        return item.id != id
-    })
-    const modal = document.getElementById("modal-add-lieu-" + id)
+    document.lieuxCards = document.lieuxCards.filter(item => item.id !== id)
+    const modal = document.getElementById(`modal-add-lieu-${id}`)
     resetForm(modal)
-    if (!!modal.querySelector("[id$=DELETE]")) {
+    if (modal.querySelector("[id$=DELETE]")) {
         modal.querySelector("[id$=DELETE]").checked = true
     }
     displayLieuxCards()
@@ -34,13 +32,13 @@ function displayLieuxCards() {
         clone.querySelector(".lieu-nom").textContent = card.nom
         clone.querySelector(".lieu-commune").textContent = card.commune
         clone.querySelector(".lieu-delete-btn").setAttribute("data-id", card.id)
-        clone.querySelector(".lieu-delete-btn").setAttribute("aria-describedby", "tooltip-delete-lieu-" + card.id)
-        clone.querySelector(".delete-tooltip").setAttribute("id", "tooltip-delete-lieu-" + card.id)
-        clone.querySelector(".lieu-edit-btn").setAttribute("aria-controls", "modal-add-lieu-" + card.id)
-        clone.querySelector(".lieu-edit-btn").setAttribute("aria-describedby", "tooltip-lieu-" + card.id)
-        clone.querySelector(".edit-tooltip").setAttribute("id", "tooltip-lieu-" + card.id)
+        clone.querySelector(".lieu-delete-btn").setAttribute("aria-describedby", `tooltip-delete-lieu-${card.id}`)
+        clone.querySelector(".delete-tooltip").setAttribute("id", `tooltip-delete-lieu-${card.id}`)
+        clone.querySelector(".lieu-edit-btn").setAttribute("aria-controls", `modal-add-lieu-${card.id}`)
+        clone.querySelector(".lieu-edit-btn").setAttribute("aria-describedby", `tooltip-lieu-${card.id}`)
+        clone.querySelector(".edit-tooltip").setAttribute("id", `tooltip-lieu-${card.id}`)
         clone.querySelector(".lieu-delete-btn").addEventListener("click", event => {
-            let lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
+            const lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
             if (lieuLinkedToPrelevement === true) {
                 dsfr(document.getElementById("fr-modal-suppression-lieu")).modal.disclose()
             } else {
@@ -148,7 +146,7 @@ function setUpCommune(element) {
         departementInput.value = event.detail.customProperties.departementCode
     })
 
-    choicesCommunes.passedElement.element.addEventListener("removeItem", function (event) {
+    choicesCommunes.passedElement.element.addEventListener("removeItem", () => {
         communeInput.value = ""
         inseeInput.value = ""
         departementInput.value = ""
@@ -161,7 +159,7 @@ function onAdresseLieuChoice(event, modal, communeChoice) {
     communeChoice.setValue([event.detail.customProperties.city])
     modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
     modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
-    if (!!event.detail.customProperties.context) {
+    if (event.detail.customProperties.context) {
         modal.querySelector("[id$=departement]").value = event.detail.customProperties.context.split(",")[0].trim()
     }
 }
@@ -177,7 +175,7 @@ function setUpAdresseLieu(modal, communeChoice) {
 function onAdresseEtablissementChoice(event, modal) {
     modal.querySelector("[id$=commune_etablissement]").value = event.detail.customProperties.city
     modal.querySelector("[id$=code_insee_etablissement]").value = event.detail.customProperties.inseeCode
-    if (!!event.detail.customProperties.context) {
+    if (event.detail.customProperties.context) {
         modal.querySelector("[id$=pays_etablissement]").value = "FR"
         modal.querySelector("[id$=departement_etablissement]").value = event.detail.customProperties.context
             .split(",")[0]
@@ -222,12 +220,12 @@ function getNextAvailableModal() {
 
 function setupCharacterCounter(element) {
     const input = element.querySelector(`[id^="id_lieux-"][id$="-activite_etablissement"]`)
-    let counterDiv = element.querySelector(".character-counter")
+    const counterDiv = element.querySelector(".character-counter")
     const maxLength = input.getAttribute("maxlength")
 
     counterDiv.textContent = `${maxLength - input.value.length} caractères restants`
 
-    input.addEventListener("input", function (e) {
+    input.addEventListener("input", e => {
         const remaining = maxLength - e.target.value.length
         counterDiv.textContent = `${remaining} caractères restants`
     })
@@ -242,7 +240,7 @@ function configureSiretField(field) {
         modal.querySelector("[id$=raison_sociale_etablissement]").value = event.detail.customProperties.raison
         modal.querySelector("[id$=adresse_lieu_dit]").value = event.detail.customProperties.streetData
         modal.querySelector("[id$=pays_etablissement]").value = "FR"
-        if (document.choicesInstances[modalId] && document.choicesInstances[modalId].adresseEtablissement) {
+        if (document.choicesInstances[modalId]?.adresseEtablissement) {
             document.choicesInstances[modalId].adresseEtablissement.setValue([event.detail.customProperties.streetData])
         }
         modal.querySelector("[id$=commune_etablissement]").value = event.detail.customProperties.commune
@@ -257,7 +255,7 @@ function configureSiretField(field) {
     })
 }
 
-;(function () {
+;(() => {
     document.documentElement.addEventListener("dsfr.start", () => {
         setTimeout(() => {
             document.querySelectorAll("[id^=modal-add-lieu-]").forEach(modal => {
@@ -288,7 +286,7 @@ function configureSiretField(field) {
     document.querySelectorAll("[id^=modal-add-lieu-]").forEach(element => {
         setupCharacterCounter(element)
         const data = buildLieuCardFromModal(element)
-        if (!!data.nom) {
+        if (data.nom) {
             document.lieuxCards.push(data)
         }
     })

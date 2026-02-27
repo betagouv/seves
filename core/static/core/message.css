@@ -13,23 +13,23 @@
     min-width: 115px;
 }
 .btn-full {
-    width: 100%;
     display: block;
+    width: 100%;
     text-align: center;
 }
 .document-to-add {
-    background-color: var(--background-action-low-blue-france);
     display: flex;
     justify-content: space-between;
+    background-color: var(--background-action-low-blue-france);
 }
 .document-to-add a {
     background-image: none;
 }
 .document-to-add span {
-    white-space: nowrap;
     width: 90%;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .message-documents-actions {
     display: flex;

@@ -1,7 +1,7 @@
-import choicesDefaults from "choicesDefaults"
 import {applicationReady} from "Application"
-import {Controller} from "Stimulus"
+import choicesDefaults from "choicesDefaults"
 import {getSelectedLabel} from "Forms"
+import {Controller} from "Stimulus"
 
 class PermissionsAdminsFormController extends Controller {
     static targets = ["selectUser", "submitBtn", "confirmModal", "modalContent", "form"]

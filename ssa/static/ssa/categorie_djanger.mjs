@@ -51,10 +51,7 @@ function setupCategorieDanger() {
                 this._customHeaderAdded = true
 
                 document.querySelector("#categorie-danger .treeselect-list").addEventListener("click", event => {
-                    if (
-                        event.target.firstElementChild
-                        && event.target.firstElementChild.classList.contains("shortcut")
-                    ) {
+                    if (event.target.firstElementChild?.classList.contains("shortcut")) {
                         const value = event.target.firstElementChild.textContent.trim()
                         treeselect.updateValue(value)
                         treeselect.toggleOpenClose()
@@ -83,7 +80,7 @@ function setupCategorieDanger() {
         patchItems(treeselect.srcElement)
     })
     treeselect.srcElement.addEventListener("input", e => {
-        if (!!e.detail) {
+        if (e.detail) {
             handleValueChangeCategorieDanger(e.detail, options)
         } else {
             if (document.getElementById("pam-container")) {

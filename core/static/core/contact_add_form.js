@@ -1,6 +1,6 @@
 import choicesDefaults from "choicesDefaults"
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const options = {
         ...choicesDefaults,
         removeItemButton: true,

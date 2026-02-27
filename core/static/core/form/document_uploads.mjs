@@ -1,5 +1,5 @@
-import {Controller} from "Stimulus"
 import {COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool} from "Application"
+import {Controller} from "Stimulus"
 import {createStore, useStore} from "StimulusStore"
 
 const DOCUMENT_FORM_ID = "document-form"
@@ -338,7 +338,7 @@ class DocumentForm extends Controller {
 
     /** @param {HTMLFormElement} form */
     formTargetConnected(form) {
-        for (let element of form.elements) {
+        for (const element of form.elements) {
             const previousValue = element.dataset.action || ""
             element.dataset.action = `invalid->${this.identifier}#onInvalid ${previousValue}`
         }

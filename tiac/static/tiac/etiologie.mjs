@@ -24,9 +24,9 @@ class EtiologieFormController extends Controller {
         this.config = JSON.parse(this.jsonConfigTarget.textContent)
         this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
         this.hasConnectedValue = true
-        let currentValue = this.analysesTargets.find(el => el.checked)
+        const currentValue = this.analysesTargets.find(el => el.checked)
 
-        if (!!currentValue) {
+        if (currentValue) {
             this.precisionsTarget.disabled = !(currentValue.value === "oui")
         }
     }
@@ -96,7 +96,7 @@ class EtiologieFormController extends Controller {
         }
         this.currentOption = checked.value
         this.etiologieModalConfirmationContentTarget.innerHTML = document.querySelector(
-            "#" + this.currentOption.replaceAll(" ", "-"),
+            `#${this.currentOption.replaceAll(" ", "-")}`,
         ).innerHTML
         dsfr(this.etiologieModalConfirmationTarget).modal.disclose()
     }

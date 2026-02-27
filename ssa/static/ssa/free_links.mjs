@@ -1,6 +1,6 @@
 import {applicationReady} from "Application"
-import {Controller} from "Stimulus"
 import choicesDefaults from "choicesDefaults"
+import {Controller} from "Stimulus"
 
 class FreeLinksViaApiController extends Controller {
     static targets = ["select", "input"]

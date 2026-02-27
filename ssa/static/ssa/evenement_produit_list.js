@@ -1,7 +1,7 @@
+import {addLevel2CategoryIfAllChildrenAreSelected, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import choicesDefaults from "choicesDefaults"
-import {patchItems, addLevel2CategoryIfAllChildrenAreSelected, tsDefaultOptions} from "CustomTreeSelect"
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     function clearSidebarFilters(event) {
         event.preventDefault()
         resetForm(document.getElementById("sidebar"))

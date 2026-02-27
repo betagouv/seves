@@ -1,8 +1,9 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
-import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
+import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
+import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import {collectFormValues} from "Forms"
+
 /**
  * @typedef AlimentData
  * @property {string} categorie_produit
@@ -110,7 +111,7 @@ class AlimentFormController extends BaseFormInModal {
         return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
     }
 
-    getDeleteConfirmationTitle(aliment) {
+    getDeleteConfirmationTitle(_aliment) {
         return "Suppression d'un aliment"
     }
 

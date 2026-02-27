@@ -1,9 +1,9 @@
-import {Controller} from "Stimulus"
-import {useStore, createStore} from "StimulusStore"
 import {applicationReady} from "Application"
+import {BaseFormSetController} from "BaseFormset"
 import Choices from "Choices"
 import choicesDefaults from "choicesDefaults"
-import {BaseFormSetController} from "BaseFormset"
+import {Controller} from "Stimulus"
+import {createStore, useStore} from "StimulusStore"
 
 const choicesStore = createStore({
     name: "selectedChoices",

@@ -1,9 +1,9 @@
-import {BaseFormSetController} from "BaseFormset"
 import {applicationReady} from "Application"
 import {setUpAddressChoices} from "BanAutocomplete"
-import {setUpSiretChoices} from "siret"
-import {collectFormValues} from "Forms"
 import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
+import {collectFormValues} from "Forms"
+import {setUpSiretChoices} from "siret"
 
 /**
  * @typedef EtablissementData
@@ -80,7 +80,7 @@ class EtablissementFormController extends BaseFormInModal {
     onAddressChoice(event) {
         this.communeInputTarget.value = event.detail.customProperties.city
         this.codeInseeInputTarget.value = event.detail.customProperties.inseeCode
-        if (!!event.detail.customProperties.context) {
+        if (event.detail.customProperties.context) {
             this.paysInputTarget.value = "FR"
             const [num, ..._] = event.detail.customProperties.context.split(/\s*,\s*/)
             this.departementInputTarget.value = num
@@ -98,8 +98,8 @@ class EtablissementFormController extends BaseFormInModal {
         this.codeInseeInputTarget.value = code_commune
         this.paysInputTarget.value = "FR"
 
-        if (!!streetData) {
-            let result = [
+        if (streetData) {
+            const result = [
                 {
                     value: streetData,
                     label: streetData,
@@ -112,8 +112,8 @@ class EtablissementFormController extends BaseFormInModal {
         fetch(`/ssa/api/find-numero-agrement/?siret=${siret}`)
             .then(response => response.json())
             .then(data => {
-                if (!!data["numero_agrement"]) {
-                    this.numeroAgrementInputTarget.value = data["numero_agrement"]
+                if (data.numero_agrement) {
+                    this.numeroAgrementInputTarget.value = data.numero_agrement
                 }
             })
 
@@ -198,7 +198,7 @@ class EtablissementFormController extends BaseFormInModal {
         return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
 
-    getDeleteConfirmationTitle(etablissement) {
+    getDeleteConfirmationTitle(_etablissement) {
         return "Suppression d'un établissement"
     }
 }

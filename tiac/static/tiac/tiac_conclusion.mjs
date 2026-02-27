@@ -1,6 +1,6 @@
-import {Controller} from "Stimulus"
 import {applicationReady} from "Application"
-import {findPath, hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
+import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
+import {Controller} from "Stimulus"
 
 /**
  * @property {Object.<string, {value: string, label: string}>} suspicionConclusionChoicesValue
@@ -52,8 +52,7 @@ class ConclusionFormController extends Controller {
         patchItems(this.treeselect.srcElement)
     }
 
-    /** @param {HTMLDivElement} el */
-    selectedHazardTreeselectTargetDiconnected(el) {
+    selectedHazardTreeselectTargetDiconnected() {
         this.treeselect.destroy()
         this.treeselect = undefined
     }
@@ -99,7 +98,7 @@ class ConclusionFormController extends Controller {
         const checkbox = this.selectedHazardTreeselectTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
         checkbox.checked = !checkbox.checked
 
-        let valuesToSet = this.treeselect.value
+        const valuesToSet = this.treeselect.value
         if (checkbox.checked) {
             valuesToSet.push(value)
         } else {

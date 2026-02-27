@@ -1,7 +1,7 @@
 import {applicationReady} from "Application"
 import "TreeSelect"
+import {hideHeader, patchItems, shortcutClicked, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 import {Controller} from "Stimulus"
-import {patchItems, showHeader, hideHeader, tsDefaultOptions, findPath, shortcutClicked} from "CustomTreeSelect"
 
 class AgentsPathogeneController extends Controller {
     static targets = ["jsonConfig", "categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
