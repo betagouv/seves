@@ -523,6 +523,7 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
     compare_exclude = [
         "date_derniere_mise_a_jour",
     ]
+    template_name = "reversion/version_list.html"
 
     def dispatch(self, request, *args, **kwargs):
         content_type = ContentType.objects.get(id=kwargs["content_type"])
@@ -550,9 +551,9 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
                 setattr(version._object_version.object, f"_prefetched_{prefetch_name}", related_qs)
 
         if hasattr(self.object, "get_prefetch_for_revision_list_view"):
-            for name, qs in self.object.get_prefetch_for_revision_list_view():
+            for name, prefetch in self.object.get_prefetch_for_revision_list_view():
                 for version in qs:
-                    setattr(version._object_version.object, name, qs)
+                    setattr(version._object_version.object, name, prefetch)
         return qs
 
     def get_initial_patch(self, versions):

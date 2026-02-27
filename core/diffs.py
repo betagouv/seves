@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -8,6 +9,7 @@ from django.db import models
 from django.db.models import ManyToOneRel
 from django.utils import timezone
 from django.utils.encoding import force_str
+from reversion import is_registered
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
 from reversion_compare.compare import (
@@ -17,6 +19,8 @@ from reversion_compare.compare import (
 from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin, CompareMixin as OriginalCompareMixin
 
 from core.models import Agent, Structure
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -86,7 +90,68 @@ def create_manual_version(obj, comment, user=None):
     return revision
 
 
+# TODO on doit pouvoir optimiser sorted(same_missing_objects_dict.values(), key=lambda item: force_str(item))
+# Car le sort sur le str de Agent nous met dedans si on a pas la structure, etc.
+
+
 class CompareObject(InitialCompareObject):
+    def get_many_to_something(self, target_ids, related_model, is_reverse=False):
+        """
+        Taken from InitialCompareObject and add select_related to reduce the number of queries
+        """
+        if not is_registered(related_model):
+            # There is no history about not registered relations, so we can't build a diff ;)
+            logger.debug("Related model %s has not been registered with django-reversion", related_model.__name__)
+            return {}, {}, []
+
+        # get instance of reversion.models.Revision():
+        # A group of related object versions.
+        old_revision = self.version_record.revision
+
+        # Get a queryset with all related objects.
+        versions = {
+            ver.object_id: ver
+            for ver in old_revision.version_set.filter(
+                content_type=ContentType.objects.get_for_model(related_model), object_id__in=target_ids
+            ).all()
+        }
+
+        missing_objects_dict = {}
+        deleted = []
+
+        if not self.follow:
+            # This models was not registered with follow relations
+            # Try to fill missing related objects
+            potentially_missing_ids = target_ids.difference(frozenset(versions))
+            if potentially_missing_ids:
+                missing_objects_dict = {
+                    force_str(rel.pk): rel
+                    for rel in related_model.objects.filter(pk__in=potentially_missing_ids).iterator()
+                    if is_registered(rel.__class__) or not self.ignore_not_registered
+                }
+
+        if is_reverse:
+            # TODO test if this works
+            content_type = ContentType.objects.get_for_model(related_model)
+            missing_objects_dict = {
+                v.object_id: v
+                for v in (
+                    Version.objects.filter(
+                        content_type=content_type,
+                        object_id__in=[o.pk for o in missing_objects_dict.values()],
+                        revision__date_created__lt=old_revision.date_created,
+                    ).select_related("revision")
+                )
+            }
+
+            if is_registered(related_model) or not self.ignore_not_registered:
+                # shift query to database
+                deleted = list(Version.objects.filter(revision=old_revision).get_deleted(related_model))
+            else:
+                deleted = []
+
+        return versions, missing_objects_dict, deleted
+
     def get_reverse_generic_relation(self):
         obj = self.get_object_version().object
 
