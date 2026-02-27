@@ -7,7 +7,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
 from django.utils import timezone
-from django.utils.encoding import force_str
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
 from reversion_compare.compare import (
@@ -90,16 +89,7 @@ class CompareObject(InitialCompareObject):
         if not isinstance(self.field, GenericRelation):
             raise NotImplementedError
 
-        ct = ContentType.objects.get_for_model(obj, for_concrete_model=False)
-
-        qs = self.field.remote_field.model.objects.filter(
-            **{
-                self.field.content_type_field_name: ct,
-                self.field.object_id_field_name: obj.pk,
-            }
-        )
-
-        ids = {force_str(v.pk) for v in qs}
+        ids = {str(v.pk) for v in getattr(obj, self.field_name).all()}
 
         # Get the related model of the current field:
         related_model = self.field.remote_field.model
