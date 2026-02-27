@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
+import pytest
+import reversion
 
 from core.factories import DepartementFactory, MessageFactory
 from core.models import LienLibre
@@ -35,6 +37,7 @@ def test_can_view_evenement_produit_history(live_server, page):
     update_page.close_etablissement_modal()
     update_page.submit_as_draft()
 
+    # TODO why message not in table ?
     message = MessageFactory(content_object=evenement)
     message.is_deleted = True
     message.save()
@@ -67,3 +70,51 @@ def test_can_view_evenement_produit_history(live_server, page):
 
     expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été ajouté à la fiche", exact=True)).to_be_visible()
     expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été supprimé à la fiche", exact=True)).to_be_visible()
+
+
+@pytest.mark.django_db
+def test_can_evenement_produit_history_performances_with_etablissement(client, django_assert_num_queries):
+    evenement = EvenementProduitFactory()
+    evenement.description = "I changed"
+    evenement.save()
+    base_queries = 27
+
+    content_type = ContentType.objects.get_for_model(EvenementProduit)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+
+    with django_assert_num_queries(base_queries):
+        client.get(url)
+
+    EtablissementFactory(evenement_produit=evenement)
+    with django_assert_num_queries(base_queries + 12):
+        client.get(url)
+
+    EtablissementFactory(evenement_produit=evenement)
+    with django_assert_num_queries(base_queries + 20):
+        client.get(url)
+
+
+@pytest.mark.django_db
+def test_can_evenement_produit_history_performances_with_messages(client, django_assert_num_queries):
+    evenement = EvenementProduitFactory()
+    base_queries = 21
+
+    content_type = ContentType.objects.get_for_model(EvenementProduit)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+
+    with django_assert_num_queries(base_queries):
+        client.get(url)
+
+    with reversion.create_revision():
+        MessageFactory.create(content_object=evenement)
+        evenement.save()
+    with django_assert_num_queries(base_queries + 6):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 2
+
+    with reversion.create_revision():
+        MessageFactory.create(content_object=evenement)
+        evenement.save()
+    with django_assert_num_queries(base_queries + 14):
+        response = client.get(url)
+        assert len(response.context["patches"]) == 3

@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
 from django.utils import timezone
+from django.utils.encoding import force_str
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
 from reversion_compare.compare import (
@@ -36,6 +37,9 @@ class Diff:
         if value == "False":
             value = "Non"
         return value
+
+    def __repr__(self):
+        return self.field + " " + self.old + " " + self.new
 
     def _normalize_field(self, field):
         if field == "transfered to":
@@ -91,7 +95,7 @@ class CompareObject(InitialCompareObject):
 
         prefetch_attr = f"_prefetched_{self.field_name}"
         if hasattr(obj, prefetch_attr):
-            related_objects = getattr(obj, prefetch_attr, None)
+            related_objects = getattr(obj, prefetch_attr)
         else:
             related_objects = getattr(obj, self.field_name).all()
 
@@ -99,6 +103,39 @@ class CompareObject(InitialCompareObject):
 
         # Get the related model of the current field:
         related_model = self.field.remote_field.model
+        return self.get_many_to_something(ids, related_model, is_reverse=True)
+
+    def get_reverse_foreign_key(self):
+        """Adapted from original in order to use prefetched objects when possible"""
+        obj = self.get_object_version().object
+        if not self.field.related_name or not hasattr(obj, self.field.related_name):
+            return {}, {}, []
+
+        if isinstance(self.field, models.fields.related.OneToOneRel):
+            try:
+                ids = {force_str(getattr(obj, force_str(self.field.related_name)).pk)}
+            except ObjectDoesNotExist:
+                ids = set()
+        else:
+            prefetch_attr = f"_prefetched_{self.field.related_name}"
+            if hasattr(obj, prefetch_attr):
+                related_objects = getattr(obj, prefetch_attr)
+            else:
+                related_objects = getattr(obj, force_str(self.field.related_name)).all()
+
+            # If there is a _ptr this is a multi-inheritance table and inherits from a non-abstract class
+            ids = {force_str(v.pk) for v in related_objects}
+            if not ids and any([f.name.endswith("_ptr") for f in obj._meta.get_fields()]):
+                # If there is a _ptr this is a multi-inheritance table and inherits from a non-abstract class
+                # lets try and get the parent items associated entries for this field
+                others = self.version_record.revision.version_set.filter(object_id=self.version_record.object_id).all()
+                for p in others:
+                    p_obj = p._object_version.object
+                    if not isinstance(p_obj, type(obj)) and hasattr(p_obj, force_str(self.field.related_name)):
+                        ids = {force_str(v.pk) for v in getattr(p_obj, force_str(self.field.related_name)).all()}
+
+        # Get the related model of the current field:
+        related_model = self.field.field.model
         return self.get_many_to_something(ids, related_model, is_reverse=True)
 
 

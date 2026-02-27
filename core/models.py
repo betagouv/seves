@@ -324,6 +324,11 @@ class Document(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.document_type})"
 
+    # TODO pourquoi les modifs ne sont pas prise en compte sur les documents ?
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
+
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE

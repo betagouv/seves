@@ -1,4 +1,3 @@
-from collections import defaultdict
 import contextlib
 import json
 import logging
@@ -541,34 +540,19 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             .exclude(serialized_data={})
         )
 
-        # V1
-        # obj_ct = ContentType.objects.get_for_model(self.object)
-        #
-        # models = [(Message, "messages"), (Document, "documents")]
-        # object_ids = [v.object_id for v in qs]
-        # for related_model, prefetch_name in models:
-        #     related_qs = related_model.objects.filter(content_type=obj_ct, object_id__in=object_ids)
-        #     for version in qs:
-        #         prefetch_related_objects([version._object_version.object], Prefetch(prefetch_name, queryset=related_qs))
-        # return qs
-
-        # TODO idée de v2?
         obj_ct = ContentType.objects.get_for_model(self.object)
-        object_ids = [v.object_id for v in qs]
-
-        models = [(Message, "messages"), (Document, "documents")]
+        # TODO exclude  fin_suivi ?
+        models = [(Message, "messages"), (Document, "documents"), (FinSuiviContact, "fin_suivi")]
 
         for related_model, prefetch_name in models:
-            related_qs = related_model.objects.filter(content_type=obj_ct, object_id__in=object_ids)
-
-            related_map = defaultdict(list)
-            for obj in related_qs:
-                related_map[obj.object_id].append(obj)
-
+            related_qs = related_model.objects.filter(content_type=obj_ct, object_id=self.object.id)
             for version in qs:
-                obj = version._object_version.object
-                setattr(obj, f"_prefetched_{prefetch_name}", related_map.get(obj.pk, []))
+                setattr(version._object_version.object, f"_prefetched_{prefetch_name}", related_qs)
 
+        if hasattr(self.object, "get_prefetch_for_revision_list_view"):
+            for name, qs in self.object.get_prefetch_for_revision_list_view():
+                for version in qs:
+                    setattr(version._object_version.object, name, qs)
         return qs
 
     def get_initial_patch(self, versions):
