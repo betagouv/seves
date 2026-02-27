@@ -10,7 +10,10 @@ from django.utils import timezone
 from django.utils.encoding import force_str
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
-from reversion_compare.compare import CompareObject as InitialCompareObject, CompareObjects as InitialCompareObjects
+from reversion_compare.compare import (
+    CompareObject as InitialCompareObject,
+    CompareObjects as InitialCompareObjects,
+)
 from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin, CompareMixin as OriginalCompareMixin
 
 from core.models import Agent, Structure
@@ -143,20 +146,6 @@ class CompareObjects(InitialCompareObjects):
         info = None
         if isinstance(self.field, GenericRelation):
             info = self.get_generic_relation_change_info()
-            # version_1_data = self.compare_obj1.get_reverse_generic_relation()
-            # version_2_data = self.compare_obj2.get_reverse_generic_relation()
-            #
-            # data = self.get_m2s_change_info(version_1_data, version_2_data)
-            # # print(data)
-            # info = data
-            # info = {
-            #     "changed_items": "",
-            #     "removed_items": "",
-            #     "added_items": "",
-            #     "removed_missing_objects": "",
-            #     "added_missing_objects": "",
-            #     "deleted_items": "",
-            # }
         else:
             if hasattr(self.field, "get_internal_type") and self.field.get_internal_type() == "ManyToManyField":
                 info = self.get_m2m_change_info()
@@ -255,9 +244,10 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     model_name = item_1._object_version.object._meta.verbose_name.title()
                     prefix = f"{model_name} ({str(item_1._object_version.object)})"
                     nested_diff = self.compare(item_1._object_version.object, item_1, _item_2)[0]
-                    for change in nested_diff:
-                        pretty_field = self._get_pretty_field(change.field, prefix=prefix)
-                        diff.append(Diff(pretty_field, change.old, change.new, version2.revision))
+                    if getattr(item_1._object_version.object, "show_nested_diff_in_revision_list", True):
+                        for change in nested_diff:
+                            pretty_field = self._get_pretty_field(change.field, prefix=prefix)
+                            diff.append(Diff(pretty_field, change.old, change.new, version2.revision))
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:
