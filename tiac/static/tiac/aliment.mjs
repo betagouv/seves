@@ -125,7 +125,9 @@ class AlimentFormController extends BaseFormInModal {
             <div class="fr-card__body">
                 <div class="fr-card__content">
                     <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
+                    <a href="#${aliment.denomination}" id="${aliment.denomination}" data-action="${this.identifier}#onModify:prevent:default" >
                       ${aliment.denomination}
+                    </a>
                     </h3>
                     <div class="fr-card__desc">
                         ${this.optionalText(aliment.motif_suspicion, `<p>${this.joinText(", ", ...aliment.motif_suspicion)}</p>`)}

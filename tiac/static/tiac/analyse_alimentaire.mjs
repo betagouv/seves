@@ -152,7 +152,9 @@ class AlimentFormController extends BaseFormInModal {
                 <div class="fr-card__body">
                     <div class="fr-card__content">
                         <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
+                            <a href="#${analyse.reference_prelevement}" id="${analyse.reference_prelevement}" data-action="${this.identifier}#onModify:prevent:default" >
                             ${analyse.reference_prelevement}
+                            </a>
                         </h3>
                         <div class="fr-card__desc">
                             <p class="fr-mb-4v">${analyse.etat_prelevement}</p>

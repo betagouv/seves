@@ -61,7 +61,9 @@ class RepasFormController extends BaseFormInModal {
             <div class="fr-card__body">
                 <div class="fr-card__content">
                     <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
+                        <a href="#${repas.denomination}" id="${repas.denomination}" data-action="${this.identifier}#onModify:prevent:default" >
                       ${repas.denomination}
+                      </a>
                     </h3>
                     <div class="fr-card__desc">
                         ${this.optionalText(repas.datetime_repas, `<p class="fr-card__detail fr-icon-calendar-2-line fr-my-2v">${this.formatDate(repas.datetime_repas)}</p>`)}
