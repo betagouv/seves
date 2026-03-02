@@ -1,6 +1,6 @@
-import { Controller } from "Stimulus"
-import { applicationReady, COMMON_EVENTS, fetchPool } from "Application"
-import { DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset } from "DocumentUploads"
+import {Controller} from "Stimulus"
+import {applicationReady, COMMON_EVENTS, fetchPool} from "Application"
+import {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset} from "DocumentUploads"
 
 const STATES = Object.freeze({
     IDLE: 0,
@@ -33,7 +33,7 @@ class MessageDocuments extends Controller {
     }
 
     /** @param {String} documentNamesJSON */
-    onDocumentSuccess({ detail }) {
+    onDocumentSuccess({detail}) {
         for (const [pk, documentName] of Object.entries(detail[COMMON_EVENTS.DOCUMENT_SUCCESS])) {
             const existingCard = this.element.querySelector(`#document-form-${pk}`)
 
@@ -71,7 +71,7 @@ class MessageDocuments extends Controller {
  */
 class MessageDocumentCard extends Controller {
     static targets = ["deleteBtn", "inputId"]
-    static values = { state: { type: Number, default: STATES.IDLE } }
+    static values = {state: {type: Number, default: STATES.IDLE}}
     static classes = ["loading"]
 
     initialize() {
@@ -92,7 +92,7 @@ class MessageDocumentCard extends Controller {
         }
     }
 
-    onDocumentRemoved({ detail }) {
+    onDocumentRemoved({detail}) {
         if (detail[COMMON_EVENTS.DOCUMENT_DELETE] === this.inputIdTarget.value) {
             this.element.remove()
         }
@@ -102,7 +102,7 @@ class MessageDocumentCard extends Controller {
      * @param {HTMLFormElement} target
      * @return {Promise<void>}
      */
-    async onDelete({ target }) {
+    async onDelete({target}) {
         this.stateValue = STATES.LOADING
         try {
             const result = await fetchPool(target.action, {
@@ -113,7 +113,7 @@ class MessageDocumentCard extends Controller {
             if (result.ok) {
                 this.element.remove()
                 this.dispatch(COMMON_EVENTS.DOCUMENT_DELETE, {
-                    detail: { [COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value },
+                    detail: {[COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value},
                     target: window,
                     prefix: "window",
                 })
@@ -127,11 +127,11 @@ class MessageDocumentCard extends Controller {
 class DocumentFormset extends BaseDocumentFormset {
     onModalClose() {
         super.onModalClose()
-        this.documentFormOutlets.forEach((it) => it.onModalClose())
+        this.documentFormOutlets.forEach(it => it.onModalClose())
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register(DOCUMENT_FORM_ID, DocumentForm)
     app.register(DOCUMENT_FORMSET_ID, DocumentFormset)
     app.register("message-documents", MessageDocuments)

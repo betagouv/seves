@@ -1,5 +1,5 @@
-import { Controller } from "Stimulus"
-import { applicationReady, COMMON_EVENTS, escapeHTML } from "Application"
+import {Controller} from "Stimulus"
+import {applicationReady, COMMON_EVENTS, escapeHTML} from "Application"
 
 /**
  * @property {HTMLElement} tabsTarget
@@ -7,7 +7,7 @@ import { applicationReady, COMMON_EVENTS, escapeHTML } from "Application"
  * @property {HTMLTemplateElement} successMessageTplTarget
  */
 class FicheBlocCommun extends Controller {
-    static values = { tab: { type: String, default: "" } }
+    static values = {tab: {type: String, default: ""}}
     static targets = ["tabs", "documentsMessageContainer", "successMessageTpl"]
 
     initialize() {
@@ -31,7 +31,7 @@ class FicheBlocCommun extends Controller {
     }
 
     /** @param {HTMLElement} currentTarget */
-    onTabSelected({ currentTarget }) {
+    onTabSelected({currentTarget}) {
         if (this.tabsTarget.dataset.initialized !== "true") {
             this.#tryInitTabs()
         } else {
@@ -44,7 +44,7 @@ class FicheBlocCommun extends Controller {
     }
 
     /** @param {String} documentNamesJSON */
-    onDocumentSuccess({ detail }) {
+    onDocumentSuccess({detail}) {
         sessionStorage[COMMON_EVENTS.DOCUMENT_SUCCESS] = JSON.stringify(detail[COMMON_EVENTS.DOCUMENT_SUCCESS])
         this.processDocumentSuccess()
     }
@@ -58,7 +58,7 @@ class FicheBlocCommun extends Controller {
             const names = JSON.parse(sessionStorage[COMMON_EVENTS.DOCUMENT_SUCCESS] || "{}")
             if (Object.keys(names).length === 0) return
             const html = Object.values(names)
-                .map((documentName) => `<li>${escapeHTML(documentName)}</li>`)
+                .map(documentName => `<li>${escapeHTML(documentName)}</li>`)
                 .join("\n")
             this.documentsMessageContainerTarget.innerHTML = this.successMessageTplTarget.innerHTML.replace(
                 "__html__",
@@ -81,4 +81,4 @@ class FicheBlocCommun extends Controller {
     }
 }
 
-applicationReady.then((app) => app.register("fiche-bloc-commun", FicheBlocCommun))
+applicationReady.then(app => app.register("fiche-bloc-commun", FicheBlocCommun))

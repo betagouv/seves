@@ -1,6 +1,6 @@
-import { Controller } from "Stimulus"
-import { applicationReady } from "Application"
-import { findPath, hideHeader, patchItems, showHeader, tsDefaultOptions } from "CustomTreeSelect"
+import {Controller} from "Stimulus"
+import {applicationReady} from "Application"
+import {findPath, hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 
 /**
  * @property {Object.<string, {value: string, label: string}>} suspicionConclusionChoicesValue
@@ -28,7 +28,7 @@ class ConclusionFormController extends Controller {
         suspicionConclusion: String,
         selectedHazardConfirmedChoices: Array,
         selectedHazardSuspectedChoices: Array,
-        selectedHazardTreeselectInitialized: { type: Boolean, default: false },
+        selectedHazardTreeselectInitialized: {type: Boolean, default: false},
     }
 
     /** @param {HTMLSelectElement} el */
@@ -41,7 +41,7 @@ class ConclusionFormController extends Controller {
             isSingleSelect: false,
             isIndependentNodes: true,
             openCallback: this.treeselectOpenCallback.bind(this),
-            searchCallback: (item) => {
+            searchCallback: item => {
                 if (item.length === 0) {
                     showHeader(this.treeselect.srcElement, ".categorie-danger-header")
                 } else {
@@ -67,9 +67,9 @@ class ConclusionFormController extends Controller {
         patchItems(this.treeselect.srcElement)
     }
 
-    onTreeselectInput({ detail }) {
+    onTreeselectInput({detail}) {
         if (detail.length === 0) {
-            this.element.querySelectorAll("[id^='shortcut_']").forEach((checkbox) => {
+            this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                 checkbox.checked = false
             })
         } else {
@@ -93,7 +93,7 @@ class ConclusionFormController extends Controller {
         }
     }
 
-    onShortcut({ target }) {
+    onShortcut({target}) {
         const label = target.getElementsByTagName("label")[0]
         const value = label.textContent.trim()
         const checkbox = this.selectedHazardTreeselectTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
@@ -117,7 +117,7 @@ class ConclusionFormController extends Controller {
         this.selectedHazardTreeselectTarget.querySelector(".treeselect-input__tags-count").innerText = text
     }
 
-    onSuspicionConclusionChanged({ target: { value } }) {
+    onSuspicionConclusionChanged({target: {value}}) {
         this.suspicionConclusionValue = value
         this.conclusionRepasTarget.disabled = false
         this.conclusionAlimentTarget.disabled = false
@@ -160,4 +160,4 @@ class ConclusionFormController extends Controller {
     }
 }
 
-applicationReady.then((app) => app.register("conclusion-form", ConclusionFormController))
+applicationReady.then(app => app.register("conclusion-form", ConclusionFormController))

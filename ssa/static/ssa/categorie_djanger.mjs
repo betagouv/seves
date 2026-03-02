@@ -1,8 +1,8 @@
-import { findPath, isLevel2WithChildren, patchItems, tsDefaultOptions } from "CustomTreeSelect"
+import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 
 function handleValueChangeCategorieDanger(value, options) {
     const fullPath = findPath(value, options)
-        .map((n) => n.name)
+        .map(n => n.name)
         .join(" > ")
 
     document.getElementById("id_categorie_danger").value = value
@@ -35,7 +35,7 @@ function setupCategorieDanger() {
         openCallback() {
             patchItems(treeselect.srcElement)
             if (this._customHeaderAdded) {
-                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach((el) => {
+                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
                     el.removeAttribute("hidden")
                     el.removeAttribute("aria-hidden")
                 })
@@ -50,10 +50,10 @@ function setupCategorieDanger() {
                 list.prepend(clone)
                 this._customHeaderAdded = true
 
-                document.querySelector("#categorie-danger .treeselect-list").addEventListener("click", (event) => {
+                document.querySelector("#categorie-danger .treeselect-list").addEventListener("click", event => {
                     if (
-                        event.target.firstElementChild &&
-                        event.target.firstElementChild.classList.contains("shortcut")
+                        event.target.firstElementChild
+                        && event.target.firstElementChild.classList.contains("shortcut")
                     ) {
                         const value = event.target.firstElementChild.textContent.trim()
                         treeselect.updateValue(value)
@@ -65,12 +65,12 @@ function setupCategorieDanger() {
         },
         searchCallback(item) {
             if (item.length === 0) {
-                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach((el) => {
+                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
                     el.removeAttribute("hidden")
                     el.removeAttribute("aria-hidden")
                 })
             } else {
-                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach((el) => {
+                treeselect.srcElement.querySelectorAll(".categorie-danger-header").forEach(el => {
                     el.setAttribute("hidden", "hidden")
                     el.setAttribute("aria-hidden", "true")
                 })
@@ -82,7 +82,7 @@ function setupCategorieDanger() {
     treeselect.srcElement.addEventListener("update-dom", () => {
         patchItems(treeselect.srcElement)
     })
-    treeselect.srcElement.addEventListener("input", (e) => {
+    treeselect.srcElement.addEventListener("input", e => {
         if (!!e.detail) {
             handleValueChangeCategorieDanger(e.detail, options)
         } else {
@@ -92,7 +92,7 @@ function setupCategorieDanger() {
         }
     })
 
-    treeselect.srcElement.addEventListener("input", (e) => {
+    treeselect.srcElement.addEventListener("input", e => {
         handleNoticeDangerDisplay(options, e.detail)
     })
     handleNoticeDangerDisplay(options, selectedValue)

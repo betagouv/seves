@@ -1,9 +1,9 @@
-import { Controller } from "Stimulus"
-import { useStore, createStore } from "StimulusStore"
-import { applicationReady } from "Application"
+import {Controller} from "Stimulus"
+import {useStore, createStore} from "StimulusStore"
+import {applicationReady} from "Application"
 import Choices from "Choices"
 import choicesDefaults from "choicesDefaults"
-import { BaseFormSetController } from "BaseFormset"
+import {BaseFormSetController} from "BaseFormset"
 
 const choicesStore = createStore({
     name: "selectedChoices",
@@ -37,20 +37,20 @@ class ZoneInfesteeController extends Controller {
         this.addChoices(...this.choices.getValue(true))
     }
 
-    onChoice({ detail: { value } }) {
+    onChoice({detail: {value}}) {
         this.addChoices(value)
     }
 
-    onRemoveItem({ detail: { value } }) {
+    onRemoveItem({detail: {value}}) {
         this.removeChoices(value)
     }
 
     addChoices(...values) {
-        this.setSelectedChoicesValue((previousValue) => [...previousValue, ...values])
+        this.setSelectedChoicesValue(previousValue => [...previousValue, ...values])
     }
 
     removeChoices(...values) {
-        this.setSelectedChoicesValue((previousValue) => previousValue.filter((value) => !values.includes(value)))
+        this.setSelectedChoicesValue(previousValue => previousValue.filter(value => !values.includes(value)))
     }
 
     /** @param {String[]} value */
@@ -59,7 +59,7 @@ class ZoneInfesteeController extends Controller {
 
         this.choices.enable()
         const currentChoices = this.choices.passedElement.optionsAsChoices()
-        const updatedChoices = currentChoices.map((choice) => ({
+        const updatedChoices = currentChoices.map(choice => ({
             value: choice.value,
             label: choice.label,
             /* We don't want to disable this option if it is selected */
@@ -93,7 +93,7 @@ class ZoneInfesteeFormController extends ZoneInfesteeController {
 
 class ZoneInfesteeFormSetController extends BaseFormSetController {
     static targets = [...BaseFormSetController.targets, "formDetectionsSelect"]
-    static values = { ...BaseFormSetController.values, selectedChoices: Array }
+    static values = {...BaseFormSetController.values, selectedChoices: Array}
     static stores = [choicesStore]
 
     connect() {
@@ -102,7 +102,7 @@ class ZoneInfesteeFormSetController extends BaseFormSetController {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("zone-infestee-form", ZoneInfesteeFormController)
     app.register("hors-zone", DetectionsHorsZoneController)
     app.register("zone-infestee-formset", ZoneInfesteeFormSetController)

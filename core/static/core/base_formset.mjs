@@ -1,5 +1,5 @@
-import { Controller } from "Stimulus"
-import { useStore } from "StimulusStore"
+import {Controller} from "Stimulus"
+import {useStore} from "StimulusStore"
 
 /**
  * @property {boolean} hasEmptyFormTplTarget
@@ -16,7 +16,7 @@ export class BaseFormSetController extends Controller {
     }
 
     static targets = ["emptyFormTpl", "formsetContainer", ...Object.keys(this.MGMT_FORM_FIELDS)]
-    static values = { ...this.MGMT_FORM_FIELDS }
+    static values = {...this.MGMT_FORM_FIELDS}
 
     connect() {
         this._initializeFieldValues()
@@ -32,7 +32,7 @@ export class BaseFormSetController extends Controller {
                 continue
             }
             this[`${fieldName}Value`] = this[`${fieldName}Target`].value
-            this[`${fieldName}ValueChanged`] = (value) => {
+            this[`${fieldName}ValueChanged`] = value => {
                 this[`${fieldName}Target`].value = value
             }
         }
