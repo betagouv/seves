@@ -131,8 +131,13 @@
         </header>
 
         {% if request.user.agent.structure.is_seves and env == "prod" %}
-            <div class="prod-warning-message">
-                {% dsfr_notice title="Attention vous êtes sur l'environnement de production de Sèves" type="alert" %}
+            <div class="general-warning-message">
+                {% dsfr_notice title="Attention vous êtes sur l'environnement de production de Sèves" type="weather-red" icon="fr-icon-warning-fill" %}
+            </div>
+        {% endif %}
+        {% if env == "preprod" %}
+            <div class="general-warning-message">
+                {% dsfr_notice title="Attention vous êtes sur l'environnement de démo de Sèves" type="warning" %}
             </div>
         {% endif %}
 

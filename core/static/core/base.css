@@ -268,7 +268,7 @@ fieldset {
     color: var(--grey-425-625) !important;
 }
 
-.prod-warning-message .fr-notice__body p {
+.general-warning-message .fr-notice__body p {
     margin-left: auto;
     margin-right: auto;
 }
