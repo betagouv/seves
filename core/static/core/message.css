@@ -1,10 +1,13 @@
 #message-type-title::first-letter {
     text-transform: capitalize;
 }
+
 .message-document-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: var(--background-default-grey);
+    word-break: break-all;
 }
 .message-document-container .fr-btn--tertiary {
     margin-bottom: 0;
