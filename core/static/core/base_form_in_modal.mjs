@@ -1,5 +1,5 @@
-import { Controller } from "Stimulus"
-import { collectFormValues, removeRequired } from "Forms"
+import {Controller} from "Stimulus"
+import {collectFormValues, removeRequired} from "Forms"
 
 /**
  * Base controller for forms that generate cards and handle deletion.
@@ -12,7 +12,7 @@ import { collectFormValues, removeRequired } from "Forms"
  */
 export class BaseFormInModal extends Controller {
     static targets = ["fieldset", "deleteInput", "dialog", "cardContainer", "deleteModal"]
-    static values = { formPrefix: String, shouldImmediatelyShow: { type: Boolean, default: false } }
+    static values = {formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
 
     openDialog() {
         dsfr(this.dialogTarget).modal.disclose()
@@ -24,7 +24,7 @@ export class BaseFormInModal extends Controller {
 
     onValidateForm() {
         const formValues = collectFormValues(this.fieldsetTarget, {
-            nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+            nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
         })
         if (formValues === undefined) {
             return
@@ -97,13 +97,13 @@ export class BaseFormInModal extends Controller {
     }
 
     joinText(delimiter, ...items) {
-        return items.filter((it) => !!it.length).join(delimiter)
+        return items.filter(it => !!it.length).join(delimiter)
     }
 
     renderBadges(items) {
         return items
-            .filter((it) => !!it?.length)
-            .map((it) => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
+            .filter(it => !!it?.length)
+            .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
             .join("")
     }
 

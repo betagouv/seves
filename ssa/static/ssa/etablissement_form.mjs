@@ -1,6 +1,6 @@
-import { setUpAddressChoices } from "BanAutocomplete"
-import { setUpSiretChoices } from "siret"
-import { formIsValid, removeRequired } from "Forms"
+import {setUpAddressChoices} from "BanAutocomplete"
+import {setUpSiretChoices} from "siret"
+import {formIsValid, removeRequired} from "Forms"
 
 let modalEtablissementHTMLContent = {}
 
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setupAdresseField(modal) {
         const addressChoices = setUpAddressChoices(modal.querySelector("[id$=adresse_lieu_dit]"))
-        addressChoices.passedElement.element.addEventListener("choice", (event) => {
+        addressChoices.passedElement.element.addEventListener("choice", event => {
             modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
             modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
             if (!!event.detail.customProperties.context) {
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function configureSiretField(field, addressChoices, communesApi) {
         const choicesSIRET = setUpSiretChoices(field, "bottom")
-        choicesSIRET.passedElement.element.addEventListener("choice", (event) => {
+        choicesSIRET.passedElement.element.addEventListener("choice", event => {
             const codeCommune = event.detail.customProperties.code_commune
             field.closest("dialog").querySelector("[id$=siret]").value = event.detail.customProperties.siret
             field.closest("dialog").querySelector("[id$=raison_sociale]").value = event.detail.customProperties.raison
@@ -59,15 +59,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             fetch(`/ssa/api/find-numero-agrement/?siret=${event.detail.customProperties.siret}`)
-                .then((response) => response.json())
-                .then((data) => {
+                .then(response => response.json())
+                .then(data => {
                     if (!!data["numero_agrement"]) {
                         field.closest("dialog").querySelector("[id$=agrement]").value = data["numero_agrement"]
                     }
                 })
 
             if (!!codeCommune && !!communesApi) {
-                fetch(`${communesApi}/${codeCommune}?fields=departement`).then(async (response) => {
+                fetch(`${communesApi}/${codeCommune}?fields=departement`).then(async response => {
                     const json = await response.json()
                     field.closest("dialog").querySelector("[id$=departement]").value = json.departement.code
                 })
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let addressChoices = setupAdresseField(modal)
         setupSiretBlock(modal, addressChoices)
 
-        modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", (event) => {
+        modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
             event.preventDefault()
             submitFormAndAddEtablissementCard(event)
         })
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         setTimeout(() => {
             dsfr(modal).modal.disclose()
-            dsfr(modal).modal.node.addEventListener("dsfr.conceal", (event) => {
+            dsfr(modal).modal.node.addEventListener("dsfr.conceal", event => {
                 if (modal.dataset.needsRestoreBackup === "false") {
                     modal.dataset.needsRestoreBackup = ""
                     removeRequired(modal)
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function initExistingEtablissements() {
-        document.querySelectorAll('[id^="fr-modal-etablissement"]').forEach((element) => {
+        document.querySelectorAll('[id^="fr-modal-etablissement"]').forEach(element => {
             const etablissementId = element.dataset.formPrefix.replace(getPrefix(""), "")
             getAndAddCardToList(element, etablissementId)
             setupEtablisementModal(element)
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
         removeRequired(currentModal)
     }
 
-    document.getElementById("add-etablissement").addEventListener("click", (event) => {
+    document.getElementById("add-etablissement").addEventListener("click", event => {
         event.preventDefault()
         showEtablissementModal()
     })

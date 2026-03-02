@@ -1,5 +1,5 @@
-import { applicationReady } from "Application"
-import { Controller } from "Stimulus"
+import {applicationReady} from "Application"
+import {Controller} from "Stimulus"
 import choicesDefaults from "choicesDefaults"
 
 class FreeLinksViaApiController extends Controller {
@@ -15,11 +15,11 @@ class FreeLinksViaApiController extends Controller {
 
     fetchFreeLink(query) {
         return fetch(`/ssa/api/freelinks/recherche/?q=${query}`).then(
-            async (response) => {
+            async response => {
                 const data = await response.json()
                 return data.results
             },
-            (error) => {
+            error => {
                 console.error("Erreur lors de la récupération des données:", error)
                 return []
             },
@@ -27,9 +27,9 @@ class FreeLinksViaApiController extends Controller {
     }
 
     syncChoicesToSelect() {
-        this.inputTarget.querySelectorAll("option").forEach((o) => (o.selected = false))
+        this.inputTarget.querySelectorAll("option").forEach(o => (o.selected = false))
 
-        this.freeLinksChoices.getValue(true).forEach((value) => {
+        this.freeLinksChoices.getValue(true).forEach(value => {
             let option = this.inputTarget.querySelector(`option[value="${value}"]`)
             if (!option) {
                 option = new Option(value, value, true, true)
@@ -54,7 +54,7 @@ class FreeLinksViaApiController extends Controller {
             this.debounce(() => {
                 const query = this.freeLinksChoices.input.element.value
                 if (query.length >= 3) {
-                    this.fetchFreeLink(query).then((results) => {
+                    this.fetchFreeLink(query).then(results => {
                         this.freeLinksChoices.setChoices(results, "value", "label", false)
                     })
                 }
@@ -68,6 +68,6 @@ class FreeLinksViaApiController extends Controller {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("free-link-via-api", FreeLinksViaApiController)
 })

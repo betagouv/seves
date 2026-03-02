@@ -1,6 +1,6 @@
-import { Controller } from "Stimulus"
-import { COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool } from "Application"
-import { createStore, useStore } from "StimulusStore"
+import {Controller} from "Stimulus"
+import {COMMON_EVENTS, dsfrDisclosePromise, escapeHTML, fetchPool} from "Application"
+import {createStore, useStore} from "StimulusStore"
 
 const DOCUMENT_FORM_ID = "document-form"
 const DOCUMENT_FORMSET_ID = "document-formset"
@@ -92,10 +92,10 @@ class BaseDocumentFormset extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
 
     static values = {
-        state: { type: Number, default: DOCUMENT_STATE.IDLE },
-        uploadDisabled: { type: Boolean, default: true },
+        state: {type: Number, default: DOCUMENT_STATE.IDLE},
+        uploadDisabled: {type: Boolean, default: true},
         allowedExtensions: Object,
-        nextUrl: { type: String, default: undefined },
+        nextUrl: {type: String, default: undefined},
         genericError: String,
     }
     static targets = [
@@ -157,10 +157,10 @@ class BaseDocumentFormset extends Controller {
         }
     }
 
-    onChangeType({ target: { options, value } }) {
+    onChangeType({target: {options, value}}) {
         this.uploadDisabledValue = value === ""
         const optionIdx = Math.max(
-            Array.from(options).findIndex((option) => option.value === value),
+            Array.from(options).findIndex(option => option.value === value),
             0,
         )
         this.setGlobalFileTypeIndexValue(optionIdx)
@@ -186,12 +186,12 @@ class BaseDocumentFormset extends Controller {
     }
 
     /** @param {FileList} files */
-    onDrop({ dataTransfer: { files } }) {
+    onDrop({dataTransfer: {files}}) {
         this.processFiles(files)
     }
 
     /** @param {FileList} files */
-    onFileSelect({ target: { files } }) {
+    onFileSelect({target: {files}}) {
         this.processFiles(files)
     }
 
@@ -206,7 +206,7 @@ class BaseDocumentFormset extends Controller {
             let hasErrors = false
             const successFileNames = {}
             const promiseResults = await Promise.allSettled(
-                this.documentFormOutlets.map((controller) => controller.submit()),
+                this.documentFormOutlets.map(controller => controller.submit()),
             )
             for (const promiseResult of promiseResults) {
                 if (promiseResult.status === "fulfilled") {
@@ -217,7 +217,7 @@ class BaseDocumentFormset extends Controller {
             }
 
             this.dispatch(COMMON_EVENTS.DOCUMENT_SUCCESS, {
-                detail: { [COMMON_EVENTS.DOCUMENT_SUCCESS]: successFileNames },
+                detail: {[COMMON_EVENTS.DOCUMENT_SUCCESS]: successFileNames},
                 target: window,
                 prefix: "window",
             })
@@ -225,13 +225,13 @@ class BaseDocumentFormset extends Controller {
             if (hasErrors) {
                 // Focus first erroneous field
                 const autofocus = this.modalTarget.querySelector("[autofocus]")
-                autofocus?.scrollIntoView({ block: "center" })
-                autofocus?.focus({ focusVisible: true })
+                autofocus?.scrollIntoView({block: "center"})
+                autofocus?.focus({focusVisible: true})
                 throw FormValidationError
             }
 
             this.stateValue = DOCUMENT_STATE.IDLE
-            this.dispatch(COMMON_EVENTS.ALL_DOCUMENTS_SUCCES, { target: window, prefix: "window" })
+            this.dispatch(COMMON_EVENTS.ALL_DOCUMENTS_SUCCES, {target: window, prefix: "window"})
             requestAnimationFrame(() => {
                 dsfr(this.modalTarget).modal.conceal()
             })
@@ -246,7 +246,7 @@ class BaseDocumentFormset extends Controller {
 
         for (const file of files) {
             const nextId = this.getNextId()
-            this.setFilesValue((value) => ({ ...value, [nextId]: file }))
+            this.setFilesValue(value => ({...value, [nextId]: file}))
             this.formsetContainerTarget.insertAdjacentHTML(
                 "beforeend",
                 this.emptyFormTplTarget.innerHTML.replace("__file_id__", nextId),
@@ -287,9 +287,9 @@ class BaseDocumentFormset extends Controller {
 class DocumentForm extends Controller {
     static stores = [fileStore, globalFileTypeIndexStore, allowedExtensionsStore]
     static values = {
-        state: { type: Number, default: DOCUMENT_STATE.IDLE },
-        fileId: { type: Number, default: -1 },
-        deleteUrl: { type: String, default: "" },
+        state: {type: Number, default: DOCUMENT_STATE.IDLE},
+        fileId: {type: Number, default: -1},
+        deleteUrl: {type: String, default: ""},
     }
     static targets = [
         "form",
@@ -440,7 +440,7 @@ class DocumentForm extends Controller {
                 this.documentNameTarget.setCustomValidity(evt.target.validationMessage)
                 target = this.documentNameTarget
             }
-            target.scrollIntoView({ block: "center" })
+            target.scrollIntoView({block: "center"})
             target.reportValidity()
         } finally {
             this.skipEvent = false
@@ -448,14 +448,14 @@ class DocumentForm extends Controller {
     }
 
     /** @param {FileList} files */
-    onFileChanged({ target: { files } }) {
+    onFileChanged({target: {files}}) {
         if (this.documentNameTarget.value.trim() === "") {
             this.documentNameTarget.value = files.length === 0 ? "" : files[0].name
             this.documentNameTarget.dispatchEvent(new Event("input"))
         }
     }
 
-    onDocumentRemoved({ detail }) {
+    onDocumentRemoved({detail}) {
         if (detail[COMMON_EVENTS.DOCUMENT_DELETE] === this.inputIdTarget.value) {
             this.element.remove()
         }
@@ -466,11 +466,11 @@ class DocumentForm extends Controller {
             this.stateValue = DOCUMENT_STATE.DELETING
             if (this.deleteUrlValue.length > 0) {
                 this.abortController = new AbortController()
-                await fetchPool(this.deleteUrlValue, { method: "POST" })
+                await fetchPool(this.deleteUrlValue, {method: "POST"})
             }
             this.element.remove()
             this.dispatch(COMMON_EVENTS.DOCUMENT_DELETE, {
-                detail: { [COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value },
+                detail: {[COMMON_EVENTS.DOCUMENT_DELETE]: this.inputIdTarget.value},
                 target: window,
                 prefix: "window",
             })
@@ -480,12 +480,12 @@ class DocumentForm extends Controller {
         }
     }
 
-    onDocumentNameChanged({ target: { value } }) {
+    onDocumentNameChanged({target: {value}}) {
         this.accordionTitleTarget.textContent = value
     }
 
-    onDocumentTypeChanged({ target: { value } }) {
-        const option = Array.from(this.documentTypeTarget.options).find((option) => option.value === value)
+    onDocumentTypeChanged({target: {value}}) {
+        const option = Array.from(this.documentTypeTarget.options).find(option => option.value === value)
         this.accordionTypeLabelTarget.textContent = option.textContent
         if (this.hasDocumentFileTarget) {
             this.documentFileTarget.accept = this.documentFormsetOutlet.allowedExtensionsValue[option.value]
@@ -514,9 +514,9 @@ class DocumentForm extends Controller {
     }
 
     async #forceOpenAccordion() {
-        await new Promise((resolve) => requestAnimationFrame(resolve))
+        await new Promise(resolve => requestAnimationFrame(resolve))
         await dsfrDisclosePromise(dsfr(this.accordionContentTarget).collapse)
     }
 }
 
-export { DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset }
+export {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset}

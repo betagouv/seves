@@ -1,5 +1,5 @@
 import choicesDefaults from "choicesDefaults"
-import { patchItems, findPath, tsDefaultOptions, isLevel2WithChildren } from "CustomTreeSelect"
+import {patchItems, findPath, tsDefaultOptions, isLevel2WithChildren} from "CustomTreeSelect"
 
 document.addEventListener("DOMContentLoaded", () => {
     function handleNoticeProduitDisplay(options, value) {
@@ -29,16 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         document.querySelector("#categorie-produit .treeselect-input").classList.add("fr-input")
 
-        treeselect.srcElement.addEventListener("input", (e) => {
+        treeselect.srcElement.addEventListener("input", e => {
             if (!e.detail) return
             const result = findPath(e.detail, options)
             document.getElementById("id_categorie_produit").value = e.detail
             document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result
-                .map((n) => n.name)
+                .map(n => n.name)
                 .join(" > ")
         })
 
-        treeselect.srcElement.addEventListener("input", (e) => {
+        treeselect.srcElement.addEventListener("input", e => {
             handleNoticeProduitDisplay(options, e.detail)
         })
         handleNoticeProduitDisplay(options, selectedValue)

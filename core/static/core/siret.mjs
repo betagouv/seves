@@ -10,7 +10,7 @@ function debounce(func, wait) {
 }
 
 function improveResults(value, results) {
-    const filteredResults = results.filter((item) => item.customProperties?.siret?.startsWith(value))
+    const filteredResults = results.filter(item => item.customProperties?.siret?.startsWith(value))
 
     if (value.length === 14) {
         return [
@@ -40,12 +40,12 @@ export function fetchSiret(value) {
         .replace("__siret__", value)
     let results = []
     return fetch(endpoint)
-        .then((response) => response.json())
-        .then((data) => {
+        .then(response => response.json())
+        .then(data => {
             if (!data["etablissements"]) {
                 return improveResults(cleanedValue, [])
             }
-            data["etablissements"].forEach((etablissement) => {
+            data["etablissements"].forEach(etablissement => {
                 let address = etablissement["adresseEtablissement"]
                 let streetData = `${address["numeroVoieEtablissement"]} ${address["typeVoieEtablissement"]} ${address["libelleVoieEtablissement"]}`
                 let fullStreetData = `${streetData} - ${address["codePostalEtablissement"]} ${address["libelleCommuneEtablissement"]}`
@@ -87,10 +87,10 @@ export function setUpSiretChoices(element, position) {
 
     choicesSIRET.input.element.addEventListener(
         "input",
-        debounce((event) => {
+        debounce(event => {
             const query = choicesSIRET.input.element.value
             if (query.length > 5) {
-                fetchSiret(query).then((results) => {
+                fetchSiret(query).then(results => {
                     choicesSIRET.clearChoices()
                     choicesSIRET.setChoices(results, "value", "label", true)
                 })

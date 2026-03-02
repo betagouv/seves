@@ -1,7 +1,7 @@
-import { Controller } from "Stimulus"
+import {Controller} from "Stimulus"
 import choicesDefaults from "choicesDefaults"
-import { applicationReady } from "Application"
-import { collectFormValues } from "Forms"
+import {applicationReady} from "Application"
+import {collectFormValues} from "Forms"
 import {
     validateFileSize,
     updateAcceptAttributeFileInput,
@@ -78,6 +78,6 @@ export class MessageFormController extends Controller {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("message-form", MessageFormController)
 })

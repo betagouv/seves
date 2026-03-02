@@ -1,5 +1,5 @@
-import { applicationReady } from "Application"
-import { Controller } from "Stimulus"
+import {applicationReady} from "Application"
+import {Controller} from "Stimulus"
 
 class ArsInformeeController extends Controller {
     static targets = ["origin"]
@@ -12,6 +12,6 @@ class ArsInformeeController extends Controller {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("ars-informee", ArsInformeeController)
 })

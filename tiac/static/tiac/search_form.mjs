@@ -1,6 +1,6 @@
-import { Controller } from "Stimulus"
-import { applicationReady } from "Application"
-import { resetForm } from "Forms"
+import {Controller} from "Stimulus"
+import {applicationReady} from "Application"
+import {resetForm} from "Forms"
 import choicesDefaults from "choicesDefaults"
 import {
     patchItems,
@@ -55,7 +55,7 @@ class SearchFormController extends Controller {
     onSidebarAdd() {
         const inputs = this.sidebarTarget.querySelectorAll("input, textarea, select")
         let isValid = true
-        inputs.forEach((input) => {
+        inputs.forEach(input => {
             if (!input.checkValidity()) {
                 input.reportValidity()
                 isValid = false
@@ -73,7 +73,7 @@ class SearchFormController extends Controller {
 
     updateFilterCounter() {
         let filledFields = [...this.sidebarTarget.querySelectorAll("input, select")]
-        filledFields = filledFields.filter((el) => el.value.trim() !== "")
+        filledFields = filledFields.filter(el => el.value.trim() !== "")
 
         if (filledFields.length === 0) {
             this.counterTarget.classList.add("fr-hidden")
@@ -91,7 +91,7 @@ class SearchFormController extends Controller {
         const list = this.categorieDangerAnalyseContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true)
-            fragment.querySelectorAll("[for^='shortcut_']").forEach((label) => {
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label => {
                 if (this.treeselectDanger.value.includes(label.innerText)) {
                     fragment.querySelector(`[id='${label.getAttribute("for")}']`).checked = true
                 }
@@ -110,7 +110,7 @@ class SearchFormController extends Controller {
         const list = this.agentsPathogenesContainerTarget.querySelector(".treeselect-list")
         if (list) {
             const fragment = this.agentsPathogenesHeaderTarget.content.cloneNode(true)
-            fragment.querySelectorAll("[for^='shortcut_']").forEach((label) => {
+            fragment.querySelectorAll("[for^='shortcut_']").forEach(label => {
                 if (this.treeselectAgentsPathogenes.value.includes(label.innerText)) {
                     fragment.querySelector(`[id='${label.getAttribute("for")}']`).checked = true
                 }
@@ -125,12 +125,12 @@ class SearchFormController extends Controller {
         this.treeselectDanger = new Treeselect({
             ...tsDefaultOptions,
             parentHtmlContainer: this.categorieDangerAnalyseContainerTarget,
-            value: this.categorieDangerAnalyseInputTarget.value.split("||").map((v) => v.trim()),
+            value: this.categorieDangerAnalyseInputTarget.value.split("||").map(v => v.trim()),
             options: options,
             isSingleSelect: false,
             openCallback: this.treeselectOpenCallback.bind(this),
             placeholder: "Chercher ou choisir dans la liste",
-            searchCallback: (item) => {
+            searchCallback: item => {
                 if (item.length === 0) {
                     showHeader(this.treeselectDanger.srcElement, ".categorie-danger-header")
                 } else {
@@ -141,9 +141,9 @@ class SearchFormController extends Controller {
         this.treeselectDanger.srcElement.addEventListener("update-dom", () => {
             patchItems(this.treeselectDanger.srcElement)
         })
-        this.treeselectDanger.srcElement.addEventListener("input", (e) => {
+        this.treeselectDanger.srcElement.addEventListener("input", e => {
             if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach((checkbox) => {
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                     checkbox.checked = false
                 })
             } else {
@@ -158,12 +158,12 @@ class SearchFormController extends Controller {
         this.treeselectAgentsPathogenes = new Treeselect({
             ...tsDefaultOptions,
             parentHtmlContainer: this.agentsPathogenesContainerTarget,
-            value: this.agentsPathogenesInputTarget.value.split("||").map((v) => v.trim()),
+            value: this.agentsPathogenesInputTarget.value.split("||").map(v => v.trim()),
             options: options,
             isSingleSelect: false,
             openCallback: this.treeselectOpenCallbackAgentsPathogenes.bind(this),
             placeholder: "Chercher ou choisir dans la liste",
-            searchCallback: (item) => {
+            searchCallback: item => {
                 if (item.length === 0) {
                     showHeader(this.treeselectAgentsPathogenes.srcElement, ".categorie-danger-header")
                 } else {
@@ -174,9 +174,9 @@ class SearchFormController extends Controller {
         this.treeselectAgentsPathogenes.srcElement.addEventListener("update-dom", () => {
             patchItems(this.treeselectAgentsPathogenes.srcElement)
         })
-        this.treeselectAgentsPathogenes.srcElement.addEventListener("input", (e) => {
+        this.treeselectAgentsPathogenes.srcElement.addEventListener("input", e => {
             if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach((checkbox) => {
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                     checkbox.checked = false
                 })
             } else {
@@ -196,7 +196,7 @@ class SearchFormController extends Controller {
 
     setupCategorieProduit() {
         const options = JSON.parse(this.jsonConfigTarget.textContent)
-        const selectedValues = this.categorieProduitInputTarget.value.split("||").map((v) => v.trim())
+        const selectedValues = this.categorieProduitInputTarget.value.split("||").map(v => v.trim())
         const treeselectCategorieProduit = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: selectedValues,
@@ -214,7 +214,7 @@ class SearchFormController extends Controller {
         })
         this.categorieProduitContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
 
-        this.treeselectCategorieProduit.srcElement.addEventListener("input", (e) => {
+        this.treeselectCategorieProduit.srcElement.addEventListener("input", e => {
             if (!e.detail) return
             const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
             this.categorieProduitInputTarget.value = values.join("||")
@@ -223,7 +223,7 @@ class SearchFormController extends Controller {
 
     setupSelectedHazard() {
         const options = JSON.parse(this.jsonConfigSelectedHazardTarget.textContent)
-        const selectedValues = this.selectedHazardInputTarget.value.split("||").map((v) => v.trim())
+        const selectedValues = this.selectedHazardInputTarget.value.split("||").map(v => v.trim())
         const treeselectSelectedHazard = new Treeselect({
             parentHtmlContainer: this.selectedHazardContainerTarget,
             value: selectedValues,
@@ -244,7 +244,7 @@ class SearchFormController extends Controller {
         })
         this.selectedHazardContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
 
-        this.treeselectSelectedHazard.srcElement.addEventListener("input", (e) => {
+        this.treeselectSelectedHazard.srcElement.addEventListener("input", e => {
             if (!e.detail) return
             const values = addLevel2CategoryIfAllChildrenAreSelected(options, e.detail)
             this.selectedHazardInputTarget.value = values.join("||")
@@ -263,18 +263,18 @@ class SearchFormController extends Controller {
 
         this.updateFilterCounter()
 
-        const sidebarClosingObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
+        const sidebarClosingObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
                 if (mutation.type !== "attributes" && mutation.attributeName !== "class") return
                 if (!mutation.target.classList.contains("open")) {
                     this.updateFilterCounter()
                 }
             })
         })
-        sidebarClosingObserver.observe(this.sidebarTarget, { attributes: true })
+        sidebarClosingObserver.observe(this.sidebarTarget, {attributes: true})
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("search-form", SearchFormController)
 })

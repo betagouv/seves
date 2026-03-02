@@ -1,7 +1,7 @@
-import { BaseFormSetController } from "BaseFormset"
-import { BaseFormInModal } from "BaseFormInModal"
-import { applicationReady } from "Application"
-import { collectFormValues } from "Forms"
+import {BaseFormSetController} from "BaseFormset"
+import {BaseFormInModal} from "BaseFormInModal"
+import {applicationReady} from "Application"
+import {collectFormValues} from "Forms"
 
 class RepasFormController extends BaseFormInModal {
     static targets = ["denominationInput", "typeCollectiviteInputContainer", "typeCollectiviteInput"]
@@ -12,7 +12,7 @@ class RepasFormController extends BaseFormInModal {
         } else {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
-                    nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
                     skipValidation: true,
                 }),
             )
@@ -37,7 +37,7 @@ class RepasFormController extends BaseFormInModal {
 
     initCard(repas) {
         this.shouldImmediatelyShowValue = false
-        this.cardContainerTargets.forEach((it) => it.remove())
+        this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(repas))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(repas))
         dsfr(this.dialogTarget).modal.conceal()
@@ -88,7 +88,7 @@ class RepasFormController extends BaseFormInModal {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("repas-formset", BaseFormSetController)
     app.register("repas-form", RepasFormController)
 })

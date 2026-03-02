@@ -1,5 +1,5 @@
-import { applicationReady } from "Application"
-import { Controller } from "Stimulus"
+import {applicationReady} from "Application"
+import {Controller} from "Stimulus"
 
 class EtiologieFormController extends Controller {
     static targets = [
@@ -17,14 +17,14 @@ class EtiologieFormController extends Controller {
         currentOption: String,
         selectedValues: Array,
         config: Object,
-        hasConnected: { type: Boolean, default: false },
+        hasConnected: {type: Boolean, default: false},
     }
 
     connect() {
         this.config = JSON.parse(this.jsonConfigTarget.textContent)
-        this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter((value) => value.length > 0)
+        this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
         this.hasConnectedValue = true
-        let currentValue = this.analysesTargets.find((el) => el.checked)
+        let currentValue = this.analysesTargets.find(el => el.checked)
 
         if (!!currentValue) {
             this.precisionsTarget.disabled = !(currentValue.value === "oui")
@@ -33,13 +33,13 @@ class EtiologieFormController extends Controller {
 
     onShowFirstModal() {
         dsfr(this.etiologieModalTarget).modal.disclose()
-        document.querySelectorAll('input[name="danger_syndromiques_suspectes_display"]').forEach((el) => {
+        document.querySelectorAll('input[name="danger_syndromiques_suspectes_display"]').forEach(el => {
             el.disabled = this.selectedValuesValue.includes(el.value)
         })
     }
 
-    onDelete({ params: { choice } }) {
-        this.selectedValuesValue = this.selectedValuesValue.filter((it) => it !== choice)
+    onDelete({params: {choice}}) {
+        this.selectedValuesValue = this.selectedValuesValue.filter(it => it !== choice)
     }
 
     renderRecommendation = (choice, description) => {
@@ -52,7 +52,7 @@ class EtiologieFormController extends Controller {
     }
 
     renderCard(choice) {
-        const item = this.config.find((d) => d.value === choice)
+        const item = this.config.find(d => d.value === choice)
         return `<div class="etiologie-card-container fr-p-4w fr-mb-2w">
             <div class="fr-grid-row fr-grid-row--gutters fr-col">
                 <div class="fr-col-12 fr-col-lg-4">${item.name}</div>
@@ -73,7 +73,7 @@ class EtiologieFormController extends Controller {
     renderCards() {
         this.etiologieCardContainerTarget.innerHTML = ""
         if (this.selectedValuesValue.length > 0) {
-            this.selectedValuesValue.forEach((it) =>
+            this.selectedValuesValue.forEach(it =>
                 this.etiologieCardContainerTarget.insertAdjacentHTML("beforeend", this.renderCard(it)),
             )
             this.etiologieEmptyCardContainerTarget.classList.add("fr-hidden")
@@ -117,6 +117,6 @@ class EtiologieFormController extends Controller {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("etiologie-form", EtiologieFormController)
 })

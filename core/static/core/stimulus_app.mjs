@@ -1,4 +1,4 @@
-import { Application as StimulusApp, Controller } from "Stimulus"
+import {Application as StimulusApp, Controller} from "Stimulus"
 
 // Drop when adoption is 99%; see https://caniuse.com/wf-promise-withresolvers
 if (typeof Promise.withResolvers !== "function") {
@@ -8,12 +8,12 @@ if (typeof Promise.withResolvers !== "function") {
             resolve = res
             reject = rej
         })
-        return { promise, resolve, reject }
+        return {promise, resolve, reject}
     }
 }
 
 async function dsfrDisclosePromise(dsfrDisclosable) {
-    const { promise, resolve } = Promise.withResolvers()
+    const {promise, resolve} = Promise.withResolvers()
 
     if (dsfrDisclosable.isDisclosed) {
         resolve()
@@ -73,7 +73,7 @@ class FetchPool {
     }
 
     fetchPool(input, init) {
-        const { promise, resolve, reject } = Promise.withResolvers()
+        const {promise, resolve, reject} = Promise.withResolvers()
         this.enqueue(async () => fetch(input, init).then(resolve, reject))
         return promise
     }
@@ -92,7 +92,7 @@ const fetchPool = FetchPool.createFetchPool()
  * @property {HTMLElement} closeTarget
  */
 class AlertController extends Controller {
-    static values = { hide: { type: Boolean, default: false } }
+    static values = {hide: {type: Boolean, default: false}}
     static targets = ["close"]
 
     /**@param {HTMLElement} target */
@@ -129,4 +129,4 @@ const COMMON_EVENTS = Object.freeze({
     DOCUMENT_DELETE: "DOCUMENT_DELETE",
 })
 
-export { applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML, COMMON_EVENTS }
+export {applicationReady, dsfrDisclosePromise, fetchPool, escapeHTML, COMMON_EVENTS}

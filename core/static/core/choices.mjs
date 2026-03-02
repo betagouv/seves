@@ -3,7 +3,7 @@ export const choicesDefaults = {
     noChoicesText: "Aucun résultat trouvé",
     searchResultLimit: 10,
     searchFields: ["label"],
-    classNames: { containerInner: "fr-select" },
+    classNames: {containerInner: "fr-select"},
     itemSelectText: "",
     shouldSort: false,
     fuseOptions: {

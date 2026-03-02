@@ -20,7 +20,7 @@
         }
     },
     "files": {
-        "includes": ["**/*.js", "**/*.css", "!**/treeselectjs.umd.js", "!venv/**"]
+        "includes": ["**/*.js", "**/*.mjs", "**/*.css", "!**/treeselectjs.umd.js", "!venv/**"]
     },
     "vcs": {
         "useIgnoreFile": true

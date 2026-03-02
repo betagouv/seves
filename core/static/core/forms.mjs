@@ -2,7 +2,7 @@
 export function formIsValid(element) {
     const inputs = element.querySelectorAll("input, textarea, select")
     let isValid = true
-    inputs.forEach((input) => {
+    inputs.forEach(input => {
         if (!input.checkValidity()) {
             input.reportValidity()
             isValid = false
@@ -23,8 +23,8 @@ export function formIsValid(element) {
  */
 export function collectFormValues(
     formLike,
-    { nameTransform, skipValidation } = {
-        nameTransform: (name) => name,
+    {nameTransform, skipValidation} = {
+        nameTransform: name => name,
         skipValidation: false,
     },
 ) {
@@ -77,7 +77,7 @@ export function collectFormValues(
 
 /** @param {HTMLElement} element */
 export function removeRequired(element) {
-    element.querySelectorAll("[required], [pattern]").forEach((field) => {
+    element.querySelectorAll("[required], [pattern]").forEach(field => {
         field.required = false
     })
 }
@@ -90,7 +90,7 @@ export function getSelectedLabel(element) {
 }
 
 export function resetForm(element) {
-    element.querySelectorAll("input, select, textarea").forEach((field) => {
+    element.querySelectorAll("input, select, textarea").forEach(field => {
         if (field.type === "checkbox" || field.type === "radio") {
             field.checked = false
         } else {

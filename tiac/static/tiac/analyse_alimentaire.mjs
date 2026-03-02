@@ -1,8 +1,8 @@
-import { BaseFormSetController } from "BaseFormset"
-import { BaseFormInModal } from "BaseFormInModal"
-import { applicationReady } from "Application"
-import { collectFormValues } from "Forms"
-import { hideHeader, patchItems, showHeader, tsDefaultOptions } from "CustomTreeSelect"
+import {BaseFormSetController} from "BaseFormset"
+import {BaseFormInModal} from "BaseFormInModal"
+import {applicationReady} from "Application"
+import {collectFormValues} from "Forms"
+import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 
 /**
  * @typedef AnalyseAlimentaireData
@@ -27,9 +27,9 @@ import { hideHeader, patchItems, showHeader, tsDefaultOptions } from "CustomTree
 class AlimentFormController extends BaseFormInModal {
     static targets = ["categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
     static values = {
-        shouldImmediatelyShow: { type: Boolean, default: false },
+        shouldImmediatelyShow: {type: Boolean, default: false},
         categorieDanger: Array,
-        customHeaderAdded: { type: Boolean, default: false },
+        customHeaderAdded: {type: Boolean, default: false},
     }
 
     connect() {
@@ -39,7 +39,7 @@ class AlimentFormController extends BaseFormInModal {
         } else {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
-                    nameTransform: (name) => name.replace(`${this.formPrefixValue}-`, ""),
+                    nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
                     skipValidation: true,
                 }),
             )
@@ -49,7 +49,7 @@ class AlimentFormController extends BaseFormInModal {
     /** @param {AnalyseAlimentaireData} analyse */
     initCard(analyse) {
         this.shouldImmediatelyShowValue = false
-        this.cardContainerTargets.forEach((it) => it.remove())
+        this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(analyse))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(analyse))
         dsfr(this.dialogTarget).modal.conceal()
@@ -59,13 +59,13 @@ class AlimentFormController extends BaseFormInModal {
         this.treeselect = new Treeselect({
             ...tsDefaultOptions,
             parentHtmlContainer: this.categorieDangerContainerTarget,
-            value: this.categorieDangerInputTarget.value.split("||").map((v) => v.trim()),
+            value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
             options: this.categorieDangerValue,
             isSingleSelect: false,
             isIndependentNodes: true,
             openCallback: this.treeselectOpenCallback.bind(this),
             placeholder: "Chercher ou choisir dans la liste",
-            searchCallback: (item) => {
+            searchCallback: item => {
                 if (item.length === 0) {
                     showHeader(this.treeselect.srcElement, ".categorie-danger-header")
                 } else {
@@ -76,9 +76,9 @@ class AlimentFormController extends BaseFormInModal {
         this.treeselect.srcElement.addEventListener("update-dom", () => {
             patchItems(this.treeselect.srcElement)
         })
-        this.treeselect.srcElement.addEventListener("input", (e) => {
+        this.treeselect.srcElement.addEventListener("input", e => {
             if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach((checkbox) => {
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                     checkbox.checked = false
                 })
             } else {
@@ -178,7 +178,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 }
 
-applicationReady.then((app) => {
+applicationReady.then(app => {
     app.register("analyse-alimentaire-formset", BaseFormSetController)
     app.register("analyse-alimentaire-form", AlimentFormController)
 })
