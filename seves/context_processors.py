@@ -24,8 +24,6 @@ def environment_class(request):
             return {"environment_class": "environment-banner environment-dev"}
         case "test":
             return {"environment_class": "environment-banner environment-test"}
-        case "preprod":
-            return {"environment_class": "environment-banner environment-preprod"}
         case _:
             return {"environment_class": ""}
 
