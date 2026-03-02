@@ -94,7 +94,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
-    source = SEVESChoiceField(choices=Source.choices, required=False)
+    source = SEVESChoiceField(choices=Source.choices, required=True)
 
     aliments_animaux = forms.ChoiceField(
         required=False,
@@ -154,9 +154,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
-
-        if not self.instance.pk:
-            self.fields["source"].required = True
 
     def clean(self):
         super().clean()
@@ -258,7 +255,7 @@ class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm)
 class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
     template_name = "ssa/forms/investigation_cas_humain.html"
 
-    source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=False)
+    source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=True)
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -267,8 +264,6 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
-        if not self.instance.pk:
-            self.fields["source"].required = True
 
     def danger_plus_courants(self):
         return [
