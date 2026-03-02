@@ -93,9 +93,10 @@
                     id="message-form"
                     class="fr-p-2w grey-container document-cards-container"
                     data-controller="message-documents"
-                    data-message-documents-card-outlet="[data-controller='message-document-card']"
                 >
                     <h2 class="fr-h4">Documents</h2>
+
+                    <p data-message-documents-target="documentsAddedMsg"></p>
 
                     <button
                         class="fr-btn fr-btn--secondary"
@@ -106,8 +107,6 @@
                     >
                         Ajouter des documents
                     </button>
-
-                    <p data-message-documents-target="documentsAddedMsg"></p>
 
                     <section data-message-documents-target="validatedSection">
                         {% for form in document_formset %}
@@ -122,6 +121,7 @@
                                         data-message-document-card-loading-class="loading"
                                         data-action="message-document-card#onDelete:stop:prevent"
                                         data-testid="document-card"
+                                        data-message-documents-target="documentCard"
                                     >
                                         {% csrf_token %}
                                         <input
@@ -142,7 +142,7 @@
                                         </span>
                                         <button
                                             type="submit"
-                                            class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary"
+                                            class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary fr-ml-2v"
                                             data-action="document-validated#onDelete:stop:prevent"
                                             data-message-document-card-target="deleteBtn"
                                             data-testid="document-delete-btn"

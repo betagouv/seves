@@ -12,13 +12,13 @@ const STATES = Object.freeze({
  * @property {HTMLElement} documentsAddedMsgTarget
  * @property {HTMLElement} validatedSectionTarget
  * @property {HTMLTemplateElement} validatedTplTarget
+ * @property {HTMLElement[]} documentCardTargets
  * @property {Number} stateValue
  * @property {String[]} loadingClasses
  * @property {MessageDocumentCard[]} cardOutlets
  */
 class MessageDocuments extends Controller {
-    static targets = ["documentsAddedMsg", "validatedSection", "validatedTpl"]
-    static outlets = ["card"]
+    static targets = ["documentsAddedMsg", "validatedSection", "validatedTpl", "documentCard"]
 
     initialize() {
         const dataAction = [
@@ -29,7 +29,7 @@ class MessageDocuments extends Controller {
     }
 
     connect() {
-        this.#updateMessage(this.cardOutlets)
+        this.#updateMessage()
     }
 
     /** @param {String} documentNamesJSON */
@@ -49,16 +49,17 @@ class MessageDocuments extends Controller {
         }
     }
 
-    cardOutletConnected() {
-        this.#updateMessage(this.cardOutletConnected.length)
+    documentCardTargetConnected() {
+        this.#updateMessage()
     }
 
-    cardOutletDisconnected() {
-        this.#updateMessage(this.cardOutletConnected.length)
+    documentCardTargetDisconnected() {
+        this.#updateMessage()
     }
 
-    #updateMessage(value) {
-        this.documentsAddedMsgTarget.innerText = value === 0 ? "Aucun document ajouté" : "Documents ajoutés au message"
+    #updateMessage() {
+        this.documentsAddedMsgTarget.innerText =
+            this.documentCardTargets.length === 0 ? "Aucun document ajouté" : "Documents ajoutés au message"
     }
 }
 
