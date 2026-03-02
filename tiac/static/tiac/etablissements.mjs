@@ -163,7 +163,9 @@ class EtablissementFormController extends BaseFormInModal {
             <div class="fr-card__body">
                 <div class="fr-card__content">
                     <h3 class="fr-card__title">
-                      ${title}
+                        <a href="#${etablissement.raison_sociale}" id="${etablissement.raison_sociale}" data-action="${this.identifier}#onModify:prevent:default" >
+                            ${title}
+                        </a>
                     </h3>
                     ${this.optionalText(subTitle, `<p class="fr-text--sm card-subtitle">${subTitle}</p>`)}
                     <div class="fr-card__desc">

@@ -20,7 +20,7 @@
                                 <div class="fr-col-3 bold">Catégorie de danger</div>
                                 <div class="fr-col-3">
                                     {% for danger in analyse.categorie_danger_labels %}
-                                        <span class="fr-badge fr-badge--info  fr-badge--no-icon fr-m-0 fr-mt-2v">{{ danger }}</span>
+                                        <span class="fr-badge fr-badge--info fr-badge--sm fr-badge--no-icon fr-m-0 fr-mt-2v">{{ danger }}</span>
                                     {% empty %}
                                         <span class="empty-value">Vide</span>
                                     {% endfor %}

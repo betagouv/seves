@@ -9,19 +9,26 @@
                     <div class="fr-card__body">
                         <div class="fr-card__content">
                             <div>
-                                <p class="fr-card__title">{{ repas.denomination }}</p>
+                                <h3 class="fr-card__title">
+                                    <a href="#repas-{{ repas.pk }}" id="{{ repas.pk }}" data-fr-opened="false"
+                                       aria-controls="fr-modal-repas-{{ repas.pk }}" >
+                                        {{ repas.denomination }}
+                                    </a>
+                                </h3>
                             </div>
-                            {% if repas.datetime_repas %}
-                                <p class="fr-card__detail fr-icon-calendar-2-line fr-mb-2v fr-mt-4v">{{ repas.datetime_repas }}</p>
-                            {% endif %}
-                            {% if repas.type_repas %}
-                                <p>{{ repas.get_type_repas_display }}</p>
-                            {% endif %}
-                            {%  if repas.nombre_participant %}
-                                <span class="fr-badge fr-badge--info fr-badge--sm fr-badge--no-icon fr-m-0">Participants : {{ repas.nombre_participant }}</span>
-                            {% endif %}
-                            <div class="fr-btns-group--right">
-                                <button data-fr-opened="false" aria-controls="fr-modal-repas-{{ repas.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                            <div class="fr-card__desc">
+                                {% if repas.datetime_repas %}
+                                    <p class="fr-card__detail fr-icon-calendar-2-line fr-mb-2v fr-mt-4v">{{ repas.datetime_repas }}</p>
+                                {% endif %}
+                                {% if repas.type_repas %}
+                                    <p>{{ repas.get_type_repas_display }}</p>
+                                {% endif %}
+                                {%  if repas.nombre_participant %}
+                                    <span class="fr-badge fr-badge--info fr-badge--no-icon fr-m-0">Participants : {{ repas.nombre_participant }}</span>
+                                {% endif %}
+                                <div class="fr-btns-group--right">
+                                    <button data-fr-opened="false" aria-controls="fr-modal-repas-{{ repas.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                                </div>
                             </div>
                         </div>
                     </div>
