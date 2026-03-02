@@ -1,13 +1,6 @@
 import {Controller} from "Stimulus"
 import choicesDefaults from "choicesDefaults"
 import {applicationReady} from "Application"
-import {collectFormValues} from "Forms"
-import {
-    validateFileSize,
-    updateAcceptAttributeFileInput,
-    getAcceptAllowedExtensionsAttributeValue,
-    isSelectedFileExtensionValid,
-} from "Document"
 
 /**
  * @property {HTMLFormElement} element
