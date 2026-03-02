@@ -21,7 +21,7 @@ def test_can_update_investigation_cas_humain_descripteur_and_save_as_draft(
 
     update_page = InvestigationCasHumainFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
-    expect(update_page.source).not_to_have_attribute("required", "")
+    expect(update_page.source).to_have_attribute("required", "")
 
     expect(update_page.date_reception).to_have_value(evenement.date_reception.strftime("%Y-%m-%d"))
 
