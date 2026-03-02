@@ -24,6 +24,7 @@ function improveResults(value, results) {
                     raison: null,
                     commune: null,
                     code_commune: null,
+                    code_postal: null,
                 },
             },
             ...filteredResults,
@@ -62,6 +63,7 @@ export function fetchSiret(value) {
                         raison: uniteLegale["denominationUniteLegale"],
                         commune: address["libelleCommuneEtablissement"],
                         code_commune: address["codeCommuneEtablissement"],
+                        code_postal: address["codePostalEtablissement"],
                     },
                 })
             })

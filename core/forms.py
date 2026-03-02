@@ -533,6 +533,7 @@ class BaseEtablissementForm(forms.ModelForm):
     )
     autre_identifiant = forms.CharField(required=False)
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
+    code_postal = forms.CharField(widget=forms.HiddenInput(), required=False)
     adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
     pays = CountryField(blank=True).formfield(label="Pays", widget=forms.Select(attrs={"class": "fr-select"}))
     departement = forms.ModelChoiceField(

@@ -283,11 +283,20 @@ def test_create_fiche_detection_with_lieu_in_corsica(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill("Test")
+    response_body = [
+        {
+            "codesPostaux": ["20000", "20090", "20167"],
+            "nom": "Ajaccio",
+            "code": "2A004",
+            "_score": 1.7631999999999999,
+            "departement": {"code": "2A", "nom": "Corse-du-Sud"},
+        }
+    ]
     lieu_form_elements.force_commune(
         config={
             "search_text": "Ajac",
-            "option_name": "Ajaccio (2A)",
-            "response_body": """[{"nom":"Ajaccio","code":"2A004","_score":1.8106081554689044,"departement":{"code":"2A","nom":"Corse-du-Sud"}}]""",
+            "option_name": f"Ajaccio ({response_body[0]['codesPostaux'][0]})",
+            "response_body": json.dumps(response_body),
         }
     )
     lieu_form_elements.save_btn.click()
@@ -349,6 +358,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     assert lieu_from_db.adresse_lieu_dit == lieu.adresse_lieu_dit
     assert lieu_from_db.commune == "Lille"
     assert lieu_from_db.code_insee == "59350"
+    assert lieu_from_db.code_postal == "59000"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.site_inspection == site_inspection
     assert lieu_from_db.is_etablissement is False
@@ -867,6 +877,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
                         "citycode": "75115",
+                        "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
                     }
@@ -901,6 +912,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
     assert lieu.adresse_lieu_dit == "251 Rue de Vaugirard"
     assert lieu.commune == "Paris"
     assert lieu.code_insee == "75115"
+    assert lieu.code_postal == "75015"
     assert lieu.departement.nom == "Paris"
 
 
@@ -925,6 +937,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
                         "citycode": "75115",
+                        "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
                     }

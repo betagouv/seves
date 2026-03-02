@@ -171,6 +171,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
     assert etablissement.commune == "PARIS"
     assert etablissement.code_insee == "75115"
+    assert etablissement.code_postal == "75013"
     assert etablissement.pays.name == "France"
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"
