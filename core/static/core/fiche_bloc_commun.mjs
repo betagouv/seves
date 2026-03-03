@@ -17,12 +17,11 @@ class FicheBlocCommun extends Controller {
             `window:${COMMON_EVENTS.ALL_DOCUMENTS_SUCCES}@window->${this.identifier}#onAllDocumentSuccess`,
         ]
         this.element.dataset.action = actions.join(" ").trim()
-    }
 
-    tabsTargetConnected(tabsTarget) {
-        this.#tryInitTabs()
-        const actions = [tabsTarget.dataset.action || "", `dsfr.current->${this.identifier}#onTabSelected`]
-        tabsTarget.dataset.action = actions.join(" ").trim()
+        for (const tab of this.tabsTarget.querySelectorAll(".fr-tabs__tab")) {
+            const actions = [tab.dataset.action || "", `${this.identifier}#onTabSelected`]
+            tab.dataset.action = actions.join(" ").trim()
+        }
     }
 
     connect() {
@@ -32,14 +31,9 @@ class FicheBlocCommun extends Controller {
 
     /** @param {HTMLElement} currentTarget */
     onTabSelected({currentTarget}) {
-        if (this.tabsTarget.dataset.initialized !== "true") {
-            this.#tryInitTabs()
-        } else {
-            const id = dsfr(currentTarget)?.tabsGroup?.current?.node?.id
-            if (this.tabsTarget.querySelector(`#${id}`) !== null) {
-                window.location.hash = `#${id}`
-                window.dispatchEvent(new Event("hashchange"))
-            }
+        const id = currentTarget.getAttribute("aria-controls")
+        if (id && this.tabsTarget.querySelector(`#${id}`) !== null) {
+            window.location.hash = `#${id}`
         }
     }
 
@@ -67,17 +61,6 @@ class FicheBlocCommun extends Controller {
         } catch (_e) {
             delete sessionStorage[COMMON_EVENTS.DOCUMENT_SUCCESS]
         }
-    }
-
-    #tryInitTabs() {
-        if (this.tabsTarget.dataset.frJsTabsGroup !== "true") return
-
-        requestAnimationFrame(() => {
-            if (window.location.hash !== "") {
-                dsfr(this.tabsTarget.querySelector(window.location.hash))?.tabPanel?.disclose()
-            }
-            this.tabsTarget.dataset.initialized = "true"
-        })
     }
 }
 
