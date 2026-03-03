@@ -201,6 +201,7 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
 
     def fill_required_fields(self, evenement_produit):
         self.type_evenement.select_option(evenement_produit.type_evenement)
+        self.source.select_option(evenement_produit.source)
         self.description.fill(evenement_produit.description)
 
     def set_categorie_produit(self, evenement_produit, clear_input=False):
@@ -359,44 +360,6 @@ class EvenementProduitDetailsPage(SsaBaseDetailPage):
 
     def publish(self):
         self.page.get_by_role("button", name="Publier").click()
-
-    def open_compte_rendu_di(self):
-        self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_test_id("fildesuivi-actions-compte-rendu").click()
-
-    @property
-    def message_form_title(self):
-        return self.page.locator("#message-type-title")
-
-    def add_recipient_to_message(self, contact: str, choice_js_fill):
-        choice_js_fill(
-            self.page,
-            ".choices:has(#id_recipients)",
-            contact,
-            contact,
-            use_locator_as_parent_element=True,
-        )
-
-    def add_message_content_and_send(self):
-        self.page.locator("#id_title").fill("Title of the message")
-        self.page.locator("#id_content").fill("My content \n with a line return")
-        self.page.get_by_test_id("fildesuivi-add-submit").click()
-
-    @property
-    def fil_de_suivi_sender(self, line_number=1):
-        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(2) a")
-
-    @property
-    def fil_de_suivi_recipients(self, line_number=1):
-        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(3) a")
-
-    @property
-    def fil_de_suivi_title(self, line_number=1):
-        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(4) a")
-
-    @property
-    def fil_de_suivi_type(self, line_number=1):
-        return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
 
 
 class EvenementProduitListPage(WithTreeSelect):
@@ -588,8 +551,9 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     def navigate_update_page(self, evenement):
         self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-update', kwargs={'pk': evenement.pk})}")
 
-    def fill_required_fields(self, evenement_produit):
-        self.description.fill(evenement_produit.description)
+    def fill_required_fields(self, evenement):
+        self.description.fill(evenement.description)
+        self.source.select_option(evenement.source)
 
     def _submit(self, locator: Locator, *, wait_for=None):
         wait_for = wait_for or "/details/"

@@ -9,7 +9,11 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
 )
-from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithDocumentPermissionMixin
+from core.model_mixins import (
+    WithBlocCommunFieldsMixin,
+    WithContactPermissionMixin,
+    WithFicheDocumentPermissionMixin,
+)
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ssa.constants import SourceInvestigationCasHumain
@@ -33,7 +37,7 @@ class EvenementInvestigationCasHumain(
     WithLatestVersionMixin,
     AllowModificationMixin,
     WithBlocCommunFieldsMixin,
-    WithDocumentPermissionMixin,
+    WithFicheDocumentPermissionMixin,
     WithContactPermissionMixin,
     WithFreeLinkIdsMixin,
     EmailNotificationMixin,

@@ -47,6 +47,7 @@ def test_can_create_investigation_cas_humain_with_all_fields(
     input_data = InvestigationCasHumainFactory.build(not_bacterie=True)
     creation_page = InvestigationCasHumainFormPage(page, live_server.url)
     creation_page.navigate()
+    expect(creation_page.source).to_have_attribute("required", "")
     creation_page.fill_required_fields(input_data)
     creation_page.date_reception.fill(input_data.date_reception.strftime("%Y-%m-%d"))
     creation_page.source.select_option(input_data.source)

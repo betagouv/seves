@@ -14,6 +14,13 @@ def test_update_evenement_simple_performances(client, django_assert_num_queries)
         client.get(reverse("tiac:evenement-simple-edition", kwargs={"pk": evenement.pk}))
 
 
+def test_update_evenement_simple_title(live_server, page):
+    evenement = EvenementSimpleFactory()
+    update_page = EvenementSimpleEditFormPage(page, live_server.url, evenement)
+    update_page.navigate()
+    expect(update_page.page.get_by_text(f"Modification de l'événement {evenement.numero}", exact=True)).to_be_visible()
+
+
 def test_evenement_simple_update_has_locking_protection(
     live_server,
     page,

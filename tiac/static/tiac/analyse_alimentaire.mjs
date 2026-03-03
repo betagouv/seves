@@ -1,8 +1,8 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
-import {collectFormValues} from "Forms";
+import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
 import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
+import {collectFormValues} from "Forms"
 
 /**
  * @typedef AnalyseAlimentaireData
@@ -29,8 +29,8 @@ class AlimentFormController extends BaseFormInModal {
     static values = {
         shouldImmediatelyShow: {type: Boolean, default: false},
         categorieDanger: Array,
-        customHeaderAdded: {type: Boolean, default: false}
-    };
+        customHeaderAdded: {type: Boolean, default: false},
+    }
 
     connect() {
         this.setupcategorieDanger()
@@ -40,15 +40,15 @@ class AlimentFormController extends BaseFormInModal {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
                     nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
-                    skipValidation: true
-                })
+                    skipValidation: true,
+                }),
             )
         }
     }
 
     /** @param {AnalyseAlimentaireData} analyse */
     initCard(analyse) {
-        this.shouldImmediatelyShowValue = false;
+        this.shouldImmediatelyShowValue = false
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(analyse))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(analyse))
@@ -76,9 +76,9 @@ class AlimentFormController extends BaseFormInModal {
         this.treeselect.srcElement.addEventListener("update-dom", () => {
             patchItems(this.treeselect.srcElement)
         })
-        this.treeselect.srcElement.addEventListener('input', (e) => {
+        this.treeselect.srcElement.addEventListener("input", e => {
             if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox =>{
+                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                     checkbox.checked = false
                 })
             } else {
@@ -94,7 +94,7 @@ class AlimentFormController extends BaseFormInModal {
         const checkbox = this.categorieDangerContainerTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
         checkbox.checked = !checkbox.checked
 
-        let valuesToSet = this.treeselect.value
+        const valuesToSet = this.treeselect.value
         if (checkbox.checked) {
             valuesToSet.push(value)
         } else {
@@ -122,12 +122,12 @@ class AlimentFormController extends BaseFormInModal {
         patchItems(this.treeselect.srcElement)
         if (this.customHeaderAddedValue) {
             showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-            return;
+            return
         }
         const list = this.categorieDangerContainerTarget.querySelector(".treeselect-list")
         if (list) {
-            const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true);
-            list.prepend(fragment);
+            const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true)
+            list.prepend(fragment)
             this.customHeaderAddedValue = true
         }
     }
@@ -152,7 +152,9 @@ class AlimentFormController extends BaseFormInModal {
                 <div class="fr-card__body">
                     <div class="fr-card__content">
                         <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
+                            <a href="#${analyse.reference_prelevement}" id="${analyse.reference_prelevement}" data-action="${this.identifier}#onModify:prevent:default" >
                             ${analyse.reference_prelevement}
+                            </a>
                         </h3>
                         <div class="fr-card__desc">
                             <p class="fr-mb-4v">${analyse.etat_prelevement}</p>

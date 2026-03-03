@@ -1,9 +1,9 @@
+import abc
 from collections import defaultdict
 import datetime
 from functools import cached_property, wraps
 import json
 import logging
-import typing
 from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
@@ -14,15 +14,15 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.forms import Media
+from django.forms import BaseModelFormSet, Media
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
-from django.views.generic.base import ContextMixin, View
-from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import BaseCreateView
+from django.views.generic.base import ContextMixin
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
 
@@ -45,11 +45,9 @@ from core.models import (
 
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from .filters import DocumentFilter, MessageFilter
+from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
-
-if typing.TYPE_CHECKING:
-    from .formsets import DocumentInMessageUploadFormSet
 
 logger = logging.getLogger(__name__)
 
@@ -78,29 +76,41 @@ class MediaDefiningMixin(ContextMixin):
         return context_data["form"].media if "form" in context_data else Media()
 
 
-class WithDocumentUploadFormMixin(MediaDefiningMixin, SingleObjectMixin, View):
-    def get_object_linked_to_document(self):
-        raise NotImplementedError
+class WithDocumentUploadFormMixin(MediaDefiningMixin, DetailView, abc.ABC):
+    @abc.abstractmethod
+    def get_redirect_url_after_upload(self, related_to) -> str | None:
+        pass
 
-    def get_redirect_url_after_upload(self):
-        raise NotImplementedError
+    @abc.abstractmethod
+    def get_document_formset(self, **kwargs) -> BaseModelFormSet:
+        pass
+
+    def get_document_formset_kwargs(self, related_to, **kwargs) -> dict:
+        return {
+            "user": self.request.user,
+            "related_to": related_to,
+            "allowed_document_types": related_to.get_allowed_document_types(),
+            "next_url": self.get_redirect_url_after_upload(related_to),
+            **kwargs,
+        }
 
     def get_context_data(self, **kwargs):
-        from .formsets import DocumentUploadFormSet
-
         context = super().get_context_data(**kwargs)
         if not (related_to := context.get(self.context_object_name)):
             related_to = self.get_object()
-        context["document_formset"] = DocumentUploadFormSet(
-            user=self.request.user,
-            related_to=related_to,
-            allowed_document_types=related_to.get_allowed_document_types(),
-            next_url=f"{related_to.get_absolute_url()}#tabpanel-documents-panel",
-        )
+        context["document_formset"] = self.get_document_formset(**self.get_document_formset_kwargs(related_to))
         return context
 
     def get_media(self, **context_data) -> Media:
         return super().get_media(**context_data) + context_data["document_formset"].media
+
+
+class WithFicheObjectDocumentUploadFormMixin(WithDocumentUploadFormMixin, abc.ABC):
+    def get_document_formset(self, **kwargs) -> BaseModelFormSet:
+        return FicheDocumentUploadFormSet(**kwargs)
+
+    def get_redirect_url_after_upload(self, related_to):
+        return f"{related_to.get_absolute_url()}#tabpanel-documents-panel"
 
 
 class WithDocumentListInContextMixin:
@@ -554,6 +564,9 @@ class WithAddUserContactsMixin:
 
     def add_user_contacts(self, obj):
         """Ajoute l'utilisateur courant et sa structure comme contacts de l'objet."""
+        if not hasattr(obj, "contacts"):
+            return
+
         agent = self.request.user.agent
 
         agent_contact = Contact.objects.get(agent=agent)
@@ -673,34 +686,22 @@ class WithOrderingMixin:
         return context
 
 
-class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaDefiningMixin, BaseCreateView):
-    def get_document_in_message_upload_formset(self, message, **kwargs) -> "DocumentInMessageUploadFormSet":
-        from django.views.generic.edit import FormMixin
+class AbstractMessageHandlingView(
+    WithAddUserContactsMixin, GetFicheObjectMixin, WithDocumentUploadFormMixin, UpdateView, abc.ABC
+):
+    context_object_name = "message"
+    model = Message
 
-        from core.formsets import DocumentInMessageUploadFormSet
+    def get_object(self, queryset=None):
+        if not hasattr(self, "object"):
+            if hasattr(self, self.context_object_name):
+                self.object = getattr(self, self.context_object_name)
+            else:
+                self.object = super().get_object(queryset=queryset)
+        return self.object
 
-        form_kwargs = FormMixin.get_form_kwargs(self)
-        form_kwargs.update(
-            {
-                "user": self.request.user,
-                "related_to": message,
-                "allowed_document_types": self.fiche_objet.get_allowed_document_types(),
-                **kwargs,
-            }
-        )
-        return DocumentInMessageUploadFormSet(**form_kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if "add_document_formset" not in context:
-            context["add_document_formset"] = self.get_document_in_message_upload_formset(
-                message=context["form"].instance
-            )
-        context["fiche_objet"] = self.fiche_objet
-        return context
-
-    def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["add_document_formset"].media
+    def get_redirect_url_after_upload(self, related_to) -> str | None:
+        return None
 
     def _is_internal_communication(self, structures):
         """
@@ -742,25 +743,34 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
             if add_structure and (structure := contacts_agents[0].get_structure_contact()):
                 self.fiche_objet.contacts.add(structure)
 
-    def handle_message_form(self, form):
-        formset = self.get_document_in_message_upload_formset(message=form.instance)
+    def get_document_formset(self, **kwargs) -> BaseModelFormSet:
+        return MessageDocumentUploadFormSet(**kwargs)
 
-        if not formset.is_valid():
-            return self.render_to_response(
-                self.get_context_data(
-                    form=form,
-                    add_document_formset_error=formset,
-                    add_document_formset=self.get_document_in_message_upload_formset(
-                        data=None, files=None, message=form.instance
-                    ),
-                )
-            )
+    def get_document_formset_kwargs(self, related_to, **kwargs) -> dict:
+        return super().get_document_formset_kwargs(related_to, queryset=self.get_object().documents.all())
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["sender"] = self.request.user.agent.contact_set.get()
+        kwargs["obj"] = self.fiche_objet
+        kwargs["instance"] = self.get_object()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["go_back_url"] = self.fiche_objet.get_absolute_url()
+        context["message_status"] = Message.Status
+        return context
+
+    def get_success_url(self):
+        return self.fiche_objet.get_absolute_url() + "#tabpanel-messages-panel"
+
+    def form_valid(self, form):
         response = super().form_valid(form)
+        # This must be performed post-form.save()
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.fiche_objet)
         self._handle_visibilite_if_needed(form.instance)
-        formset.save()
         try:
             transaction.on_commit(lambda: notify_message(form.instance))
         except OperationalError:
@@ -770,6 +780,7 @@ class MessageHandlingMixin(WithAddUserContactsMixin, GetFicheObjectMixin, MediaD
             logger.error("Could not connect to Redis")
         else:
             messages.success(self.request, "Le message a bien été ajouté.", extra_tags="core messages")
+
         return response
 
 

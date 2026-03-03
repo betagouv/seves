@@ -4,7 +4,10 @@ allowed_patterns:
 - '(models\.)?ForeignKey\(.+\)?'
 - 'ValidationError\(.+\)?'
 - 'Object.keys\(.+\)?'
+- '\.passedElement'
 fileignoreconfig:
+- filename: core/forms.py
+  checksum: 5a1b5f58ad9a86eba63e40ed849afb3a9795141c52ee64555ffae52319fd2299
 - filename: core/models.py
   checksum: adfe480045477f475255740963694ccd05f7adc0ad88d52aa59eedcdcc74005a
 - filename: ssa/models/evenement_produit.py
@@ -21,7 +24,7 @@ fileignoreconfig:
 - filename: sv/views.py
   checksum: 17381b88af7a141fb85a3ee9607583404107a063715bed7c406d53d397c63345
 - filename: ssa/static/ssa/_rappel_conso_form.js
-  checksum: eaddd88cdb839b7592fb59aad23f27f727999f50f90a073e0ec7bc4673c411d0
+  checksum: f4384fa04004669d8a843d92e7a669d17bbd106895143b6539fe6868d32132be
 - filename: core/views.py
   checksum: 2110553427b8fbda6c2c77fbc178ced52a1cd0574d24974f728ee97dcd334698
 - filename: sv/static/sv/fichedetection_lieux_form.js

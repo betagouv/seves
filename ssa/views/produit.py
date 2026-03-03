@@ -23,7 +23,7 @@ from core.mixins import (
     WithContactListInContextMixin,
     WithDocumentExportContextMixin,
     WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
+    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
@@ -102,7 +102,7 @@ class EvenementProduitCreateView(
 class EvenementProduitDetailView(
     WithBlocCommunPermission,
     WithDocumentListInContextMixin,
-    WithDocumentUploadFormMixin,
+    WithFicheObjectDocumentUploadFormMixin,
     WithMessageMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,

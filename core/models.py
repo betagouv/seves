@@ -10,6 +10,7 @@ from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
+from django.utils.functional import classproperty
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Revision
@@ -27,6 +28,7 @@ from .managers import (
     MessagQueryset,
     StructureQueryset,
 )
+from .model_mixins import WithDocumentPermissionMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
@@ -360,7 +362,7 @@ class Document(models.Model):
 
 
 @reversion.register()
-class Message(AllowsSoftDeleteMixin, models.Model):
+class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     MESSAGE = "message"
     NOTE = "note"
     POINT_DE_SITUATION = "point de situation"
@@ -407,6 +409,10 @@ class Message(AllowsSoftDeleteMixin, models.Model):
     historical_data = models.JSONField(default=dict, blank=True)
 
     objects = MessageManager.from_queryset(MessagQueryset)()
+
+    @classproperty
+    def _base_objects(self):
+        return self.objects.get_base_queryset()
 
     class Meta:
         indexes = [
@@ -506,6 +512,9 @@ class Message(AllowsSoftDeleteMixin, models.Model):
 
         intro += f" le message suivant *******: \n\n {self.content}"
         return intro
+
+    def _user_can_interact(self, user):
+        return self._is_owner(user.agent.contact_set.get())
 
 
 @reversion.register()

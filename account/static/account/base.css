@@ -1,11 +1,12 @@
 .users-container {
     max-width: 40rem;
-    margin-left: auto;
     margin-right: auto;
+    margin-left: auto;
 }
-.group-name, .user {
-    background-color: white;
+.group-name,
+.user {
     font-weight: bold;
+    background-color: white;
 }
 .user {
     padding: 0.8rem;

@@ -1,10 +1,10 @@
 .danger-emphasis {
-    font-weight: bold;
     font-style: italic;
+    font-weight: bold;
 }
 .etiologie-card-container {
-    background-color: var(--background-alt-grey);
     width: 100%;
+    background-color: var(--background-alt-grey);
 }
 .conclusion-comment .fr-input-group {
     display: flex;

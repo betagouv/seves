@@ -21,9 +21,11 @@ repos:
   rev: '3.0.7'
   hooks:
   - id: djhtml
-  - id: djcss
-  - id: djjs
 - repo: https://github.com/thoughtworks/talisman
   rev: 'v1.33.2'
   hooks:
   - id: talisman-commit
+- repo: https://github.com/biomejs/pre-commit
+  rev: v2.4.4 # Use the sha / tag you want to point at
+  hooks:
+    - id: biome-ci

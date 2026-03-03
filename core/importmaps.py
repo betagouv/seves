@@ -15,6 +15,7 @@ importmaps = {
     "CustomTreeSelect": static("ssa/_custom_tree_select.js"),
     "siret": static("core/siret.mjs"),
     "TreeSelect": static("ssa/treeselectjs.umd.js"),
-    "Document": static("core/document.js"),
     "Freelinks": static("core/free_links.js"),
+    "DocumentUploads": static("core/form/document_uploads.mjs"),
+    "FicheBlocCommun": static("core/fiche_bloc_commun.mjs"),
 }

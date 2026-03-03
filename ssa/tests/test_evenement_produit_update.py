@@ -24,6 +24,7 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     update_page.navigate_update_page(evenement)
 
     expect(update_page.date_creation).to_have_value(evenement.date_creation.strftime("%d/%m/%Y"))
+    expect(update_page.source).to_have_attribute("required", "")
 
     inputs_fields = [
         "description",

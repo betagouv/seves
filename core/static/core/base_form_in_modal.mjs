@@ -1,5 +1,5 @@
-import {Controller} from "Stimulus"
 import {collectFormValues, removeRequired} from "Forms"
+import {Controller} from "Stimulus"
 
 /**
  * Base controller for forms that generate cards and handle deletion.
@@ -11,13 +11,7 @@ import {collectFormValues, removeRequired} from "Forms"
  * @property {String} formPrefixValue
  */
 export class BaseFormInModal extends Controller {
-    static targets = [
-        "fieldset",
-        "deleteInput",
-        "dialog",
-        "cardContainer",
-        "deleteModal",
-    ]
+    static targets = ["fieldset", "deleteInput", "dialog", "cardContainer", "deleteModal"]
     static values = {formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
 
     openDialog() {
@@ -29,7 +23,9 @@ export class BaseFormInModal extends Controller {
     }
 
     onValidateForm() {
-        const formValues = collectFormValues(this.fieldsetTarget, {nameTransform: name => name.replace(`${this.formPrefixValue}-`, "")})
+        const formValues = collectFormValues(this.fieldsetTarget, {
+            nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
+        })
         if (formValues === undefined) {
             return
         }
@@ -62,42 +58,42 @@ export class BaseFormInModal extends Controller {
     /**
      * Initializes the card with form data.
      * @abstract
-     * @param {Object} data - The data to display.
+     * @param {Object} _data - The data to display.
      */
-    initCard(data) {
+    initCard(_data) {
         throw new Error("initCard must be implemented in the child class.")
     }
 
     /**
      * Renders the HTML for the card.
      * @abstract
-     * @param {Object} data - The data to render.
+     * @param {Object} _data - The data to render.
      * @returns {string} HTML
      */
-    renderCard(data) {
+    renderCard(_data) {
         throw new Error("renderCard must be implemented in the child class.")
     }
 
     /**
      * @abstract
-     * @param {Object} data
+     * @param {Object} _data
      * @return {string}
      */
-    getDeleteConfirmationSentence(data) {
+    getDeleteConfirmationSentence(_data) {
         throw new Error("getDeleteConfirmationSentence must be implemented in the child class.")
     }
 
     /**
      * @abstract
-     * @param {Object} data
+     * @param {Object} _data
      * @return {string}
      */
-    getDeleteConfirmationTitle(data) {
+    getDeleteConfirmationTitle(_data) {
         throw new Error("getDeleteConfirmationTitle must be implemented in the child class.")
     }
 
     optionalText(value, text) {
-        return value ? (text || `${value}`) : ""
+        return value ? text || `${value}` : ""
     }
 
     joinText(delimiter, ...items) {
@@ -108,15 +104,14 @@ export class BaseFormInModal extends Controller {
         return items
             .filter(it => !!it?.length)
             .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
-            .join('')
+            .join("")
     }
 
-    formatDate(value){
-        const [date, time] = value.split("T");
-        const [year, month, day] = date.split("-");
-        return`${day}/${month}/${year} ${time}`;
+    formatDate(value) {
+        const [date, time] = value.split("T")
+        const [year, month, day] = date.split("-")
+        return `${day}/${month}/${year} ${time}`
     }
-
 
     /**
      * Renders the HTML for the delete confirmation modal.

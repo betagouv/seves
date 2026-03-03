@@ -86,9 +86,9 @@ django-debug-toolbar==6.2.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
-django-dsfr==3.3.0
+django-dsfr==3.3.1
     # via -r requirements.in
-django-environ==0.12.1
+django-environ==0.13.0
     # via -r requirements.in
 django-filter==25.2
     # via -r requirements.in
@@ -231,7 +231,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.1.1
+redis==7.2.1
     # via -r requirements.in
 requests==2.32.4
     # via
@@ -243,11 +243,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.0
+ruff==0.15.4
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.52.0
+sentry-sdk[django]==2.53.0
     # via -r requirements.in
 six==1.16.0
     # via

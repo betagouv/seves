@@ -11,6 +11,8 @@
     "Forms": "file:./core/static/core/forms.mjs",
     "BaseFormset": "file:./core/static/core/base_formset.mjs",
     "BaseFormInModal": "file:./core/static/core/base_form_in_modal.mjs",
-    "TreeSelect": "file:./ssa/static/ssa/treeselectjs.umd.js"
+    "TreeSelect": "file:./ssa/static/ssa/treeselectjs.umd.js",
+    "DocumentUploads": "file:./core/static/core/form/document_uploads.mjs",
+    "FicheBlocCommun": "file:./core/static/core/fiche_bloc_commun.mjs"
   }
 }

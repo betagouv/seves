@@ -2,7 +2,6 @@
     align-items: end;
 }
 
-
 .form-fieldset {
     display: block;
     width: 100%;
@@ -16,9 +15,9 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
 }
 
 .fieldset-header {
-    width: 100%;
     display: flex;
     justify-content: space-between;
+    width: 100%;
 }
 
 .etiologie-info {
@@ -26,7 +25,7 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
 }
 
 .etiologie-template {
-    border: 1px solid  var(--text-default-info);
+    border: 1px solid var(--text-default-info);
     border-radius: 20px;
 }
 
@@ -34,7 +33,9 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
     display: block !important;
 }
 
-.repas-modal .fr-checkbox-group, .aliment-modal .fr-checkbox-group , .aliment-modal .fr-radio-group {
+.repas-modal .fr-checkbox-group,
+.aliment-modal .fr-checkbox-group,
+.aliment-modal .fr-radio-group {
     margin-top: 0.5rem;
 }
 
@@ -45,7 +46,7 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
 }
 
 #id_selected_hazard {
-    opacity: 0;
     height: 0;
     padding: 1px;
+    opacity: 0;
 }

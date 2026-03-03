@@ -184,20 +184,6 @@ class EvenementFilter(
             return queryset.filter(aliments_animaux__isnull=True)
         return queryset.filter(aliments_animaux=value)
 
-    def filter_structure_contact(self, queryset, name, value):
-        return (
-            super().filter_structure_contact(queryset, name, value)
-            if issubclass(queryset.model, EvenementProduit)
-            else queryset.none()
-        )
-
-    def filter_agent_contact(self, queryset, name, value):
-        return (
-            super().filter_agent_contact(queryset, name, value)
-            if issubclass(queryset.model, EvenementProduit)
-            else queryset.none()
-        )
-
     def with_free_links_filtered(self, ids):
         queryset = self.queryset
         subquerysets = queryset._querysets if isinstance(queryset, QuerySetSequence) else [queryset]

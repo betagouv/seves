@@ -7,7 +7,7 @@ export const choicesDefaults = {
     itemSelectText: "",
     shouldSort: false,
     fuseOptions: {
-        threshold : 0.2
-    }
-};
-export default choicesDefaults;
+        threshold: 0.2,
+    },
+}
+export default choicesDefaults

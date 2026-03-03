@@ -1,8 +1,8 @@
 @import url("./base_dsfr.css");
 @import url("./base_form.css");
 
-body{
-    background-color: #F6F6F6;
+body {
+    background-color: #f6f6f6;
 }
 
 body.environment-test *,
@@ -14,12 +14,12 @@ body.environment-test *:after,
 .no-animate *,
 .no-animate *:before,
 .no-animate *:after {
-    transition-property: none !important;
     transform: none !important;
+    transition-property: none !important;
     animation: none !important;
 }
 
-header{
+header {
     border-bottom: 2px solid #000091;
 }
 header .fr-menu {
@@ -31,35 +31,35 @@ header .fr-header__body-row {
 }
 
 fieldset {
-    margin: 0;
     padding: 0;
+    margin: 0;
     border: none;
 }
 
-.product-switch .fr-menu .fr-nav__link{
+.product-switch .fr-menu .fr-nav__link {
     padding: 0.25rem 0.5rem;
 }
-.product-switch .fr-menu__list{
+.product-switch .fr-menu__list {
     background: transparent;
 }
 .product-switch .fr-translate .fr-translate__btn::before {
     width: 0px;
 }
 
-.alert-container{
+.alert-container {
     margin: 2rem 1.5rem;
 }
 .main-container {
     margin: 2rem 1.5rem;
 }
 .main-container--sm {
-    margin: 2rem 1.5rem;
     max-width: 992px;
+    margin: 2rem 1.5rem;
 }
-#en-tete{
+#en-tete {
     display: flex;
-    align-items: center;
     gap: 1rem;
+    align-items: center;
     padding-left: 1.5rem;
 }
 #seves-title {
@@ -80,33 +80,33 @@ fieldset {
     /* Customize ChoicesJS multiple choices picker */
     min-width: 0px;
     min-height: 0px;
-    padding: .25rem .75rem !important;
+    padding: 0.25rem 0.75rem !important;
+    margin: 0.25rem;
+    color: var(--text-inverted-blue-france) !important;
     background-color: var(--background-active-blue-france) !important;
     border: 1px solid var(--background-active-blue-france) !important;
-    color: var(--text-inverted-blue-france) !important;
-    margin: 0.25rem;
 }
 
 .fr-input .choices__input,
 .fr-input .choices__list,
 .fr-select .choices__input,
 .fr-select .choices__list {
-    background-color: var(--background-contrast-grey) !important;
-    margin: 0 !important;  /* margin should be carried by .fr-select parent */
     padding: 0 !important;
+    margin: 0 !important; /* margin should be carried by .fr-select parent */
+    background-color: var(--background-contrast-grey) !important;
 }
 
-.choices__list--dropdown{
+.choices__list--dropdown {
     z-index: 10 !important;
 }
-.choices__placeholder{
+.choices__placeholder {
     color: black;
     opacity: 0.8 !important;
 }
 
 .white-container {
-    background-color: white;
     padding: 1.5rem !important;
+    background-color: white;
 }
 @media (min-width: 992px) {
     .white-container {
@@ -115,8 +115,8 @@ fieldset {
 }
 
 .grey-container {
-    background-color: var(--grey-975-100-active);
     padding: 1.5rem !important;
+    background-color: var(--grey-975-100-active);
 }
 @media (min-width: 992px) {
     .grey-container {
@@ -124,10 +124,9 @@ fieldset {
     }
 }
 
-
 .white-container--lite {
-    background-color: white;
     padding: 1rem !important;
+    background-color: white;
 }
 @media (min-width: 640px) {
     .choices__list--dropdown .choices__item--selectable {
@@ -140,38 +139,38 @@ fieldset {
 
 /* -- Champs obligatoires (choices-js) -- */
 .choices__input[hidden][required] {
-    display: block !important;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    pointer-events: none;
     top: 0;
     left: 0;
+    display: block !important;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
 }
 
 .ac-notified {
-    background-color: #faa18d;
     min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: .25rem;
+    padding: 0 0.5rem;
     color: white;
+    background-color: #faa18d;
+    border-radius: 0.25rem;
 }
 
 .environment-banner::before {
     position: fixed;
     top: 20px;
     left: -55px;
+    z-index: 9999;
     width: 175px;
+    padding: 5px 0;
+    font-size: 14px;
+    font-weight: bold;
     color: white;
     text-align: center;
-    padding: 5px 0;
-    font-weight: bold;
-    font-size: 14px;
-    z-index: 9999;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transform: rotate(-45deg);
     transform-origin: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 .environment-recette::before {
     content: "RECETTE";
@@ -188,8 +187,8 @@ fieldset {
 
 .details-top-row {
     display: flex;
-    justify-content: space-between;
     flex-wrap: wrap;
+    justify-content: space-between;
 }
 .details-top-row--actions {
     max-height: 2.5rem;
@@ -198,14 +197,14 @@ fieldset {
     -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
     mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
-.details-top-row--actions .fr-translate__btn{
+.details-top-row--actions .fr-translate__btn {
     height: 100%;
 }
 .details-top-row--actions {
     margin-left: auto;
 }
 @media (min-width: 992px) {
-    .details-top-row--actions{
+    .details-top-row--actions {
         margin-left: unset;
     }
 }
@@ -214,14 +213,14 @@ fieldset {
         height: 100%;
     }
 }
-.details-top-row--actions .fr-nav__link{
-    padding-left: 0.5rem !important;
+.details-top-row--actions .fr-nav__link {
     padding-right: 0.5rem !important;
+    padding-left: 0.5rem !important;
 }
 @media (min-width: 992px) {
-    .details-top-row--actions .fr-nav__link{
-        padding-left: 1rem !important;
+    .details-top-row--actions .fr-nav__link {
         padding-right: 1rem !important;
+        padding-left: 1rem !important;
     }
 }
 
@@ -247,29 +246,29 @@ fieldset {
 }
 
 .generic-card-container {
-    padding : 1.5rem;
-    border: 1px var(--grey-975-100-hover) solid;
+    padding: 1.5rem;
     margin-bottom: 2rem;
+    border: 1px var(--grey-975-100-hover) solid;
 }
 
 .history-removed {
-    color : var(--red-marianne-main-472);
+    color: var(--red-marianne-main-472);
 }
 
-.history-added{
-    color : var(--success-425-625);
+.history-added {
+    color: var(--success-425-625);
 }
 
 .footer-links {
+    color: var(--grey-425-625) !important;
     text-align: center;
+}
+
+.footer-links .fr-link {
     color: var(--grey-425-625) !important;
 }
 
-.footer-links .fr-link{
-    color: var(--grey-425-625) !important;
-}
-
-.prod-warning-message .fr-notice__body p{
-    margin-left: auto;
+.general-warning-message .fr-notice__body p {
     margin-right: auto;
+    margin-left: auto;
 }

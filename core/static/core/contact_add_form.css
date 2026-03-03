@@ -1,11 +1,12 @@
-label[for="id_contacts_structures"], label[for="id_contacts_agents"] {
+label[for="id_contacts_structures"],
+label[for="id_contacts_agents"] {
     font-size: 1rem;
     font-weight: bold;
 }
 .contact-form-container {
     display: flex;
-    align-items: center;
     gap: 1rem;
+    align-items: center;
 }
 .contact-form-input {
     flex-grow: 1;

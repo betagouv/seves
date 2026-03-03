@@ -90,13 +90,15 @@ def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     )
 
 
-def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
+def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
     structure = Structure.objects.create(niveau1="MUS", niveau2="MUS", libelle="MUS")
     Contact.objects.create(structure=structure, email="bar@example.com")
     structure = Structure.objects.create(niveau1="SAS/SDSPV/BSV", niveau2="SAS/SDSPV/BSV", libelle="BSV")
+    contact_copy_agent = ContactAgentFactory(with_active_agent__with_groups=[settings.SV_GROUP])
+    contact_copy_structure = ContactStructureFactory(with_one_active_agent__with_groups=[settings.SV_GROUP])
     Contact.objects.create(structure=structure, email="foo@example.com")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
@@ -106,6 +108,20 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
     page.locator("#id_content").fill("My content \n with a line return")
+    choice_js_fill(
+        page,
+        'label[for="id_recipients_copy"] ~ div.choices',
+        contact_copy_agent.agent.nom,
+        contact_copy_agent.display_with_agent_unit,
+        use_locator_as_parent_element=True,
+    )
+    choice_js_fill(
+        page,
+        'label[for="id_recipients_copy"] ~ div.choices',
+        contact_copy_structure.structure.libelle,
+        contact_copy_structure.structure.libelle,
+        use_locator_as_parent_element=True,
+    )
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
@@ -123,6 +139,9 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page):
     assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention"
 
     assert evenement.messages.get().status == Message.Status.FINALISE
+    assert evenement.messages.get().recipients_copy.all().count() == 2
+    assert contact_copy_structure in evenement.messages.get().recipients_copy.all()
+    assert contact_copy_agent in evenement.messages.get().recipients_copy.all()
 
 
 def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server, page: Page, choice_js_fill):
@@ -341,10 +360,12 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
 def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification_user, message_type, message_label):
     active_contact = ContactAgentFactory(with_active_agent=True).agent
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
+    message = Message.objects.create_unsaved(active_contact, related_to=evenement)
 
     response = client.post(
         evenement.add_message_url,
         data={
+            "id": message.pk,
             "sender": Contact.objects.get(agent=mocked_authentification_user.agent).pk,
             "recipients": [active_contact.pk],
             "message_type": message_type,
@@ -660,11 +681,13 @@ def test_cant_forge_post_of_message_in_evenement_we_cant_see(client, mocked_auth
     contact = ContactAgentFactory()
     contact.agent.user.is_active = True
     contact.agent.user.save()
+    message = Message.objects.create_unsaved(contact.agent, evenement)
 
     assert response.status_code == 403
     content_type = ContentType.objects.get_for_model(evenement).id
 
     payload = {
+        "id": message.pk,
         "content_type": content_type,
         "object_id": evenement.pk,
         "recipients": contact.pk,

@@ -3,33 +3,33 @@
 }
 
 .document-upload-accordion.fr-accordion .fr-accordion__title {
-    border-radius: .25rem;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-alt-grey);
-    word-break: break-all;
     overflow: hidden;
+    word-break: break-all;
+    background-color: var(--background-alt-grey);
+    border-radius: 0.25rem;
 }
 
 .document-upload-accordion.fr-accordion .document-upload-accordion__header {
     display: flex;
     flex-direction: row;
-    padding: .75rem 1.25rem;
     width: 100%;
+    padding: 0.75rem 1.25rem;
 }
 
 .document-upload-accordion .document-upload-accordion__title-group {
     display: flex;
-    flex-flow: row nowrap;
     flex-grow: 10;
+    flex-flow: row nowrap;
     flex-wrap: wrap;
-    margin-left: -.5rem;
+    margin-left: -0.5rem;
 }
 
 .document-upload-accordion .document-upload-accordion__title-group > * {
-    margin-left: .5rem;
-    margin-right: .5rem;
+    margin-right: 0.5rem;
     margin-bottom: 0;
+    margin-left: 0.5rem;
 }
 
 .document-upload-accordion .document-upload-accordion__title {

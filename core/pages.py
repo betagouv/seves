@@ -37,11 +37,7 @@ class BaseDocumentPage(ABC):
     @property
     def get_existing_documents_title(self):
         cards = (
-            self.page.locator(self.container_id)
-            .get_by_test_id("document-card")
-            .get_by_test_id("document-card-title")
-            .filter(visible=True)
-            .all()
+            self.page.get_by_test_id("document-card").get_by_test_id("document-card-title").filter(visible=True).all()
         )
 
         return [c.inner_text() for c in cards]
@@ -273,12 +269,15 @@ class BaseMessagePage(BaseDocumentPage, ABC):
             self.page.wait_for_url("**/core/message/**/")
             return self.page
 
+    def add_basic_message_content(self):
+        self.message_title.fill("Title of the message")
+        self.message_content.fill("My content \n with a line return")
+
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
         expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
 
-        self.message_title.fill("Title of the message")
-        self.message_content.fill("My content \n with a line return")
+        self.add_basic_message_content()
 
     def remove_document_by_name_from_aside(self, document_name):
         aside_card_list = self.page.get_by_test_id("document-card")

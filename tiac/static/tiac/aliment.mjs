@@ -1,8 +1,9 @@
-import {BaseFormSetController} from "BaseFormset"
-import {BaseFormInModal} from "BaseFormInModal"
 import {applicationReady} from "Application"
-import {patchItems, findPath, tsDefaultOptions} from "CustomTreeSelect"
-import {collectFormValues} from 'Forms'
+import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
+import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
+import {collectFormValues} from "Forms"
+
 /**
  * @typedef AlimentData
  * @property {string} categorie_produit
@@ -37,13 +38,13 @@ class AlimentFormController extends BaseFormInModal {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
                     nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
-                    skipValidation: true
-                })
+                    skipValidation: true,
+                }),
             )
         }
     }
 
-    setupCategorieProduit(){
+    setupCategorieProduit() {
         const treeselect = new Treeselect({
             parentHtmlContainer: this.categorieProduitContainerTarget,
             value: this.categorieProduitInputTarget.value,
@@ -52,33 +53,39 @@ class AlimentFormController extends BaseFormInModal {
             openCallback() {
                 patchItems(treeselect.srcElement)
             },
-            ...tsDefaultOptions
+            ...tsDefaultOptions,
         })
         patchItems(treeselect.srcElement)
-        treeselect.srcElement.addEventListener("update-dom", ()=>{patchItems(treeselect.srcElement)})
+        treeselect.srcElement.addEventListener("update-dom", () => {
+            patchItems(treeselect.srcElement)
+        })
         this.categorieProduitContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
 
-        treeselect.srcElement.addEventListener('input', (e) => {
+        treeselect.srcElement.addEventListener("input", e => {
             if (!e.detail) return
             const result = findPath(e.detail, this.categorieProduitValue)
             this.categorieProduitInputTarget.value = e.detail
-            this.categorieProduitContainerTarget.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result.map(n => n.name).join(' > ')
+            this.categorieProduitContainerTarget.querySelector(
+                "#categorie-produit .treeselect-input__tags-count",
+            ).innerText = result.map(n => n.name).join(" > ")
         })
     }
 
     initCard(aliment) {
-        this.shouldImmediatelyShowValue = false;
+        this.shouldImmediatelyShowValue = false
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(aliment))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(aliment))
         dsfr(this.dialogTarget).modal.conceal()
     }
 
-    handleConditionalFields(value){
-        if (value === "aliment cuisine"){
+    handleConditionalFields(value) {
+        if (value === "aliment cuisine") {
             this.descriptionCompositionInputContainerTarget.classList.remove("fr-hidden")
-            this.categorieProduitInputTarget.value = ''
-            this.categorieProduitContainerTarget.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = ''
+            this.categorieProduitInputTarget.value = ""
+            this.categorieProduitContainerTarget.querySelector(
+                "#categorie-produit .treeselect-input__tags-count",
+            ).innerText = ""
             this.descriptionProduitInputContainerTarget.classList.add("fr-hidden")
             this.categorieProduitRootContainerTarget.classList.add("fr-hidden")
             this.descriptionCompositionInputTarget.value = ""
@@ -86,7 +93,7 @@ class AlimentFormController extends BaseFormInModal {
             this.descriptionProduitInputContainerTarget.classList.remove("fr-hidden")
             this.categorieProduitRootContainerTarget.classList.remove("fr-hidden")
             this.descriptionCompositionInputContainerTarget.classList.add("fr-hidden")
-            this.descriptionCompositionInputTarget.value =""
+            this.descriptionCompositionInputTarget.value = ""
         }
     }
 
@@ -96,15 +103,15 @@ class AlimentFormController extends BaseFormInModal {
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onTypeAlimentChange(event){
+    onTypeAlimentChange(event) {
         this.handleConditionalFields(event.target.value)
     }
 
-    getDeleteConfirmationSentence(aliment){
+    getDeleteConfirmationSentence(aliment) {
         return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
     }
 
-    getDeleteConfirmationTitle(aliment){
+    getDeleteConfirmationTitle(_aliment) {
         return "Suppression d'un aliment"
     }
 
@@ -118,10 +125,12 @@ class AlimentFormController extends BaseFormInModal {
             <div class="fr-card__body">
                 <div class="fr-card__content">
                     <h3 class="fr-card__title" data-${this.identifier}-target="denomination">
+                    <a href="#${aliment.denomination}" id="${aliment.denomination}" data-action="${this.identifier}#onModify:prevent:default" >
                       ${aliment.denomination}
+                    </a>
                     </h3>
                     <div class="fr-card__desc">
-                        ${this.optionalText(aliment.motif_suspicion, `<p>${this.joinText(', ', ...aliment.motif_suspicion)}</p>`)}
+                        ${this.optionalText(aliment.motif_suspicion, `<p>${this.joinText(", ", ...aliment.motif_suspicion)}</p>`)}
                         ${this.optionalText(aliment.type_aliment, this.renderBadges([aliment.type_aliment]))}
                     </div>
                 </div>

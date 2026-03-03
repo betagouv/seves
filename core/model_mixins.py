@@ -74,6 +74,22 @@ class WithDocumentPermissionMixin(BasePermissionMixin):
         return self.can_user_access(user)
 
 
+class WithFicheDocumentPermissionMixin(WithDocumentPermissionMixin):
+    def _assert_etat(self):
+        from core.mixins import WithEtatMixin
+
+        return self.etat != WithEtatMixin.Etat.BROUILLON
+
+    def can_add_document(self, user):
+        return super().can_add_document(user) and self._assert_etat()
+
+    def can_update_document(self, user):
+        return super().can_update_document(user) and self._assert_etat()
+
+    def can_delete_document(self, user):
+        return super().can_delete_document(user) and self._assert_etat()
+
+
 class WithContactPermissionMixin(BasePermissionMixin):
     def can_add_agent(self, user):
         return self._user_can_interact(user)

@@ -1,9 +1,9 @@
-import {BaseFormSetController} from "BaseFormset"
-import {applicationReady} from "Application";
+import {applicationReady} from "Application"
 import {setUpAddressChoices} from "BanAutocomplete"
-import {setUpSiretChoices} from "siret"
-import {collectFormValues} from "Forms"
 import {BaseFormInModal} from "BaseFormInModal"
+import {BaseFormSetController} from "BaseFormset"
+import {collectFormValues} from "Forms"
+import {setUpSiretChoices} from "siret"
 
 /**
  * @typedef EtablissementData
@@ -69,8 +69,8 @@ class EtablissementFormController extends BaseFormInModal {
             this.initCard(
                 collectFormValues(this.fieldsetTarget, {
                     nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
-                    skipValidation: true
-                })
+                    skipValidation: true,
+                }),
             )
         }
         // Forces the has_inspection toggle to deliver an initial value
@@ -80,46 +80,52 @@ class EtablissementFormController extends BaseFormInModal {
     onAddressChoice(event) {
         this.communeInputTarget.value = event.detail.customProperties.city
         this.codeInseeInputTarget.value = event.detail.customProperties.inseeCode
-        if (!!event.detail.customProperties.context) {
+        if (event.detail.customProperties.context) {
             this.paysInputTarget.value = "FR"
             const [num, ..._] = event.detail.customProperties.context.split(/\s*,\s*/)
             this.departementInputTarget.value = num
         }
     }
 
-    onSiretChoice({detail: {customProperties: {code_commune, commune, raison, siret, streetData}}}) {
+    onSiretChoice({
+        detail: {
+            customProperties: {code_commune, commune, raison, siret, streetData},
+        },
+    }) {
         this.siretInputTarget.value = siret
         this.raisonSocialeInputTarget.value = raison
         this.communeInputTarget.value = commune
         this.codeInseeInputTarget.value = code_commune
         this.paysInputTarget.value = "FR"
 
-        if (!!streetData) {
-            let result = [
+        if (streetData) {
+            const result = [
                 {
-                    "value": streetData,
-                    "label": streetData,
-                    selected: true
-                }
+                    value: streetData,
+                    label: streetData,
+                    selected: true,
+                },
             ]
-            this.addressChoices.setChoices(result, 'value', 'label', true)
-
+            this.addressChoices.setChoices(result, "value", "label", true)
         }
 
         fetch(`/ssa/api/find-numero-agrement/?siret=${siret}`)
             .then(response => response.json())
             .then(data => {
-                if (!!data["numero_agrement"]){
-                    this.numeroAgrementInputTarget.value = data["numero_agrement"]
+                if (data.numero_agrement) {
+                    this.numeroAgrementInputTarget.value = data.numero_agrement
                 }
-            });
+            })
 
         if (!!code_commune && !!this.communesApiValue) {
-            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`).then(async response => {
-                const json = await response.json()
-                this.departementInputTarget.value = json.departement.code
-            }).catch(() => {/* NOOP */
-            })
+            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`)
+                .then(async response => {
+                    const json = await response.json()
+                    this.departementInputTarget.value = json.departement.code
+                })
+                .catch(() => {
+                    /* NOOP */
+                })
         }
     }
 
@@ -139,7 +145,7 @@ class EtablissementFormController extends BaseFormInModal {
 
     /** @param {EtablissementData} etablissement */
     initCard(etablissement) {
-        this.shouldImmediatelyShowValue = false;
+        this.shouldImmediatelyShowValue = false
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(etablissement))
         this.element.insertAdjacentHTML("beforeend", this.renderCard(etablissement))
@@ -157,7 +163,9 @@ class EtablissementFormController extends BaseFormInModal {
             <div class="fr-card__body">
                 <div class="fr-card__content">
                     <h3 class="fr-card__title">
-                      ${title}
+                        <a href="#${etablissement.raison_sociale}" id="${etablissement.raison_sociale}" data-action="${this.identifier}#onModify:prevent:default" >
+                            ${title}
+                        </a>
                     </h3>
                     ${this.optionalText(subTitle, `<p class="fr-text--sm card-subtitle">${subTitle}</p>`)}
                     <div class="fr-card__desc">
@@ -188,11 +196,11 @@ class EtablissementFormController extends BaseFormInModal {
         </div>`
     }
 
-    getDeleteConfirmationSentence(etablissement){
+    getDeleteConfirmationSentence(etablissement) {
         return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
 
-    getDeleteConfirmationTitle(etablissement){
+    getDeleteConfirmationTitle(_etablissement) {
         return "Suppression d'un établissement"
     }
 }

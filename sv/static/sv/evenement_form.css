@@ -1,7 +1,7 @@
 .evenement-form-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 .evenement-form-header h1 {
     margin-bottom: 0.5rem;

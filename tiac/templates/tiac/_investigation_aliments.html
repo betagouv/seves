@@ -9,16 +9,22 @@
                     <div class="fr-card__body">
                         <div class="fr-card__content">
                             <div>
-                                <p class="fr-card__title">{{ aliment.denomination }}</p>
+                                <h3 class="fr-card__title">
+                                    <a href="#aliment-{{ aliment.pk }}" id="{{ aliment.pk }}" data-fr-opened="false"
+                                       aria-controls="fr-modal-aliment-{{ aliment.pk }}" >{{ aliment.denomination }}
+                                    </a>
+                                </h3>
                             </div>
-                            {% if aliment.motif_suspicion_labels %}
-                                <p class="fr-pt-4v">{{ aliment.motif_suspicion_labels }}</p>
-                            {% endif %}
-                            {%  if aliment.type_aliment %}
-                                <span class="fr-badge fr-badge--info fr-badge--sm fr-badge--no-icon fr-m-0">{{ aliment.get_type_aliment_display }}</span>
-                            {% endif %}
-                            <div class="fr-btns-group--right">
-                                <button data-fr-opened="false" aria-controls="fr-modal-aliment-{{ aliment.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                            <div class="fr-card__desc">
+                                {% if aliment.motif_suspicion_labels %}
+                                    <p class="fr-pt-4v">{{ aliment.motif_suspicion_labels }}</p>
+                                {% endif %}
+                                {%  if aliment.type_aliment %}
+                                    <span class="fr-badge fr-badge--info fr-badge--no-icon fr-m-0">{{ aliment.get_type_aliment_display }}</span>
+                                {% endif %}
+                                <div class="fr-btns-group--right">
+                                    <button data-fr-opened="false" aria-controls="fr-modal-aliment-{{ aliment.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                                </div>
                             </div>
                         </div>
                     </div>

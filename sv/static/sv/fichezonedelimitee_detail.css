@@ -2,9 +2,9 @@
     font-weight: bold;
 }
 .fichezonedelimitee__zone-infestee {
+    min-height: 230px;
     background-color: var(--background-alt-grey-hover);
     border-radius: 3px;
-    min-height: 230px;
 }
 
 @media (min-width: 992px) {
@@ -24,16 +24,16 @@
     text-align: center;
 }
 .gallery-img {
-    height: 200px;
     width: auto;
+    height: 200px;
 }
-.cursor-pointer{
+.cursor-pointer {
     cursor: pointer;
 }
 .img-cartographie {
     width: 95%;
 }
-.img-cartographie img{
+.img-cartographie img {
     max-width: 95%;
 }
 
@@ -41,7 +41,7 @@
     display: flex;
 }
 
-
-.cartographies .fr-modal--opened, .cartographies .fr-modal {
+.cartographies .fr-modal--opened,
+.cartographies .fr-modal {
     transition: none !important;
 }

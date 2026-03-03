@@ -1,5 +1,4 @@
-import {Controller} from "Stimulus";
-import {useStore} from "StimulusStore"
+import {Controller} from "Stimulus"
 
 /**
  * @property {boolean} hasEmptyFormTplTarget
@@ -16,7 +15,7 @@ export class BaseFormSetController extends Controller {
     }
 
     static targets = ["emptyFormTpl", "formsetContainer", ...Object.keys(this.MGMT_FORM_FIELDS)]
-    static values = { ...this.MGMT_FORM_FIELDS }
+    static values = {...this.MGMT_FORM_FIELDS}
 
     connect() {
         this._initializeFieldValues()
@@ -26,7 +25,9 @@ export class BaseFormSetController extends Controller {
         const htmlAttr = this.context.scope.schema.targetAttributeForScope(this.identifier)
         for (const fieldName of Object.keys(this.constructor.MGMT_FORM_FIELDS)) {
             if (!this[`has${fieldName}Target`]) {
-                console.debug(`Missing target with HTML attribute ${htmlAttr}="${fieldName}". Did you render the management form with the correct data attributes?`)
+                console.debug(
+                    `Missing target with HTML attribute ${htmlAttr}="${fieldName}". Did you render the management form with the correct data attributes?`,
+                )
                 continue
             }
             this[`${fieldName}Value`] = this[`${fieldName}Target`].value
@@ -34,11 +35,15 @@ export class BaseFormSetController extends Controller {
                 this[`${fieldName}Target`].value = value
             }
         }
-        if(!this.hasEmptyFormTplTarget) {
-            console.debug(`Missing target with HTML attribute ${htmlAttr}="emptyFormTpl". This template will be used to create new forms.`)
+        if (!this.hasEmptyFormTplTarget) {
+            console.debug(
+                `Missing target with HTML attribute ${htmlAttr}="emptyFormTpl". This template will be used to create new forms.`,
+            )
         }
-        if(!this.hasFormsetContainerTarget) {
-            console.debug(`Missing target with HTML attribute ${htmlAttr}="formsetContainer". This is where new forms will be added.`)
+        if (!this.hasFormsetContainerTarget) {
+            console.debug(
+                `Missing target with HTML attribute ${htmlAttr}="formsetContainer". This is where new forms will be added.`,
+            )
         }
     }
 

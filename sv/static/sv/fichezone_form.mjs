@@ -1,16 +1,15 @@
-import {Controller} from "Stimulus";
-import {useStore, createStore} from "StimulusStore"
 import {applicationReady} from "Application"
+import {BaseFormSetController} from "BaseFormset"
 import Choices from "Choices"
 import choicesDefaults from "choicesDefaults"
-import {BaseFormSetController} from "BaseFormset"
+import {Controller} from "Stimulus"
+import {createStore, useStore} from "StimulusStore"
 
 const choicesStore = createStore({
     name: "selectedChoices",
     type: Array,
     initialValue: [],
-});
-
+})
 
 /**
  * @property {HTMLSelectElement} formDetectionsSelectTarget
@@ -56,7 +55,7 @@ class ZoneInfesteeController extends Controller {
 
     /** @param {String[]} value */
     onSelectedChoicesUpdate(value) {
-        if (this.choices === undefined) return;
+        if (this.choices === undefined) return
 
         this.choices.enable()
         const currentChoices = this.choices.passedElement.optionsAsChoices()
@@ -65,10 +64,10 @@ class ZoneInfesteeController extends Controller {
             label: choice.label,
             /* We don't want to disable this option if it is selected */
             disabled: value.includes(choice.value) && !choice.selected,
-            selected: choice.selected
-        }));
+            selected: choice.selected,
+        }))
         this.choices.clearChoices()
-        this.choices.setChoices(updatedChoices, "value", "label", false);
+        this.choices.setChoices(updatedChoices, "value", "label", false)
     }
 }
 
@@ -92,10 +91,9 @@ class ZoneInfesteeFormController extends ZoneInfesteeController {
     }
 }
 
-
 class ZoneInfesteeFormSetController extends BaseFormSetController {
     static targets = [...BaseFormSetController.targets, "formDetectionsSelect"]
-    static values = { ...BaseFormSetController.values, selectedChoices: Array }
+    static values = {...BaseFormSetController.values, selectedChoices: Array}
     static stores = [choicesStore]
 
     connect() {
@@ -103,7 +101,6 @@ class ZoneInfesteeFormSetController extends BaseFormSetController {
         this._initializeFieldValues()
     }
 }
-
 
 applicationReady.then(app => {
     app.register("zone-infestee-form", ZoneInfesteeFormController)

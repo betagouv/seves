@@ -248,23 +248,12 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     assert len(message_page.get_existing_documents_title) == 5
 
     # Remove previous document from the document aside
-    required_fields = (
-        page.get_by_test_id("document-upload").filter(has_text=document_to_remove.nom).locator("[required]")
-    )
-    expect(required_fields).not_to_have_count(0)
     message_page.remove_document_by_name_from_aside(document_to_remove.nom)
-    # Asserts that removed document won't be checked during form submission
-    expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 4
 
     # Remove previous document from the document modal
-    required_fields = (
-        page.get_by_test_id("document-upload").filter(has_text=document_to_remove_2.nom).locator("[required]")
-    )
-    expect(required_fields).not_to_have_count(0)
     message_page.remove_document_by_name_from_modal(document_to_remove_2.nom)
     # Asserts that removed document won't be checked during form submission
-    expect(required_fields).to_have_count(0)
     assert len(message_page.get_existing_documents_title) == 3
 
     # Test that adding document without validating doesn't add document
@@ -285,10 +274,11 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     document_to_edit_nom_old = document_to_edit.nom
     document_to_edit.refresh_from_db()
     assert message.status == Message.Status.FINALISE
-    assert message.documents.count() == 3, f"Expected 3 documents found {message.documents.count()}"
-    assert document_to_keep in message.documents.all()
-    assert document_to_remove not in message.documents.all()
-    assert document_to_remove_2 not in message.documents.all()
+    not_deleted = message.documents.filter(is_deleted=False).all()
+    assert not_deleted.count() == 3, f"Expected 3 documents found {not_deleted.count()}"
+    assert document_to_keep in not_deleted.all()
+    assert document_to_remove not in not_deleted.all()
+    assert document_to_remove_2 not in not_deleted.all()
     assert document_to_edit.nom == f"New {document_to_edit_nom_old}"
     assert len(mailoutbox) == 1
 
@@ -306,11 +296,8 @@ def generic_test_handle_document_validation_error(live_server, page: Page, choic
 
     message_page.add_basic_document(close=False)
     message_page.document_type_input.select_option("Choisir dans la liste")
-    message_page.validate_document_modal()
+    message_page.validate_document_modal(expect_error=True)
 
-    message_page.save_as_draft_message()
-
-    expect(message_page.document_type_input).to_be_visible()
     assert (
         message_page.document_type_input.evaluate("el => el.validationMessage") == "Please select an item in the list."
     )
@@ -453,12 +440,14 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     groups = (settings.SSA_GROUP, settings.SV_GROUP)
     contact = ContactStructureFactory(structure__libelle="Foo", with_one_active_agent__with_groups=groups)
     contact_cc = ContactStructureFactory(structure__libelle="Bar", with_one_active_agent__with_groups=groups)
+    contact_cc_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_demande_intervention()
     message_page.pick_recipient(contact.structure, choice_js_fill)
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc.structure, choice_js_fill)
+    message_page.pick_recipient_copy(contact_cc_agent.agent, choice_js_fill)
     message_page.save_as_draft_message()
 
     expect((message_page.page.get_by_text("Nouvelle demande d'intervention"))).to_be_visible()
@@ -485,7 +474,11 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
         )
     ).to_be_visible()
     expect(new_page.get_by_text(f"À : {contact.display_with_agent_unit}", exact=True)).to_be_visible()
-    expect(new_page.get_by_text(f"CC : {contact_cc.display_with_agent_unit}", exact=True)).to_be_visible()
+    expect(
+        new_page.get_by_text(
+            f"CC : {contact_cc.display_with_agent_unit}, {contact_cc_agent.display_with_agent_unit}", exact=True
+        )
+    ).to_be_visible()
 
 
 def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page, object):
@@ -535,8 +528,9 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
 
     assert message_page.message_sender_in_table() == "Structure Test"
     message = Message.objects.get()
-    assert message.documents.count() == 2
-    assert {d.nom for d in message.documents.all()} == {"Mon document", "Mon document numero 3"}
+    not_deleted = message.documents.filter(is_deleted=False)
+    assert not_deleted.count() == 2
+    assert {d.nom for d in not_deleted.all()} == {"Mon document", "Mon document numero 3"}
 
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
@@ -559,7 +553,7 @@ def generic_test_can_delete_my_own_message(live_server, page: Page, object, mock
     assert message_page.message_title_in_table() == message.title
 
     message_page.delete_message()
-    assert Message.objects.count() == 0
+    assert Message.objects.filter(is_deleted=False).count() == 0
     assert Message._base_manager.count() == 1
 
     assert len(mailoutbox) == 1
@@ -587,7 +581,7 @@ def generic_test_can_delete_my_own_draft_message(
     assert message_page.message_title_in_table() == f"[BROUILLON] {message.title}"
 
     message_page.delete_message()
-    assert Message.objects.count() == 0
+    assert Message.objects.filter(is_deleted=False).count() == 0
     assert Message._base_manager.count() == 1
 
     assert len(mailoutbox) == 0
@@ -749,6 +743,6 @@ def generic_test_cant_see_messages_in_internal_state(live_server, page: Page, mo
     page.goto(f"{live_server.url}{obj.get_absolute_url()}#tabpanel-messages-panel")
     obj.refresh_from_db()
     assert obj.messages.get_base_queryset().count() == 3
-    expect(page.locator("body")).not_to_contain_text(msg1.title, use_inner_text=True)
-    expect(page.locator("body")).to_contain_text(msg2.title, use_inner_text=True)
-    expect(page.locator("body")).to_contain_text(msg3.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).not_to_contain_text(msg1.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg2.title, use_inner_text=True)
+    expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg3.title, use_inner_text=True)

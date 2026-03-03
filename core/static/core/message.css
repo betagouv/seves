@@ -1,41 +1,45 @@
 #message-type-title::first-letter {
     text-transform: capitalize;
 }
+
 .message-document-container {
     display: flex;
     align-items: center;
-    justify-content: space-between
+    justify-content: space-between;
+    word-break: break-all;
+    background-color: var(--background-default-grey);
 }
-.message-document-container .fr-btn--tertiary{
+.message-document-container .fr-btn--tertiary {
     margin-bottom: 0;
 }
-.message-document-container .fr-btns-group{
+.message-document-container .fr-btns-group {
     min-width: 115px;
 }
-.btn-full{
-    width: 100%;
+.btn-full {
     display: block;
+    width: 100%;
     text-align: center;
 }
 .document-to-add {
-    background-color: var(--background-action-low-blue-france);
     display: flex;
     justify-content: space-between;
+    background-color: var(--background-action-low-blue-france);
 }
-.document-to-add a{
+.document-to-add a {
     background-image: none;
 }
-.document-to-add span{
-    white-space: nowrap;
+.document-to-add span {
     width: 90%;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.message-documents-actions{
+.message-documents-actions {
     display: flex;
     justify-content: end;
 }
-.message-draft, .message-draft .fr-tag {
+.message-draft,
+.message-draft .fr-tag {
     font-style: italic;
     color: var(--text-disabled-grey);
 }
@@ -46,6 +50,6 @@
     text-align: right;
 }
 
-.fil-de-suivi [target="_blank"]::after{
+.fil-de-suivi [target="_blank"]::after {
     display: none;
 }
