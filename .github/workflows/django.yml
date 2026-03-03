@@ -36,7 +36,7 @@ jobs:
           cache: pip
       - uses: biomejs/setup-biome@v2
         with:
-          version: latest
+          version: 2.4.4
       - name: Install dependencies
         run: |
           pip install --upgrade "pip!=25.3" pip-tools
