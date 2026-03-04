@@ -248,3 +248,30 @@ def notify_object_cloture(object):
         {"<p>" + object.get_email_cloture_text_html() + "</p>" if hasattr(object, "get_email_cloture_text_html") else ""}
         """,
     )
+
+
+def notify_document_upload(object, documents):
+    message = f"""
+Bonjour,
+Des documents ont été ajoutés à l’évènement : {object.get_long_email_display_name()}
+    """
+
+    html_message = f"""
+<p>Bonjour,<br>
+Des documents ont été ajoutés à l’évènement : <b>{object.get_long_email_display_name_as_html()}</b>
+<ul>"""
+
+    for document in documents:
+        message += f"\n-{document.created_by_structure} : {document.nom} [{document.get_document_type_display()}]"
+        html_message += (
+            f"<li>-{document.created_by_structure} : {document.nom} [{document.get_document_type_display()}]</li>"
+        )
+
+    html_message += "</ul></p>"
+    send_as_seves(
+        recipients=object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE),
+        object=object,
+        subject=f" {object.get_short_email_display_name()} - Ajout de document",
+        message=message,
+        html_message=html_message,
+    )
