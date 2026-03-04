@@ -16,6 +16,7 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     message_page = CreateMessagePage(page)
     message_page.new_message()
     message_page.pick_recipient(active_contact, choice_js_fill)
+    expect(message_page.page.get_by_text(f"Ouvrir la fiche {object.numero}", exact=True)).to_be_visible()
     expect(message_page.message_form_title).to_have_text("Nouveau message")
 
     message_page.message_title.fill("Title of the message")
