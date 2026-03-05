@@ -690,3 +690,14 @@ class BaseEtablissement(models.Model):
 class CustomRevisionMetaData(models.Model):
     revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
     extra_data = models.JSONField()
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    action = models.CharField()
+    path = models.CharField()
+
+    def __str__(self):
+        return f"{self.ip} - {self.action}"

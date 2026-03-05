@@ -24,6 +24,7 @@ from django.views.generic import (
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.constants import Visibilite
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
@@ -135,6 +136,7 @@ class EvenementListView(WithOrderingMixin, ListView):
         return context
 
 
+@audit_log("page view")
 class EvenementDetailView(
     EvenementDetailMixin,
     WithBlocCommunPermission,

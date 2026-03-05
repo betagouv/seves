@@ -1,6 +1,7 @@
 from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
+from core.models import AuditLog
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
     AlimentSuspectFactory,
@@ -43,6 +44,8 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
 
     for motif in evenement.danger_syndromiques_suspectes:
         expect(details_page.etiologie_block.get_by_text(DangersSyndromiques(motif).help_text)).to_be_visible()
+
+    assert AuditLog.objects.count() == 1
 
 
 def test_investigation_tiac_detail_page_content_etablissement(

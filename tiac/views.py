@@ -16,6 +16,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.diffs import create_manual_version
 from core.mixins import (
     MediaDefiningMixin,
@@ -166,6 +167,7 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
         return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}
 
 
+@audit_log("page view")
 class EvenementSimpleDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
@@ -521,6 +523,7 @@ class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
         return kwargs
 
 
+@audit_log("page view")
 class InvestigationTiacDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
