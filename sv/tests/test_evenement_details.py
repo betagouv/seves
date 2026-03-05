@@ -10,7 +10,7 @@ from reversion.models import Version
 
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
-from core.models import Contact, Structure
+from core.models import AuditLog, Contact, Structure
 from seves import settings
 from sv.factories import (
     EvenementFactory,
@@ -187,6 +187,7 @@ def test_evenement_can_view_basic_data(live_server, page: Page):
     expect(page.get_by_text("Dernière mise à jour le ")).to_be_visible()
     expect(page.get_by_text("Visibilité Toutes les structures")).to_be_visible()
     expect(page.get_by_text("Créateur Structure Test")).to_be_visible()
+    assert AuditLog.objects.count() == 1
 
 
 def test_view_mode_default_is_detail(live_server, page):
