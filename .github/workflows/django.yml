@@ -109,6 +109,7 @@ jobs:
           --reruns 1
           --reruns-delay 5
           --only-rerun E2ETestNetworkError
+          --junitxml=junit/test-results-${{ matrix.group }}.xml
         env:
           SECRET_KEY: NOT_A_REAL_SECRET
           DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
@@ -118,3 +119,16 @@ jobs:
         with:
           name: playwright-traces-${{ matrix.group }}
           path: test-results/
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.group }}
+          path: junit/test-results-${{ matrix.group }}.xml
+        if: ${{ always() }}
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: ${{ always() }}
+        with:
+          name: pytest-${{ matrix.group }}
+          path: junit/test-results-${{ matrix.group }}.xml
+          reporter: java-junit
