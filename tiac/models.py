@@ -84,7 +84,7 @@ class BaseTiacModel(models.Model):
         ]
 
 
-@reversion.register()
+@reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementSimple(
     AllowsSoftDeleteMixin,
     AllowModificationMixin,
@@ -201,6 +201,11 @@ class EvenementSimple(
     def get_long_email_display_name_as_html(self):
         return f"<b>Enregistrement simple {self.numero}</b>"
 
+    def get_prefetch_for_revision_list_view(self):
+        return [
+            ("_prefetched_etablissements", Etablissement.objects.filter(evenement_simple=self)),
+        ]
+
 
 class Evaluation(models.TextChoices):
     SATISFAISANTE = "satisfaisante", "A - Maîtrise des risques satisfaisante"
@@ -280,7 +285,7 @@ class Analyses(models.TextChoices):
     INCONNU = "ne sait pas", "Ne sait pas"
 
 
-@reversion.register()
+@reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
     AllowModificationMixin,
@@ -494,6 +499,14 @@ class InvestigationTiac(
         <li>Commune(s) : {self.communes_display}</li>
         </ul>
         """
+
+    def get_prefetch_for_revision_list_view(self):
+        return [
+            ("_prefetched_etablissements", Etablissement.objects.filter(investigation=self)),
+            ("_prefetched_repas", RepasSuspect.objects.filter(investigation=self)),
+            ("_prefetched_aliments", AlimentSuspect.objects.filter(investigation=self)),
+            ("_prefetched_analyses_alimentaires", AnalyseAlimentaire.objects.filter(investigation=self)),
+        ]
 
     class Meta:
         constraints = (

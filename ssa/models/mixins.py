@@ -4,7 +4,6 @@ from reversion.models import Version
 
 from core.mixins import WithNumeroMixin, sort_tree
 from core.models import Document, Structure
-from core.versions import get_versions_from_ids
 from ssa.constants import CategorieDanger
 
 
@@ -46,23 +45,12 @@ class WithEvenementRisqueMixin(models.Model):
 class WithLatestVersionMixin(models.Model):
     @property
     def latest_version(self):
-        from ssa.models import Etablissement
-
-        etablissement_ids = [e.id for e in self.etablissements.all()]
-        etablissements_versions = get_versions_from_ids(etablissement_ids, Etablissement)
-
-        instance_version = (
+        return (
             Version.objects.get_for_object(self)
             .select_related("revision")
             .select_related("revision__user__agent__structure")
             .first()
         )
-
-        versions = list(etablissements_versions) + [instance_version]
-        versions = [v for v in versions if v]
-        if not versions:
-            return None
-        return max(versions, key=lambda obj: obj.revision.date_created)
 
     class Meta:
         abstract = True
