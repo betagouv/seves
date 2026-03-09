@@ -213,7 +213,7 @@ def test_cant_publish_evenement_i_cant_see(client):
 def test_cant_see_cloture_evenement_button_if_is_already_cloture(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Clôturer l'événement")).not_to_be_visible()
 
 

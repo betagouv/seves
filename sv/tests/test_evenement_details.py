@@ -158,7 +158,7 @@ def test_delete_button_not_visible_if_evenement_cloture(live_server, page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_text("Actions")).not_to_be_visible()
+    page.get_by_text("Actions").click()
     expect(page.get_by_text("Supprimer l'événement", exact=True)).not_to_be_visible()
 
 
@@ -759,3 +759,16 @@ def test_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee(
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+
+def test_can_download_document(live_server, page):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
+
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    with page.expect_download() as download_info:
+        page.get_by_role("button", name="Actions").click()
+        page.get_by_text("Télécharger le document", exact=True).click()
+
+    download = download_info.value
+    assert download.suggested_filename == f"evenement_{evenement.numero}.docx"

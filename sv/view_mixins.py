@@ -1,6 +1,9 @@
 from collections import defaultdict
 
-from django.core.exceptions import ValidationError
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Prefetch
+from django.http import Http404
 
 from sv.forms import (
     PrelevementForm,
@@ -8,6 +11,8 @@ from sv.forms import (
 
 from .constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES, KNOWN_OEPPS
 from .models import (
+    Evenement,
+    FicheDetection,
     Laboratoire,
     OrganismeNuisible,
     Prelevement,
@@ -92,3 +97,52 @@ class WithPrelevementResultatsMixin:
         context = super().get_context_data(**kwargs)
         context["prelevement_resultats"] = dict(Prelevement.Resultat.choices)
         return context
+
+
+class EvenementDetailMixin(UserPassesTestMixin):
+    def get_queryset(self):
+        return (
+            Evenement.objects.all()
+            .select_related("createur", "organisme_nuisible", "statut_reglementaire")
+            .prefetch_related(
+                Prefetch(
+                    "detections",
+                    queryset=FicheDetection.objects.all()
+                    .with_numero_detection_only()
+                    .order_by("numero_detection_only"),
+                ),
+                "detections__createur",
+                "detections__contexte",
+                Prefetch(
+                    "detections__lieux__prelevements",
+                    queryset=Prelevement.objects.select_related(
+                        "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
+                    ),
+                ),
+                "detections__lieux__departement",
+                "detections__lieux__departement__region",
+                "detections__lieux__position_chaine_distribution_etablissement",
+                "detections__lieux__site_inspection",
+            )
+        )
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        try:
+            annee, numero_evenement = self.kwargs["numero"].split(".")
+            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            return self.object
+        except (ValueError, Evenement.DoesNotExist):
+            raise Http404("Événement non trouvé")
+
+    def test_func(self) -> bool | None:
+        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
+        return self.get_object().can_user_access(self.request.user)
+
+    def handle_no_permission(self):
+        raise PermissionDenied()
