@@ -156,7 +156,7 @@ def test_cant_forge_notify_ac_of_evenement_i_cant_see(client, mus_contact):
 def test_cant_see_notify_ac_btn_if_evenement_is_cloture(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Déclarer à l'AC")).not_to_be_visible()
 
 

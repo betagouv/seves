@@ -1,4 +1,7 @@
 from collections import OrderedDict
+import datetime
+import io
+import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -6,9 +9,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
 from django.forms import Media
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
@@ -19,6 +21,7 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
+from docxtpl import DocxTemplate
 from reversion.models import Version
 
 from core.constants import Visibilite
@@ -30,6 +33,7 @@ from core.mixins import (
     WithClotureContextMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithDocumentExportContextMixin,
     WithDocumentListInContextMixin,
     WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
@@ -65,6 +69,7 @@ from .models import (
     StructurePreleveuse,
 )
 from .view_mixins import (
+    EvenementDetailMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
     WithStatusToOrganismeNuisibleMixin,
@@ -131,6 +136,7 @@ class EvenementListView(WithOrderingMixin, ListView):
 
 
 class EvenementDetailView(
+    EvenementDetailMixin,
     WithBlocCommunPermission,
     WithDocumentListInContextMixin,
     WithFicheObjectDocumentUploadFormMixin,
@@ -140,57 +146,9 @@ class EvenementDetailView(
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     WithFinDeSuiviMixin,
-    UserPassesTestMixin,
     DetailView,
 ):
     model = Evenement
-
-    def get_queryset(self):
-        return (
-            Evenement.objects.all()
-            .select_related("createur", "organisme_nuisible", "statut_reglementaire")
-            .prefetch_related(
-                Prefetch(
-                    "detections",
-                    queryset=FicheDetection.objects.all()
-                    .with_numero_detection_only()
-                    .order_by("numero_detection_only"),
-                ),
-                "detections__createur",
-                "detections__contexte",
-                Prefetch(
-                    "detections__lieux__prelevements",
-                    queryset=Prelevement.objects.select_related(
-                        "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
-                    ),
-                ),
-                "detections__lieux__departement",
-                "detections__lieux__departement__region",
-                "detections__lieux__position_chaine_distribution_etablissement",
-                "detections__lieux__site_inspection",
-            )
-        )
-
-    def get_object(self, queryset=None):
-        if hasattr(self, "object"):
-            return self.object
-
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        try:
-            annee, numero_evenement = self.kwargs["numero"].split(".")
-            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
-            return self.object
-        except (ValueError, Evenement.DoesNotExist):
-            raise Http404("Événement non trouvé")
-
-    def test_func(self) -> bool | None:
-        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
-        return self.get_object().can_user_access(self.request.user)
-
-    def handle_no_permission(self):
-        raise PermissionDenied()
 
     def get_permission_context(self):
         user = self.request.user
@@ -778,3 +736,56 @@ class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         messages.success(self.request, "La zone a bien été supprimée")
         return self.request.POST.get("next")
+
+
+class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, View):
+    http_method_names = ["post"]
+
+    def create_detections_sub_doc(self, detections):
+        sub_template = DocxTemplate("sv/doc_templates/detection.docx")
+        sub_template.render({"detections": detections})
+        sub_doc_file = "subdoc_detection.docx"
+        sub_template.save(sub_doc_file)
+        return sub_doc_file
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        doc = DocxTemplate("sv/doc_templates/evenement.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        sub_doc_detection = doc.new_subdoc(self.create_detections_sub_doc(self.object.detections.all()))
+        fiche_zone = self.get_object().fiche_zone_delimitee
+        detections_hors_zone_infestee, zones_infestees = None, None
+        if fiche_zone:
+            detections_hors_zone_infestee = [f.numero for f in fiche_zone.fichedetection_set.all()]
+            zones_infestees = [
+                (zone_infestee, zone_infestee.fichedetection_set.all())
+                for zone_infestee in fiche_zone.zoneinfestee_set.all()
+            ]
+
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+            "detections": sub_doc_detection,
+            "detections_hors_zone_infestee": detections_hors_zone_infestee,
+            "zones_infestees": zones_infestees,
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)

@@ -3,6 +3,7 @@ from django.urls import path
 from .api_views import search_espece_echantillon
 from .views import (
     EvenementDetailView,
+    EvenementExportView,
     EvenementListView,
     EvenementUpdateView,
     EvenementVisibiliteUpdateView,
@@ -76,5 +77,10 @@ urlpatterns = [
         "fiche-zone-delimitee/<int:pk>/delete/",
         FicheZoneDelimiteeDeleteView.as_view(),
         name="fiche-zone-delimitee-delete",
+    ),
+    path(
+        "evenement/<str:numero>/document/",
+        EvenementExportView.as_view(),
+        name="export-evenement-document",
     ),
 ]
