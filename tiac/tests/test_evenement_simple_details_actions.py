@@ -113,6 +113,7 @@ def test_can_transform_evenement_simple_into_investigation_tiac(
     mail = mailoutbox[0]
     assert set(mail.to) == {mus_contact.email}
     assert "Passage en investigation TIAC" in mail.subject
+    assert investigation.get_absolute_url() not in mail.body
 
 
 def test_can_transform_evenement_simple_into_investigation_tiac_even_with_one_structure_manually_added(

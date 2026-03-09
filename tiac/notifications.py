@@ -40,6 +40,7 @@ def notify_transformation(old: EvenementSimple, new: InvestigationTiac):
             L’évènement <b>{old.numero}</b> de type “Enregistrement simple” a été passé en “Investigation de TIAC”. Le nouvel évènement est le suivant : <b>{new.numero}</b>
             </p>
             """,
+        link_to_fiche=False,
     )
 
 
