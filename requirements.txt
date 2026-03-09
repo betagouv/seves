@@ -284,7 +284,7 @@ virtualenv==20.36.1
     # via pre-commit
 wcwidth==0.2.13
     # via prompt-toolkit
-whitenoise==6.11.0
+whitenoise==6.12.0
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
