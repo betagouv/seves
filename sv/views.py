@@ -758,7 +758,7 @@ class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, 
         fiche_zone = self.get_object().fiche_zone_delimitee
         detections_hors_zone_infestee, zones_infestees = None, None
         if fiche_zone:
-            detections_hors_zone_infestee = [f.numero for f in fiche_zone.fichedetection_set.all()]
+            detections_hors_zone_infestee = ", ".join([f.numero for f in fiche_zone.fichedetection_set.all()])
             zones_infestees = [
                 (zone_infestee, zone_infestee.fichedetection_set.all())
                 for zone_infestee in fiche_zone.zoneinfestee_set.all()
