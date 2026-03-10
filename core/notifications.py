@@ -169,7 +169,7 @@ def notify_export_is_ready(export: Export, object):
         message=f"""
 Bonjour,
 
-L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url} .
+L'export CSV que vous avez demandé est prêt, voici le lien pour télécharger le fichier : {export.file.url} .
 
 Attention, le lien n'est valable que durant 1 heure.
 
@@ -177,7 +177,7 @@ Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide
         """,
         html_message=f"""
     <p>Bonjour,<br>
-    L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est&nbsp;: <a href="{export.file.url}">{export.file.url}</a>.</p>
+    L'export CSV que vous avez demandé est prêt, <a href="{export.file.url}">voici le lien pour télécharger le fichier</a>.
     <p>Attention, le lien n'est valable que durant 1 heure.</p>
     <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.</p>
         """,
