@@ -49,6 +49,8 @@ class Diff:
     def _normalize_field(self, field):
         if field == "transfered to":
             return "Transféré à"
+        if field == "messages":
+            return "Fil de suivi"
         return field
 
     def __init__(self, field, old, new, revision=None, comment=""):
@@ -339,7 +341,11 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                         new = f"Objet supprimé : {klass.__name__} {item}"
                         diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 for item in change["added_items"]:
-                    new = f"Objet ajouté : {item._object_version.object.__class__.__name__} {item}"
+                    klass = item._object_version.object.__class__
+                    if getattr(klass, "show_class_name_in_added_items", True):
+                        new = f"Objet ajouté : {klass.__name__} {item}"
+                    else:
+                        new = f"Objet ajouté : {item}"
                     diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
                 for item_1, _item_2 in change["changed_items"]:
                     model_name = item_1._object_version.object._meta.verbose_name.title()

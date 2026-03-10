@@ -101,12 +101,17 @@ class DocumentDeleteView(GetFicheObjectMixin, UserPassesTestMixin, View):
         return self.document.content_object
 
     def test_func(self):
-        return self.get_fiche_object().can_delete_document(self.request.user)
+        self.fiche_object = self.get_fiche_object()
+        return self.fiche_object.can_delete_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
         self.document.is_deleted = True
         self.document.deleted_by = self.request.user.agent
-        self.document.save()
+        with reversion.create_revision():
+            self.document.save()
+            reversion.add_to_revision(self.fiche_object)
+            reversion.set_user(self.request.user)
+
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
         return (
             safe_redirect(next_url + "#tabpanel-documents-panel")
@@ -525,9 +530,7 @@ def sirene_api(request, siret: str):
 
 
 class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
-    compare_exclude = [
-        "date_derniere_mise_a_jour",
-    ]
+    compare_exclude = ["date_derniere_mise_a_jour", "is_infected"]
     template_name = "reversion/version_list.html"
 
     def dispatch(self, request, *args, **kwargs):

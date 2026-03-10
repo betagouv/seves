@@ -325,13 +325,15 @@ class Document(models.Model):
         TypeDocument.ANALYSE_RISQUE,
     ]
 
+    ignored_fields_in_revision_list = ["is_infected"]
+
     class Meta:
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
 
     def __str__(self):
-        return f"{self.nom} ({self.document_type})"
+        return f"{self.nom} ({self.get_document_type_display()})"
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():
@@ -425,6 +427,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     show_nested_diff_in_revision_list = False
     show_deleted_state_in_revision_list = False
+    show_class_name_in_added_items = False
 
     @classproperty
     def _base_objects(self):
@@ -441,7 +444,9 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
         self._initial_is_deleted = self.is_deleted
 
     def __str__(self):
-        return f"{self.message_type}: {self.content[:150]}..."
+        if len(self.title) > 150:
+            return f"{self.message_type}: {self.title[:150]}…"
+        return f"{self.message_type}: {self.title}"
 
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
