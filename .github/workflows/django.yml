@@ -132,3 +132,4 @@ jobs:
           name: pytest-${{ matrix.group }}
           path: junit/test-results-${{ matrix.group }}.xml
           reporter: java-junit
+          fail-on-error: 'true'
