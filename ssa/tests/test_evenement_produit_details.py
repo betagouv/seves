@@ -5,6 +5,7 @@ import pytest
 
 from core.factories import StructureFactory
 from core.models import AuditLog
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
@@ -130,3 +131,9 @@ def test_evenement_produit_detail_page_access_other_structure(live_server, page:
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     response = details_page.navigate(evenement)
     assert response.status == status_code
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)

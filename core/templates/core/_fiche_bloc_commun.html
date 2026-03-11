@@ -24,13 +24,13 @@
     <div class="fr-tabs fr-mt-2w" data-fiche-bloc-commun-target="tabs">
         <ul class="fr-tabs__list" role="tablist">
             <li role="presentation">
-                <button id="tabpanel-messages" class="fr-tabs__tab fr-icon-message-2-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-messages-panel" data-testid="fil-de-suivi">Fil de suivi</button>
+                <button id="tabpanel-messages" class="fr-tabs__tab fr-icon-message-2-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-messages-panel" data-testid="fil-de-suivi">Fil de suivi{% if message_count %} ({{ message_count }}){% endif %}</button>
             </li>
             <li role="presentation">
-                <button id="tabpanel-contacts" class="fr-tabs__tab fr-icon-user-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-contacts-panel" data-testid="contacts">Contacts</button>
+                <button id="tabpanel-contacts" class="fr-tabs__tab fr-icon-user-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-contacts-panel" data-testid="contacts">Contacts{% if contacts_count %} ({{ contacts_count }}){% endif %}</button>
             </li>
             <li role="presentation">
-                <button id="tabpanel-documents" class="fr-tabs__tab fr-icon-book-2-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-documents-panel" data-testid="documents">Documents</button>
+                <button id="tabpanel-documents" class="fr-tabs__tab fr-icon-book-2-line fr-tabs__tab--icon-left" tabindex="0" role="tab" aria-selected="false" aria-controls="tabpanel-documents-panel" data-testid="documents">Documents{% if document_count %} ({{ document_count }}){% endif %} </button>
             </li>
         </ul>
         <div id="tabpanel-messages-panel" class="bloc-commun__panel--messages fr-tabs__panel fr-tabs__panel--selected fr-transition-none" role="tabpanel" aria-labelledby="tabpanel-messages" tabindex="0">

@@ -1,6 +1,8 @@
 from playwright.sync_api import Page, expect
 
+from core.mixins import WithEtatMixin
 from core.models import AuditLog
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
 
@@ -53,3 +55,9 @@ def test_investigation_cas_humain_detail_page_content_etablissement(
         details_page.etablissement_modal.get_by_text(etablissement.get_position_dossier_display(), exact=True)
     ).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.numero_agrement, exact=True)).to_be_visible()
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = InvestigationCasHumainFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)

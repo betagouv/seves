@@ -10,7 +10,9 @@ from reversion.models import Version
 
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
+from core.mixins import WithEtatMixin
 from core.models import AuditLog, Contact, Structure
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from seves import settings
 from sv.factories import (
     EvenementFactory,
@@ -773,3 +775,9 @@ def test_can_download_document(live_server, page):
 
     download = download_info.value
     assert download.suggested_filename == f"evenement_{evenement.numero}.docx"
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)

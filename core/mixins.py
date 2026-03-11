@@ -121,6 +121,7 @@ class WithDocumentListInContextMixin:
         allowed_document_types = self.get_object().get_allowed_document_types()
         for document in document_filter.qs:
             document.edit_form = DocumentEditForm(instance=document, allowed_document_types=allowed_document_types)
+        context["document_count"] = documents.exclude(is_deleted=True).count()
         context["document_filter"] = document_filter
         return context
 
@@ -149,6 +150,7 @@ class WithMessageMixin:
             contact_agent = self.request.user.agent.contact_set.all()[0]
         for message in message_filter.qs:
             message.can_be_deleted = message.can_agent_delete(contact_agent)
+        context["message_count"] = message_list.exclude(status=Message.Status.BROUILLON).count()
         context["message_filter"] = message_filter
         context["message_status"] = Message.Status
         context["message_content_type"] = ContentType.objects.get_for_model(Message)
@@ -205,6 +207,7 @@ class WithContactListInContextMixin(WithContactQuerysetMixin):
         ]
 
         context["content_type"] = ContentType.objects.get_for_model(obj)
+        context["contacts_count"] = len(context["contacts_agents"]) + len(context["contacts_structures"])
         return context
 
 
