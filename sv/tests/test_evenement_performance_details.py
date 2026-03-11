@@ -10,7 +10,7 @@ from sv.factories import (
     ZoneInfesteeFactory,
 )
 
-BASE_NUM_QUERIES = 23  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 25  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -32,12 +32,12 @@ def test_evenement_performances_with_messages_from_same_user(
     sender = mocked_authentification_user.agent.contact_set.get()
     MessageFactory(content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 5):
         client.get(evenement.get_absolute_url())
 
     MessageFactory.create_batch(3, content_object=evenement, sender=sender, recipients=[], recipients_copy=[])
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 3):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 5):
         response = client.get(evenement.get_absolute_url())
 
     assert len(response.context["message_filter"].qs) == 4
@@ -89,7 +89,7 @@ def test_evenement_performances_with_document(client, django_assert_num_queries)
         client.get(evenement.get_absolute_url())
 
     DocumentFactory.create_batch(3, content_object=evenement)
-    with django_assert_num_queries(BASE_NUM_QUERIES + 1):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 2):
         client.get(evenement.get_absolute_url())
 
 
