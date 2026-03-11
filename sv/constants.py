@@ -39,7 +39,6 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "XYLEFM",
         "POCZSH",
         "XYLOCH",
-        "PSDMS2",
         "HETDPA",
         "RALSSL",
         "HETDRO",
