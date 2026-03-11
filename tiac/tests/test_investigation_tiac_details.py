@@ -1,7 +1,9 @@
 from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
+from core.mixins import WithEtatMixin
 from core.models import AuditLog
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
     AlimentSuspectFactory,
@@ -158,3 +160,9 @@ def test_evenement_produit_detail_page_content_analyse_alimentaires(live_server,
         expect(details_page.current_modal.get_by_text(danger, exact=True)).to_be_visible()
     expect(details_page.current_modal.get_by_text(analyse.comments, exact=True)).to_be_visible()
     expect(details_page.current_modal.get_by_text(analyse.reference_souche, exact=True)).to_be_visible()
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)
