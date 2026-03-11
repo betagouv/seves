@@ -577,7 +577,6 @@ ORGANISMES_NUISIBLES = {
     "OE_PUCCPT": "Puccinia pittieriana (rouille de la pomme de terre)",
     "OE_RALSPS": "Ralstonia pseudosolanacearum",
     "OE_RALSSL": "Ralstonia solanacearum (maladie de Moko du bananier|pourriture brune de la pomme de terre)",
-    "OE_PSDMS2": "Ralstonia solanacearum race 2 (no longer in use) (maladie de Moko du bananier)",
     "OE_RALSSC": "Ralstonia syzygii subsp. celebesensis",
     "OE_RALSSI": "Ralstonia syzygii subsp. indonesiensis",
     "OE_RAMUEN": "Ramularia endophylla",
