@@ -27,6 +27,7 @@ class ExportAdmin(admin.ModelAdmin):
 class AuditLogAdmin(admin.ModelAdmin):
     search_fields = ("ip", "action", "user__email")
     raw_id_fields = ("user",)
+    readonly_fields = ("created_at",)
 
 
 admin.site.register(Contact, ContactAdmin)
