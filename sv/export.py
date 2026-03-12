@@ -1,8 +1,6 @@
 import csv
 from functools import reduce
 
-from .models import FicheDetection
-
 
 class FicheDetectionExport:
     fiche_detection_fields = [
@@ -62,27 +60,6 @@ class FicheDetectionExport:
         ("zone_infestee__rayon", "Rayon de la zone infestée"),
         ("zone_infestee__surface_infestee_totale", "Surface infestée totale"),
     ]
-
-    def get_queryset(self, user):
-        return (
-            FicheDetection.objects.all()
-            .get_fiches_user_can_view(user)
-            .optimized_for_details()
-            .select_related(
-                "evenement__organisme_nuisible",
-                "evenement__statut_reglementaire",
-            )
-            .prefetch_related(
-                "lieux",
-                "lieux__departement",
-                "lieux__site_inspection",
-                "lieux__prelevements",
-                "lieux__prelevements__structure_preleveuse",
-                "lieux__prelevements__espece_echantillon",
-                "lieux__prelevements__matrice_prelevee",
-                "lieux__prelevements__laboratoire",
-            )
-        )
 
     def get_fieldnames(self):
         """Retourne les noms des champs pour l'en-tête du CSV"""
@@ -158,8 +135,7 @@ class FicheDetectionExport:
             for prelevement in prelevements:
                 yield self.get_fiche_data_with_prelevement(fiche_detection, prelevement)
 
-    def export(self, stream, user):
-        queryset = self.get_queryset(user)
+    def export(self, stream, queryset):
         writer = csv.DictWriter(
             stream,
             fieldnames=self.get_fieldnames(),

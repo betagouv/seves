@@ -15,7 +15,6 @@
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 
 {% block content %}
-    {% include "sv/_extract_modal.html" %}
     <form id="search-form" method="get" >
         <div class="fr-p-4v evenements_liste__header">
             <div class="evenements_liste__header--title">
@@ -41,9 +40,13 @@
     <div class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count  }} sur un total de {{ total_object_count }}</div>
-            <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-fr-opened="false" data-testid="extract-open" aria-controls="fr-modal-extract">
-                Extraire
-            </button>
+
+            <form method="post" action="{% url 'sv:fiche-detection-export' %}{% querystring %}">
+                {% csrf_token %}
+                <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-testid="extract">
+                    Extraire
+                </button>
+            </form>
         </div>
 
         {% if paginator.count > 0 %}
