@@ -28,6 +28,9 @@ class AllowedExtensions(models.TextChoices):
     QGZ = "qgz"
     TXT = "txt"
     EML = "eml"
+    PPT = "ppt"
+    PPTX = "pptx"
+    ODP = "odp"
 
 
 class AllowedMimeTypes(models.TextChoices):
@@ -41,6 +44,9 @@ class AllowedMimeTypes(models.TextChoices):
     APPLICATION_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     APPLICATION_ODT = "application/vnd.oasis.opendocument.text"
     APPLICATION_ODS = "application/vnd.oasis.opendocument.spreadsheet"
+    APPLICATION_ODP = "application/vnd.oasis.opendocument.presentation"
+    APPLICATION_POWERPOINT = "application/vnd.ms-powerpoint"
+    APPLICATION_POWERPOINT_X = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     TEXT_CSV = "text/csv"
     APPLICATION_QGIS = "application/x-qgis"
     APPLICATION_QGIS_PROJECT = "application/x-qgis-project"
